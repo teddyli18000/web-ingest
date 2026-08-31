@@ -1,0 +1,51 @@
+name: Google Trending residual fill
+
+on:
+  push:
+    branches:
+      - agent/google-trending-residual-fill
+    paths:
+      - ".github/workflows/google-trending-residual-fill.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: google-trending-residual-fill
+  cancel-in-progress: false
+
+jobs:
+  fill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate maintenance code
+        run: |
+          python -m py_compile google-trending/*.py tools/tmp/google-trending-residual-fill.py
+          python -m unittest discover -s google-trending/tests -v
+      - name: Recover verified residual snapshots
+        run: python tools/tmp/google-trending-residual-fill.py
+      - name: Validate archive and refresh dashboard
+        run: |
+          python google-trending/validate_archive.py
+          python google-trending/render_readme.py
+          python google-trending/validate_archive.py
+      - name: Commit clean result and self-remove
+        run: |
+          git rm tools/tmp/google-trending-residual-fill.py
+          git rm .github/workflows/google-trending-residual-fill.yml
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(google-trending): recover residual historical snapshots"
+          git push origin HEAD:agent/google-trending-residual-fill
