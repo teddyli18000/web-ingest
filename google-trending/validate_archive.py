@@ -11,7 +11,10 @@ def main() -> int:
     errors: list[str] = []
     for path in files:
         payload = read_json(path)
-        expected_date = path.parent.name
+        day = path.parent.name
+        month = path.parent.parent.name
+        year = path.parent.parent.parent.name
+        expected_date = f"{year}-{month}-{day}"
         for item in validate_document(payload, expected_date):
             errors.append(f"{path}: {item}")
 
