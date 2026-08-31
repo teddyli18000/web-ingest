@@ -8,10 +8,32 @@ This task stores text/metadata only. It does **not** mirror images, screenshots,
 
 <!-- archive-dashboard:start -->
 
-_No archived snapshots yet._
+### Archive at a glance
+
+| First archived day | Latest day | Days with data | Core regions |
+| --- | --- | ---: | ---: |
+| **2024-11-28** | **2026-09-01** | **376** | **8** |
+
+### Latest regional pulse — 2026-09-01
+
+| Region | #1 trend | Volume | Top 3 |
+| --- | --- | ---: | --- |
+| 🇸🇬 Singapore | **barcelona vs rayo vallecano** | 200+ | barcelona vs rayo vallecano · aston villa vs arsenal · lecce vs roma |
+| 🇺🇸 United States | **crime** | 500+ | crime · barca · barcelona schedule |
+| 🇬🇧 United Kingdom | **amol rajan** | 500+ | amol rajan · barca · saka |
+| 🇮🇳 India | **barca** | 1000+ | barca · fcb · myles lewis-skelly |
+| 🇯🇵 Japan | **ジャン アレジ** | 100+ | ジャン アレジ · 破産 · ニコラス・ジャクソン |
+| 🇰🇷 South Korea | **바르셀로나 대 라요** | 1000+ | 바르셀로나 대 라요 · 신용회복위원회 · world cup qualifiers schedule |
+| 🇭🇰 Hong Kong | **857** | 100+ | 857 · aston villa vs arsenal · 阿斯頓維拉對兵工廠 |
+| 🇹🇼 Taiwan | **阿斯頓維拉 對 兵工廠** | 200+ | 阿斯頓維拉 對 兵工廠 · 虎航 · 公主遊輪 |
+
+[Open full 2026-09-01 snapshot →](data/2026/09/01/trending.json)
+
+### Browse by year
+
+[`2026`](data/2026/) · 4 days  [`2025`](data/2025/) · 338 days  [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
-
 ## Core regions
 
 The long-term archive intentionally uses a compact, stable set rather than crawling every available Google region:

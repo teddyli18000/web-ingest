@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "source": "aurman/GoogleTrendArchive",
+  "source_url": "https://huggingface.co/datasets/aurman/GoogleTrendArchive",
+  "source_license": "CC-BY-4.0",
+  "source_archive": "googletrendarchive-daily.zip",
+  "source_archive_sha256": "2c62716919db98408ede388ed2c6c59f7db7bd01b197ea019aeded197204e09c",
+  "imported_at": "2026-08-31T20:10:39+00:00",
+  "selected_geos": [
+    "GB",
+    "HK",
+    "IN",
+    "JP",
+    "KR",
+    "SG",
+    "TW",
+    "US"
+  ],
+  "earliest_date": "2024-11-28",
+  "latest_date": "2026-01-03",
+  "dates_with_selected_geo_data": 375,
+  "per_geo_days": {
+    "GB": 368,
+    "HK": 372,
+    "IN": 371,
+    "JP": 371,
+    "KR": 371,
+    "SG": 368,
+    "TW": 370,
+    "US": 371
+  },
+  "matching_csv_members_scanned": 2994,
+  "duplicate_date_geo_candidates": 31,
+  "parse_error_count": 1,
+  "parse_error_examples": [
+    "GB/trending_GB_1d_20251001-1140.csv: historical CSV contained no usable trend rows"
+  ],
+  "files_changed": 375,
+  "selection_policy": "for duplicate date+geo raw CSVs, choose most valid rows; tie-break by member path; existing direct snapshots win on overlap"
+}
