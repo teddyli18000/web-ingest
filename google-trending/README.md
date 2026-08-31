@@ -10,7 +10,53 @@ The goal is not to mirror Google pages or media. The task preserves the historic
 
 <!-- archive-dashboard:start -->
 
-> Archive initialized; historical backfill and the first live capture are pending.
+### Archive at a glance
+
+| First day | Latest day | Days archived | SG days | US days |
+| --- | --- | ---: | ---: | ---: |
+| **2024-11-28** | **2026-01-03** | **373** | **368** | **371** |
+
+### Source mix
+
+| Source | Region snapshots |
+| --- | ---: |
+| `googletrendarchive` | 739 |
+
+### Latest SG snapshot — 2026-01-03
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | venezuela | 2K+ |
+| 2 | venezuela news | 1K+ |
+| 3 | cdc vouchers singapore | 500+ |
+| 4 | fan bingbing | 200+ |
+| 5 | melbourne city fc vs sydney fc | 100+ |
+| 6 | lakers vs grizzlies | 1K+ |
+| 7 | bbc | 100+ |
+| 8 | warriors vs thunder | 500+ |
+| 9 | al-ahli saudi vs al-nassr | 2K+ |
+| 10 | toto singapore | 2K+ |
+
+### Latest US snapshot — 2026-01-03
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | venezuela | 500K+ |
+| 2 | grizzlies vs lakers | 100K+ |
+| 3 | thunder vs warriors | 100K+ |
+| 4 | celina powell | 20K+ |
+| 5 | akay diamonds | 20K+ |
+| 6 | wake forest vs ms state | 100K+ |
+| 7 | hawks vs knicks | 50K+ |
+| 8 | nuggets vs cavaliers | 50K+ |
+| 9 | navy vs cincinnati | 200K+ |
+| 10 | spurs vs pacers | 50K+ |
+
+[Open full snapshot →](data/2026/01/03/trending.json)
+
+### Browse by year
+
+[`2026`](data/2026/) · 3 days · [`2025`](data/2025/) · 336 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
