@@ -10,49 +10,50 @@ The task preserves the changing data that is useful later: **trend order, query,
 
 | First day | Latest day | Days archived | SG days | US days |
 | --- | --- | ---: | ---: | ---: |
-| **2024-11-28** | **2026-01-03** | **373** | **368** | **371** |
+| **2024-11-28** | **2026-09-01** | **374** | **369** | **372** |
 
 ### Source mix
 
 | Source | Region snapshots |
 | --- | ---: |
 | `googletrendarchive` | 739 |
+| `google_trending_now` | 2 |
 
-### Latest SG snapshot — 2026-01-03
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | venezuela | 2K+ |
-| 2 | venezuela news | 1K+ |
-| 3 | cdc vouchers singapore | 500+ |
-| 4 | fan bingbing | 200+ |
-| 5 | melbourne city fc vs sydney fc | 100+ |
-| 6 | lakers vs grizzlies | 1K+ |
-| 7 | bbc | 100+ |
-| 8 | warriors vs thunder | 500+ |
-| 9 | al-ahli saudi vs al-nassr | 2K+ |
-| 10 | toto singapore | 2K+ |
-
-### Latest US snapshot — 2026-01-03
+### Latest SG snapshot — 2026-09-01
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | venezuela | 500K+ |
-| 2 | grizzlies vs lakers | 100K+ |
-| 3 | thunder vs warriors | 100K+ |
-| 4 | celina powell | 20K+ |
-| 5 | akay diamonds | 20K+ |
-| 6 | wake forest vs ms state | 100K+ |
-| 7 | hawks vs knicks | 50K+ |
-| 8 | nuggets vs cavaliers | 50K+ |
-| 9 | navy vs cincinnati | 200K+ |
-| 10 | spurs vs pacers | 50K+ |
+| 1 | taekwondo | 10000+ |
+| 2 | aston villa vs arsenal | 2000+ |
+| 3 | barcelona vs rayo vallecano | 500+ |
+| 4 | alex yam | 5000+ |
+| 5 | lee yong joo princess hours | 2000+ |
+| 6 | non profit hospital | 5000+ |
+| 7 | cooling center | 5000+ |
+| 8 | collecting discarded cans for refunds | 2000+ |
+| 9 | singapore hawker centre cleaning schedule | 5000+ |
+| 10 | jack neo ah boys to firefighters | 500+ |
 
-[Open full snapshot →](data/2026/01/03/trending.json)
+### Latest US snapshot — 2026-09-01
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | barcelona vs rayo vallecano | 200000+ |
+| 2 | israel travel restrictions state department | 200000+ |
+| 3 | aston villa vs arsenal | 100000+ |
+| 4 | novak djokovic | 200000+ |
+| 5 | outlook outage | 50000+ |
+| 6 | khan | 50000+ |
+| 7 | heavy mixed triplets california birth | 50000+ |
+| 8 | messi | 50000+ |
+| 9 | pro wrestler paul leduc passes | 20000+ |
+| 10 | daniel richman fbi leak probe | 20000+ |
+
+[Open full snapshot →](data/2026/09/01/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 3 days · [`2025`](data/2025/) · 336 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 4 days · [`2025`](data/2025/) · 336 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
