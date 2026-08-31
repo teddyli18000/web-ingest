@@ -124,10 +124,10 @@ def update_manifest(year: int | None, selected: dict[tuple[str, str], tuple[str,
             "source_url": DATASET_URL,
             "dataset_doi": DATASET_DOI,
             "license": "CC-BY-4.0",
-            "policy": "SG/US only; daily_compressed.zip CSVs; lower-quality sources never overwrite live captures",
             "years": {},
         }
 
+    manifest["policy"] = f"{','.join(REGIONS)} only; daily_compressed.zip CSVs; lower-quality sources never overwrite live captures"
     days = sorted({day for _, day in selected})
     geos = Counter(geo for geo, _ in selected)
     key = str(year) if year is not None else "all"
@@ -149,7 +149,7 @@ def update_manifest(year: int | None, selected: dict[tuple[str, str], tuple[str,
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Import SG/US GoogleTrendArchive daily Trending Now CSVs")
+    parser = argparse.ArgumentParser(description=f"Import {','.join(REGIONS)} GoogleTrendArchive daily Trending Now CSVs")
     parser.add_argument("--zip", required=True, help="path to upstream daily_compressed.zip")
     parser.add_argument("--zip-sha256", help="known SHA-256 for the upstream ZIP")
     parser.add_argument("--year", type=int, help="only import one calendar year")
@@ -161,7 +161,7 @@ def main() -> int:
     with zipfile.ZipFile(zip_path) as zf:
         selected, parse_errors, scanned = select_members(zf, args.year)
         if not selected:
-            raise SystemExit("No matching SG/US daily CSV members found")
+            raise SystemExit(f"No matching {','.join(REGIONS)} daily CSV members found")
         for (geo, day), (member, items) in sorted(selected.items(), key=lambda pair: (pair[0][1], pair[0][0])):
             region = {
                 "source": "googletrendarchive",
