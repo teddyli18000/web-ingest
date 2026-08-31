@@ -104,7 +104,7 @@ Missing historical values remain missing; the backfill does not invent `stars_to
 
 ## Historical backfill
 
-`github-trending/backfill.py` converts multiple public GitHub Trending archives into the same schema. The current source set is deliberately redundant so one archive can fill another's gaps:
+`github-trending/backfill.py` converts multiple public GitHub Trending archives into the same schema. The source set is deliberately redundant so one archive can fill another's gaps:
 
 | Source | Role |
 | --- | --- |
@@ -114,9 +114,11 @@ Missing historical values remain missing; the backfill does not invent `stars_to
 | `Leko/github-trending-archive` | Richer per-language CSV snapshots, including historical star velocity where preserved |
 | `antonkomarev/github-trending-archive` | Compact recent All-Languages and language archives |
 
-When two sources cover the same `date + scope`, a deterministic source priority selects one canonical snapshot. Lower-priority sources only fill gaps. The actual result is summarized in `backfill-manifest.json` after the one-time backfill.
+When two sources cover the same `date + scope`, a deterministic source priority selects one canonical snapshot. Lower-priority sources only fill gaps. The actual result is summarized in `backfill-manifest.json`.
 
-The temporary workflow `.github/workflows/github-trending-backfill.yml` exists only to perform the initial full recovery. **After a successful verified backfill it must be deleted.** Future repairs should use the task-local script manually or through a deliberately temporary workflow.
+The initial full recovery completed on **2026-09-01**: **4,345 historical dates** were recovered through 2026-08-31, including **2,498 All-Languages dates** beginning 2018-07-01. Combined with the live 2026-09-01 capture, the archive currently begins at 2014-08-09 and continues through today.
+
+The one-time backfill workflow was removed after successful verification. Future historical repairs should use the task-local `backfill.py` deliberately; if an Action is needed for a repair, create it as a temporary workflow and remove it again after validation.
 
 ## Validation and reruns
 
