@@ -1,16 +1,6 @@
 name: Google Trending
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - ".github/workflows/google-trending.yml"
-      - "google-trending/capture.py"
-      - "google-trending/archive_lib.py"
-      - "google-trending/validate_archive.py"
-      - "google-trending/render_readme.py"
-      - "google-trending/tests/**"
   schedule:
     # 12:17 and 13:17 Singapore/Beijing time (UTC+8).
     # Starts after the GitHub Trending retry window + timeout/buffer reservation.
@@ -49,7 +39,7 @@ jobs:
           python -m py_compile google-trending/*.py
           python -m unittest discover -s google-trending/tests -v
 
-      - name: Capture SG and US Trending Now
+      - name: Capture SG, US, GB and HK Trending Now
         run: python google-trending/capture.py
 
       - name: Validate archive and refresh dashboard
