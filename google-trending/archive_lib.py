@@ -8,7 +8,7 @@ from typing import Any
 
 TASK_ROOT = Path(__file__).resolve().parent
 DATA_ROOT = TASK_ROOT / "data"
-REGIONS = ("SG", "US")
+REGIONS = ("SG", "US", "GB", "HK")
 SCHEMA_VERSION = 1
 SOURCE_QUALITY = {
     "rss_limited": 1,

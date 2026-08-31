@@ -8,7 +8,7 @@ This file is a compact manager-facing working record for repository-wide decisio
 - Each persistent collector owns one root task directory and one thin workflow entry point when automation is needed.
 - `tools/` is the repository manager workspace for schedule guards, audits, maintenance helpers, and durable operational notes.
 - Scheduled ingestion jobs are staggered using declared `timeout-minutes` plus a 15-minute planning buffer.
-- One-shot historical backfills/repairs are temporary operations; their workflows are removed after validation.
+- One-shot historical backfills/repairs/research probes are temporary operations; their scripts/workflows are removed after results are validated and durable conclusions are recorded.
 
 ## Current recurring load plan
 
@@ -20,6 +20,8 @@ This file is a compact manager-facing working record for repository-wide decisio
 
 `github-trending` intentionally has three retry opportunities. `google-trending` has two; same-day source-quality/idempotency rules make later runs cheap once a full capture succeeds.
 
+Collection workflows should not also be generic code-validation hooks. Repository-integrity CI validates code/workflow changes; recurring collectors run on their planned schedule or explicit manual dispatch.
+
 ## GitHub Trending historical state
 
 - Earliest recovered date: **2014-08-09**.
@@ -29,16 +31,16 @@ This file is a compact manager-facing working record for repository-wide decisio
 - Public historical sources are retained as provenance in each snapshot rather than erased during normalization.
 - Canonical scope repair is complete and its cumulative statistics are preserved in the task manifest.
 
-## Google Trending historical state
+## Google Trending operating policy
 
-- Long-term scope is fixed to **SG + US**.
+- Long-term regions are exactly **SG + US + GB + HK**.
 - Live source is Google Trends Trending Now through pinned `google-trends-now@1.1.1`; RSS is a clearly marked limited fallback only.
-- Historical source is `aurman/GoogleTrendArchive` (CC-BY-4.0, DOI `10.57967/hf/7531`). The imported `daily_compressed.zip` yields **373 calendar dates** from **2024-11-28 through 2026-01-03**, with **368 SG days** and **371 US days** (**739 region snapshots** total).
-- The wider Hugging Face dataset reports collection through 2026-05-17, but the daily ZIP used for this canonical backfill does not expose valid SG/US daily snapshots beyond 2026-01-03. Do not synthesize that gap.
-- Historical ZIP SHA-256 at initial recovery: `2c62716919db98408ede388ed2c6c59f7db7bd01b197ea019aeded197204e09c`.
-- Source priority is `google_trending_now` > `googletrendarchive` > `rss_limited`, so reruns may upgrade but not downgrade a date/region.
-- The initial historical recovery was rebuilt from a clean pre-data commit after a false-positive `MV-US` path match was found in an early importer revision. Final matching requires an exact `SG` or `US` directory component; the clean archive contains no output from that discarded revision.
+- Canonical licensed historical source is `aurman/GoogleTrendArchive` (CC-BY-4.0, DOI `10.57967/hf/7531`). Its raw `daily_compressed.zip` preserves recoverable daily ordering from **2024-11-28 through 2026-01-03** for the configured regions. The exact per-region counts live in `google-trending/backfill-manifest.json` and are recomputed by the four-region repair.
+- The wider Hugging Face dataset reports later 2026 observations, but its post-Jan material is processed/episode-oriented and does not expose an original daily rank field. Do not manufacture rankings from it.
+- GitHub gap research identified `fdciabdul/Google-Trends-Keywords-Scraper` as strong cross-validation evidence: its commit history begins 2026-01-01, directly captures Google Trending RSS, and contains SG/US/GB/HK snapshots on sampled gap dates. However its generated README states **All Rights Reserved**, so it is not approved for bulk historical import without clearer permission.
+- Source priority remains `google_trending_now` > `googletrendarchive` > `rss_limited`; research-only sources do not enter this priority chain.
+- Missing dates remain missing until a source both preserves the relevant historical state and has suitable redistribution terms.
 
 ## Maintenance principle
 
-Prefer a small tool that makes a rule executable over a paragraph that relies on future Agents remembering it. Prefer documentation when a decision cannot or should not be enforced mechanically.
+Prefer a small tool that makes a rule executable over a paragraph that relies on future Agents remembering it. Use temporary tools for one-off audits/recovery work, keep the resulting evidence/report when useful, and remove the temporary mechanism afterwards.
