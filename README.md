@@ -41,6 +41,7 @@ Transient Action working files should stay in the runner workspace or runner tem
 | --- | --- | --- |
 | [`ai-daily`](ai-daily/) | Byte-mirror the AIHOT daily webpage and REST API v1 response | Active |
 | [`github-trending`](github-trending/) | Preserve daily GitHub Trending rankings and recover available historical snapshots | Active |
+| [`google-trending`](google-trending/) | Preserve Google Trends Trending Now for Singapore and the United States, with historical recovery where available | Active |
 
 ## Repository management
 
