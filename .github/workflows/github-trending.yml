@@ -17,6 +17,9 @@ on:
 permissions:
   contents: write
 
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+
 concurrency:
   group: github-trending-daily
   cancel-in-progress: false
@@ -47,7 +50,7 @@ jobs:
 
       - name: Commit snapshot
         run: |
-          git add github-trending
+          git add github-trending/data github-trending/README.md
           if git diff --cached --quiet; then
             echo "No new snapshot to commit."
             exit 0
