@@ -1,0 +1,74 @@
+name: Google Trending
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/google-trending.yml"
+      - "google-trending/capture.py"
+      - "google-trending/archive_lib.py"
+      - "google-trending/validate_archive.py"
+      - "google-trending/render_readme.py"
+      - "google-trending/tests/**"
+  schedule:
+    # 12:17 and 13:17 Singapore/Beijing time (UTC+8).
+    # Starts after the GitHub Trending retry window + timeout/buffer reservation.
+    - cron: "17 4,5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+
+concurrency:
+  group: google-trending-daily
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Validate task code
+        run: |
+          python -m py_compile google-trending/*.py
+          python -m unittest discover -s google-trending/tests -v
+
+      - name: Capture SG and US Trending Now
+        run: python google-trending/capture.py
+
+      - name: Validate archive and refresh dashboard
+        run: |
+          python google-trending/validate_archive.py
+          python google-trending/render_readme.py
+
+      - name: Commit snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add google-trending/data google-trending/README.md
+          if git diff --cached --quiet; then
+            echo "No new or upgraded snapshot to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data(google-trending): capture $(TZ=Asia/Singapore date +%F)"
+          git pull --rebase origin main
+          git push origin HEAD:main
