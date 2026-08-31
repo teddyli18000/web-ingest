@@ -16,8 +16,9 @@ This file is a compact manager-facing working record for repository-wide decisio
 | --- | --- | ---: |
 | `ai-daily` | 08:05 | 65 min |
 | `github-trending` | 09:27 / 10:27 / 11:27 | 15 min |
+| `google-trends` | 12:07 / 13:07 / 14:07 | 20 min |
 
-`github-trending` intentionally has three retry opportunities. Same-day idempotency makes later runs cheap once the first capture succeeds.
+Retry-slot collectors are same-day idempotent. Once a valid daily snapshot exists, later opportunities should exit without rewriting it.
 
 ## GitHub Trending historical state
 
@@ -26,12 +27,16 @@ This file is a compact manager-facing working record for repository-wide decisio
 - Historical All-Languages coverage: **2,498 dates**, beginning 2018-07-01.
 - Direct daily collection continues after the historical boundary.
 - Public historical sources are retained as provenance in each snapshot rather than erased during normalization.
+- Canonical historical scopes collapse unambiguous source aliases such as `cpp` → `c++` and `c%23` → `c#`; the migration counters are preserved across no-op reruns.
 
-A one-time normalization repair is being used to collapse unambiguous source-specific scope aliases such as `cpp` → `c++` and percent-encoded `c%23` → `c#`. The repair must not invent ranks, repositories, stars, or other source data.
+## Google Trends operating decision
 
-## Next collection candidate
-
-Google Trends / Trending Now is the next candidate to investigate. Before implementation, decide what historical window is actually recoverable and what minimal fields are worth preserving; avoid blindly mirroring a high-frequency firehose.
+- Product archived: **Google Trends → Trending Now**, not generic Explore/interest-over-time data.
+- Recurring source: Google's public Trending Now RSS export; no browser, cookie, API key, or GCP identity is required.
+- Long-term core regions: `SG`, `US`, `GB`, `IN`, `JP`, `KR`, `HK`, `TW`.
+- One day is committed only when all configured core regions succeed.
+- Historical recovery source: `aurman/GoogleTrendArchive` raw daily CSV archive (CC-BY-4.0), filtered to the core-region set instead of copying the multi-gigabyte upstream dataset.
+- Missing historical days remain missing; do not synthesize Trending Now rankings from BigQuery or keyword interest time series.
 
 ## Maintenance principle
 
