@@ -10,8 +10,9 @@ All cron expressions are stored in UTC. Human-facing times below use Asia/Singap
 | --- | --- | ---: | --- |
 | `ai-daily.yml` | 08:05 daily | 65 min | Wait for and mirror the AIHOT daily snapshot |
 | `github-trending.yml` | 09:27 / 10:27 / 11:27 daily | 15 min | Three retry opportunities; first valid snapshot wins |
+| `google-trending.yml` | 12:17 / 13:17 daily | 15 min | Capture SG + US Google Trending Now; second slot is a retry/no-op opportunity |
 
-The schedule is intentionally staggered. `ai-daily` can legitimately spend close to an hour waiting for its upstream publication, so GitHub Trending starts only after its worst-case timeout window plus repository buffer.
+The schedule is intentionally staggered. `ai-daily` can legitimately spend close to an hour waiting for its upstream publication, GitHub Trending starts only after its worst-case timeout window plus repository buffer, and Google Trending begins after the last GitHub Trending retry has released its own timeout + buffer reservation.
 
 ## Load-balancing policy
 
