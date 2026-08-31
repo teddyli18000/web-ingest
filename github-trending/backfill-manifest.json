@@ -27,17 +27,15 @@
     "antonkomarev/github-trending-archive": 22313,
     "hanishrao/trending-collection": 2994,
     "ifyour/github-trending-archive": 1410,
-    "larsbijl/trending_archive": 14560
+    "larsbijl/trending_archive": 13497
   },
   "scope_counts": {
     "all": 2498,
     "astro": 1011,
     "c": 1088,
-    "c#": 1087,
-    "c%23": 1,
-    "c++": 1088,
+    "c#": 1088,
+    "c++": 4170,
     "coffeescript": 2133,
-    "cpp": 4145,
     "css": 1687,
     "dart": 863,
     "elixir": 1687,
@@ -91,5 +89,15 @@
       "dates_seen": 1084
     }
   },
-  "merge_policy": "one canonical snapshot per date+scope; deterministic source priority; no synthesized cross-language ranking"
+  "merge_policy": "one canonical snapshot per date+scope; deterministic source priority; no synthesized cross-language ranking",
+  "scope_normalization": {
+    "aliases": {
+      "cpp": "c++",
+      "c%23": "c#"
+    },
+    "collision_resolution": "same deterministic historical source priority used by backfill; ties keep the existing snapshot",
+    "renamed_snapshots_seen": 4146,
+    "alias_collisions_resolved": 1063,
+    "files_changed": 4145
+  }
 }
