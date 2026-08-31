@@ -14,9 +14,9 @@ Only the AIHOT daily report is collected by this task.
 
 Workflow: `.github/workflows/ai-daily.yml`
 
-The GitHub Action starts every day at **08:17 Beijing time** (`00:17 UTC`).
+The GitHub Action starts every day at **08:05 Beijing time** (`00:05 UTC`).
 
-For a scheduled run, the collector verifies that the returned `report.date` is today's Beijing date. If today's report is not available yet, it retries every 5 minutes, up to 10 attempts. The normal collection window is therefore roughly 08:17–09:02.
+For a scheduled run, the collector verifies that the returned `report.date` is today's Beijing date. If today's report is not available yet, it retries every 5 minutes, up to 12 attempts. The intended collection window is therefore **08:05–09:00 Beijing time**, with the last attempt at about 09:00.
 
 The workflow can also be run manually with a `YYYY-MM-DD` date to backfill one report.
 
