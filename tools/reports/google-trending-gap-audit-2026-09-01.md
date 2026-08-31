@@ -1,35 +1,44 @@
-# Google Trending 2026 gap audit
+# Google Trending 2026 gap cross-check
 
-Generated from the one-shot repository audit on `2026-09-01` (Asia/Singapore), with manual GitHub commit-search follow-up for older dense history.
+Generated: `2026-08-31T20:44:34+00:00`
 
-## Candidate
+Purpose: cross-check whether public GitHub history preserves genuine Google Trending Now/RSS snapshots during the licensed archive gap `2026-01-04` through `2026-08-31`. This is evidence review, not an import authorization.
 
-- Repository: `fdciabdul/Google-Trends-Keywords-Scraper`
-- Collector source directly requests Google Trending RSS: `https://trends.google.com/trending/rss?geo=<country>&hours=48`.
-- Repository-generated README states **All Rights Reserved**.
-- The candidate is therefore useful as historical **cross-validation evidence**, but is **not approved as a bulk import source** for `web-ingest` without clearer redistribution permission.
+## Historical archive lineage
 
-## Cross-validation
+| Repository | Fork | Declared SPDX | All Rights Reserved | Jan 04 | Feb 15 | Apr 15 | Jun 16 | Jul 01 | Aug 31 |
+| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `fdciabdul/Google-Trends-Keywords-Scraper` | no | none | yes | error | error | 10/10/10/10 | 10/10/10/10 | 10/10/10/10 | 10/10/10/10 |
+| `253611069/Google-Trends-Keywords-Scraper` | yes | none | yes | 10/10/10/10 | 10/10/10/10 | 10/10/10/10 | 10/10/10/10 | — | — |
+| `DutchErwin/Google-Trends-Keywords-Scraper` | yes | none | yes | — | — | — | — | — | — |
+| `imheyday/Google-Trends-Keywords-Scraper` | yes | none | yes | — | — | — | — | — | — |
+| `connorodea/Google-Trends-Keywords-Scraper` | yes | none | yes | — | — | — | — | — | — |
 
-The temporary path-scoped REST audit automatically found complete SG/US/GB/HK snapshots on **2026-07-01** and **2026-08-31**, but returned false negatives for the older January/April anchors in this unusually large, high-frequency Git history.
+Cell values are `SG/US/GB/HK` item counts from the first matching commit on that UTC date. A dash means no `data/SG.json` commit was found for that anchor date; it does **not** prove the repository had no data at nearby times.
 
-A second GitHub commit-search + historical-file pass verified those older anchors directly:
+## Independent collector cross-check
 
-| UTC date | Verification | SG | US | GB | HK |
-| --- | --- | --- | --- | --- | --- |
-| 2026-01-04 | GitHub commit search + direct historical file reads | present | present | present | present |
-| 2026-04-15 | GitHub commit search + direct historical file reads | present | present | present | present |
-| 2026-07-01 | one-shot automated audit | present | present | present | present |
-| 2026-08-31 | one-shot automated audit | present | present | present | present |
+| Repository | Google Trending RSS endpoint visible in indexed code |
+| --- | --- |
+| `RuochenLyu/google-trends-now` | no/unknown |
+| `aymenhmaidiwastaken/daily-country-search-trends` | yes |
+| `flack0x/trendspyg` | yes |
 
-Result: **4/4 anchor dates** confirm that all four target regions were being captured in the candidate repository during the 2026 gap. This validates that the gap is not caused by Google Trending Now being unavailable during those periods.
+## Evidence by anchor
+
+- `2026-01-04`: `253611069/Google-Trends-Keywords-Scraper`
+- `2026-02-15`: `253611069/Google-Trends-Keywords-Scraper`
+- `2026-04-15`: `fdciabdul/Google-Trends-Keywords-Scraper`, `253611069/Google-Trends-Keywords-Scraper`
+- `2026-06-16`: `fdciabdul/Google-Trends-Keywords-Scraper`, `253611069/Google-Trends-Keywords-Scraper`
+- `2026-07-01`: `fdciabdul/Google-Trends-Keywords-Scraper`
+- `2026-08-31`: `fdciabdul/Google-Trends-Keywords-Scraper`
 
 ## Decision
 
-Do **not** copy the candidate's historical JSON into `web-ingest` at scale while its redistribution terms remain unclear. Public visibility and technical recoverability are not treated as permission to republish an archive.
+- The CC-BY-4.0 `aurman/GoogleTrendArchive` daily ZIP remains the only approved bulk historical import source currently recorded by `web-ingest`; its exact daily ordering ends on `2026-01-03`.
+- GitHub history cross-checks verify complete four-region snapshots on selected later dates from `2026-01-04` through `2026-08-31` among the tested anchors.
+- These GitHub repositories are the same scraper lineage or mirrors/forks, so they are **supporting evidence, not independent provenance**.
+- No tested repository provides a clearly licensed, gap-wide archive that is safe to bulk redistribute into `web-ingest`. Missing days therefore stay missing.
+- The previous report wording `throughout the gap` was too strong and is superseded by this report.
 
-The canonical import source remains `aurman/GoogleTrendArchive` (CC-BY-4.0) for the dates where its raw daily CSV archive preserves original daily ordering. Its later processed dataset can establish that trends existed after January 2026, but it does not expose an original daily rank field and therefore must not be converted into invented rankings.
-
-The remaining 2026 continuity gap is now classified as **recoverable in principle, but not currently importable under the repository's provenance/licensing rules**. Revisit only if a suitably licensed rank-preserving source or explicit permission becomes available.
-
-The temporary audit script and one-shot workflow were removed after the repair; this report is the durable result.
+Temporary audit code/workflow should be removed after this report is committed.
