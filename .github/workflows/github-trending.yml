@@ -10,8 +10,9 @@ on:
       - "github-trending/archive_lib.py"
       - "github-trending/tests/**"
   schedule:
-    # 08:17, 09:17, 10:17 Singapore/Beijing time (UTC+8).
-    - cron: "17 0-2 * * *"
+    # 09:27, 10:27, 11:27 Singapore/Beijing time (UTC+8).
+    # Staggered after ai-daily's 08:05 start + 65 min timeout + 15 min repo buffer.
+    - cron: "27 1-3 * * *"
   workflow_dispatch:
 
 permissions:
