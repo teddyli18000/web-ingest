@@ -22,25 +22,61 @@
     "HK": 270
   },
   "writes_by_region": {
-    "SG": 272,
+    "SG": 273,
     "HK": 268,
-    "US": 269,
-    "GB": 272
+    "US": 270,
+    "GB": 273
   },
   "missing_after_by_region": {
-    "SG": 2,
-    "US": 2,
-    "GB": 2,
+    "SG": 1,
+    "US": 1,
+    "GB": 1,
     "HK": 2
   },
   "required_gap_missing_after_by_region": {},
-  "failure_count": 5,
+  "failure_count": 2,
   "failure_examples": [
-    "2025-02-05 SG: source file missing or empty at 4ff513d09419",
-    "2025-02-05 US: source file missing or empty at 4ff513d09419",
-    "2025-02-05 GB: source file missing or empty at 4ff513d09419",
-    "2025-03-24: no source commit found",
-    "2025-03-27: no source commit found"
+    "2025-03-24: no source commit found in the primary mirror or 12 checked long-lived forks",
+    "2025-03-27: no source commit found in the primary mirror or 12 checked long-lived forks; HK remains missing"
   ],
-  "updated_at": "2026-08-31T21:10:35+00:00"
+  "updated_at": "2026-08-31T21:31:22+00:00",
+  "residual_recovery": {
+    "updated_at": "2026-08-31T21:31:22+00:00",
+    "fallback_source_repo": "connorodea/Google-Trends-Keywords-Scraper",
+    "fallback_source_commit": "ce3c2897587e504e2934535795498f93e805d342",
+    "fallback_source_kind": "google_hottrends_atom",
+    "recovered": {
+      "2025-02-05": [
+        "GB",
+        "SG",
+        "US"
+      ]
+    },
+    "unresolved": {
+      "2025-03-24": [
+        "SG",
+        "US",
+        "GB",
+        "HK"
+      ],
+      "2025-03-27": [
+        "HK"
+      ]
+    },
+    "checked_forks": [
+      "connorodea/Google-Trends-Keywords-Scraper",
+      "DutchErwin/Google-Trends-Keywords-Scraper",
+      "mapledxf/Google-Trends-Keywords-Scraper",
+      "253611069/Google-Trends-Keywords-Scraper",
+      "langtuandroid/Google-Trends-Keywords-Scraper",
+      "mupsje/Google-Trends-Keywords-Scraper",
+      "dennyhaq/Google-Trends-Keywords-Scraper",
+      "CattleZoe/Google-Trends-Keywords-Scraper",
+      "VisionDirectingStudio/Google-Trends-Keywords-Scraper",
+      "pixelapps-dev/Google-Trends-Keywords-Scraper",
+      "danteGPT/Google-Trends-Keywords-Scraper",
+      "e5dmnyKSA/Google-Trends-Keywords-Scraper"
+    ],
+    "note": "The primary mirror repository was also checked. The listed forks had no commits on the unresolved UTC dates."
+  }
 }

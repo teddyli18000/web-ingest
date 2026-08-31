@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-01** | **642** | **641** | **641** | **641** | **641** |
+| **2024-11-28** | **2026-09-01** | **642** | **642** | **642** | **642** | **641** |
 
 ### Source mix
 
@@ -19,6 +19,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
 | `google_trending_now` | 4 |
+| `github_hottrends_mirror` | 3 |
 
 ### Latest SG snapshot — 2026-09-01
 
@@ -93,15 +94,16 @@ The task preserves changing data useful later: **source order, query, search-vol
 1. `google_trending_now` — direct live Trending Now capture; highest quality.
 2. `googletrendarchive` — CC-BY-4.0 historical daily recovery.
 3. `github_rss_mirror` — historical Google Trending RSS snapshots mirrored from `fdciabdul/Google-Trends-Keywords-Scraper` only where a canonical region/date is missing. Exact commit/file provenance and the upstream **All Rights Reserved** notice are stored in every mirrored region.
-4. `rss_limited` — live fallback only.
+4. `github_hottrends_mirror` — legacy Google Hot Trends Atom snapshots recovered from exact Git commits when the modern mirror has a hole; provenance includes the historical `pn` endpoint, commit and file path.
+5. `rss_limited` — live fallback only.
 
-`googletrendarchive` and `github_rss_mirror` have equal merge quality: neither replaces the other when a region already exists. Direct live data can upgrade either historical source.
+The three historical sources have equal merge quality: they fill holes but never replace one another. Direct live data can upgrade any historical source.
 
 ### Historical recovery
 
 The licensed `aurman/GoogleTrendArchive` daily ZIP covers recoverable configured-region snapshots from **2024-11-28 through 2026-01-03** with gaps recorded in `backfill-manifest.json`.
 
-The GitHub RSS mirror is used to fill missing region snapshots without cloning the upstream repository. A one-shot manager tool selects the upstream commit closest to **12:30 Asia/Singapore** for each missing archive date, copies source JSON order, preserves the exact commit/file/RSS endpoint, and records results in `mirror-manifest.json`. It never invents breakdowns, categories, timestamps, or Explore URLs that the RSS mirror did not preserve.
+The GitHub RSS mirror is used to fill missing region snapshots without cloning the upstream repository. A one-shot manager tool selects the upstream commit closest to **12:30 Asia/Singapore** for each missing archive date, copies source JSON order, preserves the exact commit/file/RSS endpoint, and records results in `mirror-manifest.json`. For the isolated **2025-02-05** SG/US/GB hole, a second Git-history source preserved Google's predecessor Hot Trends Atom feed; those snapshots are kept separately as `github_hottrends_mirror` rather than being relabeled as modern RSS. Mirror imports never invent fields absent from their source.
 
 ## Schedule
 
