@@ -2,11 +2,7 @@
 
 A daily archive of Google Trends **Trending Now** for **Singapore (SG)** and the **United States (US)**.
 
-The goal is not to mirror Google pages or media. The task preserves the historically useful changing data: **trend order, query, search-volume signal, timing fields, breakdown, categories when available, source provenance, and Google Explore links**.
-
-- **SG** is the local signal.
-- **US** is a larger English-language / global-Internet reference signal.
-- Images, screenshots, HTML pages, and the upstream 500MB+ historical ZIP are not committed.
+The task preserves the changing data that is useful later: **trend order, query, search-volume signal, timing fields, breakdown, categories when available, source provenance, and Google Explore links**. It does not mirror Google pages, images, screenshots, or the large upstream historical ZIP.
 
 <!-- archive-dashboard:start -->
 
@@ -64,42 +60,33 @@ The goal is not to mirror Google pages or media. The task preserves the historic
 
 ### Live collection
 
-Primary collector: `google-trends-now@1.1.1`, an unofficial client for Google's current Trending Now web-data path.
+Primary collector: pinned `google-trends-now@1.1.1`, which reads Google's current Trending Now web-data path. The task requests **SG + US**, past **24 hours**, all categories/statuses, Google's relevance order, and all available rows.
 
-The task requests:
+If the primary path fails, Google Trends RSS may be used as a bounded fallback. RSS output is stored explicitly as `rss_limited`; it is not treated as the full Trending Now pool and may later be upgraded by a complete same-day capture.
 
-- region: `SG` and `US`;
-- window: past **24 hours**;
-- category: all;
-- trend status: all;
-- order: Google's Trending Now relevance order;
-- limit: all available rows.
-
-If the primary Trending Now request fails, the collector may use Google Trends RSS as a bounded fallback. RSS output is explicitly stored as `rss_limited`; it never masquerades as the full Trending Now pool and can later be upgraded by a full same-day capture.
-
-### Historical recovery
-
-Historical source: [`aurman/GoogleTrendArchive`](https://huggingface.co/datasets/aurman/GoogleTrendArchive), DOI `10.57967/hf/7531`, CC-BY-4.0.
-
-The dataset preserves Google Trending Now observations beginning **2024-11-28** and currently extends through **2026-05-17**. The backfill imports only SG / US **1-day** CSV material and converts it into this task's schema. The large upstream archive remains external.
-
-Historical source data and current live captures are not treated as identical-quality observations. Source priority is:
+Source priority is:
 
 1. `google_trending_now` — direct live capture;
 2. `googletrendarchive` — historical recovery;
 3. `rss_limited` — fallback only.
 
-A lower-priority source never overwrites a higher-priority region snapshot.
+Lower-priority data never overwrites a higher-priority region snapshot.
+
+### Historical recovery
+
+Historical source: [`aurman/GoogleTrendArchive`](https://huggingface.co/datasets/aurman/GoogleTrendArchive), DOI `10.57967/hf/7531`, CC-BY-4.0.
+
+The wider dataset reports observations from 2024-11-28 through 2026-05-17. For this repository, the canonical backfill uses its public `daily_compressed.zip`; exact SG/US directory snapshots recover **2024-11-28 through 2026-01-03**. No valid SG/US daily snapshot is invented for the later gap.
+
+Initial clean recovery: **373 dates / 739 region snapshots** — SG 368 days, US 371 days. The source ZIP SHA-256 is recorded in `backfill-manifest.json`. The 500MB+ ZIP itself is never committed.
 
 ## Schedule
 
 Workflow: `.github/workflows/google-trending.yml`
 
-The workflow gets two daily opportunities at **12:17 and 13:17 Singapore/Beijing time**. The first successful full capture normally makes the second run a no-op. Multiple slots protect against transient Google/network failure without crowding the existing morning collectors.
+Daily opportunities: **12:17 and 13:17 Asia/Singapore**. The first successful full capture normally makes the second attempt a no-op. The repository manager guard checks these slots against every other recurring workflow's timeout plus the 15-minute planning buffer.
 
-The repository-wide schedule guard (`python tools/check-repository-integrity.py --show`) validates this timing against every other recurring workflow's declared timeout plus the repository's 15-minute planning buffer.
-
-The workflow can also be run manually.
+The workflow also supports manual recovery through `workflow_dispatch`.
 
 ## Output
 
@@ -109,64 +96,26 @@ Canonical daily file:
 google-trending/data/YYYY/MM/DD/trending.json
 ```
 
-Schema v1 shape:
+Each file contains one date and whatever valid SG/US region snapshots exist for that date. Missing upstream fields remain `null` or empty; the archive does not infer exact counts, categories, timestamps, or ranks the source did not preserve.
 
-```json
-{
-  "schema_version": 1,
-  "date": "2026-09-01",
-  "kind": "google-trends-trending-now-daily",
-  "regions": {
-    "SG": {
-      "source": "google_trending_now",
-      "fetch_status": "success",
-      "source_url": "https://trends.google.com/trending?...",
-      "captured_at": "2026-09-01T04:17:00.000Z",
-      "window_hours": 24,
-      "items": [
-        {
-          "rank": 1,
-          "query": "example",
-          "search_volume": 50000,
-          "search_volume_label": "50K+",
-          "increase_percentage": 200,
-          "started_at": "...",
-          "ended_at": null,
-          "active": true,
-          "trend_breakdown": [],
-          "categories": [],
-          "explore_url": "..."
-        }
-      ]
-    },
-    "US": { "...": "..." }
-  }
-}
-```
+## Recovery and validation
 
-Missing upstream fields remain `null` or empty. The archive does not infer categories, timestamps, volumes, or rankings that the source did not preserve.
-
-## Historical backfill and recovery
-
-`backfill.py` converts the external GoogleTrendArchive ZIP and supports `--year` so large imports can be committed by natural year boundaries. It is safe to rerun: existing equal/higher-quality region snapshots remain unchanged.
-
-The initial backfill is executed by a temporary, non-scheduled workflow on the implementation branch. After the recovered output is validated and merged, that temporary workflow is removed. Reusable historical conversion logic stays here for future repair.
-
-## Validation and reruns
-
-- `capture.py` fetches **both regions before writing either**, so a hard failure cannot leave a new half-captured day.
-- A same-day valid direct capture is append-only by default; later scheduled attempts exit without rewriting it.
-- RSS can be upgraded to a full live capture automatically.
-- Historical data can be upgraded by a direct capture for the same date, but cannot downgrade live data.
-- `--force` exists only for explicit same-day repair and should not be used casually.
-- `validate_archive.py` checks date/path consistency, supported regions/sources, contiguous ranks, non-empty queries, and duplicate queries.
+- `capture.py` fetches both SG and US before writing a new live day, preventing a new half-captured day after a hard failure.
+- Same-day reruns are idempotent by source quality.
+- RSS may upgrade to full live data; historical data may upgrade to direct live data; neither can downgrade a better source.
+- `backfill.py` converts the external daily ZIP and can batch by year.
+- The initial historical backfill completed successfully on a clean pre-data branch. Its temporary workflow is removed before merge; reusable conversion code remains.
+- `validate_archive.py` checks date/path consistency, regions/sources, contiguous ranks, non-empty queries, and duplicate queries.
 - `render_readme.py` rebuilds the dashboard from committed archive files.
+- Parser/schema changes are covered by `tests/` and governed by `AGENTS.md`.
 
 ## Files
 
+- `AGENTS.md` — task boundaries and durable rules.
 - `archive_lib.py` — schema, validation, source priority, merge behavior, and paths.
 - `capture.py` — live SG + US collector.
 - `backfill.py` — GoogleTrendArchive historical converter.
+- `backfill-manifest.json` — historical provenance and coverage.
 - `validate_archive.py` — full archive validation.
 - `render_readme.py` — README dashboard renderer.
-- `tests/` — deterministic schema and historical-parser tests.
+- `tests/` — deterministic tests.
