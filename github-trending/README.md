@@ -7,7 +7,34 @@ GitHub Trending is great for seeing what is hot now, but GitHub does not provide
 It does **not** mirror repository contents, README files, screenshots, avatars, or other large assets.
 
 <!-- archive-dashboard:start -->
-> Archive initialized. Historical backfill has not been committed yet.
+
+### Archive at a glance
+
+| First recovered day | Latest day | Days archived | All-Languages days |
+| --- | --- | ---: | ---: |
+| **2026-09-01** | **2026-09-01** | **1** | **1** |
+
+### Latest All-Languages snapshot — 2026-09-01
+
+| # | Repository | Language | Stars today |
+| ---: | --- | --- | ---: |
+| 1 | [THU-MAIC/OpenMAIC](https://github.com/THU-MAIC/OpenMAIC) | TypeScript | 2,819 |
+| 2 | [tt-a1i/archify](https://github.com/tt-a1i/archify) | JavaScript | 3,993 |
+| 3 | [K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills) | Python | 1,968 |
+| 4 | [k1tbyte/Wand-Enhancer](https://github.com/k1tbyte/Wand-Enhancer) | C# | 511 |
+| 5 | [majd/ipatool](https://github.com/majd/ipatool) | Go | 376 |
+| 6 | [jingyaogong/minimind](https://github.com/jingyaogong/minimind) | Python | 472 |
+| 7 | [Osmantic/ODS](https://github.com/Osmantic/ODS) | Python | 163 |
+| 8 | [checkstyle/checkstyle](https://github.com/checkstyle/checkstyle) | Java | 199 |
+| 9 | [zhaoxuya520/reverse-skill](https://github.com/zhaoxuya520/reverse-skill) | PowerShell | 1,439 |
+| 10 | [sponsors/affaan-m](https://github.com/sponsors/affaan-m) | JavaScript | 548 |
+
+[Open full snapshot →](data/2026/09/01/trending.json)
+
+### Browse by year
+
+[`2026`](data/2026/) · 1 days
+
 <!-- archive-dashboard:end -->
 
 ## Source
