@@ -58,12 +58,13 @@ def fetch_region(geo: str) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Capture SG and US Google Trends Trending Now")
+    parser = argparse.ArgumentParser(description=f"Capture Google Trends Trending Now for {', '.join(REGIONS)}")
     parser.add_argument("--force", action="store_true", help="explicitly replace an existing same-day region")
     args = parser.parse_args()
 
     day = datetime.now(LOCAL_TZ).date().isoformat()
-    # Fetch both regions before writing either one, so a hard failure does not leave a half-captured day.
+    # Fetch every configured region before writing any of them, so a hard failure
+    # does not leave a newly-created day partially captured.
     candidates = {geo: fetch_region(geo) for geo in REGIONS}
 
     changed = False
