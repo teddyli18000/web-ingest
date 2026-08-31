@@ -35,18 +35,18 @@ jobs:
           TARGET_DATE: ${{ inputs.date }}
         run: |
           if [ -n "$TARGET_DATE" ]; then
-            python tasks/ai-daily/fetch_aihot_daily.py \
+            python ai-daily/fetch_aihot_daily.py \
               --date "$TARGET_DATE" \
               --attempts 1
           else
-            python tasks/ai-daily/fetch_aihot_daily.py \
+            python ai-daily/fetch_aihot_daily.py \
               --attempts 10 \
               --retry-seconds 300
           fi
 
       - name: Commit snapshot
         run: |
-          git add tasks/ai-daily/data
+          git add ai-daily/data
           if git diff --cached --quiet; then
             echo "No new snapshot to commit."
             exit 0
