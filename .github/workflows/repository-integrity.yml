@@ -1,0 +1,38 @@
+name: Repository integrity
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "README.md"
+      - "AGENTS.md"
+      - "tools/**"
+      - ".github/workflows/**"
+      - "*/README.md"
+  pull_request:
+    paths:
+      - "README.md"
+      - "AGENTS.md"
+      - "tools/**"
+      - ".github/workflows/**"
+      - "*/README.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repository-integrity-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Validate repository and Action schedule
+        run: python3 tools/check-repository-integrity.py --show
