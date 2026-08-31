@@ -1,4 +1,4 @@
-name: AI Daily - Page Smoke
+name: AI Daily - Raw Mirror Smoke
 
 on:
   push:
@@ -14,19 +14,42 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - name: Fetch raw daily page
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch through collector
         run: |
-          mkdir -p ai-daily/data/2026/08/30
+          python ai-daily/fetch_aihot_daily.py --date 2026-08-30 --attempts 1
+
+      - name: Compare API bytes independently
+        run: |
+          curl --fail --silent --show-error \
+            -H "Accept: application/json" \
+            -A "web-ingest/1.0 (+https://github.com/teddyli18000/web-ingest)" \
+            "https://aihot.virxact.com/api/v1/dailies/2026-08-30" \
+            -o /tmp/aihot-api.json
+          cmp /tmp/aihot-api.json ai-daily/data/2026/08/30/aihot-daily.json
+          sha256sum /tmp/aihot-api.json ai-daily/data/2026/08/30/aihot-daily.json
+
+      - name: Compare webpage bytes independently
+        run: |
           curl --fail --silent --show-error --location \
+            -H "Accept: text/html,application/xhtml+xml" \
             -A "web-ingest/1.0 (+https://github.com/teddyli18000/web-ingest)" \
             "https://aihot.virxact.com/daily/2026-08-30" \
-            -o ai-daily/data/2026/08/30/aihot-daily-page.html
-          wc -c ai-daily/data/2026/08/30/aihot-daily-page.html
-          head -c 500 ai-daily/data/2026/08/30/aihot-daily-page.html
-      - name: Commit page sample
+            -o /tmp/aihot-page.html
+          cmp /tmp/aihot-page.html ai-daily/data/2026/08/30/aihot-daily.html
+          sha256sum /tmp/aihot-page.html ai-daily/data/2026/08/30/aihot-daily.html
+
+      - name: Commit verified HTML sample
         run: |
-          git add ai-daily/data/2026/08/30/aihot-daily-page.html
+          git add ai-daily/data/2026/08/30/aihot-daily.html
+          if git diff --cached --quiet; then
+            echo "Verified HTML already present."
+            exit 0
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "test(ai-daily): archive raw page sample"
+          git commit -m "test(ai-daily): store verified raw webpage mirror"
           git push
