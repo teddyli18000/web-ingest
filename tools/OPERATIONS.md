@@ -29,13 +29,15 @@ This file is a compact manager-facing working record for repository-wide decisio
 - Public historical sources are retained as provenance in each snapshot rather than erased during normalization.
 - Canonical scope repair is complete and its cumulative statistics are preserved in the task manifest.
 
-## Google Trending rollout
+## Google Trending historical state
 
 - Long-term scope is fixed to **SG + US**.
 - Live source is Google Trends Trending Now through pinned `google-trends-now@1.1.1`; RSS is a clearly marked limited fallback only.
-- Historical source is `aurman/GoogleTrendArchive` (CC-BY-4.0, DOI `10.57967/hf/7531`). Only SG/US 1-day CSV material is imported; the upstream large ZIP is never committed.
+- Historical source is `aurman/GoogleTrendArchive` (CC-BY-4.0, DOI `10.57967/hf/7531`). The imported `daily_compressed.zip` yields **373 calendar dates** from **2024-11-28 through 2026-01-03**, with **368 SG days** and **371 US days** (**739 region snapshots** total).
+- The wider Hugging Face dataset reports collection through 2026-05-17, but the daily ZIP used for this canonical backfill does not expose valid SG/US daily snapshots beyond 2026-01-03. Do not synthesize that gap.
+- Historical ZIP SHA-256 at initial recovery: `2c62716919db98408ede388ed2c6c59f7db7bd01b197ea019aeded197204e09c`.
 - Source priority is `google_trending_now` > `googletrendarchive` > `rss_limited`, so reruns may upgrade but not downgrade a date/region.
-- Initial historical recovery is performed on `agent/google-trending` by a temporary non-scheduled workflow and committed by year. Remove that workflow after validation before merging the feature branch.
+- The initial historical recovery was rebuilt from a clean pre-data commit after a false-positive `MV-US` path match was found in an early importer revision. Final matching requires an exact `SG` or `US` directory component; the clean archive contains no output from that discarded revision.
 
 ## Maintenance principle
 
