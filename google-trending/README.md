@@ -10,13 +10,14 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-01** | **376** | **369** | **372** | **369** | **373** |
+| **2024-11-28** | **2026-09-01** | **642** | **641** | **641** | **641** | **641** |
 
 ### Source mix
 
 | Source | Region snapshots |
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
+| `github_rss_mirror` | 1,081 |
 | `google_trending_now` | 4 |
 
 ### Latest SG snapshot — 2026-09-01
@@ -83,7 +84,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 ### Browse by year
 
-[`2026`](data/2026/) · 4 days · [`2025`](data/2025/) · 338 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 244 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 

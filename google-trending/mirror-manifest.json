@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "source": "fdciabdul/Google-Trends-Keywords-Scraper",
+  "source_url": "https://github.com/fdciabdul/Google-Trends-Keywords-Scraper",
+  "upstream_notice": "All Rights Reserved",
+  "source_endpoint": "https://trends.google.com/trending/rss?geo={GEO}&hours=48",
+  "selection_policy": "for each archive date with a missing canonical region, use the source commit closest to 04:30 UTC (12:30 Asia/Singapore); fall back to the UTC day and then commit search",
+  "range": {
+    "start": "2024-11-28",
+    "end": "2026-08-31"
+  },
+  "required_gap": {
+    "start": "2026-01-04",
+    "end": "2026-08-31"
+  },
+  "days_needing_fill": 282,
+  "source_commit_days_used": 280,
+  "missing_before_by_region": {
+    "SG": 274,
+    "US": 271,
+    "GB": 274,
+    "HK": 270
+  },
+  "writes_by_region": {
+    "SG": 272,
+    "HK": 268,
+    "US": 269,
+    "GB": 272
+  },
+  "missing_after_by_region": {
+    "SG": 2,
+    "US": 2,
+    "GB": 2,
+    "HK": 2
+  },
+  "required_gap_missing_after_by_region": {},
+  "failure_count": 5,
+  "failure_examples": [
+    "2025-02-05 SG: source file missing or empty at 4ff513d09419",
+    "2025-02-05 US: source file missing or empty at 4ff513d09419",
+    "2025-02-05 GB: source file missing or empty at 4ff513d09419",
+    "2025-03-24: no source commit found",
+    "2025-03-27: no source commit found"
+  ],
+  "updated_at": "2026-08-31T21:10:35+00:00"
+}
