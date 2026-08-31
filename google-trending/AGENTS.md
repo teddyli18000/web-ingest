@@ -11,7 +11,8 @@ Read `README.md` before changing collection or historical behavior.
 - Google Trends RSS live fallback is visibly marked `rss_limited`.
 - `aurman/GoogleTrendArchive` is the licensed CC-BY-4.0 historical source where it preserves daily ordering.
 - `fdciabdul/Google-Trends-Keywords-Scraper` may be mirrored as `github_rss_mirror` to fill otherwise missing historical region snapshots. Preserve exact source repository, commit SHA, file path, RSS endpoint, and upstream rights notice.
-- Source quality is `google_trending_now` > (`googletrendarchive` = `github_rss_mirror`) > `rss_limited`. Equal-quality historical sources never overwrite one another.
+- Older Git-history recovery may use the predecessor Google Hot Trends Atom feed as `github_hottrends_mirror` only when the exact source commit and feed endpoint are verifiable. Never relabel those snapshots as modern Trending RSS.
+- Source quality is `google_trending_now` > (`googletrendarchive` = `github_rss_mirror` = `github_hottrends_mirror`) > `rss_limited`. Equal-quality historical sources never overwrite one another.
 
 ## Data rules
 
