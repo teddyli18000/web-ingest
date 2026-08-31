@@ -1,6 +1,14 @@
 name: Google Trends - Trending Now
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/google-trends.yml"
+      - "google-trends/*.py"
+      - "google-trends/config.json"
+      - "google-trends/tests/**"
   schedule:
     # 12:07, 13:07, 14:07 Asia/Singapore (UTC+8).
     - cron: "7 4-6 * * *"
@@ -25,11 +33,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Capture Google Trending Now
-        run: python3 google-trends/capture.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-      - name: Refresh task README
-        run: python3 google-trends/render_readme.py
+      - name: Validate task code
+        run: |
+          python -m py_compile google-trends/*.py
+          python -m unittest discover -s google-trends/tests -v
+
+      - name: Capture Google Trending Now
+        run: python google-trends/capture.py
+
+      - name: Refresh and validate archive
+        run: |
+          python google-trends/render_readme.py
+          python google-trends/validate_archive.py
 
       - name: Commit snapshot
         run: |
