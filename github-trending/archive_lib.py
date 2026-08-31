@@ -112,6 +112,7 @@ class TrendingHTMLParser(HTMLParser):
         self.in_article = False
         self.depth = 0
         self.current: dict[str, Any] | None = None
+        self.in_repo_heading = False
         self.capture_kind: str | None = None
         self.capture_tag: str | None = None
         self.text: list[str] = []
@@ -141,9 +142,11 @@ class TrendingHTMLParser(HTMLParser):
         if self.current is None:
             return
 
-        if tag == "a":
+        if tag == "h2":
+            self.in_repo_heading = True
+        elif tag == "a":
             href = a.get("href", "")
-            if self.current["repo"] is None and href.startswith("/") and href.count("/") == 2:
+            if self.in_repo_heading and self.current["repo"] is None and href.startswith("/") and href.count("/") == 2:
                 repo = normalize_repo(href)
                 if repo:
                     self.current["repo"] = repo
@@ -163,6 +166,9 @@ class TrendingHTMLParser(HTMLParser):
     def handle_endtag(self, tag: str) -> None:
         if not self.in_article:
             return
+
+        if tag == "h2":
+            self.in_repo_heading = False
 
         if self.capture_kind and tag == self.capture_tag and self.current is not None:
             text = " ".join("".join(self.text).split())
@@ -186,6 +192,7 @@ class TrendingHTMLParser(HTMLParser):
             self.in_article = False
             self.depth = 0
             self.current = None
+            self.in_repo_heading = False
             self.capture_kind = None
             self.capture_tag = None
             self.text = []
