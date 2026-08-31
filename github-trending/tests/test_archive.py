@@ -16,6 +16,7 @@ class ArchiveTests(unittest.TestCase):
     def test_trending_html(self):
         html = '''
         <article class="Box-row">
+          <a href="/sponsors/owner">Sponsor</a>
           <h2><a href="/owner/repo"> owner / repo </a></h2>
           <span itemprop="programmingLanguage">Python</span>
           <a href="/owner/repo/stargazers">3,938</a>
