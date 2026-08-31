@@ -47,6 +47,8 @@ jobs:
           fetch-depth: 1
       - name: Validate repository and Action schedule
         run: python3 tools/check-repository-integrity.py --show
+      - name: Validate repository management tools
+        run: find tools -maxdepth 2 -type f -name '*.py' -print0 | xargs -0 -r python3 -m py_compile
       - name: Validate GitHub Trending maintenance code
         run: |
           python3 -m py_compile github-trending/*.py
