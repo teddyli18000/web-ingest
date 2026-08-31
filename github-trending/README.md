@@ -27,7 +27,7 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 | 7 | [Osmantic/ODS](https://github.com/Osmantic/ODS) | Python | 163 |
 | 8 | [checkstyle/checkstyle](https://github.com/checkstyle/checkstyle) | Java | 199 |
 | 9 | [zhaoxuya520/reverse-skill](https://github.com/zhaoxuya520/reverse-skill) | PowerShell | 1,439 |
-| 10 | [sponsors/affaan-m](https://github.com/sponsors/affaan-m) | JavaScript | 548 |
+| 10 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 548 |
 
 [Open full snapshot →](data/2026/09/01/trending.json)
 
