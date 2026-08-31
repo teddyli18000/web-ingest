@@ -10,6 +10,8 @@ on:
       - "tools/**"
       - ".github/workflows/**"
       - "*/README.md"
+      - "github-trending/*.py"
+      - "github-trending/tests/**"
   pull_request:
     paths:
       - "README.md"
@@ -17,10 +19,15 @@ on:
       - "tools/**"
       - ".github/workflows/**"
       - "*/README.md"
+      - "github-trending/*.py"
+      - "github-trending/tests/**"
   workflow_dispatch:
 
 permissions:
   contents: read
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
 
 concurrency:
   group: repository-integrity-${{ github.ref }}
@@ -36,3 +43,7 @@ jobs:
           fetch-depth: 1
       - name: Validate repository and Action schedule
         run: python3 tools/check-repository-integrity.py --show
+      - name: Validate GitHub Trending maintenance code
+        run: |
+          python3 -m py_compile github-trending/*.py
+          python3 -m unittest discover -s github-trending/tests -v
