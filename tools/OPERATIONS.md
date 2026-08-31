@@ -32,14 +32,15 @@ Retry-slot collectors are same-day idempotent. Once a valid daily snapshot exist
 ## Google Trends historical state
 
 - Product archived: **Google Trends → Trending Now**, not generic Explore/interest-over-time data.
+- Long-term region contract: **SG + US only**.
 - Recurring source: Google's public Trending Now RSS export; no browser, cookie, API key, or GCP identity is required.
-- Long-term core regions: `SG`, `US`, `GB`, `IN`, `JP`, `KR`, `HK`, `TW`.
-- One day is committed only when all configured core regions succeed.
-- Historical source: `aurman/GoogleTrendArchive` raw daily CSV archive (CC-BY-4.0), filtered to the core-region set instead of copying the multi-gigabyte upstream dataset.
-- Initial recovery completed on **2026-09-01**: **375 historical dates** from **2024-11-28 through 2026-01-03**, plus a direct 2026-09-01 snapshot.
-- Historical per-region coverage is 368–372 days; source gaps are preserved rather than filled with invented rows. One empty GB source CSV was skipped and is recorded in the manifest.
-- Known exact-ranking gap: **2026-01-04 through 2026-08-31**. A post-install source search found no reliable public archive that preserves the missing daily Trending Now rankings. Do not substitute BigQuery or keyword interest time series for this gap.
-- The one-shot backfill workflow completed successfully and removed itself. `backfill-manifest.json` holds source SHA-256 and import statistics.
+- One live day is committed only when both SG and US succeed.
+- Historical source: `aurman/GoogleTrendArchive` raw daily CSV archive (CC-BY-4.0), normalized into the task schema instead of copying the bulk upstream archive.
+- SG/US historical recovery covers **373 dates** from **2024-11-28 through 2026-01-03**; SG is present on 368 days and US on 371 days.
+- The direct 2026-09-01 capture brings the current archive to **374 stored dates** total after pruning non-core regions.
+- Known exact-ranking gap: **2026-01-04 through 2026-08-31**. Do not substitute BigQuery or keyword-interest time series for this gap.
+- The original 8-region import was deliberately pruned to SG/US; `backfill-manifest.json` preserves the original import statistics and records the scope-repair provenance.
+- Temporary backfill/repair workflows must be removed once validation succeeds.
 
 ## Maintenance principle
 
