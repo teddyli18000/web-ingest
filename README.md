@@ -30,7 +30,7 @@ Task-specific scripts and configuration stay inside that task's folder rather th
 
 | Task | Purpose | Status |
 | --- | --- | --- |
-| [`ai-daily`](tasks/ai-daily/) | Collect source data for the AI daily report | Scaffold only |
+| [`ai-daily`](tasks/ai-daily/) | Mirror the daily AIHOT report | Active — daily 08:17 Beijing time |
 
 ## Conventions
 
