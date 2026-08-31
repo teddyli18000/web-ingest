@@ -16,8 +16,9 @@ This file is a compact manager-facing working record for repository-wide decisio
 | --- | --- | ---: |
 | `ai-daily` | 08:05 | 65 min |
 | `github-trending` | 09:27 / 10:27 / 11:27 | 15 min |
+| `google-trending` | 12:17 / 13:17 | 15 min |
 
-`github-trending` intentionally has three retry opportunities. Same-day idempotency makes later runs cheap once the first capture succeeds.
+`github-trending` intentionally has three retry opportunities. `google-trending` has two; same-day source-quality/idempotency rules make later runs cheap once a full capture succeeds.
 
 ## GitHub Trending historical state
 
@@ -26,12 +27,15 @@ This file is a compact manager-facing working record for repository-wide decisio
 - Historical All-Languages coverage: **2,498 dates**, beginning 2018-07-01.
 - Direct daily collection continues after the historical boundary.
 - Public historical sources are retained as provenance in each snapshot rather than erased during normalization.
+- Canonical scope repair is complete and its cumulative statistics are preserved in the task manifest.
 
-A one-time normalization repair is being used to collapse unambiguous source-specific scope aliases such as `cpp` → `c++` and percent-encoded `c%23` → `c#`. The repair must not invent ranks, repositories, stars, or other source data.
+## Google Trending rollout
 
-## Next collection candidate
-
-Google Trends / Trending Now is the next candidate to investigate. Before implementation, decide what historical window is actually recoverable and what minimal fields are worth preserving; avoid blindly mirroring a high-frequency firehose.
+- Long-term scope is fixed to **SG + US**.
+- Live source is Google Trends Trending Now through pinned `google-trends-now@1.1.1`; RSS is a clearly marked limited fallback only.
+- Historical source is `aurman/GoogleTrendArchive` (CC-BY-4.0, DOI `10.57967/hf/7531`). Only SG/US 1-day CSV material is imported; the upstream large ZIP is never committed.
+- Source priority is `google_trending_now` > `googletrendarchive` > `rss_limited`, so reruns may upgrade but not downgrade a date/region.
+- Initial historical recovery is performed on `agent/google-trending` by a temporary non-scheduled workflow and committed by year. Remove that workflow after validation before merging the feature branch.
 
 ## Maintenance principle
 
