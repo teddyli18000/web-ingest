@@ -33,7 +33,7 @@ Transient Action working files should stay in the runner workspace or runner tem
 
 | Task | Purpose | Status |
 | --- | --- | --- |
-| [`ai-daily`](ai-daily/) | Mirror the daily AIHOT report | Active |
+| [`ai-daily`](ai-daily/) | Byte-mirror the AIHOT daily webpage and REST API v1 response | Active |
 
 ## Conventions
 
