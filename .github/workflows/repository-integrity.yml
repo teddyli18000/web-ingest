@@ -12,6 +12,8 @@ on:
       - "*/README.md"
       - "github-trending/*.py"
       - "github-trending/tests/**"
+      - "google-trending/*.py"
+      - "google-trending/tests/**"
   pull_request:
     paths:
       - "README.md"
@@ -21,6 +23,8 @@ on:
       - "*/README.md"
       - "github-trending/*.py"
       - "github-trending/tests/**"
+      - "google-trending/*.py"
+      - "google-trending/tests/**"
   workflow_dispatch:
 
 permissions:
@@ -47,3 +51,7 @@ jobs:
         run: |
           python3 -m py_compile github-trending/*.py
           python3 -m unittest discover -s github-trending/tests -v
+      - name: Validate Google Trending maintenance code
+        run: |
+          python3 -m py_compile google-trending/*.py
+          python3 -m unittest discover -s google-trending/tests -v
