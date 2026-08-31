@@ -1,0 +1,32 @@
+name: AI Daily - Page Smoke
+
+on:
+  push:
+    paths:
+      - ".github/workflows/ai-daily-page-smoke.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch raw daily page
+        run: |
+          mkdir -p ai-daily/data/2026/08/30
+          curl --fail --silent --show-error --location \
+            -A "web-ingest/1.0 (+https://github.com/teddyli18000/web-ingest)" \
+            "https://aihot.virxact.com/daily/2026-08-30" \
+            -o ai-daily/data/2026/08/30/aihot-daily-page.html
+          wc -c ai-daily/data/2026/08/30/aihot-daily-page.html
+          head -c 500 ai-daily/data/2026/08/30/aihot-daily-page.html
+      - name: Commit page sample
+        run: |
+          git add ai-daily/data/2026/08/30/aihot-daily-page.html
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "test(ai-daily): archive raw page sample"
+          git push
