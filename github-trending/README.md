@@ -61,7 +61,9 @@ If the direct page is temporarily unavailable, the collector may use a verified 
 
 Workflow: `.github/workflows/github-trending.yml`
 
-The workflow gets three morning opportunities at **08:17, 09:17, and 10:17 Singapore/Beijing time**. The first successful snapshot for the date wins; later runs validate the existing file and exit without rewriting it. Multiple slots are intentional protection against transient GitHub/network failures.
+The workflow gets three morning opportunities at **09:27, 10:27, and 11:27 Singapore/Beijing time**. The first successful snapshot for the date wins; later runs validate the existing file and exit without rewriting it. Multiple slots are intentional protection against transient GitHub/network failures.
+
+The first slot is deliberately after `ai-daily`'s declared worst-case execution window plus the repository scheduling buffer. Repository-wide recurring Action load is validated by `tools/check-repository-integrity.py` rather than scheduled independently by each task in isolation.
 
 The workflow can also be run manually.
 
@@ -79,7 +81,7 @@ Schema v1 example:
 {
   "schema_version": 1,
   "date": "2026-09-01",
-  "captured_at": "2026-09-01T08:17:08+08:00",
+  "captured_at": "2026-09-01T09:27:08+08:00",
   "snapshots": [
     {
       "scope": "all",
@@ -106,7 +108,7 @@ Missing historical values remain missing; the backfill does not invent `stars_to
 
 ## Historical backfill
 
-`github-trending/backfill.py` is the low-level multi-source converter. Deliberate future rebuilds should enter through **`github-trending/canonical_backfill.py`**, which canonicalizes source-specific scope aliases before any files or manifest are written.
+`github-trending/backfill.py` converts multiple public GitHub Trending archives into the same schema and canonicalizes known source-specific scope aliases before candidate snapshots are merged.
 
 The source set is deliberately redundant so one archive can fill another's gaps:
 
@@ -137,8 +139,7 @@ The one-time full backfill workflow was removed after successful verification. H
 
 - `archive_lib.py` — schema, validation, HTML/Markdown parsers, and daily path helpers.
 - `capture.py` — direct daily GitHub Trending collector.
-- `backfill.py` — low-level historical multi-source converter.
-- `canonical_backfill.py` — canonical entry point for future historical rebuilds.
+- `backfill.py` — historical multi-source converter with canonical scope merging.
 - `scope_normalization.py` — stable scope aliases and source priority rules.
 - `repair_scopes.py` — one-shot in-place canonicalization for already recovered history.
 - `render_readme.py` — updates the archive dashboard above.
