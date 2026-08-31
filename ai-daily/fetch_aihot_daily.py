@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Mirror one AIHOT daily report into this repository."""
+"""Mirror one AIHOT daily report into this repository byte-for-byte."""
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -36,7 +37,7 @@ def today_beijing() -> str:
     return datetime.now(TIMEZONE).date().isoformat()
 
 
-def fetch_json(url: str) -> dict:
+def fetch_raw_json(url: str) -> tuple[bytes, dict]:
     request = urllib.request.Request(
         url,
         headers={
@@ -47,7 +48,12 @@ def fetch_json(url: str) -> dict:
     with urllib.request.urlopen(request, timeout=30) as response:
         if response.status != 200:
             raise RuntimeError(f"unexpected HTTP status: {response.status}")
-        return json.load(response)
+        raw_body = response.read()
+
+    payload = json.loads(raw_body)
+    if not isinstance(payload, dict):
+        raise RuntimeError("AIHOT response root is not a JSON object")
+    return raw_body, payload
 
 
 def validate(payload: dict, expected_date: str) -> dict:
@@ -82,33 +88,34 @@ def output_path(report_date: str) -> Path:
     )
 
 
-def write_snapshot(payload: dict, report_date: str) -> Path:
+def write_snapshot(raw_body: bytes, report_date: str) -> Path:
     path = output_path(report_date)
-    content = json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
 
     if path.exists():
-        existing = path.read_text(encoding="utf-8")
-        if existing == content:
-            print(f"Snapshot already exists and is unchanged: {path}")
+        existing = path.read_bytes()
+        if existing == raw_body:
+            print(f"Snapshot already exists and is byte-identical: {path}")
             return path
         raise RuntimeError(
-            f"snapshot already exists with different content: {path}; "
+            f"snapshot already exists with different bytes: {path}; "
             "refusing to silently rewrite history"
         )
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8")
-    print(f"Saved AIHOT daily {report_date}: {path}")
+    path.write_bytes(raw_body)
+    print(f"Saved byte-for-byte AIHOT daily {report_date}: {path}")
     return path
 
 
-def set_github_outputs(report_date: str, path: Path) -> None:
+def set_github_outputs(report_date: str, path: Path, raw_body: bytes) -> None:
     output_file = os.environ.get("GITHUB_OUTPUT")
     if not output_file:
         return
+    sha256 = hashlib.sha256(raw_body).hexdigest()
     with open(output_file, "a", encoding="utf-8") as handle:
         handle.write(f"report_date={report_date}\n")
         handle.write(f"output_path={path.as_posix()}\n")
+        handle.write(f"sha256={sha256}\n")
 
 
 def main() -> int:
@@ -124,10 +131,10 @@ def main() -> int:
     last_error: Exception | None = None
     for attempt in range(1, args.attempts + 1):
         try:
-            payload = fetch_json(url)
+            raw_body, payload = fetch_raw_json(url)
             report = validate(payload, expected_date)
-            path = write_snapshot(payload, report["date"])
-            set_github_outputs(report["date"], path)
+            path = write_snapshot(raw_body, report["date"])
+            set_github_outputs(report["date"], path, raw_body)
             return 0
         except (urllib.error.URLError, urllib.error.HTTPError, RuntimeError, json.JSONDecodeError) as exc:
             last_error = exc
