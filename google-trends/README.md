@@ -113,6 +113,10 @@ Schema v1 keeps one daily file with one snapshot per region:
 
 The source archive was collected from Google's Trending Now UI by Aleksandra Urman, Anikó Hannák, and Joachim Baumann and is published as `aurman/GoogleTrendArchive` under **CC-BY-4.0**. Its collection begins on **2024-11-28**. The upstream dataset is large, so this repository does not copy it wholesale: the one-time importer reads `daily_compressed.zip` directly and retains only the configured core-region daily CSVs.
 
+The initial recovery completed on **2026-09-01** and recovered **375 historical dates** through **2026-01-03**. Per-region coverage is 368–372 days because the upstream archive has collection gaps. One empty GB CSV was skipped; that parse exception and the exact source archive SHA-256 are recorded in `backfill-manifest.json`.
+
+There is a known exact-ranking gap from **2026-01-04 through 2026-08-31**. A post-install source search found no reliable public archive preserving those missing daily Trending Now rankings, so direct collection resumes with 2026-09-01 rather than synthesizing the gap from a different Google Trends product.
+
 Historical rows can be richer than RSS. When the source preserved them, records may also include `started_raw`, `ended_raw`, `trend_breakdown`, and `explore_url`. Raw timestamp strings are preserved rather than reinterpreted with guessed timezone semantics.
 
 If multiple upstream CSVs exist for the same `date + geo`, the importer selects the candidate with the most usable rows, with a deterministic path tie-break. Existing direct Google snapshots always win on overlap. Exact source archive SHA-256, coverage, gaps, and importer statistics are recorded in `backfill-manifest.json`.
