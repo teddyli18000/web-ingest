@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from backfill import merge
-from repair_scopes import canonicalize_day
+from repair_scopes import canonicalize_day, normalization_summary
 from scope_normalization import normalize_scope
 
 
@@ -63,6 +63,32 @@ class ScopeNormalizationTests(unittest.TestCase):
         self.assertTrue(merge(store, "2022-01-01", "c++", 420, high))
         self.assertEqual(set(store["2022-01-01"]), {"c++"})
         self.assertEqual(store["2022-01-01"]["c++"][1]["items"][0]["repo"], "better/source")
+
+    def test_normalization_stats_survive_noop_rerun(self):
+        manifest = {
+            "scope_normalization": {
+                "renamed_snapshots_seen": 4146,
+                "alias_collisions_resolved": 1063,
+                "files_changed": 4145,
+            }
+        }
+        summary = normalization_summary(manifest, 0, 0, 0)
+        self.assertEqual(summary["renamed_snapshots_seen"], 4146)
+        self.assertEqual(summary["alias_collisions_resolved"], 1063)
+        self.assertEqual(summary["files_changed"], 4145)
+
+    def test_normalization_stats_accumulate_future_repairs(self):
+        manifest = {
+            "scope_normalization": {
+                "renamed_snapshots_seen": 10,
+                "alias_collisions_resolved": 3,
+                "files_changed": 8,
+            }
+        }
+        summary = normalization_summary(manifest, 2, 1, 2)
+        self.assertEqual(summary["renamed_snapshots_seen"], 12)
+        self.assertEqual(summary["alias_collisions_resolved"], 4)
+        self.assertEqual(summary["files_changed"], 10)
 
     def test_unknown_scope_is_not_guessed(self):
         self.assertEqual(normalize_scope("Some New Lang"), "some-new-lang")

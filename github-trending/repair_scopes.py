@@ -51,6 +51,25 @@ def historical_paths(root: Path, through: str) -> list[Path]:
     return sorted(paths)
 
 
+def normalization_summary(manifest: dict[str, Any], renamed: int,
+                          collisions: int, changed_files: int) -> dict[str, Any]:
+    """Return cumulative repair statistics so a no-op rerun cannot erase history."""
+    previous = manifest.get("scope_normalization")
+    previous = previous if isinstance(previous, dict) else {}
+
+    def previous_int(key: str) -> int:
+        value = previous.get(key, 0)
+        return value if isinstance(value, int) and value >= 0 else 0
+
+    return {
+        "aliases": {"cpp": "c++", "c%23": "c#"},
+        "collision_resolution": "same deterministic historical source priority used by backfill; ties keep the existing snapshot",
+        "renamed_snapshots_seen": previous_int("renamed_snapshots_seen") + renamed,
+        "alias_collisions_resolved": previous_int("alias_collisions_resolved") + collisions,
+        "files_changed": previous_int("files_changed") + changed_files,
+    }
+
+
 def refresh_manifest(root: Path, manifest: dict[str, Any], through: str,
                      renamed: int, collisions: int, changed_files: int) -> dict[str, Any]:
     years: Counter[str] = Counter()
@@ -87,13 +106,7 @@ def refresh_manifest(root: Path, manifest: dict[str, Any], through: str,
         "source_counts": dict(sorted(sources.items())),
         "scope_counts": dict(sorted(scopes.items())),
         "merge_policy": "one canonical snapshot per date+scope; deterministic source priority; no synthesized cross-language ranking",
-        "scope_normalization": {
-            "aliases": {"cpp": "c++", "c%23": "c#"},
-            "collision_resolution": "same deterministic historical source priority used by backfill; ties keep the existing snapshot",
-            "renamed_snapshots_seen": renamed,
-            "alias_collisions_resolved": collisions,
-            "files_changed": changed_files,
-        },
+        "scope_normalization": normalization_summary(manifest, renamed, collisions, changed_files),
     })
     return updated
 
@@ -126,9 +139,10 @@ def main() -> int:
 
     print(json.dumps({
         "through": through,
-        "files_changed": changed_files,
-        "renamed_snapshots": renamed,
-        "alias_collisions_resolved": collisions,
+        "files_changed_this_run": changed_files,
+        "renamed_snapshots_this_run": renamed,
+        "alias_collisions_resolved_this_run": collisions,
+        "cumulative_scope_normalization": updated_manifest["scope_normalization"],
         "dates": updated_manifest["dates"],
         "scopes": len(updated_manifest["scope_counts"]),
     }, indent=2))
