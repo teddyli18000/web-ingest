@@ -1,26 +1,24 @@
 # web-ingest Operations Notes
 
-This file is a compact manager-facing working record for repository-wide decisions that are useful to future Agents. It is not a changelog and should stay short.
+This file is a compact manager-facing record for repository-wide decisions. It is not a changelog.
 
 ## Current operating model
 
 - `web-ingest` only collects and stores public Internet snapshots.
-- Each persistent collector owns one root task directory and one thin workflow entry point when automation is needed.
-- `tools/` is the repository manager workspace for schedule guards, audits, maintenance helpers, and durable operational notes.
+- Each persistent collector owns one root task directory and one thin workflow entry point.
+- `tools/` is the repository manager workspace for schedule guards, audits, temporary migrations/backfills, and durable operational notes.
 - Scheduled ingestion jobs are staggered using declared `timeout-minutes` plus a 15-minute planning buffer.
-- One-shot historical backfills/repairs/research probes are temporary operations; their scripts/workflows are removed after results are validated and durable conclusions are recorded.
+- One-shot backfills/repairs/probes are temporary; their scripts/workflows are removed after validation while reports/manifests remain.
 
 ## Current recurring load plan
 
 | Task | Asia/Singapore schedule | Declared timeout |
 | --- | --- | ---: |
-| `ai-daily` | 08:05 | 65 min |
-| `github-trending` | 09:27 / 10:27 / 11:27 | 15 min |
-| `google-trending` | 12:17 / 13:17 | 15 min |
+| `ai-daily` | 08:07 | 65 min |
+| `github-trending` | 09:31 / 10:43 / 11:55 | 15 min |
+| `google-trending` | 12:37 / 13:49 | 15 min |
 
-`github-trending` intentionally has three retry opportunities. `google-trending` has two; same-day source-quality/idempotency rules make later runs cheap once a full capture succeeds.
-
-Collection workflows are not generic code-validation hooks. Repository-integrity CI validates code/workflow changes; recurring collectors run on their planned schedule or explicit manual dispatch.
+The minute values are deliberately different rather than copied between bots. `github-trending` has three retry opportunities; `google-trending` has two. Collection workflows run only on schedule or manual dispatch; repository-integrity owns code/workflow validation.
 
 ## GitHub Trending historical state
 
@@ -28,23 +26,18 @@ Collection workflows are not generic code-validation hooks. Repository-integrity
 - Historical recovery through 2026-08-31: **4,345 dates**.
 - Historical All-Languages coverage: **2,498 dates**, beginning 2018-07-01.
 - Direct daily collection continues after the historical boundary.
-- Public historical sources are retained as provenance in each snapshot rather than erased during normalization.
-- Canonical scope repair is complete and its cumulative statistics are preserved in the task manifest.
+- Public historical sources remain visible as provenance.
 
 ## Google Trending operating state
 
 - Long-term regions are exactly **SG + US + GB + HK**.
-- Live source is Google Trends Trending Now through pinned `google-trends-now@1.1.1`; RSS is a clearly marked limited fallback only.
-- Canonical licensed historical source is `aurman/GoogleTrendArchive` (CC-BY-4.0, DOI `10.57967/hf/7531`). Its raw `daily_compressed.zip` preserves recoverable daily ordering from **2024-11-28 through 2026-01-03**.
-- Licensed historical region coverage is: **SG 368 days, US 371, GB 368, HK 372**. The source has one known empty GB CSV on 2025-10-01; that file is recorded as a parse error rather than fabricated.
-- 2026-09-01 was captured directly for all four regions after the scope migration. Direct captures outrank historical/fallback data.
-- The wider Hugging Face dataset reports later 2026 observations, but its post-Jan material is processed/episode-oriented and does not expose an original daily rank field. Do not manufacture rankings from it.
-- GitHub gap cross-check verified complete **SG/US/GB/HK** snapshots at six tested anchors spanning **2026-01-04, 2026-02-15, 2026-04-15, 2026-06-16, 2026-07-01, and 2026-08-31**. The evidence comes from `fdciabdul/Google-Trends-Keywords-Scraper` and a large fork/mirror in the same scraper lineage, so it demonstrates that snapshots existed on those dates but is **not independent provenance or proof of every intervening day**.
-- The tested GitHub archive lineage has no declared SPDX license and advertises **All Rights Reserved**; it remains research evidence only and is not approved for bulk historical import. Separate open-source collectors independently confirm use of Google's Trending RSS endpoint, but they do not supply a suitably licensed gap-wide historical archive.
-- Durable audit report: `tools/reports/google-trending-gap-audit-2026-09-01.md`.
-- Source priority remains `google_trending_now` > `googletrendarchive` > `rss_limited`; research-only sources do not enter this priority chain.
-- Missing dates remain missing until a source both preserves the relevant historical state and has suitable redistribution terms.
+- Live source is Google Trends Trending Now through pinned `google-trends-now@1.1.1`; RSS is a marked fallback.
+- `aurman/GoogleTrendArchive` remains the CC-BY-4.0 historical source where available.
+- Repository-owner direction permits using `fdciabdul/Google-Trends-Keywords-Scraper` as a historical mirror to fill otherwise missing region snapshots. Store it as `github_rss_mirror`, preserve exact commit/file provenance and the upstream **All Rights Reserved** notice, and never use it to overwrite an existing `googletrendarchive` or direct snapshot.
+- Mirror selection targets the source commit closest to **12:30 Asia/Singapore** for each missing archive date, with deterministic fallbacks recorded in `google-trending/mirror-manifest.json`.
+- Source quality order is `google_trending_now` > (`googletrendarchive` = `github_rss_mirror`) > `rss_limited`. Equal-quality historical sources do not overwrite one another.
+- Durable audit/background report: `tools/reports/google-trending-gap-audit-2026-09-01.md`; the one-shot mirror backfill writes a separate completion report.
 
 ## Maintenance principle
 
-Prefer a small tool that makes a rule executable over a paragraph that relies on future Agents remembering it. Use temporary tools for one-off audits/recovery work, keep the resulting evidence/report when useful, and remove the temporary mechanism afterwards.
+Prefer a small executable guard/tool over relying on future Agents to remember a rule. Keep durable provenance and decisions; remove temporary mechanisms after they finish.
