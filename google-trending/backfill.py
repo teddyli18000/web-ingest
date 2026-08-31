@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import io
 import json
 import re
@@ -18,7 +19,14 @@ DATASET_URL = "https://huggingface.co/datasets/aurman/GoogleTrendArchive"
 DATASET_DOI = "10.57967/hf/7531"
 MANIFEST = TASK_ROOT / "backfill-manifest.json"
 DATE_RE = re.compile(r"(?<!\d)(20\d{6})(?!\d)")
-GEO_RE = re.compile(r"(?:^|[/_.-])(SG|US)(?:$|[/_.-])", re.IGNORECASE)
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def normalized_key(value: str) -> str:
@@ -43,42 +51,11 @@ def member_date(name: str) -> str | None:
 
 
 def member_geo(name: str) -> str | None:
-    match = GEO_RE.search(name.replace("\\", "/"))
-    return match.group(1).upper() if match else None
-
-
-def is_daily_member(name: str) -> bool:
-    lowered = name.lower().replace("\\", "/")
-    basename = PurePosixPath(lowered).name
-    return (
-        "_1d_" in basename
-        or "-1d-" in basename
-        or basename.endswith("_1d.csv")
-        or "/1d/" in lowered
-    )
-
-
-def select_members(zf: zipfile.ZipFile, year: int | None = None) -> dict[tuple[str, str], str]:
-    candidates: dict[tuple[str, str], list[tuple[int, str]]] = defaultdict(list)
-    for info in zf.infolist():
-        if info.is_dir() or not info.filename.lower().endswith(".csv"):
-            continue
-        if not is_daily_member(info.filename):
-            continue
-        geo = member_geo(info.filename)
-        day = member_date(info.filename)
-        if geo not in REGIONS or day is None:
-            continue
-        if year is not None and not day.startswith(f"{year:04d}-"):
-            continue
-        candidates[(geo, day)].append((info.file_size, info.filename))
-
-    # Some archives contain repeated snapshots for one region/day. The largest daily CSV is the
-    # least-truncated candidate; tie-breaking by name keeps selection deterministic.
-    return {
-        key: max(entries, key=lambda item: (item[0], item[1]))[1]
-        for key, entries in candidates.items()
-    }
+    for part in PurePosixPath(name.replace("\\", "/")).parts[:-1]:
+        upper = part.upper()
+        if upper in REGIONS:
+            return upper
+    return None
 
 
 def parse_csv(raw: bytes) -> list[dict]:
@@ -106,49 +83,86 @@ def parse_csv(raw: bytes) -> list[dict]:
     return items
 
 
-def update_manifest(year: int | None, selected: dict[tuple[str, str], str], writes: int) -> None:
+def select_members(zf: zipfile.ZipFile, year: int | None = None) -> tuple[dict[tuple[str, str], tuple[str, list[dict]]], list[str], int]:
+    candidates: dict[tuple[str, str], list[tuple[str, list[dict]]]] = defaultdict(list)
+    parse_errors: list[str] = []
+    scanned = 0
+    for info in zf.infolist():
+        if info.is_dir() or not info.filename.lower().endswith(".csv"):
+            continue
+        geo = member_geo(info.filename)
+        day = member_date(info.filename)
+        if geo not in REGIONS or day is None:
+            continue
+        if year is not None and not day.startswith(f"{year:04d}-"):
+            continue
+        scanned += 1
+        try:
+            items = parse_csv(zf.read(info))
+        except Exception as exc:
+            parse_errors.append(f"{info.filename}: {exc}")
+            continue
+        if not items:
+            parse_errors.append(f"{info.filename}: historical CSV contained no usable trend rows")
+            continue
+        candidates[(geo, day)].append((info.filename, items))
+
+    selected = {
+        key: max(options, key=lambda pair: (len(pair[1]), pair[0]))
+        for key, options in candidates.items()
+    }
+    return selected, parse_errors, scanned
+
+
+def update_manifest(year: int | None, selected: dict[tuple[str, str], tuple[str, list[dict]]], writes: int, parse_errors: list[str], scanned: int, zip_sha256: str) -> None:
     if MANIFEST.exists():
         manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
     else:
         manifest = {
-            "source": DATASET_URL,
+            "schema_version": 1,
+            "source": "aurman/GoogleTrendArchive",
+            "source_url": DATASET_URL,
             "dataset_doi": DATASET_DOI,
             "license": "CC-BY-4.0",
-            "policy": "SG/US only; 1-day Trending Now CSVs; lower-quality sources never overwrite live captures",
+            "policy": "SG/US only; daily_compressed.zip CSVs; lower-quality sources never overwrite live captures",
             "years": {},
         }
 
     days = sorted({day for _, day in selected})
     geos = Counter(geo for geo, _ in selected)
     key = str(year) if year is not None else "all"
+    manifest["source_archive"] = "daily_compressed.zip"
+    manifest["source_archive_sha256"] = zip_sha256
     manifest["years"][key] = {
         "selected_region_days": len(selected),
         "writes_or_upgrades": writes,
         "first_day": days[0] if days else None,
         "last_day": days[-1] if days else None,
         "selected_by_region": dict(sorted(geos.items())),
+        "matching_csv_members_scanned": scanned,
+        "duplicate_or_extra_candidates": max(0, scanned - len(selected) - len(parse_errors)),
+        "parse_error_count": len(parse_errors),
+        "parse_error_examples": parse_errors[:10],
     }
-    manifest["updated_at"] = datetime.now(timezone.utc).isoformat()
+    manifest["updated_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Import SG/US GoogleTrendArchive daily Trending Now CSVs")
     parser.add_argument("--zip", required=True, help="path to upstream daily_compressed.zip")
+    parser.add_argument("--zip-sha256", help="known SHA-256 for the upstream ZIP")
     parser.add_argument("--year", type=int, help="only import one calendar year")
     args = parser.parse_args()
 
+    zip_path = Path(args.zip).resolve()
+    zip_sha256 = args.zip_sha256 or sha256_file(zip_path)
     writes = 0
-    with zipfile.ZipFile(args.zip) as zf:
-        selected = select_members(zf, args.year)
+    with zipfile.ZipFile(zip_path) as zf:
+        selected, parse_errors, scanned = select_members(zf, args.year)
         if not selected:
-            raise SystemExit("No matching SG/US 1-day CSV members found")
-
-        for (geo, day), member in sorted(selected.items(), key=lambda pair: (pair[0][1], pair[0][0])):
-            items = parse_csv(zf.read(member))
-            if not items:
-                print(f"WARN {geo} {day}: empty parsed CSV {member}", file=sys.stderr)
-                continue
+            raise SystemExit("No matching SG/US daily CSV members found")
+        for (geo, day), (member, items) in sorted(selected.items(), key=lambda pair: (pair[0][1], pair[0][0])):
             region = {
                 "source": "googletrendarchive",
                 "fetch_status": "historical_import",
@@ -164,12 +178,8 @@ def main() -> int:
             _, wrote = merge_region(day, geo, region)
             writes += int(wrote)
 
-    update_manifest(args.year, selected, writes)
-    print(json.dumps({
-        "year": args.year,
-        "selected_region_days": len(selected),
-        "writes_or_upgrades": writes,
-    }, indent=2))
+    update_manifest(args.year, selected, writes, parse_errors, scanned, zip_sha256)
+    print(json.dumps({"year": args.year, "selected_region_days": len(selected), "writes_or_upgrades": writes, "matching_csv_members_scanned": scanned, "parse_errors": len(parse_errors)}, indent=2))
     return 0
 
 
