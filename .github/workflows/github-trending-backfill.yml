@@ -11,6 +11,9 @@ on:
 permissions:
   contents: write
 
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+
 concurrency:
   group: github-trending-backfill
   cancel-in-progress: false
