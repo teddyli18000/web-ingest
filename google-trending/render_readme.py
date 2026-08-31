@@ -11,18 +11,19 @@ START = "<!-- archive-dashboard:start -->"
 END = "<!-- archive-dashboard:end -->"
 
 
+def path_date(path: Path) -> str:
+    return f"{path.parent.parent.parent.name}-{path.parent.parent.name}-{path.parent.name}"
+
+
 def render_dashboard() -> str:
     files = iter_archive_files()
     if not files:
         return "> Archive initialized; historical backfill and the first live capture are pending."
 
-    rows = [(path.parent.name, read_json(path), path) for path in files]
-    first_day = rows[0][0]
-    last_day = rows[-1][0]
+    rows = [(path_date(path), read_json(path), path) for path in files]
     coverage = Counter()
     sources = Counter()
     years = Counter()
-
     for day, payload, _ in rows:
         years[day[:4]] += 1
         for geo, region in payload.get("regions", {}).items():
@@ -30,16 +31,11 @@ def render_dashboard() -> str:
             sources[str(region.get("source", "unknown"))] += 1
 
     lines = [
-        "### Archive at a glance",
-        "",
+        "### Archive at a glance", "",
         "| First day | Latest day | Days archived | SG days | US days |",
         "| --- | --- | ---: | ---: | ---: |",
-        f"| **{first_day}** | **{last_day}** | **{len(rows):,}** | **{coverage['SG']:,}** | **{coverage['US']:,}** |",
-        "",
-        "### Source mix",
-        "",
-        "| Source | Region snapshots |",
-        "| --- | ---: |",
+        f"| **{rows[0][0]}** | **{rows[-1][0]}** | **{len(rows):,}** | **{coverage['SG']:,}** | **{coverage['US']:,}** |",
+        "", "### Source mix", "", "| Source | Region snapshots |", "| --- | ---: |",
     ]
     for source, count in sources.most_common():
         lines.append(f"| `{source}` | {count:,} |")
@@ -49,13 +45,7 @@ def render_dashboard() -> str:
         region = latest.get("regions", {}).get(geo)
         if not region:
             continue
-        lines.extend([
-            "",
-            f"### Latest {geo} snapshot — {latest_day}",
-            "",
-            "| # | Trend | Search volume |",
-            "| ---: | --- | ---: |",
-        ])
+        lines.extend(["", f"### Latest {geo} snapshot — {latest_day}", "", "| # | Trend | Search volume |", "| ---: | --- | ---: |"])
         for item in region.get("items", [])[:10]:
             query = str(item.get("query", "")).replace("|", "\\|")
             volume = item.get("search_volume_label") or item.get("search_volume") or "—"
