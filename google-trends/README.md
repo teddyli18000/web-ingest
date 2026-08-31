@@ -12,7 +12,7 @@ This task stores text/metadata only. It does **not** mirror images, screenshots,
 
 | First archived day | Latest day | Days with data | Core regions |
 | --- | --- | ---: | ---: |
-| **2024-11-28** | **2026-09-01** | **376** | **2** |
+| **2024-11-28** | **2026-09-01** | **374** | **2** |
 
 ### Latest regional pulse — 2026-09-01
 
@@ -25,10 +25,9 @@ This task stores text/metadata only. It does **not** mirror images, screenshots,
 
 ### Browse by year
 
-[`2026`](data/2026/) · 4 days  [`2025`](data/2025/) · 338 days  [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 4 days  [`2025`](data/2025/) · 336 days  [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
-
 ## Core regions
 
 The long-term contract is intentionally small and stable:
