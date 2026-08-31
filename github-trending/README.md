@@ -98,13 +98,17 @@ Schema v1 example:
 }
 ```
 
-Historical files can contain several scopes (`all`, `python`, `go`, etc.) when old archives preserved separate language pages. A per-language archive is **never** merged into a synthetic All-Languages ranking.
+Historical files can contain several scopes (`all`, `python`, `go`, `c++`, `c#`, etc.) when old archives preserved separate language pages. A per-language archive is **never** merged into a synthetic All-Languages ranking.
+
+Scope names are normalized only where the mapping is unambiguous. Percent-encoded slugs are decoded and known source aliases such as `cpp` → `c++` are canonicalized. The original source and `source_path` remain in each snapshot, so the raw upstream naming can still be traced. Unknown scope names are normalized generically but are not guessed into another language.
 
 Missing historical values remain missing; the backfill does not invent `stars_today`, total stars, language, or any other field that the source did not preserve.
 
 ## Historical backfill
 
-`github-trending/backfill.py` converts multiple public GitHub Trending archives into the same schema. The source set is deliberately redundant so one archive can fill another's gaps:
+`github-trending/backfill.py` is the low-level multi-source converter. Deliberate future rebuilds should enter through **`github-trending/canonical_backfill.py`**, which canonicalizes source-specific scope aliases before any files or manifest are written.
+
+The source set is deliberately redundant so one archive can fill another's gaps:
 
 | Source | Role |
 | --- | --- |
@@ -114,11 +118,11 @@ Missing historical values remain missing; the backfill does not invent `stars_to
 | `Leko/github-trending-archive` | Richer per-language CSV snapshots, including historical star velocity where preserved |
 | `antonkomarev/github-trending-archive` | Compact recent All-Languages and language archives |
 
-When two sources cover the same `date + scope`, a deterministic source priority selects one canonical snapshot. Lower-priority sources only fill gaps. The actual result is summarized in `backfill-manifest.json`.
+When two sources cover the same canonical `date + scope`, a deterministic source priority selects one snapshot. Lower-priority sources only fill gaps. The actual result is summarized in `backfill-manifest.json`.
 
 The initial full recovery completed on **2026-09-01**: **4,345 historical dates** were recovered through 2026-08-31, including **2,498 All-Languages dates** beginning 2018-07-01. Combined with the live 2026-09-01 capture, the archive currently begins at 2014-08-09 and continues through today.
 
-The one-time backfill workflow was removed after successful verification. Future historical repairs should use the task-local `backfill.py` deliberately; if an Action is needed for a repair, create it as a temporary workflow and remove it again after validation.
+The one-time full backfill workflow was removed after successful verification. Historical format repairs use task-local scripts and, only when GitHub Actions execution is useful, a temporary self-cleaning workflow that must disappear after the repair succeeds.
 
 ## Validation and reruns
 
@@ -127,11 +131,15 @@ The one-time backfill workflow was removed after successful verification. Future
 - `--force` exists for explicit repairs; it must not be used casually against historical data.
 - Every saved snapshot is schema-checked for contiguous ranks and duplicate repositories.
 - The README dashboard is rebuilt from the files already stored in `data/`.
+- Historical repairs stop at the backfill manifest's `latest_date`; they do not rewrite newer direct daily captures.
 
 ## Files
 
-- `archive_lib.py` — schema, validation, normalization, HTML/Markdown parsers.
+- `archive_lib.py` — schema, validation, HTML/Markdown parsers, and daily path helpers.
 - `capture.py` — direct daily GitHub Trending collector.
-- `backfill.py` — historical multi-source converter.
+- `backfill.py` — low-level historical multi-source converter.
+- `canonical_backfill.py` — canonical entry point for future historical rebuilds.
+- `scope_normalization.py` — stable scope aliases and source priority rules.
+- `repair_scopes.py` — one-shot in-place canonicalization for already recovered history.
 - `render_readme.py` — updates the archive dashboard above.
-- `tests/` — deterministic parser/converter tests.
+- `tests/` — deterministic parser/converter/normalization tests.
