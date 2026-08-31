@@ -6,38 +6,45 @@ The repository only handles **collection and storage**. Downstream analysis, arc
 
 ## Structure
 
+Each persistent collection task lives directly at the repository root:
+
 ```text
 web-ingest/
 ├── README.md
 ├── AGENTS.md
-└── tasks/
+├── .github/
+│   └── workflows/
+│       └── <task-name>.yml
+├── ai-daily/
+│   ├── README.md
+│   ├── <task-specific scripts/config>
+│   └── data/
+│       └── YYYY/MM/DD/
+└── <another-task>/
     ├── README.md
-    └── <task-name>/
-        ├── README.md
-        └── data/
-            └── YYYY/MM/DD/
+    └── data/
 ```
 
-When a task needs automation, its workflow lives at:
+There is intentionally no shared `tasks/` namespace. One root-level task folder = one independent Internet collection job.
 
-```text
-.github/workflows/<task-name>.yml
-```
-
-Task-specific scripts and configuration stay inside that task's folder rather than in a shared framework.
+Transient Action working files should stay in the runner workspace or runner temporary directory and should not become part of the persistent repository structure.
 
 ## Tasks
 
 | Task | Purpose | Status |
 | --- | --- | --- |
-| [`ai-daily`](tasks/ai-daily/) | Mirror the daily AIHOT report | Active — daily 08:17 Beijing time |
+| [`ai-daily`](ai-daily/) | Mirror the daily AIHOT report | Active |
 
 ## Conventions
 
-- One folder = one independent collection task.
-- Recurring snapshots use `data/YYYY/MM/DD/`.
+- One root-level folder = one independent collection task.
+- Every task folder must contain a `README.md` that explains source, schedule, workflow, output, and maintenance/recovery behavior.
+- Task workflows live in `.github/workflows/<task-name>.yml` because GitHub requires workflows there.
+- Task-specific scripts and configuration stay inside the task folder.
+- Recurring snapshots use `<task-name>/data/YYYY/MM/DD/`.
 - Keep raw or minimally normalized source data whenever practical.
 - Historical data should be append-only; do not silently rewrite old snapshots.
-- A completed collection may include a small `manifest.json` describing the run and its files.
 - Keep the repository simple. Do not introduce shared infrastructure until multiple tasks genuinely need it.
 - This is a public repository: never commit tokens, cookies, credentials, signed URLs, or other secrets.
+
+For Agent navigation and modification rules, read [`AGENTS.md`](AGENTS.md).
