@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mirror one AIHOT daily report into this repository byte-for-byte."""
+"""Mirror one AIHOT daily report and its webpage byte-for-byte."""
 
 from __future__ import annotations
 
@@ -37,26 +37,24 @@ def today_beijing() -> str:
     return datetime.now(TIMEZONE).date().isoformat()
 
 
-def fetch_raw_json(url: str) -> tuple[bytes, dict]:
+def fetch_raw(url: str, accept: str) -> bytes:
     request = urllib.request.Request(
         url,
         headers={
-            "Accept": "application/json",
+            "Accept": accept,
             "User-Agent": USER_AGENT,
         },
     )
     with urllib.request.urlopen(request, timeout=30) as response:
         if response.status != 200:
-            raise RuntimeError(f"unexpected HTTP status: {response.status}")
-        raw_body = response.read()
+            raise RuntimeError(f"unexpected HTTP status {response.status} for {url}")
+        return response.read()
 
+
+def parse_and_validate_api(raw_body: bytes, expected_date: str) -> dict:
     payload = json.loads(raw_body)
     if not isinstance(payload, dict):
         raise RuntimeError("AIHOT response root is not a JSON object")
-    return raw_body, payload
-
-
-def validate(payload: dict, expected_date: str) -> dict:
     if payload.get("schemaVersion") != 1:
         raise RuntimeError("unexpected AIHOT schemaVersion")
 
@@ -69,53 +67,73 @@ def validate(payload: dict, expected_date: str) -> dict:
         raise RuntimeError(
             f"latest report is {report_date!r}, waiting for {expected_date!r}"
         )
-
     if not isinstance(report.get("sections"), list):
         raise RuntimeError("AIHOT report.sections is missing or invalid")
+
+    links = report.get("links")
+    if not isinstance(links, dict):
+        raise RuntimeError("AIHOT report.links is missing or invalid")
+    page_url = links.get("aihot")
+    expected_page_url = f"https://aihot.virxact.com/daily/{expected_date}"
+    if page_url != expected_page_url:
+        raise RuntimeError(
+            f"unexpected AIHOT daily page URL: {page_url!r}; expected {expected_page_url!r}"
+        )
 
     return report
 
 
-def output_path(report_date: str) -> Path:
+def validate_page(raw_html: bytes, report_date: str) -> None:
+    prefix = raw_html[:4096].lower()
+    if b"<!doctype html" not in prefix and b"<html" not in prefix:
+        raise RuntimeError("AIHOT daily page response is not HTML")
+
+    try:
+        text = raw_html.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise RuntimeError("AIHOT daily page is not valid UTF-8 HTML") from exc
+
+    if report_date not in text:
+        raise RuntimeError(f"AIHOT daily page does not contain report date {report_date}")
+
+
+def output_dir(report_date: str) -> Path:
     year, month, day = report_date.split("-")
-    return (
-        Path(__file__).resolve().parent
-        / "data"
-        / year
-        / month
-        / day
-        / "aihot-daily.json"
-    )
+    return Path(__file__).resolve().parent / "data" / year / month / day
 
 
-def write_snapshot(raw_body: bytes, report_date: str) -> Path:
-    path = output_path(report_date)
-
+def write_snapshot(path: Path, raw_body: bytes, label: str) -> None:
     if path.exists():
         existing = path.read_bytes()
         if existing == raw_body:
-            print(f"Snapshot already exists and is byte-identical: {path}")
-            return path
+            print(f"{label} already exists and is byte-identical: {path}")
+            return
         raise RuntimeError(
-            f"snapshot already exists with different bytes: {path}; "
+            f"{label} already exists with different bytes: {path}; "
             "refusing to silently rewrite history"
         )
 
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(raw_body)
-    print(f"Saved byte-for-byte AIHOT daily {report_date}: {path}")
-    return path
+    print(f"Saved byte-for-byte {label}: {path}")
 
 
-def set_github_outputs(report_date: str, path: Path, raw_body: bytes) -> None:
+def set_github_outputs(
+    report_date: str,
+    api_path: Path,
+    page_path: Path,
+    api_raw: bytes,
+    page_raw: bytes,
+) -> None:
     output_file = os.environ.get("GITHUB_OUTPUT")
     if not output_file:
         return
-    sha256 = hashlib.sha256(raw_body).hexdigest()
     with open(output_file, "a", encoding="utf-8") as handle:
         handle.write(f"report_date={report_date}\n")
-        handle.write(f"output_path={path.as_posix()}\n")
-        handle.write(f"sha256={sha256}\n")
+        handle.write(f"api_path={api_path.as_posix()}\n")
+        handle.write(f"page_path={page_path.as_posix()}\n")
+        handle.write(f"api_sha256={hashlib.sha256(api_raw).hexdigest()}\n")
+        handle.write(f"page_sha256={hashlib.sha256(page_raw).hexdigest()}\n")
 
 
 def main() -> int:
@@ -126,17 +144,32 @@ def main() -> int:
         raise SystemExit("--retry-seconds cannot be negative")
 
     expected_date = args.date or today_beijing()
-    url = f"{API_BASE}/{expected_date}" if args.date else f"{API_BASE}/latest"
+    api_url = f"{API_BASE}/{expected_date}" if args.date else f"{API_BASE}/latest"
 
     last_error: Exception | None = None
     for attempt in range(1, args.attempts + 1):
         try:
-            raw_body, payload = fetch_raw_json(url)
-            report = validate(payload, expected_date)
-            path = write_snapshot(raw_body, report["date"])
-            set_github_outputs(report["date"], path, raw_body)
+            api_raw = fetch_raw(api_url, "application/json")
+            report = parse_and_validate_api(api_raw, expected_date)
+            page_url = report["links"]["aihot"]
+            page_raw = fetch_raw(page_url, "text/html,application/xhtml+xml")
+            validate_page(page_raw, report["date"])
+
+            day_dir = output_dir(report["date"])
+            api_path = day_dir / "aihot-daily.json"
+            page_path = day_dir / "aihot-daily.html"
+            write_snapshot(api_path, api_raw, "AIHOT v1 API response")
+            write_snapshot(page_path, page_raw, "AIHOT daily webpage response")
+            set_github_outputs(
+                report["date"], api_path, page_path, api_raw, page_raw
+            )
             return 0
-        except (urllib.error.URLError, urllib.error.HTTPError, RuntimeError, json.JSONDecodeError) as exc:
+        except (
+            urllib.error.URLError,
+            urllib.error.HTTPError,
+            RuntimeError,
+            json.JSONDecodeError,
+        ) as exc:
             last_error = exc
             print(f"Attempt {attempt}/{args.attempts} failed: {exc}", file=sys.stderr)
             if attempt < args.attempts:
