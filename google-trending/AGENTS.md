@@ -8,26 +8,24 @@ Read `README.md` before changing collection or historical behavior.
 
 - Long-term regions are exactly **SG**, **US**, **GB**, and **HK** unless the repository owner explicitly changes that decision.
 - Live primary source is the full Trending Now data path through the pinned `google-trends-now` collector.
-- Google Trends RSS is fallback-only and must remain visibly marked `rss_limited`.
-- Canonical licensed historical source is `aurman/GoogleTrendArchive`; only exact configured-region directory data from its public daily archive is retained.
-- Source priority is `google_trending_now` > `googletrendarchive` > `rss_limited`; never downgrade a stored region snapshot.
-- A third-party archive may be used as research evidence without becoming an import source. Do not bulk-copy historical data whose redistribution rights are unclear.
+- Google Trends RSS live fallback is visibly marked `rss_limited`.
+- `aurman/GoogleTrendArchive` is the licensed CC-BY-4.0 historical source where it preserves daily ordering.
+- `fdciabdul/Google-Trends-Keywords-Scraper` may be mirrored as `github_rss_mirror` to fill otherwise missing historical region snapshots. Preserve exact source repository, commit SHA, file path, RSS endpoint, and upstream rights notice.
+- Source quality is `google_trending_now` > (`googletrendarchive` = `github_rss_mirror`) > `rss_limited`. Equal-quality historical sources never overwrite one another.
 
 ## Data rules
 
 - Canonical output: `data/YYYY/MM/DD/trending.json`.
-- Preserve source provenance and historical source-member names.
-- Missing upstream fields stay missing; do not infer counts, categories, timestamps, or rankings.
-- Do not commit upstream ZIPs, images, screenshots, HTML pages, cookies, credentials, signed URLs, or temporary research downloads.
+- Preserve source order and provenance. Never invent ranking, counts, categories, timestamps, breakdowns, or Explore links absent from the source.
+- Mirror imports fill missing regions only; they do not replace existing licensed/direct snapshots.
+- Do not commit upstream repository clones, ZIPs, images, screenshots, HTML pages, cookies, credentials, signed URLs, or temporary research downloads.
 - A live run fetches every configured region successfully before writing a newly-created day.
 - Same-day reruns must be safe and predictable.
 
 ## Validation and maintenance
 
-- Task collection/conversion logic stays here, not in `tools/`.
-- Repository-level research/audits, migration helpers, and other one-shot management work may use temporary scripts under `tools/`; remove temporary tools after their result is recorded.
+- Persistent task collection/schema logic stays here. One-shot repository-management importers/audits may live temporarily under `tools/`.
 - Parser/schema changes require deterministic tests under `tests/`.
 - Before schedule changes run `python tools/check-repository-integrity.py --show`.
 - After data/schema changes run `python google-trending/validate_archive.py` and refresh the README dashboard.
-- Historical backfills/repairs are one-shot operations; temporary workflows must be removed after validation.
-- Historical gaps are allowed when no suitably licensed source preserves the original state; never synthesize continuity from unrelated Google Trends products or rankless aggregates.
+- Historical backfills/repairs are one-shot operations; temporary scripts/workflows must be removed after validation, while manifests/reports remain.
