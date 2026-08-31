@@ -1,0 +1,88 @@
+name: Google Trending historical backfill
+
+on:
+  push:
+    branches:
+      - agent/google-trending
+    paths:
+      - ".github/workflows/google-trending-backfill.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+
+concurrency:
+  group: google-trending-historical-backfill
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Validate implementation and repository schedule
+        run: |
+          python -m py_compile google-trending/*.py
+          python -m unittest discover -s google-trending/tests -v
+          python tools/check-repository-integrity.py --show
+
+      - name: Download upstream historical archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --retry-delay 5 \
+            "https://huggingface.co/datasets/aurman/GoogleTrendArchive/resolve/main/daily_compressed.zip?download=true" \
+            --output "${RUNNER_TEMP}/daily_compressed.zip"
+          test "$(stat -c %s "${RUNNER_TEMP}/daily_compressed.zip")" -gt 100000000
+
+      - name: Configure commit identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Import history by year
+        shell: bash
+        run: |
+          set -euo pipefail
+          for year in 2024 2025 2026; do
+            python google-trending/backfill.py --zip "${RUNNER_TEMP}/daily_compressed.zip" --year "${year}"
+            python google-trending/validate_archive.py
+            git add "google-trending/data/${year}" google-trending/backfill-manifest.json
+            if git diff --cached --quiet; then
+              echo "${year}: no changes"
+              continue
+            fi
+            git commit -m "data(google-trending): recover ${year} history"
+            git pull --rebase origin agent/google-trending
+            git push origin HEAD:agent/google-trending
+          done
+
+      - name: Refresh dashboard and validate final archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          python google-trending/render_readme.py
+          python google-trending/validate_archive.py
+          git add google-trending/README.md google-trending/backfill-manifest.json
+          if git diff --cached --quiet; then
+            echo "Dashboard already current."
+            exit 0
+          fi
+          git commit -m "docs(google-trending): finalize historical dashboard"
+          git pull --rebase origin agent/google-trending
+          git push origin HEAD:agent/google-trending
