@@ -11,6 +11,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 from archive_lib import make_item, merge_candidate, normalize_repo, parse_markdown_language_archive, to_int, validate_day, write_day
+from scope_normalization import normalize_scope
 
 SOURCES = {
     "larsbijl": ("https://github.com/larsbijl/trending_archive.git", 220, None),
@@ -45,6 +46,15 @@ def snapshot(scope: str, source: str, path: Path, root: Path, items: list[dict])
             "source_path": path.relative_to(root).as_posix(), "items": items}
 
 
+def merge(store, date: str, scope: str, score: int, candidate: dict) -> bool:
+    """Merge one historical candidate using the canonical scope key."""
+    canonical = normalize_scope(scope)
+    if candidate.get("scope") != canonical:
+        candidate = dict(candidate)
+        candidate["scope"] = canonical
+    return merge_candidate(store, date, canonical, score, candidate)
+
+
 def import_markdown(store, root: Path, source: str, score: int) -> Counter:
     stats = Counter()
     for path in root.rglob("*.md"):
@@ -56,7 +66,7 @@ def import_markdown(store, root: Path, source: str, score: int) -> Counter:
         if scopes:
             stats["dates_seen"] += 1
         for scope, items in scopes.items():
-            if merge_candidate(store, date, scope, score, snapshot(scope, source, path, root, items)):
+            if merge(store, date, scope, score, snapshot(scope, source, path, root, items)):
                 stats["selected_snapshots"] += 1
             else:
                 stats["lower_priority_snapshots"] += 1
@@ -83,8 +93,8 @@ def import_ifyour(store, root: Path, score: int) -> Counter:
             lang = row.get("lang") if isinstance(row.get("lang"), str) else None
             items.append(make_item(len(items) + 1, repo, language=lang))
         if items:
-            if merge_candidate(store, date, "all", score,
-                               snapshot("all", "ifyour/github-trending-archive", path, root, items)):
+            if merge(store, date, "all", score,
+                     snapshot("all", "ifyour/github-trending-archive", path, root, items)):
                 stats["selected_snapshots"] += 1
             else:
                 stats["lower_priority_snapshots"] += 1
@@ -121,8 +131,8 @@ def import_leko(store, root: Path, score: int) -> Counter:
                                        stars_today=to_int(row.get("starsToday")),
                                        total_stars=to_int(row.get("stargazers"))))
             if items:
-                if merge_candidate(store, day_dir.name, scope, score,
-                                   snapshot(scope, "Leko/github-trending-archive", path, root, items)):
+                if merge(store, day_dir.name, scope, score,
+                         snapshot(scope, "Leko/github-trending-archive", path, root, items)):
                     stats["selected_snapshots"] += 1
                 else:
                     stats["lower_priority_snapshots"] += 1
@@ -158,8 +168,8 @@ def import_anton(store, root: Path, score: int) -> Counter:
             if repo and not any(x["repo"].casefold() == repo.casefold() for x in items):
                 items.append(make_item(len(items) + 1, repo))
         if items:
-            if merge_candidate(store, date, scope, score,
-                               snapshot(scope, "antonkomarev/github-trending-archive", path, root, items)):
+            if merge(store, date, scope, score,
+                     snapshot(scope, "antonkomarev/github-trending-archive", path, root, items)):
                 stats["selected_snapshots"] += 1
             else:
                 stats["lower_priority_snapshots"] += 1
