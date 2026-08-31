@@ -1,0 +1,61 @@
+name: Google Trending - residual recovery probe
+
+on:
+  push:
+    branches:
+      - agent/google-trending-residual-recovery
+    paths:
+      - ".github/workflows/google-trending-residual-probe.yml"
+      - "tools/tmp/google-trending-residual-recovery.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+
+concurrency:
+  group: google-trending-residual-probe
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/google-trending-residual-recovery
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate temporary recovery tool
+        run: |
+          python3 -m py_compile tools/tmp/google-trending-residual-recovery.py google-trending/*.py
+          python3 -m unittest discover -s google-trending/tests -v
+
+      - name: Scan lineage and recover residual snapshots
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 tools/tmp/google-trending-residual-recovery.py
+
+      - name: Validate recovered archive
+        run: python3 google-trending/validate_archive.py
+
+      - name: Commit probe result to recovery branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add google-trending/data google-trending/mirror-manifest.json google-trending/README.md tools/reports/google-trending-residual-recovery-2026-09-01.md
+          if git diff --cached --quiet; then
+            echo "Probe produced no repository changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "repair(google-trending): recover residual historical gaps"
+          git push origin HEAD:agent/google-trending-residual-recovery
