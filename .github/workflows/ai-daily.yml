@@ -25,21 +25,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
       - name: Fetch AIHOT daily
         id: fetch
         env:
           TARGET_DATE: ${{ inputs.date }}
         run: |
           if [ -n "$TARGET_DATE" ]; then
-            python ai-daily/fetch_aihot_daily.py \
+            python3 ai-daily/fetch_aihot_daily.py \
               --date "$TARGET_DATE" \
               --attempts 1
           else
-            python ai-daily/fetch_aihot_daily.py \
+            python3 ai-daily/fetch_aihot_daily.py \
               --attempts 12 \
               --retry-seconds 300
           fi
