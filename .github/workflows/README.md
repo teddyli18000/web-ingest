@@ -10,8 +10,9 @@ All cron expressions are stored in UTC. Human-facing times below use Asia/Singap
 | --- | --- | ---: | --- |
 | `ai-daily.yml` | 08:05 daily | 65 min | Wait for and mirror the AIHOT daily snapshot |
 | `github-trending.yml` | 09:27 / 10:27 / 11:27 daily | 15 min | Three retry opportunities; first valid snapshot wins |
+| `google-trends.yml` | 12:07 / 13:07 / 14:07 daily | 20 min | Capture all configured core-region Trending Now RSS snapshots |
 
-The schedule is intentionally staggered. `ai-daily` can legitimately spend close to an hour waiting for its upstream publication, so GitHub Trending starts only after its worst-case timeout window plus repository buffer.
+The schedule is intentionally staggered. `ai-daily` can legitimately spend close to an hour waiting for its upstream publication, GitHub Trending follows after that window, and Google Trends runs after the Trending retry block.
 
 ## Load-balancing policy
 
@@ -30,7 +31,7 @@ The current cross-workflow planning buffer is **15 minutes** after the declared 
 
 ## CI and maintenance Actions
 
-`repository-integrity.yml` is event-driven only. It runs when repository rules, workflow definitions, or maintenance tools change. Normal daily data commits do not trigger it.
+`repository-integrity.yml` is event-driven only. It runs when repository rules, workflow definitions, or maintenance/task code change. Normal daily data commits do not trigger it.
 
 Short event-driven validation may run at the same time as a collection task; it is intentionally lightweight. The load-balancing rule is aimed at recurring ingestion jobs, which are the persistent workload we control.
 
