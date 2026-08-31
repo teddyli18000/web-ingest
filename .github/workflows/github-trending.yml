@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - ".github/workflows/github-trending.yml"
+      - "github-trending/capture.py"
+      - "github-trending/archive_lib.py"
+      - "github-trending/tests/**"
   schedule:
     # 08:17, 09:17, 10:17 Singapore/Beijing time (UTC+8).
     - cron: "17 0-2 * * *"
