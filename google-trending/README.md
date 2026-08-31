@@ -10,14 +10,14 @@ The task preserves the changing data that is useful later: **trend order, query,
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-01** | **374** | **369** | **372** | **0** | **0** |
+| **2024-11-28** | **2026-09-01** | **376** | **369** | **372** | **369** | **373** |
 
 ### Source mix
 
 | Source | Region snapshots |
 | --- | ---: |
-| `googletrendarchive` | 739 |
-| `google_trending_now` | 2 |
+| `googletrendarchive` | 1,479 |
+| `google_trending_now` | 4 |
 
 ### Latest SG snapshot — 2026-09-01
 
@@ -49,11 +49,41 @@ The task preserves the changing data that is useful later: **trend order, query,
 | 9 | pro wrestler paul leduc passes | 20000+ |
 | 10 | daniel richman fbi leak probe | 20000+ |
 
+### Latest GB snapshot — 2026-09-01
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | aston villa vs arsenal | 100000+ |
+| 2 | barcelona vs rayo vallecano | 10000+ |
+| 3 | catherine, princess of wales | 20000+ |
+| 4 | grand canyon flash floods | 10000+ |
+| 5 | emmerdale emmerdale | 20000+ |
+| 6 | revolut user account fraud jersey | 5000+ |
+| 7 | atorvastatin | 10000+ |
+| 8 | lindsay clancy | 20000+ |
+| 9 | novak djokovic | 20000+ |
+| 10 | james bond | 10000+ |
+
+### Latest HK snapshot — 2026-09-01
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 夜生活 | 2000+ |
+| 2 | 謝振軒 | 5000+ |
+| 3 | 阿斯頓維拉對兵工廠 | 1000+ |
+| 4 | aston villa vs arsenal | 500+ |
+| 5 | 何超瓊 | 200+ |
+| 6 | 謝淑怡 | 2000+ |
+| 7 | 沙德爾 | 2000+ |
+| 8 | 黎彼得 | 2000+ |
+| 9 | low-pressure area | 2000+ |
+| 10 | windy | 2000+ |
+
 [Open full snapshot →](data/2026/09/01/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 4 days · [`2025`](data/2025/) · 336 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 4 days · [`2025`](data/2025/) · 338 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 

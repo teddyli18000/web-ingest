@@ -4,46 +4,54 @@
   "source_url": "https://huggingface.co/datasets/aurman/GoogleTrendArchive",
   "dataset_doi": "10.57967/hf/7531",
   "license": "CC-BY-4.0",
-  "policy": "SG/US only; daily_compressed.zip CSVs; lower-quality sources never overwrite live captures",
+  "policy": "SG,US,GB,HK only; daily_compressed.zip CSVs; lower-quality sources never overwrite live captures",
   "years": {
     "2024": {
-      "selected_region_days": 68,
+      "selected_region_days": 136,
       "writes_or_upgrades": 68,
       "first_day": "2024-11-28",
       "last_day": "2024-12-31",
       "selected_by_region": {
+        "GB": 34,
+        "HK": 34,
         "SG": 34,
         "US": 34
       },
-      "matching_csv_members_scanned": 72,
-      "duplicate_or_extra_candidates": 4,
+      "matching_csv_members_scanned": 144,
+      "duplicate_or_extra_candidates": 8,
       "parse_error_count": 0,
       "parse_error_examples": []
     },
     "2025": {
-      "selected_region_days": 665,
-      "writes_or_upgrades": 665,
+      "selected_region_days": 1331,
+      "writes_or_upgrades": 666,
       "first_day": "2025-01-01",
       "last_day": "2025-12-31",
       "selected_by_region": {
+        "GB": 331,
+        "HK": 335,
         "SG": 331,
         "US": 334
       },
-      "matching_csv_members_scanned": 669,
-      "duplicate_or_extra_candidates": 4,
-      "parse_error_count": 0,
-      "parse_error_examples": []
+      "matching_csv_members_scanned": 1339,
+      "duplicate_or_extra_candidates": 7,
+      "parse_error_count": 1,
+      "parse_error_examples": [
+        "GB/trending_GB_1d_20251001-1140.csv: historical CSV contained no usable trend rows"
+      ]
     },
     "2026": {
-      "selected_region_days": 6,
+      "selected_region_days": 12,
       "writes_or_upgrades": 6,
       "first_day": "2026-01-01",
       "last_day": "2026-01-03",
       "selected_by_region": {
+        "GB": 3,
+        "HK": 3,
         "SG": 3,
         "US": 3
       },
-      "matching_csv_members_scanned": 6,
+      "matching_csv_members_scanned": 12,
       "duplicate_or_extra_candidates": 0,
       "parse_error_count": 0,
       "parse_error_examples": []
@@ -51,5 +59,5 @@
   },
   "source_archive": "daily_compressed.zip",
   "source_archive_sha256": "2c62716919db98408ede388ed2c6c59f7db7bd01b197ea019aeded197204e09c",
-  "updated_at": "2026-08-31T20:19:16+00:00"
+  "updated_at": "2026-08-31T20:37:24+00:00"
 }
