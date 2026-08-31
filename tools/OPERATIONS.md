@@ -29,14 +29,17 @@ Retry-slot collectors are same-day idempotent. Once a valid daily snapshot exist
 - Public historical sources are retained as provenance in each snapshot rather than erased during normalization.
 - Canonical historical scopes collapse unambiguous source aliases such as `cpp` → `c++` and `c%23` → `c#`; the migration counters are preserved across no-op reruns.
 
-## Google Trends operating decision
+## Google Trends historical state
 
 - Product archived: **Google Trends → Trending Now**, not generic Explore/interest-over-time data.
 - Recurring source: Google's public Trending Now RSS export; no browser, cookie, API key, or GCP identity is required.
 - Long-term core regions: `SG`, `US`, `GB`, `IN`, `JP`, `KR`, `HK`, `TW`.
 - One day is committed only when all configured core regions succeed.
-- Historical recovery source: `aurman/GoogleTrendArchive` raw daily CSV archive (CC-BY-4.0), filtered to the core-region set instead of copying the multi-gigabyte upstream dataset.
-- Missing historical days remain missing; do not synthesize Trending Now rankings from BigQuery or keyword interest time series.
+- Historical source: `aurman/GoogleTrendArchive` raw daily CSV archive (CC-BY-4.0), filtered to the core-region set instead of copying the multi-gigabyte upstream dataset.
+- Initial recovery completed on **2026-09-01**: **375 historical dates** from **2024-11-28 through 2026-01-03**, plus a direct 2026-09-01 snapshot.
+- Historical per-region coverage is 368–372 days; source gaps are preserved rather than filled with invented rows. One empty GB source CSV was skipped and is recorded in the manifest.
+- Known exact-ranking gap: **2026-01-04 through 2026-08-31**. A post-install source search found no reliable public archive that preserves the missing daily Trending Now rankings. Do not substitute BigQuery or keyword interest time series for this gap.
+- The one-shot backfill workflow completed successfully and removed itself. `backfill-manifest.json` holds source SHA-256 and import statistics.
 
 ## Maintenance principle
 
