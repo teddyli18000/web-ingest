@@ -188,16 +188,26 @@ def build_windows(schedules: list[WorkflowSchedule]) -> list[RunWindow]:
 
 def check_load_balance(schedules: list[WorkflowSchedule]) -> None:
     windows = build_windows(schedules)
+    reported: set[tuple[tuple[str, str], tuple[str, str]]] = set()
     for index, left in enumerate(windows):
         for right in windows[index + 1 :]:
             if right.start >= left.reserved_until:
                 break
             if left.workflow == right.workflow:
                 continue
+
+            pair = tuple(sorted(((left.workflow, left.cron), (right.workflow, right.cron))))
+            if pair in reported:
+                continue
+            reported.add(pair)
+
+            left_local = left.start.astimezone(LOCAL_TZ)
+            right_local = right.start.astimezone(LOCAL_TZ)
+            reserved_local = left.reserved_until.astimezone(LOCAL_TZ)
             error(
                 "scheduled workload overlap: "
-                f"{left.workflow} {left.start.isoformat()} reserves through {left.reserved_until.isoformat()} "
-                f"but {right.workflow} starts at {right.start.isoformat()}"
+                f"{left.workflow} ({left.cron}) starts {left_local:%Y-%m-%d %H:%M} local and reserves through "
+                f"{reserved_local:%H:%M}; {right.workflow} ({right.cron}) starts {right_local:%H:%M}"
             )
 
 
