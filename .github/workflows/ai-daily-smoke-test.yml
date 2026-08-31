@@ -1,0 +1,38 @@
+name: AI Daily - Smoke Test
+
+on:
+  push:
+    paths:
+      - ".github/workflows/ai-daily-smoke-test.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch known AIHOT daily
+        run: |
+          python ai-daily/fetch_aihot_daily.py \
+            --date 2026-08-30 \
+            --attempts 1
+
+      - name: Commit smoke-test snapshot
+        run: |
+          git add ai-daily/data/2026/08/30/aihot-daily.json
+          if git diff --cached --quiet; then
+            echo "Snapshot already present; fetch still succeeded."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "test(ai-daily): verify AIHOT ingestion"
+          git push
