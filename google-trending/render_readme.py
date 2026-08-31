@@ -30,11 +30,14 @@ def render_dashboard() -> str:
             coverage[geo] += 1
             sources[str(region.get("source", "unknown"))] += 1
 
+    header = "| First day | Latest day | Days archived | " + " | ".join(f"{geo} days" for geo in REGIONS) + " |"
+    separator = "| --- | --- | ---: | " + " | ".join("---:" for _ in REGIONS) + " |"
+    counts = " | ".join(f"**{coverage[geo]:,}**" for geo in REGIONS)
     lines = [
         "### Archive at a glance", "",
-        "| First day | Latest day | Days archived | SG days | US days |",
-        "| --- | --- | ---: | ---: | ---: |",
-        f"| **{rows[0][0]}** | **{rows[-1][0]}** | **{len(rows):,}** | **{coverage['SG']:,}** | **{coverage['US']:,}** |",
+        header,
+        separator,
+        f"| **{rows[0][0]}** | **{rows[-1][0]}** | **{len(rows):,}** | {counts} |",
         "", "### Source mix", "", "| Source | Region snapshots |", "| --- | ---: |",
     ]
     for source, count in sources.most_common():
