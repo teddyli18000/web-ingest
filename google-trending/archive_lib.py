@@ -13,6 +13,7 @@ SCHEMA_VERSION = 1
 SOURCE_QUALITY = {
     "rss_limited": 1,
     "googletrendarchive": 2,
+    "github_rss_mirror": 2,
     "google_trending_now": 3,
 }
 

@@ -2,9 +2,10 @@ name: Google Trending
 
 on:
   schedule:
-    # 12:17 and 13:17 Singapore/Beijing time (UTC+8).
-    # Starts after the GitHub Trending retry window + timeout/buffer reservation.
-    - cron: "17 4,5 * * *"
+    # 12:37 and 13:49 Singapore/Beijing time (UTC+8).
+    # First slot starts after the last GitHub Trending retry + timeout/buffer reservation.
+    - cron: "37 4 * * *"
+    - cron: "49 5 * * *"
   workflow_dispatch:
 
 permissions:
