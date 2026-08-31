@@ -16,9 +16,11 @@ class GoogleTrendingTests(unittest.TestCase):
     def test_canonical_region_set(self):
         self.assertEqual(REGIONS, ("SG", "US", "GB", "HK"))
 
-    def test_source_priority_keeps_mirror_below_live(self):
+    def test_source_priority_keeps_mirrors_below_live(self):
         self.assertEqual(SOURCE_QUALITY["github_rss_mirror"], SOURCE_QUALITY["googletrendarchive"])
+        self.assertEqual(SOURCE_QUALITY["github_hottrends_mirror"], SOURCE_QUALITY["googletrendarchive"])
         self.assertLess(SOURCE_QUALITY["github_rss_mirror"], SOURCE_QUALITY["google_trending_now"])
+        self.assertLess(SOURCE_QUALITY["github_hottrends_mirror"], SOURCE_QUALITY["google_trending_now"])
 
     def test_live_item_is_normalized(self):
         item = canonical_item({"query": "Example", "search_volume": 50000, "search_volume_label": "50K+", "trend_breakdown": ["example", "example news"]}, 1)
@@ -34,10 +36,11 @@ class GoogleTrendingTests(unittest.TestCase):
         payload["regions"]["SG"]["items"][1]["query"] = "A"
         self.assertTrue(any("duplicate query" in error for error in validate_document(payload, "2026-09-01")))
 
-    def test_mirror_source_is_valid(self):
-        payload = new_document("2026-04-15")
-        payload["regions"]["GB"] = {"source": "github_rss_mirror", "items": [canonical_item({"query": "Example", "search_volume_label": "200+"}, 1)]}
-        self.assertEqual(validate_document(payload, "2026-04-15"), [])
+    def test_mirror_sources_are_valid(self):
+        for source in ("github_rss_mirror", "github_hottrends_mirror"):
+            payload = new_document("2026-04-15")
+            payload["regions"]["GB"] = {"source": source, "items": [canonical_item({"query": "Example", "search_volume_label": "200+"}, 1)]}
+            self.assertEqual(validate_document(payload, "2026-04-15"), [])
 
     def test_historical_csv_aliases(self):
         raw = ("Trends,Search volume,Started,Ended,Trend breakdown,Explore link\n" 'hello world,20K+,2 hours ago,,"hello, world",https://example.test\n').encode()
