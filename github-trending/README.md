@@ -12,7 +12,7 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2026-09-01** | **2026-09-01** | **1** | **1** |
+| **2014-08-09** | **2026-09-01** | **4,346** | **2,499** |
 
 ### Latest All-Languages snapshot — 2026-09-01
 
@@ -33,7 +33,19 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 ### Browse by year
 
-[`2026`](data/2026/) · 1 days
+[`2026`](data/2026/) · 244 days  
+[`2025`](data/2025/) · 365 days  
+[`2024`](data/2024/) · 366 days  
+[`2023`](data/2023/) · 365 days  
+[`2022`](data/2022/) · 365 days  
+[`2021`](data/2021/) · 365 days  
+[`2020`](data/2020/) · 366 days  
+[`2019`](data/2019/) · 364 days  
+[`2018`](data/2018/) · 365 days  
+[`2017`](data/2017/) · 364 days  
+[`2016`](data/2016/) · 340 days  
+[`2015`](data/2015/) · 343 days  
+[`2014`](data/2014/) · 134 days
 
 <!-- archive-dashboard:end -->
 
