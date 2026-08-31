@@ -1,0 +1,65 @@
+name: Google Trending - gap cross-check
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/google-trending-gap-crosscheck.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+
+concurrency:
+  group: google-trending-gap-crosscheck
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate temporary audit tool
+        run: |
+          python -m py_compile tools/tmp/google-trending-gap-crosscheck.py
+          python tools/check-repository-integrity.py --show
+
+      - name: Cross-check GitHub history gap
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python tools/tmp/google-trending-gap-crosscheck.py \
+            --output tools/reports/google-trending-gap-audit-2026-09-01.md
+
+      - name: Commit report and self-remove
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git rm .github/workflows/google-trending-gap-crosscheck.yml
+          git rm tools/tmp/google-trending-gap-crosscheck.py
+          git add tools/reports/google-trending-gap-audit-2026-09-01.md
+
+          git status --short
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+            exit 1
+          fi
+
+          git commit -m "docs(tools): strengthen Google Trending gap cross-check"
+          git pull --rebase origin main
+          git push origin HEAD:main
