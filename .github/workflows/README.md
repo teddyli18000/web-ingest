@@ -8,11 +8,11 @@ All cron expressions are stored in UTC. Human-facing times below use Asia/Singap
 
 | Workflow | Local schedule | Timeout | Purpose |
 | --- | --- | ---: | --- |
-| `ai-daily.yml` | 08:05 daily | 65 min | Wait for and mirror the AIHOT daily snapshot |
-| `github-trending.yml` | 09:27 / 10:27 / 11:27 daily | 15 min | Three retry opportunities; first valid snapshot wins |
-| `google-trending.yml` | 12:17 / 13:17 daily | 15 min | Capture SG + US Google Trending Now; second slot is a retry/no-op opportunity |
+| `ai-daily.yml` | 08:07 daily | 65 min | Wait for and mirror the AIHOT daily snapshot |
+| `github-trending.yml` | 09:31 / 10:43 / 11:55 daily | 15 min | Three retry opportunities; first valid snapshot wins |
+| `google-trending.yml` | 12:37 / 13:49 daily | 15 min | Capture SG + US + GB + HK Trending Now; second slot is retry/no-op |
 
-The schedule is intentionally staggered. `ai-daily` can legitimately spend close to an hour waiting for its upstream publication, GitHub Trending starts only after its worst-case timeout window plus repository buffer, and Google Trending begins after the last GitHub Trending retry has released its own timeout + buffer reservation.
+The schedule deliberately uses different non-round minutes. `ai-daily` reserves through 09:27 under the timeout + buffer policy, GitHub Trending starts at 09:31, and its final 11:55 slot reserves through 12:25; Google Trending therefore starts at 12:37.
 
 ## Load-balancing policy
 
@@ -24,19 +24,17 @@ For every recurring workflow:
 - provide `workflow_dispatch` for manual recovery;
 - provide top-level `concurrency` so repeated runs of the same task do not overlap;
 - keep its scheduled start outside every other recurring workflow's declared timeout window plus the repository buffer;
-- keep cron minutes deliberately non-round when practical, reducing contention with common `:00` schedules on GitHub-hosted runners;
-- document the schedule in the task README when behavior changes.
+- use deliberately different non-round cron minutes where practical rather than copying one minute across bots;
+- keep collection workflows schedule/manual only; code-change validation belongs to repository-integrity CI.
 
-The current cross-workflow planning buffer is **15 minutes** after the declared timeout. This is a planning guard, not a claim that Actions always consume their full timeout.
+The cross-workflow planning buffer is **15 minutes** after the declared timeout.
 
 ## CI and maintenance Actions
 
-`repository-integrity.yml` is event-driven only. It runs when repository rules, workflow definitions, or maintenance tools change. Normal daily data commits do not trigger it.
-
-Short event-driven validation may run at the same time as a collection task; it is intentionally lightweight. The load-balancing rule is aimed at recurring ingestion jobs, which are the persistent workload we control.
+`repository-integrity.yml` is event-driven only. It validates repository rules, recurring schedules, task tests, and Python repository-management tools. Normal daily data commits do not trigger it.
 
 ## Temporary workflows
 
-Backfills, migrations, repairs, probes, and diagnostics are one-shot operations. They must not receive a recurring `schedule:` trigger. Remove temporary workflow files after the operation is validated.
+Backfills, migrations, repairs, probes, and diagnostics are one-shot operations. They must not receive a recurring `schedule:` trigger and must self-remove or be removed after validation.
 
-When a large historical repair is needed, prefer batching commits by natural archive boundaries (for example, year) and keep source conversion logic inside the task directory.
+Large historical repairs should batch commits by natural archive boundaries such as year. Temporary manager scripts belong under `tools/`; durable task schema/source rules belong in the task directory.
