@@ -8,13 +8,15 @@ All cron expressions are stored in UTC. Human-facing times below use Asia/Singap
 
 | Workflow | Local schedule | Timeout | Purpose |
 | --- | --- | ---: | --- |
-| `ai-daily.yml` | 07:53 / 08:07 / 08:21 / 08:35 / 08:49 / 09:03 + recovery slots | 11 min | Prewarm before AIHOT publication, then autonomous same-day recovery |
+| `ai-daily.yml` | 07:51 / 07:57 / 08:03 / 08:09 / 08:13; recovery 08:29 / 09:03 / 10:11 / 11:27 | 13 min | Race AIHOT publication before the downstream 08:15 check, then recover only inside its retry window |
 | `github-trending.yml` | 09:31 / 10:43 / 11:55 daily | 15 min | Three retry opportunities; first valid snapshot wins |
 | `google-trending.yml` | 12:37 / 13:49 daily | 15 min | Capture SG + US + GB + HK Trending Now; second slot is retry/no-op |
 
-AI Daily is intentionally different from the other collectors because punctuality around an external publication time matters. It prewarms at 07:53 and polls closely around 08:00, then retains independent recovery events at 08:07 / 08:21 / 08:35 / 08:49 / 09:03 and later at 10:13 / 11:25 / 13:19 / 14:31 / 20:17 / 23:23. A complete same-day snapshot makes every later scheduled run a fast no-op against the latest `main`.
+AI Daily is intentionally different from the other collectors because punctuality around an external publication time matters. Its known downstream consumer checks the mirror at 08:15 and then hourly through 12:15, so collection effort is concentrated before the first check and only retained while those retries can still consume the result. There are no afternoon/evening AI Daily recovery slots after that useful window.
 
-The schedule deliberately uses different non-round minutes. AI Daily's final slot before GitHub Trending is 09:03; its 11-minute timeout plus the 15-minute planning buffer reserves through 09:29, before GitHub Trending starts at 09:31. Later AI Daily recovery slots are placed in otherwise free gaps. GitHub Trending's final 11:55 slot reserves through 12:25; Google Trending therefore starts at 12:37.
+The primary AI Daily events begin at 07:51 and repeat through 08:13. A run that begins before 08:15 polls every 10 seconds; once a complete same-day snapshot reaches `main`, every later run becomes a fast no-op. Recovery events at 08:29 / 09:03 / 10:11 / 11:27 cover the remaining downstream retry window.
+
+The schedule deliberately uses different non-round minutes. Under the timeout + 15-minute planning-buffer rule, AI Daily's 09:03 slot reserves through 09:31, its 10:11 slot through 10:39, and its 11:27 slot through 11:55. These exact boundaries remain non-overlapping with GitHub Trending at 09:31 / 10:43 / 11:55. GitHub Trending's final 11:55 slot reserves through 12:25; Google Trending therefore starts at 12:37.
 
 ## Load-balancing policy
 
