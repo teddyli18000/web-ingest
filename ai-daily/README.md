@@ -23,11 +23,21 @@ Do not convert the v1 payload back into the old field shape.
 
 Workflow: `.github/workflows/ai-daily.yml`
 
-The GitHub Action starts every day at **08:05 Beijing time** (`00:05 UTC`).
+Scheduled collection has six independent daily opportunities at **08:07, 08:19, 08:31, 08:43, 08:55, and 09:09 Beijing/Singapore time**.
 
-For a scheduled run, the collector verifies that the returned `report.date` is today's Beijing date. If today's report is not available yet, it retries every 5 minutes, up to 12 attempts. The intended collection window is **08:05–09:00 Beijing time**, with the last attempt at about 09:00.
+This is deliberate redundancy. GitHub documents that scheduled Actions may be delayed under load and can sometimes be dropped. A single long-running cron therefore must not be the only path to the daily snapshot.
 
-The workflow can also be run manually with a `YYYY-MM-DD` date to backfill one report.
+Each scheduled opportunity:
+
+1. checks out the latest `main` at job start;
+2. checks whether both files for today's Beijing date already exist;
+3. becomes a no-op if the complete snapshot is already committed;
+4. otherwise tries the AIHOT v1 source up to 3 times, 60 seconds apart;
+5. commits with a rebase-before-push so delayed collectors do not collide with other repository writers.
+
+The job timeout is **6 minutes**. The final 09:09 opportunity plus the repository's 15-minute planning buffer clears by 09:30, before GitHub Trending starts at 09:31.
+
+The workflow can also be run manually with a `YYYY-MM-DD` date to backfill one report. Manual runs do not use the scheduled-run early-exit shortcut, so the collector still performs its normal byte-identity validation against an existing snapshot.
 
 ## Output
 

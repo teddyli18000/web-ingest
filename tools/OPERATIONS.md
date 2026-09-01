@@ -14,11 +14,18 @@ This file is a compact manager-facing record for repository-wide decisions. It i
 
 | Task | Asia/Singapore schedule | Declared timeout |
 | --- | --- | ---: |
-| `ai-daily` | 08:07 | 65 min |
+| `ai-daily` | 08:07 / 08:19 / 08:31 / 08:43 / 08:55 / 09:09 | 6 min |
 | `github-trending` | 09:31 / 10:43 / 11:55 | 15 min |
 | `google-trending` | 12:37 / 13:49 | 15 min |
 
-The minute values are deliberately different rather than copied between bots. `github-trending` has three retry opportunities; `google-trending` has two. Collection workflows run only on schedule or manual dispatch; repository-integrity owns code/workflow validation.
+The minute values are deliberately varied rather than copied between bots. AI Daily uses six short idempotent opportunities because GitHub scheduled events are best-effort and can be delayed or dropped; the first complete snapshot wins and later slots no-op against the latest `main`. Its final slot reserves through 09:30, immediately before GitHub Trending at 09:31. `github-trending` has three retry opportunities; `google-trending` has two. Collection workflows run only on schedule or manual dispatch; repository-integrity owns code/workflow validation.
+
+### AI Daily scheduler incident — 2026-09-01
+
+- AIHOT's archived API response says the 2026-09-01 report was generated at **00:01:42Z / 08:01:42 UTC+8**.
+- The original single 08:07 scheduled GitHub Actions run was not created until **04:57:49Z / 12:57:49 UTC+8**.
+- That run fetched successfully on its first request and committed at about 12:58, proving the delay was in GitHub's scheduled trigger path rather than the AIHOT collector or publication time.
+- Durable response: do not rely on one long sleeping cron for AI Daily. Use multiple short schedule events, latest-main checkout, complete-snapshot early exit, and rebase-before-push.
 
 ## GitHub Trending historical state
 
