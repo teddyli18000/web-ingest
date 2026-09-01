@@ -21,6 +21,14 @@ WORKFLOW_DISPATCH_RE = re.compile(r"^\s{2}workflow_dispatch\s*:\s*(?:#.*)?$", re
 TOP_LEVEL_CONCURRENCY_RE = re.compile(r"^concurrency\s*:\s*(?:#.*)?$", re.MULTILINE)
 TEMPORARY_NAME_PARTS = ("backfill", "repair", "migration", "probe", "diagnostic", "temp")
 
+# Scheduled repository-wide maintenance is allowed only when explicitly registered
+# here. This keeps disposable temp/probe workflows unscheduled while allowing the
+# durable lifecycle manager for temp-work/.
+SCHEDULED_MAINTENANCE_READMES = {
+    "temp-work-cleanup.yml": "temp-work/README.md",
+    "temp-work-cleanup.yaml": "temp-work/README.md",
+}
+
 
 @dataclass(frozen=True)
 class WorkflowSchedule:
@@ -35,7 +43,6 @@ class RunWindow:
     workflow: str
     cron: str
     start: datetime
-    busy_until: datetime
     reserved_until: datetime
 
 
@@ -108,7 +115,7 @@ def cron_events(expr: str, year: int = REFERENCE_YEAR) -> list[datetime]:
     end = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
     events: list[datetime] = []
     while current < end:
-        cron_dow = (current.weekday() + 1) % 7  # Python Monday=0; cron Sunday=0
+        cron_dow = (current.weekday() + 1) % 7
         dom_match = current.day in doms
         dow_match = cron_dow in dows
         if dom_wild and dow_wild:
@@ -118,7 +125,6 @@ def cron_events(expr: str, year: int = REFERENCE_YEAR) -> list[datetime]:
         elif dow_wild:
             day_match = dom_match
         else:
-            # POSIX/Vixie cron: restricted DOM and DOW are ORed.
             day_match = dom_match or dow_match
 
         if current.month in months and day_match:
@@ -129,19 +135,24 @@ def cron_events(expr: str, year: int = REFERENCE_YEAR) -> list[datetime]:
     return events
 
 
-def discover_schedules() -> list[WorkflowSchedule]:
-    schedules: list[WorkflowSchedule] = []
+def workflow_paths() -> list[Path]:
     if not WORKFLOW_DIR.is_dir():
         error("missing .github/workflows directory")
-        return schedules
+        return []
+    return sorted({*WORKFLOW_DIR.glob("*.yml"), *WORKFLOW_DIR.glob("*.yaml")})
 
-    for path in sorted(WORKFLOW_DIR.glob("*.yml")):
+
+def discover_schedules() -> list[WorkflowSchedule]:
+    schedules: list[WorkflowSchedule] = []
+    for path in workflow_paths():
         text = path.read_text(encoding="utf-8")
         crons = tuple(CRON_RE.findall(text))
         if not crons:
             continue
 
-        if any(part in path.stem.casefold() for part in TEMPORARY_NAME_PARTS):
+        maintenance_readme = SCHEDULED_MAINTENANCE_READMES.get(path.name)
+        is_registered_maintenance = maintenance_readme is not None
+        if not is_registered_maintenance and any(part in path.stem.casefold() for part in TEMPORARY_NAME_PARTS):
             error(f"temporary workflow must not be scheduled: {path.relative_to(ROOT)}")
         if not WORKFLOW_DISPATCH_RE.search(text):
             error(f"scheduled workflow lacks workflow_dispatch: {path.relative_to(ROOT)}")
@@ -157,9 +168,9 @@ def discover_schedules() -> list[WorkflowSchedule]:
             error(f"scheduled workflow has invalid timeout: {path.relative_to(ROOT)}")
             continue
 
-        task_readme = ROOT / path.stem / "README.md"
-        if not task_readme.is_file():
-            error(f"scheduled task lacks task README: {path.stem}/README.md")
+        readme_path = ROOT / (maintenance_readme or f"{path.stem}/README.md")
+        if not readme_path.is_file():
+            error(f"scheduled workflow lacks ownership README: {readme_path.relative_to(ROOT)}")
 
         for expr in crons:
             try:
@@ -180,9 +191,8 @@ def build_windows(schedules: list[WorkflowSchedule]) -> list[RunWindow]:
             except ValueError:
                 continue
             for start in starts:
-                busy_until = start + timedelta(minutes=schedule.timeout_minutes)
-                reserved_until = busy_until + timedelta(minutes=POST_RUN_BUFFER_MINUTES)
-                windows.append(RunWindow(schedule.name, expr, start, busy_until, reserved_until))
+                reserved_until = start + timedelta(minutes=schedule.timeout_minutes + POST_RUN_BUFFER_MINUTES)
+                windows.append(RunWindow(schedule.name, expr, start, reserved_until))
     return sorted(windows, key=lambda item: (item.start, item.workflow, item.cron))
 
 
@@ -219,6 +229,8 @@ def check_repository_docs() -> None:
         "tools/AGENTS.md",
         ".github/workflows/README.md",
         ".github/workflows/AGENTS.md",
+        "temp-work/README.md",
+        "temp-work/AGENTS.md",
     ]
     for relative in required:
         if not (ROOT / relative).is_file():

@@ -22,6 +22,8 @@ When you need to inspect, run, repair, or extend a task:
 
 For repository-wide scheduling, workflow policy, audits, or maintenance helpers, use `tools/` as the manager workspace. Read `tools/README.md`, `tools/AGENTS.md`, and `tools/OPERATIONS.md` before changing repository-wide behavior.
 
+For temporary experiments, investigations, validation, one-shot maintenance, and short-lived collaboration that do not belong to an existing persistent task, use `temp-work/<work-name>/`. Read `temp-work/README.md` and `temp-work/AGENTS.md` first. Do not scatter temporary files across the repository or use another task directory as scratch space.
+
 Do not invent a `tasks/` wrapper. One root-level task folder = one independent collection task.
 
 ## Task layout
@@ -40,7 +42,7 @@ Prefer this simple shape:
 
 Repository-wide maintenance tools and operational notes belong under `tools/`; do not move task implementation there.
 
-Transient Action working files belong in the runner workspace or runner temporary directory. Do not commit temporary downloads, caches, checkpoints, or scratch files unless they are intentional task output.
+Transient Action working files belong in the runner workspace or runner temporary directory. Committed short-lived Agent work belongs under `temp-work/<work-name>/`, not at the repository root or inside a persistent task.
 
 ## Collection rules
 
@@ -70,6 +72,8 @@ Do not weaken the schedule guard just to accommodate a preferred time. Move the 
 
 Event-driven lightweight CI is not treated as persistent ingestion load, but it must remain short and path-scoped so normal data commits do not waste Actions.
 
+This is a public repository. Actions runner time is not treated as the same scarce resource as in a private repository, so Agents may use Actions aggressively when they materially improve reproduction, testing, validation, collection reliability, or temporary experiments. Do not create waste for its own sake, but do not avoid a useful Action merely to save public-repository minutes.
+
 ## Adding a task
 
 For a new ingestion job:
@@ -81,25 +85,38 @@ For a new ingestion job:
 5. Document source, schedule, output path/format, retry/backfill behavior, and any important failure conditions.
 6. If it is scheduled, include it in the repository load plan by satisfying the schedule guard rather than manually maintaining a separate registry.
 
+## Temporary Agent work
+
+- If work is not clearly part of an existing persistent task, create `temp-work/<work-name>/` using `lowercase-kebab-case`.
+- One first-level workspace = one temporary task. Do not modify another workspace.
+- Every workspace must have a short non-empty `README.md` recording purpose, important context, outputs/conclusions, and whether anything should migrate into durable repository state.
+- `temp-work/` is disposable. `.github/workflows/temp-work-cleanup.yml` removes first-level workspaces with no meaningful commit for more than one month.
+- Do not keep temporary work alive with empty edits, file touching, or meaningless commits.
+- When an experiment produces a durable result, migrate only the validated long-term change into the appropriate task or `tools/`; do not let `temp-work/` become a second permanent task hierarchy.
+
 ## Temporary and historical operations
 
 - Backfills, migrations, repairs, probes, and diagnostics may use temporary workflows when Actions execution is useful.
-- Temporary workflows must not have a recurring schedule.
-- Remove them after successful output validation.
+- Temporary workflows must not have a recurring schedule. The durable repository-wide `temp-work-cleanup.yml` lifecycle workflow is the explicit exception and is registered by the integrity checker.
+- Remove disposable workflows after successful output validation.
 - Keep reusable conversion/repair logic in the task directory; the workflow itself should remain disposable.
 
 ## Public-repository safety
 
-Never commit:
+Everything committed here or emitted by Actions should be treated as potentially public, including Git history, logs, Step Summaries, artifacts, issue/PR discussion, and diagnostic output.
 
-- API tokens or passwords
+Never commit or expose:
+
+- API tokens, keys, passwords, or credentials
 - cookies or session data
 - private headers
-- signed or expiring URLs
+- signed, expiring, credential-bearing, or otherwise sensitive URLs
 - personal/private source data
+- private repository or private service contents
 - secrets copied from Action logs
+- diagnostic dumps containing credentials, user data, or private environment information
 
-Use GitHub Actions secrets when a task genuinely needs credentials.
+Use GitHub Actions secrets when a task genuinely needs credentials, and make sure workflows do not echo secrets or persist secret-derived material into files, logs, summaries, or artifacts.
 
 ## Changes
 
