@@ -11,12 +11,13 @@ All cron expressions are stored in UTC. Human-facing times below use Asia/Singap
 | `ai-daily.yml` | 07:51 / 07:57 / 08:03 / 08:09 / 08:13; recovery 08:29 / 09:03 / 10:11 / 11:27 | 13 min | Race AIHOT publication before the downstream 08:15 check, then recover only inside its retry window |
 | `github-trending.yml` | 09:31 / 10:43 / 11:55 daily | 15 min | Three retry opportunities; first valid snapshot wins |
 | `google-trending.yml` | 12:37 / 13:49 daily | 15 min | Capture SG + US + GB + HK Trending Now; second slot is retry/no-op |
+| `temp-work-cleanup.yml` | 23:17 Sunday | 3 min | Delete first-level `temp-work/` workspaces untouched by meaningful commits for more than one month |
 
 AI Daily is intentionally different from the other collectors because punctuality around an external publication time matters. Its known downstream consumer checks the mirror at 08:15 and then hourly through 12:15, so collection effort is concentrated before the first check and only retained while those retries can still consume the result. There are no afternoon/evening AI Daily recovery slots after that useful window.
 
 The primary AI Daily events begin at 07:51 and repeat through 08:13. A run that begins before 08:15 polls every 10 seconds; once a complete same-day snapshot reaches `main`, every later run becomes a fast no-op. Recovery events at 08:29 / 09:03 / 10:11 / 11:27 cover the remaining downstream retry window.
 
-The schedule deliberately uses different non-round minutes. Under the timeout + 15-minute planning-buffer rule, AI Daily's 09:03 slot reserves through 09:31, its 10:11 slot through 10:39, and its 11:27 slot through 11:55. These exact boundaries remain non-overlapping with GitHub Trending at 09:31 / 10:43 / 11:55. GitHub Trending's final 11:55 slot reserves through 12:25; Google Trending therefore starts at 12:37.
+The schedule deliberately uses different non-round minutes. Under the timeout + 15-minute planning-buffer rule, AI Daily's 09:03 slot reserves through 09:31, its 10:11 slot through 10:39, and its 11:27 slot through 11:55. These exact boundaries remain non-overlapping with GitHub Trending at 09:31 / 10:43 / 11:55. GitHub Trending's final 11:55 slot reserves through 12:25; Google Trending therefore starts at 12:37. The weekly temp-work cleanup is far outside the collector window and is validated by the same schedule guard.
 
 ## Load-balancing policy
 
@@ -31,6 +32,8 @@ For every recurring workflow:
 - use deliberately different non-round cron minutes where practical rather than copying one minute across bots;
 - keep collection workflows schedule/manual only; code-change validation belongs to repository-integrity CI.
 
+Persistent repository-wide maintenance schedules must be explicitly registered by the integrity checker with their ownership README. Disposable backfill/repair/probe workflows remain forbidden from receiving recurring schedules.
+
 The cross-workflow planning buffer is **15 minutes** after the declared timeout. Multiple retry slots inside one idempotent workflow may overlap one another logically; top-level concurrency serializes actual execution, while each run must check whether its intended output already exists.
 
 Scheduled Actions are not treated as exact clocks. GitHub documents that schedule events may be delayed or dropped under load. A task that needs punctual collection should use independent opportunities and idempotent recovery rather than one long sleeping runner.
@@ -39,8 +42,12 @@ Scheduled Actions are not treated as exact clocks. GitHub documents that schedul
 
 `repository-integrity.yml` is event-driven only. It validates repository rules, recurring schedules, task tests, and Python repository-management tools. Normal daily data commits do not trigger it.
 
+`temp-work-cleanup.yml` is the durable lifecycle manager for `temp-work/`. It is API-only, writes only when stale first-level workspaces actually need deletion, and records its audit trail in the Action Step Summary instead of committing status files.
+
+This is a public repository, so useful Actions execution is not treated as scarce private-runner budget. Reproduction, testing, validation, probes, and short-lived experiments may use Actions aggressively when that materially improves reliability or evidence. Public visibility is the hard constraint: workflows must not expose credentials, private data, private repository content, signed URLs, sensitive environment dumps, or secret-derived artifacts/logs.
+
 ## Temporary workflows
 
 Backfills, migrations, repairs, probes, diagnostics, and smoke tests are one-shot operations. They must not receive a recurring `schedule:` trigger and must self-remove or be removed after validation.
 
-Large historical repairs should batch commits by natural archive boundaries such as year. Temporary manager scripts belong under `tools/`; durable task schema/source rules belong in the task directory.
+Large historical repairs should batch commits by natural archive boundaries such as year. Temporary manager scripts belong under `tools/` or, when they are experiment-specific and disposable, inside their `temp-work/<work-name>/` workspace; durable task schema/source rules belong in the task directory.
