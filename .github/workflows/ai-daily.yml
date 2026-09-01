@@ -2,14 +2,21 @@ name: AI Daily - AIHOT
 
 on:
   schedule:
-    # Multiple independent off-peak opportunities reduce exposure to delayed/dropped GitHub cron events.
-    # Local times (UTC+8): 08:07, 08:19, 08:31, 08:43, 08:55, 09:09.
-    - cron: "7 0 * * *"
-    - cron: "19 0 * * *"
-    - cron: "31 0 * * *"
-    - cron: "43 0 * * *"
-    - cron: "55 0 * * *"
-    - cron: "9 1 * * *"
+    # Primary window. 07:53 starts before AIHOT's usual 08:00 publication and polls closely.
+    # Local times are Asia/Singapore / Beijing (UTC+8).
+    - cron: "53 23 * * *" # 07:53 local on the following calendar day
+    - cron: "7 0 * * *"   # 08:07
+    - cron: "21 0 * * *"  # 08:21
+    - cron: "35 0 * * *"  # 08:35
+    - cron: "49 0 * * *"  # 08:49
+    - cron: "3 1 * * *"   # 09:03
+    # Recovery slots. These are normally fast no-ops after the first complete snapshot.
+    - cron: "13 2 * * *"  # 10:13
+    - cron: "25 3 * * *"  # 11:25
+    - cron: "19 5 * * *"  # 13:19
+    - cron: "31 6 * * *"  # 14:31
+    - cron: "17 12 * * *" # 20:17
+    - cron: "23 15 * * *" # 23:23
   workflow_dispatch:
     inputs:
       date:
@@ -27,12 +34,12 @@ concurrency:
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 11
     steps:
       - uses: actions/checkout@v4
         with:
-          # Scheduled events can sit in GitHub's queue for a long time. Read the latest
-          # main at job start so a delayed retry sees snapshots written by an earlier slot.
+          # A scheduled event can sit in GitHub's queue for a long time. Always read the
+          # latest main at job start so a delayed retry sees snapshots written by an earlier slot.
           ref: main
           fetch-depth: 0
 
@@ -65,7 +72,7 @@ jobs:
           echo "date=$day" >> "$GITHUB_OUTPUT"
           echo "present=$present" >> "$GITHUB_OUTPUT"
           if [ "$present" = "true" ]; then
-            echo "AIHOT snapshot for $day already exists; this delayed/retry slot is a no-op."
+            echo "AIHOT snapshot for $day already exists; this delayed/recovery slot is a no-op."
           fi
 
       - name: Fetch AIHOT daily
@@ -73,20 +80,36 @@ jobs:
         id: fetch
         env:
           TARGET_DATE: ${{ inputs.date }}
+        shell: bash
         run: |
+          set -euo pipefail
           if [ -n "$TARGET_DATE" ]; then
             python3 ai-daily/fetch_aihot_daily.py \
               --date "$TARGET_DATE" \
               --attempts 1
-          else
-            python3 ai-daily/fetch_aihot_daily.py \
-              --attempts 3 \
-              --retry-seconds 60
+            exit 0
           fi
+
+          local_hm="$(TZ=Asia/Shanghai date +%H%M)"
+          if [[ "$local_hm" < "0915" ]]; then
+            # Primary window: stay warm around publication and re-check every 15 seconds.
+            attempts=40
+            retry_seconds=15
+          else
+            # A delayed morning cron or a later recovery slot should not occupy a runner for long.
+            attempts=5
+            retry_seconds=30
+          fi
+
+          echo "AIHOT fetch mode: local=$local_hm attempts=$attempts retry=${retry_seconds}s"
+          python3 ai-daily/fetch_aihot_daily.py \
+            --attempts "$attempts" \
+            --retry-seconds "$retry_seconds"
 
       - name: Commit snapshot
         if: steps.snapshot.outputs.present != 'true'
         run: |
+          set -euo pipefail
           git add ai-daily/data
           if git diff --cached --quiet; then
             echo "No new snapshot to commit."
