@@ -14,11 +14,15 @@ This file is a compact manager-facing record for repository-wide decisions. It i
 
 | Task | Asia/Singapore schedule | Declared timeout |
 | --- | --- | ---: |
-| `ai-daily` | 07:53 / 08:07 / 08:21 / 08:35 / 08:49 / 09:03; recovery 10:13 / 11:25 / 13:19 / 14:31 / 20:17 / 23:23 | 11 min |
+| `ai-daily` | primary 07:51 / 07:57 / 08:03 / 08:09 / 08:13; recovery 08:29 / 09:03 / 10:11 / 11:27 | 13 min |
 | `github-trending` | 09:31 / 10:43 / 11:55 | 15 min |
 | `google-trending` | 12:37 / 13:49 | 15 min |
 
-The minute values are deliberately varied rather than copied between bots. AI Daily is the punctuality-sensitive collector: it starts before the expected publication time, polls closely during the primary window, and keeps same-day recovery opportunities that normally no-op after the first successful snapshot. The final pre-GitHub-Trending slot reserves through 09:29, before GitHub Trending at 09:31; later AI recovery slots are placed in free gaps. `github-trending` has three retry opportunities; `google-trending` has two. Collection workflows run only on schedule or manual dispatch; repository-integrity owns code/workflow validation.
+The minute values are deliberately varied rather than copied between bots. AI Daily is the punctuality-sensitive collector. Its known downstream GPT automation checks the mirror at **08:15**, then retries at **09:15 / 10:15 / 11:15 / 12:15**. Operational priority is therefore: get the complete HTML + JSON snapshot onto `main` before the first 08:15 consumer check whenever AIHOT publishes on its normal schedule; only keep recovery work that can still be consumed by the remaining retry window.
+
+AI Daily runs that begin before 08:15 poll every 10 seconds. Multiple independent primary schedule events reduce dependence on one GitHub cron. A complete snapshot makes all later events no-op against latest `main`. Afternoon/evening recovery after the downstream retry window is intentionally not scheduled.
+
+Under the timeout + 15-minute planning-buffer policy, the 09:03 AI Daily slot reserves through 09:31, the 10:11 slot through 10:39, and the 11:27 slot through 11:55. These boundaries are intentionally adjacent to but non-overlapping with GitHub Trending at 09:31 / 10:43 / 11:55. `google-trending` remains at 12:37 / 13:49.
 
 ### AI Daily scheduler incident — 2026-09-01
 
@@ -26,8 +30,8 @@ The minute values are deliberately varied rather than copied between bots. AI Da
 - The original single 08:07 scheduled GitHub Actions run was not created until **04:57:49Z / 12:57:49 UTC+8**.
 - That run fetched successfully on its first request and committed at about 12:58, proving the delay was in GitHub's scheduled trigger path rather than the AIHOT collector or publication time.
 - GitHub itself documents that scheduled Actions may be delayed and, under sufficiently high load, queued jobs may be dropped. Therefore an exact single cron is not a reliability boundary.
-- Durable response: AI Daily must not depend on an Agent checking it later. It prewarms before 08:00, uses multiple independent schedule events, reads latest `main`, exits immediately when a complete same-day snapshot exists, retries densely during the publication window, uses bounded recovery retries later, and rebases before push.
-- If a nominally early scheduled event is itself delayed until after 09:15 local time, it automatically uses the short recovery retry policy rather than occupying a runner for the full primary polling window.
+- Durable response: AI Daily must not depend on an Agent checking it later. It uses multiple independent schedule events, reads latest `main`, exits immediately when a complete same-day snapshot exists, retries densely during the pre-08:15 publication race, uses bounded recovery only while the consumer still retries, and rebases before push.
+- A live one-shot smoke test on 2026-09-01 exercised real AIHOT API/page requests, both output files, byte-identical rerun behavior, and scheduled same-day no-op detection before the temporary smoke workflow was removed.
 
 ## GitHub Trending historical state
 
