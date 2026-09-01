@@ -2,8 +2,14 @@ name: AI Daily - AIHOT
 
 on:
   schedule:
-    # 08:07 Singapore/Beijing time (UTC+8). AIHOT normally publishes at 08:00.
+    # Multiple independent off-peak opportunities reduce exposure to delayed/dropped GitHub cron events.
+    # Local times (UTC+8): 08:07, 08:19, 08:31, 08:43, 08:55, 09:09.
     - cron: "7 0 * * *"
+    - cron: "19 0 * * *"
+    - cron: "31 0 * * *"
+    - cron: "43 0 * * *"
+    - cron: "55 0 * * *"
+    - cron: "9 1 * * *"
   workflow_dispatch:
     inputs:
       date:
@@ -21,11 +27,49 @@ concurrency:
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 65
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Scheduled events can sit in GitHub's queue for a long time. Read the latest
+          # main at job start so a delayed retry sees snapshots written by an earlier slot.
+          ref: main
+          fetch-depth: 0
+
+      - name: Check whether the scheduled snapshot already exists
+        id: snapshot
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          TARGET_DATE: ${{ inputs.date }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "$TARGET_DATE" ]; then
+            day="$TARGET_DATE"
+          else
+            day="$(TZ=Asia/Shanghai date +%F)"
+          fi
+
+          year="${day:0:4}"
+          month="${day:5:2}"
+          date_part="${day:8:2}"
+          dir="ai-daily/data/$year/$month/$date_part"
+
+          present=false
+          if [ "$EVENT_NAME" = "schedule" ] \
+             && [ -f "$dir/aihot-daily.json" ] \
+             && [ -f "$dir/aihot-daily.html" ]; then
+            present=true
+          fi
+
+          echo "date=$day" >> "$GITHUB_OUTPUT"
+          echo "present=$present" >> "$GITHUB_OUTPUT"
+          if [ "$present" = "true" ]; then
+            echo "AIHOT snapshot for $day already exists; this delayed/retry slot is a no-op."
+          fi
 
       - name: Fetch AIHOT daily
+        if: steps.snapshot.outputs.present != 'true'
         id: fetch
         env:
           TARGET_DATE: ${{ inputs.date }}
@@ -36,11 +80,12 @@ jobs:
               --attempts 1
           else
             python3 ai-daily/fetch_aihot_daily.py \
-              --attempts 12 \
-              --retry-seconds 300
+              --attempts 3 \
+              --retry-seconds 60
           fi
 
       - name: Commit snapshot
+        if: steps.snapshot.outputs.present != 'true'
         run: |
           git add ai-daily/data
           if git diff --cached --quiet; then
@@ -51,4 +96,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "data(ai-daily): mirror AIHOT daily ${{ steps.fetch.outputs.report_date }}"
-          git push
+          git pull --rebase origin main
+          git push origin HEAD:main
