@@ -1,0 +1,124 @@
+name: Temp work cleanup
+
+on:
+  schedule:
+    # GitHub cron uses UTC. 15:17 Sunday UTC = 23:17 Sunday Asia/Singapore.
+    - cron: '17 15 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-work-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TEMP_ROOT: temp-work
+    steps:
+      - name: Remove stale temporary workspaces
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${GITHUB_REF_NAME}" != "main" ]]; then
+            echo "Refusing to clean from non-main ref: ${GITHUB_REF_NAME}" >&2
+            exit 1
+          fi
+
+          base_commit="${GITHUB_SHA}"
+          cutoff_epoch="$(date -u -d '1 month ago' +%s)"
+          cutoff_iso="$(date -u -d "@${cutoff_epoch}" +'%Y-%m-%dT%H:%M:%SZ')"
+
+          base_tree="$(
+            gh api "repos/${GITHUB_REPOSITORY}/git/commits/${base_commit}" --jq '.tree.sha'
+          )"
+          entries_json="$(
+            gh api "repos/${GITHUB_REPOSITORY}/contents/${TEMP_ROOT}?ref=${base_commit}"
+          )"
+
+          mapfile -t workspaces < <(
+            jq -r '.[] | select(.type == "dir") | .name' <<<"${entries_json}"
+          )
+
+          {
+            echo "## Temp work cleanup"
+            echo
+            echo "- Base commit: \`${base_commit}\`"
+            echo "- Inactivity cutoff: \`${cutoff_iso}\`"
+            echo
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+          if (( ${#workspaces[@]} == 0 )); then
+            echo "- No temporary workspaces found." >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+
+          deletions='[]'
+
+          for name in "${workspaces[@]}"; do
+            rel="${TEMP_ROOT}/${name}"
+            last_iso="$(
+              gh api --method GET "repos/${GITHUB_REPOSITORY}/commits" \
+                -f path="${rel}" \
+                -f per_page=1 \
+                --jq '.[0].commit.committer.date // empty'
+            )"
+
+            if [[ -z "${last_iso}" ]]; then
+              echo "- KEEP \`${rel}\`: no commit timestamp returned; failing safe." >> "${GITHUB_STEP_SUMMARY}"
+              continue
+            fi
+
+            last_epoch="$(date -u -d "${last_iso}" +%s)"
+            if (( last_epoch < cutoff_epoch )); then
+              deletions="$(
+                jq -c --arg path "${rel}" \
+                  '. + [{path: $path, mode: "040000", type: "tree", sha: null}]' \
+                  <<<"${deletions}"
+              )"
+              echo "- DELETE \`${rel}\` — last commit: \`${last_iso}\`" >> "${GITHUB_STEP_SUMMARY}"
+            else
+              echo "- KEEP \`${rel}\` — last commit: \`${last_iso}\`" >> "${GITHUB_STEP_SUMMARY}"
+            fi
+          done
+
+          delete_count="$(jq 'length' <<<"${deletions}")"
+          if (( delete_count == 0 )); then
+            echo >> "${GITHUB_STEP_SUMMARY}"
+            echo "Nothing to delete." >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+
+          new_tree="$(
+            jq -n \
+              --arg base_tree "${base_tree}" \
+              --argjson tree "${deletions}" \
+              '{base_tree: $base_tree, tree: $tree}' \
+            | gh api --method POST "repos/${GITHUB_REPOSITORY}/git/trees" --input - --jq '.sha'
+          )"
+
+          new_commit="$(
+            jq -n \
+              --arg message "chore: prune stale temp work" \
+              --arg tree "${new_tree}" \
+              --arg parent "${base_commit}" \
+              '{message: $message, tree: $tree, parents: [$parent]}' \
+            | gh api --method POST "repos/${GITHUB_REPOSITORY}/git/commits" --input - --jq '.sha'
+          )"
+
+          jq -n --arg sha "${new_commit}" '{sha: $sha, force: false}' \
+            | gh api --method PATCH \
+                "repos/${GITHUB_REPOSITORY}/git/refs/heads/main" \
+                --input - >/dev/null
+
+          {
+            echo
+            echo "Deleted ${delete_count} stale workspace(s)."
+            echo "Cleanup commit: \`${new_commit}\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
