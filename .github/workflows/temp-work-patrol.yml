@@ -1,0 +1,37 @@
+name: Temp work patrol
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "temp-work/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-work-patrol
+  cancel-in-progress: true
+
+jobs:
+  patrol:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 64
+      - name: Check temp-work commit isolation
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            BEFORE="$(git rev-parse HEAD^)"
+            AFTER="$(git rev-parse HEAD)"
+          fi
+          python3 tools/check-temp-work-commits.py --before "${BEFORE}" --after "${AFTER}" | tee patrol.txt
+          cat patrol.txt >> "${GITHUB_STEP_SUMMARY}"
