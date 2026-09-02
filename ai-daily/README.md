@@ -37,7 +37,11 @@ These times are intentionally spread across more than two hours. The purpose is 
 - from **07:49 through 08:14**, the same delayed run becomes a dense publication watcher, polling every **10 seconds** for up to 72 attempts;
 - once the 08:15 first-consumer deadline has passed, the run uses only short bounded recovery attempts.
 
-This design specifically hedges correlated GitHub scheduler delay. On **2026-09-02**, AIHOT generated the report at 08:00:31 local time, but the first nominal morning Action was not dispatched until 09:27:24, about 96 minutes late. A nominal 06:13 hedge delayed by the same amount would instead start around 07:49 and remain active through the normal publication time.
+This design specifically hedges correlated GitHub scheduler delay. On **2026-09-02**, AIHOT had generated the report by **08:00:31** local time, while GitHub showed no actual AI Daily scheduled runner until **09:27:24**. Once that runner started, the collector fetched the report within seconds and pushed the mirror to `main` by **09:27:43**. The available run metadata does not identify which nominal cron expression produced that 09:27 runner, so this incident is treated as a scheduler-dispatch gap rather than attributing an exact delay to one specific cron slot.
+
+A nominal early hedge that is delayed into the 07:49-08:15 window automatically becomes a dense watcher, which gives the collector more chances to survive similar correlated dispatch delays without keeping punctual early runs alive for hours.
+
+Each scheduled run also records its triggering cron expression, the local time when a runner actually began executing, and the run URL in the GitHub Actions Step Summary. This telemetry makes future scheduler delay directly observable instead of requiring it to be inferred from the final mirror commit.
 
 Top-level concurrency still serializes actual execution and every run first checks the latest `main`, so delayed duplicate opportunities become fast no-ops after one complete snapshot lands.
 
@@ -51,13 +55,14 @@ These slots are chosen to feed the remaining downstream retry window while still
 
 Every scheduled opportunity:
 
-1. checks out the latest `main` at job start, not the stale commit that happened to exist when GitHub queued the event;
-2. checks whether both files for today's Beijing date already exist;
-3. becomes a no-op if the complete snapshot is already committed;
-4. treats an unpublished report as an expected successful result only for an actual start before 07:49;
-5. uses dense 10-second polling only when an actual start lands in the 07:49-08:15 publication window;
-6. uses only short bounded retries after 08:15;
-7. commits with a rebase-before-push so delayed collectors do not collide with other repository writers.
+1. records the triggering cron and actual runner start time in the Step Summary;
+2. checks out the latest `main` at job start, not the stale commit that happened to exist when GitHub queued the event;
+3. checks whether both files for today's Beijing date already exist;
+4. becomes a no-op if the complete snapshot is already committed;
+5. treats an unpublished report as an expected successful result only for an actual start before 07:49;
+6. uses dense 10-second polling only when an actual start lands in the 07:49-08:15 publication window;
+7. uses only short bounded retries after 08:15;
+8. commits with a rebase-before-push so delayed collectors do not collide with other repository writers.
 
 The workflow timeout remains **13 minutes**. Early scheduler hedges normally finish in seconds, while a hedge delayed into the publication window can use most of that timeout. Recovery slots retain the existing schedule-plan boundaries: the 09:03 slot reserves through 09:31, the 10:11 slot through 10:39, and the 11:27 slot through 11:55 under the repository's timeout + 15-minute planning rule.
 
