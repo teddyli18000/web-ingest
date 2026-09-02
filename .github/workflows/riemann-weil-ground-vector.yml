@@ -1,0 +1,186 @@
+name: Riemann-Weil cutoff-free ground vectors
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "temp-work/riemann-weil-research/experiments/cutoff_free_ground_vector.py"
+      - ".github/workflows/riemann-weil-ground-vector.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: riemann-weil-ground-vector
+  cancel-in-progress: false
+
+jobs:
+  vector:
+    name: c=100 N=${{ matrix.N }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - N: 8
+            prec: 600
+            dps: 110
+          - N: 12
+            prec: 600
+            dps: 120
+          - N: 16
+            prec: 600
+            dps: 130
+          - N: 24
+            prec: 1200
+            dps: 160
+          - N: 32
+            prec: 1800
+            dps: 190
+          - N: 48
+            prec: 3000
+            dps: 230
+    steps:
+      - name: Checkout research workspace
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check python-flint mpmath
+
+      - name: Fetch pinned public verifier
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/akivag613/connes-cvs-.git upstream-connes-cvs
+          git -C upstream-connes-cvs checkout --quiet 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c
+          test "$(git -C upstream-connes-cvs rev-parse HEAD)" = "5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c"
+
+      - name: Compute cutoff-free ground vector
+        run: |
+          python temp-work/riemann-weil-research/experiments/cutoff_free_ground_vector.py \
+            --upstream-script upstream-connes-cvs/papers/2_guinand_weil_dictionary_tail_order/scripts/arb_ldlt_certify.py \
+            --upstream-commit 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c \
+            --c 100 --N ${{ matrix.N }} --prec ${{ matrix.prec }} --dps ${{ matrix.dps }} \
+            --output vector-N${{ matrix.N }}.json
+          python -m json.tool vector-N${{ matrix.N }}.json >/dev/null
+
+      - name: Upload vector diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: cutoff-free-vector-N${{ matrix.N }}
+          path: vector-N${{ matrix.N }}.json
+          retention-days: 1
+
+  collect:
+    name: compare nested ground vectors
+    needs: vector
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install comparison dependency
+        run: python -m pip install --disable-pip-version-check mpmath
+
+      - name: Download vectors
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cutoff-free-vector-N*
+          path: tmp/vectors
+          merge-multiple: true
+
+      - name: Compare nested vectors
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import mpmath as mp
+
+          mp.mp.dps = 120
+          rows = []
+          for path in Path("tmp/vectors").glob("vector-N*.json"):
+              rows.append(json.loads(path.read_text()))
+          rows.sort(key=lambda x: int(x["N"]))
+          if len(rows) < 2:
+              raise SystemExit("need at least two vector results")
+
+          comparisons = []
+          for prev, curr in zip(rows, rows[1:]):
+              n0 = int(prev["N"])
+              n1 = int(curr["N"])
+              a = [mp.mpf(x) for x in prev["coefficients_minusN_to_N"]]
+              b = [mp.mpf(x) for x in curr["coefficients_minusN_to_N"]]
+              dot = mp.fsum(a[k + n0] * b[k + n1] for k in range(-n0, n0 + 1))
+              overlap = abs(dot)
+              retained = mp.fsum(b[k + n1] ** 2 for k in range(-n0, n0 + 1))
+              new_shell = max(mp.mpf("0"), 1 - retained)
+              distance = mp.sqrt(max(mp.mpf("0"), 2 - 2 * overlap))
+              comparisons.append({
+                  "N_from": n0,
+                  "N_to": n1,
+                  "absolute_overlap_padded": mp.nstr(overlap, 80),
+                  "sign_aligned_L2_distance": mp.nstr(distance, 80),
+                  "large_vector_mass_inside_old_band": mp.nstr(retained, 80),
+                  "large_vector_mass_in_new_modes": mp.nstr(new_shell, 80),
+              })
+
+          compact_rows = []
+          for row in rows:
+              compact_rows.append({
+                  k: row[k]
+                  for k in [
+                      "N", "dimension", "arb_prec_bits", "mpmath_dps",
+                      "ground_eigenvalue_midpoint", "second_eigenvalue_midpoint",
+                      "spectral_gap_midpoint", "absolute_residual_norm",
+                      "relative_residual_norm", "periodic_log_energy",
+                      "outer_25pct_frequency_mass", "endpoint_mass_eps_0.05",
+                      "endpoint_mass_eps_0.10", "endpoint_mass_eps_1_over_N",
+                      "source_T_at_0", "source_T_at_half"
+                  ]
+              })
+
+          out = {
+              "status": "cutoff_free_ground_vector_convergence_diagnostic",
+              "warning": "Vector convergence uses high-precision midpoint matrices; eigenvalue signs are certified separately by Arb interval LDL.",
+              "c": 100,
+              "upstream_commit": "5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c",
+              "bands": compact_rows,
+              "nested_comparisons": comparisons,
+          }
+          dest = Path("temp-work/riemann-weil-research/results/cutoff-free-ground-vector-convergence-c100.json")
+          dest.parent.mkdir(parents=True, exist_ok=True)
+          dest.write_text(json.dumps(out, indent=2, sort_keys=True) + "\n")
+          print(json.dumps(out, indent=2, sort_keys=True))
+          PY
+          python -m json.tool temp-work/riemann-weil-research/results/cutoff-free-ground-vector-convergence-c100.json >/dev/null
+
+      - name: Commit result safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp-work/riemann-weil-research/results/cutoff-free-ground-vector-convergence-c100.json
+          if git diff --cached --quiet; then
+            echo "No result change"
+            exit 0
+          fi
+          git commit -m "research(riemann): record cutoff-free vector convergence"
+          git pull --rebase origin main
+          git push origin HEAD:main
