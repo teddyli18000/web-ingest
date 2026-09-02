@@ -1,0 +1,185 @@
+name: Riemann-Weil cutoff-free profile extension
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/riemann-weil-profile-extension.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: riemann-weil-profile-extension
+  cancel-in-progress: false
+
+jobs:
+  vector:
+    name: c=100 N=${{ matrix.N }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - N: 64
+            prec: 3500
+            dps: 260
+          - N: 80
+            prec: 4500
+            dps: 300
+          - N: 96
+            prec: 5500
+            dps: 340
+          - N: 128
+            prec: 7500
+            dps: 450
+    steps:
+      - name: Checkout research workspace
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install public interval dependencies
+        run: python -m pip install --disable-pip-version-check python-flint mpmath
+
+      - name: Fetch pinned public verifier
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/akivag613/connes-cvs-.git upstream-connes-cvs
+          git -C upstream-connes-cvs checkout --quiet 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c
+          test "$(git -C upstream-connes-cvs rev-parse HEAD)" = "5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c"
+
+      - name: Compute cutoff-free ground vector
+        run: |
+          python temp-work/riemann-weil-research/experiments/cutoff_free_ground_vector.py \
+            --upstream-script upstream-connes-cvs/papers/2_guinand_weil_dictionary_tail_order/scripts/arb_ldlt_certify.py \
+            --upstream-commit 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c \
+            --c 100 --N ${{ matrix.N }} --prec ${{ matrix.prec }} --dps ${{ matrix.dps }} \
+            --output ground-N${{ matrix.N }}.json
+          python -m json.tool ground-N${{ matrix.N }}.json >/dev/null
+
+      - name: Upload vector
+        uses: actions/upload-artifact@v4
+        with:
+          name: profile-ground-N${{ matrix.N }}
+          path: ground-N${{ matrix.N }}.json
+          retention-days: 1
+
+  collect:
+    name: fit sine-power profile
+    needs: vector
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download vectors
+        uses: actions/download-artifact@v4
+        with:
+          pattern: profile-ground-N*
+          path: tmp/profile
+          merge-multiple: true
+
+      - name: Analyze profile
+        run: |
+          python - <<'PY'
+          import json, math
+          from pathlib import Path
+
+          rows = [json.loads(p.read_text()) for p in Path('tmp/profile').glob('ground-N*.json')]
+          rows.sort(key=lambda x: int(x['N']))
+          if not rows:
+              raise SystemExit('no profile rows')
+
+          def norm(v):
+              z = math.sqrt(sum(x*x for x in v))
+              return [x/z for x in v]
+
+          def sinpow(m, N):
+              v = [0.0] * (2*N + 1)
+              den = 4.0 ** m
+              for k in range(-min(m,N), min(m,N)+1):
+                  v[k+N] = ((-1.0) ** k) * math.comb(2*m, m-k) / den
+              return norm(v)
+
+          def overlap(a,b):
+              return abs(sum(x*y for x,y in zip(a,b)))
+
+          out_rows=[]
+          raw={}
+          for row in rows:
+              N=int(row['N'])
+              v=norm([float(x) for x in row['coefficients_minusN_to_N']])
+              raw[str(N)] = row
+              center=N
+              r=abs(v[center+1]/v[center]) if v[center] else float('nan')
+              m_ratio=r/(1-r) if r < 1 else float('inf')
+              best=(None,-1.0)
+              for m in range(1,N+1):
+                  ov=overlap(v,sinpow(m,N))
+                  if ov>best[1]:
+                      best=(m,ov)
+              ks=range(-N,N+1)
+              fixed_tail={}
+              for K in (2,4,8,16,32,64):
+                  if K < N:
+                      fixed_tail[str(K)] = sum(v[k+N]**2 for k in ks if abs(k)>K)
+              mean_abs=sum(abs(k)*v[k+N]**2 for k in ks)
+              second=sum(k*k*v[k+N]**2 for k in ks)
+              out_rows.append({
+                  'N':N,
+                  'ground_eigenvalue_midpoint':row['ground_eigenvalue_midpoint'],
+                  'second_eigenvalue_midpoint':row['second_eigenvalue_midpoint'],
+                  'periodic_log_energy':row['periodic_log_energy'],
+                  'best_integer_sine_power_m':best[0],
+                  'best_integer_sine_power_overlap':best[1],
+                  'm_from_first_coefficient_ratio':m_ratio,
+                  'fixed_band_tail_mass':fixed_tail,
+                  'mean_abs_frequency':mean_abs,
+                  'second_frequency_moment':second,
+                  'source_T_at_half':row['source_T_at_half'],
+              })
+
+          payload={
+              'status':'cutoff_free_sine_power_profile_extension',
+              'c':100,
+              'upstream_commit':'5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c',
+              'rows':out_rows,
+              'raw_vectors':raw,
+              'interpretation':{
+                  'sine_power_model':'normalized T(s) proportional to sin(pi*s)^(2m); Fourier coefficients are alternating centered binomial coefficients',
+                  'purpose':'test whether effective m keeps increasing with Galerkin band N or begins to saturate toward a finite-width continuum profile',
+                  'warning':'eigenvectors are high-precision midpoint diagnostics, not interval eigenvector certificates'
+              }
+          }
+          dest=Path('temp-work/riemann-weil-research/results/cutoff-free-profile-extension-c100.json')
+          dest.parent.mkdir(parents=True, exist_ok=True)
+          dest.write_text(json.dumps(payload,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({'status':payload['status'],'rows':out_rows},indent=2,sort_keys=True))
+          PY
+          python -m json.tool temp-work/riemann-weil-research/results/cutoff-free-profile-extension-c100.json >/dev/null
+
+      - name: Commit result safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp-work/riemann-weil-research/results/cutoff-free-profile-extension-c100.json
+          if git diff --cached --quiet; then
+            echo "No result change"
+            exit 0
+          fi
+          git commit -m "research(riemann): extend cutoff-free ground profile"
+          git pull --rebase origin main
+          git push origin HEAD:main
