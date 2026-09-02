@@ -17,7 +17,7 @@ falsify or support a relative-flow strategy before any interval certification.
 """
 from __future__ import annotations
 
-import argparse, importlib.util, json, math
+import argparse, importlib.util, json
 from pathlib import Path
 import mpmath as mp
 from flint import arb_mat
@@ -32,19 +32,24 @@ def load_module(path: Path):
     return mod
 
 
+def mp_mid(x, digits=0):
+    if digits <= 0:
+        digits = max(80, mp.mp.dps + 20)
+    return mp.mpf(x.mid().str(digits, radius=False))
+
+
 def project_even_arb(A: arb_mat, N: int):
-    # Return mpmath midpoint matrix directly in the orthonormal even basis.
     root2 = mp.sqrt(2)
     center = N
     E = mp.matrix(N+1)
-    E[0,0] = mp.mpf(str(A[center,center].mid()))
+    E[0,0] = mp_mid(A[center,center])
     for k in range(1,N+1):
-        v = (mp.mpf(str(A[center,center+k].mid())) + mp.mpf(str(A[center,center-k].mid()))) / root2
+        v = (mp_mid(A[center,center+k]) + mp_mid(A[center,center-k])) / root2
         E[0,k]=E[k,0]=v
     for k in range(1,N+1):
         for j in range(k,N+1):
-            v = (mp.mpf(str(A[center+k,center+j].mid())) + mp.mpf(str(A[center+k,center-j].mid()))
-                 + mp.mpf(str(A[center-k,center+j].mid())) + mp.mpf(str(A[center-k,center-j].mid()))) / 2
+            v = (mp_mid(A[center+k,center+j]) + mp_mid(A[center+k,center-j])
+                 + mp_mid(A[center-k,center+j]) + mp_mid(A[center-k,center-j])) / 2
             E[k,j]=E[j,k]=v
     return E
 
@@ -96,7 +101,7 @@ def prime_powers(c:int):
     out=[]
     for p in primes:
         q=p
-        while q<c:  # active interior sources only
+        while q<c:
             out.append((q,p))
             q*=p
     return sorted(out)
@@ -122,6 +127,8 @@ def main():
     H0=project_even_mp(full_H(args.N,mp.mpf(0)),args.N)
     sigma0,lo0,hi0=sigma_generalized(E,H0)
     endpoint_relerr=abs(sigma0-2*chi)/max(1,abs(2*chi))
+    if endpoint_relerr > mp.mpf('1e-30'):
+        raise RuntimeError('endpoint identity sigma(0)=2 chi failed: relerr='+mp.nstr(endpoint_relerr,30))
 
     Lc=mp.log(args.c)
     rows=[]
@@ -146,7 +153,7 @@ def main():
     ranked=sorted(rows,key=lambda x: float(mp.mpf(x['absolute_relative_bound_contribution'])),reverse=True)
     out={
         'status':'exploratory_midpoint_interior_susceptibility',
-        'warning':'Midpoint generalized eigenvalues only; no interval sign/norm certificate. This is a strategy stress test, not an RH result.',
+        'warning':'Midpoint generalized eigenvalues only; no interval sign/norm certificate. Endpoint identity is used as a stringent internal validation. This is a strategy stress test, not an RH result.',
         'upstream_commit':args.upstream_commit,'c':args.c,'N':args.N,'prec_bits':args.prec,'mpmath_dps':args.dps,
         'endpoint_chi':mp.nstr(chi,60),
         'endpoint_sigma0':mp.nstr(sigma0,60),
