@@ -2,13 +2,18 @@ name: AI Daily - AIHOT
 
 on:
   schedule:
-    # Primary publication window. The goal is to have the complete snapshot on main before
-    # the downstream GPT automation's first 08:15 local check.
-    # Local times are Asia/Singapore / Beijing (UTC+8).
-    - cron: "51 23 * * *" # 07:51 local on the following calendar day
-    - cron: "57 23 * * *" # 07:57 local on the following calendar day
-    - cron: "3 0 * * *"   # 08:03
-    - cron: "9 0 * * *"   # 08:09
+    # Scheduler-lag hedges. Local times are Asia/Singapore / Beijing (UTC+8).
+    # Early runs are cheap one-shot probes when GitHub dispatches them on time. If GitHub
+    # delays one into the 07:49-08:15 publication window, it automatically becomes a dense
+    # polling run. Spreading nominal times over more than two hours protects the 08:15
+    # downstream deadline from correlated schedule delays like the 96-minute lag on 2026-09-02.
+    - cron: "53 21 * * *" # 05:53 local on the following calendar day
+    - cron: "13 22 * * *" # 06:13 local on the following calendar day
+    - cron: "33 22 * * *" # 06:33 local on the following calendar day
+    - cron: "53 22 * * *" # 06:53 local on the following calendar day
+    - cron: "13 23 * * *" # 07:13 local on the following calendar day
+    - cron: "33 23 * * *" # 07:33 local on the following calendar day
+    - cron: "53 23 * * *" # 07:53 local on the following calendar day
     - cron: "13 0 * * *"  # 08:13
     # Recovery slots only while the downstream GPT automation is still retrying.
     - cron: "29 0 * * *"  # 08:29
@@ -89,21 +94,34 @@ jobs:
           fi
 
           local_hm="$(TZ=Asia/Shanghai date +%H%M)"
-          if [[ "$local_hm" < "0815" ]]; then
-            # Publication race window: keep a runner warm and re-check every 10 seconds so
-            # the first downstream 08:15 check normally sees a committed complete snapshot.
-            attempts=70
+          if [[ "$local_hm" < "0749" ]]; then
+            # A punctual early hedge should be cheap: probe once, and treat "not published yet"
+            # as expected rather than a failed Action. Its value is that scheduler delay can move
+            # this same nominal event into the publication window below.
+            echo "AIHOT fetch mode: early scheduler hedge local=$local_hm"
+            python3 ai-daily/fetch_aihot_daily.py \
+              --attempts 1 \
+              --retry-seconds 0 \
+              --allow-not-ready
+          elif [[ "$local_hm" < "0815" ]]; then
+            # A hedge that actually lands near publication stays warm for about twelve minutes.
+            # Together with 20-minute nominal spacing, this covers correlated scheduler lag while
+            # keeping the workflow inside its existing 13-minute timeout.
+            attempts=72
             retry_seconds=10
+            echo "AIHOT fetch mode: publication window local=$local_hm attempts=$attempts retry=${retry_seconds}s"
+            python3 ai-daily/fetch_aihot_daily.py \
+              --attempts "$attempts" \
+              --retry-seconds "$retry_seconds"
           else
             # Once the first consumer check has passed, use only short bounded recovery attempts.
             attempts=5
             retry_seconds=30
+            echo "AIHOT fetch mode: recovery local=$local_hm attempts=$attempts retry=${retry_seconds}s"
+            python3 ai-daily/fetch_aihot_daily.py \
+              --attempts "$attempts" \
+              --retry-seconds "$retry_seconds"
           fi
-
-          echo "AIHOT fetch mode: local=$local_hm attempts=$attempts retry=${retry_seconds}s"
-          python3 ai-daily/fetch_aihot_daily.py \
-            --attempts "$attempts" \
-            --retry-seconds "$retry_seconds"
 
       - name: Commit snapshot
         if: steps.snapshot.outputs.present != 'true'
