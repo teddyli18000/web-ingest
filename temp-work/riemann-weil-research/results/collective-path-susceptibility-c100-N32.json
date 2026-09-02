@@ -1,0 +1,51 @@
+{
+  "status": "exploratory_collective_path_susceptibility",
+  "warning": "High-precision midpoint centered differences, not an interval derivative certificate. Valid only inside the threshold-free neighborhood used here.",
+  "upstream_commit": "5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c",
+  "c0": 100,
+  "u0": "4.60517018598809136803598290936872841520220297725754595206666",
+  "N": 32,
+  "prec_bits": 2400,
+  "mpmath_dps": 200,
+  "active_prime_power_count": 35,
+  "previous_prime_power_threshold": 97,
+  "next_prime_power_threshold": 101,
+  "rows": [
+    {
+      "h": "0.001",
+      "gamma": "7.074488913157498044326369398803074143307850347598522010198825561205927e+75",
+      "generalized_min": "-7.074488913157498044326369398803074143307850347598522010198825561205927e+75",
+      "generalized_max": "3992427481838119929891346808033105953853578593435541162275478664010238.0",
+      "log10_gamma": 75.84969507031464
+    },
+    {
+      "h": "0.0001",
+      "gamma": "7.074463640495198878445274553896276887148393640183221250973889803415903e+73",
+      "generalized_min": "-7.074463640495198878445274553896276887148393640183221250973889803415903e+73",
+      "generalized_max": "39924487675308843294688223434183739490858823891736694158407050702151.58",
+      "log10_gamma": 73.84969351885312
+    },
+    {
+      "h": "0.00001",
+      "gamma": "7.074463387768760162464162132140290834285147365877535197515998908930238e+71",
+      "generalized_min": "-7.074463387768760162464162132140290834285147365877535197515998908930238e+71",
+      "generalized_max": "399244898038853275071162023675622264611475749571422633145026005434.3175",
+      "log10_gamma": 71.84969350333847
+    }
+  ],
+  "convergence": [
+    {
+      "h_coarse": "0.001",
+      "h_fine": "0.0001",
+      "derivative_frobenius_relative_difference": "0.00009637417937378191424662288161834174451455",
+      "gamma_relative_difference": "99.00035723785693803980359288127263371349"
+    },
+    {
+      "h_coarse": "0.0001",
+      "h_fine": "0.00001",
+      "derivative_frobenius_relative_difference": "0.0000009637832905788193108416990180085687452868",
+      "gamma_relative_difference": "99.00000357237609219841324159418648522488"
+    }
+  ],
+  "meaning": "Gamma is the generalized operator norm of the signed full derivative E_N prime+archimedean+pole path. Compare it with enormous termwise interior susceptibilities to quantify collective cancellation."
+}
