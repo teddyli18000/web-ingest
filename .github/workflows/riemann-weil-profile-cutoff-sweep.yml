@@ -1,0 +1,132 @@
+name: Riemann-Weil cutoff-free profile cutoff sweep
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/riemann-weil-profile-cutoff-sweep.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: riemann-weil-profile-cutoff-sweep
+  cancel-in-progress: false
+
+jobs:
+  vector:
+    name: c=${{ matrix.c }} N=64
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        c: [13, 17, 23, 37, 67, 100]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install public dependencies
+        run: python -m pip install --disable-pip-version-check python-flint mpmath
+      - name: Fetch pinned public verifier
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/akivag613/connes-cvs-.git upstream-connes-cvs
+          git -C upstream-connes-cvs checkout --quiet 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c
+      - name: Compute vector
+        run: |
+          python temp-work/riemann-weil-research/experiments/cutoff_free_ground_vector.py \
+            --upstream-script upstream-connes-cvs/papers/2_guinand_weil_dictionary_tail_order/scripts/arb_ldlt_certify.py \
+            --upstream-commit 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c \
+            --c ${{ matrix.c }} --N 64 --prec 3500 --dps 260 \
+            --output ground-c${{ matrix.c }}.json
+      - name: Upload vector
+        uses: actions/upload-artifact@v4
+        with:
+          name: cutoff-profile-c${{ matrix.c }}
+          path: ground-c${{ matrix.c }}.json
+          retention-days: 1
+
+  collect:
+    name: collect cutoff profile sweep
+    needs: vector
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Download vectors
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cutoff-profile-c*
+          path: tmp/cutoffs
+          merge-multiple: true
+      - name: Fit sine-power profiles
+        run: |
+          python - <<'PY'
+          import json, math
+          from pathlib import Path
+          rows=[]
+          for p in Path('tmp/cutoffs').glob('ground-c*.json'):
+              r=json.loads(p.read_text())
+              N=int(r['N']); c=int(r['c'])
+              v=[float(x) for x in r['coefficients_minusN_to_N']]
+              z=math.sqrt(sum(x*x for x in v)); v=[x/z for x in v]
+              def model(m):
+                  a=[0.0]*(2*N+1)
+                  den=4.0**m
+                  for k in range(-min(m,N),min(m,N)+1):
+                      a[k+N]=((-1.0)**k)*math.comb(2*m,m-k)/den
+                  zz=math.sqrt(sum(x*x for x in a))
+                  return [x/zz for x in a]
+              best=(None,-1.0)
+              for m in range(1,N+1):
+                  a=model(m); ov=abs(sum(x*y for x,y in zip(v,a)))
+                  if ov>best[1]: best=(m,ov)
+              ratio=abs(v[N+1]/v[N]); mratio=ratio/(1-ratio)
+              tails={}
+              for K in (2,4,8,16,32):
+                  tails[str(K)]=sum(v[k+N]**2 for k in range(-N,N+1) if abs(k)>K)
+              rows.append({
+                  'c':c,'N':N,
+                  'best_integer_sine_power_m':best[0],
+                  'best_integer_sine_power_overlap':best[1],
+                  'm_from_first_coefficient_ratio':mratio,
+                  'twice_m_ratio':2*mratio,
+                  'groskin_empirical_s_55logc_minus128':55*math.log(c)-128,
+                  'periodic_log_energy':r['periodic_log_energy'],
+                  'source_T_at_half':r['source_T_at_half'],
+                  'fixed_band_tail_mass':tails,
+                  'ground_eigenvalue_midpoint':r['ground_eigenvalue_midpoint'],
+              })
+          rows.sort(key=lambda x:x['c'])
+          out={
+              'status':'cutoff_free_profile_cutoff_sweep',
+              'N':64,
+              'rows':rows,
+              'warning':'Ground vectors are high-precision midpoint diagnostics. The Groskin s(c) expression is an empirical comparison coordinate, not a theorem or identity.'
+          }
+          dest=Path('temp-work/riemann-weil-research/results/cutoff-free-profile-cutoff-sweep-N64.json')
+          dest.parent.mkdir(parents=True,exist_ok=True)
+          dest.write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(out,indent=2,sort_keys=True))
+          PY
+      - name: Commit result safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp-work/riemann-weil-research/results/cutoff-free-profile-cutoff-sweep-N64.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research(riemann): record cutoff-free profile cutoff sweep"
+          git pull --rebase origin main
+          git push origin HEAD:main
