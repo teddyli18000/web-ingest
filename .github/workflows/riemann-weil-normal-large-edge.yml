@@ -1,0 +1,101 @@
+name: Riemann-Weil Schur normal large-edge asymptotic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/riemann-weil-normal-large-edge.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: riemann-weil-normal-large-edge-main
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        q: [97, 193, 397, 797]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check python-flint mpmath
+      - name: Fetch pinned verifier
+        run: |
+          git clone --quiet https://github.com/akivag613/connes-cvs-.git upstream-connes-cvs
+          git -C upstream-connes-cvs checkout --quiet 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c
+      - name: Probe fixed-N normal shape at prime edge
+        run: |
+          python temp-work/riemann-weil-research/experiments/prime_edge_normal_shape.py \
+            --upstream-script upstream-connes-cvs/papers/2_guinand_weil_dictionary_tail_order/scripts/arb_ldlt_certify.py \
+            --q '${{ matrix.q }}' --Nmax 24 --prec 3000 \
+            --output 'large-edge-q${{ matrix.q }}.json'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: large-edge-q${{ matrix.q }}
+          path: large-edge-q${{ matrix.q }}.json
+          retention-days: 1
+
+  collect:
+    needs: probe
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: large-edge-q*
+          path: edges
+          merge-multiple: true
+      - name: Summarize N=24 trend
+        run: |
+          python - <<'PY'
+          import glob,json,math
+          from pathlib import Path
+          rows=[]
+          for f in glob.glob('edges/large-edge-q*.json'):
+              d=json.loads(Path(f).read_text())
+              r=next(x for x in d['rows'] if x['N']==24)
+              rows.append({
+                'q':d['q'],
+                'log_q':math.log(d['q']),
+                'N':24,
+                'central_difference_absolute_overlap':r['central_difference_absolute_overlap'],
+                'one_minus_overlap':1-float(r['central_difference_absolute_overlap']),
+                'M0_normalized_abs':r['moments'][0]['normalized_abs'],
+                'M2_normalized_abs':r['moments'][1]['normalized_abs'],
+                'M4_normalized_abs':r['moments'][2]['normalized_abs'],
+                'schur_pivot_mid':r['schur_pivot_mid'],
+              })
+          rows.sort(key=lambda x:x['q'])
+          out={'status':'fixed_N24_prime_edge_normal_asymptotic_probe','rows':rows,
+               'warning':'Direction/moment diagnostics are high-precision midpoint quantities; this is a conjecture-generation trend check.'}
+          p=Path('temp-work/riemann-weil-research/results/fixed-N24-prime-edge-normal-q97-193-397-797.json')
+          p.parent.mkdir(parents=True,exist_ok=True); p.write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps(out,indent=2))
+          PY
+      - name: Commit
+        run: |
+          set -euo pipefail
+          git config user.name 'riemann-weil-research-bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          path='temp-work/riemann-weil-research/results/fixed-N24-prime-edge-normal-q97-193-397-797.json'
+          git add "$path"
+          git diff --cached --quiet && exit 0
+          git commit -m 'research: record fixed-N prime-edge normal asymptotic probe'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then exit 0; fi
+            git fetch origin main
+            git rebase origin/main
+          done
+          exit 1
