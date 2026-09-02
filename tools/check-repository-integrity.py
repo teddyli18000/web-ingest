@@ -21,10 +21,12 @@ WORKFLOW_DISPATCH_RE = re.compile(r"^\s{2}workflow_dispatch\s*:\s*(?:#.*)?$", re
 TOP_LEVEL_CONCURRENCY_RE = re.compile(r"^concurrency\s*:\s*(?:#.*)?$", re.MULTILINE)
 TEMPORARY_NAME_PARTS = ("backfill", "repair", "migration", "probe", "diagnostic", "temp")
 
-# Scheduled repository-wide maintenance is allowed only when explicitly registered
-# here. This keeps disposable temp/probe workflows unscheduled while allowing the
-# durable lifecycle manager for temp-work/.
-SCHEDULED_MAINTENANCE_READMES = {
+# Most scheduled workflows are owned by a same-named root task directory. Register
+# durable exceptions here when several workflow entry points belong to one task, or
+# when repository-wide maintenance is owned by a non-matching directory.
+SCHEDULED_WORKFLOW_READMES = {
+    "ai-daily-warm.yml": "ai-daily/README.md",
+    "ai-daily-warm.yaml": "ai-daily/README.md",
     "temp-work-cleanup.yml": "temp-work/README.md",
     "temp-work-cleanup.yaml": "temp-work/README.md",
 }
@@ -150,9 +152,9 @@ def discover_schedules() -> list[WorkflowSchedule]:
         if not crons:
             continue
 
-        maintenance_readme = SCHEDULED_MAINTENANCE_READMES.get(path.name)
-        is_registered_maintenance = maintenance_readme is not None
-        if not is_registered_maintenance and any(part in path.stem.casefold() for part in TEMPORARY_NAME_PARTS):
+        registered_readme = SCHEDULED_WORKFLOW_READMES.get(path.name)
+        is_registered_exception = registered_readme is not None
+        if not is_registered_exception and any(part in path.stem.casefold() for part in TEMPORARY_NAME_PARTS):
             error(f"temporary workflow must not be scheduled: {path.relative_to(ROOT)}")
         if not WORKFLOW_DISPATCH_RE.search(text):
             error(f"scheduled workflow lacks workflow_dispatch: {path.relative_to(ROOT)}")
@@ -168,7 +170,7 @@ def discover_schedules() -> list[WorkflowSchedule]:
             error(f"scheduled workflow has invalid timeout: {path.relative_to(ROOT)}")
             continue
 
-        readme_path = ROOT / (maintenance_readme or f"{path.stem}/README.md")
+        readme_path = ROOT / (registered_readme or f"{path.stem}/README.md")
         if not readme_path.is_file():
             error(f"scheduled workflow lacks ownership README: {readme_path.relative_to(ROOT)}")
 
