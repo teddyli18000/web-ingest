@@ -8,19 +8,19 @@ All cron expressions are stored in UTC. Human-facing times below use Asia/Singap
 
 | Workflow | Local schedule | Timeout | Purpose |
 | --- | --- | ---: | --- |
-| `ai-daily-warm.yml` | 07:21 daily | 65 min | Acquire a runner before AIHOT's expected 08:00 publication, hold it until 07:58, then poll across the publication boundary |
-| `ai-daily.yml` | recovery 08:43 / 09:03 / 10:11 / 11:27 | 13 min | Short recovery opportunities plus manual backfill |
+| `ai-daily-warm.yml` | runner acquisition 07:21 / 07:43 / 07:53 / 08:03 | 52 min | Acquire a runner before AIHOT publication, keep an acquired runner alive, and provide later acquisition fallbacks if earlier scheduled runs never start |
+| `ai-daily.yml` | recovery 09:11 / 10:11 / 11:13 / 11:37 | 3 min | Short recovery opportunities immediately before useful downstream retries, plus manual backfill |
 | `github-trending.yml` | 09:31 / 10:43 / 11:55 daily | 15 min | Three retry opportunities; first valid snapshot wins |
 | `google-trending.yml` | 12:37 / 13:49 daily | 15 min | Capture SG + US + GB + HK Trending Now; second slot is retry/no-op |
 | `temp-work-cleanup.yml` | 23:17 Sunday | 3 min | Delete first-level `temp-work/` workspaces untouched by meaningful commits for more than one month |
 
 AI Daily is intentionally different from the other collectors because punctuality around an external publication time matters. Its known downstream consumer checks the mirror at 08:15 and then hourly through 12:15.
 
-The primary AI Daily workflow therefore **acquires and holds** a runner instead of relying on a fresh scheduled event near 08:00. A nominal 07:21 run checks whether today's snapshot already exists, then stays alive until 07:58 and polls AIHOT every 10 seconds until 08:16. If the 07:21 schedule itself is delayed past the publication window, the same run skips the hold and performs bounded recovery immediately.
+The warm workflow therefore uses a **runner-acquisition ladder**. It asks GitHub for a runner at 07:21, then creates additional opportunities at 07:43, 07:53, and 08:03. All runs use the same `ai-daily-aihot` concurrency group with `cancel-in-progress: false`. Once one run is actually executing, it remains the active run; later opportunities are only fallbacks for cases where an earlier scheduled event never becomes an executing runner. GitHub's default single-pending concurrency behavior means a newer pending opportunity can replace an older pending one while the current active run is preserved.
 
-The warm workflow's 65-minute timeout plus the repository's 15-minute planning buffer reserves through **08:41**. The first separate recovery slot is therefore **08:43**. Recovery keeps the original short 13-minute timeout; its 09:03 slot reserves through 09:31, its 10:11 slot through 10:39, and its 11:27 slot through 11:55. These boundaries remain non-overlapping with GitHub Trending at 09:31 / 10:43 / 11:55. GitHub Trending's final 11:55 slot reserves through 12:25; Google Trending starts at 12:37.
+An acquired warm runner waits until 07:57, polls AIHOT every 10 seconds through 08:10, and performs a short immediate recovery attempt when it starts after that warm window. The 52-minute timeout lets a punctual 07:21 run stay alive across the intended publication window. The latest nominal 08:03 slot plus the repository's 15-minute planning buffer reserves this workflow through 09:10.
 
-The warm and recovery workflows share the same `ai-daily-aihot` concurrency group, so delayed runs cannot write AI Daily concurrently.
+Recovery then starts at 09:11 with a short 3-minute timeout. Its later 10:11, 11:13, and 11:37 slots are arranged around the downstream retry times while remaining clear of GitHub Trending's declared windows. Warm and recovery share the same concurrency group, so delayed AI Daily runs do not write the task concurrently.
 
 ## Load-balancing policy
 
@@ -39,7 +39,7 @@ Most scheduled workflows are owned by a same-named root task directory. Durable 
 
 The cross-workflow planning buffer is **15 minutes** after the declared timeout. Multiple retry slots inside one idempotent workflow may overlap one another logically; top-level concurrency serializes actual execution, while each run must check whether its intended output already exists.
 
-Scheduled Actions are not exact clocks. GitHub schedule events may be delayed or dropped under load. For tasks with a hard publication boundary, acquiring a runner moderately early and deliberately holding it can be preferable to betting on several new dispatches close to the deadline.
+Scheduled Actions are not exact clocks. GitHub schedule events may be delayed or dropped under load. For a task with a hard publication boundary, repeated acquisition opportunities plus holding an already-acquired runner are preferred over releasing a runner and depending on a fresh near-deadline dispatch.
 
 ## CI and maintenance Actions
 
