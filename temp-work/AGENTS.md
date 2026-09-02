@@ -21,7 +21,7 @@ Keep repository coordination out of the Agent's way:
 - Prefer creating task-specific files instead of repeatedly rewriting shared status files. Independent files naturally allow several Agents to work at once.
 - If an existing file must be changed, read that file itself and use the current blob SHA required by GitHub's file-update API. No separate HEAD read is required.
 - If an update is rejected because that exact file changed concurrently, re-read only that file, preserve the other writer's work, and retry the smallest intended edit. Do not force-push, reset, rewrite history, or revert another Agent's work to make a write succeed.
-- Commit only meaningful work. Repository-wide coordination, contention detection, lifecycle cleanup, and workspace patrol belong to the repository maintenance bots.
+- Commit only meaningful work. Repository-wide coordination, lifecycle cleanup, and workspace patrol belong to repository maintenance.
 
 ## Minimum record
 
@@ -51,11 +51,13 @@ Never commit or expose:
 
 Actions are not scarce here and may be used aggressively when useful for testing, reproduction, validation, or short-lived automation. That freedom does not relax the public-data boundary. Credentials must use GitHub Actions secrets and workflows must not echo or archive them.
 
-## Repository-managed coordination
+## Repository-managed patrol
 
-- `.github/workflows/temp-work-patrol.yml` inspects direct-to-main temporary-work commits and reports cross-workspace writes, missing workspace records, high activity, and file contention.
+- `.github/workflows/temp-work-patrol.yml` is a lightweight patrol for direct-to-main temporary work.
+- It records boundary incidents such as one commit touching multiple temporary workspaces or temporary work spilling outside its workspace.
+- High commit frequency is normal and is intentionally ignored.
+- Recorded incidents are written to the workflow Step Summary for later inspection; an incident does not fail or block the Agent's work.
 - `.github/workflows/temp-work-cleanup.yml` handles workspace lifecycle cleanup.
-- These bots exist so individual Agents can stay focused on their assigned work instead of duplicating repository-management checks.
 
 ## Lifecycle
 
