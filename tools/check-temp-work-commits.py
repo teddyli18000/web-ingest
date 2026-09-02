@@ -4,7 +4,7 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,6 +37,22 @@ def workspace_for(path: str) -> str | None:
     if "/" not in rest:
         return None
     return rest.split("/", 1)[0]
+
+
+def recent_workspace_activity(workspace: str) -> tuple[int, list[tuple[str, int]]]:
+    path = f"temp-work/{workspace}"
+    commits = [
+        line
+        for line in git("log", "--since=5 minutes ago", "--format=%H", "--", path).splitlines()
+        if line
+    ]
+    paths = [
+        line
+        for line in git("log", "--since=5 minutes ago", "--format=", "--name-only", "--", path).splitlines()
+        if line
+    ]
+    hot_files = [(name, count) for name, count in Counter(paths).most_common() if count >= 3]
+    return len(commits), hot_files
 
 
 def main() -> int:
@@ -79,11 +95,17 @@ def main() -> int:
         if not readme.is_file() or not readme.read_text(encoding="utf-8").strip():
             violations.append(f"{short}: temp-work/{workspace}/ is missing a non-empty README.md")
 
-    for workspace, count in sorted(touched_counts.items()):
-        if count >= 4:
+    for workspace in sorted(touched_counts):
+        recent_count, hot_files = recent_workspace_activity(workspace)
+        if recent_count >= 4:
             notices.append(
-                f"high activity: {count} commits in this push touched temp-work/{workspace}/; "
+                f"high activity: {recent_count} commits in the last 5 minutes touched temp-work/{workspace}/; "
                 "writers should re-read latest main immediately before every write and retry on stale-SHA conflicts"
+            )
+        for path, count in hot_files:
+            notices.append(
+                f"hot file: {path} changed {count} times in the last 5 minutes; "
+                "split concurrent work into separate files when practical"
             )
 
     print("## Temp-work patrol")
