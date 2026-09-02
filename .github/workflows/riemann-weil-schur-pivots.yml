@@ -1,0 +1,161 @@
+name: Riemann-Weil even Schur pivots
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "temp-work/riemann-weil-research/experiments/even_schur_pivots.py"
+      - ".github/workflows/riemann-weil-schur-pivots.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: riemann-weil-schur-pivots
+  cancel-in-progress: false
+
+jobs:
+  pivots:
+    name: c=100 Nmax=${{ matrix.Nmax }} p=${{ matrix.prec }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - Nmax: 48
+            prec: 3000
+          - Nmax: 80
+            prec: 5000
+          - Nmax: 120
+            prec: 7000
+    steps:
+      - name: Checkout research workspace
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install interval dependencies
+        run: python -m pip install --disable-pip-version-check python-flint mpmath
+
+      - name: Fetch pinned public verifier
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/akivag613/connes-cvs-.git upstream-connes-cvs
+          git -C upstream-connes-cvs checkout --quiet 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c
+          test "$(git -C upstream-connes-cvs rev-parse HEAD)" = "5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c"
+
+      - name: Compute rigorous nested pivots
+        run: |
+          python temp-work/riemann-weil-research/experiments/even_schur_pivots.py \
+            --upstream-script upstream-connes-cvs/papers/2_guinand_weil_dictionary_tail_order/scripts/arb_ldlt_certify.py \
+            --upstream-commit 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c \
+            --c 100 --Nmax ${{ matrix.Nmax }} --prec ${{ matrix.prec }} \
+            --output pivots-${{ matrix.Nmax }}.json
+          python -m json.tool pivots-${{ matrix.Nmax }}.json >/dev/null
+
+      - name: Upload pivot result
+        uses: actions/upload-artifact@v4
+        with:
+          name: schur-pivots-${{ matrix.Nmax }}
+          path: pivots-${{ matrix.Nmax }}.json
+          retention-days: 1
+
+  collect:
+    name: validate and collect pivots
+    needs: pivots
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download pivot artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: schur-pivots-*
+          path: tmp/pivots
+          merge-multiple: true
+
+      - name: Validate nested interval consistency
+        run: |
+          python - <<'PY'
+          import json
+          from decimal import Decimal, getcontext
+          from pathlib import Path
+
+          getcontext().prec = 100
+          runs = []
+          for path in Path("tmp/pivots").glob("pivots-*.json"):
+              runs.append(json.loads(path.read_text()))
+          runs.sort(key=lambda x: int(x["Nmax"]))
+          if len(runs) != 3:
+              raise SystemExit(f"expected 3 pivot runs, got {len(runs)}")
+
+          checks = []
+          for small, large in zip(runs, runs[1:]):
+              count = min(int(small["Nmax"]), int(large["Nmax"])) + 1
+              worst = Decimal(0)
+              for n in range(count):
+                  a = small["pivots"][n]["pivot"]
+                  b = large["pivots"][n]["pivot"]
+                  alo, ahi = Decimal(a["lower"]), Decimal(a["upper"])
+                  blo, bhi = Decimal(b["lower"]), Decimal(b["upper"])
+                  if max(alo, blo) > min(ahi, bhi):
+                      raise SystemExit(f"non-overlapping rigorous pivot intervals at N={n}: {a} vs {b}")
+                  am, bm = Decimal(a["mid"]), Decimal(b["mid"])
+                  scale = max(abs(am), abs(bm), Decimal(1))
+                  worst = max(worst, abs(am-bm)/scale)
+              checks.append({
+                  "Nmax_small": small["Nmax"],
+                  "Nmax_large": large["Nmax"],
+                  "prefix_checked_through_N": count - 1,
+                  "rigorous_intervals_overlap": True,
+                  "worst_midpoint_abs_difference_over_max1": str(worst),
+              })
+
+          final = runs[-1]
+          out = {
+              "status": "rigorous_even_schur_pivot_sequence_c100",
+              "method": "one cutoff-free Arb matrix projected to nested orthonormal even sector; unpivoted interval LDL^T",
+              "upstream_commit": final["upstream_commit"],
+              "c": 100,
+              "Nmax": final["Nmax"],
+              "prec_bits": final["prec_bits"],
+              "cross_precision_prefix_checks": checks,
+              "pivots": final["pivots"],
+          }
+          dest = Path("temp-work/riemann-weil-research/results/even-schur-pivots-c100-N120.json")
+          dest.parent.mkdir(parents=True, exist_ok=True)
+          dest.write_text(json.dumps(out, indent=2, sort_keys=True) + "\n")
+          print(json.dumps({
+              "status": out["status"],
+              "Nmax": out["Nmax"],
+              "checks": checks,
+              "last_pivot": out["pivots"][-1],
+          }, indent=2, sort_keys=True))
+          PY
+          python -m json.tool temp-work/riemann-weil-research/results/even-schur-pivots-c100-N120.json >/dev/null
+
+      - name: Commit result safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp-work/riemann-weil-research/results/even-schur-pivots-c100-N120.json
+          if git diff --cached --quiet; then
+            echo "No result change"
+            exit 0
+          fi
+          git commit -m "research(riemann): record rigorous even Schur pivots"
+          git pull --rebase origin main
+          git push origin HEAD:main
