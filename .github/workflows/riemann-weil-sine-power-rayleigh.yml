@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install interval dependencies
-        run: python -m pip install --disable-pip-version-check python-flint
+        run: python -m pip install --disable-pip-version-check python-flint mpmath
       - name: Fetch pinned public verifier
         run: |
           set -euo pipefail
