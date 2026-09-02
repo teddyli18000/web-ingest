@@ -17,14 +17,17 @@ jobs:
       matrix:
         include:
           - N: 16
-            prec: 1200
-            dps: 110
+            prec: 2000
+            dps: 220
+            hs: '1e-25,1e-30,1e-35'
           - N: 24
-            prec: 1800
-            dps: 150
+            prec: 3000
+            dps: 270
+            hs: '1e-35,1e-40,1e-45'
           - N: 32
-            prec: 2400
-            dps: 200
+            prec: 4200
+            dps: 340
+            hs: '1e-45,1e-50,1e-55'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -36,18 +39,18 @@ jobs:
         run: |
           git clone --quiet https://github.com/akivag613/connes-cvs-.git upstream-connes-cvs
           git -C upstream-connes-cvs checkout --quiet 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c
-      - name: Compute collective path susceptibility
+      - name: Compute collective path susceptibility below the conditioning floor
         run: |
           python temp-work/riemann-weil-research/experiments/collective_path_susceptibility.py \
             --upstream-script upstream-connes-cvs/papers/2_guinand_weil_dictionary_tail_order/scripts/arb_ldlt_certify.py \
             --upstream-commit 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c \
             --c0 100 --N ${{ matrix.N }} --prec ${{ matrix.prec }} --dps ${{ matrix.dps }} \
-            --hs 1e-3,1e-4,1e-5 \
-            --output collective-path-susceptibility-c100-N${{ matrix.N }}.json
+            --hs '${{ matrix.hs }}' \
+            --output collective-path-susceptibility-deep-c100-N${{ matrix.N }}.json
       - uses: actions/upload-artifact@v4
         with:
-          name: collective-path-susceptibility-c100-N${{ matrix.N }}
-          path: collective-path-susceptibility-c100-N${{ matrix.N }}.json
+          name: collective-path-susceptibility-deep-c100-N${{ matrix.N }}
+          path: collective-path-susceptibility-deep-c100-N${{ matrix.N }}.json
           retention-days: 1
 
   collect:
@@ -59,19 +62,19 @@ jobs:
           fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
-          pattern: collective-path-susceptibility-*
+          pattern: collective-path-susceptibility-deep-*
           path: downloaded
           merge-multiple: true
       - name: Commit results safely
         run: |
           set -euo pipefail
           mkdir -p temp-work/riemann-weil-research/results
-          cp downloaded/collective-path-susceptibility-*.json temp-work/riemann-weil-research/results/
+          cp downloaded/collective-path-susceptibility-deep-*.json temp-work/riemann-weil-research/results/
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add temp-work/riemann-weil-research/results/collective-path-susceptibility-*.json
+          git add temp-work/riemann-weil-research/results/collective-path-susceptibility-deep-*.json
           git diff --cached --quiet && exit 0
-          git commit -m 'research: record collective path susceptibility results'
+          git commit -m 'research: record deep collective path susceptibility results'
           for attempt in 1 2 3 4; do
             git fetch origin main
             git rebase origin/main && git push origin HEAD:main && exit 0
