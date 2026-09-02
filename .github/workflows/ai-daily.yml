@@ -6,7 +6,7 @@ on:
     # Early runs are cheap one-shot probes when GitHub dispatches them on time. If GitHub
     # delays one into the 07:49-08:15 publication window, it automatically becomes a dense
     # polling run. Spreading nominal times over more than two hours protects the 08:15
-    # downstream deadline from correlated schedule delays like the 96-minute lag on 2026-09-02.
+    # downstream deadline from scheduler-dispatch gaps like the one observed on 2026-09-02.
     - cron: "53 21 * * *" # 05:53 local on the following calendar day
     - cron: "13 22 * * *" # 06:13 local on the following calendar day
     - cron: "33 22 * * *" # 06:33 local on the following calendar day
@@ -39,6 +39,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 13
     steps:
+      - name: Record schedule timing
+        if: github.event_name == 'schedule'
+        env:
+          SCHEDULE_EXPR: ${{ github.event.schedule }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "### AI Daily schedule timing"
+            echo
+            echo "- cron: \`${SCHEDULE_EXPR}\`"
+            echo "- runner observed: $(TZ=Asia/Singapore date '+%Y-%m-%d %H:%M:%S %Z')"
+            echo "- run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
       - uses: actions/checkout@v4
         with:
           # A scheduled event can sit in GitHub's queue for a long time. Always read the
