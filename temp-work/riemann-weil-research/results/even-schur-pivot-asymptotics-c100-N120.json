@@ -1,0 +1,1080 @@
+{
+  "status": "exploratory_midpoint_asymptotic_diagnostic",
+  "warning": "All fitted asymptotics use midpoint values of separately rigorous positive Arb pivot intervals; fits are not proofs.",
+  "source_status": "rigorous_even_schur_pivot_sequence_c100",
+  "c": 100,
+  "Nmax": 120,
+  "all_source_pivots_have_strict_positive_lower_bound": true,
+  "cross_precision_prefix_checks": [
+    {
+      "Nmax_large": 80,
+      "Nmax_small": 48,
+      "prefix_checked_through_N": 48,
+      "rigorous_intervals_overlap": true,
+      "worst_midpoint_abs_difference_over_max1": "0"
+    },
+    {
+      "Nmax_large": 120,
+      "Nmax_small": 80,
+      "prefix_checked_through_N": 80,
+      "rigorous_intervals_overlap": true,
+      "worst_midpoint_abs_difference_over_max1": "0"
+    }
+  ],
+  "tail_windows": [
+    {
+      "N_min": 16,
+      "count": 105,
+      "pivot_min": 6.456732141555173e-51,
+      "pivot_min_at_N": 113,
+      "pivot_max": 2.6026644670403646e-29,
+      "pivot_max_at_N": 16,
+      "y_last": 49.66254947887191,
+      "y_min": 28.584581817102254,
+      "y_max": 50.189987229988375,
+      "delta_y_median": 0.16751034176362012,
+      "delta_y_last": 0.3041541356214452,
+      "delta_y_abs_max": 5.204173706662985,
+      "delta_y_positive_count": 57,
+      "delta_y_negative_count": 47,
+      "models": {
+        "linear_N": {
+          "intercept": 33.06172121833126,
+          "slope": 0.16204508976544293,
+          "rmse": 2.5489047404319267
+        },
+        "power_law_logN": {
+          "intercept": 3.3811620735373964,
+          "slope": 9.940289063406754,
+          "rmse": 1.4901049177093049
+        },
+        "stretched_sqrtN": {
+          "intercept": 22.977086355853476,
+          "slope": 2.634324623579493,
+          "rmse": 2.022057734993909
+        },
+        "stretched_cuberootN": {
+          "intercept": 12.991696199697593,
+          "slope": 7.820630932171098,
+          "rmse": 1.8393350111814943
+        },
+        "plateau_inverse_power": {
+          "parameter": 0.65,
+          "asymptote_y": 57.92851130865189,
+          "amplitude": -185.73507302390516,
+          "rmse": 1.1305611545911427
+        },
+        "plateau_exponential": {
+          "parameter": 0.036000000000000004,
+          "asymptote_y": 49.575942318929,
+          "amplitude": -37.14138936443468,
+          "rmse": 1.0417679820648247
+        }
+      },
+      "model_ranking_by_rmse": [
+        {
+          "model": "plateau_exponential",
+          "rmse": 1.0417679820648247
+        },
+        {
+          "model": "plateau_inverse_power",
+          "rmse": 1.1305611545911427
+        },
+        {
+          "model": "power_law_logN",
+          "rmse": 1.4901049177093049
+        },
+        {
+          "model": "stretched_cuberootN",
+          "rmse": 1.8393350111814943
+        },
+        {
+          "model": "stretched_sqrtN",
+          "rmse": 2.022057734993909
+        },
+        {
+          "model": "linear_N",
+          "rmse": 2.5489047404319267
+        }
+      ]
+    },
+    {
+      "N_min": 24,
+      "count": 97,
+      "pivot_min": 6.456732141555173e-51,
+      "pivot_min_at_N": 113,
+      "pivot_max": 2.1564008522750777e-33,
+      "pivot_max_at_N": 24,
+      "y_last": 49.66254947887191,
+      "y_min": 32.666270505197005,
+      "y_max": 50.189987229988375,
+      "delta_y_median": 0.15459889081225242,
+      "delta_y_last": 0.3041541356214452,
+      "delta_y_abs_max": 5.204173706662985,
+      "delta_y_positive_count": 52,
+      "delta_y_negative_count": 44,
+      "models": {
+        "linear_N": {
+          "intercept": 35.49243138712552,
+          "slope": 0.13403726846059738,
+          "rmse": 2.0095684694322973
+        },
+        "power_law_logN": {
+          "intercept": 7.126881118403638,
+          "slope": 9.078096507025277,
+          "rmse": 1.4108153933504195
+        },
+        "stretched_sqrtN": {
+          "intercept": 26.352348966720083,
+          "slope": 2.261715927508771,
+          "rmse": 1.7060876537967635
+        },
+        "stretched_cuberootN": {
+          "intercept": 17.25519502686756,
+          "slope": 6.832797702954256,
+          "rmse": 1.6044703188838378
+        },
+        "plateau_inverse_power": {
+          "parameter": 0.9500000000000001,
+          "asymptote_y": 53.95655280421526,
+          "amplitude": -428.63512688772147,
+          "rmse": 1.1032301704424083
+        },
+        "plateau_exponential": {
+          "parameter": 0.038,
+          "asymptote_y": 49.398025788142355,
+          "amplitude": -39.293835009805115,
+          "rmse": 1.0723234038112892
+        }
+      },
+      "model_ranking_by_rmse": [
+        {
+          "model": "plateau_exponential",
+          "rmse": 1.0723234038112892
+        },
+        {
+          "model": "plateau_inverse_power",
+          "rmse": 1.1032301704424083
+        },
+        {
+          "model": "power_law_logN",
+          "rmse": 1.4108153933504195
+        },
+        {
+          "model": "stretched_cuberootN",
+          "rmse": 1.6044703188838378
+        },
+        {
+          "model": "stretched_sqrtN",
+          "rmse": 1.7060876537967635
+        },
+        {
+          "model": "linear_N",
+          "rmse": 2.0095684694322973
+        }
+      ]
+    },
+    {
+      "N_min": 32,
+      "count": 89,
+      "pivot_min": 6.456732141555173e-51,
+      "pivot_min_at_N": 113,
+      "pivot_max": 4.6024676806360654e-38,
+      "pivot_max_at_N": 32,
+      "y_last": 49.66254947887191,
+      "y_min": 37.33700925250797,
+      "y_max": 50.189987229988375,
+      "delta_y_median": 0.08186820522825045,
+      "delta_y_last": 0.3041541356214452,
+      "delta_y_abs_max": 5.204173706662985,
+      "delta_y_positive_count": 46,
+      "delta_y_negative_count": 42,
+      "models": {
+        "linear_N": {
+          "intercept": 37.680373997928115,
+          "slope": 0.10959636777104156,
+          "rmse": 1.582352129004853
+        },
+        "power_law_logN": {
+          "intercept": 11.776988937424129,
+          "slope": 8.023569426653863,
+          "rmse": 1.2597497913455853
+        },
+        "stretched_sqrtN": {
+          "intercept": 29.630103998585962,
+          "slope": 1.908147444270759,
+          "rmse": 1.415771698454788
+        },
+        "stretched_cuberootN": {
+          "intercept": 21.598407202312714,
+          "slope": 5.8438715155755085,
+          "rmse": 1.3616937031997847
+        },
+        "plateau_inverse_power": {
+          "parameter": 1.25,
+          "asymptote_y": 52.04535675879298,
+          "amplitude": -1116.5259084934248,
+          "rmse": 1.0532054872977907
+        },
+        "plateau_exponential": {
+          "parameter": 0.038,
+          "asymptote_y": 49.40649868846296,
+          "amplitude": -39.36714538730671,
+          "rmse": 1.0432250116312207
+        }
+      },
+      "model_ranking_by_rmse": [
+        {
+          "model": "plateau_exponential",
+          "rmse": 1.0432250116312207
+        },
+        {
+          "model": "plateau_inverse_power",
+          "rmse": 1.0532054872977907
+        },
+        {
+          "model": "power_law_logN",
+          "rmse": 1.2597497913455853
+        },
+        {
+          "model": "stretched_cuberootN",
+          "rmse": 1.3616937031997847
+        },
+        {
+          "model": "stretched_sqrtN",
+          "rmse": 1.415771698454788
+        },
+        {
+          "model": "linear_N",
+          "rmse": 1.582352129004853
+        }
+      ]
+    },
+    {
+      "N_min": 40,
+      "count": 81,
+      "pivot_min": 6.456732141555173e-51,
+      "pivot_min_at_N": 113,
+      "pivot_max": 8.16281430404941e-42,
+      "pivot_max_at_N": 41,
+      "y_last": 49.66254947887191,
+      "y_min": 41.08816008315805,
+      "y_max": 50.189987229988375,
+      "delta_y_median": -0.030944714999996847,
+      "delta_y_last": 0.3041541356214452,
+      "delta_y_abs_max": 5.204173706662985,
+      "delta_y_positive_count": 40,
+      "delta_y_negative_count": 40,
+      "models": {
+        "linear_N": {
+          "intercept": 39.514842539166125,
+          "slope": 0.08969209076118471,
+          "rmse": 1.349943803406182
+        },
+        "power_law_logN": {
+          "intercept": 16.282919731979174,
+          "slope": 7.013457751074859,
+          "rmse": 1.193347027291671
+        },
+        "stretched_sqrtN": {
+          "intercept": 32.49057155843968,
+          "slope": 1.6056256877043902,
+          "rmse": 1.2677224078239988
+        },
+        "stretched_cuberootN": {
+          "intercept": 25.47386166660765,
+          "slope": 4.97409899011087,
+          "rmse": 1.2417559076645814
+        },
+        "plateau_inverse_power": {
+          "parameter": 1.6,
+          "asymptote_y": 50.88002588107051,
+          "amplitude": -3788.71590639589,
+          "rmse": 1.0759414970398355
+        },
+        "plateau_exponential": {
+          "parameter": 0.039,
+          "asymptote_y": 49.343841243661515,
+          "amplitude": -40.85970168720551,
+          "rmse": 1.0744003166006095
+        }
+      },
+      "model_ranking_by_rmse": [
+        {
+          "model": "plateau_exponential",
+          "rmse": 1.0744003166006095
+        },
+        {
+          "model": "plateau_inverse_power",
+          "rmse": 1.0759414970398355
+        },
+        {
+          "model": "power_law_logN",
+          "rmse": 1.193347027291671
+        },
+        {
+          "model": "stretched_cuberootN",
+          "rmse": 1.2417559076645814
+        },
+        {
+          "model": "stretched_sqrtN",
+          "rmse": 1.2677224078239988
+        },
+        {
+          "model": "linear_N",
+          "rmse": 1.349943803406182
+        }
+      ]
+    },
+    {
+      "N_min": 48,
+      "count": 73,
+      "pivot_min": 6.456732141555173e-51,
+      "pivot_min_at_N": 113,
+      "pivot_max": 2.149809053132637e-42,
+      "pivot_max_at_N": 51,
+      "y_last": 49.66254947887191,
+      "y_min": 41.66760011257441,
+      "y_max": 50.189987229988375,
+      "delta_y_median": -0.035538019796934606,
+      "delta_y_last": 0.3041541356214452,
+      "delta_y_abs_max": 5.204173706662985,
+      "delta_y_positive_count": 36,
+      "delta_y_negative_count": 36,
+      "models": {
+        "linear_N": {
+          "intercept": 40.966248963339694,
+          "slope": 0.07437890928281178,
+          "rmse": 1.2622110751562652
+        },
+        "power_law_logN": {
+          "intercept": 20.0645495499207,
+          "slope": 6.174005778854752,
+          "rmse": 1.1885281574644586
+        },
+        "stretched_sqrtN": {
+          "intercept": 34.78982521450894,
+          "slope": 1.3667576481410402,
+          "rmse": 1.2236425175037564
+        },
+        "stretched_cuberootN": {
+          "intercept": 28.615192250145377,
+          "slope": 4.2780595465910025,
+          "rmse": 1.2114733668082494
+        },
+        "plateau_inverse_power": {
+          "parameter": 2.3000000000000003,
+          "asymptote_y": 49.827001406702315,
+          "amplitude": -53441.18157083393,
+          "rmse": 1.1088815783092725
+        },
+        "plateau_exponential": {
+          "parameter": 0.045,
+          "asymptote_y": 49.12279322514611,
+          "amplitude": -55.23192918688833,
+          "rmse": 1.1154835815104756
+        }
+      },
+      "model_ranking_by_rmse": [
+        {
+          "model": "plateau_inverse_power",
+          "rmse": 1.1088815783092725
+        },
+        {
+          "model": "plateau_exponential",
+          "rmse": 1.1154835815104756
+        },
+        {
+          "model": "power_law_logN",
+          "rmse": 1.1885281574644586
+        },
+        {
+          "model": "stretched_cuberootN",
+          "rmse": 1.2114733668082494
+        },
+        {
+          "model": "stretched_sqrtN",
+          "rmse": 1.2236425175037564
+        },
+        {
+          "model": "linear_N",
+          "rmse": 1.2622110751562652
+        }
+      ]
+    },
+    {
+      "N_min": 60,
+      "count": 61,
+      "pivot_min": 6.456732141555173e-51,
+      "pivot_min_at_N": 113,
+      "pivot_max": 3.427752357942373e-44,
+      "pivot_max_at_N": 82,
+      "y_last": 49.66254947887191,
+      "y_min": 43.464990561738354,
+      "y_max": 50.189987229988375,
+      "delta_y_median": 0.08186820522825045,
+      "delta_y_last": 0.3041541356214452,
+      "delta_y_abs_max": 5.204173706662985,
+      "delta_y_positive_count": 31,
+      "delta_y_negative_count": 29,
+      "models": {
+        "linear_N": {
+          "intercept": 42.833391084003715,
+          "slope": 0.055236756878752256,
+          "rmse": 1.167799790073635
+        },
+        "power_law_logN": {
+          "intercept": 25.81461485955271,
+          "slope": 4.908526849951953,
+          "rmse": 1.155195076559199
+        },
+        "stretched_sqrtN": {
+          "intercept": 37.92436941665334,
+          "slope": 1.0465977441780268,
+          "rmse": 1.1608179848937974
+        },
+        "stretched_cuberootN": {
+          "intercept": 33.01573859279472,
+          "slope": 3.314544662971879,
+          "rmse": 1.158783712761747
+        },
+        "plateau_inverse_power": {
+          "parameter": 1.5,
+          "asymptote_y": 51.01475078037778,
+          "amplitude": -2540.2373881664225,
+          "rmse": 1.1478245073592666
+        },
+        "plateau_exponential": {
+          "parameter": 0.029,
+          "asymptote_y": 49.803251454192456,
+          "amplitude": -23.934209066769817,
+          "rmse": 1.148437095685499
+        }
+      },
+      "model_ranking_by_rmse": [
+        {
+          "model": "plateau_inverse_power",
+          "rmse": 1.1478245073592666
+        },
+        {
+          "model": "plateau_exponential",
+          "rmse": 1.148437095685499
+        },
+        {
+          "model": "power_law_logN",
+          "rmse": 1.155195076559199
+        },
+        {
+          "model": "stretched_cuberootN",
+          "rmse": 1.158783712761747
+        },
+        {
+          "model": "stretched_sqrtN",
+          "rmse": 1.1608179848937974
+        },
+        {
+          "model": "linear_N",
+          "rmse": 1.167799790073635
+        }
+      ]
+    },
+    {
+      "N_min": 70,
+      "count": 51,
+      "pivot_min": 6.456732141555173e-51,
+      "pivot_min_at_N": 113,
+      "pivot_max": 3.427752357942373e-44,
+      "pivot_max_at_N": 82,
+      "y_last": 49.66254947887191,
+      "y_min": 43.464990561738354,
+      "y_max": 50.189987229988375,
+      "delta_y_median": 0.15292686100424646,
+      "delta_y_last": 0.3041541356214452,
+      "delta_y_abs_max": 5.204173706662985,
+      "delta_y_positive_count": 26,
+      "delta_y_negative_count": 24,
+      "models": {
+        "linear_N": {
+          "intercept": 43.84594244096116,
+          "slope": 0.045276935012086315,
+          "rmse": 1.180195855683497
+        },
+        "power_law_logN": {
+          "intercept": 28.879241905110135,
+          "slope": 4.242555360560218,
+          "rmse": 1.178876324519783
+        },
+        "stretched_sqrtN": {
+          "intercept": 39.60333212854938,
+          "slope": 0.8792628186307562,
+          "rmse": 1.1793169430050883
+        },
+        "stretched_cuberootN": {
+          "intercept": 35.36078564414884,
+          "slope": 2.8098846023001247,
+          "rmse": 1.1791204942508984
+        },
+        "plateau_inverse_power": {
+          "parameter": 0.25,
+          "asymptote_y": 65.058815522594,
+          "amplitude": -52.59496836855593,
+          "rmse": 1.178825016744893
+        },
+        "plateau_exponential": {
+          "parameter": 0.013000000000000001,
+          "asymptote_y": 51.65492679114913,
+          "amplitude": -11.842702643267266,
+          "rmse": 1.1788890571038442
+        }
+      },
+      "model_ranking_by_rmse": [
+        {
+          "model": "plateau_inverse_power",
+          "rmse": 1.178825016744893
+        },
+        {
+          "model": "power_law_logN",
+          "rmse": 1.178876324519783
+        },
+        {
+          "model": "plateau_exponential",
+          "rmse": 1.1788890571038442
+        },
+        {
+          "model": "stretched_cuberootN",
+          "rmse": 1.1791204942508984
+        },
+        {
+          "model": "stretched_sqrtN",
+          "rmse": 1.1793169430050883
+        },
+        {
+          "model": "linear_N",
+          "rmse": 1.180195855683497
+        }
+      ]
+    },
+    {
+      "N_min": 80,
+      "count": 41,
+      "pivot_min": 6.456732141555173e-51,
+      "pivot_min_at_N": 113,
+      "pivot_max": 3.427752357942373e-44,
+      "pivot_max_at_N": 82,
+      "y_last": 49.66254947887191,
+      "y_min": 43.464990561738354,
+      "y_max": 50.189987229988375,
+      "delta_y_median": -0.09174826342726305,
+      "delta_y_last": 0.3041541356214452,
+      "delta_y_abs_max": 5.204173706662985,
+      "delta_y_positive_count": 19,
+      "delta_y_negative_count": 21,
+      "models": {
+        "linear_N": {
+          "intercept": 44.20384374296255,
+          "slope": 0.04184411121934482,
+          "rmse": 1.2323014019057104
+        },
+        "power_law_logN": {
+          "intercept": 29.365816186780787,
+          "slope": 4.137039293739577,
+          "rmse": 1.2325882510203376
+        },
+        "stretched_sqrtN": {
+          "intercept": 40.06651795134011,
+          "slope": 0.833644232669556,
+          "rmse": 1.2323682434225955
+        },
+        "stretched_cuberootN": {
+          "intercept": 35.92938485918566,
+          "slope": 2.6884038173618814,
+          "rmse": 1.232424360667726
+        },
+        "plateau_inverse_power": {
+          "parameter": 0.1,
+          "asymptote_y": 89.7106561618198,
+          "amplitude": -65.44050025993693,
+          "rmse": 1.2326509532692262
+        },
+        "plateau_exponential": {
+          "parameter": 0.001,
+          "asymptote_y": 90.23292545040002,
+          "amplitude": -46.2422759803119,
+          "rmse": 1.2323015392005456
+        }
+      },
+      "model_ranking_by_rmse": [
+        {
+          "model": "linear_N",
+          "rmse": 1.2323014019057104
+        },
+        {
+          "model": "plateau_exponential",
+          "rmse": 1.2323015392005456
+        },
+        {
+          "model": "stretched_sqrtN",
+          "rmse": 1.2323682434225955
+        },
+        {
+          "model": "stretched_cuberootN",
+          "rmse": 1.232424360667726
+        },
+        {
+          "model": "power_law_logN",
+          "rmse": 1.2325882510203376
+        },
+        {
+          "model": "plateau_inverse_power",
+          "rmse": 1.2326509532692262
+        }
+      ]
+    },
+    {
+      "N_min": 90,
+      "count": 31,
+      "pivot_min": 6.456732141555173e-51,
+      "pivot_min_at_N": 113,
+      "pivot_max": 5.962726061878747e-47,
+      "pivot_max_at_N": 107,
+      "y_last": 49.66254947887191,
+      "y_min": 46.224555142448196,
+      "y_max": 50.189987229988375,
+      "delta_y_median": -0.09174826342726305,
+      "delta_y_last": 0.3041541356214452,
+      "delta_y_abs_max": 3.84752214568055,
+      "delta_y_positive_count": 14,
+      "delta_y_negative_count": 16,
+      "models": {
+        "linear_N": {
+          "intercept": 44.39870833492996,
+          "slope": 0.04014139476861311,
+          "rmse": 1.0484457082486571
+        },
+        "power_law_logN": {
+          "intercept": 29.022955211119804,
+          "slope": 4.212752835144471,
+          "rmse": 1.047875625101734
+        },
+        "stretched_sqrtN": {
+          "intercept": 40.18731064293921,
+          "slope": 0.8230668411764952,
+          "rmse": 1.0481591728930786
+        },
+        "stretched_cuberootN": {
+          "intercept": 35.97501329196321,
+          "slope": 2.68113814039802,
+          "rmse": 1.0480643185940692
+        },
+        "plateau_inverse_power": {
+          "parameter": 8.0,
+          "asymptote_y": 49.163283069928575,
+          "amplitude": -6271113008612917.0,
+          "rmse": 1.043784259767884
+        },
+        "plateau_exponential": {
+          "parameter": 0.5,
+          "asymptote_y": 48.76888616607902,
+          "amplitude": -6.618865546873739e+19,
+          "rmse": 1.0339645103329116
+        }
+      },
+      "model_ranking_by_rmse": [
+        {
+          "model": "plateau_exponential",
+          "rmse": 1.0339645103329116
+        },
+        {
+          "model": "plateau_inverse_power",
+          "rmse": 1.043784259767884
+        },
+        {
+          "model": "power_law_logN",
+          "rmse": 1.047875625101734
+        },
+        {
+          "model": "stretched_cuberootN",
+          "rmse": 1.0480643185940692
+        },
+        {
+          "model": "stretched_sqrtN",
+          "rmse": 1.0481591728930786
+        },
+        {
+          "model": "linear_N",
+          "rmse": 1.0484457082486571
+        }
+      ]
+    },
+    {
+      "N_min": 100,
+      "count": 21,
+      "pivot_min": 6.456732141555173e-51,
+      "pivot_min_at_N": 113,
+      "pivot_max": 5.962726061878747e-47,
+      "pivot_max_at_N": 107,
+      "y_last": 49.66254947887191,
+      "y_min": 46.224555142448196,
+      "y_max": 50.189987229988375,
+      "delta_y_median": -0.1884260900816379,
+      "delta_y_last": 0.3041541356214452,
+      "delta_y_abs_max": 3.84752214568055,
+      "delta_y_positive_count": 9,
+      "delta_y_negative_count": 11,
+      "models": {
+        "linear_N": {
+          "intercept": 46.445783462859474,
+          "slope": 0.021765484175470595,
+          "rmse": 1.0378751899284038
+        },
+        "power_law_logN": {
+          "intercept": 38.31908848636728,
+          "slope": 2.2389839081356464,
+          "rmse": 1.038893460117778
+        },
+        "stretched_sqrtN": {
+          "intercept": 44.20602311694073,
+          "slope": 0.4419988030244387,
+          "rmse": 1.038388332549196
+        },
+        "stretched_cuberootN": {
+          "intercept": 41.96678461103454,
+          "slope": 1.4349654145447195,
+          "rmse": 1.0385576595136006
+        },
+        "plateau_inverse_power": {
+          "parameter": 0.1,
+          "asymptote_y": 71.07292351414434,
+          "amplitude": -35.568332967855014,
+          "rmse": 1.0389934162925725
+        },
+        "plateau_exponential": {
+          "parameter": 0.5,
+          "asymptote_y": 48.737154400483746,
+          "amplitude": 4.4055069149300256e+21,
+          "rmse": 1.0250556383282678
+        }
+      },
+      "model_ranking_by_rmse": [
+        {
+          "model": "plateau_exponential",
+          "rmse": 1.0250556383282678
+        },
+        {
+          "model": "linear_N",
+          "rmse": 1.0378751899284038
+        },
+        {
+          "model": "stretched_sqrtN",
+          "rmse": 1.038388332549196
+        },
+        {
+          "model": "stretched_cuberootN",
+          "rmse": 1.0385576595136006
+        },
+        {
+          "model": "power_law_logN",
+          "rmse": 1.038893460117778
+        },
+        {
+          "model": "plateau_inverse_power",
+          "rmse": 1.0389934162925725
+        }
+      ]
+    }
+  ],
+  "last_41": [
+    {
+      "N": 80,
+      "s": 3.2711629893940573e-50,
+      "y": 49.48529781612236
+    },
+    {
+      "N": 81,
+      "s": 5.430192906496163e-49,
+      "y": 48.265184741914155
+    },
+    {
+      "N": 82,
+      "s": 3.427752357942373e-44,
+      "y": 43.464990561738354
+    },
+    {
+      "N": 83,
+      "s": 2.1420802232220825e-49,
+      "y": 48.66916426840134
+    },
+    {
+      "N": 84,
+      "s": 1.3293794735290867e-48,
+      "y": 47.876351031295194
+    },
+    {
+      "N": 85,
+      "s": 1.2705097357796271e-48,
+      "y": 47.8960220026489
+    },
+    {
+      "N": 86,
+      "s": 1.1469587457736872e-49,
+      "y": 48.94045220267855
+    },
+    {
+      "N": 87,
+      "s": 8.713658901444332e-48,
+      "y": 47.05979944464354
+    },
+    {
+      "N": 88,
+      "s": 1.202780155687652e-49,
+      "y": 48.91981374580801
+    },
+    {
+      "N": 89,
+      "s": 4.773365711678454e-47,
+      "y": 46.32117529086327
+    },
+    {
+      "N": 90,
+      "s": 1.3447954906578318e-47,
+      "y": 46.87134375583398
+    },
+    {
+      "N": 91,
+      "s": 1.6573081082466568e-47,
+      "y": 46.78059674488641
+    },
+    {
+      "N": 92,
+      "s": 4.355903936588208e-50,
+      "y": 49.3609217065723
+    },
+    {
+      "N": 93,
+      "s": 7.070023834823613e-50,
+      "y": 49.150579122085006
+    },
+    {
+      "N": 94,
+      "s": 9.26382323794552e-50,
+      "y": 49.03320974026574
+    },
+    {
+      "N": 95,
+      "s": 2.8964098424565763e-47,
+      "y": 46.53813998538795
+    },
+    {
+      "N": 96,
+      "s": 2.889836473830551e-48,
+      "y": 47.53912673181866
+    },
+    {
+      "N": 97,
+      "s": 4.149011617586896e-50,
+      "y": 49.38205534910768
+    },
+    {
+      "N": 98,
+      "s": 1.2370506916910702e-48,
+      "y": 47.907612503547405
+    },
+    {
+      "N": 99,
+      "s": 1.5244333814874794e-49,
+      "y": 48.81689154977321
+    },
+    {
+      "N": 100,
+      "s": 6.984196884801587e-51,
+      "y": 50.15588352635036
+    },
+    {
+      "N": 101,
+      "s": 1.5888919581396633e-49,
+      "y": 48.79890563305003
+    },
+    {
+      "N": 102,
+      "s": 1.9671790148367154e-49,
+      "y": 48.70615611714308
+    },
+    {
+      "N": 103,
+      "s": 3.7839600893813054e-49,
+      "y": 48.42205345288676
+    },
+    {
+      "N": 104,
+      "s": 8.870601610252425e-50,
+      "y": 49.05204692502141
+    },
+    {
+      "N": 105,
+      "s": 6.848645314128368e-49,
+      "y": 48.164395324972105
+    },
+    {
+      "N": 106,
+      "s": 8.470766528530659e-51,
+      "y": 50.072077288128746
+    },
+    {
+      "N": 107,
+      "s": 5.962726061878747e-47,
+      "y": 46.224555142448196
+    },
+    {
+      "N": 108,
+      "s": 2.2510971476334028e-48,
+      "y": 47.64760576232035
+    },
+    {
+      "N": 109,
+      "s": 9.895558296614042e-51,
+      "y": 50.00455969834502
+    },
+    {
+      "N": 110,
+      "s": 3.1776739174818807e-47,
+      "y": 46.49789067072338
+    },
+    {
+      "N": 111,
+      "s": 8.338350877786924e-50,
+      "y": 49.078919833714345
+    },
+    {
+      "N": 112,
+      "s": 1.8669853409023466e-49,
+      "y": 48.728859092008186
+    },
+    {
+      "N": 113,
+      "s": 6.456732141555173e-51,
+      "y": 50.189987229988375
+    },
+    {
+      "N": 114,
+      "s": 2.6738407838709233e-50,
+      "y": 49.57286445673931
+    },
+    {
+      "N": 115,
+      "s": 1.3695713855696744e-49,
+      "y": 48.86341532627893
+    },
+    {
+      "N": 116,
+      "s": 2.6669440293869026e-49,
+      "y": 48.57398609866463
+    },
+    {
+      "N": 117,
+      "s": 3.810782036965453e-50,
+      "y": 49.41898589060076
+    },
+    {
+      "N": 118,
+      "s": 3.584025790119654e-49,
+      "y": 48.44562887387979
+    },
+    {
+      "N": 119,
+      "s": 4.381316798914363e-50,
+      "y": 49.358395343250464
+    },
+    {
+      "N": 120,
+      "s": 2.1749562286349917e-50,
+      "y": 49.66254947887191
+    }
+  ],
+  "selected": [
+    {
+      "N": 0,
+      "s": 0.02511878208811645,
+      "y": 1.600001421671832
+    },
+    {
+      "N": 1,
+      "s": 7.148886083101749e-07,
+      "y": 6.1457616233247725
+    },
+    {
+      "N": 2,
+      "s": 5.457366659030637e-10,
+      "y": 9.263016866696177
+    },
+    {
+      "N": 4,
+      "s": 4.1639156376663175e-15,
+      "y": 14.380498078024889
+    },
+    {
+      "N": 8,
+      "s": 3.7960908187303163e-22,
+      "y": 21.420663405938736
+    },
+    {
+      "N": 16,
+      "s": 2.6026644670403646e-29,
+      "y": 28.584581817102254
+    },
+    {
+      "N": 24,
+      "s": 2.1564008522750777e-33,
+      "y": 32.666270505197005
+    },
+    {
+      "N": 32,
+      "s": 4.6024676806360654e-38,
+      "y": 37.33700925250797
+    },
+    {
+      "N": 40,
+      "s": 2.465993294902124e-42,
+      "y": 41.608008108596316
+    },
+    {
+      "N": 48,
+      "s": 4.082998141817151e-43,
+      "y": 42.38902081772548
+    },
+    {
+      "N": 60,
+      "s": 1.9353465823395938e-47,
+      "y": 46.71324125011828
+    },
+    {
+      "N": 70,
+      "s": 8.557854863114685e-47,
+      "y": 46.067635083204145
+    },
+    {
+      "N": 80,
+      "s": 3.2711629893940573e-50,
+      "y": 49.48529781612236
+    },
+    {
+      "N": 90,
+      "s": 1.3447954906578318e-47,
+      "y": 46.87134375583398
+    },
+    {
+      "N": 100,
+      "s": 6.984196884801587e-51,
+      "y": 50.15588352635036
+    },
+    {
+      "N": 110,
+      "s": 3.1776739174818807e-47,
+      "y": 46.49789067072338
+    },
+    {
+      "N": 120,
+      "s": 2.1749562286349917e-50,
+      "y": 49.66254947887191
+    }
+  ]
+}
