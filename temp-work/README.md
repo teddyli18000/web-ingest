@@ -16,7 +16,9 @@ Temporary Agents normally work directly on `main`; ordinary `temp-work/` work do
 
 Agents should stay focused on the task instead of repeatedly managing repository state. There is no separate HEAD check or branch-synchronization ritual before each write. Prefer independent task files so concurrent work naturally lands without contention. When an existing file genuinely needs editing, read that file itself and use the current blob SHA required by GitHub; if that exact file changed concurrently, re-read only it and retry the smallest intended edit.
 
-Repository coordination belongs to the maintenance layer. The `Temp work patrol` Action watches direct-to-main activity for cross-workspace writes, missing workspace records, unusually high commit activity, and files being edited repeatedly in a short window. The weekly cleanup bot manages workspace lifecycle.
+Repository coordination belongs to the maintenance layer. The `Temp work patrol` Action is intentionally lightweight: it ignores normal high-frequency commits and only records boundary incidents, such as one commit touching multiple temporary workspaces or temporary work spilling outside its own workspace. These incidents are written to the Action Step Summary for later inspection and do not block the Agent or fail the run.
+
+The weekly cleanup bot manages workspace lifecycle.
 
 ## Public-repository safety
 
