@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-01** | **642** | **642** | **642** | **642** | **641** |
+| **2024-11-28** | **2026-09-02** | **643** | **643** | **643** | **643** | **642** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 4 |
+| `google_trending_now` | 8 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-09-01
+### Latest SG snapshot — 2026-09-02
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | taekwondo | 10000+ |
-| 2 | aston villa vs arsenal | 2000+ |
-| 3 | barcelona vs rayo vallecano | 500+ |
-| 4 | alex yam | 5000+ |
-| 5 | lee yong joo princess hours | 2000+ |
-| 6 | non profit hospital | 5000+ |
-| 7 | cooling center | 5000+ |
-| 8 | collecting discarded cans for refunds | 2000+ |
-| 9 | singapore hawker centre cleaning schedule | 5000+ |
-| 10 | jack neo ah boys to firefighters | 500+ |
+| 1 | lorong lew lian | 2000+ |
+| 2 | non stop flight | 2000+ |
+| 3 | certis cisco | 2000+ |
+| 4 | lev panfilov | 1000+ |
+| 5 | singapore flu positivity rate cda | 2000+ |
+| 6 | thailand shortens tourist stay limit | 1000+ |
+| 7 | food court | 200+ |
+| 8 | wallich residence | 100+ |
+| 9 | dyson toothbrush | 2000+ |
+| 10 | tabung haji | 200+ |
 
-### Latest US snapshot — 2026-09-01
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | barcelona vs rayo vallecano | 200000+ |
-| 2 | israel travel restrictions state department | 200000+ |
-| 3 | aston villa vs arsenal | 100000+ |
-| 4 | novak djokovic | 200000+ |
-| 5 | outlook outage | 50000+ |
-| 6 | khan | 50000+ |
-| 7 | heavy mixed triplets california birth | 50000+ |
-| 8 | messi | 50000+ |
-| 9 | pro wrestler paul leduc passes | 20000+ |
-| 10 | daniel richman fbi leak probe | 20000+ |
-
-### Latest GB snapshot — 2026-09-01
+### Latest US snapshot — 2026-09-02
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | aston villa vs arsenal | 100000+ |
-| 2 | barcelona vs rayo vallecano | 10000+ |
-| 3 | catherine, princess of wales | 20000+ |
-| 4 | grand canyon flash floods | 10000+ |
-| 5 | emmerdale emmerdale | 20000+ |
-| 6 | revolut user account fraud jersey | 5000+ |
-| 7 | atorvastatin | 10000+ |
-| 8 | lindsay clancy | 20000+ |
-| 9 | novak djokovic | 20000+ |
-| 10 | james bond | 10000+ |
+| 1 | erin piacenti | 200000+ |
+| 2 | cardinals vs dodgers | 50000+ |
+| 3 | rosanna scotto cries live on air | 50000+ |
+| 4 | john roberts white house dissent | 20000+ |
+| 5 | dyson toothbrush | 50000+ |
+| 6 | giants vs pirates | 20000+ |
+| 7 | mike johnson | 10000+ |
+| 8 | braves vs nationals | 20000+ |
+| 9 | stan kroenke | 50000+ |
+| 10 | blue jays vs guardians | 20000+ |
 
-### Latest HK snapshot — 2026-09-01
+### Latest GB snapshot — 2026-09-02
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 夜生活 | 2000+ |
-| 2 | 謝振軒 | 5000+ |
-| 3 | 阿斯頓維拉對兵工廠 | 1000+ |
-| 4 | aston villa vs arsenal | 500+ |
-| 5 | 何超瓊 | 200+ |
-| 6 | 謝淑怡 | 2000+ |
-| 7 | 沙德爾 | 2000+ |
-| 8 | 黎彼得 | 2000+ |
-| 9 | low-pressure area | 2000+ |
-| 10 | windy | 2000+ |
+| 1 | british airways ba825 emergency descent | 50000+ |
+| 2 | west ham vs wolves | 100000+ |
+| 3 | martin lewis | 20000+ |
+| 4 | pacific marine heatwave and el nino | 20000+ |
+| 5 | birmingham vs southampton | 20000+ |
+| 6 | bedford school | 10000+ |
+| 7 | uk new 76 number plates | 10000+ |
+| 8 | israel | 5000+ |
+| 9 | dark matter | 5000+ |
+| 10 | keir starmer | 10000+ |
 
-[Open full snapshot →](data/2026/09/01/trending.json)
+### Latest HK snapshot — 2026-09-02
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 熱帶風暴 沙德爾 | 100000+ |
+| 2 | 李嘉欣 | 2000+ |
+| 3 | 陳觀泰 | 2000+ |
+| 4 | 黃之鋒 | 2000+ |
+| 5 | 浪漫勇士 | 500+ |
+| 6 | 热带风暴 沙德尔 | 2000+ |
+| 7 | joshua wong | 500+ |
+| 8 | 李浩林 | 1000+ |
+| 9 | bigbang 香港演唱會 | 500+ |
+| 10 | 儲蓄 | 500+ |
+
+[Open full snapshot →](data/2026/09/02/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 244 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 245 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
