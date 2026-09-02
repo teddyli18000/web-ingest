@@ -17,14 +17,17 @@ jobs:
       matrix:
         include:
           - N: 16
-            prec: 1800
-            dps: 180
-          - N: 24
             prec: 2600
-            dps: 220
-          - N: 32
+            dps: 280
+            hs: '1e-20,1e-22,1e-24'
+          - N: 24
             prec: 3600
-            dps: 260
+            dps: 340
+            hs: '1e-30,1e-32,1e-34'
+          - N: 32
+            prec: 5000
+            dps: 430
+            hs: '1e-40,1e-42,1e-44'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -39,18 +42,18 @@ jobs:
         run: |
           git clone --quiet https://github.com/akivag613/connes-cvs-.git upstream-connes-cvs
           git -C upstream-connes-cvs checkout --quiet 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c
-      - name: Decompose Schur log-flow
+      - name: Decompose Schur log-flow below conditioning floor
         run: |
           python temp-work/riemann-weil-research/experiments/schur_flow_component_decomposition.py \
             --upstream-script upstream-connes-cvs/papers/2_guinand_weil_dictionary_tail_order/scripts/arb_ldlt_certify.py \
             --upstream-commit 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c \
             --c0 100 --N ${{ matrix.N }} --prec ${{ matrix.prec }} --dps ${{ matrix.dps }} \
-            --hs '1e-6,1e-8' \
-            --output schur-flow-components-c100-N${{ matrix.N }}.json
+            --hs '${{ matrix.hs }}' \
+            --output schur-flow-components-deep-c100-N${{ matrix.N }}.json
       - uses: actions/upload-artifact@v4
         with:
-          name: schur-flow-components-c100-N${{ matrix.N }}
-          path: schur-flow-components-c100-N${{ matrix.N }}.json
+          name: schur-flow-components-deep-c100-N${{ matrix.N }}
+          path: schur-flow-components-deep-c100-N${{ matrix.N }}.json
           retention-days: 1
 
   collect:
@@ -62,19 +65,19 @@ jobs:
           fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
-          pattern: schur-flow-components-*
+          pattern: schur-flow-components-deep-*
           path: downloaded
           merge-multiple: true
       - name: Commit results safely
         run: |
           set -euo pipefail
           mkdir -p temp-work/riemann-weil-research/results
-          cp downloaded/schur-flow-components-*.json temp-work/riemann-weil-research/results/
+          cp downloaded/schur-flow-components-deep-*.json temp-work/riemann-weil-research/results/
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add temp-work/riemann-weil-research/results/schur-flow-components-*.json
+          git add temp-work/riemann-weil-research/results/schur-flow-components-deep-*.json
           git diff --cached --quiet && exit 0
-          git commit -m 'research: record Schur-flow component decomposition'
+          git commit -m 'research: record deep Schur-flow component decomposition'
           for attempt in 1 2 3 4; do
             git fetch origin main
             git rebase origin/main && git push origin HEAD:main && exit 0
