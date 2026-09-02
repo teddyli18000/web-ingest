@@ -10,6 +10,12 @@
 - Every workspace must contain a short non-empty `README.md` describing its purpose, important inputs/outputs, current conclusion, and whether anything should move into a persistent task or repository maintenance area.
 - `temp-work/` is not a second persistent task namespace. Durable collection code/data belongs in the relevant root task; durable repository-wide maintenance belongs in `tools/`.
 
+## Concurrent Agents
+
+Temporary Agents work directly on `main`; they do not need a branch or PR for ordinary `temp-work/` work. Before each write, re-read the latest target on `main`. If another Agent moved `main` or changed the target first, refresh and retry only your intended change instead of forcing or rewriting history.
+
+The `Temp work patrol` Action watches pushes for workspace isolation, required README files, and unusually hot workspaces/files. It helps catch coordination mistakes, but it deliberately stays lightweight and does not serialize every Agent behind a lock.
+
 ## Public-repository safety
 
 This repository is public. Treat everything committed here, printed in Actions logs, uploaded as an artifact, or written to a Step Summary as potentially visible to anyone.
