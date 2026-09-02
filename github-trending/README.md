@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-01** | **4,346** | **2,499** |
+| **2014-08-09** | **2026-09-02** | **4,347** | **2,500** |
 
-### Latest All-Languages snapshot — 2026-09-01
+### Latest All-Languages snapshot — 2026-09-02
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [THU-MAIC/OpenMAIC](https://github.com/THU-MAIC/OpenMAIC) | TypeScript | 2,819 |
-| 2 | [tt-a1i/archify](https://github.com/tt-a1i/archify) | JavaScript | 3,993 |
-| 3 | [K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills) | Python | 1,968 |
-| 4 | [k1tbyte/Wand-Enhancer](https://github.com/k1tbyte/Wand-Enhancer) | C# | 511 |
-| 5 | [majd/ipatool](https://github.com/majd/ipatool) | Go | 376 |
-| 6 | [jingyaogong/minimind](https://github.com/jingyaogong/minimind) | Python | 472 |
-| 7 | [Osmantic/ODS](https://github.com/Osmantic/ODS) | Python | 163 |
-| 8 | [checkstyle/checkstyle](https://github.com/checkstyle/checkstyle) | Java | 199 |
-| 9 | [zhaoxuya520/reverse-skill](https://github.com/zhaoxuya520/reverse-skill) | PowerShell | 1,439 |
-| 10 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 548 |
+| 1 | [Gitlawb/openclaude](https://github.com/Gitlawb/openclaude) | TypeScript | 80 |
+| 2 | [Imbad0202/academic-research-skills](https://github.com/Imbad0202/academic-research-skills) | Python | 193 |
+| 3 | [THU-MAIC/OpenMAIC](https://github.com/THU-MAIC/OpenMAIC) | TypeScript | 3,128 |
+| 4 | [iv-org/invidious](https://github.com/iv-org/invidious) | Crystal | 577 |
+| 5 | [jingyaogong/minimind](https://github.com/jingyaogong/minimind) | Python | 1,005 |
+| 6 | [3b1b/manim](https://github.com/3b1b/manim) | Python | 86 |
+| 7 | [firecrawl/pdf-inspector](https://github.com/firecrawl/pdf-inspector) | Rust | 541 |
+| 8 | [browser-use/video-use](https://github.com/browser-use/video-use) | Python | 472 |
+| 9 | [K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills) | Python | 912 |
+| 10 | [handsomestWei/patent-disclosure-skill](https://github.com/handsomestWei/patent-disclosure-skill) | Python | 501 |
 
-[Open full snapshot →](data/2026/09/01/trending.json)
+[Open full snapshot →](data/2026/09/02/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 244 days  
+[`2026`](data/2026/) · 245 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
