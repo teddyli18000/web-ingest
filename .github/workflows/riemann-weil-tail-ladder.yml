@@ -1,0 +1,176 @@
+name: Riemann-Weil tail ladder
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "temp-work/riemann-weil-research/experiments/source_escape_diagnostic.py"
+      - "temp-work/riemann-weil-research/experiments/arch_tail_budget_diagnostic.py"
+      - "temp-work/riemann-weil-research/experiments/cutoff_ladder.py"
+      - ".github/workflows/riemann-weil-tail-ladder.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: riemann-weil-tail-ladder
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: probe T=${{ matrix.T }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        T: [120, 240, 480]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install public research package
+        run: python -m pip install --disable-pip-version-check connes-cvs==0.3.1
+
+      - name: Run ground-source diagnostic
+        run: |
+          python temp-work/riemann-weil-research/experiments/source_escape_diagnostic.py \
+            --cutoffs 100 \
+            --Ns 16 \
+            --T ${{ matrix.T }} \
+            --dps 60 \
+            --output probe-${{ matrix.T }}.json
+          python -m json.tool probe-${{ matrix.T }}.json >/dev/null
+
+      - name: Upload probe
+        uses: actions/upload-artifact@v4
+        with:
+          name: probe-${{ matrix.T }}
+          path: probe-${{ matrix.T }}.json
+          retention-days: 1
+
+  budget:
+    name: rigorous tail budget
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Arb bindings
+        run: python -m pip install --disable-pip-version-check python-flint
+
+      - name: Compute interval tail bounds
+        run: |
+          python temp-work/riemann-weil-research/experiments/arch_tail_budget_diagnostic.py \
+            --c 100 --N 16 --Ts 120,240,480 --prec 300 --dyadic-count 24 \
+            --output tail-budget.json
+          python -m json.tool tail-budget.json >/dev/null
+
+      - name: Upload tail budget
+        uses: actions/upload-artifact@v4
+        with:
+          name: tail-budget
+          path: tail-budget.json
+          retention-days: 1
+
+  collect:
+    name: collect certified ladder
+    needs: [probe, budget]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download probe artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: probe-*
+          path: tmp/probes
+          merge-multiple: true
+
+      - name: Download tail budget
+        uses: actions/download-artifact@v4
+        with:
+          name: tail-budget
+          path: tmp/budget
+
+      - name: Merge results
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          probes = []
+          for path in sorted(Path("tmp/probes").glob("probe-*.json")):
+              payload = json.loads(path.read_text())
+              run = payload["runs"][0]
+              probes.append(run)
+
+          budget = json.loads(Path("tmp/budget/tail-budget.json").read_text())
+          by_T = {int(x["T"]): x for x in budget["results"]}
+
+          rows = []
+          for run in sorted(probes, key=lambda x: int(x["T_archimedean_cutoff"])):
+              T = int(run["T_archimedean_cutoff"])
+              diag = run["diagnostics"][0]
+              rows.append({
+                  "T": T,
+                  "finite_T_ground_eigenvalue": diag["finite_T_ground_eigenvalue"],
+                  "periodic_log_energy": diag["periodic_log_energy"],
+                  "outer_25pct_frequency_mass": diag["outer_25pct_frequency_mass"],
+                  "endpoint_mass_eps_0.05": diag["endpoint_mass_eps_0.05"],
+                  "endpoint_mass_eps_0.10": diag["endpoint_mass_eps_0.10"],
+                  "source_T_at_0": diag["source_T_at_0"],
+                  "B_T_trace_upper_interval": by_T[T]["B_T_trace_upper_interval"],
+                  "B_T_trace_upper_numeric_upper": by_T[T]["B_T_trace_upper_numeric_upper"],
+                  "tail_threshold_pass": by_T[T]["threshold_pass"],
+              })
+
+          out = {
+              "status": "research_probe_with_rigorous_tail_budget",
+              "c": 100,
+              "N": 16,
+              "normalization": "CvS/Groskin cutoff c corresponds to compact-window half-width log(c)/2",
+              "certificate": "For each row, 0 <= Q_infty-Q_T <= B_T I; finite-T negative values certify nothing unless below -B_T.",
+              "rows": rows,
+          }
+          dest = Path("temp-work/riemann-weil-research/results/cutoff-tail-ladder-c100-N16.json")
+          dest.parent.mkdir(parents=True, exist_ok=True)
+          dest.write_text(json.dumps(out, indent=2, sort_keys=True) + "\n")
+          print(json.dumps(out, indent=2, sort_keys=True))
+          PY
+          python -m json.tool temp-work/riemann-weil-research/results/cutoff-tail-ladder-c100-N16.json >/dev/null
+
+      - name: Commit result safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp-work/riemann-weil-research/results/cutoff-tail-ladder-c100-N16.json
+          if git diff --cached --quiet; then
+            echo "No result change"
+            exit 0
+          fi
+          git commit -m "research(riemann): record certified cutoff ladder"
+          git pull --rebase origin main
+          git push origin HEAD:main
