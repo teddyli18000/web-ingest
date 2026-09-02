@@ -11,6 +11,21 @@ This directory is a disposable Agent workspace, not persistent storage.
 - Do not use a temporary workspace as an excuse to modify `ai-daily/`, `github-trending/`, `google-trending/`, `tools/`, repository root files, or persistent workflows unless the current user task explicitly requires that durable change.
 - When an experiment proves a durable change is needed, keep the experiment isolated first, validate it, then make the smallest intentional change in the proper persistent location.
 
+## Direct-main coordination
+
+Temporary Agents work directly on `main`. Do not create a branch or PR just for work inside `temp-work/` unless the user explicitly asks for one.
+
+Multiple Agents may be active at the same time, so treat every GitHub write as optimistic concurrency:
+
+- immediately before a write, re-read the latest `main` state and the target file/directory;
+- keep each commit limited to one first-level workspace, `temp-work/<work-name>/`;
+- when updating an existing file, use the freshly read blob SHA/current content rather than an older cached copy;
+- if a write fails because `main`, the file SHA, or the target changed, do not force it through: re-read latest `main`, re-apply only your intended change, and retry;
+- never force-push, reset, revert another Agent's work, or rewrite shared history to resolve a temporary-work collision;
+- avoid editing the same file concurrently when work can instead be split into separate notes, experiments, or result files inside the same workspace.
+
+`.github/workflows/temp-work-patrol.yml` is the lightweight coordinator/patrol bot. It checks direct-to-main temp-work pushes for workspace isolation and missing workspace README files. It is a backstop, not a lock service; safe writes still depend on the re-read-and-retry rules above.
+
 ## Minimum record
 
 Every `temp-work/<work-name>/` must contain a non-empty `README.md` that briefly records:
