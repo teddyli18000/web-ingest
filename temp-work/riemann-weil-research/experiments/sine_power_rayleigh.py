@@ -43,6 +43,14 @@ def interval_payload(x: arb, digits: int = 70) -> dict:
     }
 
 
+def midpoint_log10(x: arb, digits: int = 50) -> str | None:
+    mid = x.mid()
+    if mid <= 0:
+        return None
+    value = mid.log() / arb(10).log()
+    return value.mid().str(digits, radius=False)
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--upstream-script", type=Path, required=True)
@@ -76,6 +84,7 @@ def main() -> None:
                 j = center + joff
                 num += aw * A[i, j] * arb(str(wj))
         q = num / arb(str(denom_int))
+        log10_mid = midpoint_log10(q)
 
         rows.append({
             "m": m,
@@ -83,19 +92,15 @@ def main() -> None:
             "rayleigh": interval_payload(q),
             "certified_positive": bool(q.lower() > 0),
             "certified_negative": bool(q.upper() < 0),
-            "minus_log10_mid_nonrigorous": (
-                None if q.mid() <= 0 else str(-float(q.mid().log(10)))
-            ),
+            "log10_mid_nonrigorous": log10_mid,
+            "minus_log10_mid_nonrigorous": None if log10_mid is None else str(-arb(log10_mid)),
         })
 
-    # Select the smallest positive midpoint only as a descriptive coordinate;
-    # every individual interval remains the actual certificate.
+    # Select by Arb midpoint comparisons, without converting tiny numbers to float.
     positive_rows = [r for r in rows if r["certified_positive"]]
     best = None
     if positive_rows:
-        def key(r):
-            return float(arb(r["rayleigh"]["mid"]))
-        best = min(positive_rows, key=key)
+        best = min(positive_rows, key=lambda r: arb(r["rayleigh"]["mid"]))
 
     payload = {
         "status": "rigorous_cutoff_free_sine_power_rayleigh",
