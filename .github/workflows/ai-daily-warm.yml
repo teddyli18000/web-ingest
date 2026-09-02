@@ -1,0 +1,124 @@
+name: AI Daily - AIHOT warm runner
+
+on:
+  schedule:
+    # Start before the expected 08:00 publication, acquire a runner, then stay alive.
+    # 23:21 UTC = 07:21 Asia/Singapore / Beijing on the following calendar day.
+    - cron: "21 23 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ai-daily-aihot
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    steps:
+      - name: Record schedule timing
+        if: github.event_name == 'schedule'
+        env:
+          SCHEDULE_EXPR: ${{ github.event.schedule }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "### AI Daily warm-runner timing"
+            echo
+            echo "- cron: \`${SCHEDULE_EXPR}\`"
+            echo "- runner acquired: $(TZ=Asia/Singapore date '+%Y-%m-%d %H:%M:%S %Z')"
+            echo "- planned first fetch: 07:58 Asia/Singapore"
+            echo "- run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Check whether today's snapshot already exists
+        id: snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          day="$(TZ=Asia/Shanghai date +%F)"
+          year="${day:0:4}"
+          month="${day:5:2}"
+          date_part="${day:8:2}"
+          dir="ai-daily/data/$year/$month/$date_part"
+
+          present=false
+          if [ -f "$dir/aihot-daily.json" ] && [ -f "$dir/aihot-daily.html" ]; then
+            present=true
+          fi
+
+          echo "date=$day" >> "$GITHUB_OUTPUT"
+          echo "present=$present" >> "$GITHUB_OUTPUT"
+          if [ "$present" = "true" ]; then
+            echo "AIHOT snapshot for $day already exists; warm runner is a no-op."
+          fi
+
+      - name: Hold runner until publication window
+        if: steps.snapshot.outputs.present != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          day="$(TZ=Asia/Shanghai date +%F)"
+          target_epoch="$(TZ=Asia/Shanghai date -d "$day 07:58:00" +%s)"
+          now_epoch="$(date +%s)"
+
+          if (( now_epoch < target_epoch )); then
+            wait_seconds=$((target_epoch - now_epoch))
+            echo "Runner acquired early; holding it for ${wait_seconds}s until 07:58 local."
+            sleep "$wait_seconds"
+          else
+            echo "Runner started after 07:58 local; fetching immediately."
+          fi
+
+      - name: Fetch AIHOT daily
+        if: steps.snapshot.outputs.present != 'true'
+        id: fetch
+        shell: bash
+        run: |
+          set -euo pipefail
+          day="$(TZ=Asia/Shanghai date +%F)"
+          now_epoch="$(date +%s)"
+          deadline_epoch="$(TZ=Asia/Shanghai date -d "$day 08:16:00" +%s)"
+
+          if (( now_epoch < deadline_epoch )); then
+            retry_seconds=10
+            remaining=$((deadline_epoch - now_epoch))
+            attempts=$((remaining / retry_seconds + 1))
+            echo "AIHOT fetch mode: warm publication watcher attempts=$attempts retry=${retry_seconds}s"
+            python3 ai-daily/fetch_aihot_daily.py \
+              --attempts "$attempts" \
+              --retry-seconds "$retry_seconds" \
+              --allow-not-ready
+          else
+            attempts=5
+            retry_seconds=30
+            echo "AIHOT fetch mode: delayed warm-run recovery attempts=$attempts retry=${retry_seconds}s"
+            python3 ai-daily/fetch_aihot_daily.py \
+              --attempts "$attempts" \
+              --retry-seconds "$retry_seconds"
+          fi
+
+      - name: Commit snapshot
+        if: steps.snapshot.outputs.present != 'true'
+        run: |
+          set -euo pipefail
+          git add ai-daily/data
+          if git diff --cached --quiet; then
+            echo "No new snapshot to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data(ai-daily): mirror AIHOT daily ${{ steps.fetch.outputs.report_date }}"
+          git pull --rebase origin main
+          git push origin HEAD:main

@@ -8,16 +8,19 @@ All cron expressions are stored in UTC. Human-facing times below use Asia/Singap
 
 | Workflow | Local schedule | Timeout | Purpose |
 | --- | --- | ---: | --- |
-| `ai-daily.yml` | scheduler hedges 05:53 / 06:13 / 06:33 / 06:53 / 07:13 / 07:33 / 07:53 / 08:13; recovery 08:29 / 09:03 / 10:11 / 11:27 | 13 min | Hedge correlated GitHub scheduler delay before the downstream 08:15 check, then recover only inside its retry window |
+| `ai-daily-warm.yml` | 07:21 daily | 65 min | Acquire a runner before AIHOT's expected 08:00 publication, hold it until 07:58, then poll across the publication boundary |
+| `ai-daily.yml` | recovery 08:43 / 09:03 / 10:11 / 11:27 | 13 min | Short recovery opportunities plus manual backfill |
 | `github-trending.yml` | 09:31 / 10:43 / 11:55 daily | 15 min | Three retry opportunities; first valid snapshot wins |
 | `google-trending.yml` | 12:37 / 13:49 daily | 15 min | Capture SG + US + GB + HK Trending Now; second slot is retry/no-op |
 | `temp-work-cleanup.yml` | 23:17 Sunday | 3 min | Delete first-level `temp-work/` workspaces untouched by meaningful commits for more than one month |
 
-AI Daily is intentionally different from the other collectors because punctuality around an external publication time matters. Its known downstream consumer checks the mirror at 08:15 and then hourly through 12:15, so collection effort is concentrated before the first check and only retained while those retries can still consume the result. There are no afternoon/evening AI Daily recovery slots after that useful window.
+AI Daily is intentionally different from the other collectors because punctuality around an external publication time matters. Its known downstream consumer checks the mirror at 08:15 and then hourly through 12:15.
 
-AI Daily does not assume that schedule delay is independent between nearby cron events. Its primary nominal events are spread from 05:53 through 08:13 at 20-minute spacing. An event that actually starts before 07:49 is only a cheap one-shot probe; if GitHub delays that same event into 07:49-08:15, it automatically becomes a dense 10-second publication watcher. This turns early cron events into scheduler-lag hedges without keeping runners or the AIHOT endpoint busy for hours when GitHub is punctual.
+The primary AI Daily workflow therefore **acquires and holds** a runner instead of relying on a fresh scheduled event near 08:00. A nominal 07:21 run checks whether today's snapshot already exists, then stays alive until 07:58 and polls AIHOT every 10 seconds until 08:16. If the 07:21 schedule itself is delayed past the publication window, the same run skips the hold and performs bounded recovery immediately.
 
-The schedule deliberately uses different non-round minutes. Under the timeout + 15-minute planning-buffer rule, AI Daily's 09:03 slot reserves through 09:31, its 10:11 slot through 10:39, and its 11:27 slot through 11:55. These exact boundaries remain non-overlapping with GitHub Trending at 09:31 / 10:43 / 11:55. GitHub Trending's final 11:55 slot reserves through 12:25; Google Trending therefore starts at 12:37. The weekly temp-work cleanup is far outside the collector window and is validated by the same schedule guard.
+The warm workflow's 65-minute timeout plus the repository's 15-minute planning buffer reserves through **08:41**. The first separate recovery slot is therefore **08:43**. Recovery keeps the original short 13-minute timeout; its 09:03 slot reserves through 09:31, its 10:11 slot through 10:39, and its 11:27 slot through 11:55. These boundaries remain non-overlapping with GitHub Trending at 09:31 / 10:43 / 11:55. GitHub Trending's final 11:55 slot reserves through 12:25; Google Trending starts at 12:37.
+
+The warm and recovery workflows share the same `ai-daily-aihot` concurrency group, so delayed runs cannot write AI Daily concurrently.
 
 ## Load-balancing policy
 
@@ -26,17 +29,17 @@ The schedule deliberately uses different non-round minutes. Under the timeout + 
 For every recurring workflow:
 
 - declare `timeout-minutes`;
-- provide `workflow_dispatch` for manual recovery;
+- provide `workflow_dispatch` for manual recovery or operator testing;
 - provide top-level concurrency so repeated runs of the same task do not overlap;
 - keep its scheduled start outside every other recurring workflow's declared timeout window plus the repository buffer;
 - use deliberately different non-round cron minutes where practical rather than copying one minute across bots;
 - keep collection workflows schedule/manual only; code-change validation belongs to repository-integrity CI.
 
-Persistent repository-wide maintenance schedules must be explicitly registered by the integrity checker with their ownership README. Disposable backfill/repair/probe workflows remain forbidden from receiving recurring schedules.
+Most scheduled workflows are owned by a same-named root task directory. Durable exceptions where multiple workflow entry points belong to one task must be explicitly registered in `tools/check-repository-integrity.py` with the owning README. Repository-wide maintenance uses the same mechanism. Disposable backfill/repair/probe workflows remain forbidden from receiving recurring schedules.
 
 The cross-workflow planning buffer is **15 minutes** after the declared timeout. Multiple retry slots inside one idempotent workflow may overlap one another logically; top-level concurrency serializes actual execution, while each run must check whether its intended output already exists.
 
-Scheduled Actions are not exact clocks. GitHub schedule events may be delayed or dropped under load, and nearby events can be delayed together. A task that needs punctual collection should hedge scheduler lag across a sufficiently wide nominal window, keep early on-time probes cheap, and remain idempotent when delayed opportunities eventually arrive.
+Scheduled Actions are not exact clocks. GitHub schedule events may be delayed or dropped under load. For tasks with a hard publication boundary, acquiring a runner moderately early and deliberately holding it can be preferable to betting on several new dispatches close to the deadline.
 
 ## CI and maintenance Actions
 
@@ -44,7 +47,7 @@ Scheduled Actions are not exact clocks. GitHub schedule events may be delayed or
 
 `temp-work-cleanup.yml` is the durable lifecycle manager for `temp-work/`. It is API-only, writes only when stale first-level workspaces actually need deletion, and records its audit trail in the Action Step Summary instead of committing status files.
 
-This is a public repository, so useful Actions execution is not treated as scarce private-runner budget. Reproduction, testing, validation, probes, and short-lived experiments may use Actions aggressively when that materially improves reliability or evidence. Public visibility is the hard constraint: workflows must not expose credentials, private data, private repository content, signed URLs, sensitive environment dumps, or secret-derived artifacts/logs.
+This is a public repository, so useful Actions execution is not treated as scarce private-runner budget. Reproduction, testing, validation, probes, and intentional warm-runner holding may use Actions time when that materially improves reliability. Public visibility is the hard constraint: workflows must not expose credentials, private data, private repository content, signed URLs, sensitive environment dumps, or secret-derived artifacts/logs.
 
 ## Temporary workflows
 

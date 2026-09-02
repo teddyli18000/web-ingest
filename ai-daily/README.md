@@ -21,52 +21,46 @@ Do not convert the v1 payload back into the old field shape.
 
 ## Schedule and reliability
 
-Workflow: `.github/workflows/ai-daily.yml`
+Workflows:
 
-This collector is designed to run without an Agent watching it. GitHub scheduled workflow events are best-effort and can be delayed together, so the repository does not depend on cron events near 08:00 being dispatched close to their nominal times.
+- `.github/workflows/ai-daily-warm.yml` — primary warm runner before publication.
+- `.github/workflows/ai-daily.yml` — short recovery slots and manual backfill.
 
-A known downstream GPT automation checks the completed GitHub mirror first at **08:15 Asia/Singapore**, then retries hourly at **09:15, 10:15, 11:15, and 12:15**. The collector therefore optimizes for one operational objective: have both raw mirror files committed to `main` before 08:15 whenever AIHOT publishes on its normal schedule. Recovery work after the downstream retry window is intentionally avoided.
+A known downstream GPT automation checks the completed GitHub mirror first at **08:15 Asia/Singapore**, then retries hourly at **09:15, 10:15, 11:15, and 12:15**. The primary objective is therefore to have both raw mirror files committed to `main` before 08:15 whenever AIHOT publishes on its normal schedule.
 
-### Scheduler-lag hedge window
+### Warm-runner strategy
 
-Primary nominal opportunities are **05:53, 06:13, 06:33, 06:53, 07:13, 07:33, 07:53, and 08:13 Beijing/Singapore time**.
+The primary schedule is **07:21 Asia/Singapore / Beijing time**.
 
-These times are intentionally spread across more than two hours. The purpose is not to poll AIHOT continuously from 05:53. Instead, behavior depends on when GitHub actually starts the job:
+The goal is to acquire a GitHub-hosted runner before the expected 08:00 publication instead of depending on GitHub to dispatch a new scheduled event exactly around publication time. Once the warm runner starts:
 
-- before **07:49**, the run performs one cheap publication probe and exits successfully if today's report is simply not published yet;
-- from **07:49 through 08:14**, the same delayed run becomes a dense publication watcher, polling every **10 seconds** for up to 72 attempts;
-- once the 08:15 first-consumer deadline has passed, the run uses only short bounded recovery attempts.
+1. it checks out the latest `main` and exits immediately if today's complete snapshot already exists;
+2. if it starts before **07:58**, it deliberately stays alive and sleeps until 07:58;
+3. from 07:58 until **08:16**, it polls AIHOT every **10 seconds**;
+4. if GitHub dispatches the nominal 07:21 event only after 08:16, the same run skips the wait and performs a short bounded recovery fetch instead;
+5. after a successful fetch it commits both raw files with a rebase-before-push.
 
-This design specifically hedges correlated GitHub scheduler delay. On **2026-09-02**, AIHOT had generated the report by **08:00:31** local time, while GitHub showed no actual AI Daily scheduled runner until **09:27:24**. Once that runner started, the collector fetched the report within seconds and pushed the mirror to `main` by **09:27:43**. The available run metadata does not identify which nominal cron expression produced that 09:27 runner, so this incident is treated as a scheduler-dispatch gap rather than attributing an exact delay to one specific cron slot.
+The warm workflow has a **65-minute timeout**. On a normal day it occupies a runner for roughly 40 minutes, most of which is an intentional idle hold before publication. This is a reliability tradeoff: the repository is public, so useful Actions time is not treated as scarce private-runner budget, while obtaining a runner before 08:00 materially reduces exposure to scheduler dispatch lag near the publication deadline.
 
-A nominal early hedge that is delayed into the 07:49-08:15 window automatically becomes a dense watcher, which gives the collector more chances to survive similar correlated dispatch delays without keeping punctual early runs alive for hours.
+The warm run records the triggering cron, actual runner-acquisition time, planned first-fetch time, and run URL in the Step Summary.
 
-Each scheduled run also records its triggering cron expression, the local time when a runner actually began executing, and the run URL in the GitHub Actions Step Summary. This telemetry makes future scheduler delay directly observable instead of requiring it to be inferred from the final mirror commit.
+### Why this replaced distributed early probes
 
-Top-level concurrency still serializes actual execution and every run first checks the latest `main`, so delayed duplicate opportunities become fast no-ops after one complete snapshot lands.
+On **2026-09-02**, AIHOT had generated the report by **08:00:31** local time, while GitHub showed no actual AI Daily scheduled runner until **09:27:24**. Once a runner existed, the collector fetched and committed the report within seconds. The available metadata does not identify which nominal cron produced that delayed run, so the incident demonstrates a scheduler-dispatch gap rather than a proven exact delay for one particular cron.
+
+The previous design spread many cheap one-shot cron opportunities across the morning and hoped that at least one delayed event would land near publication. The warm-runner design is more direct: acquire one runner moderately early and keep it alive across the publication boundary.
 
 ### Recovery slots
 
-If the 08:15 consumer check has already passed and the snapshot is still missing, bounded recovery opportunities run at **08:29, 09:03, 10:11, and 11:27 Beijing/Singapore time**.
+If the warm run does not produce a snapshot, `.github/workflows/ai-daily.yml` provides short recovery opportunities at **08:43, 09:03, 10:11, and 11:27 Asia/Singapore / Beijing time**.
 
-These slots are chosen to feed the remaining downstream retry window while still respecting the repository's cross-workflow schedule guard. There are no AI Daily recovery schedules after the last useful window leading into the downstream 12:15 check.
+The first recovery starts after the warm workflow's declared timeout plus the repository's 15-minute planning buffer. Later slots feed the remaining downstream retry window. Each recovery first checks the latest `main`; once a complete snapshot exists, delayed duplicates become fast no-ops.
 
-### Per-run behavior
+The warm and recovery workflows share the same `ai-daily-aihot` concurrency group, so they do not write the task concurrently even if GitHub dispatches delayed runs out of order.
 
-Every scheduled opportunity:
+### Manual backfill
 
-1. records the triggering cron and actual runner start time in the Step Summary;
-2. checks out the latest `main` at job start, not the stale commit that happened to exist when GitHub queued the event;
-3. checks whether both files for today's Beijing date already exist;
-4. becomes a no-op if the complete snapshot is already committed;
-5. treats an unpublished report as an expected successful result only for an actual start before 07:49;
-6. uses dense 10-second polling only when an actual start lands in the 07:49-08:15 publication window;
-7. uses only short bounded retries after 08:15;
-8. commits with a rebase-before-push so delayed collectors do not collide with other repository writers.
-
-The workflow timeout remains **13 minutes**. Early scheduler hedges normally finish in seconds, while a hedge delayed into the publication window can use most of that timeout. Recovery slots retain the existing schedule-plan boundaries: the 09:03 slot reserves through 09:31, the 10:11 slot through 10:39, and the 11:27 slot through 11:55 under the repository's timeout + 15-minute planning rule.
-
-The workflow can also be run manually with a `YYYY-MM-DD` date to backfill one report. Manual runs do not use the scheduled-run early-exit shortcut, so the collector still performs its normal byte-identity validation against an existing snapshot.
+`.github/workflows/ai-daily.yml` can be run manually with a `YYYY-MM-DD` Beijing date to backfill one report. Manual backfills still use the collector's byte-identity checks and never silently rewrite a different existing snapshot.
 
 ## Output
 
@@ -94,17 +88,17 @@ Existing snapshots are not silently overwritten. A rerun with byte-identical con
 When changing or repairing this task:
 
 1. Read this file first.
-2. Read `.github/workflows/ai-daily.yml` and `ai-daily/fetch_aihot_daily.py` before editing.
+2. Read both `.github/workflows/ai-daily-warm.yml` and `.github/workflows/ai-daily.yml`, plus `ai-daily/fetch_aihot_daily.py`, before editing scheduling behavior.
 3. Preserve both raw outputs: webpage HTML and REST API v1 JSON.
 4. Preserve byte-for-byte mirroring unless the repository owner explicitly changes it.
-5. Keep the API contract, schedule, retry behavior, output paths, and backfill behavior documented here when they change.
+5. Keep the API contract, warm-run timing, recovery timing, output paths, and backfill behavior documented here when they change.
 6. Do not move Gmail sending, summarization, or downstream archive logic into this repository.
-7. Do not reduce AI Daily back to one scheduled trigger; scheduler-lag hedging before the first downstream check is the durable priority.
-8. Do not turn early hedges into long-running pre-publication polling; early on-time runs should stay cheap and only delayed runs should become dense watchers.
-9. Do not add recovery schedules after the downstream retry window unless that downstream contract changes.
+7. Preserve the warm-runner principle unless there is evidence that another strategy is more reliable: acquire a runner before publication and keep it alive across the expected publication boundary.
+8. Keep recovery attempts bounded and inside the downstream retry window.
 
 ## Files
 
 - `ai-daily/fetch_aihot_daily.py` — fetch, validate, retry, and save both original response bodies.
-- `.github/workflows/ai-daily.yml` — scheduled/manual GitHub Action.
+- `.github/workflows/ai-daily-warm.yml` — primary scheduled warm runner.
+- `.github/workflows/ai-daily.yml` — scheduled recovery and manual backfill.
 - `ai-daily/data/` — immutable daily snapshots.
