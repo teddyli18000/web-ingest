@@ -1,0 +1,166 @@
+name: Riemann-Weil cutoff-free ground-state diagnostic
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "temp-work/riemann-weil-research/experiments/cutoff_free_ground_state_diagnostic.py"
+      - ".github/workflows/riemann-weil-cutoff-free-ground-state.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: riemann-weil-cutoff-free-ground-state
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    name: c=100 N=${{ matrix.N }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        N: [8, 12, 16, 24, 32, 48]
+    steps:
+      - name: Checkout research workspace
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install public interval dependencies
+        run: python -m pip install --disable-pip-version-check python-flint mpmath
+
+      - name: Fetch pinned public verifier
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/akivag613/connes-cvs-.git upstream-connes-cvs
+          git -C upstream-connes-cvs checkout --quiet 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c
+          test "$(git -C upstream-connes-cvs rev-parse HEAD)" = "5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c"
+
+      - name: Diagnose cutoff-free ground state
+        run: |
+          python temp-work/riemann-weil-research/experiments/cutoff_free_ground_state_diagnostic.py \
+            --upstream-script upstream-connes-cvs/papers/2_guinand_weil_dictionary_tail_order/scripts/arb_ldlt_certify.py \
+            --upstream-commit 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c \
+            --c 100 --N ${{ matrix.N }} --prec 900 --dps 220 \
+            --output ground-N${{ matrix.N }}.json
+          python -m json.tool ground-N${{ matrix.N }}.json >/dev/null
+
+      - name: Upload diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: cutoff-free-ground-N${{ matrix.N }}
+          path: ground-N${{ matrix.N }}.json
+          retention-days: 1
+
+  collect:
+    name: collect ground-state diagnostics
+    needs: diagnose
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download diagnostics
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cutoff-free-ground-N*
+          path: tmp/grounds
+          merge-multiple: true
+
+      - name: Merge and compare nested bands
+        run: |
+          python - <<'PY'
+          import json, math
+          from pathlib import Path
+
+          rows = [json.loads(p.read_text()) for p in Path('tmp/grounds').glob('ground-N*.json')]
+          rows.sort(key=lambda r: int(r['N']))
+          if not rows:
+              raise SystemExit('no ground-state diagnostics downloaded')
+
+          brackets_path = Path('temp-work/riemann-weil-research/results/cutoff-free-lambda-brackets-c100.json')
+          brackets = json.loads(brackets_path.read_text()) if brackets_path.exists() else None
+          bracket_by_n = {}
+          if brackets:
+              bracket_by_n = {int(r['N']): r for r in brackets.get('rows', [])}
+
+          def coeffs(row):
+              return [float(x) for x in row['coefficients_minusN_to_N']]
+
+          def pad(v, n_small, n_big):
+              out = [0.0] * (2*n_big + 1)
+              off = n_big - n_small
+              out[off:off+len(v)] = v
+              return out
+
+          comparisons = []
+          for a, b in zip(rows, rows[1:]):
+              na, nb = int(a['N']), int(b['N'])
+              va = pad(coeffs(a), na, nb)
+              vb = coeffs(b)
+              dot = sum(x*y for x, y in zip(va, vb))
+              if dot < 0:
+                  va = [-x for x in va]
+                  dot = -dot
+              da = math.sqrt(sum((x-y)**2 for x, y in zip(va, vb)))
+              comparisons.append({
+                  'N_from': na,
+                  'N_to': nb,
+                  'absolute_overlap_padded': dot,
+                  'L2_distance_after_sign_alignment': da,
+              })
+
+          compact_rows = []
+          for r in rows:
+              n = int(r['N'])
+              item = {k: v for k, v in r.items() if k != 'coefficients_minusN_to_N'}
+              if n in bracket_by_n:
+                  item['certified_lambda_lower'] = bracket_by_n[n]['lambda_min_rigorous_lower']
+                  item['certified_lambda_upper'] = bracket_by_n[n]['lambda_min_rigorous_upper']
+              compact_rows.append(item)
+
+          out = {
+              'status': 'cutoff_free_ground_state_collapse_vs_escape_probe',
+              'c': 100,
+              'upstream_commit': '5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c',
+              'rows': compact_rows,
+              'nested_band_comparisons': comparisons,
+              'interpretation': {
+                  'collapse_pattern': 'overlap -> 1, distance -> 0, log-energy bounded, outer mass -> 0',
+                  'escape_pattern': 'overlap fails to stabilize and/or log-energy grows with persistent outer mass',
+                  'warning': 'Ground vectors are midpoint diagnostics; eigenvalue signs come only from the separate Arb interval-LDL certificates.'
+              },
+          }
+          dest = Path('temp-work/riemann-weil-research/results/cutoff-free-ground-state-c100.json')
+          dest.parent.mkdir(parents=True, exist_ok=True)
+          dest.write_text(json.dumps(out, indent=2, sort_keys=True) + '\n')
+          print(json.dumps(out, indent=2, sort_keys=True))
+          PY
+          python -m json.tool temp-work/riemann-weil-research/results/cutoff-free-ground-state-c100.json >/dev/null
+
+      - name: Commit result safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp-work/riemann-weil-research/results/cutoff-free-ground-state-c100.json
+          if git diff --cached --quiet; then
+            echo "No result change"
+            exit 0
+          fi
+          git commit -m "research(riemann): record cutoff-free ground-state diagnostics"
+          git pull --rebase origin main
+          git push origin HEAD:main
