@@ -1,0 +1,69 @@
+name: Riemann-Weil prolate trial
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'temp-work/riemann-weil-research/experiments/prolate_trial_overlap.py'
+      - '.github/workflows/riemann-weil-prolate-trial.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: riemann-weil-prolate-trial
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Checkout research workspace
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check python-flint mpmath numpy scipy
+
+      - name: Fetch pinned cutoff-free verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/akivag613/connes-cvs-.git upstream-connes-cvs
+          git -C upstream-connes-cvs checkout --quiet 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c
+          test "$(git -C upstream-connes-cvs rev-parse HEAD)" = "5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c"
+
+      - name: Compare prolate trial with cutoff-free ground
+        run: |
+          python temp-work/riemann-weil-research/experiments/prolate_trial_overlap.py \
+            --upstream-script upstream-connes-cvs/papers/2_guinand_weil_dictionary_tail_order/scripts/arb_ldlt_certify.py \
+            --upstream-commit 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c \
+            --C 13 --Ns 4,8,12,16 --prolate-M 120 --prec 1400 --dps 200 \
+            --output prolate-trial-c13.json
+          python -m json.tool prolate-trial-c13.json >/dev/null
+
+      - name: Commit result safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p temp-work/riemann-weil-research/results
+          cp prolate-trial-c13.json temp-work/riemann-weil-research/results/prolate-trial-c13.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add temp-work/riemann-weil-research/results/prolate-trial-c13.json
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m 'research: record prolate trial overlap probe'
+          # Result path does not trigger this workflow; rebase before push to avoid
+          # clobbering unrelated concurrent main-branch work.
+          git pull --rebase origin main
+          git push origin HEAD:main
