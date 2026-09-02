@@ -1,22 +1,10 @@
-name: AI Daily - AIHOT
+name: AI Daily - AIHOT recovery
 
 on:
   schedule:
-    # Scheduler-lag hedges. Local times are Asia/Singapore / Beijing (UTC+8).
-    # Early runs are cheap one-shot probes when GitHub dispatches them on time. If GitHub
-    # delays one into the 07:49-08:15 publication window, it automatically becomes a dense
-    # polling run. Spreading nominal times over more than two hours protects the 08:15
-    # downstream deadline from scheduler-dispatch gaps like the one observed on 2026-09-02.
-    - cron: "53 21 * * *" # 05:53 local on the following calendar day
-    - cron: "13 22 * * *" # 06:13 local on the following calendar day
-    - cron: "33 22 * * *" # 06:33 local on the following calendar day
-    - cron: "53 22 * * *" # 06:53 local on the following calendar day
-    - cron: "13 23 * * *" # 07:13 local on the following calendar day
-    - cron: "33 23 * * *" # 07:33 local on the following calendar day
-    - cron: "53 23 * * *" # 07:53 local on the following calendar day
-    - cron: "13 0 * * *"  # 08:13
-    # Recovery slots only while the downstream GPT automation is still retrying.
-    - cron: "29 0 * * *"  # 08:29
+    # Short recovery opportunities after the warm runner's reserved window.
+    # Local times are Asia/Singapore / Beijing (UTC+8).
+    - cron: "43 0 * * *"  # 08:43
     - cron: "3 1 * * *"   # 09:03
     - cron: "11 2 * * *"  # 10:11
     - cron: "27 3 * * *"  # 11:27
@@ -47,7 +35,7 @@ jobs:
         run: |
           set -euo pipefail
           {
-            echo "### AI Daily schedule timing"
+            echo "### AI Daily recovery timing"
             echo
             echo "- cron: \`${SCHEDULE_EXPR}\`"
             echo "- runner observed: $(TZ=Asia/Singapore date '+%Y-%m-%d %H:%M:%S %Z')"
@@ -56,12 +44,10 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          # A scheduled event can sit in GitHub's queue for a long time. Always read the
-          # latest main at job start so a delayed retry sees snapshots written by an earlier slot.
           ref: main
           fetch-depth: 0
 
-      - name: Check whether the scheduled snapshot already exists
+      - name: Check whether the snapshot already exists
         id: snapshot
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -90,7 +76,7 @@ jobs:
           echo "date=$day" >> "$GITHUB_OUTPUT"
           echo "present=$present" >> "$GITHUB_OUTPUT"
           if [ "$present" = "true" ]; then
-            echo "AIHOT snapshot for $day already exists; this delayed/recovery slot is a no-op."
+            echo "AIHOT snapshot for $day already exists; recovery is a no-op."
           fi
 
       - name: Fetch AIHOT daily
@@ -108,35 +94,12 @@ jobs:
             exit 0
           fi
 
-          local_hm="$(TZ=Asia/Shanghai date +%H%M)"
-          if [[ "$local_hm" < "0749" ]]; then
-            # A punctual early hedge should be cheap: probe once, and treat "not published yet"
-            # as expected rather than a failed Action. Its value is that scheduler delay can move
-            # this same nominal event into the publication window below.
-            echo "AIHOT fetch mode: early scheduler hedge local=$local_hm"
-            python3 ai-daily/fetch_aihot_daily.py \
-              --attempts 1 \
-              --retry-seconds 0 \
-              --allow-not-ready
-          elif [[ "$local_hm" < "0815" ]]; then
-            # A hedge that actually lands near publication stays warm for about twelve minutes.
-            # Together with 20-minute nominal spacing, this covers correlated scheduler lag while
-            # keeping the workflow inside its existing 13-minute timeout.
-            attempts=72
-            retry_seconds=10
-            echo "AIHOT fetch mode: publication window local=$local_hm attempts=$attempts retry=${retry_seconds}s"
-            python3 ai-daily/fetch_aihot_daily.py \
-              --attempts "$attempts" \
-              --retry-seconds "$retry_seconds"
-          else
-            # Once the first consumer check has passed, use only short bounded recovery attempts.
-            attempts=5
-            retry_seconds=30
-            echo "AIHOT fetch mode: recovery local=$local_hm attempts=$attempts retry=${retry_seconds}s"
-            python3 ai-daily/fetch_aihot_daily.py \
-              --attempts "$attempts" \
-              --retry-seconds "$retry_seconds"
-          fi
+          attempts=5
+          retry_seconds=30
+          echo "AIHOT fetch mode: recovery attempts=$attempts retry=${retry_seconds}s"
+          python3 ai-daily/fetch_aihot_daily.py \
+            --attempts "$attempts" \
+            --retry-seconds "$retry_seconds"
 
       - name: Commit snapshot
         if: steps.snapshot.outputs.present != 'true'
