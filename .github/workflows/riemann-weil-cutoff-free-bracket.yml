@@ -1,0 +1,119 @@
+name: Riemann-Weil cutoff-free lambda bracket
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "temp-work/riemann-weil-research/experiments/cutoff_free_lambda_bracket.py"
+      - ".github/workflows/riemann-weil-cutoff-free-bracket.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: riemann-weil-cutoff-free-bracket
+  cancel-in-progress: false
+
+jobs:
+  bracket:
+    name: c=100 N=${{ matrix.N }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        N: [8, 12, 16, 24, 32]
+    steps:
+      - name: Checkout research workspace
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install interval dependencies
+        run: python -m pip install --disable-pip-version-check python-flint mpmath
+
+      - name: Fetch pinned public verifier
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/akivag613/connes-cvs-.git upstream-connes-cvs
+          git -C upstream-connes-cvs checkout --quiet 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c
+          test "$(git -C upstream-connes-cvs rev-parse HEAD)" = "5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c"
+
+      - name: Bracket cutoff-free minimum eigenvalue
+        run: |
+          python temp-work/riemann-weil-research/experiments/cutoff_free_lambda_bracket.py \
+            --upstream-script upstream-connes-cvs/papers/2_guinand_weil_dictionary_tail_order/scripts/arb_ldlt_certify.py \
+            --upstream-commit 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c \
+            --c 100 --N ${{ matrix.N }} --prec 600 --steps 72 \
+            --output bracket-N${{ matrix.N }}.json
+          python -m json.tool bracket-N${{ matrix.N }}.json >/dev/null
+
+      - name: Upload bracket
+        uses: actions/upload-artifact@v4
+        with:
+          name: bracket-N${{ matrix.N }}
+          path: bracket-N${{ matrix.N }}.json
+          retention-days: 1
+
+  collect:
+    name: collect cutoff-free brackets
+    needs: bracket
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download brackets
+        uses: actions/download-artifact@v4
+        with:
+          pattern: bracket-N*
+          path: tmp/brackets
+          merge-multiple: true
+
+      - name: Merge results
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          rows = []
+          for path in Path("tmp/brackets").glob("bracket-N*.json"):
+              rows.append(json.loads(path.read_text()))
+          rows.sort(key=lambda x: int(x["N"]))
+          out = {
+              "status": "rigorous_cutoff_free_lambda_brackets",
+              "c": 100,
+              "upstream_commit": "5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c",
+              "method": "Arb cutoff-free matrix + shifted interval LDL^T bisection",
+              "rows": rows,
+          }
+          dest = Path("temp-work/riemann-weil-research/results/cutoff-free-lambda-brackets-c100.json")
+          dest.parent.mkdir(parents=True, exist_ok=True)
+          dest.write_text(json.dumps(out, indent=2, sort_keys=True) + "\n")
+          print(json.dumps(out, indent=2, sort_keys=True))
+          PY
+          python -m json.tool temp-work/riemann-weil-research/results/cutoff-free-lambda-brackets-c100.json >/dev/null
+
+      - name: Commit result safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp-work/riemann-weil-research/results/cutoff-free-lambda-brackets-c100.json
+          if git diff --cached --quiet; then
+            echo "No result change"
+            exit 0
+          fi
+          git commit -m "research(riemann): record cutoff-free eigenvalue brackets"
+          git pull --rebase origin main
+          git push origin HEAD:main
