@@ -1,0 +1,95 @@
+name: Riemann-Weil prime-edge Schur normal shape
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'temp-work/riemann-weil-research/experiments/prime_edge_normal_shape.py'
+      - '.github/workflows/riemann-weil-prime-edge-normal-shape.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: riemann-weil-prime-edge-normal-shape-main
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        q: [7, 17, 97]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check python-flint mpmath
+      - name: Fetch pinned verifier
+        run: |
+          git clone --quiet https://github.com/akivag613/connes-cvs-.git upstream-connes-cvs
+          git -C upstream-connes-cvs checkout --quiet 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c
+      - name: Probe normal shape
+        run: |
+          python temp-work/riemann-weil-research/experiments/prime_edge_normal_shape.py \
+            --upstream-script upstream-connes-cvs/papers/2_guinand_weil_dictionary_tail_order/scripts/arb_ldlt_certify.py \
+            --q '${{ matrix.q }}' --Nmax 32 --prec 3000 \
+            --output 'normal-q${{ matrix.q }}.json'
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: normal-q${{ matrix.q }}
+          path: normal-q${{ matrix.q }}.json
+          retention-days: 1
+
+  collect:
+    needs: probe
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download
+        uses: actions/download-artifact@v4
+        with:
+          pattern: normal-q*
+          path: normals
+          merge-multiple: true
+      - name: Merge
+        run: |
+          python - <<'PY'
+          import glob,json
+          from pathlib import Path
+          rows=[]
+          for f in sorted(glob.glob('normals/normal-q*.json')):
+              rows.append(json.loads(Path(f).read_text()))
+          out={'status':'prime_edge_schur_normal_shape_map','rows':sorted(rows,key=lambda x:x['q'])}
+          p=Path('temp-work/riemann-weil-research/results/prime-edge-schur-normal-shape-q7-17-97-N32.json')
+          p.parent.mkdir(parents=True,exist_ok=True)
+          p.write_text(json.dumps(out,indent=2)+'\n')
+          print(json.dumps({'summary':[{'q':d['q'],'tail':d['rows'][-1]} for d in out['rows']]},indent=2))
+          PY
+      - name: Commit result safely
+        run: |
+          set -euo pipefail
+          git config user.name 'riemann-weil-research-bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          path='temp-work/riemann-weil-research/results/prime-edge-schur-normal-shape-q7-17-97-N32.json'
+          git add "$path"
+          git diff --cached --quiet && exit 0
+          git commit -m 'research: record prime-edge Schur normal shape'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then exit 0; fi
+            git fetch origin main
+            git rebase origin/main
+          done
+          exit 1
