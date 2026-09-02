@@ -12,9 +12,11 @@
 
 ## Concurrent Agents
 
-Temporary Agents work directly on `main`; they do not need a branch or PR for ordinary `temp-work/` work. Before each write, re-read the latest target on `main`. If another Agent moved `main` or changed the target first, refresh and retry only your intended change instead of forcing or rewriting history.
+Temporary Agents normally work directly on `main`; ordinary `temp-work/` work does not need a branch or PR.
 
-The `Temp work patrol` Action watches pushes for workspace isolation, required README files, and unusually hot workspaces/files. It helps catch coordination mistakes, but it deliberately stays lightweight and does not serialize every Agent behind a lock.
+Agents should stay focused on the task instead of repeatedly managing repository state. There is no separate HEAD check or branch-synchronization ritual before each write. Prefer independent task files so concurrent work naturally lands without contention. When an existing file genuinely needs editing, read that file itself and use the current blob SHA required by GitHub; if that exact file changed concurrently, re-read only it and retry the smallest intended edit.
+
+Repository coordination belongs to the maintenance layer. The `Temp work patrol` Action watches direct-to-main activity for cross-workspace writes, missing workspace records, unusually high commit activity, and files being edited repeatedly in a short window. The weekly cleanup bot manages workspace lifecycle.
 
 ## Public-repository safety
 
@@ -28,7 +30,7 @@ GitHub Actions may be used freely when they materially help an experiment or val
 
 A weekly GitHub Actions cleanup checks every first-level workspace. The activity timestamp is the most recent Git commit that touched that workspace. Workspaces untouched for more than one month are deleted automatically.
 
-The cleanup keeps this root `README.md` and `AGENTS.md`, records its result in the Action Step Summary, and does not maintain a parallel status file.
+The cleanup keeps repository-managed files at the `temp-work/` root, records its result in the Action Step Summary, and does not maintain a parallel status file.
 
 Do not keep a workspace alive with empty edits, `touch`, or meaningless commits. If the work remains active, normal meaningful commits refresh its activity time. If the result becomes durable, migrate the useful result to its proper long-term location and let the temporary workspace disappear.
 
