@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
-      - "temp-work/riemann-weil-research/experiments/cutoff_free_lambda_bracket.py"
+      - "temp-work/riemann-weil-research/experiments/cutoff_free_lambda_bracket_v2.py"
       - ".github/workflows/riemann-weil-cutoff-free-bracket.yml"
 
 permissions:
@@ -16,13 +16,25 @@ concurrency:
 
 jobs:
   bracket:
-    name: c=100 N=${{ matrix.N }}
+    name: c=100 N=${{ matrix.N }} p=${{ matrix.prec }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
-        N: [8, 12, 16, 24, 32]
+        include:
+          - N: 8
+            prec: 600
+          - N: 12
+            prec: 600
+          - N: 16
+            prec: 600
+          - N: 24
+            prec: 1200
+          - N: 32
+            prec: 1800
+          - N: 48
+            prec: 3000
     steps:
       - name: Checkout research workspace
         uses: actions/checkout@v4
@@ -46,17 +58,17 @@ jobs:
 
       - name: Bracket cutoff-free minimum eigenvalue
         run: |
-          python temp-work/riemann-weil-research/experiments/cutoff_free_lambda_bracket.py \
+          python temp-work/riemann-weil-research/experiments/cutoff_free_lambda_bracket_v2.py \
             --upstream-script upstream-connes-cvs/papers/2_guinand_weil_dictionary_tail_order/scripts/arb_ldlt_certify.py \
             --upstream-commit 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c \
-            --c 100 --N ${{ matrix.N }} --prec 600 --steps 72 \
+            --c 100 --N ${{ matrix.N }} --prec ${{ matrix.prec }} --steps 80 \
             --output bracket-N${{ matrix.N }}.json
           python -m json.tool bracket-N${{ matrix.N }}.json >/dev/null
 
       - name: Upload bracket
         uses: actions/upload-artifact@v4
         with:
-          name: bracket-N${{ matrix.N }}
+          name: cutoff-free-bracket-N${{ matrix.N }}
           path: bracket-N${{ matrix.N }}.json
           retention-days: 1
 
@@ -75,7 +87,7 @@ jobs:
       - name: Download brackets
         uses: actions/download-artifact@v4
         with:
-          pattern: bracket-N*
+          pattern: cutoff-free-bracket-N*
           path: tmp/brackets
           merge-multiple: true
 
@@ -89,11 +101,13 @@ jobs:
           for path in Path("tmp/brackets").glob("bracket-N*.json"):
               rows.append(json.loads(path.read_text()))
           rows.sort(key=lambda x: int(x["N"]))
+          if not rows:
+              raise SystemExit("no bracket results downloaded")
           out = {
-              "status": "rigorous_cutoff_free_lambda_brackets",
+              "status": "rigorous_cutoff_free_lambda_brackets_v2",
               "c": 100,
               "upstream_commit": "5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c",
-              "method": "Arb cutoff-free matrix + shifted interval LDL^T bisection",
+              "method": "Arb cutoff-free matrix + shifted interval LDL^T adaptive bracketing",
               "rows": rows,
           }
           dest = Path("temp-work/riemann-weil-research/results/cutoff-free-lambda-brackets-c100.json")
@@ -114,6 +128,6 @@ jobs:
             echo "No result change"
             exit 0
           fi
-          git commit -m "research(riemann): record cutoff-free eigenvalue brackets"
+          git commit -m "research(riemann): record rigorous cutoff-free brackets"
           git pull --rebase origin main
           git push origin HEAD:main
