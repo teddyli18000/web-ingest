@@ -1,0 +1,60 @@
+name: Riemann-Weil source escape probe
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "temp-work/riemann-weil-research/experiments/source_escape_diagnostic.py"
+      - ".github/workflows/riemann-weil-source-probe.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: riemann-weil-source-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install public research package
+        run: python -m pip install --disable-pip-version-check connes-cvs==0.3.1
+
+      - name: Run source escape diagnostic
+        run: |
+          python temp-work/riemann-weil-research/experiments/source_escape_diagnostic.py \
+            --cutoffs 13,100 \
+            --Ns 4,8,12,16 \
+            --T 120 \
+            --dps 60 \
+            --output temp-work/riemann-weil-research/results/source-escape-c13-c100.json
+
+      - name: Validate JSON
+        run: python -m json.tool temp-work/riemann-weil-research/results/source-escape-c13-c100.json >/dev/null
+
+      - name: Commit research result
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp-work/riemann-weil-research/results/source-escape-c13-c100.json
+          if git diff --cached --quiet; then
+            echo "No result change"
+            exit 0
+          fi
+          git commit -m "research(riemann): record source escape probe"
+          git pull --rebase origin main
+          git push origin HEAD:main
