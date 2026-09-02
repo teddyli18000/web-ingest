@@ -100,12 +100,12 @@ def main() -> int:
         if recent_count >= 4:
             notices.append(
                 f"high activity: {recent_count} commits in the last 5 minutes touched temp-work/{workspace}/; "
-                "writers should re-read latest main immediately before every write and retry on stale-SHA conflicts"
+                "the patrol bot is tracking this workspace for contention"
             )
         for path, count in hot_files:
             notices.append(
                 f"hot file: {path} changed {count} times in the last 5 minutes; "
-                "split concurrent work into separate files when practical"
+                "prefer independent files for concurrent work when practical"
             )
 
     print("## Temp-work patrol")
