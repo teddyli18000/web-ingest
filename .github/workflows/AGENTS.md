@@ -18,6 +18,8 @@ Workflow files are thin orchestration layers. Keep collection/conversion logic i
 - writes limited to the owning task or explicitly registered repository-wide maintenance boundary;
 - safe reruns/idempotency where the operation permits it.
 
+For reliability-sensitive workflows, multiple cron entries may intentionally target the same concurrency group. Once one run is executing, later scheduled opportunities should act as fallbacks rather than parallel writers. Keep the behavior documented in the owning task README.
+
 ## Temporary workflows
 
 One-shot backfill, repair, migration, probe, or diagnostic workflows may exist briefly but must never receive a recurring schedule. Remove them after successful validation.
@@ -36,4 +38,5 @@ Public visibility is the hard boundary. Treat workflow definitions, logs, Step S
 - Do not trigger validation on ordinary data snapshots unless the validation is specifically about that data.
 - Use shallow/sparse checkout when practical, but prefer API-only maintenance when checkout adds no value.
 - Avoid long `sleep` in Actions when the source can instead be retried in a bounded task-local collector.
+- A documented warm-runner workflow is the explicit exception: when scheduler dispatch itself is the reliability risk, holding an already-acquired runner across a known publication boundary is useful work rather than waste.
 - Public Actions are available to use, not a reason to create redundant jobs with no reliability, validation, or maintenance benefit.
