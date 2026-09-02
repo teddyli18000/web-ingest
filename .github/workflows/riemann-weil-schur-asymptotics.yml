@@ -1,0 +1,48 @@
+name: Riemann-Weil Schur-pivot asymptotics
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'temp-work/riemann-weil-research/experiments/analyze_schur_pivot_asymptotics.py'
+      - 'temp-work/riemann-weil-research/results/even-schur-pivots-c100-N120.json'
+      - '.github/workflows/riemann-weil-schur-asymptotics.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: riemann-weil-schur-asymptotics-main
+  cancel-in-progress: false
+
+jobs:
+  analyze:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Run asymptotic diagnostic
+        run: |
+          set -euo pipefail
+          python temp-work/riemann-weil-research/experiments/analyze_schur_pivot_asymptotics.py \
+            --input temp-work/riemann-weil-research/results/even-schur-pivots-c100-N120.json \
+            --output temp-work/riemann-weil-research/results/even-schur-pivot-asymptotics-c100-N120.json
+          python -m json.tool temp-work/riemann-weil-research/results/even-schur-pivot-asymptotics-c100-N120.json >/dev/null
+      - name: Commit result safely
+        run: |
+          set -euo pipefail
+          git config user.name 'riemann-weil-research-bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          path='temp-work/riemann-weil-research/results/even-schur-pivot-asymptotics-c100-N120.json'
+          git add "$path"
+          git diff --cached --quiet && exit 0
+          git commit -m 'research: record Schur-pivot asymptotic diagnostic'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then exit 0; fi
+            git fetch origin main
+            git rebase origin/main
+          done
+          exit 1
