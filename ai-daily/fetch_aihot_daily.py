@@ -20,6 +20,10 @@ TIMEZONE = ZoneInfo("Asia/Shanghai")
 USER_AGENT = "web-ingest/1.0 (+https://github.com/teddyli18000/web-ingest)"
 
 
+class ReportNotReady(RuntimeError):
+    """The endpoint is healthy, but today's report has not been published yet."""
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Mirror an AIHOT daily report")
     parser.add_argument(
@@ -29,6 +33,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--attempts", type=int, default=1, help="Maximum fetch attempts")
     parser.add_argument(
         "--retry-seconds", type=int, default=300, help="Seconds between attempts"
+    )
+    parser.add_argument(
+        "--allow-not-ready",
+        action="store_true",
+        help="Exit successfully when every attempt only shows that today's report is not published yet",
     )
     return parser.parse_args()
 
@@ -64,7 +73,7 @@ def parse_and_validate_api(raw_body: bytes, expected_date: str) -> dict:
 
     report_date = report.get("date")
     if report_date != expected_date:
-        raise RuntimeError(
+        raise ReportNotReady(
             f"latest report is {report_date!r}, waiting for {expected_date!r}"
         )
     if not isinstance(report.get("sections"), list):
@@ -147,6 +156,7 @@ def main() -> int:
     api_url = f"{API_BASE}/{expected_date}" if args.date else f"{API_BASE}/latest"
 
     last_error: Exception | None = None
+    saw_hard_error = False
     for attempt in range(1, args.attempts + 1):
         try:
             api_raw = fetch_raw(api_url, "application/json")
@@ -164,16 +174,33 @@ def main() -> int:
                 report["date"], api_path, page_path, api_raw, page_raw
             )
             return 0
+        except ReportNotReady as exc:
+            last_error = exc
+            print(f"Attempt {attempt}/{args.attempts} not ready: {exc}", file=sys.stderr)
+            if attempt < args.attempts:
+                time.sleep(args.retry_seconds)
         except (
             urllib.error.URLError,
             urllib.error.HTTPError,
             RuntimeError,
             json.JSONDecodeError,
         ) as exc:
+            saw_hard_error = True
             last_error = exc
             print(f"Attempt {attempt}/{args.attempts} failed: {exc}", file=sys.stderr)
             if attempt < args.attempts:
                 time.sleep(args.retry_seconds)
+
+    if (
+        args.allow_not_ready
+        and not saw_hard_error
+        and isinstance(last_error, ReportNotReady)
+    ):
+        print(
+            f"AIHOT report for {expected_date} is not published yet; "
+            "scheduled early probe exits successfully."
+        )
+        return 0
 
     print(f"Collection failed: {last_error}", file=sys.stderr)
     return 1
