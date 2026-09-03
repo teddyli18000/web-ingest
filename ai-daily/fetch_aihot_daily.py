@@ -11,7 +11,8 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -28,11 +29,17 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Mirror an AIHOT daily report")
     parser.add_argument(
         "--date",
-        help="Beijing calendar date (YYYY-MM-DD). Omit to wait for today's latest report.",
+        help="Beijing calendar date (YYYY-MM-DD). Omit to wait for today's report.",
     )
     parser.add_argument("--attempts", type=int, default=1, help="Maximum fetch attempts")
     parser.add_argument(
         "--retry-seconds", type=int, default=300, help="Seconds between attempts"
+    )
+    parser.add_argument(
+        "--request-timeout",
+        type=float,
+        default=15,
+        help="Per-request timeout in seconds",
     )
     parser.add_argument(
         "--allow-not-ready",
@@ -46,18 +53,48 @@ def today_beijing() -> str:
     return datetime.now(TIMEZONE).date().isoformat()
 
 
-def fetch_raw(url: str, accept: str) -> bytes:
+def fetch_raw(url: str, accept: str, timeout_seconds: float) -> bytes:
     request = urllib.request.Request(
         url,
         headers={
             "Accept": accept,
             "User-Agent": USER_AGENT,
+            # The live collector cares about publication freshness. The date-specific
+            # URL already avoids cross-day /latest caching; these headers additionally
+            # ask intermediaries to revalidate rather than serve a stale response.
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
         },
     )
-    with urllib.request.urlopen(request, timeout=30) as response:
+    with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
         if response.status != 200:
             raise RuntimeError(f"unexpected HTTP status {response.status} for {url}")
         return response.read()
+
+
+def retry_after_seconds(error: urllib.error.HTTPError) -> float | None:
+    value = error.headers.get("Retry-After") if error.headers is not None else None
+    if not value:
+        return None
+
+    try:
+        return max(0.0, float(value))
+    except ValueError:
+        pass
+
+    try:
+        retry_at = parsedate_to_datetime(value)
+        if retry_at.tzinfo is None:
+            retry_at = retry_at.replace(tzinfo=timezone.utc)
+        return max(0.0, (retry_at - datetime.now(timezone.utc)).total_seconds())
+    except (TypeError, ValueError, OverflowError):
+        return None
+
+
+def transient_retry_seconds(base_seconds: int, attempt: int) -> float:
+    if base_seconds <= 0:
+        return 0.0
+    return float(min(base_seconds * (2 ** max(0, attempt - 1)), 60))
 
 
 def parse_and_validate_api(raw_body: bytes, expected_date: str) -> dict:
@@ -74,7 +111,7 @@ def parse_and_validate_api(raw_body: bytes, expected_date: str) -> dict:
     report_date = report.get("date")
     if report_date != expected_date:
         raise ReportNotReady(
-            f"latest report is {report_date!r}, waiting for {expected_date!r}"
+            f"report is {report_date!r}, waiting for {expected_date!r}"
         )
     if not isinstance(report.get("sections"), list):
         raise RuntimeError("AIHOT report.sections is missing or invalid")
@@ -151,18 +188,28 @@ def main() -> int:
         raise SystemExit("--attempts must be at least 1")
     if args.retry_seconds < 0:
         raise SystemExit("--retry-seconds cannot be negative")
+    if args.request_timeout <= 0:
+        raise SystemExit("--request-timeout must be positive")
 
+    live_mode = args.date is None
     expected_date = args.date or today_beijing()
-    api_url = f"{API_BASE}/{expected_date}" if args.date else f"{API_BASE}/latest"
+    # Use the date-specific endpoint even for today's live watch. Unlike /latest,
+    # this URL cannot still represent yesterday when today's report is being published.
+    api_url = f"{API_BASE}/{expected_date}"
 
     last_error: Exception | None = None
     saw_hard_error = False
     for attempt in range(1, args.attempts + 1):
+        retry_delay = float(args.retry_seconds)
         try:
-            api_raw = fetch_raw(api_url, "application/json")
+            api_raw = fetch_raw(api_url, "application/json", args.request_timeout)
             report = parse_and_validate_api(api_raw, expected_date)
             page_url = report["links"]["aihot"]
-            page_raw = fetch_raw(page_url, "text/html,application/xhtml+xml")
+            page_raw = fetch_raw(
+                page_url,
+                "text/html,application/xhtml+xml",
+                args.request_timeout,
+            )
             validate_page(page_raw, report["date"])
 
             day_dir = output_dir(report["date"])
@@ -177,19 +224,38 @@ def main() -> int:
         except ReportNotReady as exc:
             last_error = exc
             print(f"Attempt {attempt}/{args.attempts} not ready: {exc}", file=sys.stderr)
-            if attempt < args.attempts:
-                time.sleep(args.retry_seconds)
+        except urllib.error.HTTPError as exc:
+            if live_mode and exc.code == 404:
+                last_error = ReportNotReady(
+                    f"AIHOT report or page for {expected_date} is not published yet"
+                )
+                print(
+                    f"Attempt {attempt}/{args.attempts} not ready: {last_error}",
+                    file=sys.stderr,
+                )
+            else:
+                saw_hard_error = True
+                last_error = exc
+                if exc.code == 429:
+                    retry_after = retry_after_seconds(exc)
+                    if retry_after is not None:
+                        retry_delay = retry_after
+                elif 500 <= exc.code < 600:
+                    retry_delay = transient_retry_seconds(args.retry_seconds, attempt)
+                print(f"Attempt {attempt}/{args.attempts} failed: {exc}", file=sys.stderr)
         except (
             urllib.error.URLError,
-            urllib.error.HTTPError,
+            TimeoutError,
             RuntimeError,
             json.JSONDecodeError,
         ) as exc:
             saw_hard_error = True
             last_error = exc
+            retry_delay = transient_retry_seconds(args.retry_seconds, attempt)
             print(f"Attempt {attempt}/{args.attempts} failed: {exc}", file=sys.stderr)
-            if attempt < args.attempts:
-                time.sleep(args.retry_seconds)
+
+        if attempt < args.attempts:
+            time.sleep(retry_delay)
 
     if (
         args.allow_not_ready
@@ -198,7 +264,7 @@ def main() -> int:
     ):
         print(
             f"AIHOT report for {expected_date} is not published yet; "
-            "scheduled early probe exits successfully."
+            "scheduled publication watch exits successfully."
         )
         return 0
 
