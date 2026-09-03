@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-02** | **4,347** | **2,500** |
+| **2014-08-09** | **2026-09-03** | **4,348** | **2,501** |
 
-### Latest All-Languages snapshot — 2026-09-02
+### Latest All-Languages snapshot — 2026-09-03
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [Gitlawb/openclaude](https://github.com/Gitlawb/openclaude) | TypeScript | 80 |
-| 2 | [Imbad0202/academic-research-skills](https://github.com/Imbad0202/academic-research-skills) | Python | 193 |
-| 3 | [THU-MAIC/OpenMAIC](https://github.com/THU-MAIC/OpenMAIC) | TypeScript | 3,128 |
-| 4 | [iv-org/invidious](https://github.com/iv-org/invidious) | Crystal | 577 |
-| 5 | [jingyaogong/minimind](https://github.com/jingyaogong/minimind) | Python | 1,005 |
-| 6 | [3b1b/manim](https://github.com/3b1b/manim) | Python | 86 |
-| 7 | [firecrawl/pdf-inspector](https://github.com/firecrawl/pdf-inspector) | Rust | 541 |
-| 8 | [browser-use/video-use](https://github.com/browser-use/video-use) | Python | 472 |
-| 9 | [K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills) | Python | 912 |
-| 10 | [handsomestWei/patent-disclosure-skill](https://github.com/handsomestWei/patent-disclosure-skill) | Python | 501 |
+| 1 | [fmtlib/fmt](https://github.com/fmtlib/fmt) | C++ | 14 |
+| 2 | [google-research/timesfm](https://github.com/google-research/timesfm) | Python | 343 |
+| 3 | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | JavaScript | 1,354 |
+| 4 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 832 |
+| 5 | [sngyai/Sequoia-X](https://github.com/sngyai/Sequoia-X) | Python | 63 |
+| 6 | [ChromeDevTools/chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp) | TypeScript | 148 |
+| 7 | [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) | Python | 533 |
+| 8 | [superlinked/sie](https://github.com/superlinked/sie) | Python | 60 |
+| 9 | [pacifio/atlas](https://github.com/pacifio/atlas) | Rust | 888 |
+| 10 | [zyronon/TypeWords](https://github.com/zyronon/TypeWords) | Vue | 21 |
 
-[Open full snapshot →](data/2026/09/02/trending.json)
+[Open full snapshot →](data/2026/09/03/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 245 days  
+[`2026`](data/2026/) · 246 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
