@@ -113,8 +113,11 @@ jobs:
 
       - name: Commit snapshot
         if: steps.snapshot.outputs.present != 'true'
+        id: commit
+        shell: bash
         run: |
           set -euo pipefail
+          echo "pushed=false" >> "$GITHUB_OUTPUT"
           git add ai-daily/data
           if git diff --cached --quiet; then
             echo "No new snapshot to commit."
@@ -126,3 +129,14 @@ jobs:
           git commit -m "data(ai-daily): mirror AIHOT daily ${{ steps.fetch.outputs.report_date }}"
           git pull --rebase origin main
           git push origin HEAD:main
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger Github_test AI Daily Bot 1
+        if: steps.commit.outputs.pushed == 'true' || (github.run_attempt > 1 && steps.snapshot.outputs.present == 'true')
+        env:
+          AI_DAILY_DISPATCH_TOKEN: ${{ secrets.AI_DAILY_DISPATCH_TOKEN }}
+          REPORT_DATE: ${{ steps.fetch.outputs.report_date || steps.snapshot.outputs.date }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ai-daily/trigger_github_test_archive.py --date "$REPORT_DATE"
