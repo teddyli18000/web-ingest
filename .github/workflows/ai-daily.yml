@@ -90,16 +90,18 @@ jobs:
           if [ -n "$TARGET_DATE" ]; then
             python3 ai-daily/fetch_aihot_daily.py \
               --date "$TARGET_DATE" \
-              --attempts 1
+              --attempts 1 \
+              --request-timeout 15
             exit 0
           fi
 
           attempts=2
           retry_seconds=10
-          echo "AIHOT fetch mode: short recovery attempts=$attempts retry=${retry_seconds}s"
+          echo "AIHOT fetch mode: short recovery attempts=$attempts retry=${retry_seconds}s timeout=10s"
           python3 ai-daily/fetch_aihot_daily.py \
             --attempts "$attempts" \
-            --retry-seconds "$retry_seconds"
+            --retry-seconds "$retry_seconds" \
+            --request-timeout 10
 
       - name: Commit snapshot
         if: steps.snapshot.outputs.present != 'true'
