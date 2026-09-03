@@ -1,0 +1,130 @@
+name: Riemann-Weil boundary Pick diagnostics
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "temp-work/riemann-weil-research/experiments/infinite_boundary_pick_diagnostics.py"
+      - ".github/workflows/riemann-weil-boundary-pick-diagnostics.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: riemann-weil-boundary-pick-diagnostics
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    name: c=${{ matrix.c }} Nmax=48
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - c: 13
+            prec: 3000
+            dps: 720
+          - c: 100
+            prec: 3500
+            dps: 800
+    steps:
+      - name: Checkout research workspace
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install public high-precision dependencies
+        run: python -m pip install --disable-pip-version-check python-flint mpmath
+
+      - name: Fetch pinned public cutoff-free verifier
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/akivag613/connes-cvs-.git upstream-connes-cvs
+          git -C upstream-connes-cvs checkout --quiet 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c
+          test "$(git -C upstream-connes-cvs rev-parse HEAD)" = "5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c"
+
+      - name: Compute boundary Pick diagnostics
+        run: |
+          set -euo pipefail
+          python temp-work/riemann-weil-research/experiments/infinite_boundary_pick_diagnostics.py \
+            --upstream-script upstream-connes-cvs/papers/2_guinand_weil_dictionary_tail_order/scripts/arb_ldlt_certify.py \
+            --upstream-commit 5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c \
+            --c ${{ matrix.c }} --Nmax 48 \
+            --prec ${{ matrix.prec }} --dps ${{ matrix.dps }} \
+            --output boundary-pick-c${{ matrix.c }}.json
+          python -m json.tool boundary-pick-c${{ matrix.c }}.json >/dev/null
+
+      - name: Upload diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: boundary-pick-c${{ matrix.c }}
+          path: boundary-pick-c${{ matrix.c }}.json
+          retention-days: 1
+
+  collect:
+    name: collect boundary Pick diagnostics
+    needs: diagnose
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download diagnostics
+        uses: actions/download-artifact@v4
+        with:
+          pattern: boundary-pick-c*
+          path: tmp/boundary-pick
+          merge-multiple: true
+
+      - name: Validate and stage results
+        run: |
+          set -euo pipefail
+          mkdir -p temp-work/riemann-weil-research/results
+          for c in 13 100; do
+            src="tmp/boundary-pick/boundary-pick-c${c}.json"
+            test -f "$src"
+            python -m json.tool "$src" >/dev/null
+            python - <<PY
+          import json
+          from pathlib import Path
+          p=Path("$src")
+          d=json.loads(p.read_text())
+          assert d["status"] == "exploratory_infinite_boundary_pick_diagnostics"
+          assert int(d["c"]) == $c
+          assert int(d["Nmax"]) == 48
+          assert d["all_reported_disk_nesting_checks_pass"] is True
+          rows=d["rows"]
+          assert rows and int(rows[-1]["N"]) == 48
+          for row in rows:
+              assert float(row["endpoint_capacity_relative_error_vs_pivot"]) >= 0.0
+          PY
+            cp "$src" "temp-work/riemann-weil-research/results/infinite-boundary-pick-c${c}-N48.json"
+          done
+
+      - name: Commit result safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add \
+            temp-work/riemann-weil-research/results/infinite-boundary-pick-c13-N48.json \
+            temp-work/riemann-weil-research/results/infinite-boundary-pick-c100-N48.json
+          if git diff --cached --quiet; then
+            echo "No result change"
+            exit 0
+          fi
+          git commit -m "research(riemann): record boundary Pick diagnostics"
+          git pull --rebase origin main
+          git push origin HEAD:main
