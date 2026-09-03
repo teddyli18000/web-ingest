@@ -33,7 +33,7 @@ jobs:
             echo
             echo "- cron: \`${SCHEDULE_EXPR}\`"
             echo "- runner acquired: $(TZ=Asia/Singapore date '+%Y-%m-%d %H:%M:%S %Z')"
-            echo "- planned first fetch: 07:55 Asia/Singapore"
+            echo "- planned first fetch: 07:59:45 Asia/Singapore"
             echo "- warm deadline: 08:14 Asia/Singapore"
             echo "- run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           } >> "${GITHUB_STEP_SUMMARY}"
@@ -71,15 +71,15 @@ jobs:
         run: |
           set -euo pipefail
           day="$(TZ=Asia/Shanghai date +%F)"
-          target_epoch="$(TZ=Asia/Shanghai date -d "$day 07:55:00" +%s)"
+          target_epoch="$(TZ=Asia/Shanghai date -d "$day 07:59:45" +%s)"
           now_epoch="$(date +%s)"
 
           if (( now_epoch < target_epoch )); then
             wait_seconds=$((target_epoch - now_epoch))
-            echo "Runner acquired early; holding it for ${wait_seconds}s until 07:55 local."
+            echo "Runner acquired early; holding it for ${wait_seconds}s until 07:59:45 local."
             sleep "$wait_seconds"
           else
-            echo "Runner started after 07:55 local; fetching immediately."
+            echo "Runner started after 07:59:45 local; fetching immediately."
           fi
 
       - name: Fetch AIHOT daily
@@ -93,21 +93,22 @@ jobs:
           deadline_epoch="$(TZ=Asia/Shanghai date -d "$day 08:14:00" +%s)"
 
           if (( now_epoch < deadline_epoch )); then
-            retry_seconds=10
+            retry_seconds=5
             remaining=$((deadline_epoch - now_epoch))
             attempts=$((remaining / retry_seconds + 1))
-            echo "AIHOT fetch mode: warm publication watcher attempts=$attempts retry=${retry_seconds}s"
+            echo "AIHOT fetch mode: publication watcher attempts=$attempts retry=${retry_seconds}s timeout=5s"
             python3 ai-daily/fetch_aihot_daily.py \
               --attempts "$attempts" \
               --retry-seconds "$retry_seconds" \
-              --allow-not-ready
+              --request-timeout 5
           else
             attempts=4
             retry_seconds=20
-            echo "AIHOT fetch mode: delayed warm-run recovery attempts=$attempts retry=${retry_seconds}s"
+            echo "AIHOT fetch mode: delayed warm-run recovery attempts=$attempts retry=${retry_seconds}s timeout=10s"
             python3 ai-daily/fetch_aihot_daily.py \
               --attempts "$attempts" \
-              --retry-seconds "$retry_seconds"
+              --retry-seconds "$retry_seconds" \
+              --request-timeout 10
           fi
 
       - name: Commit snapshot
