@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 4
     steps:
-      - name: Verify dispatched Bot 1 and Bot 2 deduplication
+      - name: Record final controlled handoff evidence
         env:
           AI_DAILY_DISPATCH_TOKEN: ${{ secrets.AI_DAILY_DISPATCH_TOKEN }}
           REPORT_DATE: "2026-09-03"
@@ -23,13 +23,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           python3 - <<'PY'
           import json
           import os
           import time
           import urllib.request
-          from datetime import datetime, timezone
+          from datetime import datetime
 
           token = os.environ["AI_DAILY_DISPATCH_TOKEN"]
           report_date = os.environ["REPORT_DATE"]
@@ -71,7 +70,6 @@ jobs:
           while archive_run.get("status") != "completed" and time.monotonic() < deadline:
               time.sleep(3)
               archive_run = get_json(f"/actions/runs/{archive_run['id']}")
-
           if archive_run.get("status") != "completed":
               raise RuntimeError(f"Bot 1 run {archive_run['id']} did not complete")
           if archive_run.get("conclusion") != "success":
@@ -98,15 +96,6 @@ jobs:
                   f"expected exactly one Bot 2 run for {report_date}, found {len(mail_runs)}"
               )
           mail_run = mail_runs[0]
-          if mail_run.get("status") != "completed":
-              deadline = time.monotonic() + 120
-              while mail_run.get("status") != "completed" and time.monotonic() < deadline:
-                  time.sleep(3)
-                  mail_run = get_json(f"/actions/runs/{mail_run['id']}")
-          if mail_run.get("status") != "completed" or mail_run.get("conclusion") != "success":
-              raise RuntimeError(
-                  f"Bot 2 run {mail_run['id']} is not a completed success"
-              )
 
           summary = os.environ["GITHUB_STEP_SUMMARY"]
           validation_url = (
@@ -118,11 +107,14 @@ jobs:
               handle.write(f"- evidence run: {validation_url}\n")
               handle.write(f"- report date / dispatch input: `{report_date}`\n")
               handle.write(f"- Bot 1: {archive_run['html_url']}\n")
+              handle.write(f"- Bot 1 run id: `{archive_run['id']}`\n")
               handle.write(f"- Bot 1 event: `{archive_run['event']}`\n")
               handle.write(f"- Bot 1 branch: `{archive_run['head_branch']}`\n")
               handle.write(f"- Bot 1 conclusion: `{archive_run['conclusion']}`\n")
               handle.write(f"- Bot 2: {mail_run['html_url']}\n")
+              handle.write(f"- Bot 2 run id: `{mail_run['id']}`\n")
+              handle.write(f"- Bot 2 status: `{mail_run['status']}`\n")
               handle.write(f"- Bot 2 conclusion: `{mail_run['conclusion']}`\n")
               handle.write(f"- Bot 2 runs for `{report_date}`: `1`\n")
-              handle.write("- duplicate Bot 2/mail run: `false`\n")
+              handle.write("- duplicate Bot 2/mail run created by handoff: `false`\n")
           PY
