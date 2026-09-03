@@ -8,19 +8,21 @@ All cron expressions are stored in UTC. Human-facing times below use Asia/Singap
 
 | Workflow | Local schedule | Timeout | Purpose |
 | --- | --- | ---: | --- |
-| `ai-daily-warm.yml` | runner acquisition 07:21 / 07:43 / 07:53 / 08:03 | 52 min | Acquire a runner before AIHOT publication, keep an acquired runner alive, and provide later acquisition fallbacks if earlier scheduled runs never start |
-| `ai-daily.yml` | recovery 09:11 / 10:11 / 11:13 / 11:37 | 3 min | Short recovery opportunities immediately before useful downstream retries, plus manual backfill |
+| `ai-daily-warm.yml` | runner acquisition 04:37 / 05:07 | 230 min | Acquire an AI Daily runner hours before publication and keep it alive across 08:00 |
+| `ai-daily.yml` | recovery 09:13 / 10:13 / 11:13 / 11:37 | 3 min | Short recovery opportunities before downstream retries, plus manual backfill |
 | `github-trending.yml` | 09:31 / 10:43 / 11:55 daily | 15 min | Three retry opportunities; first valid snapshot wins |
 | `google-trending.yml` | 12:37 / 13:49 daily | 15 min | Capture SG + US + GB + HK Trending Now; second slot is retry/no-op |
 | `temp-work-cleanup.yml` | 23:17 Sunday | 3 min | Delete first-level `temp-work/` workspaces untouched by meaningful commits for more than one month |
 
 AI Daily is intentionally different from the other collectors because punctuality around an external publication time matters. Its known downstream consumer checks the mirror at 08:15 and then hourly through 12:15.
 
-The warm workflow therefore uses a **runner-acquisition ladder**. It asks GitHub for a runner at 07:21, then creates additional opportunities at 07:43, 07:53, and 08:03. All runs use the same `ai-daily-aihot` concurrency group with `cancel-in-progress: false`. Once one run is actually executing, it remains the active run; later opportunities are only fallbacks for cases where an earlier scheduled event never becomes an executing runner. GitHub's default single-pending concurrency behavior means a newer pending opportunity can replace an older pending one while the current active run is preserved.
+Two consecutive days showed that several nearby GitHub `schedule` events can be delayed together. On 2026-09-03 the nominal 07:21 / 07:43 / 07:53 / 08:03 AI Daily warm events did not actually start until roughly 09:07 / 09:25 / 09:30 / 10:49, even though AIHOT had generated the report at 08:00. Near-deadline cron hedging is therefore not treated as a reliable way to meet the 08:15 objective.
 
-An acquired warm runner waits until 07:57, polls AIHOT every 10 seconds through 08:10, and performs a short immediate recovery attempt when it starts after that warm window. The 52-minute timeout lets a punctual 07:21 run stay alive across the intended publication window. The latest nominal 08:03 slot plus the repository's 15-minute planning buffer reserves this workflow through 09:10.
+The warm workflow now asks for a runner at **04:37**, with a **05:07** fallback. Both use the same `ai-daily-aihot` concurrency group with `cancel-in-progress: false`. Once one run is executing it remains alive, waits until 07:55, then polls AIHOT every 10 seconds through 08:14. The 230-minute timeout is intentional: acquiring a runner hours early provides enough dispatch-delay budget to absorb scheduler lag comparable to the incidents already observed.
 
-Recovery then starts at 09:11 with a short 3-minute timeout. Its later 10:11, 11:13, and 11:37 slots are arranged around the downstream retry times while remaining clear of GitHub Trending's declared windows. Warm and recovery share the same concurrency group, so delayed AI Daily runs do not write the task concurrently.
+The 05:07 nominal start plus the workflow timeout and repository's 15-minute planning buffer reserves AI Daily through **09:12**. Recovery therefore begins at **09:13**, then runs at 10:13 / 11:13 / 11:37 with a short 3-minute timeout. These windows remain clear of GitHub Trending's declared schedule.
+
+This long warm hold is a documented exception to the normal preference against idle Actions. `web-ingest` is public, and retaining a runner already acquired materially improves the reliability of a time-sensitive collector.
 
 ## Load-balancing policy
 
@@ -39,7 +41,7 @@ Most scheduled workflows are owned by a same-named root task directory. Durable 
 
 The cross-workflow planning buffer is **15 minutes** after the declared timeout. Multiple retry slots inside one idempotent workflow may overlap one another logically; top-level concurrency serializes actual execution, while each run must check whether its intended output already exists.
 
-Scheduled Actions are not exact clocks. GitHub schedule events may be delayed or dropped under load. For a task with a hard publication boundary, repeated acquisition opportunities plus holding an already-acquired runner are preferred over releasing a runner and depending on a fresh near-deadline dispatch.
+Scheduled Actions are not exact clocks. For a task with a hard publication boundary, acquire the runner far enough in advance to absorb observed scheduler delay and keep that runner alive rather than depending on a fresh near-deadline dispatch.
 
 ## CI and maintenance Actions
 
@@ -47,7 +49,7 @@ Scheduled Actions are not exact clocks. GitHub schedule events may be delayed or
 
 `temp-work-cleanup.yml` is the durable lifecycle manager for `temp-work/`. It is API-only, writes only when stale first-level workspaces actually need deletion, and records its audit trail in the Action Step Summary instead of committing status files.
 
-This is a public repository, so useful Actions execution is not treated as scarce private-runner budget. Reproduction, testing, validation, probes, and intentional warm-runner holding may use Actions time when that materially improves reliability. Public visibility is the hard constraint: workflows must not expose credentials, private data, private repository content, signed URLs, sensitive environment dumps, or secret-derived artifacts/logs.
+This is a public repository, so useful Actions execution is not treated as scarce private-runner budget. Reproduction, testing, validation, probes, and intentional warm-runner holding may use Actions time when that materially improves reliability. Public visibility is the hard constraint: workflows must not expose credentials, private data, private repository content, signed URLs, sensitive environment dumps, or secret-derived material.
 
 ## Temporary workflows
 
