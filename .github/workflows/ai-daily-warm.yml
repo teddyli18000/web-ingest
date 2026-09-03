@@ -132,10 +132,10 @@ jobs:
           echo "pushed=true" >> "$GITHUB_OUTPUT"
 
       - name: Trigger Github_test AI Daily Bot 1
-        if: steps.commit.outputs.pushed == 'true'
+        if: steps.commit.outputs.pushed == 'true' || (github.run_attempt > 1 && steps.snapshot.outputs.present == 'true')
         env:
           AI_DAILY_DISPATCH_TOKEN: ${{ secrets.AI_DAILY_DISPATCH_TOKEN }}
-          REPORT_DATE: ${{ steps.fetch.outputs.report_date }}
+          REPORT_DATE: ${{ steps.fetch.outputs.report_date || steps.snapshot.outputs.date }}
         shell: bash
         run: |
           set -euo pipefail
