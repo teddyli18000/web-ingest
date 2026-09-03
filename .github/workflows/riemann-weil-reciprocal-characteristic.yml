@@ -16,9 +16,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - {c: 13, N: 8,  prec: 1500, dps: 160}
+          - {c: 13, N: 12, prec: 2300, dps: 190}
           - {c: 13, N: 16, prec: 3200, dps: 220}
+          - {c: 29, N: 8,  prec: 1500, dps: 160}
+          - {c: 29, N: 12, prec: 2300, dps: 190}
           - {c: 29, N: 16, prec: 3200, dps: 220}
+          - {c: 67, N: 8,  prec: 1500, dps: 160}
+          - {c: 67, N: 12, prec: 2300, dps: 190}
           - {c: 67, N: 16, prec: 3200, dps: 220}
+          - {c: 100, N: 8,  prec: 1500, dps: 160}
+          - {c: 100, N: 12, prec: 2300, dps: 190}
           - {c: 100, N: 16, prec: 3200, dps: 220}
     runs-on: ubuntu-24.04
     steps:
@@ -70,7 +78,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add temp-work/riemann-weil-research/results/reciprocal-characteristic/
           git diff --cached --quiet && exit 0
-          git commit -m 'research: record reciprocal-characteristic pole diagnostics'
+          git commit -m 'research: record reciprocal-characteristic band sweep'
           for attempt in 1 2 3 4; do
             git fetch origin main
             git rebase origin/main && git push origin HEAD:main && exit 0
