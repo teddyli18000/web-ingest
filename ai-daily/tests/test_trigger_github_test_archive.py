@@ -164,6 +164,11 @@ class WorkflowOrderingTests(unittest.TestCase):
                 workflow.index('echo "pushed=true" >> "$GITHUB_OUTPUT"'),
             )
             self.assertIn("steps.commit.outputs.pushed == 'true'", workflow)
+            self.assertIn("github.run_attempt > 1", workflow)
+            self.assertIn(
+                "REPORT_DATE: ${{ steps.fetch.outputs.report_date || steps.snapshot.outputs.date }}",
+                workflow,
+            )
             self.assertIn(
                 "AI_DAILY_DISPATCH_TOKEN: ${{ secrets.AI_DAILY_DISPATCH_TOKEN }}",
                 workflow,
@@ -175,7 +180,8 @@ class WorkflowOrderingTests(unittest.TestCase):
             )
 
         self.assertIn(
-            "if: github.event_name == 'schedule' && steps.commit.outputs.pushed == 'true'",
+            "if: github.event_name == 'schedule' && (steps.commit.outputs.pushed == 'true' || "
+            "(github.run_attempt > 1 && steps.snapshot.outputs.present == 'true'))",
             recovery,
         )
 
