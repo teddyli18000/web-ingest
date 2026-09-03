@@ -1,0 +1,95 @@
+name: Riemann Zhu v2 supplement probe
+
+on:
+  push:
+    paths:
+      - '.github/workflows/riemann-zhu-v2-supplement-probe.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Fetch arXiv v2 source bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/zhu-src
+          for url in \
+            'https://export.arxiv.org/e-print/2608.24827v2' \
+            'https://arxiv.org/e-print/2608.24827v2' \
+            'https://export.arxiv.org/src/2608.24827v2' \
+            'https://arxiv.org/src/2608.24827v2'; do
+            echo "trying $url"
+            if curl --fail --location --retry 3 --retry-delay 2 --connect-timeout 20 --max-time 180 "$url" -o /tmp/zhu-source; then
+              break
+            fi
+          done
+          test -s /tmp/zhu-source
+          file /tmp/zhu-source
+          tar -xf /tmp/zhu-source -C /tmp/zhu-src
+
+      - name: Inventory supplement without copying third-party source
+        shell: bash
+        run: |
+          set -euo pipefail
+          out='temp-work/riemann-weil-research/results/zhu-v2-supplement-probe.txt'
+          mkdir -p "$(dirname "$out")"
+          {
+            echo 'status: fetched arXiv:2608.24827v2 source bundle on GitHub Actions'
+            echo 'policy: inventory + hashes + verifier output only; third-party source is not committed'
+            echo
+            echo 'files:'
+            find /tmp/zhu-src -type f -printf '%P\n' | LC_ALL=C sort
+            echo
+            echo 'sha256:'
+            find /tmp/zhu-src -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum
+          } > "$out"
+
+          verifier="$(find /tmp/zhu-src -type f -name 'verify_certificate.py' -print -quit)"
+          if [ -z "$verifier" ]; then
+            echo 'verifier: NOT FOUND' >> "$out"
+            exit 0
+          fi
+          echo "verifier: ${verifier#/tmp/zhu-src/}" >> "$out"
+
+          echo >> "$out"
+          echo 'verifier help:' >> "$out"
+          (cd "$(dirname "$verifier")" && python3 "$(basename "$verifier")" --help) >> "$out" 2>&1 || true
+
+          echo >> "$out"
+          echo 'verifier default run:' >> "$out"
+          set +e
+          (cd "$(dirname "$verifier")" && python3 "$(basename "$verifier")") >> "$out" 2>&1
+          rc=$?
+          set -e
+          echo "verifier_exit_code: $rc" >> "$out"
+
+      - name: Commit probe result only
+        shell: bash
+        run: |
+          set -euo pipefail
+          path='temp-work/riemann-weil-research/results/zhu-v2-supplement-probe.txt'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$path"
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m 'research: record Zhu v2 supplement probe'
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            git fetch origin main
+            git rebase origin/main
+          done
+          exit 1
