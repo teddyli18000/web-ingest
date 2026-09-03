@@ -146,9 +146,13 @@ def main() -> None:
     if not (0 <= args.panel_start < args.panel_end <= 800):
         raise ValueError("panel range must satisfy 0 <= start < end <= 800")
     ctx.prec = args.prec
-    L = arb(5).log() / 2 if args.L == "log5over2" else arb(args.L)
+    threshold = arb(5).log() / 2
+    L = threshold if args.L == "log5over2" else arb(args.L)
     T = arb(args.T)
-    if not (L <= arb(5).log() / 2):
+    # Arb strict comparisons intentionally return false for overlapping balls.
+    # Equality with the endpoint is valid here, so reject only a certified
+    # strict overshoot; overlap with the threshold is accepted.
+    if not (L < threshold or L.overlaps(threshold)):
         raise ValueError("this assembler is scoped to the {2,3,4} prime plateau through log(5)/2")
 
     pdata = prime_data()
