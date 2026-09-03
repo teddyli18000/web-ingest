@@ -1,0 +1,76 @@
+name: Riemann-Weil Arb head smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/riemann-weil-arb-head-smoke.yml'
+      - 'temp-work/riemann-weil-research/experiments/zhu_arb_head_panel.py'
+      - 'temp-work/riemann-weil-research/experiments/zhu_arb_head_collect.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  panel:
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: [0,1,2,3,4,5,6,7]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: python -m pip install 'python-flint==0.8.0' 'mpmath==1.3.0'
+      - name: Assemble 100-panel Arb enclosure
+        shell: bash
+        run: |
+          start=$(( ${{ matrix.chunk }} * 100 ))
+          end=$(( start + 100 ))
+          python temp-work/riemann-weil-research/experiments/zhu_arb_head_panel.py \
+            --N 24 --L 0.8 --T 200 --panel-start "$start" --panel-end "$end" \
+            --prec 384 \
+            --output "temp-work/riemann-weil-research/results/arb-head-smoke-part-${{ matrix.chunk }}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arb-head-smoke-part-${{ matrix.chunk }}
+          path: temp-work/riemann-weil-research/results/arb-head-smoke-part-${{ matrix.chunk }}.json
+          if-no-files-found: error
+
+  collect:
+    needs: panel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: python -m pip install 'python-flint==0.8.0'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: arb-head-smoke-part-*
+          path: /tmp/arb-head-smoke
+          merge-multiple: true
+      - name: Collect and validate finite head
+        run: |
+          python temp-work/riemann-weil-research/experiments/zhu_arb_head_collect.py \
+            --partials-glob '/tmp/arb-head-smoke/*.json' \
+            --prec 512 \
+            --output temp-work/riemann-weil-research/results/arb-head-smoke-L0800-N24.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arb-head-smoke-final
+          path: temp-work/riemann-weil-research/results/arb-head-smoke-L0800-N24.json
+      - name: Commit smoke result
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add temp-work/riemann-weil-research/results/arb-head-smoke-L0800-N24.json
+          git commit -m 'research: record rigorous Arb head smoke' || exit 0
+          git pull --rebase origin main
+          git push origin HEAD:main
