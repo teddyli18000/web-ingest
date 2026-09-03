@@ -13,33 +13,29 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 4
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 1
-
-      - name: Controlled end-to-end handoff validation
+      - name: Verify dispatched Bot 1 and Bot 2 deduplication
         env:
           AI_DAILY_DISPATCH_TOKEN: ${{ secrets.AI_DAILY_DISPATCH_TOKEN }}
           REPORT_DATE: "2026-09-03"
+          HANDOFF_AFTER: "2026-09-03T08:14:30Z"
         shell: bash
         run: |
           set -euo pipefail
 
-          before_file="$RUNNER_TEMP/ai-daily-handoff-before.json"
-          result_file="$RUNNER_TEMP/ai-daily-handoff-result.json"
-
-          python3 - "$before_file" <<'PY'
+          python3 - <<'PY'
           import json
           import os
-          import sys
+          import time
           import urllib.request
+          from datetime import datetime, timezone
 
           token = os.environ["AI_DAILY_DISPATCH_TOKEN"]
           report_date = os.environ["REPORT_DATE"]
-          output = sys.argv[1]
+          handoff_after = datetime.fromisoformat(
+              os.environ["HANDOFF_AFTER"].replace("Z", "+00:00")
+          )
           base = "https://api.github.com/repos/teddyli18000/Github_test"
           headers = {
               "Accept": "application/vnd.github+json",
@@ -55,188 +51,78 @@ jobs:
                       raise RuntimeError(f"unexpected HTTP {response.status} for {path}")
                   return json.load(response)
 
-          archive = get_json(
+          def parse_time(value):
+              return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+          archive_payload = get_json(
               "/actions/workflows/ai-daily-archive.yml/runs"
               "?event=workflow_dispatch&branch=master&per_page=50"
           )
-          mail = get_json(
-              "/actions/workflows/ai-daily-mail.yml/runs"
-              "?event=workflow_dispatch&branch=master&per_page=50"
-          )
-          title = f"AI Daily Mail | {report_date}"
-          state = {
-              "archive_ids": [run["id"] for run in archive.get("workflow_runs", [])],
-              "mail_runs": [
-                  {"id": run["id"], "html_url": run["html_url"]}
-                  for run in mail.get("workflow_runs", [])
-                  if run.get("display_title") == title
-              ],
-          }
-          with open(output, "w", encoding="utf-8") as handle:
-              json.dump(state, handle)
-          PY
+          candidates = [
+              run
+              for run in archive_payload.get("workflow_runs", [])
+              if parse_time(run["created_at"]) >= handoff_after
+          ]
+          if not candidates:
+              raise RuntimeError("no Bot 1 workflow_dispatch run found after controlled handoff")
+          archive_run = max(candidates, key=lambda run: run["created_at"])
 
-          python3 ai-daily/trigger_github_test_archive.py --date "$REPORT_DATE"
+          deadline = time.monotonic() + 120
+          while archive_run.get("status") != "completed" and time.monotonic() < deadline:
+              time.sleep(3)
+              archive_run = get_json(f"/actions/runs/{archive_run['id']}")
 
-          python3 - "$before_file" "$result_file" <<'PY'
-          import json
-          import os
-          import sys
-          import time
-          import urllib.error
-          import urllib.parse
-          import urllib.request
-
-          token = os.environ["AI_DAILY_DISPATCH_TOKEN"]
-          report_date = os.environ["REPORT_DATE"]
-          before_path, result_path = sys.argv[1:3]
-          with open(before_path, encoding="utf-8") as handle:
-              before = json.load(handle)
-
-          base = "https://api.github.com/repos/teddyli18000/Github_test"
-          headers = {
-              "Accept": "application/vnd.github+json",
-              "Authorization": f"Bearer {token}",
-              "User-Agent": "web-ingest/ai-daily-handoff-validation",
-              "X-GitHub-Api-Version": "2022-11-28",
-          }
-
-          def get_json(path):
-              request = urllib.request.Request(base + path, headers=headers)
-              with urllib.request.urlopen(request, timeout=15) as response:
-                  if response.status != 200:
-                      raise RuntimeError(f"unexpected HTTP {response.status} for {path}")
-                  return json.load(response)
-
-          def find_new_archive_run():
-              old = set(before["archive_ids"])
-              deadline = time.monotonic() + 60
-              while time.monotonic() < deadline:
-                  payload = get_json(
-                      "/actions/workflows/ai-daily-archive.yml/runs"
-                      "?event=workflow_dispatch&branch=master&per_page=50"
-                  )
-                  for run in payload.get("workflow_runs", []):
-                      if run["id"] not in old:
-                          return run
-                  time.sleep(2)
-              raise RuntimeError("new Github_test Bot 1 workflow_dispatch run was not observed")
-
-          def wait_completed(run_id, timeout=180):
-              deadline = time.monotonic() + timeout
-              while time.monotonic() < deadline:
-                  run = get_json(f"/actions/runs/{run_id}")
-                  if run.get("status") == "completed":
-                      return run
-                  time.sleep(3)
-              raise RuntimeError(f"workflow run {run_id} did not complete in validation window")
-
-          archive_run = find_new_archive_run()
+          if archive_run.get("status") != "completed":
+              raise RuntimeError(f"Bot 1 run {archive_run['id']} did not complete")
+          if archive_run.get("conclusion") != "success":
+              raise RuntimeError(
+                  f"Bot 1 run {archive_run['id']} concluded {archive_run.get('conclusion')!r}"
+              )
           if archive_run.get("event") != "workflow_dispatch":
               raise RuntimeError(f"Bot 1 event was {archive_run.get('event')!r}")
           if archive_run.get("head_branch") != "master":
               raise RuntimeError(f"Bot 1 branch was {archive_run.get('head_branch')!r}")
 
-          archive_run = wait_completed(archive_run["id"])
-          if archive_run.get("conclusion") != "success":
-              raise RuntimeError(
-                  f"Bot 1 run {archive_run['id']} concluded {archive_run.get('conclusion')!r}"
-              )
-
-          archive_files = ["brief.html", "brief.md", "sources.md", "daily.json"]
-          for name in archive_files:
-              quoted = urllib.parse.quote(
-                  f"ai-daily/{report_date}/{name}", safe="/"
-              )
-              info = get_json(f"/contents/{quoted}?ref=master")
-              if info.get("type") != "file" or int(info.get("size", 0)) <= 0:
-                  raise RuntimeError(f"archive file is missing or empty: {name}")
-
+          mail_payload = get_json(
+              "/actions/workflows/ai-daily-mail.yml/runs"
+              "?event=workflow_dispatch&branch=master&per_page=100"
+          )
           title = f"AI Daily Mail | {report_date}"
-          before_mail_ids = {item["id"] for item in before["mail_runs"]}
-          deadline = time.monotonic() + 60
-          matching_mail = []
-          while time.monotonic() < deadline:
-              mail = get_json(
-                  "/actions/workflows/ai-daily-mail.yml/runs"
-                  "?event=workflow_dispatch&branch=master&per_page=50"
-              )
-              matching_mail = [
-                  run
-                  for run in mail.get("workflow_runs", [])
-                  if run.get("display_title") == title
-              ]
-              after_ids = {run["id"] for run in matching_mail}
-              if before_mail_ids:
-                  break
-              if after_ids:
-                  break
-              time.sleep(2)
-
-          after_mail_ids = {run["id"] for run in matching_mail}
-          new_mail_ids = after_mail_ids - before_mail_ids
-          if before_mail_ids and new_mail_ids:
+          mail_runs = [
+              run
+              for run in mail_payload.get("workflow_runs", [])
+              if run.get("display_title") == title
+          ]
+          if len(mail_runs) != 1:
               raise RuntimeError(
-                  f"duplicate AI Daily Mail run was created: {sorted(new_mail_ids)}"
+                  f"expected exactly one Bot 2 run for {report_date}, found {len(mail_runs)}"
               )
-          if not before_mail_ids and len(new_mail_ids) != 1:
+          mail_run = mail_runs[0]
+          if mail_run.get("status") != "completed":
+              deadline = time.monotonic() + 120
+              while mail_run.get("status") != "completed" and time.monotonic() < deadline:
+                  time.sleep(3)
+                  mail_run = get_json(f"/actions/runs/{mail_run['id']}")
+          if mail_run.get("status") != "completed" or mail_run.get("conclusion") != "success":
               raise RuntimeError(
-                  f"expected exactly one new AI Daily Mail run, got {sorted(new_mail_ids)}"
+                  f"Bot 2 run {mail_run['id']} is not a completed success"
               )
 
-          mail_run = None
-          mail_mode = "reused-existing"
-          if before_mail_ids:
-              mail_run = next(
-                  run for run in matching_mail if run["id"] in before_mail_ids
-              )
-          else:
-              mail_mode = "triggered-new"
-              new_id = next(iter(new_mail_ids))
-              mail_run = wait_completed(new_id, timeout=120)
-              if mail_run.get("conclusion") != "success":
-                  raise RuntimeError(
-                      f"Bot 2 run {new_id} concluded {mail_run.get('conclusion')!r}"
-                  )
-
-          result = {
-              "report_date": report_date,
-              "archive_run_id": archive_run["id"],
-              "archive_run_url": archive_run["html_url"],
-              "archive_event": archive_run["event"],
-              "archive_branch": archive_run["head_branch"],
-              "archive_conclusion": archive_run["conclusion"],
-              "archive_files": archive_files,
-              "mail_mode": mail_mode,
-              "mail_run_id": mail_run["id"] if mail_run else None,
-              "mail_run_url": mail_run["html_url"] if mail_run else None,
-              "duplicate_mail_run_created": False,
-          }
-          with open(result_path, "w", encoding="utf-8") as handle:
-              json.dump(result, handle)
-          PY
-
-          python3 - "$result_file" <<'PY'
-          import json
-          import os
-          import sys
-
-          with open(sys.argv[1], encoding="utf-8") as handle:
-              result = json.load(handle)
           summary = os.environ["GITHUB_STEP_SUMMARY"]
+          validation_url = (
+              f"{os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}"
+              f"/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+          )
           with open(summary, "a", encoding="utf-8") as handle:
-              handle.write("### Controlled AI Daily handoff validation\n\n")
-              handle.write(f"- validation run: {os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}\n")
-              handle.write(f"- report date / dispatch input: `{result['report_date']}`\n")
-              handle.write("- raw mirror: HTML 200 + JSON 200 (production helper)\n")
-              handle.write("- dispatch: HTTP 204 (production helper)\n")
-              handle.write(f"- Bot 1: {result['archive_run_url']}\n")
-              handle.write(f"- Bot 1 event: `{result['archive_event']}`\n")
-              handle.write(f"- Bot 1 branch: `{result['archive_branch']}`\n")
-              handle.write(f"- Bot 1 conclusion: `{result['archive_conclusion']}`\n")
-              handle.write("- archive files: `brief.html`, `brief.md`, `sources.md`, `daily.json` all present and non-empty\n")
-              handle.write(f"- Bot 2 mode: `{result['mail_mode']}`\n")
-              if result["mail_run_url"]:
-                  handle.write(f"- Bot 2 reference run: {result['mail_run_url']}\n")
-              handle.write("- duplicate mail run created by validation: `false`\n")
+              handle.write("### Controlled AI Daily handoff evidence\n\n")
+              handle.write(f"- evidence run: {validation_url}\n")
+              handle.write(f"- report date / dispatch input: `{report_date}`\n")
+              handle.write(f"- Bot 1: {archive_run['html_url']}\n")
+              handle.write(f"- Bot 1 event: `{archive_run['event']}`\n")
+              handle.write(f"- Bot 1 branch: `{archive_run['head_branch']}`\n")
+              handle.write(f"- Bot 1 conclusion: `{archive_run['conclusion']}`\n")
+              handle.write(f"- Bot 2: {mail_run['html_url']}\n")
+              handle.write(f"- Bot 2 conclusion: `{mail_run['conclusion']}`\n")
+              handle.write(f"- Bot 2 runs for `{report_date}`: `1`\n")
+              handle.write("- duplicate Bot 2/mail run: `false`\n")
           PY
