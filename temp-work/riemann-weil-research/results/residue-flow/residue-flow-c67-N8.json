@@ -1,0 +1,120 @@
+{
+  "status": "exploratory_schur_barycentric_rational_pole_test",
+  "warning": "Schur pivots/matrix use Arb; polynomial roots and residues are high-precision midpoint diagnostics, not root-isolation certificates.",
+  "upstream_commit": "5a66d0cd177ef8b8ad1c2c93165b8d56ca40292c",
+  "c": 67,
+  "N": 8,
+  "prec_bits": 1500,
+  "mpmath_dps": 180,
+  "schur_pivot_mid": "1.0547824705977348977607553660375840819795844515478078824466099992557592070113522e-20",
+  "q_degree": 8,
+  "all_q_roots_positive_real": true,
+  "max_abs_imag_q_root": "0.0",
+  "all_finite_pole_residues_negative": true,
+  "positive_pole_count": 8,
+  "expected_positive_pole_count": 8,
+  "interval_counts_between_nonnegative_integer_nodes": [
+    {
+      "interval": "(0,1)",
+      "count": 0
+    },
+    {
+      "interval": "(1,2)",
+      "count": 0
+    },
+    {
+      "interval": "(2,3)",
+      "count": 0
+    },
+    {
+      "interval": "(3,4)",
+      "count": 0
+    },
+    {
+      "interval": "(4,5)",
+      "count": 0
+    },
+    {
+      "interval": "(5,6)",
+      "count": 0
+    },
+    {
+      "interval": "(6,7)",
+      "count": 0
+    },
+    {
+      "interval": "(7,8)",
+      "count": 0
+    }
+  ],
+  "positive_poles_beyond_N": 8,
+  "sum_barycentric_weights": "0.0000000006623536530085892091141529668209023245128832205831504171086092604370938",
+  "r_asymptotic_C_over_z": "-200.7424750968125792660866889124451367367292670793559493183990920556547",
+  "roots": [
+    {
+      "x_root": "89.471249807623099694247932824232385706367254433062583799319281507295420042939152",
+      "imag_abs": "0.0",
+      "positive_real_x": true,
+      "positive_pole": "9.458924347282998525454209590520109526828254804894912759415814903486483",
+      "residue_at_positive_pole": "-0.4189695271850931436120948056803979672719431121250577872951917757101541",
+      "residue_negative": true
+    },
+    {
+      "x_root": "197.90582420946469665691123946392017735361687497332017035579103733311555323462933",
+      "imag_abs": "0.0",
+      "positive_real_x": true,
+      "positive_pole": "14.06790049045928873913652105020052505612410424705250484534304183567373",
+      "residue_at_positive_pole": "-0.019092534867951923760505456706100255709429848721945673635925213158839",
+      "residue_negative": true
+    },
+    {
+      "x_root": "280.13747812099343936245344208218342978321748820400815947106320898957800236769283",
+      "imag_abs": "0.0",
+      "positive_real_x": true,
+      "positive_pole": "16.73730797114617949702277344911602447658467293876293840763114095734431",
+      "residue_at_positive_pole": "-0.2301578542376887231088342560481267345771328165470748238207898704128617",
+      "residue_negative": true
+    },
+    {
+      "x_root": "415.06518518003682261952199786230635883093020239955580948906823788423773346438",
+      "imag_abs": "0.0",
+      "positive_real_x": true,
+      "positive_pole": "20.37314863196253282121346951533937390534836697649670921381143589993975",
+      "residue_at_positive_pole": "-0.3543887220839553598535934040108667167481776039224267554521173747821527",
+      "residue_negative": true
+    },
+    {
+      "x_root": "707.92447550415007593296201737428627079607061518017387600351361593537622402996133",
+      "imag_abs": "0.0",
+      "positive_real_x": true,
+      "positive_pole": "26.60685016126768200530496390986012634141826135900958275124028529657997",
+      "residue_at_positive_pole": "-0.4370868795884806635766244129486095434068171841465254509407580983092686",
+      "residue_negative": true
+    },
+    {
+      "x_root": "1291.1773155771856126607442846491728642887596311021538801906192398578263450848293",
+      "imag_abs": "0.0",
+      "positive_real_x": true,
+      "positive_pole": "35.93295584247398944643324478685733680115936697387686256206919315199196",
+      "residue_at_positive_pole": "-1.58050091614665259758493939891592139627093122212964135327789284561538",
+      "residue_negative": true
+    },
+    {
+      "x_root": "3288.1019831069747818078317156953837867035284404931013607369359278031199817157384",
+      "imag_abs": "0.0",
+      "positive_real_x": true,
+      "positive_pole": "57.34197400776306359585359373311874873551450469764636886296884458888531",
+      "residue_at_positive_pole": "-6.21427628070901882658446626696358355227645022591851344311439574530832",
+      "residue_negative": true
+    },
+    {
+      "x_root": "33940.307995377455731843303498686234694397953259113406399895680267458138181528334",
+      "imag_abs": "0.0",
+      "positive_real_x": true,
+      "positive_pole": "184.2289553663523754928459548322223217507966374281161964278647965680477",
+      "residue_at_positive_pole": "-91.11676483358744839496228645494896220210375152616678937166247510453039",
+      "residue_negative": true
+    }
+  ],
+  "meaning": "All q-roots positive real plus negative residues is the finite-pole signature expected for an odd rational Pick/Herglotz function in the convention r(z)=a z+sum 2c_j z/(t_j^2-z^2), c_j>0. This diagnostic can falsify but does not rigorously prove Pick membership."
+}
