@@ -4,8 +4,8 @@ on:
   schedule:
     # Short recovery opportunities immediately before useful downstream retries.
     # Local times are Asia/Singapore / Beijing (UTC+8).
-    - cron: "11 1 * * *"  # 09:11, before the 09:15 consumer retry
-    - cron: "11 2 * * *"  # 10:11, before the 10:15 consumer retry
+    - cron: "13 1 * * *"  # 09:13, before the 09:15 consumer retry
+    - cron: "13 2 * * *"  # 10:13, before the 10:15 consumer retry
     - cron: "13 3 * * *"  # 11:13, before the 11:15 consumer retry
     - cron: "37 3 * * *"  # 11:37, final chance before the 12:15 consumer retry
   workflow_dispatch:
