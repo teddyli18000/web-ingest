@@ -11,11 +11,13 @@ Collect the daily report published by **AIHOT**.
 
 This task only collects the AIHOT daily report and its webpage. Downstream Gmail delivery is intentionally outside this repository.
 
-## API contract
+## API migration
 
-Use **REST API v1 only**. Do not add new calls to `/api/public/*`.
+This task uses **REST API v1 only**. Do not add new calls to `/api/public/*`.
 
-AIHOT states that `/api/public/*` will stop serving on **2026-12-31**. The old daily endpoints are replaced by `/api/v1/dailies/latest` and `/api/v1/dailies/{date}`. Keep the v1 payload in its original shape.
+AIHOT states that `/api/public/*` will stop serving on **2026-12-31**. The old daily endpoints `/api/public/daily` and `/api/public/daily/{date}` are replaced by `/api/v1/dailies/latest` and `/api/v1/dailies/{date}`. The v1 response has a stable outer object and the report body is under `report`.
+
+Do not convert the v1 payload back into the old field shape.
 
 ## Schedule and reliability
 
@@ -78,10 +80,14 @@ ai-daily/data/YYYY/MM/DD/
 └── aihot-daily.json
 ```
 
-- `aihot-daily.html` is the **byte-for-byte HTTP response body of the AIHOT daily webpage**.
-- `aihot-daily.json` is the **byte-for-byte REST API v1 response body**.
+- `aihot-daily.html` is the **byte-for-byte HTTP response body of the AIHOT daily webpage**. This is the preferred source when a downstream Agent needs to reproduce the page visually.
+- `aihot-daily.json` is the **byte-for-byte REST API v1 response body**. This is the preferred structured source for validation and reliable content extraction.
 
-Neither file may be reformatted, normalized, reserialized, have a newline appended, have escaping changed, or otherwise be modified by the collector. The collector may parse in-memory copies only for validation and for discovering the canonical daily webpage URL.
+Neither file may be reformatted, normalized, reserialized, have a newline appended, have escaping changed, or otherwise be modified by the collector.
+
+The collector may parse in-memory copies only for validation and for discovering the canonical daily webpage URL.
+
+The raw website HTML is not itself guaranteed to be Gmail-safe: mail clients may strip scripts or unsupported CSS. Any email-compatible transformation belongs downstream; this repository must preserve the original webpage response so the downstream Agent has the best possible source material.
 
 Existing snapshots are not silently overwritten. A rerun with byte-identical content is a no-op; different bytes for an existing file fail so an Agent can inspect the change explicitly.
 
@@ -90,13 +96,14 @@ Existing snapshots are not silently overwritten. A rerun with byte-identical con
 When changing or repairing this task:
 
 1. Read this file first.
-2. Read both AI Daily workflows and `ai-daily/fetch_aihot_daily.py` before changing scheduling behavior.
-3. Preserve both raw outputs and byte-for-byte mirroring.
-4. Keep the API contract, warm acquisition timing, recovery timing, output paths, and backfill behavior documented.
-5. Do not move Gmail sending, summarization, or downstream archive logic into this repository.
-6. Preserve the early-warm principle unless evidence supports a better mechanism: acquire a runner well before publication and keep it alive across 08:00.
-7. Do not move the primary warm acquisition back near 08:00 merely to reduce runner time; GitHub scheduler delay has already caused repeated missed 08:15 deadlines.
-8. Keep recovery attempts short and inside the downstream retry window.
+2. Read both `.github/workflows/ai-daily-warm.yml` and `.github/workflows/ai-daily.yml`, plus `ai-daily/fetch_aihot_daily.py`, before editing scheduling behavior.
+3. Preserve both raw outputs: webpage HTML and REST API v1 JSON.
+4. Preserve byte-for-byte mirroring unless the repository owner explicitly changes it.
+5. Keep the API contract, warm acquisition timing, recovery timing, output paths, and backfill behavior documented here when they change.
+6. Do not move Gmail sending, summarization, or downstream archive logic into this repository.
+7. Preserve the early-warm principle unless evidence supports a better mechanism: acquire a runner well before publication and keep it alive across 08:00.
+8. Do not move the primary warm acquisition back near 08:00 merely to reduce runner time; GitHub scheduler delay has already caused repeated missed 08:15 deadlines.
+9. Keep recovery attempts short and inside the downstream retry window.
 
 ## Files
 
