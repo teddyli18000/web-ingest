@@ -6,6 +6,7 @@ Collect the daily report published by **AIHOT**.
 
 - Site: `https://aihot.virxact.com/`
 - REST API v1: `GET https://aihot.virxact.com/api/v1/dailies/latest`
+- Date-specific REST API v1: `GET https://aihot.virxact.com/api/v1/dailies/{date}`
 - Daily webpage: use the exact `report.links.aihot` returned by the v1 response.
 - AIHOT normally publishes the daily report at about 08:00 Beijing time.
 
@@ -47,10 +48,11 @@ Both use the same `ai-daily-aihot` concurrency group with `cancel-in-progress: f
 Once a warm run actually starts:
 
 1. it checks the latest `main` and exits if today's complete snapshot already exists;
-2. if it starts before **07:55**, it deliberately holds the acquired runner until 07:55;
-3. from 07:55 through **08:14**, it polls AIHOT every **10 seconds**;
+2. if it starts before **07:59:45**, it deliberately holds the acquired runner until 07:59:45;
+3. from 07:59:45 through **08:14**, it polls AIHOT every **5 seconds** with a **5-second per-request timeout**;
 4. if it starts after 08:14, it skips the hold and performs a short immediate recovery fetch;
-5. after a successful fetch it commits both raw files with a rebase-before-push.
+5. after a successful fetch it commits both raw files with a rebase-before-push;
+6. if the entire warm publication window ends without a complete snapshot, the workflow fails instead of reporting a misleading green success.
 
 The warm job has a **230-minute timeout**. A punctual 04:37 runner can stay alive through the publication window, while that early start gives the scheduler several hours of delay budget. The 05:07 fallback still reaches the publication window under delays comparable to the worst observed on 2026-09-03.
 
@@ -58,17 +60,34 @@ Each scheduled warm run records its triggering cron, actual runner-acquisition t
 
 This is an intentional exception to the repository's normal preference against long idle Actions: punctuality is the task requirement, the repository is public, and holding a runner already acquired is materially more reliable than asking GitHub for a new runner close to 08:00.
 
+### Low-latency publication watch
+
+The live collector resolves the current Beijing date once it starts and polls **`/api/v1/dailies/{date}` directly**, rather than waiting for `/api/v1/dailies/latest` to advance from yesterday. The date-specific endpoint is the authoritative live target for this task because its URL already names the report we are waiting for.
+
+The collector also sends standard `Cache-Control: no-cache` / `Pragma: no-cache` request headers so intermediaries are asked to revalidate freshness. It does **not** add undocumented query-string cache busters.
+
+Live-mode response handling is deliberately publication-aware:
+
+- HTTP 404 from either the date-specific API or its daily webpage is treated as "not published yet" and retried within the warm window.
+- The API must report exactly the expected date, schema version, sections shape, and canonical daily page URL before the snapshot is accepted.
+- The HTML page must be valid UTF-8 HTML and contain the expected report date before either raw response is persisted.
+- HTTP 429 obeys `Retry-After` when supplied.
+- 5xx, network errors, and request timeouts use bounded exponential retry delays rather than tight failure loops.
+- Manual historical backfills keep stricter semantics: a 404 for an explicitly requested past date is a hard failure, not "not ready".
+
+The API response and webpage are both fetched and validated **before** either file is written, so a temporary page lag cannot leave a network-induced half-snapshot. Existing files remain byte-identity protected.
+
 ### Recovery slots
 
 If the warm runner still does not produce a snapshot, `.github/workflows/ai-daily.yml` provides short recovery opportunities at **09:13, 10:13, 11:13, and 11:37** local time.
 
-Each scheduled recovery makes up to two fetch attempts 10 seconds apart and has a **3-minute timeout**. The first three sit immediately before the 09:15 / 10:15 / 11:15 downstream retries. The 11:37 slot is the final useful chance before 12:15 while remaining clear of later repository workload.
+Each scheduled recovery makes up to two fetch attempts 10 seconds apart and has a **3-minute timeout**. Recovery HTTP requests are individually bounded to 10 seconds. The first three sit immediately before the 09:15 / 10:15 / 11:15 downstream retries. The 11:37 slot is the final useful chance before 12:15 while remaining clear of later repository workload.
 
 Warm and recovery workflows share the same concurrency group, so delayed runs do not write AI Daily concurrently. Once a complete snapshot exists, later runs become fast no-ops.
 
 ### Manual backfill
 
-`.github/workflows/ai-daily.yml` can be run manually with a `YYYY-MM-DD` Beijing date. Manual backfills retain byte-identity checks and never silently rewrite a different existing snapshot.
+`.github/workflows/ai-daily.yml` can be run manually with a `YYYY-MM-DD` Beijing date. Manual backfills retain byte-identity checks, use the date-specific v1 endpoint, and never silently rewrite a different existing snapshot.
 
 ## Output
 
@@ -99,15 +118,16 @@ When changing or repairing this task:
 2. Read both `.github/workflows/ai-daily-warm.yml` and `.github/workflows/ai-daily.yml`, plus `ai-daily/fetch_aihot_daily.py`, before editing scheduling behavior.
 3. Preserve both raw outputs: webpage HTML and REST API v1 JSON.
 4. Preserve byte-for-byte mirroring unless the repository owner explicitly changes it.
-5. Keep the API contract, warm acquisition timing, recovery timing, output paths, and backfill behavior documented here when they change.
+5. Keep the API contract, warm acquisition timing, publication polling behavior, recovery timing, output paths, and backfill behavior documented here when they change.
 6. Do not move Gmail sending, summarization, or downstream archive logic into this repository.
 7. Preserve the early-warm principle unless evidence supports a better mechanism: acquire a runner well before publication and keep it alive across 08:00.
 8. Do not move the primary warm acquisition back near 08:00 merely to reduce runner time; GitHub scheduler delay has already caused repeated missed 08:15 deadlines.
-9. Keep recovery attempts short and inside the downstream retry window.
+9. Keep the live publication watch date-specific, bounded, and failure-visible; do not silently turn an exhausted warm window into success.
+10. Keep recovery attempts short and inside the downstream retry window.
 
 ## Files
 
 - `ai-daily/fetch_aihot_daily.py` — fetch, validate, retry, and save both original response bodies.
-- `.github/workflows/ai-daily-warm.yml` — early warm runner.
+- `.github/workflows/ai-daily-warm.yml` — early warm runner and low-latency publication watch.
 - `.github/workflows/ai-daily.yml` — scheduled recovery and manual backfill.
 - `ai-daily/data/` — immutable daily snapshots.
