@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-04** | **4,349** | **2,502** |
+| **2014-08-09** | **2026-09-05** | **4,350** | **2,503** |
 
-### Latest All-Languages snapshot — 2026-09-04
+### Latest All-Languages snapshot — 2026-09-05
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [fmtlib/fmt](https://github.com/fmtlib/fmt) | C++ | 963 |
-| 2 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 1,601 |
-| 3 | [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) | Python | 774 |
-| 4 | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | JavaScript | 2,128 |
-| 5 | [anthropics/skills](https://github.com/anthropics/skills) | Python | 281 |
-| 6 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 751 |
-| 7 | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | Go | 543 |
-| 8 | [blader/humanizer](https://github.com/blader/humanizer) | Python | 1,208 |
-| 9 | [google-research/timesfm](https://github.com/google-research/timesfm) | Python | 1,618 |
-| 10 | [averygan/reclip](https://github.com/averygan/reclip) | HTML | 88 |
+| 1 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 2,758 |
+| 2 | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | JavaScript | 1,679 |
+| 3 | [fmtlib/fmt](https://github.com/fmtlib/fmt) | C++ | 688 |
+| 4 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 1,135 |
+| 5 | [anthropics/skills](https://github.com/anthropics/skills) | Python | 511 |
+| 6 | [blader/humanizer](https://github.com/blader/humanizer) | Python | 1,130 |
+| 7 | [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) | Python | 720 |
+| 8 | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | Go | 501 |
+| 9 | [magnitudedev/magnitude](https://github.com/magnitudedev/magnitude) | TypeScript | 391 |
+| 10 | [bikini/exploitarium](https://github.com/bikini/exploitarium) | Python | 74 |
 
-[Open full snapshot →](data/2026/09/04/trending.json)
+[Open full snapshot →](data/2026/09/05/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 247 days  
+[`2026`](data/2026/) · 248 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
