@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-05** | **4,350** | **2,503** |
+| **2014-08-09** | **2026-09-06** | **4,351** | **2,504** |
 
-### Latest All-Languages snapshot — 2026-09-05
+### Latest All-Languages snapshot — 2026-09-06
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 2,758 |
-| 2 | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | JavaScript | 1,679 |
-| 3 | [fmtlib/fmt](https://github.com/fmtlib/fmt) | C++ | 688 |
-| 4 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 1,135 |
-| 5 | [anthropics/skills](https://github.com/anthropics/skills) | Python | 511 |
-| 6 | [blader/humanizer](https://github.com/blader/humanizer) | Python | 1,130 |
-| 7 | [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) | Python | 720 |
-| 8 | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | Go | 501 |
-| 9 | [magnitudedev/magnitude](https://github.com/magnitudedev/magnitude) | TypeScript | 391 |
-| 10 | [bikini/exploitarium](https://github.com/bikini/exploitarium) | Python | 74 |
+| 1 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 2,692 |
+| 2 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 1,314 |
+| 3 | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | JavaScript | 2,845 |
+| 4 | [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) | Python | 575 |
+| 5 | [fmtlib/fmt](https://github.com/fmtlib/fmt) | C++ | 134 |
+| 6 | [anthropics/skills](https://github.com/anthropics/skills) | Python | 475 |
+| 7 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 855 |
+| 8 | [anomalyco/opencode](https://github.com/anomalyco/opencode) | TypeScript | 725 |
+| 9 | [ruvnet/ruflo](https://github.com/ruvnet/ruflo) | TypeScript | 136 |
+| 10 | [humanlayer/skills](https://github.com/humanlayer/skills) | TypeScript | 442 |
 
-[Open full snapshot →](data/2026/09/05/trending.json)
+[Open full snapshot →](data/2026/09/06/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 248 days  
+[`2026`](data/2026/) · 249 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
