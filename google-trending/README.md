@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-05** | **645** | **645** | **645** | **645** | **644** |
+| **2024-11-28** | **2026-09-06** | **646** | **646** | **646** | **646** | **645** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 16 |
+| `google_trending_now` | 20 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-09-05
+### Latest SG snapshot — 2026-09-06
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | investment | 5000+ |
-| 2 | singapore haze central region | 500+ |
-| 3 | ipswich town vs liverpool f.c. standings | 10000+ |
-| 4 | taxi | 2000+ |
-| 5 | betis vs real madrid | 5000+ |
-| 6 | anwar ibrahim | 100+ |
-| 7 | sid | 500+ |
-| 8 | driving | 2000+ |
-| 9 | singapore police cyber extortion warning | 2000+ |
-| 10 | louis koo loan lawsuit | 1000+ |
+| 1 | mount anak krakatau | 5000+ |
+| 2 | september 2026 singapore t bill yield | 1000+ |
+| 3 | anak krakatau | 1000+ |
+| 4 | capital punishment | 1000+ |
+| 5 | nanning | 500+ |
+| 6 | singapura | 100+ |
+| 7 | cathay pacific | 5000+ |
+| 8 | inter miami vs atlanta united | 2000+ |
+| 9 | simon lane | 1000+ |
+| 10 | man city vs coventry | 5000+ |
 
-### Latest US snapshot — 2026-09-05
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | clay matthews | 200000+ |
-| 2 | what does a mistrial mean | 2000000+ |
-| 3 | miami fl vs stanford | 200000+ |
-| 4 | michigan state football | 100000+ |
-| 5 | utep vs oklahoma | 200000+ |
-| 6 | yankees vs padres | 50000+ |
-| 7 | nationals vs dodgers | 50000+ |
-| 8 | betis vs real madrid | 200000+ |
-| 9 | braves vs phillies | 50000+ |
-| 10 | bruce campbell | 20000+ |
-
-### Latest GB snapshot — 2026-09-05
+### Latest US snapshot — 2026-09-06
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | ipswich town vs liverpool | 200000+ |
-| 2 | russell howard baby loss | 100000+ |
-| 3 | richard o'sullivan | 100000+ |
-| 4 | september heat dome europe uk | 20000+ |
-| 5 | betis vs real madrid | 50000+ |
-| 6 | what is a mistrial | 50000+ |
-| 7 | tort | 10000+ |
-| 8 | andy ruiz | 10000+ |
-| 9 | john bishop cancelled comedy shows | 10000+ |
-| 10 | a66 | 20000+ |
+| 1 | clemson vs lsu | 1000000+ |
+| 2 | wmu vs michigan | 500000+ |
+| 3 | college football scores | 200000+ |
+| 4 | virginia tech football | 100000+ |
+| 5 | boise state vs oregon | 200000+ |
+| 6 | baylor vs auburn | 200000+ |
+| 7 | fl atlantic vs florida | 200000+ |
+| 8 | ucla vs cal | 50000+ |
+| 9 | atlanta united vs inter miami | 100000+ |
+| 10 | doug eddings | 20000+ |
 
-### Latest HK snapshot — 2026-09-05
+### Latest GB snapshot — 2026-09-06
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 王菲 | 5000+ |
-| 2 | 雞蛋 | 2000+ |
-| 3 | 石門 | 5000+ |
-| 4 | 甘國亮 | 2000+ |
-| 5 | 視帝 | 2000+ |
-| 6 | 玄 戰 六合彩 | 1000+ |
-| 7 | 亞伯拉罕·林肯號航空母艦 | 500+ |
-| 8 | 遺產 | 500+ |
-| 9 | 鍾麗淇 | 200+ |
-| 10 | 馬會 | 500+ |
+| 1 | man city vs coventry | 100000+ |
+| 2 | newcastle vs bournemouth | 200000+ |
+| 3 | pensioner | 20000+ |
+| 4 | hull vs aston villa | 100000+ |
+| 5 | sarah khalifa egypt | 20000+ |
+| 6 | uk supermarkets product recalls | 20000+ |
+| 7 | nottm forest vs spurs | 100000+ |
+| 8 | brighton vs leeds | 50000+ |
+| 9 | st. mirren vs celtic | 50000+ |
+| 10 | west ham vs derby county | 50000+ |
 
-[Open full snapshot →](data/2026/09/05/trending.json)
+### Latest HK snapshot — 2026-09-06
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 王浩信 | 2000+ |
+| 2 | 妥瑞症 | 1000+ |
+| 3 | 梁嘉莹 | 1000+ |
+| 4 | 六合彩結果 | 20000+ |
+| 5 | 嘉應高昇 | 1000+ |
+| 6 | 吳英倫 | 2000+ |
+| 7 | 股票 | 500+ |
+| 8 | mark six | 5000+ |
+| 9 | alexandra eala | 500+ |
+| 10 | 王菲 結婚 | 1000+ |
+
+[Open full snapshot →](data/2026/09/06/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 247 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 248 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
