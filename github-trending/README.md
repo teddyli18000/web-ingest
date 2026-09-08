@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-07** | **4,352** | **2,505** |
+| **2014-08-09** | **2026-09-08** | **4,353** | **2,506** |
 
-### Latest All-Languages snapshot — 2026-09-07
+### Latest All-Languages snapshot — 2026-09-08
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 1,485 |
-| 2 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 2,207 |
-| 3 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 620 |
-| 4 | [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) | Python | 520 |
-| 5 | [openai/skills](https://github.com/openai/skills) | Python | 46 |
-| 6 | [anomalyco/opencode](https://github.com/anomalyco/opencode) | TypeScript | 551 |
-| 7 | [blader/humanizer](https://github.com/blader/humanizer) | Python | 748 |
-| 8 | [llvm/llvm-project](https://github.com/llvm/llvm-project) | LLVM | 23 |
-| 9 | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | JavaScript | 1,539 |
-| 10 | [ruvnet/ruflo](https://github.com/ruvnet/ruflo) | TypeScript | 276 |
+| 1 | [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) | TypeScript | 474 |
+| 2 | [microsoft/markitdown](https://github.com/microsoft/markitdown) | Python | 886 |
+| 3 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 96 |
+| 4 | [jo-inc/camofox-browser](https://github.com/jo-inc/camofox-browser) | JavaScript | 135 |
+| 5 | [MoonTechLab/LunaTV](https://github.com/MoonTechLab/LunaTV) | TypeScript | 197 |
+| 6 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 1,897 |
+| 7 | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | JavaScript | 580 |
+| 8 | [The-Swarm-Corporation/AutoHedge](https://github.com/The-Swarm-Corporation/AutoHedge) | Python | 517 |
+| 9 | [BraveOPotato/FckSignups](https://github.com/BraveOPotato/FckSignups) | TypeScript | 501 |
+| 10 | [bytedance/deer-flow](https://github.com/bytedance/deer-flow) | Python | 195 |
 
-[Open full snapshot →](data/2026/09/07/trending.json)
+[Open full snapshot →](data/2026/09/08/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 250 days  
+[`2026`](data/2026/) · 251 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
