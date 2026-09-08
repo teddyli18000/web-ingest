@@ -14,6 +14,21 @@ PACKAGE = "google-trends-now@1.1.1"
 LOCAL_TZ = ZoneInfo("Asia/Singapore")
 
 
+def dedupe_items(items: list[dict]) -> list[dict]:
+    deduped: list[dict] = []
+    seen: set[str] = set()
+    for item in items:
+        query = str(item.get("query") or "").strip()
+        key = query.casefold()
+        if key and key in seen:
+            continue
+        if key:
+            seen.add(key)
+        deduped.append(item)
+
+    return [{**item, "rank": rank} for rank, item in enumerate(deduped, start=1)]
+
+
 def fetch_region(geo: str) -> dict:
     command = [
         "npx", "--yes", PACKAGE,
@@ -45,6 +60,8 @@ def fetch_region(geo: str) -> dict:
     if not isinstance(items, list) or not items:
         raise RuntimeError(f"{geo}: empty trend list")
 
+    items = dedupe_items([canonical_item(item, rank) for rank, item in enumerate(items, start=1)])
+
     return {
         "source": source,
         "fetch_status": status,
@@ -53,7 +70,7 @@ def fetch_region(geo: str) -> dict:
         "window_hours": payload.get("hours", 24),
         "sort": payload.get("sort", "relevance"),
         "collector": PACKAGE,
-        "items": [canonical_item(item, rank) for rank, item in enumerate(items, start=1)],
+        "items": items,
     }
 
 
