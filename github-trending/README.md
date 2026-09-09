@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-08** | **4,353** | **2,506** |
+| **2014-08-09** | **2026-09-09** | **4,354** | **2,507** |
 
-### Latest All-Languages snapshot — 2026-09-08
+### Latest All-Languages snapshot — 2026-09-09
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) | TypeScript | 474 |
-| 2 | [microsoft/markitdown](https://github.com/microsoft/markitdown) | Python | 886 |
-| 3 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 96 |
-| 4 | [jo-inc/camofox-browser](https://github.com/jo-inc/camofox-browser) | JavaScript | 135 |
-| 5 | [MoonTechLab/LunaTV](https://github.com/MoonTechLab/LunaTV) | TypeScript | 197 |
-| 6 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 1,897 |
-| 7 | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | JavaScript | 580 |
-| 8 | [The-Swarm-Corporation/AutoHedge](https://github.com/The-Swarm-Corporation/AutoHedge) | Python | 517 |
-| 9 | [BraveOPotato/FckSignups](https://github.com/BraveOPotato/FckSignups) | TypeScript | 501 |
-| 10 | [bytedance/deer-flow](https://github.com/bytedance/deer-flow) | Python | 195 |
+| 1 | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) | Python | 656 |
+| 2 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 710 |
+| 3 | [openai/skills](https://github.com/openai/skills) | Python | 490 |
+| 4 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 1,427 |
+| 5 | [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) | TypeScript | 2,627 |
+| 6 | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | JavaScript | 666 |
+| 7 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 452 |
+| 8 | [multica-ai/andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills) | — | 333 |
+| 9 | [microsoft/markitdown](https://github.com/microsoft/markitdown) | Python | 2,047 |
+| 10 | [jo-inc/camofox-browser](https://github.com/jo-inc/camofox-browser) | JavaScript | 871 |
 
-[Open full snapshot →](data/2026/09/08/trending.json)
+[Open full snapshot →](data/2026/09/09/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 251 days  
+[`2026`](data/2026/) · 252 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
