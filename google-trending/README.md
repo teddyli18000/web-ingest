@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-10** | **648** | **648** | **648** | **648** | **647** |
+| **2024-11-28** | **2026-09-11** | **649** | **649** | **649** | **649** | **648** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 28 |
+| `google_trending_now` | 32 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-09-10
+### Latest SG snapshot — 2026-09-11
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | iphone duo | 20000+ |
-| 2 | apple sg | 20000+ |
-| 3 | apple duo | 20000+ |
-| 4 | singapore haze psi readings september | 5000+ |
-| 5 | hock leng lim | 2000+ |
-| 6 | dbs bank | 5000+ |
-| 7 | singtel | 2000+ |
-| 8 | betty ong | 1000+ |
-| 9 | military aircraft | 500+ |
-| 10 | south east asia | 500+ |
+| 1 | sheng siong | 20000+ |
+| 2 | true fitness | 10000+ |
+| 3 | lee cheuk-hing unfair dismissal claim | 2000+ |
+| 4 | vivian balakrishnan | 2000+ |
+| 5 | kishin rk | 1000+ |
+| 6 | aster | 1000+ |
+| 7 | micron technology | 500+ |
+| 8 | man utd vs sabah | 10000+ |
+| 9 | livenation | 5000+ |
+| 10 | jack neo kiki darling | 500+ |
 
-### Latest US snapshot — 2026-09-10
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | sam darnold | 2000000+ |
-| 2 | aj brown | 200000+ |
-| 3 | iphone | 500000+ |
-| 4 | patriots game | 500000+ |
-| 5 | barry melrose | 100000+ |
-| 6 | nfl scores | 500000+ |
-| 7 | iphone 18 pro | 200000+ |
-| 8 | brock bowers | 100000+ |
-| 9 | united airlines dubai flight suspension | 50000+ |
-| 10 | sleep | 20000+ |
-
-### Latest GB snapshot — 2026-09-10
+### Latest US snapshot — 2026-09-11
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | chelsea vs leeds | 200000+ |
-| 2 | noel clarke | 100000+ |
-| 3 | napoli vs arsenal | 100000+ |
-| 4 | iphone | 100000+ |
-| 5 | qualifying week winter fuel allowance | 10000+ |
-| 6 | iphone 18 pro | 50000+ |
-| 7 | richard branson wife | 20000+ |
-| 8 | st. johnstone vs celtic | 50000+ |
-| 9 | rangers vs st. mirren | 50000+ |
-| 10 | psg vs slovan bratislava | 20000+ |
+| 1 | rams | 1000000+ |
+| 2 | country musician brian duckworth passes | 500000+ |
+| 3 | shailene woodley | 100000+ |
+| 4 | florida a&m vs miami fl | 100000+ |
+| 5 | demarcus robinson | 50000+ |
+| 6 | naval support activity bahrain | 20000+ |
+| 7 | pumas - león | 50000+ |
+| 8 | aster | 20000+ |
+| 9 | kaelon black | 50000+ |
+| 10 | dolly parton final request prayer | 20000+ |
 
-### Latest HK snapshot — 2026-09-10
+### Latest GB snapshot — 2026-09-11
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | apple | 50000+ |
-| 2 | iphone 18 pro max | 20000+ |
-| 3 | 陳百祥 | 2000+ |
-| 4 | 火鍋 | 2000+ |
-| 5 | iphone 17 | 5000+ |
-| 6 | iphone18 | 5000+ |
-| 7 | 林行止 | 500+ |
-| 8 | airpods 5 | 2000+ |
-| 9 | apple trade in | 1000+ |
-| 10 | 陳寶儀 | 1000+ |
+| 1 | man utd vs sabah | 100000+ |
+| 2 | aster | 20000+ |
+| 3 | dawn french driving ban | 20000+ |
+| 4 | primark | 50000+ |
+| 5 | 9/11 | 20000+ |
+| 6 | oasis | 20000+ |
+| 7 | gye worthy | 5000+ |
+| 8 | bayern vs bodø/glimt | 20000+ |
+| 9 | shailene woodley | 5000+ |
+| 10 | esther rantzen | 5000+ |
 
-[Open full snapshot →](data/2026/09/10/trending.json)
+### Latest HK snapshot — 2026-09-11
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 雷宇揚 | 10000+ |
+| 2 | 鍾麗淇 | 5000+ |
+| 3 | 莊 寶 | 5000+ |
+| 4 | 胡 楓 | 2000+ |
+| 5 | 渣打馬拉松 2027 | 2000+ |
+| 6 | 吳沚默 | 2000+ |
+| 7 | 萬 寧 88 折 | 1000+ |
+| 8 | 911 | 1000+ |
+| 9 | 渣打馬拉松 | 2000+ |
+| 10 | 鄒幸彤 | 2000+ |
+
+[Open full snapshot →](data/2026/09/11/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 250 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 251 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
