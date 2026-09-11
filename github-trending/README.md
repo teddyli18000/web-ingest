@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-10** | **4,355** | **2,508** |
+| **2014-08-09** | **2026-09-11** | **4,356** | **2,509** |
 
-### Latest All-Languages snapshot — 2026-09-10
+### Latest All-Languages snapshot — 2026-09-11
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) | Python | 4,650 |
-| 2 | [Tencent/teamai-cli](https://github.com/Tencent/teamai-cli) | TypeScript | 556 |
-| 3 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 688 |
-| 4 | [pascalorg/editor](https://github.com/pascalorg/editor) | TypeScript | 107 |
-| 5 | [earthtojake/text-to-cad](https://github.com/earthtojake/text-to-cad) | Python | 124 |
-| 6 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 2,249 |
-| 7 | [TauricResearch/TradingAgents](https://github.com/TauricResearch/TradingAgents) | Python | 367 |
-| 8 | [liquidslr/system-design-notes](https://github.com/liquidslr/system-design-notes) | — | 1,397 |
-| 9 | [openai/plugins](https://github.com/openai/plugins) | JavaScript | 498 |
-| 10 | [freestylefly/awesome-gpt-image-2](https://github.com/freestylefly/awesome-gpt-image-2) | JavaScript | 705 |
+| 1 | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) | Python | 3,882 |
+| 2 | [bilawalsidhu/gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view) | JavaScript | 1,762 |
+| 3 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 732 |
+| 4 | [alsk1992/CloddsBot](https://github.com/alsk1992/CloddsBot) | TypeScript | 277 |
+| 5 | [Tencent/teamai-cli](https://github.com/Tencent/teamai-cli) | TypeScript | 841 |
+| 6 | [AlexsJones/llmfit](https://github.com/AlexsJones/llmfit) | Rust | 258 |
+| 7 | [liquidslr/system-design-notes](https://github.com/liquidslr/system-design-notes) | — | 900 |
+| 8 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 1,294 |
+| 9 | [freestylefly/awesome-gpt-image-2](https://github.com/freestylefly/awesome-gpt-image-2) | JavaScript | 962 |
+| 10 | [armory3d/armorpaint](https://github.com/armory3d/armorpaint) | C | 72 |
 
-[Open full snapshot →](data/2026/09/10/trending.json)
+[Open full snapshot →](data/2026/09/11/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 253 days  
+[`2026`](data/2026/) · 254 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
