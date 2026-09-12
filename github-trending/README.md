@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-11** | **4,356** | **2,509** |
+| **2014-08-09** | **2026-09-12** | **4,357** | **2,510** |
 
-### Latest All-Languages snapshot — 2026-09-11
+### Latest All-Languages snapshot — 2026-09-12
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) | Python | 3,882 |
-| 2 | [bilawalsidhu/gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view) | JavaScript | 1,762 |
-| 3 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 732 |
-| 4 | [alsk1992/CloddsBot](https://github.com/alsk1992/CloddsBot) | TypeScript | 277 |
-| 5 | [Tencent/teamai-cli](https://github.com/Tencent/teamai-cli) | TypeScript | 841 |
-| 6 | [AlexsJones/llmfit](https://github.com/AlexsJones/llmfit) | Rust | 258 |
-| 7 | [liquidslr/system-design-notes](https://github.com/liquidslr/system-design-notes) | — | 900 |
-| 8 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 1,294 |
-| 9 | [freestylefly/awesome-gpt-image-2](https://github.com/freestylefly/awesome-gpt-image-2) | JavaScript | 962 |
-| 10 | [armory3d/armorpaint](https://github.com/armory3d/armorpaint) | C | 72 |
+| 1 | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) | Python | 3,463 |
+| 2 | [bilawalsidhu/gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view) | JavaScript | 3,680 |
+| 3 | [nab138/iloader](https://github.com/nab138/iloader) | TypeScript | 50 |
+| 4 | [melgarafael/DeskcommCRM](https://github.com/melgarafael/DeskcommCRM) | TypeScript | 152 |
+| 5 | [vastsa/PI-Desktop](https://github.com/vastsa/PI-Desktop) | TypeScript | 552 |
+| 6 | [armory3d/armorpaint](https://github.com/armory3d/armorpaint) | C | 350 |
+| 7 | [alsk1992/CloddsBot](https://github.com/alsk1992/CloddsBot) | TypeScript | 626 |
+| 8 | [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki) | TypeScript | 647 |
+| 9 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 729 |
+| 10 | [Sonarr/Sonarr](https://github.com/Sonarr/Sonarr) | C# | 191 |
 
-[Open full snapshot →](data/2026/09/11/trending.json)
+[Open full snapshot →](data/2026/09/12/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 254 days  
+[`2026`](data/2026/) · 255 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
