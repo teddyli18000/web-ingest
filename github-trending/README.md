@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-12** | **4,357** | **2,510** |
+| **2014-08-09** | **2026-09-13** | **4,358** | **2,511** |
 
-### Latest All-Languages snapshot — 2026-09-12
+### Latest All-Languages snapshot — 2026-09-13
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) | Python | 3,463 |
-| 2 | [bilawalsidhu/gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view) | JavaScript | 3,680 |
-| 3 | [nab138/iloader](https://github.com/nab138/iloader) | TypeScript | 50 |
-| 4 | [melgarafael/DeskcommCRM](https://github.com/melgarafael/DeskcommCRM) | TypeScript | 152 |
-| 5 | [vastsa/PI-Desktop](https://github.com/vastsa/PI-Desktop) | TypeScript | 552 |
-| 6 | [armory3d/armorpaint](https://github.com/armory3d/armorpaint) | C | 350 |
-| 7 | [alsk1992/CloddsBot](https://github.com/alsk1992/CloddsBot) | TypeScript | 626 |
-| 8 | [nashsu/llm_wiki](https://github.com/nashsu/llm_wiki) | TypeScript | 647 |
-| 9 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 729 |
-| 10 | [Sonarr/Sonarr](https://github.com/Sonarr/Sonarr) | C# | 191 |
+| 1 | [bilawalsidhu/gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view) | JavaScript | 2,265 |
+| 2 | [melgarafael/DeskcommCRM](https://github.com/melgarafael/DeskcommCRM) | TypeScript | 504 |
+| 3 | [asgeirtj/system_prompts_leaks](https://github.com/asgeirtj/system_prompts_leaks) | JavaScript | 217 |
+| 4 | [nab138/iloader](https://github.com/nab138/iloader) | TypeScript | 209 |
+| 5 | [Flowseal/zapret-discord-youtube](https://github.com/Flowseal/zapret-discord-youtube) | Batchfile | 65 |
+| 6 | [jihe520/MathModelAgent](https://github.com/jihe520/MathModelAgent) | Python | 262 |
+| 7 | [Sonarr/Sonarr](https://github.com/Sonarr/Sonarr) | C# | 227 |
+| 8 | [alsk1992/CloddsBot](https://github.com/alsk1992/CloddsBot) | TypeScript | 376 |
+| 9 | [yuliskov/SmartTube](https://github.com/yuliskov/SmartTube) | Java | 136 |
+| 10 | [Shubhamsaboo/awesome-llm-apps](https://github.com/Shubhamsaboo/awesome-llm-apps) | Python | 230 |
 
-[Open full snapshot →](data/2026/09/12/trending.json)
+[Open full snapshot →](data/2026/09/13/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 255 days  
+[`2026`](data/2026/) · 256 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
