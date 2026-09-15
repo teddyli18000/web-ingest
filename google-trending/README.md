@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-14** | **650** | **650** | **650** | **650** | **649** |
+| **2024-11-28** | **2026-09-15** | **651** | **651** | **651** | **651** | **650** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 36 |
+| `google_trending_now` | 40 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-09-14
+### Latest SG snapshot — 2026-09-15
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | psi singapore now | 50000+ |
-| 2 | bangladesh | 2000+ |
-| 3 | hyrox | 2000+ |
-| 4 | foresque residences balcony concrete lawsuit | 1000+ |
-| 5 | taiwan | 1000+ |
-| 6 | jamil khir baharom | 500+ |
-| 7 | suahasil nazara | 1000+ |
-| 8 | singapore telecommunications limited | 500+ |
-| 9 | hawker centre | 200+ |
-| 10 | man utd vs man city | 20000+ |
+| 1 | margaret chung | 5000+ |
+| 2 | psd reviewing civil servant housing data | 10000+ |
+| 3 | singapore sms blaster phishing sentencing | 10000+ |
+| 4 | private investigator | 1000+ |
+| 5 | rts bukit chagar station | 1000+ |
+| 6 | china | 1000+ |
+| 7 | singapore | 2000+ |
+| 8 | haze malaysia | 500+ |
+| 9 | news | 1000+ |
+| 10 | australia vs zimbabwe | 1000+ |
 
-### Latest US snapshot — 2026-09-14
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | cowboys | 2000000+ |
-| 2 | commanders vs eagles | 1000000+ |
-| 3 | packers vs vikings | 1000000+ |
-| 4 | bloodhound q50 | 500000+ |
-| 5 | nfl scores | 1000000+ |
-| 6 | bears vs panthers | 1000000+ |
-| 7 | saints vs lions | 1000000+ |
-| 8 | dolphins vs raiders | 500000+ |
-| 9 | kyler murray | 200000+ |
-| 10 | falcons vs steelers | 500000+ |
-
-### Latest GB snapshot — 2026-09-14
+### Latest US snapshot — 2026-09-15
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | sydney sweeney ad | 20000+ |
-| 2 | prince george eton college boarding | 20000+ |
-| 3 | manchester united f.c. vs man city standings | 200000+ |
-| 4 | boris johnson | 20000+ |
-| 5 | martin brundle | 10000+ |
-| 6 | sweden elections | 10000+ |
-| 7 | brest vs psg | 20000+ |
-| 8 | ludek miklosko | 5000+ |
-| 9 | diogo jota | 10000+ |
-| 10 | what did meghan share in her video of the family's uk return | 20000+ |
+| 1 | widows bay | 500000+ |
+| 2 | broncos | 500000+ |
+| 3 | bob mackie | 100000+ |
+| 4 | macklemore | 100000+ |
+| 5 | social security cola 2027 forecast | 50000+ |
+| 6 | mitch mcconnell | 100000+ |
+| 7 | travis kelce | 200000+ |
+| 8 | tom pelphrey | 100000+ |
+| 9 | yankees vs twins | 50000+ |
+| 10 | braves vs cubs | 50000+ |
 
-### Latest HK snapshot — 2026-09-14
+### Latest GB snapshot — 2026-09-15
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 任正非 | 5000+ |
-| 2 | 李嘉诚 | 2000+ |
-| 3 | 香港人 | 1000+ |
-| 4 | 林 行止 | 2000+ |
-| 5 | tides | 500+ |
-| 6 | 超級 市場 | 2000+ |
-| 7 | 預測 | 2000+ |
-| 8 | 氣象廳 | 500+ |
-| 9 | 曼聯對曼城 | 10000+ |
-| 10 | 吳兆麟 | 5000+ |
+| 1 | leeds vs newcastle | 200000+ |
+| 2 | traffic | 50000+ |
+| 3 | matthew rhys | 50000+ |
+| 4 | knebworth | 200000+ |
+| 5 | ed sheeran | 50000+ |
+| 6 | british royal family | 20000+ |
+| 7 | next april pension rise forecast | 5000+ |
+| 8 | gov.uk state pension forecast research | 20000+ |
+| 9 | john torode | 2000+ |
+| 10 | australia vs zimbabwe | 5000+ |
 
-[Open full snapshot →](data/2026/09/14/trending.json)
+### Latest HK snapshot — 2026-09-15
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 醫療券 | 5000+ |
+| 2 | 百 佳 超市 | 500+ |
+| 3 | 愛 回 家 之 三代 同 糖 | 1000+ |
+| 4 | 消费券 | 500+ |
+| 5 | china | 500+ |
+| 6 | 超級 市場 | 1000+ |
+| 7 | 香港施政報告 | 5000+ |
+| 8 | ios 27 | 2000+ |
+| 9 | 長者 生活 津貼 | 2000+ |
+| 10 | 校長 | 1000+ |
+
+[Open full snapshot →](data/2026/09/15/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 252 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 253 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
