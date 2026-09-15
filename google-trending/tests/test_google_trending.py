@@ -9,6 +9,7 @@ sys.path.insert(0, str(ROOT))
 
 from archive_lib import REGIONS, SOURCE_QUALITY, canonical_item, new_document, validate_document
 from backfill import member_date, member_geo, parse_csv
+from capture import dedupe_items
 from render_readme import path_date
 
 
@@ -28,6 +29,17 @@ class GoogleTrendingTests(unittest.TestCase):
         self.assertEqual(item["query"], "Example")
         self.assertEqual(item["search_volume"], 50000)
         self.assertEqual(item["trend_breakdown"], ["example", "example news"])
+
+    def test_dedupe_items_removes_duplicates_and_reranks(self):
+        items = [
+            canonical_item({"query": "A"}, 1),
+            canonical_item({"query": "B"}, 2),
+            canonical_item({"query": "a"}, 3),
+            canonical_item({"query": "B "}, 4),
+        ]
+        deduped = dedupe_items(items)
+        self.assertEqual([item["query"] for item in deduped], ["A", "B"])
+        self.assertEqual([item["rank"] for item in deduped], [1, 2])
 
     def test_document_validation_requires_contiguous_unique_queries(self):
         payload = new_document("2026-09-01")
