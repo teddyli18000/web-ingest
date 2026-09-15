@@ -16,7 +16,7 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-API_BASE = "https://aihot.virxact.com/api/v1/dailies"
+API_BASE = "https://aihot.news//api/v1/dailies"
 TIMEZONE = ZoneInfo("Asia/Shanghai")
 USER_AGENT = "web-ingest/1.0 (+https://github.com/teddyli18000/web-ingest)"
 
@@ -120,7 +120,7 @@ def parse_and_validate_api(raw_body: bytes, expected_date: str) -> dict:
     if not isinstance(links, dict):
         raise RuntimeError("AIHOT report.links is missing or invalid")
     page_url = links.get("aihot")
-    expected_page_url = f"https://aihot.virxact.com/daily/{expected_date}"
+    expected_page_url = f"https://aihot.news/daily/{expected_date}"
     if page_url != expected_page_url:
         raise RuntimeError(
             f"unexpected AIHOT daily page URL: {page_url!r}; expected {expected_page_url!r}"
