@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-14** | **4,359** | **2,512** |
+| **2014-08-09** | **2026-09-15** | **4,360** | **2,513** |
 
-### Latest All-Languages snapshot — 2026-09-14
+### Latest All-Languages snapshot — 2026-09-15
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [JustVugg/colibri](https://github.com/JustVugg/colibri) | C | 868 |
-| 2 | [ever-co/ever-gauzy](https://github.com/ever-co/ever-gauzy) | TypeScript | 191 |
-| 3 | [bilawalsidhu/gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view) | JavaScript | 2,680 |
-| 4 | [tech-leads-club/agent-skills](https://github.com/tech-leads-club/agent-skills) | TypeScript | 265 |
-| 5 | [melgarafael/DeskcommCRM](https://github.com/melgarafael/DeskcommCRM) | TypeScript | 432 |
-| 6 | [calesthio/OpenMontage](https://github.com/calesthio/OpenMontage) | Python | 380 |
-| 7 | [asgeirtj/system_prompts_leaks](https://github.com/asgeirtj/system_prompts_leaks) | JavaScript | 706 |
-| 8 | [vxcontrol/pentagi](https://github.com/vxcontrol/pentagi) | Go | 590 |
-| 9 | [multimodal-art-projection/YuE](https://github.com/multimodal-art-projection/YuE) | Python | 487 |
-| 10 | [yuliskov/SmartTube](https://github.com/yuliskov/SmartTube) | Java | 233 |
+| 1 | [JustVugg/colibri](https://github.com/JustVugg/colibri) | C | 2,173 |
+| 2 | [alibaba/open-code-review](https://github.com/alibaba/open-code-review) | Go | 1,571 |
+| 3 | [multimodal-art-projection/YuE](https://github.com/multimodal-art-projection/YuE) | Python | 559 |
+| 4 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 2,776 |
+| 5 | [666ghj/MiroFish](https://github.com/666ghj/MiroFish) | Python | 560 |
+| 6 | [Panniantong/Agent-Reach](https://github.com/Panniantong/Agent-Reach) | Python | 651 |
+| 7 | [asgeirtj/system_prompts_leaks](https://github.com/asgeirtj/system_prompts_leaks) | JavaScript | 764 |
+| 8 | [rlaope/oh-my-hermes](https://github.com/rlaope/oh-my-hermes) | Python | 77 |
+| 9 | [localsend/localsend](https://github.com/localsend/localsend) | Dart | 251 |
+| 10 | [dani-garcia/vaultwarden](https://github.com/dani-garcia/vaultwarden) | Rust | 115 |
 
-[Open full snapshot →](data/2026/09/14/trending.json)
+[Open full snapshot →](data/2026/09/15/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 257 days  
+[`2026`](data/2026/) · 258 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
