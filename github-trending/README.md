@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-15** | **4,360** | **2,513** |
+| **2014-08-09** | **2026-09-16** | **4,361** | **2,514** |
 
-### Latest All-Languages snapshot — 2026-09-15
+### Latest All-Languages snapshot — 2026-09-16
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [JustVugg/colibri](https://github.com/JustVugg/colibri) | C | 2,173 |
-| 2 | [alibaba/open-code-review](https://github.com/alibaba/open-code-review) | Go | 1,571 |
-| 3 | [multimodal-art-projection/YuE](https://github.com/multimodal-art-projection/YuE) | Python | 559 |
-| 4 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 2,776 |
-| 5 | [666ghj/MiroFish](https://github.com/666ghj/MiroFish) | Python | 560 |
-| 6 | [Panniantong/Agent-Reach](https://github.com/Panniantong/Agent-Reach) | Python | 651 |
-| 7 | [asgeirtj/system_prompts_leaks](https://github.com/asgeirtj/system_prompts_leaks) | JavaScript | 764 |
-| 8 | [rlaope/oh-my-hermes](https://github.com/rlaope/oh-my-hermes) | Python | 77 |
-| 9 | [localsend/localsend](https://github.com/localsend/localsend) | Dart | 251 |
-| 10 | [dani-garcia/vaultwarden](https://github.com/dani-garcia/vaultwarden) | Rust | 115 |
+| 1 | [alibaba/open-code-review](https://github.com/alibaba/open-code-review) | Go | 2,756 |
+| 2 | [JustVugg/colibri](https://github.com/JustVugg/colibri) | C | 2,026 |
+| 3 | [ever-co/ever-gauzy](https://github.com/ever-co/ever-gauzy) | TypeScript | 634 |
+| 4 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 2,072 |
+| 5 | [Homebrew/BrewUI](https://github.com/Homebrew/BrewUI) | Swift | 271 |
+| 6 | [melgarafael/DeskcommCRM](https://github.com/melgarafael/DeskcommCRM) | TypeScript | 193 |
+| 7 | [alphaXiv/OpenResearch](https://github.com/alphaXiv/OpenResearch) | Rust | 531 |
+| 8 | [NationalSecurityAgency/ghidra](https://github.com/NationalSecurityAgency/ghidra) | Java | 725 |
+| 9 | [danny-avila/LibreChat](https://github.com/danny-avila/LibreChat) | TypeScript | 254 |
+| 10 | [pacifio/atlas](https://github.com/pacifio/atlas) | Rust | 91 |
 
-[Open full snapshot →](data/2026/09/15/trending.json)
+[Open full snapshot →](data/2026/09/16/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 258 days  
+[`2026`](data/2026/) · 259 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
