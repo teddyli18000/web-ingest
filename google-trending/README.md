@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-15** | **651** | **651** | **651** | **651** | **650** |
+| **2024-11-28** | **2026-09-16** | **652** | **652** | **652** | **652** | **651** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 40 |
+| `google_trending_now` | 44 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-09-15
+### Latest SG snapshot — 2026-09-16
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | margaret chung | 5000+ |
-| 2 | psd reviewing civil servant housing data | 10000+ |
-| 3 | singapore sms blaster phishing sentencing | 10000+ |
-| 4 | private investigator | 1000+ |
-| 5 | rts bukit chagar station | 1000+ |
-| 6 | china | 1000+ |
-| 7 | singapore | 2000+ |
-| 8 | haze malaysia | 500+ |
-| 9 | news | 1000+ |
-| 10 | australia vs zimbabwe | 1000+ |
+| 1 | flight attendant | 5000+ |
+| 2 | anthropic singapore | 2000+ |
+| 3 | divorce | 500+ |
+| 4 | ed sheeran | 2000+ |
+| 5 | michael carrick | 500+ |
+| 6 | liverpool vs spurs | 10000+ |
+| 7 | priority pass | 500+ |
+| 8 | singapore haze air quality | 500+ |
+| 9 | foo cexiang | 200+ |
+| 10 | ipswich town vs arsenal | 5000+ |
 
-### Latest US snapshot — 2026-09-15
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | widows bay | 500000+ |
-| 2 | broncos | 500000+ |
-| 3 | bob mackie | 100000+ |
-| 4 | macklemore | 100000+ |
-| 5 | social security cola 2027 forecast | 50000+ |
-| 6 | mitch mcconnell | 100000+ |
-| 7 | travis kelce | 200000+ |
-| 8 | tom pelphrey | 100000+ |
-| 9 | yankees vs twins | 50000+ |
-| 10 | braves vs cubs | 50000+ |
-
-### Latest GB snapshot — 2026-09-15
+### Latest US snapshot — 2026-09-16
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | leeds vs newcastle | 200000+ |
-| 2 | traffic | 50000+ |
-| 3 | matthew rhys | 50000+ |
-| 4 | knebworth | 200000+ |
-| 5 | ed sheeran | 50000+ |
-| 6 | british royal family | 20000+ |
-| 7 | next april pension rise forecast | 5000+ |
-| 8 | gov.uk state pension forecast research | 20000+ |
-| 9 | john torode | 2000+ |
-| 10 | australia vs zimbabwe | 5000+ |
+| 1 | eliana moreno | 100000+ |
+| 2 | dancing with the stars | 500000+ |
+| 3 | elche vs real madrid | 200000+ |
+| 4 | ed sheeran tour | 100000+ |
+| 5 | red sox vs rangers | 50000+ |
+| 6 | puebla - toluca | 50000+ |
+| 7 | brewers vs pirates | 50000+ |
+| 8 | jimmy horn jr | 20000+ |
+| 9 | thomas massie pete hegseth impeachment | 20000+ |
+| 10 | harry shum jr | 50000+ |
 
-### Latest HK snapshot — 2026-09-15
+### Latest GB snapshot — 2026-09-16
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 醫療券 | 5000+ |
-| 2 | 百 佳 超市 | 500+ |
-| 3 | 愛 回 家 之 三代 同 糖 | 1000+ |
-| 4 | 消费券 | 500+ |
-| 5 | china | 500+ |
-| 6 | 超級 市場 | 1000+ |
-| 7 | 香港施政報告 | 5000+ |
-| 8 | ios 27 | 2000+ |
-| 9 | 長者 生活 津貼 | 2000+ |
-| 10 | 校長 | 1000+ |
+| 1 | brantham | 100000+ |
+| 2 | jj gabriel | 50000+ |
+| 3 | liverpool vs spurs | 200000+ |
+| 4 | ipswich town vs arsenal | 100000+ |
+| 5 | eng vs sl | 50000+ |
+| 6 | raheem sterling | 20000+ |
+| 7 | elche vs real madrid | 20000+ |
+| 8 | west ham vs fulham | 20000+ |
+| 9 | michael carrick | 5000+ |
+| 10 | pokemon 30th anniversary | 10000+ |
 
-[Open full snapshot →](data/2026/09/15/trending.json)
+### Latest HK snapshot — 2026-09-16
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 施政報告 | 20000+ |
+| 2 | 补贴 | 5000+ |
+| 3 | policy address 2026 | 2000+ |
+| 4 | 藝人 | 1000+ |
+| 5 | 張寶兒 | 1000+ |
+| 6 | 謝振軒 | 500+ |
+| 7 | 陳建州 | 1000+ |
+| 8 | tank | 1000+ |
+| 9 | yuri nakamura | 1000+ |
+| 10 | 利物浦對熱刺 | 5000+ |
+
+[Open full snapshot →](data/2026/09/16/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 253 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 254 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
