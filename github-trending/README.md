@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-16** | **4,361** | **2,514** |
+| **2014-08-09** | **2026-09-17** | **4,362** | **2,515** |
 
-### Latest All-Languages snapshot — 2026-09-16
+### Latest All-Languages snapshot — 2026-09-17
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [alibaba/open-code-review](https://github.com/alibaba/open-code-review) | Go | 2,756 |
-| 2 | [JustVugg/colibri](https://github.com/JustVugg/colibri) | C | 2,026 |
-| 3 | [ever-co/ever-gauzy](https://github.com/ever-co/ever-gauzy) | TypeScript | 634 |
-| 4 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 2,072 |
-| 5 | [Homebrew/BrewUI](https://github.com/Homebrew/BrewUI) | Swift | 271 |
-| 6 | [melgarafael/DeskcommCRM](https://github.com/melgarafael/DeskcommCRM) | TypeScript | 193 |
-| 7 | [alphaXiv/OpenResearch](https://github.com/alphaXiv/OpenResearch) | Rust | 531 |
-| 8 | [NationalSecurityAgency/ghidra](https://github.com/NationalSecurityAgency/ghidra) | Java | 725 |
-| 9 | [danny-avila/LibreChat](https://github.com/danny-avila/LibreChat) | TypeScript | 254 |
-| 10 | [pacifio/atlas](https://github.com/pacifio/atlas) | Rust | 91 |
+| 1 | [alibaba/open-code-review](https://github.com/alibaba/open-code-review) | Go | 3,231 |
+| 2 | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | JavaScript | 927 |
+| 3 | [JustVugg/colibri](https://github.com/JustVugg/colibri) | C | 1,546 |
+| 4 | [abue-ammar/tinycast](https://github.com/abue-ammar/tinycast) | Swift | 1,179 |
+| 5 | [jamiepine/voicebox](https://github.com/jamiepine/voicebox) | TypeScript | 417 |
+| 6 | [Lakr233/vphone-cli](https://github.com/Lakr233/vphone-cli) | Swift | 547 |
+| 7 | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Python | 110 |
+| 8 | [ever-co/ever-gauzy](https://github.com/ever-co/ever-gauzy) | TypeScript | 778 |
+| 9 | [ankitects/anki](https://github.com/ankitects/anki) | Rust | 58 |
+| 10 | [NationalSecurityAgency/ghidra](https://github.com/NationalSecurityAgency/ghidra) | Java | 1,059 |
 
-[Open full snapshot →](data/2026/09/16/trending.json)
+[Open full snapshot →](data/2026/09/17/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 259 days  
+[`2026`](data/2026/) · 260 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
