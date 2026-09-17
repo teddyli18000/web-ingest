@@ -16,7 +16,7 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-API_BASE = "https://aihot.news//api/v1/dailies"
+API_BASE = "https://aihot.news/api/v1/dailies"
 TIMEZONE = ZoneInfo("Asia/Shanghai")
 USER_AGENT = "web-ingest/1.0 (+https://github.com/teddyli18000/web-ingest)"
 
