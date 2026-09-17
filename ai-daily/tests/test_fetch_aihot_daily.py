@@ -39,7 +39,7 @@ def report(report_date: str) -> bytes:
             "report": {
                 "date": report_date,
                 "sections": [],
-                "links": {"aihot": f"https://aihot.virxact.com/daily/{report_date}"},
+                "links": {"aihot": f"https://aihot.news/daily/{report_date}"},
             },
         }
     ).encode()
@@ -107,7 +107,7 @@ class PublicationBoundaryTests(unittest.TestCase):
         self.assertEqual(
             fetch_raw.call_args_list[0],
             mock.call(
-                "https://aihot.virxact.com/api/v1/dailies/2026-09-03",
+                "https://aihot.news/api/v1/dailies/2026-09-03",
                 "application/json",
                 5,
             ),
@@ -115,14 +115,14 @@ class PublicationBoundaryTests(unittest.TestCase):
         self.assertEqual(
             fetch_raw.call_args_list[1],
             mock.call(
-                "https://aihot.virxact.com/daily/2026-09-03",
+                "https://aihot.news/daily/2026-09-03",
                 "text/html,application/xhtml+xml",
                 5,
             ),
         )
 
     def test_live_404_before_publication_retries_then_succeeds(self) -> None:
-        api_url = "https://aihot.virxact.com/api/v1/dailies/2026-09-03"
+        api_url = "https://aihot.news/api/v1/dailies/2026-09-03"
         fetch_raw = self.run_successfully_with_fetches(
             [
                 http_error(api_url, 404),
@@ -134,7 +134,7 @@ class PublicationBoundaryTests(unittest.TestCase):
         self.assertEqual(fetch_raw.call_count, 3)
 
     def test_page_can_lag_api_without_losing_the_publication(self) -> None:
-        page_url = "https://aihot.virxact.com/daily/2026-09-03"
+        page_url = "https://aihot.news/daily/2026-09-03"
         fetch_raw = self.run_successfully_with_fetches(
             [
                 report("2026-09-03"),
@@ -147,7 +147,7 @@ class PublicationBoundaryTests(unittest.TestCase):
         self.assertEqual(fetch_raw.call_count, 4)
 
     def test_retry_after_is_obeyed_for_rate_limit(self) -> None:
-        api_url = "https://aihot.virxact.com/api/v1/dailies/2026-09-03"
+        api_url = "https://aihot.news/api/v1/dailies/2026-09-03"
         with (
             mock.patch.object(
                 aihot,
@@ -176,7 +176,7 @@ class PublicationBoundaryTests(unittest.TestCase):
             sleep.assert_called_once_with(7.0)
 
     def test_historical_404_is_a_hard_failure(self) -> None:
-        api_url = "https://aihot.virxact.com/api/v1/dailies/2026-01-01"
+        api_url = "https://aihot.news/api/v1/dailies/2026-01-01"
         with (
             mock.patch.object(
                 aihot,
