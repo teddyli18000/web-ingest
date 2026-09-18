@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-16** | **652** | **652** | **652** | **652** | **651** |
+| **2024-11-28** | **2026-09-18** | **653** | **653** | **653** | **653** | **652** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 44 |
+| `google_trending_now` | 48 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-09-16
+### Latest SG snapshot — 2026-09-18
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | flight attendant | 5000+ |
-| 2 | anthropic singapore | 2000+ |
-| 3 | divorce | 500+ |
-| 4 | ed sheeran | 2000+ |
-| 5 | michael carrick | 500+ |
-| 6 | liverpool vs spurs | 10000+ |
-| 7 | priority pass | 500+ |
-| 8 | singapore haze air quality | 500+ |
-| 9 | foo cexiang | 200+ |
-| 10 | ipswich town vs arsenal | 5000+ |
+| 1 | hospital | 10000+ |
+| 2 | smuggling | 5000+ |
+| 3 | seah kian peng sleeping | 10000+ |
+| 4 | waymo | 1000+ |
+| 5 | diver | 500+ |
+| 6 | australia vs zimbabwe | 500+ |
+| 7 | najib house arrest | 500+ |
+| 8 | money laundering | 2000+ |
+| 9 | china | 1000+ |
+| 10 | man city vs norwich city | 5000+ |
 
-### Latest US snapshot — 2026-09-16
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | eliana moreno | 100000+ |
-| 2 | dancing with the stars | 500000+ |
-| 3 | elche vs real madrid | 200000+ |
-| 4 | ed sheeran tour | 100000+ |
-| 5 | red sox vs rangers | 50000+ |
-| 6 | puebla - toluca | 50000+ |
-| 7 | brewers vs pirates | 50000+ |
-| 8 | jimmy horn jr | 20000+ |
-| 9 | thomas massie pete hegseth impeachment | 20000+ |
-| 10 | harry shum jr | 50000+ |
-
-### Latest GB snapshot — 2026-09-16
+### Latest US snapshot — 2026-09-18
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | brantham | 100000+ |
-| 2 | jj gabriel | 50000+ |
-| 3 | liverpool vs spurs | 200000+ |
-| 4 | ipswich town vs arsenal | 100000+ |
-| 5 | eng vs sl | 50000+ |
-| 6 | raheem sterling | 20000+ |
-| 7 | elche vs real madrid | 20000+ |
-| 8 | west ham vs fulham | 20000+ |
-| 9 | michael carrick | 5000+ |
-| 10 | pokemon 30th anniversary | 10000+ |
+| 1 | bills | 2000000+ |
+| 2 | dj moore | 200000+ |
+| 3 | senate blocks data center bill | 20000+ |
+| 4 | jared young | 50000+ |
+| 5 | phillies vs mets | 50000+ |
+| 6 | millie bobby brown | 50000+ |
+| 7 | tay keith | 20000+ |
+| 8 | brain eating amoeba | 10000+ |
+| 9 | aileen wuornos | 50000+ |
+| 10 | sun vs dream | 20000+ |
 
-### Latest HK snapshot — 2026-09-16
+### Latest GB snapshot — 2026-09-18
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 施政報告 | 20000+ |
-| 2 | 补贴 | 5000+ |
-| 3 | policy address 2026 | 2000+ |
-| 4 | 藝人 | 1000+ |
-| 5 | 張寶兒 | 1000+ |
-| 6 | 謝振軒 | 500+ |
-| 7 | 陳建州 | 1000+ |
-| 8 | tank | 1000+ |
-| 9 | yuri nakamura | 1000+ |
-| 10 | 利物浦對熱刺 | 5000+ |
+| 1 | man city vs norwich city | 200000+ |
+| 2 | armed forces | 20000+ |
+| 3 | celtic vs ferencváros | 100000+ |
+| 4 | sway | 50000+ |
+| 5 | sri lanka vs england | 20000+ |
+| 6 | millie bobby brown | 10000+ |
+| 7 | palace vs lech poznań | 20000+ |
+| 8 | qatar airways disruptive passenger gatwick | 10000+ |
+| 9 | scientist | 10000+ |
+| 10 | real sociedad vs bournemouth | 20000+ |
 
-[Open full snapshot →](data/2026/09/16/trending.json)
+### Latest HK snapshot — 2026-09-18
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 李泳豪 | 5000+ |
+| 2 | 遺囑 | 2000+ |
+| 3 | 工資 | 2000+ |
+| 4 | 梁家輝 | 1000+ |
+| 5 | 高 息 股 | 1000+ |
+| 6 | 照顧 者 | 1000+ |
+| 7 | 先達iphone回收價 | 2000+ |
+| 8 | china | 1000+ |
+| 9 | 伏明霞 | 500+ |
+| 10 | 華為 | 100+ |
+
+[Open full snapshot →](data/2026/09/18/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 254 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 255 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
