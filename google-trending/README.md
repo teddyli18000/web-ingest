@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-18** | **653** | **653** | **653** | **653** | **652** |
+| **2024-11-28** | **2026-09-19** | **654** | **654** | **654** | **654** | **653** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 48 |
+| `google_trending_now` | 52 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-09-18
+### Latest SG snapshot — 2026-09-19
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | hospital | 10000+ |
-| 2 | smuggling | 5000+ |
-| 3 | seah kian peng sleeping | 10000+ |
-| 4 | waymo | 1000+ |
-| 5 | diver | 500+ |
-| 6 | australia vs zimbabwe | 500+ |
-| 7 | najib house arrest | 500+ |
-| 8 | money laundering | 2000+ |
-| 9 | china | 1000+ |
-| 10 | man city vs norwich city | 5000+ |
+| 1 | sea | 5000+ |
+| 2 | brentford f.c. vs chelsea f.c. standings | 5000+ |
+| 3 | chan chun sing mandarin speech | 1000+ |
+| 4 | psi singapore | 2000+ |
+| 5 | chan chun sing | 2000+ |
+| 6 | bayern vs union berlin | 1000+ |
+| 7 | singapore airlines world best airline | 1000+ |
+| 8 | greenland | 200+ |
+| 9 | bayern munich vs union berlin standings | 500+ |
+| 10 | aircraft carrier | 200+ |
 
-### Latest US snapshot — 2026-09-18
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | bills | 2000000+ |
-| 2 | dj moore | 200000+ |
-| 3 | senate blocks data center bill | 20000+ |
-| 4 | jared young | 50000+ |
-| 5 | phillies vs mets | 50000+ |
-| 6 | millie bobby brown | 50000+ |
-| 7 | tay keith | 20000+ |
-| 8 | brain eating amoeba | 10000+ |
-| 9 | aileen wuornos | 50000+ |
-| 10 | sun vs dream | 20000+ |
-
-### Latest GB snapshot — 2026-09-18
+### Latest US snapshot — 2026-09-19
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | man city vs norwich city | 200000+ |
-| 2 | armed forces | 20000+ |
-| 3 | celtic vs ferencváros | 100000+ |
-| 4 | sway | 50000+ |
-| 5 | sri lanka vs england | 20000+ |
-| 6 | millie bobby brown | 10000+ |
-| 7 | palace vs lech poznań | 20000+ |
-| 8 | qatar airways disruptive passenger gatwick | 10000+ |
-| 9 | scientist | 10000+ |
-| 10 | real sociedad vs bournemouth | 20000+ |
+| 1 | amazon settlement | 50000+ |
+| 2 | greenland | 100000+ |
+| 3 | carrot top | 20000+ |
+| 4 | data center bill | 20000+ |
+| 5 | mets baseball | 10000+ |
+| 6 | frankie muniz | 20000+ |
+| 7 | miami fl vs wake forest | 200000+ |
+| 8 | houston vs texas tech | 200000+ |
+| 9 | fever vs tempo | 100000+ |
+| 10 | portland st vs oregon | 50000+ |
 
-### Latest HK snapshot — 2026-09-18
+### Latest GB snapshot — 2026-09-19
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 李泳豪 | 5000+ |
-| 2 | 遺囑 | 2000+ |
-| 3 | 工資 | 2000+ |
-| 4 | 梁家輝 | 1000+ |
-| 5 | 高 息 股 | 1000+ |
-| 6 | 照顧 者 | 1000+ |
-| 7 | 先達iphone回收價 | 2000+ |
-| 8 | china | 1000+ |
-| 9 | 伏明霞 | 500+ |
-| 10 | 華為 | 100+ |
+| 1 | stephanie cole | 100000+ |
+| 2 | britain war | 20000+ |
+| 3 | david walliams | 20000+ |
+| 4 | thomas tuchel | 20000+ |
+| 5 | art | 5000+ |
+| 6 | brentford vs chelsea | 200000+ |
+| 7 | philip foster | 10000+ |
+| 8 | iphone iphone 18 pro max | 5000+ |
+| 9 | greenland | 5000+ |
+| 10 | athlos | 10000+ |
 
-[Open full snapshot →](data/2026/09/18/trending.json)
+### Latest HK snapshot — 2026-09-19
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 挑情醜聞 | 2000+ |
+| 2 | 德望中學 | 1000+ |
+| 3 | 挑情丑闻 | 500+ |
+| 4 | 王祖藍 | 5000+ |
+| 5 | 關之琳 | 2000+ |
+| 6 | 布蘭特福德對切爾西 | 2000+ |
+| 7 | 蘭香如故 | 1000+ |
+| 8 | 月餅 | 1000+ |
+| 9 | 廖碧兒 | 500+ |
+| 10 | 生化危機 | 1000+ |
+
+[Open full snapshot →](data/2026/09/19/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 255 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 256 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
