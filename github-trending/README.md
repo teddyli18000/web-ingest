@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-19** | **4,364** | **2,517** |
+| **2014-08-09** | **2026-09-20** | **4,365** | **2,518** |
 
-### Latest All-Languages snapshot — 2026-09-19
+### Latest All-Languages snapshot — 2026-09-20
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | JavaScript | 3,006 |
-| 2 | [anthropics/claude-code](https://github.com/anthropics/claude-code) | TypeScript | 444 |
-| 3 | [alibaba/open-code-review](https://github.com/alibaba/open-code-review) | Go | 2,704 |
-| 4 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 958 |
-| 5 | [Tencent/BrowserSkill](https://github.com/Tencent/BrowserSkill) | TypeScript | 1,306 |
-| 6 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | JavaScript | 675 |
-| 7 | [TencentCloud/Octop](https://github.com/TencentCloud/Octop) | Python | 569 |
-| 8 | [Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec) | TypeScript | 296 |
-| 9 | [ankitects/anki](https://github.com/ankitects/anki) | Rust | 174 |
-| 10 | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Python | 299 |
+| 1 | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | JavaScript | 3,155 |
+| 2 | [trycua/cua](https://github.com/trycua/cua) | HTML | 859 |
+| 3 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | JavaScript | 556 |
+| 4 | [coder/coder](https://github.com/coder/coder) | Go | 402 |
+| 5 | [anthropics/claude-code](https://github.com/anthropics/claude-code) | TypeScript | 483 |
+| 6 | [Open-Dev-Society/OpenStock](https://github.com/Open-Dev-Society/OpenStock) | TypeScript | 472 |
+| 7 | [higgsfield-ai/higgsfield](https://github.com/higgsfield-ai/higgsfield) | Jupyter Notebook | 196 |
+| 8 | [docling-project/docling](https://github.com/docling-project/docling) | Python | 129 |
+| 9 | [cloudflare/quiche](https://github.com/cloudflare/quiche) | Rust | 31 |
+| 10 | [asciimoo/hister](https://github.com/asciimoo/hister) | Go | 420 |
 
-[Open full snapshot →](data/2026/09/19/trending.json)
+[Open full snapshot →](data/2026/09/20/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 262 days  
+[`2026`](data/2026/) · 263 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
