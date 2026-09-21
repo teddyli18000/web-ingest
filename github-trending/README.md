@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-20** | **4,365** | **2,518** |
+| **2014-08-09** | **2026-09-21** | **4,366** | **2,519** |
 
-### Latest All-Languages snapshot — 2026-09-20
+### Latest All-Languages snapshot — 2026-09-21
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | JavaScript | 3,155 |
-| 2 | [trycua/cua](https://github.com/trycua/cua) | HTML | 859 |
-| 3 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | JavaScript | 556 |
-| 4 | [coder/coder](https://github.com/coder/coder) | Go | 402 |
-| 5 | [anthropics/claude-code](https://github.com/anthropics/claude-code) | TypeScript | 483 |
-| 6 | [Open-Dev-Society/OpenStock](https://github.com/Open-Dev-Society/OpenStock) | TypeScript | 472 |
-| 7 | [higgsfield-ai/higgsfield](https://github.com/higgsfield-ai/higgsfield) | Jupyter Notebook | 196 |
-| 8 | [docling-project/docling](https://github.com/docling-project/docling) | Python | 129 |
-| 9 | [cloudflare/quiche](https://github.com/cloudflare/quiche) | Rust | 31 |
-| 10 | [asciimoo/hister](https://github.com/asciimoo/hister) | Go | 420 |
+| 1 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 826 |
+| 2 | [BuilderIO/agent-native](https://github.com/BuilderIO/agent-native) | TypeScript | 98 |
+| 3 | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | JavaScript | 2,428 |
+| 4 | [trycua/cua](https://github.com/trycua/cua) | HTML | 1,018 |
+| 5 | [anthropics/financial-services](https://github.com/anthropics/financial-services) | Python | 260 |
+| 6 | [paperless-ngx/paperless-ngx](https://github.com/paperless-ngx/paperless-ngx) | Python | 57 |
+| 7 | [anthropics/claude-code](https://github.com/anthropics/claude-code) | TypeScript | 419 |
+| 8 | [mihail911/modern-software-dev-assignments](https://github.com/mihail911/modern-software-dev-assignments) | Python | 172 |
+| 9 | [higgsfield-ai/higgsfield](https://github.com/higgsfield-ai/higgsfield) | Jupyter Notebook | 465 |
+| 10 | [Open-Dev-Society/OpenStock](https://github.com/Open-Dev-Society/OpenStock) | TypeScript | 755 |
 
-[Open full snapshot →](data/2026/09/20/trending.json)
+[Open full snapshot →](data/2026/09/21/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 263 days  
+[`2026`](data/2026/) · 264 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
