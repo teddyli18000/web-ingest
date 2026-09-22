@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-20** | **655** | **655** | **655** | **655** | **654** |
+| **2024-11-28** | **2026-09-22** | **656** | **656** | **656** | **656** | **655** |
 
 ### Source mix
 
@@ -18,63 +18,69 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 56 |
+| `google_trending_now` | 60 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-09-20
+### Latest SG snapshot — 2026-09-22
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | anthony loke | 100+ |
-| 2 | ufc | 200+ |
-| 3 | brighton vs arsenal | 100+ |
+| 1 | google | 2000+ |
+| 2 | flight attendant | 500+ |
+| 3 | singapore weather | 200+ |
+| 4 | hawker centre cleaning | 200+ |
+| 5 | weather forecast | 100+ |
+| 6 | maps | 200+ |
+| 7 | outlook | 100+ |
 
-### Latest US snapshot — 2026-09-20
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | lane kiffin | 500000+ |
-| 2 | north carolina football | 200000+ |
-| 3 | sean sharaf | 10000+ |
-| 4 | ufc | 200000+ |
-| 5 | isaac pitbull cruz | 2000+ |
-| 6 | nascar | 20000+ |
-| 7 | jimmy fallon | 5000+ |
-| 8 | florida vs auburn | 50000+ |
-| 9 | alabama football | 200000+ |
-| 10 | deep sea | 2000+ |
-
-### Latest GB snapshot — 2026-09-20
+### Latest US snapshot — 2026-09-22
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | bethany antonia | 50000+ |
-| 2 | will best | 10000+ |
-| 3 | chris appleton | 10000+ |
-| 4 | andros townsend | 2000+ |
-| 5 | world war | 2000+ |
-| 6 | heatwave | 1000+ |
-| 7 | john nellis | 5000+ |
-| 8 | jimmy fallon | 2000+ |
-| 9 | gable steveson | 2000+ |
-| 10 | netflix movies new | 1000+ |
+| 1 | jaxson dart | 200000+ |
+| 2 | giants vs rams | 200000+ |
+| 3 | jennifer eckhart | 20000+ |
+| 4 | trump tv | 20000+ |
+| 5 | clavicular | 10000+ |
+| 6 | el nino | 10000+ |
+| 7 | zach ertz | 10000+ |
+| 8 | nolan wells | 2000+ |
+| 9 | davante adams | 20000+ |
+| 10 | amd stock | 10000+ |
 
-### Latest HK snapshot — 2026-09-20
+### Latest GB snapshot — 2026-09-22
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 抖音 | 100+ |
-| 2 | ai | 200+ |
-| 3 | chatgpt | 200+ |
-| 4 | 阿仙奴 | 200+ |
-| 5 | arsenal | 200+ |
-| 6 | 熱刺 | 100+ |
+| 1 | ind vs jpn | 2000+ |
+| 2 | richard hammond | 1000+ |
+| 3 | classroom | 2000+ |
+| 4 | word | 2000+ |
+| 5 | marthas rule | 1000+ |
+| 6 | diana, princess of wales | 200+ |
+| 7 | india vs japan | 1000+ |
+| 8 | clavicular | 500+ |
+| 9 | trump tv | 500+ |
+| 10 | piers morgan | 1000+ |
 
-[Open full snapshot →](data/2026/09/20/trending.json)
+### Latest HK snapshot — 2026-09-22
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 王至尊 | 500+ |
+| 2 | 張家朗 | 200+ |
+| 3 | 江學禮 | 200+ |
+| 4 | 套餐 | 200+ |
+| 5 | 何詩蓓 | 100+ |
+| 6 | gemini | 500+ |
+| 7 | ig | 100+ |
+| 8 | 覃伟中 | 100+ |
+
+[Open full snapshot →](data/2026/09/22/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 257 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 258 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
