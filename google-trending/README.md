@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-22** | **656** | **656** | **656** | **656** | **655** |
+| **2024-11-28** | **2026-09-23** | **657** | **657** | **657** | **657** | **656** |
 
 ### Source mix
 
@@ -18,69 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 60 |
+| `google_trending_now` | 64 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-09-22
+### Latest SG snapshot — 2026-09-23
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | google | 2000+ |
-| 2 | flight attendant | 500+ |
-| 3 | singapore weather | 200+ |
-| 4 | hawker centre cleaning | 200+ |
-| 5 | weather forecast | 100+ |
-| 6 | maps | 200+ |
-| 7 | outlook | 100+ |
+| 1 | fraud | 5000+ |
+| 2 | lawyer | 500+ |
+| 3 | weather | 10000+ |
+| 4 | coe bidding | 200+ |
+| 5 | donald trump | 1000+ |
+| 6 | the straits times | 2000+ |
+| 7 | councillor | 500+ |
+| 8 | england vs sri lanka | 1000+ |
+| 9 | sutd | 500+ |
+| 10 | opus 5.5 | 500+ |
 
-### Latest US snapshot — 2026-09-22
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | jaxson dart | 200000+ |
-| 2 | giants vs rams | 200000+ |
-| 3 | jennifer eckhart | 20000+ |
-| 4 | trump tv | 20000+ |
-| 5 | clavicular | 10000+ |
-| 6 | el nino | 10000+ |
-| 7 | zach ertz | 10000+ |
-| 8 | nolan wells | 2000+ |
-| 9 | davante adams | 20000+ |
-| 10 | amd stock | 10000+ |
-
-### Latest GB snapshot — 2026-09-22
+### Latest US snapshot — 2026-09-23
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | ind vs jpn | 2000+ |
-| 2 | richard hammond | 1000+ |
-| 3 | classroom | 2000+ |
-| 4 | word | 2000+ |
-| 5 | marthas rule | 1000+ |
-| 6 | diana, princess of wales | 200+ |
-| 7 | india vs japan | 1000+ |
-| 8 | clavicular | 500+ |
-| 9 | trump tv | 500+ |
-| 10 | piers morgan | 1000+ |
+| 1 | measles | 200000+ |
+| 2 | lynx vs fever | 100000+ |
+| 3 | chris spatola | 50000+ |
+| 4 | padres vs dodgers | 100000+ |
+| 5 | kratom | 100000+ |
+| 6 | rays vs yankees | 100000+ |
+| 7 | marlins vs cubs | 50000+ |
+| 8 | brewers vs phillies | 50000+ |
+| 9 | guardians vs red sox | 50000+ |
+| 10 | beats 360 | 20000+ |
 
-### Latest HK snapshot — 2026-09-22
+### Latest GB snapshot — 2026-09-23
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 王至尊 | 500+ |
-| 2 | 張家朗 | 200+ |
-| 3 | 江學禮 | 200+ |
-| 4 | 套餐 | 200+ |
-| 5 | 何詩蓓 | 100+ |
-| 6 | gemini | 500+ |
-| 7 | ig | 100+ |
-| 8 | 覃伟中 | 100+ |
+| 1 | nigella lawson | 50000+ |
+| 2 | bbc sounds | 20000+ |
+| 3 | reform uk | 5000+ |
+| 4 | anthony gordon | 5000+ |
+| 5 | digger | 10000+ |
+| 6 | polar vortex | 20000+ |
+| 7 | tim westwood | 5000+ |
+| 8 | personal allowance | 1000+ |
+| 9 | hurricane polo | 5000+ |
+| 10 | angry anderson | 1000+ |
 
-[Open full snapshot →](data/2026/09/22/trending.json)
+### Latest HK snapshot — 2026-09-23
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 關正傑 | 1000+ |
+| 2 | 关嘉敏 | 500+ |
+| 3 | 獨 居 長者 | 1000+ |
+| 4 | 房屋署 | 2000+ |
+| 5 | 八达通 | 5000+ |
+| 6 | 月餅 | 5000+ |
+| 7 | live nation | 5000+ |
+| 8 | 熱帶 氣旋 | 2000+ |
+| 9 | 莊太量 | 1000+ |
+| 10 | 天氣 | 5000+ |
+
+[Open full snapshot →](data/2026/09/23/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 258 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 259 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
