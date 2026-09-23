@@ -12,28 +12,26 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-22** | **4,367** | **2,520** |
+| **2014-08-09** | **2026-09-23** | **4,368** | **2,521** |
 
-### Latest All-Languages snapshot — 2026-09-22
+### Latest All-Languages snapshot — 2026-09-23
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [BuilderIO/agent-native](https://github.com/BuilderIO/agent-native) | TypeScript | 607 |
-| 2 | [trycua/cua](https://github.com/trycua/cua) | HTML | 609 |
-| 3 | [Open-Dev-Society/OpenStock](https://github.com/Open-Dev-Society/OpenStock) | TypeScript | 844 |
-| 4 | [akitaonrails/ai-memory](https://github.com/akitaonrails/ai-memory) | Rust | 167 |
-| 5 | [coder/coder](https://github.com/coder/coder) | Go | 460 |
-| 6 | [anthropics/financial-services](https://github.com/anthropics/financial-services) | Python | 424 |
-| 7 | [cloudflare/quiche](https://github.com/cloudflare/quiche) | Rust | 32 |
-| 8 | [mvt-project/mvt](https://github.com/mvt-project/mvt) | Python | 169 |
-| 9 | [zhouxiaoka/autoclip](https://github.com/zhouxiaoka/autoclip) | Python | 250 |
-| 10 | [ruanyf/weekly](https://github.com/ruanyf/weekly) | — | 182 |
+| 1 | [anthropics/financial-services](https://github.com/anthropics/financial-services) | Python | 438 |
+| 2 | [agent-substrate/substrate](https://github.com/agent-substrate/substrate) | Go | 245 |
+| 3 | [dream-num/univer](https://github.com/dream-num/univer) | TypeScript | 255 |
+| 4 | [davila7/claude-code-templates](https://github.com/davila7/claude-code-templates) | Python | 64 |
+| 5 | [google/ax](https://github.com/google/ax) | Go | 2,305 |
+| 6 | [mvt-project/mvt](https://github.com/mvt-project/mvt) | Python | 441 |
+| 7 | [superdesigndev/treg](https://github.com/superdesigndev/treg) | Python | 230 |
+| 8 | [browser-use/video-use](https://github.com/browser-use/video-use) | Python | 191 |
 
-[Open full snapshot →](data/2026/09/22/trending.json)
+[Open full snapshot →](data/2026/09/23/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 265 days  
+[`2026`](data/2026/) · 266 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
