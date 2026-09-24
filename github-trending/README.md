@@ -12,26 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-23** | **4,368** | **2,521** |
+| **2014-08-09** | **2026-09-24** | **4,369** | **2,522** |
 
-### Latest All-Languages snapshot — 2026-09-23
+### Latest All-Languages snapshot — 2026-09-24
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [anthropics/financial-services](https://github.com/anthropics/financial-services) | Python | 438 |
-| 2 | [agent-substrate/substrate](https://github.com/agent-substrate/substrate) | Go | 245 |
-| 3 | [dream-num/univer](https://github.com/dream-num/univer) | TypeScript | 255 |
-| 4 | [davila7/claude-code-templates](https://github.com/davila7/claude-code-templates) | Python | 64 |
-| 5 | [google/ax](https://github.com/google/ax) | Go | 2,305 |
-| 6 | [mvt-project/mvt](https://github.com/mvt-project/mvt) | Python | 441 |
-| 7 | [superdesigndev/treg](https://github.com/superdesigndev/treg) | Python | 230 |
-| 8 | [browser-use/video-use](https://github.com/browser-use/video-use) | Python | 191 |
+| 1 | [anthropics/financial-services](https://github.com/anthropics/financial-services) | Python | 664 |
+| 2 | [google/ax](https://github.com/google/ax) | Go | 1,543 |
+| 3 | [davila7/claude-code-templates](https://github.com/davila7/claude-code-templates) | Python | 389 |
+| 4 | [BuilderIO/agent-native](https://github.com/BuilderIO/agent-native) | TypeScript | 87 |
+| 5 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 474 |
+| 6 | [dream-num/univer](https://github.com/dream-num/univer) | TypeScript | 1,142 |
+| 7 | [Open-Dev-Society/OpenStock](https://github.com/Open-Dev-Society/OpenStock) | TypeScript | 344 |
+| 8 | [agent-substrate/substrate](https://github.com/agent-substrate/substrate) | Go | 558 |
+| 9 | [strands-agents/harness-sdk](https://github.com/strands-agents/harness-sdk) | Python | 115 |
+| 10 | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything) | Python | 57 |
 
-[Open full snapshot →](data/2026/09/23/trending.json)
+[Open full snapshot →](data/2026/09/24/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 266 days  
+[`2026`](data/2026/) · 267 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
