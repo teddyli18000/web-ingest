@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-23** | **657** | **657** | **657** | **657** | **656** |
+| **2024-11-28** | **2026-09-24** | **658** | **658** | **658** | **658** | **657** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 64 |
+| `google_trending_now` | 68 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-09-23
+### Latest SG snapshot — 2026-09-24
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | fraud | 5000+ |
-| 2 | lawyer | 500+ |
-| 3 | weather | 10000+ |
-| 4 | coe bidding | 200+ |
-| 5 | donald trump | 1000+ |
-| 6 | the straits times | 2000+ |
-| 7 | councillor | 500+ |
-| 8 | england vs sri lanka | 1000+ |
-| 9 | sutd | 500+ |
-| 10 | opus 5.5 | 500+ |
+| 1 | singapore airlines | 20000+ |
+| 2 | ang mo kio | 5000+ |
+| 3 | singapore certified hr requirement 2028 | 2000+ |
+| 4 | south africa vs australia | 500+ |
+| 5 | lockheed martin f-35 lightning ii | 500+ |
+| 6 | steven cheung | 2000+ |
+| 7 | sandbox | 1000+ |
+| 8 | coe | 5000+ |
+| 9 | weather | 10000+ |
+| 10 | afghanistan vs japan | 1000+ |
 
-### Latest US snapshot — 2026-09-23
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | measles | 200000+ |
-| 2 | lynx vs fever | 100000+ |
-| 3 | chris spatola | 50000+ |
-| 4 | padres vs dodgers | 100000+ |
-| 5 | kratom | 100000+ |
-| 6 | rays vs yankees | 100000+ |
-| 7 | marlins vs cubs | 50000+ |
-| 8 | brewers vs phillies | 50000+ |
-| 9 | guardians vs red sox | 50000+ |
-| 10 | beats 360 | 20000+ |
-
-### Latest GB snapshot — 2026-09-23
+### Latest US snapshot — 2026-09-24
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | nigella lawson | 50000+ |
-| 2 | bbc sounds | 20000+ |
-| 3 | reform uk | 5000+ |
-| 4 | anthony gordon | 5000+ |
-| 5 | digger | 10000+ |
-| 6 | polar vortex | 20000+ |
-| 7 | tim westwood | 5000+ |
-| 8 | personal allowance | 1000+ |
-| 9 | hurricane polo | 5000+ |
-| 10 | angry anderson | 1000+ |
+| 1 | jonathan taylor thomas | 50000+ |
+| 2 | harvey weinstein | 50000+ |
+| 3 | tucker wetmore | 20000+ |
+| 4 | lonzo ball | 50000+ |
+| 5 | congressional budget office social security projection | 20000+ |
+| 6 | wings vs storm | 20000+ |
+| 7 | meat recall | 50000+ |
+| 8 | meta vr glasses | 50000+ |
+| 9 | dream vs liberty | 50000+ |
+| 10 | love hypothesis | 50000+ |
 
-### Latest HK snapshot — 2026-09-23
+### Latest GB snapshot — 2026-09-24
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 關正傑 | 1000+ |
-| 2 | 关嘉敏 | 500+ |
-| 3 | 獨 居 長者 | 1000+ |
-| 4 | 房屋署 | 2000+ |
-| 5 | 八达通 | 5000+ |
-| 6 | 月餅 | 5000+ |
-| 7 | live nation | 5000+ |
-| 8 | 熱帶 氣旋 | 2000+ |
-| 9 | 莊太量 | 1000+ |
-| 10 | 天氣 | 5000+ |
+| 1 | truro bonfire night cancellation | 100000+ |
+| 2 | the bear | 10000+ |
+| 3 | charity shop | 5000+ |
+| 4 | pembrokeshire beach rescue rip current | 10000+ |
+| 5 | raf valley | 20000+ |
+| 6 | south africa vs australia | 5000+ |
+| 7 | radiohead | 2000+ |
+| 8 | singapore airlines | 5000+ |
+| 9 | tom bateman | 10000+ |
+| 10 | meta vr glasses | 5000+ |
 
-[Open full snapshot →](data/2026/09/23/trending.json)
+### Latest HK snapshot — 2026-09-24
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 蔡天鳳 | 500+ |
+| 2 | mcl | 1000+ |
+| 3 | 關嘉敏 | 2000+ |
+| 4 | 佳 宝 食品 超級 市場 | 2000+ |
+| 5 | 騎師 | 200+ |
+| 6 | 犬 | 500+ |
+| 7 | 2027 | 1000+ |
+| 8 | 台风 | 500+ |
+| 9 | 何沛珈 | 500+ |
+| 10 | 天氣 | 2000+ |
+
+[Open full snapshot →](data/2026/09/24/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 259 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 260 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
