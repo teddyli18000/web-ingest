@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-24** | **658** | **658** | **658** | **658** | **657** |
+| **2024-11-28** | **2026-09-25** | **659** | **659** | **659** | **659** | **658** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 68 |
+| `google_trending_now` | 72 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-09-24
+### Latest SG snapshot — 2026-09-25
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | singapore airlines | 20000+ |
-| 2 | ang mo kio | 5000+ |
-| 3 | singapore certified hr requirement 2028 | 2000+ |
-| 4 | south africa vs australia | 500+ |
-| 5 | lockheed martin f-35 lightning ii | 500+ |
-| 6 | steven cheung | 2000+ |
-| 7 | sandbox | 1000+ |
-| 8 | coe | 5000+ |
-| 9 | weather | 10000+ |
-| 10 | afghanistan vs japan | 1000+ |
+| 1 | australia vs brazil | 2000+ |
+| 2 | s suraendher kumarr public assembly charges | 2000+ |
+| 3 | smartglasses | 5000+ |
+| 4 | hdb reviewing jumbo flat scheme | 2000+ |
+| 5 | mid autumn festival 2026 | 5000+ |
+| 6 | stomp | 500+ |
+| 7 | 火 | 200+ |
+| 8 | najib razak | 1000+ |
+| 9 | you benchang | 5000+ |
+| 10 | nations league | 5000+ |
 
-### Latest US snapshot — 2026-09-24
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | jonathan taylor thomas | 50000+ |
-| 2 | harvey weinstein | 50000+ |
-| 3 | tucker wetmore | 20000+ |
-| 4 | lonzo ball | 50000+ |
-| 5 | congressional budget office social security projection | 20000+ |
-| 6 | wings vs storm | 20000+ |
-| 7 | meat recall | 50000+ |
-| 8 | meta vr glasses | 50000+ |
-| 9 | dream vs liberty | 50000+ |
-| 10 | love hypothesis | 50000+ |
-
-### Latest GB snapshot — 2026-09-24
+### Latest US snapshot — 2026-09-25
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | truro bonfire night cancellation | 100000+ |
-| 2 | the bear | 10000+ |
-| 3 | charity shop | 5000+ |
-| 4 | pembrokeshire beach rescue rip current | 10000+ |
-| 5 | raf valley | 20000+ |
-| 6 | south africa vs australia | 5000+ |
-| 7 | radiohead | 2000+ |
-| 8 | singapore airlines | 5000+ |
-| 9 | tom bateman | 10000+ |
-| 10 | meta vr glasses | 5000+ |
+| 1 | falcons vs packers | 500000+ |
+| 2 | falcons | 1000000+ |
+| 3 | fever vs lynx | 200000+ |
+| 4 | wind advisory | 20000+ |
+| 5 | mark carney donald trump canada | 50000+ |
+| 6 | patient zero lyrics | 100000+ |
+| 7 | susan sarandon | 50000+ |
+| 8 | kelly clarkson new short haircut | 20000+ |
+| 9 | brian robinson jr. | 50000+ |
+| 10 | portugal vs wales | 200000+ |
 
-### Latest HK snapshot — 2026-09-24
+### Latest GB snapshot — 2026-09-25
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 蔡天鳳 | 500+ |
-| 2 | mcl | 1000+ |
-| 3 | 關嘉敏 | 2000+ |
-| 4 | 佳 宝 食品 超級 市場 | 2000+ |
-| 5 | 騎師 | 200+ |
-| 6 | 犬 | 500+ |
-| 7 | 2027 | 1000+ |
-| 8 | 台风 | 500+ |
-| 9 | 何沛珈 | 500+ |
-| 10 | 天氣 | 2000+ |
+| 1 | met office | 50000+ |
+| 2 | aykroyd | 20000+ |
+| 3 | portugal vs wales | 100000+ |
+| 4 | australia vs brazil | 5000+ |
+| 5 | mark carney donald trump canada | 10000+ |
+| 6 | ranulph fiennes | 20000+ |
+| 7 | afg vs nep | 10000+ |
+| 8 | netherlands vs germany | 20000+ |
+| 9 | benjamin netanyahu | 10000+ |
+| 10 | victoria beckham | 10000+ |
 
-[Open full snapshot →](data/2026/09/24/trending.json)
+### Latest HK snapshot — 2026-09-25
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 中秋節 | 20000+ |
+| 2 | 中秋节 | 5000+ |
+| 3 | 鄧兆尊 | 2000+ |
+| 4 | 超級 市場 | 2000+ |
+| 5 | 王楚欽 | 200+ |
+| 6 | australia vs brazil | 200+ |
+| 7 | 中秋節 2026 | 2000+ |
+| 8 | 唐寧 | 1000+ |
+| 9 | 黃淑儀 | 2000+ |
+| 10 | 荷蘭對德國 | 1000+ |
+
+[Open full snapshot →](data/2026/09/25/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 260 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 261 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
