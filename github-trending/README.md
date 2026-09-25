@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-24** | **4,369** | **2,522** |
+| **2014-08-09** | **2026-09-25** | **4,370** | **2,523** |
 
-### Latest All-Languages snapshot — 2026-09-24
+### Latest All-Languages snapshot — 2026-09-25
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [anthropics/financial-services](https://github.com/anthropics/financial-services) | Python | 664 |
-| 2 | [google/ax](https://github.com/google/ax) | Go | 1,543 |
-| 3 | [davila7/claude-code-templates](https://github.com/davila7/claude-code-templates) | Python | 389 |
-| 4 | [BuilderIO/agent-native](https://github.com/BuilderIO/agent-native) | TypeScript | 87 |
-| 5 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 474 |
-| 6 | [dream-num/univer](https://github.com/dream-num/univer) | TypeScript | 1,142 |
-| 7 | [Open-Dev-Society/OpenStock](https://github.com/Open-Dev-Society/OpenStock) | TypeScript | 344 |
-| 8 | [agent-substrate/substrate](https://github.com/agent-substrate/substrate) | Go | 558 |
-| 9 | [strands-agents/harness-sdk](https://github.com/strands-agents/harness-sdk) | Python | 115 |
-| 10 | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything) | Python | 57 |
+| 1 | [rohitg00/ai-engineering-from-scratch](https://github.com/rohitg00/ai-engineering-from-scratch) | Python | 347 |
+| 2 | [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) | Python | 1,668 |
+| 3 | [dream-num/univer](https://github.com/dream-num/univer) | TypeScript | 1,082 |
+| 4 | [google/ax](https://github.com/google/ax) | Go | 1,373 |
+| 5 | [NVIDIA/Model-Optimizer](https://github.com/NVIDIA/Model-Optimizer) | Python | 44 |
+| 6 | [FxEmbed/FxEmbed](https://github.com/FxEmbed/FxEmbed) | TypeScript | 182 |
+| 7 | [anthropics/financial-services](https://github.com/anthropics/financial-services) | Python | 509 |
+| 8 | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything) | Python | 413 |
+| 9 | [mvt-project/mvt](https://github.com/mvt-project/mvt) | Python | 272 |
+| 10 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 611 |
 
-[Open full snapshot →](data/2026/09/24/trending.json)
+[Open full snapshot →](data/2026/09/25/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 267 days  
+[`2026`](data/2026/) · 268 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
