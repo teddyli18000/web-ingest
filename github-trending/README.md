@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-25** | **4,370** | **2,523** |
+| **2014-08-09** | **2026-09-26** | **4,371** | **2,524** |
 
-### Latest All-Languages snapshot — 2026-09-25
+### Latest All-Languages snapshot — 2026-09-26
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [rohitg00/ai-engineering-from-scratch](https://github.com/rohitg00/ai-engineering-from-scratch) | Python | 347 |
-| 2 | [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) | Python | 1,668 |
-| 3 | [dream-num/univer](https://github.com/dream-num/univer) | TypeScript | 1,082 |
-| 4 | [google/ax](https://github.com/google/ax) | Go | 1,373 |
-| 5 | [NVIDIA/Model-Optimizer](https://github.com/NVIDIA/Model-Optimizer) | Python | 44 |
-| 6 | [FxEmbed/FxEmbed](https://github.com/FxEmbed/FxEmbed) | TypeScript | 182 |
-| 7 | [anthropics/financial-services](https://github.com/anthropics/financial-services) | Python | 509 |
-| 8 | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything) | Python | 413 |
-| 9 | [mvt-project/mvt](https://github.com/mvt-project/mvt) | Python | 272 |
-| 10 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 611 |
+| 1 | [paperclipai/paperclip](https://github.com/paperclipai/paperclip) | TypeScript | 2,109 |
+| 2 | [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) | Python | 83 |
+| 3 | [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) | Python | 1,653 |
+| 4 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 468 |
+| 5 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 583 |
+| 6 | [dream-num/univer](https://github.com/dream-num/univer) | TypeScript | 1,050 |
+| 7 | [anthropics/skills](https://github.com/anthropics/skills) | Python | 189 |
+| 8 | [androoAGI/starnet](https://github.com/androoAGI/starnet) | JavaScript | 93 |
+| 9 | [derv82/wifit3](https://github.com/derv82/wifit3) | Python | 183 |
+| 10 | [kelseyhightower/kubernetes-the-hard-way](https://github.com/kelseyhightower/kubernetes-the-hard-way) | — | 119 |
 
-[Open full snapshot →](data/2026/09/25/trending.json)
+[Open full snapshot →](data/2026/09/26/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 268 days  
+[`2026`](data/2026/) · 269 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
