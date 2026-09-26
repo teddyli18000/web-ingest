@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-25** | **659** | **659** | **659** | **659** | **658** |
+| **2024-11-28** | **2026-09-26** | **660** | **660** | **660** | **660** | **659** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 72 |
+| `google_trending_now` | 76 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-09-25
+### Latest SG snapshot — 2026-09-26
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | australia vs brazil | 2000+ |
-| 2 | s suraendher kumarr public assembly charges | 2000+ |
-| 3 | smartglasses | 5000+ |
-| 4 | hdb reviewing jumbo flat scheme | 2000+ |
-| 5 | mid autumn festival 2026 | 5000+ |
-| 6 | stomp | 500+ |
-| 7 | 火 | 200+ |
-| 8 | najib razak | 1000+ |
-| 9 | you benchang | 5000+ |
-| 10 | nations league | 5000+ |
+| 1 | 刘欢 | 1000+ |
+| 2 | loh kean yew asian games | 1000+ |
+| 3 | liu huan | 500+ |
+| 4 | xi jinping | 1000+ |
+| 5 | mosque | 2000+ |
+| 6 | mamma mia focaccia closure singapore | 500+ |
+| 7 | starbucks | 2000+ |
+| 8 | türkiye vs france | 2000+ |
+| 9 | weather | 5000+ |
+| 10 | bangkok | 200+ |
 
-### Latest US snapshot — 2026-09-25
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | falcons vs packers | 500000+ |
-| 2 | falcons | 1000000+ |
-| 3 | fever vs lynx | 200000+ |
-| 4 | wind advisory | 20000+ |
-| 5 | mark carney donald trump canada | 50000+ |
-| 6 | patient zero lyrics | 100000+ |
-| 7 | susan sarandon | 50000+ |
-| 8 | kelly clarkson new short haircut | 20000+ |
-| 9 | brian robinson jr. | 50000+ |
-| 10 | portugal vs wales | 200000+ |
-
-### Latest GB snapshot — 2026-09-25
+### Latest US snapshot — 2026-09-26
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | met office | 50000+ |
-| 2 | aykroyd | 20000+ |
-| 3 | portugal vs wales | 100000+ |
-| 4 | australia vs brazil | 5000+ |
-| 5 | mark carney donald trump canada | 10000+ |
-| 6 | ranulph fiennes | 20000+ |
-| 7 | afg vs nep | 10000+ |
-| 8 | netherlands vs germany | 20000+ |
-| 9 | benjamin netanyahu | 10000+ |
-| 10 | victoria beckham | 10000+ |
+| 1 | northwestern vs indiana | 200000+ |
+| 2 | clemson vs california | 100000+ |
+| 3 | dodgers vs giants | 50000+ |
+| 4 | cubs vs red sox | 50000+ |
+| 5 | guardians vs royals | 20000+ |
+| 6 | ted kaczynski | 20000+ |
+| 7 | orioles vs yankees | 20000+ |
+| 8 | 刘欢 | 10000+ |
+| 9 | uab football | 20000+ |
+| 10 | cardinals vs brewers | 20000+ |
 
-### Latest HK snapshot — 2026-09-25
+### Latest GB snapshot — 2026-09-26
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 中秋節 | 20000+ |
-| 2 | 中秋节 | 5000+ |
-| 3 | 鄧兆尊 | 2000+ |
-| 4 | 超級 市場 | 2000+ |
-| 5 | 王楚欽 | 200+ |
-| 6 | australia vs brazil | 200+ |
-| 7 | 中秋節 2026 | 2000+ |
-| 8 | 唐寧 | 1000+ |
-| 9 | 黃淑儀 | 2000+ |
-| 10 | 荷蘭對德國 | 1000+ |
+| 1 | manchester city | 200000+ |
+| 2 | beverley callard | 20000+ |
+| 3 | fa cup referee error mulbarton woodford | 20000+ |
+| 4 | national lottery euromillions jackpot | 50000+ |
+| 5 | royal family news | 10000+ |
+| 6 | rotten tomatoes | 5000+ |
+| 7 | turkey national football team vs france national football team standings | 5000+ |
+| 8 | nhs | 10000+ |
+| 9 | florence pugh | 10000+ |
+| 10 | afl | 5000+ |
 
-[Open full snapshot →](data/2026/09/25/trending.json)
+### Latest HK snapshot — 2026-09-26
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 劉歡 | 5000+ |
+| 2 | 饮 茶 | 1000+ |
+| 3 | 田啟文 | 1000+ |
+| 4 | 蔡楓華 | 200+ |
+| 5 | 鞋 | 2000+ |
+| 6 | 饮茶 | 500+ |
+| 7 | 林德信 | 500+ |
+| 8 | 羅湖 | 500+ |
+| 9 | 監獄 | 500+ |
+| 10 | 主持人 | 200+ |
+
+[Open full snapshot →](data/2026/09/26/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 261 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 262 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
