@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-26** | **4,371** | **2,524** |
+| **2014-08-09** | **2026-09-27** | **4,372** | **2,525** |
 
-### Latest All-Languages snapshot — 2026-09-26
+### Latest All-Languages snapshot — 2026-09-27
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [paperclipai/paperclip](https://github.com/paperclipai/paperclip) | TypeScript | 2,109 |
-| 2 | [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) | Python | 83 |
-| 3 | [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) | Python | 1,653 |
-| 4 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 468 |
-| 5 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 583 |
-| 6 | [dream-num/univer](https://github.com/dream-num/univer) | TypeScript | 1,050 |
-| 7 | [anthropics/skills](https://github.com/anthropics/skills) | Python | 189 |
-| 8 | [androoAGI/starnet](https://github.com/androoAGI/starnet) | JavaScript | 93 |
-| 9 | [derv82/wifit3](https://github.com/derv82/wifit3) | Python | 183 |
-| 10 | [kelseyhightower/kubernetes-the-hard-way](https://github.com/kelseyhightower/kubernetes-the-hard-way) | — | 119 |
+| 1 | [paperclipai/paperclip](https://github.com/paperclipai/paperclip) | TypeScript | 2,608 |
+| 2 | [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) | Python | 2,147 |
+| 3 | [NVIDIA/Model-Optimizer](https://github.com/NVIDIA/Model-Optimizer) | Python | 357 |
+| 4 | [dream-num/univer](https://github.com/dream-num/univer) | TypeScript | 849 |
+| 5 | [tensorflow/tensorflow](https://github.com/tensorflow/tensorflow) | C++ | 46 |
+| 6 | [rohitg00/ai-engineering-from-scratch](https://github.com/rohitg00/ai-engineering-from-scratch) | Python | 827 |
+| 7 | [openbao/openbao](https://github.com/openbao/openbao) | Go | 364 |
+| 8 | [block/buzz](https://github.com/block/buzz) | Rust | 339 |
+| 9 | [microsoft/vscode](https://github.com/microsoft/vscode) | TypeScript | 95 |
+| 10 | [zhaoxuya520/reverse-skill](https://github.com/zhaoxuya520/reverse-skill) | PowerShell | 361 |
 
-[Open full snapshot →](data/2026/09/26/trending.json)
+[Open full snapshot →](data/2026/09/27/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 269 days  
+[`2026`](data/2026/) · 270 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
