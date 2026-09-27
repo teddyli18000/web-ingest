@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-26** | **660** | **660** | **660** | **660** | **659** |
+| **2024-11-28** | **2026-09-27** | **661** | **661** | **661** | **661** | **660** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 76 |
+| `google_trending_now` | 80 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-09-26
+### Latest SG snapshot — 2026-09-27
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 刘欢 | 1000+ |
-| 2 | loh kean yew asian games | 1000+ |
-| 3 | liu huan | 500+ |
-| 4 | xi jinping | 1000+ |
-| 5 | mosque | 2000+ |
-| 6 | mamma mia focaccia closure singapore | 500+ |
-| 7 | starbucks | 2000+ |
-| 8 | türkiye vs france | 2000+ |
-| 9 | weather | 5000+ |
-| 10 | bangkok | 200+ |
+| 1 | google's birthday | 50000+ |
+| 2 | west indies vs india | 2000+ |
+| 3 | loh kean yew | 2000+ |
+| 4 | money | 5000+ |
+| 5 | ind vs wi | 1000+ |
+| 6 | perry ng singapore citizenship | 2000+ |
+| 7 | food | 1000+ |
+| 8 | asian games 2026 women 200m | 500+ |
+| 9 | michael carrick | 200+ |
+| 10 | england national football team vs spain national football team standings | 10000+ |
 
-### Latest US snapshot — 2026-09-26
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | northwestern vs indiana | 200000+ |
-| 2 | clemson vs california | 100000+ |
-| 3 | dodgers vs giants | 50000+ |
-| 4 | cubs vs red sox | 50000+ |
-| 5 | guardians vs royals | 20000+ |
-| 6 | ted kaczynski | 20000+ |
-| 7 | orioles vs yankees | 20000+ |
-| 8 | 刘欢 | 10000+ |
-| 9 | uab football | 20000+ |
-| 10 | cardinals vs brewers | 20000+ |
-
-### Latest GB snapshot — 2026-09-26
+### Latest US snapshot — 2026-09-27
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | manchester city | 200000+ |
-| 2 | beverley callard | 20000+ |
-| 3 | fa cup referee error mulbarton woodford | 20000+ |
-| 4 | national lottery euromillions jackpot | 50000+ |
-| 5 | royal family news | 10000+ |
-| 6 | rotten tomatoes | 5000+ |
-| 7 | turkey national football team vs france national football team standings | 5000+ |
-| 8 | nhs | 10000+ |
-| 9 | florence pugh | 10000+ |
-| 10 | afl | 5000+ |
+| 1 | dante moore | 500000+ |
+| 2 | méxico - colombia | 200000+ |
+| 3 | google's birthday | 50000+ |
+| 4 | south carolina vs alabama | 100000+ |
+| 5 | texas a&m vs lsu | 200000+ |
+| 6 | kate upton | 100000+ |
+| 7 | iowa vs michigan | 200000+ |
+| 8 | wisconsin vs penn state | 200000+ |
+| 9 | ole miss vs florida | 200000+ |
+| 10 | raul rosas jr | 100000+ |
 
-### Latest HK snapshot — 2026-09-26
+### Latest GB snapshot — 2026-09-27
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 劉歡 | 5000+ |
-| 2 | 饮 茶 | 1000+ |
-| 3 | 田啟文 | 1000+ |
-| 4 | 蔡楓華 | 200+ |
-| 5 | 鞋 | 2000+ |
-| 6 | 饮茶 | 500+ |
-| 7 | 林德信 | 500+ |
-| 8 | 羅湖 | 500+ |
-| 9 | 監獄 | 500+ |
-| 10 | 主持人 | 200+ |
+| 1 | google's birthday | 200000+ |
+| 2 | raf fairford | 50000+ |
+| 3 | england national football team vs spain national football team standings | 200000+ |
+| 4 | haaland | 50000+ |
+| 5 | strictly come dancing host josh widdicombe | 20000+ |
+| 6 | pension | 20000+ |
+| 7 | eng vs sl | 20000+ |
+| 8 | ind vs wi | 20000+ |
+| 9 | darren till | 50000+ |
+| 10 | amazon prime settlement automatic refunds | 10000+ |
 
-[Open full snapshot →](data/2026/09/26/trending.json)
+### Latest HK snapshot — 2026-09-27
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | google's birthday | 10000+ |
+| 2 | 洪楗華 | 5000+ |
+| 3 | 香港 | 500+ |
+| 4 | 風 眼 | 2000+ |
+| 5 | 英格蘭對西班牙 | 5000+ |
+| 6 | england vs spain | 2000+ |
+| 7 | 旺角 | 1000+ |
+| 8 | viutv | 500+ |
+| 9 | 藝人 | 500+ |
+| 10 | 潘芳芳 | 1000+ |
+
+[Open full snapshot →](data/2026/09/27/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 262 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 263 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
