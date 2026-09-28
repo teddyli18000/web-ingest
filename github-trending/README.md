@@ -12,28 +12,27 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-27** | **4,372** | **2,525** |
+| **2014-08-09** | **2026-09-28** | **4,373** | **2,526** |
 
-### Latest All-Languages snapshot — 2026-09-27
+### Latest All-Languages snapshot — 2026-09-28
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [paperclipai/paperclip](https://github.com/paperclipai/paperclip) | TypeScript | 2,608 |
-| 2 | [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) | Python | 2,147 |
-| 3 | [NVIDIA/Model-Optimizer](https://github.com/NVIDIA/Model-Optimizer) | Python | 357 |
-| 4 | [dream-num/univer](https://github.com/dream-num/univer) | TypeScript | 849 |
-| 5 | [tensorflow/tensorflow](https://github.com/tensorflow/tensorflow) | C++ | 46 |
-| 6 | [rohitg00/ai-engineering-from-scratch](https://github.com/rohitg00/ai-engineering-from-scratch) | Python | 827 |
-| 7 | [openbao/openbao](https://github.com/openbao/openbao) | Go | 364 |
-| 8 | [block/buzz](https://github.com/block/buzz) | Rust | 339 |
-| 9 | [microsoft/vscode](https://github.com/microsoft/vscode) | TypeScript | 95 |
-| 10 | [zhaoxuya520/reverse-skill](https://github.com/zhaoxuya520/reverse-skill) | PowerShell | 361 |
+| 1 | [paperclipai/paperclip](https://github.com/paperclipai/paperclip) | TypeScript | 2,401 |
+| 2 | [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) | Python | 4,520 |
+| 3 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 3,086 |
+| 4 | [rohitg00/ai-engineering-from-scratch](https://github.com/rohitg00/ai-engineering-from-scratch) | Python | 790 |
+| 5 | [InfinityLoop1308/PipePipe](https://github.com/InfinityLoop1308/PipePipe) | Shell | 242 |
+| 6 | [vercel-labs/scriptc](https://github.com/vercel-labs/scriptc) | TypeScript | 102 |
+| 7 | [mvschwarz/openrig](https://github.com/mvschwarz/openrig) | TypeScript | 114 |
+| 8 | [dream-num/univer](https://github.com/dream-num/univer) | TypeScript | 895 |
+| 9 | [willfaust/Madeira](https://github.com/willfaust/Madeira) | C | 83 |
 
-[Open full snapshot →](data/2026/09/27/trending.json)
+[Open full snapshot →](data/2026/09/28/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 270 days  
+[`2026`](data/2026/) · 271 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
