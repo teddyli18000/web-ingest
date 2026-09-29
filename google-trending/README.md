@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-28** | **662** | **662** | **662** | **662** | **661** |
+| **2024-11-28** | **2026-09-29** | **663** | **663** | **663** | **663** | **662** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 84 |
+| `google_trending_now` | 88 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-09-28
+### Latest SG snapshot — 2026-09-29
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | haze singapore | 20000+ |
-| 2 | mahathir mohamad wife | 10000+ |
-| 3 | neo swee lin | 5000+ |
-| 4 | resignation | 2000+ |
-| 5 | geylang bahru | 2000+ |
-| 6 | singapore vs bangladesh | 500+ |
-| 7 | anthony loke | 1000+ |
-| 8 | south korea vs uruguay | 500+ |
-| 9 | vsmc | 200+ |
-| 10 | norway vs portugal | 10000+ |
+| 1 | thomas ong hdb flat move | 10000+ |
+| 2 | muay thai | 20000+ |
+| 3 | australia vs brazil | 5000+ |
+| 4 | singapore airlines dining upgrades | 5000+ |
+| 5 | public transport council fare hike | 2000+ |
+| 6 | fine | 2000+ |
+| 7 | singapore haze air pollution | 10000+ |
+| 8 | anthony loke | 1000+ |
+| 9 | product recall | 2000+ |
+| 10 | 偶像 | 100+ |
 
-### Latest US snapshot — 2026-09-28
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | rams vs broncos | 500000+ |
-| 2 | ravens vs cowboys | 1000000+ |
-| 3 | pac | 200000+ |
-| 4 | madonna | 500000+ |
-| 5 | raiders vs saints | 500000+ |
-| 6 | rams | 1000000+ |
-| 7 | chiefs vs dolphins | 500000+ |
-| 8 | cardinals vs 49ers | 500000+ |
-| 9 | vikings vs buccaneers | 200000+ |
-| 10 | seahawks vs commanders | 1000000+ |
-
-### Latest GB snapshot — 2026-09-28
+### Latest US snapshot — 2026-09-29
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | diesel rationing | 50000+ |
-| 2 | pac | 50000+ |
-| 3 | pak vs hk | 20000+ |
-| 4 | queen camilla | 10000+ |
-| 5 | triple lock pension | 5000+ |
-| 6 | bbc one strictly viewing figures | 10000+ |
-| 7 | that mitchell and webb look | 5000+ |
-| 8 | vmas | 20000+ |
-| 9 | thames water | 10000+ |
-| 10 | virgil van dijk | 5000+ |
+| 1 | eagles | 1000000+ |
+| 2 | fda chlorthalidone dissolution testing recall | 500000+ |
+| 3 | dennis haskins | 100000+ |
+| 4 | snow | 200000+ |
+| 5 | jj mccarthy | 200000+ |
+| 6 | today | 100000+ |
+| 7 | eagles game | 200000+ |
+| 8 | guatemala vs el salvador | 100000+ |
+| 9 | jalen hurts | 100000+ |
+| 10 | us ban canadian grocery products | 50000+ |
 
-### Latest HK snapshot — 2026-09-28
+### Latest GB snapshot — 2026-09-29
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 邵音音 | 10000+ |
-| 2 | 盧海鵬 | 2000+ |
-| 3 | 債券 | 2000+ |
-| 4 | 麥當勞 | 1000+ |
-| 5 | 呈祥道 | 500+ |
-| 6 | 城市售票網 | 5000+ |
-| 7 | 鍾培生 | 2000+ |
-| 8 | norway vs portugal | 1000+ |
-| 9 | 天氣 | 2000+ |
-| 10 | 歐國聯 | 500+ |
+| 1 | nursery | 20000+ |
+| 2 | explorer sir ranulph fiennes found | 20000+ |
+| 3 | australia vs brazil | 10000+ |
+| 4 | sergey lavrov uk future comments | 20000+ |
+| 5 | uk ireland ferry passport policy | 20000+ |
+| 6 | rob burrow | 10000+ |
+| 7 | graeme dott | 5000+ |
+| 8 | triple lock | 20000+ |
+| 9 | sl vs nep | 10000+ |
+| 10 | belgium national football team vs france national football team standings | 50000+ |
 
-[Open full snapshot →](data/2026/09/28/trending.json)
+### Latest HK snapshot — 2026-09-29
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 田蕊妮 | 2000+ |
+| 2 | 擎海 | 2000+ |
+| 3 | australia vs brazil | 500+ |
+| 4 | 退休 | 500+ |
+| 5 | 天水圍 | 1000+ |
+| 6 | 快達票 | 2000+ |
+| 7 | wage | 2000+ |
+| 8 | bigbang | 1000+ |
+| 9 | 比利時對法國 | 1000+ |
+| 10 | 赛马 | 1000+ |
+
+[Open full snapshot →](data/2026/09/29/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 264 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 265 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
