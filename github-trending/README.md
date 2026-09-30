@@ -12,26 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-09-29** | **4,374** | **2,527** |
+| **2014-08-09** | **2026-09-30** | **4,375** | **2,528** |
 
-### Latest All-Languages snapshot — 2026-09-29
+### Latest All-Languages snapshot — 2026-09-30
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 3,221 |
-| 2 | [paperclipai/paperclip](https://github.com/paperclipai/paperclip) | TypeScript | 3,197 |
-| 3 | [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) | Python | 4,561 |
-| 4 | [NawfalMotii79/PLFM_RADAR](https://github.com/NawfalMotii79/PLFM_RADAR) | PLSQL | 158 |
-| 5 | [cs341-illinois/coursebook](https://github.com/cs341-illinois/coursebook) | TeX | 195 |
-| 6 | [byoungd/up](https://github.com/byoungd/up) | JavaScript | 327 |
-| 7 | [mvschwarz/openrig](https://github.com/mvschwarz/openrig) | TypeScript | 734 |
-| 8 | [dream-num/univer](https://github.com/dream-num/univer) | TypeScript | 1,099 |
+| 1 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 4,758 |
+| 2 | [NVIDIA/OpenShell](https://github.com/NVIDIA/OpenShell) | Rust | 990 |
+| 3 | [vectorize-io/hindsight](https://github.com/vectorize-io/hindsight) | Python | 2,575 |
+| 4 | [paperclipai/paperclip](https://github.com/paperclipai/paperclip) | TypeScript | 2,458 |
+| 5 | [t8y2/dbx](https://github.com/t8y2/dbx) | Rust | 232 |
+| 6 | [mvschwarz/openrig](https://github.com/mvschwarz/openrig) | TypeScript | 737 |
+| 7 | [oblien/openship](https://github.com/oblien/openship) | TypeScript | 437 |
+| 8 | [averygan/reclip](https://github.com/averygan/reclip) | HTML | 113 |
+| 9 | [cs341-illinois/coursebook](https://github.com/cs341-illinois/coursebook) | TeX | 572 |
+| 10 | [rohitg00/ai-engineering-from-scratch](https://github.com/rohitg00/ai-engineering-from-scratch) | Python | 786 |
 
-[Open full snapshot →](data/2026/09/29/trending.json)
+[Open full snapshot →](data/2026/09/30/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 272 days  
+[`2026`](data/2026/) · 273 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
