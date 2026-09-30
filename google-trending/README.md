@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-29** | **663** | **663** | **663** | **663** | **662** |
+| **2024-11-28** | **2026-09-30** | **664** | **664** | **664** | **664** | **663** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 88 |
+| `google_trending_now` | 92 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-09-29
+### Latest SG snapshot — 2026-09-30
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | thomas ong hdb flat move | 10000+ |
-| 2 | muay thai | 20000+ |
-| 3 | australia vs brazil | 5000+ |
-| 4 | singapore airlines dining upgrades | 5000+ |
-| 5 | public transport council fare hike | 2000+ |
-| 6 | fine | 2000+ |
-| 7 | singapore haze air pollution | 10000+ |
-| 8 | anthony loke | 1000+ |
-| 9 | product recall | 2000+ |
-| 10 | 偶像 | 100+ |
+| 1 | singapore hdb utilities rebate october 2026 | 5000+ |
+| 2 | crystal jade holding companies receivership | 2000+ |
+| 3 | west indies vs india | 5000+ |
+| 4 | mahathir mohamad hospitalized | 5000+ |
+| 5 | performance improvement | 1000+ |
+| 6 | thomas ong hdb flat | 2000+ |
+| 7 | czechia vs england | 5000+ |
+| 8 | xi jinping | 1000+ |
+| 9 | spain national football team vs croatia national football team standings | 5000+ |
+| 10 | fire | 1000+ |
 
-### Latest US snapshot — 2026-09-29
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | eagles | 1000000+ |
-| 2 | fda chlorthalidone dissolution testing recall | 500000+ |
-| 3 | dennis haskins | 100000+ |
-| 4 | snow | 200000+ |
-| 5 | jj mccarthy | 200000+ |
-| 6 | today | 100000+ |
-| 7 | eagles game | 200000+ |
-| 8 | guatemala vs el salvador | 100000+ |
-| 9 | jalen hurts | 100000+ |
-| 10 | us ban canadian grocery products | 50000+ |
-
-### Latest GB snapshot — 2026-09-29
+### Latest US snapshot — 2026-09-30
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | nursery | 20000+ |
-| 2 | explorer sir ranulph fiennes found | 20000+ |
-| 3 | australia vs brazil | 10000+ |
-| 4 | sergey lavrov uk future comments | 20000+ |
-| 5 | uk ireland ferry passport policy | 20000+ |
-| 6 | rob burrow | 10000+ |
-| 7 | graeme dott | 5000+ |
-| 8 | triple lock | 20000+ |
-| 9 | sl vs nep | 10000+ |
-| 10 | belgium national football team vs france national football team standings | 50000+ |
+| 1 | wnba playoffs | 2000000+ |
+| 2 | red sox vs yankees | 500000+ |
+| 3 | mlb | 500000+ |
+| 4 | cubs vs padres | 500000+ |
+| 5 | jack smith | 100000+ |
+| 6 | chad lowe | 100000+ |
+| 7 | méxico - perú | 200000+ |
+| 8 | aces vs fever | 500000+ |
+| 9 | usa vs chile | 200000+ |
+| 10 | spain vs croatia | 200000+ |
 
-### Latest HK snapshot — 2026-09-29
+### Latest GB snapshot — 2026-09-30
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 田蕊妮 | 2000+ |
-| 2 | 擎海 | 2000+ |
-| 3 | australia vs brazil | 500+ |
-| 4 | 退休 | 500+ |
-| 5 | 天水圍 | 1000+ |
-| 6 | 快達票 | 2000+ |
-| 7 | wage | 2000+ |
-| 8 | bigbang | 1000+ |
-| 9 | 比利時對法國 | 1000+ |
-| 10 | 赛马 | 1000+ |
+| 1 | czechia vs england | 500000+ |
+| 2 | charles iii | 100000+ |
+| 3 | west indies vs india | 20000+ |
+| 4 | andy burnham | 20000+ |
+| 5 | chad lowe | 10000+ |
+| 6 | richard osman | 10000+ |
+| 7 | flydubai | 5000+ |
+| 8 | william, prince of wales | 10000+ |
+| 9 | euromillions results tuesday | 5000+ |
+| 10 | ted lasso | 2000+ |
 
-[Open full snapshot →](data/2026/09/29/trending.json)
+### Latest HK snapshot — 2026-09-30
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 田啟文 | 2000+ |
+| 2 | 吳綺莉 | 1000+ |
+| 3 | 鄧龍威 | 5000+ |
+| 4 | 綠色 債券 | 5000+ |
+| 5 | 捷克對英格蘭 | 1000+ |
+| 6 | 龔慈恩 | 2000+ |
+| 7 | 爆炸頭 | 1000+ |
+| 8 | 明天的天氣 | 10000+ |
+| 9 | czechia vs england | 500+ |
+| 10 | weather tomorrow | 2000+ |
+
+[Open full snapshot →](data/2026/09/30/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 265 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 266 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
