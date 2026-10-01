@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-09-30** | **664** | **664** | **664** | **664** | **663** |
+| **2024-11-28** | **2026-10-01** | **665** | **665** | **665** | **665** | **664** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 92 |
+| `google_trending_now` | 96 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-09-30
+### Latest SG snapshot — 2026-10-01
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | singapore hdb utilities rebate october 2026 | 5000+ |
-| 2 | crystal jade holding companies receivership | 2000+ |
-| 3 | west indies vs india | 5000+ |
-| 4 | mahathir mohamad hospitalized | 5000+ |
-| 5 | performance improvement | 1000+ |
-| 6 | thomas ong hdb flat | 2000+ |
-| 7 | czechia vs england | 5000+ |
-| 8 | xi jinping | 1000+ |
-| 9 | spain national football team vs croatia national football team standings | 5000+ |
-| 10 | fire | 1000+ |
+| 1 | bee cheng hiang ai data breach | 2000+ |
+| 2 | primary school leaving examination | 1000+ |
+| 3 | japan vs ecuador | 2000+ |
+| 4 | scoot | 2000+ |
+| 5 | treasury bill | 1000+ |
+| 6 | karkaunsl leasing director jail sentence | 500+ |
+| 7 | argentina vs bolivia | 10000+ |
+| 8 | review | 2000+ |
+| 9 | india vs sri lanka | 5000+ |
+| 10 | dfi retail group starbucks acquisition | 2000+ |
 
-### Latest US snapshot — 2026-09-30
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | wnba playoffs | 2000000+ |
-| 2 | red sox vs yankees | 500000+ |
-| 3 | mlb | 500000+ |
-| 4 | cubs vs padres | 500000+ |
-| 5 | jack smith | 100000+ |
-| 6 | chad lowe | 100000+ |
-| 7 | méxico - perú | 200000+ |
-| 8 | aces vs fever | 500000+ |
-| 9 | usa vs chile | 200000+ |
-| 10 | spain vs croatia | 200000+ |
-
-### Latest GB snapshot — 2026-09-30
+### Latest US snapshot — 2026-10-01
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | czechia vs england | 500000+ |
-| 2 | charles iii | 100000+ |
-| 3 | west indies vs india | 20000+ |
-| 4 | andy burnham | 20000+ |
-| 5 | chad lowe | 10000+ |
-| 6 | richard osman | 10000+ |
-| 7 | flydubai | 5000+ |
-| 8 | william, prince of wales | 10000+ |
-| 9 | euromillions results tuesday | 5000+ |
-| 10 | ted lasso | 2000+ |
+| 1 | christa pike execution | 200000+ |
+| 2 | argentina vs bolivia | 200000+ |
+| 3 | trump aca refund checks | 200000+ |
+| 4 | tj maxx closing | 100000+ |
+| 5 | joey porter jr | 100000+ |
+| 6 | argentina - bolivia | 100000+ |
+| 7 | sud | 20000+ |
+| 8 | state department visa crackdown donald trump | 50000+ |
+| 9 | valkyries vs wings | 200000+ |
+| 10 | sophia bush | 20000+ |
 
-### Latest HK snapshot — 2026-09-30
+### Latest GB snapshot — 2026-10-01
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 田啟文 | 2000+ |
-| 2 | 吳綺莉 | 1000+ |
-| 3 | 鄧龍威 | 5000+ |
-| 4 | 綠色 債券 | 5000+ |
-| 5 | 捷克對英格蘭 | 1000+ |
-| 6 | 龔慈恩 | 2000+ |
-| 7 | 爆炸頭 | 1000+ |
-| 8 | 明天的天氣 | 10000+ |
-| 9 | czechia vs england | 500+ |
-| 10 | weather tomorrow | 2000+ |
+| 1 | esther rantzen | 100000+ |
+| 2 | argentina vs bolivia | 50000+ |
+| 3 | sud | 20000+ |
+| 4 | ind vs sl | 20000+ |
+| 5 | execution | 20000+ |
+| 6 | celebrity traitors | 50000+ |
+| 7 | wicknell chivayo | 10000+ |
+| 8 | anthony head | 20000+ |
+| 9 | minibus | 10000+ |
+| 10 | putin news | 5000+ |
 
-[Open full snapshot →](data/2026/09/30/trending.json)
+### Latest HK snapshot — 2026-10-01
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 國慶煙花 | 2000+ |
+| 2 | 朱咪咪 | 1000+ |
+| 3 | 惠 康 | 2000+ |
+| 4 | 日本對厄瓜多 | 1000+ |
+| 5 | 簡約公屋 | 500+ |
+| 6 | 王書麒 | 2000+ |
+| 7 | 國慶優惠 | 2000+ |
+| 8 | argentina vs bolivia | 1000+ |
+| 9 | hkjc | 1000+ |
+| 10 | 明天的天氣 | 10000+ |
+
+[Open full snapshot →](data/2026/10/01/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 266 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 267 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
