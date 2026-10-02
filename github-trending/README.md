@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-01** | **4,376** | **2,529** |
+| **2014-08-09** | **2026-10-02** | **4,377** | **2,530** |
 
-### Latest All-Languages snapshot — 2026-10-01
+### Latest All-Languages snapshot — 2026-10-02
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [NVIDIA/OpenShell](https://github.com/NVIDIA/OpenShell) | Rust | 1,281 |
-| 2 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 3,483 |
-| 3 | [mvschwarz/openrig](https://github.com/mvschwarz/openrig) | TypeScript | 624 |
-| 4 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 90 |
-| 5 | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | JavaScript | 743 |
-| 6 | [harry0703/MoneyPrinterTurbo](https://github.com/harry0703/MoneyPrinterTurbo) | Python | 431 |
-| 7 | [openclaw/openclaw](https://github.com/openclaw/openclaw) | TypeScript | 136 |
-| 8 | [ComposioHQ/awesome-claude-skills](https://github.com/ComposioHQ/awesome-claude-skills) | Python | 123 |
-| 9 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 876 |
-| 10 | [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) | TypeScript | 349 |
+| 1 | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | JavaScript | 1,194 |
+| 2 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 883 |
+| 3 | [NVIDIA/OpenShell](https://github.com/NVIDIA/OpenShell) | Rust | 2,456 |
+| 4 | [firebase/firebase-ios-sdk](https://github.com/firebase/firebase-ios-sdk) | C++ | 112 |
+| 5 | [mvschwarz/openrig](https://github.com/mvschwarz/openrig) | TypeScript | 642 |
+| 6 | [cursor/plugins](https://github.com/cursor/plugins) | TypeScript | 150 |
+| 7 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 455 |
+| 8 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 362 |
+| 9 | [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) | TypeScript | 627 |
+| 10 | [earendil-works/pi](https://github.com/earendil-works/pi) | TypeScript | 298 |
 
-[Open full snapshot →](data/2026/10/01/trending.json)
+[Open full snapshot →](data/2026/10/02/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 274 days  
+[`2026`](data/2026/) · 275 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
