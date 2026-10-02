@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-01** | **665** | **665** | **665** | **665** | **664** |
+| **2024-11-28** | **2026-10-02** | **666** | **666** | **666** | **666** | **665** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 96 |
+| `google_trending_now` | 100 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-01
+### Latest SG snapshot — 2026-10-02
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | bee cheng hiang ai data breach | 2000+ |
-| 2 | primary school leaving examination | 1000+ |
-| 3 | japan vs ecuador | 2000+ |
-| 4 | scoot | 2000+ |
-| 5 | treasury bill | 1000+ |
-| 6 | karkaunsl leasing director jail sentence | 500+ |
-| 7 | argentina vs bolivia | 10000+ |
-| 8 | review | 2000+ |
-| 9 | india vs sri lanka | 5000+ |
-| 10 | dfi retail group starbucks acquisition | 2000+ |
+| 1 | singapore | 10000+ |
+| 2 | khaw boon wan | 10000+ |
+| 3 | erik brown diver | 500+ |
+| 4 | scoot flight tr905 passenger removal | 2000+ |
+| 5 | denmark vs portugal | 5000+ |
+| 6 | singapore vs malaysia | 10000+ |
+| 7 | karkaunsl leasing director jail sentence | 2000+ |
+| 8 | wales vs norway | 1000+ |
+| 9 | germany national football team vs serbia national football team standings | 1000+ |
+| 10 | indonesia vs bangladesh | 1000+ |
 
-### Latest US snapshot — 2026-10-01
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | christa pike execution | 200000+ |
-| 2 | argentina vs bolivia | 200000+ |
-| 3 | trump aca refund checks | 200000+ |
-| 4 | tj maxx closing | 100000+ |
-| 5 | joey porter jr | 100000+ |
-| 6 | argentina - bolivia | 100000+ |
-| 7 | sud | 20000+ |
-| 8 | state department visa crackdown donald trump | 50000+ |
-| 9 | valkyries vs wings | 200000+ |
-| 10 | sophia bush | 20000+ |
-
-### Latest GB snapshot — 2026-10-01
+### Latest US snapshot — 2026-10-02
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | esther rantzen | 100000+ |
-| 2 | argentina vs bolivia | 50000+ |
-| 3 | sud | 20000+ |
-| 4 | ind vs sl | 20000+ |
-| 5 | execution | 20000+ |
-| 6 | celebrity traitors | 50000+ |
-| 7 | wicknell chivayo | 10000+ |
-| 8 | anthony head | 20000+ |
-| 9 | minibus | 10000+ |
-| 10 | putin news | 5000+ |
+| 1 | steelers vs browns | 2000000+ |
+| 2 | ken urker | 500000+ |
+| 3 | fever vs aces | 200000+ |
+| 4 | phillies | 200000+ |
+| 5 | social security benefit increase projection | 100000+ |
+| 6 | capitol police plaque lawsuit dismissal | 50000+ |
+| 7 | rick ross | 100000+ |
+| 8 | what happened to chad lowes daughter | 20000+ |
+| 9 | amazon ftc settlement payouts | 20000+ |
+| 10 | uss klakring sinking exercise | 50000+ |
 
-### Latest HK snapshot — 2026-10-01
+### Latest GB snapshot — 2026-10-02
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 國慶煙花 | 2000+ |
-| 2 | 朱咪咪 | 1000+ |
-| 3 | 惠 康 | 2000+ |
-| 4 | 日本對厄瓜多 | 1000+ |
-| 5 | 簡約公屋 | 500+ |
-| 6 | 王書麒 | 2000+ |
-| 7 | 國慶優惠 | 2000+ |
-| 8 | argentina vs bolivia | 1000+ |
-| 9 | hkjc | 1000+ |
-| 10 | 明天的天氣 | 10000+ |
+| 1 | richard e grant | 200000+ |
+| 2 | sebastian croft | 100000+ |
+| 3 | jerry hall | 100000+ |
+| 4 | ken urker | 50000+ |
+| 5 | new driving licence rules | 20000+ |
+| 6 | sir alex ferguson old trafford return | 10000+ |
+| 7 | james blunt | 20000+ |
+| 8 | ross kemp | 20000+ |
+| 9 | celebrity race across the world 2026 | 20000+ |
+| 10 | hannah fry | 20000+ |
 
-[Open full snapshot →](data/2026/10/01/trending.json)
+### Latest HK snapshot — 2026-10-02
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 天文台 | 10000+ |
+| 2 | 黎姿 | 1000+ |
+| 3 | 外傭最低工資 | 500+ |
+| 4 | 東北季風 | 10000+ |
+| 5 | 丹麥對葡萄牙 | 1000+ |
+| 6 | 黃澤林 | 1000+ |
+| 7 | 簡約 公 屋 | 1000+ |
+| 8 | 煙花 | 2000+ |
+| 9 | weather tomorrow | 2000+ |
+| 10 | 姚子羚 | 200+ |
+
+[Open full snapshot →](data/2026/10/02/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 267 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 268 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
