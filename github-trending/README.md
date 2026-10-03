@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-02** | **4,377** | **2,530** |
+| **2014-08-09** | **2026-10-03** | **4,378** | **2,531** |
 
-### Latest All-Languages snapshot — 2026-10-02
+### Latest All-Languages snapshot — 2026-10-03
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | JavaScript | 1,194 |
-| 2 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 883 |
-| 3 | [NVIDIA/OpenShell](https://github.com/NVIDIA/OpenShell) | Rust | 2,456 |
-| 4 | [firebase/firebase-ios-sdk](https://github.com/firebase/firebase-ios-sdk) | C++ | 112 |
-| 5 | [mvschwarz/openrig](https://github.com/mvschwarz/openrig) | TypeScript | 642 |
-| 6 | [cursor/plugins](https://github.com/cursor/plugins) | TypeScript | 150 |
-| 7 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 455 |
-| 8 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 362 |
-| 9 | [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) | TypeScript | 627 |
-| 10 | [earendil-works/pi](https://github.com/earendil-works/pi) | TypeScript | 298 |
+| 1 | [Panniantong/Agent-Reach](https://github.com/Panniantong/Agent-Reach) | Python | 696 |
+| 2 | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | Go | 209 |
+| 3 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 556 |
+| 4 | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | JavaScript | 1,435 |
+| 5 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | JavaScript | 722 |
+| 6 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 955 |
+| 7 | [NVIDIA/OpenShell](https://github.com/NVIDIA/OpenShell) | Rust | 594 |
+| 8 | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | JavaScript | 140 |
+| 9 | [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) | TypeScript | 580 |
+| 10 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 282 |
 
-[Open full snapshot →](data/2026/10/02/trending.json)
+[Open full snapshot →](data/2026/10/03/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 275 days  
+[`2026`](data/2026/) · 276 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
