@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-02** | **666** | **666** | **666** | **666** | **665** |
+| **2024-11-28** | **2026-10-03** | **667** | **667** | **667** | **667** | **666** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 100 |
+| `google_trending_now` | 104 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-02
+### Latest SG snapshot — 2026-10-03
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | singapore | 10000+ |
-| 2 | khaw boon wan | 10000+ |
-| 3 | erik brown diver | 500+ |
-| 4 | scoot flight tr905 passenger removal | 2000+ |
-| 5 | denmark vs portugal | 5000+ |
-| 6 | singapore vs malaysia | 10000+ |
-| 7 | karkaunsl leasing director jail sentence | 2000+ |
-| 8 | wales vs norway | 1000+ |
-| 9 | germany national football team vs serbia national football team standings | 1000+ |
-| 10 | indonesia vs bangladesh | 1000+ |
+| 1 | india vs west indies | 2000+ |
+| 2 | india vs pakistan | 5000+ |
+| 3 | nvidia | 2000+ |
+| 4 | joo chiat car free day | 1000+ |
+| 5 | erik brown diver | 5000+ |
+| 6 | france national football team vs italy national football team standings | 5000+ |
+| 7 | chen yixin paris apartment rent | 2000+ |
+| 8 | sri lanka vs bangladesh | 2000+ |
+| 9 | bukit timah expressway | 1000+ |
+| 10 | min ah jim carrey | 2000+ |
 
-### Latest US snapshot — 2026-10-02
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | steelers vs browns | 2000000+ |
-| 2 | ken urker | 500000+ |
-| 3 | fever vs aces | 200000+ |
-| 4 | phillies | 200000+ |
-| 5 | social security benefit increase projection | 100000+ |
-| 6 | capitol police plaque lawsuit dismissal | 50000+ |
-| 7 | rick ross | 100000+ |
-| 8 | what happened to chad lowes daughter | 20000+ |
-| 9 | amazon ftc settlement payouts | 20000+ |
-| 10 | uss klakring sinking exercise | 50000+ |
-
-### Latest GB snapshot — 2026-10-02
+### Latest US snapshot — 2026-10-03
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | richard e grant | 200000+ |
-| 2 | sebastian croft | 100000+ |
-| 3 | jerry hall | 100000+ |
-| 4 | ken urker | 50000+ |
-| 5 | new driving licence rules | 20000+ |
-| 6 | sir alex ferguson old trafford return | 10000+ |
-| 7 | james blunt | 20000+ |
-| 8 | ross kemp | 20000+ |
-| 9 | celebrity race across the world 2026 | 20000+ |
-| 10 | hannah fry | 20000+ |
+| 1 | penn state vs northwestern | 500000+ |
+| 2 | pittsburgh vs virginia tech | 200000+ |
+| 3 | france vs italy | 200000+ |
+| 4 | pak vs ind | 100000+ |
+| 5 | greg lui doj charges | 20000+ |
+| 6 | tony romo | 50000+ |
+| 7 | kathleen turner | 50000+ |
+| 8 | shivon zilis | 20000+ |
+| 9 | wings vs valkyries | 100000+ |
+| 10 | montana state vs idaho | 50000+ |
 
-### Latest HK snapshot — 2026-10-02
+### Latest GB snapshot — 2026-10-03
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 天文台 | 10000+ |
-| 2 | 黎姿 | 1000+ |
-| 3 | 外傭最低工資 | 500+ |
-| 4 | 東北季風 | 10000+ |
-| 5 | 丹麥對葡萄牙 | 1000+ |
-| 6 | 黃澤林 | 1000+ |
-| 7 | 簡約 公 屋 | 1000+ |
-| 8 | 煙花 | 2000+ |
-| 9 | weather tomorrow | 2000+ |
-| 10 | 姚子羚 | 200+ |
+| 1 | india vs pakistan | 100000+ |
+| 2 | alison hammond | 100000+ |
+| 3 | ind vs wi | 20000+ |
+| 4 | france vs italy | 50000+ |
+| 5 | american covid strain | 20000+ |
+| 6 | gaten matarazzo | 5000+ |
+| 7 | euromillions results friday | 20000+ |
+| 8 | smuggling | 5000+ |
+| 9 | sylvester stallone | 10000+ |
+| 10 | f1 qualifying | 5000+ |
 
-[Open full snapshot →](data/2026/10/02/trending.json)
+### Latest HK snapshot — 2026-10-03
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 霍汶希 | 2000+ |
+| 2 | 現金 | 500+ |
+| 3 | 黃澤林 | 10000+ |
+| 4 | 房屋署 | 1000+ |
+| 5 | 羅家英 | 5000+ |
+| 6 | 超級市場 | 2000+ |
+| 7 | coleman wong | 2000+ |
+| 8 | 天氣 | 5000+ |
+| 9 | 胆固醇 | 2000+ |
+| 10 | 亞運網球 | 1000+ |
+
+[Open full snapshot →](data/2026/10/03/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 268 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 269 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
