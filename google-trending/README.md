@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-03** | **667** | **667** | **667** | **667** | **666** |
+| **2024-11-28** | **2026-10-04** | **668** | **668** | **668** | **668** | **667** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 104 |
+| `google_trending_now` | 108 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-03
+### Latest SG snapshot — 2026-10-04
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | india vs west indies | 2000+ |
-| 2 | india vs pakistan | 5000+ |
-| 3 | nvidia | 2000+ |
-| 4 | joo chiat car free day | 1000+ |
-| 5 | erik brown diver | 5000+ |
-| 6 | france national football team vs italy national football team standings | 5000+ |
-| 7 | chen yixin paris apartment rent | 2000+ |
-| 8 | sri lanka vs bangladesh | 2000+ |
-| 9 | bukit timah expressway | 1000+ |
-| 10 | min ah jim carrey | 2000+ |
+| 1 | f1 | 5000+ |
+| 2 | nanning | 2000+ |
+| 3 | max verstappen | 500+ |
+| 4 | argentina vs burkina faso | 10000+ |
+| 5 | croatia vs england | 10000+ |
+| 6 | submarine communications cable | 5000+ |
+| 7 | spain national football team vs czech republic national football team standings | 2000+ |
+| 8 | news | 2000+ |
+| 9 | india vs brazil | 5000+ |
+| 10 | market | 200+ |
 
-### Latest US snapshot — 2026-10-03
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | penn state vs northwestern | 500000+ |
-| 2 | pittsburgh vs virginia tech | 200000+ |
-| 3 | france vs italy | 200000+ |
-| 4 | pak vs ind | 100000+ |
-| 5 | greg lui doj charges | 20000+ |
-| 6 | tony romo | 50000+ |
-| 7 | kathleen turner | 50000+ |
-| 8 | shivon zilis | 20000+ |
-| 9 | wings vs valkyries | 100000+ |
-| 10 | montana state vs idaho | 50000+ |
-
-### Latest GB snapshot — 2026-10-03
+### Latest US snapshot — 2026-10-04
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | india vs pakistan | 100000+ |
-| 2 | alison hammond | 100000+ |
-| 3 | ind vs wi | 20000+ |
-| 4 | france vs italy | 50000+ |
-| 5 | american covid strain | 20000+ |
-| 6 | gaten matarazzo | 5000+ |
-| 7 | euromillions results friday | 20000+ |
-| 8 | smuggling | 5000+ |
-| 9 | sylvester stallone | 10000+ |
-| 10 | f1 qualifying | 5000+ |
+| 1 | argentina vs burkina faso | 200000+ |
+| 2 | padres vs brewers | 500000+ |
+| 3 | ohio state vs iowa | 500000+ |
+| 4 | miami fl vs clemson | 200000+ |
+| 5 | estados unidos - méxico | 200000+ |
+| 6 | lucki | 100000+ |
+| 7 | mcneese state vs lsu | 100000+ |
+| 8 | braves vs dodgers | 200000+ |
+| 9 | yankees vs rays | 200000+ |
+| 10 | michigan vs minnesota | 500000+ |
 
-### Latest HK snapshot — 2026-10-03
+### Latest GB snapshot — 2026-10-04
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 霍汶希 | 2000+ |
-| 2 | 現金 | 500+ |
-| 3 | 黃澤林 | 10000+ |
-| 4 | 房屋署 | 1000+ |
-| 5 | 羅家英 | 5000+ |
-| 6 | 超級市場 | 2000+ |
-| 7 | coleman wong | 2000+ |
-| 8 | 天氣 | 5000+ |
-| 9 | 胆固醇 | 2000+ |
-| 10 | 亞運網球 | 1000+ |
+| 1 | croatia vs england | 1000000+ |
+| 2 | kevin adams | 50000+ |
+| 3 | argentina vs burkina faso | 50000+ |
+| 4 | f1 | 50000+ |
+| 5 | strictly spoiler | 50000+ |
+| 6 | glastonbury 2027 | 200000+ |
+| 7 | bahrain gp | 20000+ |
+| 8 | prince harry, duke of sussex | 20000+ |
+| 9 | temperature | 10000+ |
+| 10 | nrl grand final | 10000+ |
 
-[Open full snapshot →](data/2026/10/03/trending.json)
+### Latest HK snapshot — 2026-10-04
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | f1 | 5000+ |
+| 2 | 東張西望 | 5000+ |
+| 3 | 香港天文台 | 1000+ |
+| 4 | 厄尔尼诺现象 | 200+ |
+| 5 | f1 線上看 | 1000+ |
+| 6 | 克羅埃西亞對英格蘭 | 5000+ |
+| 7 | 李家鼎 | 500+ |
+| 8 | nba | 1000+ |
+| 9 | argentina vs burkina faso | 1000+ |
+| 10 | croatia vs england | 2000+ |
+
+[Open full snapshot →](data/2026/10/04/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 269 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 270 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
