@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-03** | **4,378** | **2,531** |
+| **2014-08-09** | **2026-10-04** | **4,379** | **2,532** |
 
-### Latest All-Languages snapshot — 2026-10-03
+### Latest All-Languages snapshot — 2026-10-04
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [Panniantong/Agent-Reach](https://github.com/Panniantong/Agent-Reach) | Python | 696 |
-| 2 | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | Go | 209 |
-| 3 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 556 |
-| 4 | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | JavaScript | 1,435 |
-| 5 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | JavaScript | 722 |
-| 6 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 955 |
-| 7 | [NVIDIA/OpenShell](https://github.com/NVIDIA/OpenShell) | Rust | 594 |
-| 8 | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | JavaScript | 140 |
-| 9 | [heygen-com/hyperframes](https://github.com/heygen-com/hyperframes) | TypeScript | 580 |
-| 10 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 282 |
+| 1 | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | JavaScript | 1,281 |
+| 2 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | JavaScript | 699 |
+| 3 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 897 |
+| 4 | [Effect-TS/effect](https://github.com/Effect-TS/effect) | TypeScript | 302 |
+| 5 | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | Go | 507 |
+| 6 | [Panniantong/Agent-Reach](https://github.com/Panniantong/Agent-Reach) | Python | 1,696 |
+| 7 | [pingdotgg/t3code](https://github.com/pingdotgg/t3code) | TypeScript | 252 |
+| 8 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 79 |
+| 9 | [cloudflare/cloudflare-os](https://github.com/cloudflare/cloudflare-os) | TypeScript | 85 |
+| 10 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | JavaScript | 252 |
 
-[Open full snapshot →](data/2026/10/03/trending.json)
+[Open full snapshot →](data/2026/10/04/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 276 days  
+[`2026`](data/2026/) · 277 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
