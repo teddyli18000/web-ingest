@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-04** | **4,379** | **2,532** |
+| **2014-08-09** | **2026-10-05** | **4,380** | **2,533** |
 
-### Latest All-Languages snapshot — 2026-10-04
+### Latest All-Languages snapshot — 2026-10-05
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | JavaScript | 1,281 |
-| 2 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | JavaScript | 699 |
-| 3 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 897 |
-| 4 | [Effect-TS/effect](https://github.com/Effect-TS/effect) | TypeScript | 302 |
-| 5 | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | Go | 507 |
-| 6 | [Panniantong/Agent-Reach](https://github.com/Panniantong/Agent-Reach) | Python | 1,696 |
-| 7 | [pingdotgg/t3code](https://github.com/pingdotgg/t3code) | TypeScript | 252 |
-| 8 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 79 |
-| 9 | [cloudflare/cloudflare-os](https://github.com/cloudflare/cloudflare-os) | TypeScript | 85 |
-| 10 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | JavaScript | 252 |
+| 1 | [tester-army/e2e](https://github.com/tester-army/e2e) | TypeScript | 345 |
+| 2 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | JavaScript | 1,171 |
+| 3 | [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) | JavaScript | 197 |
+| 4 | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | JavaScript | 1,894 |
+| 5 | [earthtojake/text-to-cad](https://github.com/earthtojake/text-to-cad) | Python | 83 |
+| 6 | [Panniantong/Agent-Reach](https://github.com/Panniantong/Agent-Reach) | Python | 980 |
+| 7 | [getsentry/sentry](https://github.com/getsentry/sentry) | Python | 152 |
+| 8 | [calesthio/OpenMontage](https://github.com/calesthio/OpenMontage) | Python | 245 |
+| 9 | [pingdotgg/t3code](https://github.com/pingdotgg/t3code) | TypeScript | 490 |
+| 10 | [caddyserver/caddy](https://github.com/caddyserver/caddy) | Go | 24 |
 
-[Open full snapshot →](data/2026/10/04/trending.json)
+[Open full snapshot →](data/2026/10/05/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 277 days  
+[`2026`](data/2026/) · 278 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
