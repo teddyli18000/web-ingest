@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-05** | **669** | **669** | **669** | **669** | **668** |
+| **2024-11-28** | **2026-10-06** | **670** | **670** | **670** | **670** | **669** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 112 |
+| `google_trending_now` | 116 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-05
+### Latest SG snapshot — 2026-10-06
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | vehicle impoundment | 5000+ |
-| 2 | singapore news | 10000+ |
-| 3 | cna | 2000+ |
-| 4 | irene sofiya mohd khairool faisal | 2000+ |
-| 5 | portugal national football team vs norway national football team standings | 5000+ |
-| 6 | plague | 500+ |
-| 7 | parliament | 500+ |
-| 8 | china | 1000+ |
-| 9 | hawker centre | 1000+ |
-| 10 | greece vs germany | 500+ |
+| 1 | kootenay river | 2000+ |
+| 2 | fire | 500+ |
+| 3 | south korea vs uzbekistan | 200+ |
+| 4 | safety | 10000+ |
+| 5 | north-south corridor, singapore | 500+ |
+| 6 | kallang wave mall | 500+ |
+| 7 | france vs belgium | 5000+ |
+| 8 | caleb flynn | 1000+ |
+| 9 | indonesia vs thailand | 1000+ |
+| 10 | ticketmaster | 1000+ |
 
-### Latest US snapshot — 2026-10-05
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | chiefs vs raiders | 1000000+ |
-| 2 | lions vs panthers | 500000+ |
-| 3 | lions | 500000+ |
-| 4 | sass jordan passing age 63 | 100000+ |
-| 5 | cowboys vs texans | 1000000+ |
-| 6 | broncos vs 49ers | 1000000+ |
-| 7 | patriots vs bills | 1000000+ |
-| 8 | rams vs eagles | 500000+ |
-| 9 | dolphins vs vikings | 500000+ |
-| 10 | chargers vs seahawks | 500000+ |
-
-### Latest GB snapshot — 2026-10-05
+### Latest US snapshot — 2026-10-06
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | zionism | 50000+ |
-| 2 | andrew mountbatten-windsor | 20000+ |
-| 3 | kelly cates | 20000+ |
-| 4 | polar vortex weather | 20000+ |
-| 5 | plague | 10000+ |
-| 6 | europe diesel supply shortage | 5000+ |
-| 7 | found | 10000+ |
-| 8 | royal family | 2000+ |
-| 9 | ryan coogan | 2000+ |
-| 10 | gosport | 10000+ |
+| 1 | robert kelker kelly | 200000+ |
+| 2 | saints | 1000000+ |
+| 3 | jim bakker | 50000+ |
+| 4 | caleb flynn | 200000+ |
+| 5 | knicks vs 76ers | 100000+ |
+| 6 | cancer | 50000+ |
+| 7 | sophie cunningham hat | 20000+ |
+| 8 | argentina vs benin | 50000+ |
+| 9 | pete hegseth military reduction gop reaction | 100000+ |
+| 10 | timberwolves | 50000+ |
 
-### Latest HK snapshot — 2026-10-05
+### Latest GB snapshot — 2026-10-06
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 一粥麵 | 1000+ |
-| 2 | 蔡天鳳 | 500+ |
-| 3 | hkexpress | 2000+ |
-| 4 | 天文台 | 5000+ |
-| 5 | nba | 2000+ |
-| 6 | 明天的天氣 | 10000+ |
-| 7 | 胡定欣 | 500+ |
-| 8 | portugal vs norway | 500+ |
-| 9 | 薛家燕 | 200+ |
-| 10 | 伊朗 | 200+ |
+| 1 | asos | 100000+ |
+| 2 | jeffrey archer | 100000+ |
+| 3 | aj pritchard | 20000+ |
+| 4 | nationwide | 20000+ |
+| 5 | royal exchange square glasgow disturbance | 20000+ |
+| 6 | citi | 20000+ |
+| 7 | car | 20000+ |
+| 8 | uk polar vortex snow weather forecast | 10000+ |
+| 9 | michael flatley | 20000+ |
+| 10 | cancer | 10000+ |
 
-[Open full snapshot →](data/2026/10/05/trending.json)
+### Latest HK snapshot — 2026-10-06
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 夏竹欣 | 2000+ |
+| 2 | 何 麥 | 1000+ |
+| 3 | 黄百鸣 | 1000+ |
+| 4 | 刘松仁 | 200+ |
+| 5 | 邓萃雯 | 200+ |
+| 6 | 定期 存款 | 200+ |
+| 7 | nba | 2000+ |
+| 8 | 法國對比利時 | 1000+ |
+| 9 | 食品安全 | 500+ |
+| 10 | 屯門公路 | 200+ |
+
+[Open full snapshot →](data/2026/10/06/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 271 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 272 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
