@@ -17,69 +17,69 @@ The task preserves changing data useful later: **source order, query, search-vol
 | Source | Region snapshots |
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
-| `github_rss_mirror` | 1,085 |
-| `google_trending_now` | 116 |
+| `github_rss_mirror` | 1,081 |
+| `google_trending_now` | 120 |
 | `github_hottrends_mirror` | 3 |
 
 ### Latest SG snapshot — 2026-10-07
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | mexico vs chile | 200+ |
-| 2 | gabriel foong shi cheng | 500+ |
-| 3 | sgx | 200+ |
-| 4 | colombia vs peru | 200+ |
-| 5 | usa vs canada | 500+ |
-| 6 | braves vs dodgers | 200+ |
-| 7 | f1 road closure 2026 | 200+ |
-| 8 | argentina | 500+ |
-| 9 | the batman part ii | 100+ |
-| 10 | police | 200+ |
+| 1 | emergency | 5000+ |
+| 2 | laos | 2000+ |
+| 3 | tan su shan | 5000+ |
+| 4 | coe premiums lower singapore | 2000+ |
+| 5 | ocbc share price | 5000+ |
+| 6 | desmond lee p1 registration 2027 | 2000+ |
+| 7 | singapore haze | 1000+ |
+| 8 | egg | 1000+ |
+| 9 | country | 500+ |
+| 10 | argentina vs benin | 10000+ |
 
 ### Latest US snapshot — 2026-10-07
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | mexico vs | 20000+ |
-| 2 | kwanza jones | 2000+ |
-| 3 | manny machado | 2000+ |
-| 4 | william contreras | 1000+ |
-| 5 | mexico game today | 1000+ |
-| 6 | fernando tatis jr | 500+ |
-| 7 | olive garden closure | 200+ |
-| 8 | milwaukee brewers vs padres match player stats | 200+ |
-| 9 | bennedict mathurin | 200+ |
-| 10 | lakeeta vaccaro hill | 200+ |
+| 1 | freddie jackson | 200000+ |
+| 2 | hurricane tracker | 200000+ |
+| 3 | brewers vs padres | 500000+ |
+| 4 | dodgers vs braves | 500000+ |
+| 5 | why did i receive $90 from social security | 100000+ |
+| 6 | eva marie saint | 100000+ |
+| 7 | usa vs canada | 200000+ |
+| 8 | méxico - chile | 100000+ |
+| 9 | lane johnson | 100000+ |
+| 10 | argentina - benín | 200000+ |
 
 ### Latest GB snapshot — 2026-10-07
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | instagram | 200+ |
-| 2 | disney plus | 100+ |
-| 3 | chicago vs vancouver | 100+ |
-| 4 | mlb | 200+ |
-| 5 | rsd black friday | 2000+ |
-| 6 | colombia vs peru | 200+ |
-| 7 | nico paz | 200+ |
-| 8 | grand theft auto vi | 200+ |
-| 9 | nicole kidman | 100+ |
-| 10 | usa vs canada | 1000+ |
+| 1 | royal mail | 200000+ |
+| 2 | glasgow | 20000+ |
+| 3 | england national football team vs czech republic national football team standings | 500000+ |
+| 4 | jaguar type 01 | 20000+ |
+| 5 | russian plague outbreak bubonic plague | 10000+ |
+| 6 | eva marie saint | 10000+ |
+| 7 | supermarket | 5000+ |
+| 8 | joan collins | 5000+ |
+| 9 | christa | 20000+ |
+| 10 | tesco fuel offer | 20000+ |
 
 ### Latest HK snapshot — 2026-10-07
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 比高集團 | 200+ |
-| 2 | 陳曉華 | 100+ |
-| 3 | mlb | 500+ |
-| 4 | argentina | 500+ |
-| 5 | 阿根廷國家足球隊 | 500+ |
-| 6 | 阿根廷 | 1000+ |
-| 7 | argentina vs benin | 2000+ |
-| 8 | 逃票 | 500+ |
-| 9 | 皇崗口岸 | 100+ |
-| 10 | 天气 | 100+ |
+| 1 | 熱帶氣旋 | 1000+ |
+| 2 | 逃票 | 2000+ |
+| 3 | 楊何蓓 茵 | 1000+ |
+| 4 | 王皓 | 1000+ |
+| 5 | 安 柏 苑 | 1000+ |
+| 6 | 阿 燦 | 1000+ |
+| 7 | 鄒幸彤 | 500+ |
+| 8 | 戰鬥機 | 500+ |
+| 9 | 偷竊 | 100+ |
+| 10 | 上海大師賽 | 100+ |
 
 [Open full snapshot →](data/2026/10/07/trending.json)
 
