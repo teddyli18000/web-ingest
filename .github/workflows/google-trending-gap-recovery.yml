@@ -53,7 +53,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add google-trending/data/2025/03/24 google-trending/data/2025/03/27 google-trending/data/2026/10/07 google-trending/mirror-manifest.json google-trending/README.md || true
+          git add google-trending/data google-trending/mirror-manifest.json google-trending/README.md
           git rm -r temp-work/google-trending-gap-recovery .github/workflows/google-trending-gap-recovery.yml
 
           if git diff --cached --quiet; then
