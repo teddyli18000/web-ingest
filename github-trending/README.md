@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-06** | **4,381** | **2,534** |
+| **2014-08-09** | **2026-10-07** | **4,382** | **2,535** |
 
-### Latest All-Languages snapshot — 2026-10-06
+### Latest All-Languages snapshot — 2026-10-07
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [tester-army/e2e](https://github.com/tester-army/e2e) | TypeScript | 1,398 |
-| 2 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 534 |
-| 3 | [earthtojake/text-to-cad](https://github.com/earthtojake/text-to-cad) | Python | 437 |
-| 4 | [pingdotgg/t3code](https://github.com/pingdotgg/t3code) | TypeScript | 485 |
-| 5 | [boykopovar/AnyPS5](https://github.com/boykopovar/AnyPS5) | C++ | 997 |
-| 6 | [Panniantong/Agent-Reach](https://github.com/Panniantong/Agent-Reach) | Python | 1,155 |
-| 7 | [calesthio/OpenMontage](https://github.com/calesthio/OpenMontage) | Python | 742 |
-| 8 | [caddyserver/caddy](https://github.com/caddyserver/caddy) | Go | 515 |
-| 9 | [DuarteSantos8/openGym](https://github.com/DuarteSantos8/openGym) | JavaScript | 1,433 |
-| 10 | [cloudflare/cloudflare-os](https://github.com/cloudflare/cloudflare-os) | TypeScript | 101 |
+| 1 | [tester-army/e2e](https://github.com/tester-army/e2e) | TypeScript | 1,725 |
+| 2 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 889 |
+| 3 | [earthtojake/text-to-cad](https://github.com/earthtojake/text-to-cad) | Python | 619 |
+| 4 | [boykopovar/AnyPS5](https://github.com/boykopovar/AnyPS5) | C++ | 949 |
+| 5 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | JavaScript | 616 |
+| 6 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 534 |
+| 7 | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) | Python | 326 |
+| 8 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 2,956 |
+| 9 | [deepseek-ai/DeepGEMM](https://github.com/deepseek-ai/DeepGEMM) | Cuda | 199 |
+| 10 | [msitarzewski/agency-agents](https://github.com/msitarzewski/agency-agents) | Shell | 623 |
 
-[Open full snapshot →](data/2026/10/06/trending.json)
+[Open full snapshot →](data/2026/10/07/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 279 days  
+[`2026`](data/2026/) · 280 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
