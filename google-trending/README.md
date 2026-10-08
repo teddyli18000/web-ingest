@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-07** | **671** | **671** | **671** | **671** | **670** |
+| **2024-11-28** | **2026-10-08** | **672** | **672** | **672** | **672** | **671** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 120 |
+| `google_trending_now` | 124 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-07
+### Latest SG snapshot — 2026-10-08
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | emergency | 5000+ |
-| 2 | laos | 2000+ |
-| 3 | tan su shan | 5000+ |
-| 4 | coe premiums lower singapore | 2000+ |
-| 5 | ocbc share price | 5000+ |
-| 6 | desmond lee p1 registration 2027 | 2000+ |
-| 7 | singapore haze | 1000+ |
-| 8 | egg | 1000+ |
-| 9 | country | 500+ |
-| 10 | argentina vs benin | 10000+ |
+| 1 | world space week 2026 | 50000+ |
+| 2 | sia sandals phase out | 5000+ |
+| 3 | singapore bank stocks drop | 10000+ |
+| 4 | nana patekar | 5000+ |
+| 5 | zebra crossing | 2000+ |
+| 6 | lta coe category merger proposal | 2000+ |
+| 7 | japan | 2000+ |
+| 8 | bond yields impact asean banks | 2000+ |
+| 9 | shoplifting | 2000+ |
+| 10 | negligence | 2000+ |
 
-### Latest US snapshot — 2026-10-07
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | freddie jackson | 200000+ |
-| 2 | hurricane tracker | 200000+ |
-| 3 | brewers vs padres | 500000+ |
-| 4 | dodgers vs braves | 500000+ |
-| 5 | why did i receive $90 from social security | 100000+ |
-| 6 | eva marie saint | 100000+ |
-| 7 | usa vs canada | 200000+ |
-| 8 | méxico - chile | 100000+ |
-| 9 | lane johnson | 100000+ |
-| 10 | argentina - benín | 200000+ |
-
-### Latest GB snapshot — 2026-10-07
+### Latest US snapshot — 2026-10-08
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | royal mail | 200000+ |
-| 2 | glasgow | 20000+ |
-| 3 | england national football team vs czech republic national football team standings | 500000+ |
-| 4 | jaguar type 01 | 20000+ |
-| 5 | russian plague outbreak bubonic plague | 10000+ |
-| 6 | eva marie saint | 10000+ |
-| 7 | supermarket | 5000+ |
-| 8 | joan collins | 5000+ |
-| 9 | christa | 20000+ |
-| 10 | tesco fuel offer | 20000+ |
+| 1 | susan dell | 200000+ |
+| 2 | nana patekar | 100000+ |
+| 3 | rays vs yankees | 500000+ |
+| 4 | trump accounts | 100000+ |
+| 5 | guardians vs white sox | 200000+ |
+| 6 | mia goth | 50000+ |
+| 7 | travis kelce birthday chiefs win | 50000+ |
+| 8 | flood watch | 100000+ |
+| 9 | hurricane watch | 200000+ |
+| 10 | airport | 50000+ |
 
-### Latest HK snapshot — 2026-10-07
+### Latest GB snapshot — 2026-10-08
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 熱帶氣旋 | 1000+ |
-| 2 | 逃票 | 2000+ |
-| 3 | 楊何蓓 茵 | 1000+ |
-| 4 | 王皓 | 1000+ |
-| 5 | 安 柏 苑 | 1000+ |
-| 6 | 阿 燦 | 1000+ |
-| 7 | 鄒幸彤 | 500+ |
-| 8 | 戰鬥機 | 500+ |
-| 9 | 偷竊 | 100+ |
-| 10 | 上海大師賽 | 100+ |
+| 1 | nana patekar | 20000+ |
+| 2 | mary berry | 20000+ |
+| 3 | susan dell | 10000+ |
+| 4 | cruz beckham new dog sandy | 10000+ |
+| 5 | kieran mckenna | 5000+ |
+| 6 | cole palmer england xi euro 2028 | 5000+ |
+| 7 | electrocution | 10000+ |
+| 8 | avon beach | 2000+ |
+| 9 | brighton | 5000+ |
+| 10 | elsinore | 20000+ |
 
-[Open full snapshot →](data/2026/10/07/trending.json)
+### Latest HK snapshot — 2026-10-08
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 羅敏莊 | 2000+ |
+| 2 | 蔡楓華 | 2000+ |
+| 3 | 呂良偉 | 500+ |
+| 4 | 長者 | 2000+ |
+| 5 | 熱帶 氣旋 | 1000+ |
+| 6 | japan | 500+ |
+| 7 | anne carson | 200+ |
+| 8 | 蜜雪冰城 | 200+ |
+| 9 | 安達臣 | 200+ |
+| 10 | 失踪者 | 200+ |
+
+[Open full snapshot →](data/2026/10/08/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 273 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 274 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
