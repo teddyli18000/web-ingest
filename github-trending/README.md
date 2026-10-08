@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-07** | **4,382** | **2,535** |
+| **2014-08-09** | **2026-10-08** | **4,383** | **2,536** |
 
-### Latest All-Languages snapshot — 2026-10-07
+### Latest All-Languages snapshot — 2026-10-08
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [tester-army/e2e](https://github.com/tester-army/e2e) | TypeScript | 1,725 |
-| 2 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 889 |
-| 3 | [earthtojake/text-to-cad](https://github.com/earthtojake/text-to-cad) | Python | 619 |
-| 4 | [boykopovar/AnyPS5](https://github.com/boykopovar/AnyPS5) | C++ | 949 |
-| 5 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | JavaScript | 616 |
-| 6 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 534 |
-| 7 | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) | Python | 326 |
-| 8 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 2,956 |
-| 9 | [deepseek-ai/DeepGEMM](https://github.com/deepseek-ai/DeepGEMM) | Cuda | 199 |
-| 10 | [msitarzewski/agency-agents](https://github.com/msitarzewski/agency-agents) | Shell | 623 |
+| 1 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 4,655 |
+| 2 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 1,403 |
+| 3 | [boykopovar/AnyPS5](https://github.com/boykopovar/AnyPS5) | C++ | 2,716 |
+| 4 | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) | Python | 619 |
+| 5 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 825 |
+| 6 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | JavaScript | 677 |
+| 7 | [EpicGames/raddebugger](https://github.com/EpicGames/raddebugger) | C | 90 |
+| 8 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 578 |
+| 9 | [manaflow-ai/cmux](https://github.com/manaflow-ai/cmux) | Swift | 44 |
+| 10 | [trycua/cua](https://github.com/trycua/cua) | Rust | 228 |
 
-[Open full snapshot →](data/2026/10/07/trending.json)
+[Open full snapshot →](data/2026/10/08/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 280 days  
+[`2026`](data/2026/) · 281 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
