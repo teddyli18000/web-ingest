@@ -26,6 +26,7 @@
 - Record exact source provenance in the sibling `source.json`.
 - Fail if the chosen destination already exists. Do not invent merge/update semantics.
 - Respect the importer's file-size and total-size guards unless the owner explicitly decides otherwise for a particular source.
+- After a successful import, add one concise row to `git-mirror/README.md` under **Mirrored repositories** with only: repository name, original upstream description, source link, and local snapshot link. Keep machine metadata out of the README.
 
 ## Temporary workflow
 
