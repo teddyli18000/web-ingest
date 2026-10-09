@@ -36,7 +36,7 @@ def github_repo(source_url: str) -> tuple[str, str] | None:
 
 
 def safe_name(value: str) -> str:
-    name = Path(value).name
+    name = Path(value.replace("\\", "/")).name
     name = re.sub(r"[\x00-\x1f]+", "-", name).strip()
     if not name or name in {".", ".."}:
         return "asset"
@@ -63,18 +63,20 @@ def download_asset(url: str, target: Path, *, token: str | None, max_bytes: int)
     request = Request(url, headers=headers)
     digest = hashlib.sha256()
     written = 0
-    with urlopen(request, timeout=60) as response, target.open("wb") as handle:
-        while True:
-            chunk = response.read(1024 * 1024)
-            if not chunk:
-                break
-            written += len(chunk)
-            if written > max_bytes:
-                handle.close()
-                target.unlink(missing_ok=True)
-                raise ValueError(f"asset exceeds size guard: {target.name}")
-            digest.update(chunk)
-            handle.write(chunk)
+    try:
+        with urlopen(request, timeout=60) as response, target.open("wb") as handle:
+            while True:
+                chunk = response.read(1024 * 1024)
+                if not chunk:
+                    break
+                written += len(chunk)
+                if written > max_bytes:
+                    raise ValueError(f"asset exceeds size guard: {target.name}")
+                digest.update(chunk)
+                handle.write(chunk)
+    except Exception:
+        target.unlink(missing_ok=True)
+        raise
     return written, digest.hexdigest()
 
 
@@ -188,7 +190,13 @@ def collect_latest_release(
             while target.exists():
                 target = assets_dir / f"{stem}-{index}{suffix}"
                 index += 1
-        written, sha256 = download_asset(url, target, token=token, max_bytes=per_asset_limit)
+        try:
+            written, sha256 = download_asset(url, target, token=token, max_bytes=per_asset_limit)
+        except (HTTPError, URLError, TimeoutError, OSError, ValueError) as exc:
+            item["status"] = f"not mirrored: download failed ({type(exc).__name__})"
+            captured_assets.append(item)
+            continue
+
         total_written += written
         item.update({
             "status": "mirrored",
