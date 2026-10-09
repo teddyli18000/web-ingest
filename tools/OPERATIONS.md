@@ -5,10 +5,10 @@ This file is a compact manager-facing record for repository-wide decisions. It i
 ## Current operating model
 
 - `web-ingest` only collects and stores public Internet snapshots.
-- Each persistent collector owns one root task directory and one thin workflow entry point.
+- Each persistent collector owns one root task directory and one thin workflow entry point when durable automation is needed.
 - `tools/` is the repository manager workspace for schedule guards, audits, temporary migrations/backfills, and durable operational notes.
 - Scheduled ingestion jobs are staggered using declared `timeout-minutes` plus a 15-minute planning buffer.
-- One-shot backfills/repairs/probes are temporary; their scripts/workflows are removed after validation while reports/manifests remain.
+- One-shot backfills/repairs/probes/imports are temporary; their workflows are removed after validation while durable task code, reports, manifests, or imported data remain as appropriate.
 
 ## Current recurring load plan
 
@@ -49,9 +49,18 @@ Under the timeout + 15-minute planning-buffer policy, the 09:03 AI Daily slot re
 - Repository-owner direction permits using `fdciabdul/Google-Trends-Keywords-Scraper` as a historical mirror to fill otherwise missing region snapshots. Store modern-feed snapshots as `github_rss_mirror`, preserve exact commit/file provenance and the upstream **All Rights Reserved** notice, and never use the mirror to overwrite an existing `googletrendarchive` or direct snapshot.
 - The required **2026-01-04 through 2026-08-31** SG/US/GB/HK mirror gap is complete. Mirror selection targets the source commit closest to **12:30 Asia/Singapore** for each missing archive date, with deterministic fallbacks recorded in `google-trending/mirror-manifest.json`.
 - The isolated **2025-02-05** SG/US/GB hole was recovered from an exact historical commit in `connorodea/Google-Trends-Keywords-Scraper`. That commit used Google's predecessor Hot Trends Atom feed, so those snapshots are stored separately as `github_hottrends_mirror` with the historical `pn` endpoint rather than being relabeled as modern RSS.
-- Remaining source-side gaps are **2025-03-24 (SG/US/GB/HK)** and **2025-03-27 (HK)**. The primary mirror plus 12 long-lived forks were checked and had no commits on those UTC dates; do not synthesize or backdate later snapshots to fill them.
+- Remaining source-side gaps are **2025-03-24 (SG/US/GB/HK)** and **2025-03-27 (HK)**. A later handoff recovery expanded the GitHub mirror scan well beyond the original 12 long-lived forks and still found no exact-date source snapshots; do not synthesize or backdate later snapshots to fill them.
 - Source quality order is `google_trending_now` > (`googletrendarchive` = `github_rss_mirror` = `github_hottrends_mirror`) > `rss_limited`. Equal-quality historical sources do not overwrite one another.
 - Durable reports: `tools/reports/google-trending-gap-audit-2026-09-01.md` and `tools/reports/google-trending-residual-recovery-2026-09-01.md`.
+
+## Public Git mirror operating state
+
+- `git-mirror/` is the reusable task for owner-requested **one-shot file snapshots** of public Git repositories.
+- A new source repository does not get its own root task. Agents render a temporary self-cleaning workflow from `git-mirror/templates/one-shot-workflow.yml.tpl` and commit it directly to `main`.
+- Default import behavior is public HTTPS only, shallow single-branch clone, source default branch unless specified, source `.git` history excluded, Git LFS objects not downloaded, submodules not initialized, and exact commit/tree provenance written beside the snapshot.
+- Normal output is `git-mirror/data/<host>/<source-path>/{source.json,snapshot/}`.
+- Existing mirror destinations are not automatically refreshed or overwritten. If the owner later wants another snapshot of the same source, decide that case explicitly then rather than maintaining a standing sync policy.
+- Import workflows are never scheduled and must remove themselves after a successful validated commit.
 
 ## Maintenance principle
 
