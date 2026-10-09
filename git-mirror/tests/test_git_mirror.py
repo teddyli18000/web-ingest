@@ -7,6 +7,7 @@ from pathlib import Path
 TASK_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TASK_ROOT))
 
+from collect_latest_release import github_repo, safe_name
 from import_snapshot import default_destination, destination_path, validate_source_url
 from render_workflow import render
 
@@ -42,12 +43,23 @@ class GitMirrorTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             destination_path("../outside")
 
+    def test_github_release_source_detection(self):
+        self.assertEqual(
+            github_repo("https://github.com/example/project.git"),
+            ("example", "project"),
+        )
+        self.assertIsNone(github_repo("https://gitlab.com/example/project.git"))
+
+    def test_release_asset_name_cannot_escape_directory(self):
+        self.assertEqual(safe_name("../../build.zip"), "build.zip")
+
     def test_renderer_creates_path_scoped_self_cleaning_workflow(self):
         path, content = render("https://github.com/example/project.git", branch="main")
         self.assertTrue(path.startswith(".github/workflows/git-mirror-project-"))
         self.assertIn('SOURCE_URL: "https://github.com/example/project.git"', content)
         self.assertIn('SOURCE_BRANCH: "main"', content)
         self.assertIn(f'WORKFLOW_PATH: "{path}"', content)
+        self.assertIn("collect_latest_release.py", content)
         self.assertIn('git rm -- "$WORKFLOW_PATH"', content)
         self.assertNotIn("schedule:", content)
         self.assertNotIn("{{", content)
