@@ -61,6 +61,7 @@ class GitMirrorTests(unittest.TestCase):
         self.assertIn(f'WORKFLOW_PATH: "{path}"', content)
         self.assertIn("collect_latest_release.py", content)
         self.assertIn("${{ github.token }}", content)
+        self.assertIn("git add -f git-mirror/data", content)
         self.assertIn('git rm -- "$WORKFLOW_PATH"', content)
         self.assertNotIn("schedule:", content)
         for token in (
