@@ -12,28 +12,27 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-08** | **4,383** | **2,536** |
+| **2014-08-09** | **2026-10-09** | **4,384** | **2,537** |
 
-### Latest All-Languages snapshot — 2026-10-08
+### Latest All-Languages snapshot — 2026-10-09
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 4,655 |
-| 2 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 1,403 |
-| 3 | [boykopovar/AnyPS5](https://github.com/boykopovar/AnyPS5) | C++ | 2,716 |
-| 4 | [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd) | Python | 619 |
-| 5 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 825 |
-| 6 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | JavaScript | 677 |
-| 7 | [EpicGames/raddebugger](https://github.com/EpicGames/raddebugger) | C | 90 |
-| 8 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 578 |
-| 9 | [manaflow-ai/cmux](https://github.com/manaflow-ai/cmux) | Swift | 44 |
-| 10 | [trycua/cua](https://github.com/trycua/cua) | Rust | 228 |
+| 1 | [boykopovar/AnyPS5](https://github.com/boykopovar/AnyPS5) | C++ | 4,669 |
+| 2 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 1,160 |
+| 3 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 7,738 |
+| 4 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 1,774 |
+| 5 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 670 |
+| 6 | [EpicGames/raddebugger](https://github.com/EpicGames/raddebugger) | C | 279 |
+| 7 | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Python | 392 |
+| 8 | [storytold/artcraft](https://github.com/storytold/artcraft) | Rust | 2,103 |
+| 9 | [liquidslr/system-design-notes](https://github.com/liquidslr/system-design-notes) | — | 393 |
 
-[Open full snapshot →](data/2026/10/08/trending.json)
+[Open full snapshot →](data/2026/10/09/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 281 days  
+[`2026`](data/2026/) · 282 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
