@@ -53,10 +53,22 @@ jobs:
           fi
           python3 git-mirror/import_snapshot.py "${args[@]}"
 
-      - name: Validate imported snapshot
+      - name: Mirror latest release when available
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          args=(--source-url "$SOURCE_URL")
+          if [ -n "$MIRROR_DESTINATION" ]; then
+            args+=(--destination "$MIRROR_DESTINATION")
+          fi
+          python3 git-mirror/collect_latest_release.py "${args[@]}"
+
+      - name: Validate imported mirror
         run: python3 git-mirror/validate_snapshots.py
 
-      - name: Commit snapshot and self-clean
+      - name: Commit mirror and self-clean
         shell: bash
         run: |
           set -euo pipefail
@@ -66,6 +78,6 @@ jobs:
           git add git-mirror/data
           git rm -- "$WORKFLOW_PATH"
 
-          git commit -m "data(git-mirror): import {{LABEL}} snapshot"
+          git commit -m "data(git-mirror): import {{LABEL}} mirror"
           git pull --rebase origin main
           git push origin HEAD:main
