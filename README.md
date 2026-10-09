@@ -1,6 +1,6 @@
 # web-ingest
 
-A simple GitHub Actions workspace for collecting public Internet data on a schedule.
+A simple GitHub Actions workspace for collecting and preserving public Internet data through scheduled or one-shot jobs.
 
 The repository only handles **collection and storage**. Downstream analysis, archiving, reporting, or delivery belongs elsewhere.
 
@@ -48,6 +48,7 @@ Transient Action working files should stay in the runner workspace or runner tem
 | [`ai-daily`](ai-daily/) | Byte-mirror the AIHOT daily webpage and REST API v1 response | Active |
 | [`github-trending`](github-trending/) | Preserve daily GitHub Trending rankings and recover available historical snapshots | Active |
 | [`google-trending`](google-trending/) | Preserve Google Trends Trending Now for Singapore, the United States, the United Kingdom, and Hong Kong, with historical recovery where available | Active |
+| [`git-mirror`](git-mirror/) | Import one-shot file snapshots of public Git repositories through temporary self-cleaning Actions | Ready |
 
 ## Repository management
 
@@ -59,12 +60,12 @@ Transient Action working files should stay in the runner workspace or runner tem
 ## Conventions
 
 - One root-level task folder = one independent collection task.
-- Every task folder must contain a `README.md` that explains source, schedule, workflow, output, and maintenance/recovery behavior.
-- Task workflows live in `.github/workflows/<task-name>.yml` because GitHub requires workflows there.
+- Every task folder must contain a `README.md` that explains source, schedule/workflow behavior, output, and maintenance/recovery behavior.
+- Task workflows live in `.github/workflows/<task-name>.yml` when durable automation is needed because GitHub requires workflows there. One-shot tasks may instead create a temporary self-cleaning workflow from a retained task-local template.
 - Task-specific scripts and configuration stay inside the task folder.
 - Repository-wide maintenance code and notes belong in `tools/`.
 - Temporary Agent work belongs in `temp-work/<work-name>/`, never at the `temp-work/` root or inside an unrelated persistent task.
-- Recurring snapshots use `<task-name>/data/YYYY/MM/DD/`.
+- Recurring snapshots use `<task-name>/data/YYYY/MM/DD/`; explicitly one-shot tasks may document a source-keyed layout instead.
 - Keep raw or minimally normalized source data whenever practical.
 - Historical data should be append-only; do not silently rewrite old snapshots.
 - Scheduled collection jobs must be load-balanced rather than clustered; the repository guard checks declared timeouts plus a buffer.
@@ -76,6 +77,6 @@ This repository is public. GitHub Actions can be used aggressively when they mat
 
 The tradeoff is visibility: assume committed files, Git history, Actions logs, Step Summaries, artifacts, issue/PR discussion, and workflow output may be visible to anyone.
 
-Never commit or expose tokens, passwords, API keys, cookies, sessions, credentials, private headers, personal/private source data, private repository contents, signed or temporary credential-bearing URLs, secrets copied from Actions logs, or sensitive diagnostic dumps. Use GitHub Actions secrets when credentials are genuinely required, and do not echo or archive secret-derived material.
+Never commit or expose tokens, passwords, API keys, cookies, sessions, credentials, private headers, personal/private source data, private repository contents, signed or temporary credential-bearing URLs, secrets copied from Actions logs, or sensitive diagnostic dumps. Use GitHub Actions secrets when credentials are genuinely required, and do not echo or archive sensitive derived material.
 
 For Agent navigation and modification rules, read [`AGENTS.md`](AGENTS.md).
