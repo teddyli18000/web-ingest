@@ -1,18 +1,18 @@
 # Public Git Repository Mirror
 
-`git-mirror` stores **one-shot file snapshots** of public Git repositories for later use.
+`git-mirror` stores **one-shot mirrors** of public Git repositories for later use.
 
-The normal workflow is intentionally simple: the repository owner supplies a public repository URL, an Agent creates a temporary GitHub Actions workflow from the retained template, the Action shallow-clones the requested source branch, commits a file snapshot plus provenance to `main`, and then removes the temporary workflow.
+The repository owner supplies a public repository URL. An Agent creates a temporary GitHub Actions workflow from the retained template, the Action shallow-clones the requested source branch, captures the latest formal release when supported, commits the mirror to `main`, and removes the temporary workflow.
 
 This task is **not** a synchronization service. There is no recurring schedule and no automatic refresh policy.
 
 ## Mirrored repositories
 
-| Repository | Description | Source | Snapshot |
+| Repository | Description | Source | Mirror |
 | --- | --- | --- | --- |
 | _No repositories mirrored yet._ |  |  |  |
 
-Keep this table for people: one concise row per mirrored repository. Detailed provenance belongs in that snapshot's `source.json`, not here.
+Keep this table for people: one concise row per mirrored repository. Detailed provenance belongs inside that mirror, not here.
 
 ## What is preserved
 
@@ -27,69 +27,67 @@ the default destination is:
 ```text
 git-mirror/data/github.com/example/project/
 ├── source.json
-└── snapshot/
-    └── <source repository working tree>
+├── snapshot/
+│   └── <source repository working tree>
+└── release/                 # only when a supported latest release exists
+    ├── README.md             # title, tag, date, source link, full release notes
+    ├── release.json          # machine-readable release metadata
+    └── assets/               # mirrored uploaded release attachments
 ```
 
-`source.json` records the original URL, selected branch/ref, exact source commit and tree SHA, source commit time, import time, file/byte counts, submodule gitlinks, and the policies used during import.
-
 The snapshot contains the checked-out files only. It intentionally does **not** contain the source repository's `.git` history.
+
+For GitHub repositories, the importer also captures the **latest formal Release** when one exists. Release notes are preserved in full, and uploaded release assets are mirrored subject to the same repository-safety size limits. GitHub-generated source archives are not duplicated because `snapshot/` already preserves the source files.
 
 ## Source policy
 
 - Public **HTTPS Git URLs only** by default.
-- GitHub, GitLab, Codeberg, Gitea, and other publicly cloneable HTTPS Git hosts are treated the same way.
+- GitHub, GitLab, Codeberg, Gitea, and other publicly cloneable HTTPS Git hosts can be mirrored as repository snapshots.
 - If no branch is specified, Git chooses the source repository's default branch.
 - Cloning is shallow (`--depth 1 --single-branch`).
 - Git LFS smudging is disabled: LFS pointer files are preserved instead of automatically downloading large LFS objects.
 - Submodules are **not initialized or recursively cloned**. Their gitlink commit IDs are recorded in `source.json`; `.gitmodules`, when present, remains part of the file snapshot.
 - Symlinks are preserved as symlinks rather than followed.
-- Existing mirror destinations are not overwritten. A second import of the same logical destination requires an explicit later decision by the repository owner.
+- Existing mirror destinations are not overwritten. A second import requires an explicit later decision by the repository owner.
+- Release capture is currently implemented for GitHub. Other hosts keep the repository snapshot; add host-specific release support only when a real source requires it.
 
 ## Size guard
 
 The importer defaults to:
 
-- maximum individual regular file: **90 MiB**;
-- maximum snapshot payload: **500 MiB**.
+- maximum individual regular file or release asset: **90 MiB**;
+- maximum snapshot payload: **500 MiB**;
+- maximum mirrored release assets in total: **500 MiB**.
 
-These are repository-safety guards rather than claims about upstream repository size. An Agent may only change them for a specific import when the repository owner has a reason to do so.
+Assets over the limit are not downloaded; their upstream name/link remains in `release.json` and the human-readable release README.
 
 ## Durable files
 
-- `import_snapshot.py` — validates the public Git URL, shallow-clones the source, builds the snapshot and writes provenance.
+- `import_snapshot.py` — shallow-clones the source, builds the working-tree snapshot, and writes provenance.
+- `collect_latest_release.py` — captures the latest formal GitHub release, full release notes, and eligible uploaded assets.
 - `render_workflow.py` — renders the retained one-shot workflow template for a concrete source URL.
-- `templates/one-shot-workflow.yml.tpl` — template copied into `.github/workflows/` only for the lifetime of one import.
-- `tests/` — deterministic tests for URL/destination/template behavior; they do not contact external repositories.
+- `templates/one-shot-workflow.yml.tpl` — template copied into `.github/workflows/` only for one import.
+- `validate_snapshots.py` — validates stored mirrors.
+- `tests/` — deterministic task tests; they do not contact external repositories.
 
 ## Agent procedure
 
 1. Read this README and `AGENTS.md`.
-2. Take the repository URL supplied by the owner. Use the source default branch unless the owner specifies another branch.
-3. Render a temporary workflow, for example:
+2. Take the public repository URL supplied by the owner. Use the source default branch unless another branch is specified.
+3. Look up the upstream repository name and original description for the human-facing asset table.
+4. Render and commit a temporary one-shot workflow to `main`.
+5. The Action validates this task, imports `snapshot/`, captures the latest supported release, validates the result, removes its own workflow, and pushes the mirror to `main`.
+6. Verify the resulting mirror, then add one row to **Mirrored repositories** using the upstream repository name and original description. Link **Mirror** to the local mirror root so `snapshot/` and `release/` are both easy to reach.
 
-   ```bash
-   python git-mirror/render_workflow.py \
-     --source-url https://github.com/example/project.git \
-     --output .github/workflows/git-mirror-example-project.yml
-   ```
+## Safety
 
-4. Commit the temporary workflow directly to `main`. Its path-scoped `push` trigger starts the import.
-5. The Action runs the task tests, imports the snapshot, stages `git-mirror/data/`, removes its own workflow, commits the result, rebases on latest `main`, and pushes.
-6. Verify the resulting `source.json` and snapshot exist, then add one row to **Mirrored repositories** using the upstream repository name and original description. No temporary workflow should remain after success.
-
-Agents using the GitHub file API rather than a local checkout may fill `templates/one-shot-workflow.yml.tpl` directly. Keep the same behavior: one-shot, path-scoped trigger, no schedule, and self-removal after a validated import.
-
-## Output and provenance rules
-
-- Treat the source repository as public input, not as trusted executable code.
-- Do not run build scripts, hooks, package installers, tests, or arbitrary commands from the mirrored repository.
-- Never import a private repository, credential-bearing URL, cookie, session, token, or private artifact.
-- Do not follow Git submodules or LFS objects automatically.
-- Do not rewrite or normalize source files merely for style.
-- Do not fabricate source commit metadata.
-- The source repository's own `.github/workflows/` directory is safe inside the nested snapshot path; it is data and is never copied into this repository's root `.github/workflows/`.
+- Treat source repositories as public input, not trusted executable code.
+- Do not run source build scripts, hooks, package installers, tests, or arbitrary commands.
+- Never import a private repository or credential-bearing URL.
+- Do not follow submodules or LFS objects automatically.
+- Do not rewrite source files merely for style.
+- Source `.github/workflows/` files stay nested inside `snapshot/`; they are data, not workflows for `web-ingest`.
 
 ## Updates
 
-There is deliberately no normal update/sync behavior. If the owner later requests a second snapshot of an already mirrored repository, handle that request explicitly at that time rather than encoding a standing refresh policy now.
+There is deliberately no normal update/sync behavior. If the owner later requests another snapshot of an already mirrored repository, handle that case explicitly at the time.
