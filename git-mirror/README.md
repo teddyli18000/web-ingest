@@ -10,7 +10,7 @@ This task is **not** a synchronization service. There is no recurring schedule a
 
 | Repository | Description | Source | Mirror |
 | --- | --- | --- | --- |
-| _No repositories mirrored yet._ |  |  |  |
+| ARTEX | AI 自主渗透测试系统 \| 百度“agent+”攻防挑战赛冠军项目 | [mhtsec/ARTEX](https://github.com/mhtsec/ARTEX) | [Mirror](data/github.com/mhtsec/ARTEX/) |
 
 Keep this table for people: one concise row per mirrored repository. Detailed provenance belongs inside that mirror, not here.
 
