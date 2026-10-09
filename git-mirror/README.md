@@ -6,6 +6,14 @@ The normal workflow is intentionally simple: the repository owner supplies a pub
 
 This task is **not** a synchronization service. There is no recurring schedule and no automatic refresh policy.
 
+## Mirrored repositories
+
+| Repository | Description | Source | Snapshot |
+| --- | --- | --- | --- |
+| _No repositories mirrored yet._ |  |  |  |
+
+Keep this table for people: one concise row per mirrored repository. Detailed provenance belongs in that snapshot's `source.json`, not here.
+
 ## What is preserved
 
 For a source such as:
@@ -68,7 +76,7 @@ These are repository-safety guards rather than claims about upstream repository 
 
 4. Commit the temporary workflow directly to `main`. Its path-scoped `push` trigger starts the import.
 5. The Action runs the task tests, imports the snapshot, stages `git-mirror/data/`, removes its own workflow, commits the result, rebases on latest `main`, and pushes.
-6. Verify the resulting `source.json` and snapshot exist. No temporary workflow should remain after success.
+6. Verify the resulting `source.json` and snapshot exist, then add one row to **Mirrored repositories** using the upstream repository name and original description. No temporary workflow should remain after success.
 
 Agents using the GitHub file API rather than a local checkout may fill `templates/one-shot-workflow.yml.tpl` directly. Keep the same behavior: one-shot, path-scoped trigger, no schedule, and self-removal after a validated import.
 
