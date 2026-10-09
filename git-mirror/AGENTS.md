@@ -1,52 +1,62 @@
 # AGENTS.md — git-mirror
 
-`git-mirror` is the persistent task for one-shot snapshots of public Git repositories.
+`git-mirror` is the persistent task for one-shot mirrors of public Git repositories.
 
 ## Scope
 
-- Use this task when the repository owner provides a public Git repository URL and wants its files preserved in `web-ingest`.
-- The default operation is a **single snapshot**, not recurring synchronization.
+- Use this task when the repository owner provides a public Git repository URL and wants it preserved in `web-ingest`.
+- The default operation is a **single mirror**, not recurring synchronization.
 - Work directly on `main` unless the owner explicitly says otherwise.
-- The durable implementation stays under `git-mirror/`; the per-import workflow is temporary and lives briefly under `.github/workflows/`.
+- Durable implementation stays under `git-mirror/`; each import workflow is temporary under `.github/workflows/`.
 
 ## Source boundary
 
 - Accept public HTTPS Git URLs only unless the owner explicitly approves a special case later.
-- Never place credentials in a Git URL.
-- Never mirror private repositories or private service contents.
-- Do not run code from the source repository. Cloning and copying files is the operation; source build/test/install hooks are out of scope.
+- Never place credentials in a Git URL or mirror private repositories/private service contents.
+- Do not run code from the source repository. Cloning/copying files and downloading public release assets are the operation.
 - Do not initialize submodules or fetch Git LFS objects by default.
 
-## Snapshot behavior
+## Mirror behavior
 
-- Use a shallow single-branch clone.
-- Use the source default branch when no branch is specified.
-- Preserve the checked-out working tree, excluding source `.git` metadata.
+- Use a shallow single-branch clone and the source default branch unless another branch is specified.
+- Preserve the checked-out working tree under `snapshot/`, excluding source `.git` metadata.
 - Preserve symlinks without following them.
-- Record exact source provenance in the sibling `source.json`.
-- Fail if the chosen destination already exists. Do not invent merge/update semantics.
-- Respect the importer's file-size and total-size guards unless the owner explicitly decides otherwise for a particular source.
-- After a successful import, add one concise row to `git-mirror/README.md` under **Mirrored repositories** with only: repository name, original upstream description, source link, and local snapshot link. Keep machine metadata out of the README.
+- Record exact source provenance in `source.json`.
+- Fail if the destination already exists. Do not invent merge/update semantics.
+- Respect file and total-size guards unless the owner explicitly decides otherwise for a particular source.
+- For GitHub sources, capture only the **latest formal Release** when one exists: preserve the complete release notes, metadata, and eligible uploaded assets under `release/`.
+- Do not duplicate GitHub-generated source zip/tar archives; `snapshot/` already contains the source tree.
+- For non-GitHub hosts, keep the repository snapshot. Add release support for another host only when a concrete source requires it; do not add speculative adapters.
+
+## Human-facing asset index
+
+After a successful import, add exactly one concise row to `git-mirror/README.md` under **Mirrored repositories** with:
+
+- repository name;
+- original upstream description;
+- upstream source link;
+- local **Mirror** link pointing to the mirror root.
+
+Keep machine metadata out of the README. The mirror-root link is intentional: a person can open `snapshot/` for source files or `release/` for the latest release from one place.
 
 ## Temporary workflow
 
 - Start from `templates/one-shot-workflow.yml.tpl` or `render_workflow.py`.
-- A concrete import workflow must have no `schedule:` trigger.
-- Prefer a path-scoped `push` trigger on the workflow file itself plus `workflow_dispatch` for recovery.
-- Give the job an explicit timeout and a unique concurrency group.
+- No recurring `schedule:` trigger.
+- Prefer a path-scoped `push` trigger on the workflow file plus `workflow_dispatch` for recovery.
+- Give the job an explicit timeout and unique concurrency group.
 - Run `git-mirror` tests before importing.
 - Stage only the mirror output and the temporary workflow's own deletion.
-- Rebase on latest `main` before pushing the resulting commit.
+- Rebase on latest `main` before pushing.
 - Remove the temporary workflow after a successful validated import.
 
 ## Destination layout
 
-Default layout:
-
 ```text
 git-mirror/data/<host>/<source-path>/
 ├── source.json
-└── snapshot/
+├── snapshot/
+└── release/        # optional; latest supported release only
 ```
 
 Do not place mirrored repositories at the repository root, under `tools/`, or under another ingestion task.
@@ -55,4 +65,4 @@ Do not place mirrored repositories at the repository root, under `tools/`, or un
 
 Everything copied here becomes public through `web-ingest`. If a supposedly public source contains obvious credentials, private keys, session material, personal/private data, or other material that should not be republished, stop instead of committing it.
 
-Source `.github/workflows/` files remain nested under the snapshot directory and must never be promoted into this repository's root `.github/workflows/` except for the one temporary importer workflow created from our own retained template.
+Source `.github/workflows/` files remain nested under `snapshot/` and must never be promoted into this repository's root `.github/workflows/` except for the temporary importer workflow created from our own retained template.
