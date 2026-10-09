@@ -16,15 +16,17 @@ When you need to inspect, run, repair, or extend a task:
 
 1. Read the root `README.md` to find the task.
 2. Open `<task-name>/README.md` before changing anything.
-3. Read `.github/workflows/<task-name>.yml` and the task-local scripts/config referenced by that README.
+3. Read `.github/workflows/<task-name>.yml` and the task-local scripts/config referenced by that README when a durable workflow exists.
 4. Keep changes scoped to that task unless a repository-wide rule truly needs to change.
 5. If behavior changes, update the task README in the same change so the next Agent can continue from documented state.
+
+For **one-shot snapshots of public Git repositories**, use the existing `git-mirror/` task instead of creating a new root task per source repository. Read `git-mirror/README.md` and `git-mirror/AGENTS.md`; concrete imports use temporary self-cleaning workflows rendered from the retained task template and write only file snapshots plus source provenance.
 
 For repository-wide scheduling, workflow policy, audits, or maintenance helpers, use `tools/` as the manager workspace. Read `tools/README.md`, `tools/AGENTS.md`, and `tools/OPERATIONS.md` before changing repository-wide behavior.
 
 For temporary experiments, investigations, validation, one-shot maintenance, and short-lived collaboration that do not belong to an existing persistent task, use `temp-work/<work-name>/`. Read `temp-work/README.md` and `temp-work/AGENTS.md` first. Do not scatter temporary files across the repository or use another task directory as scratch space.
 
-Do not invent a `tasks/` wrapper. One root-level task folder = one independent collection task.
+Do not invent a `tasks/` wrapper. One root-level task folder = one independent Internet collection job.
 
 ## Task layout
 
@@ -48,7 +50,7 @@ Transient Action working files belong in the runner workspace or runner temporar
 
 - One task must not depend on another task's internal files.
 - Preserve source data as raw or minimally normalized data when practical.
-- Store recurring snapshots under `<task-name>/data/YYYY/MM/DD/`.
+- Store recurring snapshots under `<task-name>/data/YYYY/MM/DD/` unless a task README explicitly documents a source-keyed one-shot layout such as `git-mirror`.
 - Do not silently overwrite historical snapshots.
 - Re-running the same date should be safe and predictable.
 - Prefer stable APIs, feeds, or documented endpoints over brittle browser scraping when both are available.
@@ -80,10 +82,12 @@ For a new ingestion job:
 
 1. Create `<task-name>/README.md` at the repository root.
 2. Put task-specific code/config in that folder.
-3. Put the workflow at `.github/workflows/<task-name>.yml` if automation is needed.
+3. Put the workflow at `.github/workflows/<task-name>.yml` if durable automation is needed.
 4. Add the task to the root README table.
-5. Document source, schedule, output path/format, retry/backfill behavior, and any important failure conditions.
+5. Document source, schedule/workflow behavior, output path/format, retry/backfill behavior, and any important failure conditions.
 6. If it is scheduled, include it in the repository load plan by satisfying the schedule guard rather than manually maintaining a separate registry.
+
+Do not create a new task merely because the owner supplies another public Git repository URL; those one-shot file snapshots belong under `git-mirror/`.
 
 ## Temporary Agent work
 
@@ -96,10 +100,10 @@ For a new ingestion job:
 
 ## Temporary and historical operations
 
-- Backfills, migrations, repairs, probes, and diagnostics may use temporary workflows when Actions execution is useful.
-- Temporary workflows must not have a recurring schedule. The durable repository-wide `temp-work-cleanup.yml` lifecycle workflow is the explicit exception and is registered by the integrity checker.
+- Backfills, migrations, repairs, probes, diagnostics, and one-shot imports may use temporary workflows when Actions execution is useful.
+- Temporary workflows must not have a recurring `schedule:` trigger. The durable repository-wide `temp-work-cleanup.yml` lifecycle workflow is the explicit exception and is registered by the integrity checker.
 - Remove disposable workflows after successful output validation.
-- Keep reusable conversion/repair logic in the task directory; the workflow itself should remain disposable.
+- Keep reusable conversion/repair/import logic in the owning task directory; the workflow itself should remain disposable.
 
 ## Public-repository safety
 
