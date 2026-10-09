@@ -75,7 +75,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add git-mirror/data
+          # A mirrored repository may track files that match its own .gitignore.
+          # Force-add the snapshot so the outer repository preserves the source tree exactly.
+          git add -f git-mirror/data
           git rm -- "$WORKFLOW_PATH"
 
           git commit -m "data(git-mirror): import {{LABEL}} mirror"
