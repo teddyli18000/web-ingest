@@ -47,6 +47,7 @@ Keep machine metadata out of the README. The mirror-root link is intentional: a 
 - Give the job an explicit timeout and unique concurrency group.
 - Run `git-mirror` tests before importing.
 - Stage only the mirror output and the temporary workflow's own deletion.
+- Stage mirror output with `git add -f git-mirror/data`. A source repository may intentionally track files that match its own nested `.gitignore`; ordinary `git add` in `web-ingest` would otherwise silently omit them.
 - Rebase on latest `main` before pushing.
 - Remove the temporary workflow after a successful validated import.
 
