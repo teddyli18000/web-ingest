@@ -12,27 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-09** | **4,384** | **2,537** |
+| **2014-08-09** | **2026-10-10** | **4,385** | **2,538** |
 
-### Latest All-Languages snapshot — 2026-10-09
+### Latest All-Languages snapshot — 2026-10-10
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [boykopovar/AnyPS5](https://github.com/boykopovar/AnyPS5) | C++ | 4,669 |
-| 2 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 1,160 |
-| 3 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 7,738 |
-| 4 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 1,774 |
-| 5 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 670 |
-| 6 | [EpicGames/raddebugger](https://github.com/EpicGames/raddebugger) | C | 279 |
-| 7 | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Python | 392 |
-| 8 | [storytold/artcraft](https://github.com/storytold/artcraft) | Rust | 2,103 |
-| 9 | [liquidslr/system-design-notes](https://github.com/liquidslr/system-design-notes) | — | 393 |
+| 1 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 14,927 |
+| 2 | [boykopovar/AnyPS5](https://github.com/boykopovar/AnyPS5) | C++ | 5,868 |
+| 3 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 1,687 |
+| 4 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 1,739 |
+| 5 | [alibaba/open-code-review](https://github.com/alibaba/open-code-review) | Go | 326 |
+| 6 | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Python | 709 |
+| 7 | [BerriAI/litellm](https://github.com/BerriAI/litellm) | Python | 95 |
+| 8 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | JavaScript | 436 |
+| 9 | [storytold/artcraft](https://github.com/storytold/artcraft) | Rust | 3,752 |
+| 10 | [Robbyant/lingbot-map](https://github.com/Robbyant/lingbot-map) | Python | 110 |
 
-[Open full snapshot →](data/2026/10/09/trending.json)
+[Open full snapshot →](data/2026/10/10/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 282 days  
+[`2026`](data/2026/) · 283 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
