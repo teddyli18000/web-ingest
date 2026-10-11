@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-10** | **4,385** | **2,538** |
+| **2014-08-09** | **2026-10-11** | **4,386** | **2,539** |
 
-### Latest All-Languages snapshot — 2026-10-10
+### Latest All-Languages snapshot — 2026-10-11
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 14,927 |
-| 2 | [boykopovar/AnyPS5](https://github.com/boykopovar/AnyPS5) | C++ | 5,868 |
-| 3 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 1,687 |
-| 4 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 1,739 |
-| 5 | [alibaba/open-code-review](https://github.com/alibaba/open-code-review) | Go | 326 |
-| 6 | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Python | 709 |
-| 7 | [BerriAI/litellm](https://github.com/BerriAI/litellm) | Python | 95 |
-| 8 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | JavaScript | 436 |
-| 9 | [storytold/artcraft](https://github.com/storytold/artcraft) | Rust | 3,752 |
-| 10 | [Robbyant/lingbot-map](https://github.com/Robbyant/lingbot-map) | Python | 110 |
+| 1 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 25,793 |
+| 2 | [boykopovar/AnyPS5](https://github.com/boykopovar/AnyPS5) | C++ | 5,805 |
+| 3 | [storytold/artcraft](https://github.com/storytold/artcraft) | Rust | 3,222 |
+| 4 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 1,190 |
+| 5 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 178 |
+| 6 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 1,736 |
+| 7 | [flutter/flutter](https://github.com/flutter/flutter) | Dart | 88 |
+| 8 | [tensorflow/tensorflow](https://github.com/tensorflow/tensorflow) | C++ | 26 |
+| 9 | [hugohe3/ppt-master](https://github.com/hugohe3/ppt-master) | Python | 461 |
+| 10 | [pytorch/pytorch](https://github.com/pytorch/pytorch) | Python | 84 |
 
-[Open full snapshot →](data/2026/10/10/trending.json)
+[Open full snapshot →](data/2026/10/11/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 283 days  
+[`2026`](data/2026/) · 284 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
