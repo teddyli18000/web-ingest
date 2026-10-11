@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-09** | **673** | **673** | **673** | **673** | **672** |
+| **2024-11-28** | **2026-10-11** | **674** | **674** | **674** | **674** | **673** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 128 |
+| `google_trending_now` | 132 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-09
+### Latest SG snapshot — 2026-10-11
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | everton road condo fall singapore | 10000+ |
-| 2 | lim tean | 2000+ |
-| 3 | souplantation | 2000+ |
-| 4 | malaysia haze | 5000+ |
-| 5 | game | 2000+ |
-| 6 | bangladesh vs afghanistan | 5000+ |
-| 7 | f1 singapore 2026 | 5000+ |
-| 8 | tax | 2000+ |
-| 9 | crystal jade restaurant closures singapore | 2000+ |
-| 10 | singapore pollution index high 2026 | 50000+ |
+| 1 | police car | 5000+ |
+| 2 | ong ye kung haze subsidy | 10000+ |
+| 3 | f1 singapore grand prix starting grid | 2000+ |
+| 4 | boon lay | 2000+ |
+| 5 | alex karp | 2000+ |
+| 6 | what time is f1 today | 1000+ |
+| 7 | dbs ocbc uob stock pullbacks | 1000+ |
+| 8 | bangladesh vs afghanistan | 1000+ |
+| 9 | lisa | 500+ |
+| 10 | como vs roma | 200+ |
 
-### Latest US snapshot — 2026-10-09
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | cowboys | 1000000+ |
-| 2 | fort hood shooter | 200000+ |
-| 3 | cleveland guardians | 500000+ |
-| 4 | high wind watch | 50000+ |
-| 5 | ceedee lamb | 100000+ |
-| 6 | souplantation | 20000+ |
-| 7 | 76ers | 100000+ |
-| 8 | bladen county military aircraft fire | 20000+ |
-| 9 | cassidy hutchinson | 20000+ |
-| 10 | mms marvel candy collection | 20000+ |
-
-### Latest GB snapshot — 2026-10-09
+### Latest US snapshot — 2026-10-11
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | el nino polar vortex interaction | 20000+ |
-| 2 | katya jones strictly come dancing | 10000+ |
-| 3 | nidal hasan | 20000+ |
-| 4 | sagal abdi-wali | 20000+ |
-| 5 | jonathan bailey | 20000+ |
-| 6 | ticketmaster | 10000+ |
-| 7 | navi pillay | 10000+ |
-| 8 | below netflix | 20000+ |
-| 9 | adidas sues white fox | 5000+ |
-| 10 | afg vs ban | 10000+ |
+| 1 | lsu vs kentucky | 500000+ |
+| 2 | marvin harrison jr | 500000+ |
+| 3 | maryland vs ohio state | 200000+ |
+| 4 | art of play brooklyn | 100000+ |
+| 5 | ga alabama game | 1000000+ |
+| 6 | usc vs penn state | 100000+ |
+| 7 | ucla vs oregon | 200000+ |
+| 8 | indiana vs nebraska | 500000+ |
+| 9 | tennessee vs arkansas | 200000+ |
+| 10 | américa - monterrey | 100000+ |
 
-### Latest HK snapshot — 2026-10-09
+### Latest GB snapshot — 2026-10-11
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 施永青 | 2000+ |
-| 2 | 張曦雯 | 5000+ |
-| 3 | 萬寧88折 | 2000+ |
-| 4 | 跌倒 | 1000+ |
-| 5 | 李兆熊 | 500+ |
-| 6 | 利息 | 1000+ |
-| 7 | 新皇崗口岸 | 2000+ |
-| 8 | 許志安 | 2000+ |
-| 9 | 關淑怡 | 1000+ |
-| 10 | 羅艷卿 | 1000+ |
+| 1 | yorkshire wildlife park | 200000+ |
+| 2 | man utd vs spurs | 200000+ |
+| 3 | aurora uk | 20000+ |
+| 4 | southampton vs portsmouth | 5000+ |
+| 5 | william, prince of wales | 20000+ |
+| 6 | motherwell vs celtic | 20000+ |
+| 7 | liam gallagher | 10000+ |
+| 8 | ukrainian supplier salmonella egg contamination | 5000+ |
+| 9 | riyadh | 20000+ |
+| 10 | jordan henderson | 100000+ |
 
-[Open full snapshot →](data/2026/10/09/trending.json)
+### Latest HK snapshot — 2026-10-11
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 長者 | 10000+ |
+| 2 | 梅艷芳 | 2000+ |
+| 3 | 周國豐 | 1000+ |
+| 4 | 郭晉安 | 2000+ |
+| 5 | 鍾廷森 | 2000+ |
+| 6 | 焦浩軒 | 1000+ |
+| 7 | 林詩棟 | 5000+ |
+| 8 | 林青霞 | 500+ |
+| 9 | tcl | 500+ |
+| 10 | 貓 | 1000+ |
+
+[Open full snapshot →](data/2026/10/11/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 275 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 276 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
