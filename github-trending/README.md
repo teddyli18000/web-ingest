@@ -12,26 +12,27 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-12** | **4,387** | **2,540** |
+| **2014-08-09** | **2026-10-13** | **4,388** | **2,541** |
 
-### Latest All-Languages snapshot — 2026-10-12
+### Latest All-Languages snapshot — 2026-10-13
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 25,599 |
-| 2 | [boykopovar/AnyPS5](https://github.com/boykopovar/AnyPS5) | C++ | 3,952 |
-| 3 | [storytold/artcraft](https://github.com/storytold/artcraft) | Rust | 2,957 |
-| 4 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 1,083 |
-| 5 | [bilawalsidhu/gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view) | JavaScript | 886 |
-| 6 | [pytorch/pytorch](https://github.com/pytorch/pytorch) | Python | 315 |
-| 7 | [lyogavin/airllm](https://github.com/lyogavin/airllm) | Jupyter Notebook | 548 |
-| 8 | [chrislgarry/Apollo-11](https://github.com/chrislgarry/Apollo-11) | Assembly | 466 |
+| 1 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 45,327 |
+| 2 | [bilawalsidhu/gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view) | JavaScript | 1,895 |
+| 3 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 246 |
+| 4 | [storytold/artcraft](https://github.com/storytold/artcraft) | Rust | 4,095 |
+| 5 | [open-webui/open-webui](https://github.com/open-webui/open-webui) | Python | 157 |
+| 6 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 2,081 |
+| 7 | [lyogavin/airllm](https://github.com/lyogavin/airllm) | Jupyter Notebook | 879 |
+| 8 | [microsoft/BitNet](https://github.com/microsoft/BitNet) | C++ | 97 |
+| 9 | [Alishahryar1/free-claude-code](https://github.com/Alishahryar1/free-claude-code) | Python | 626 |
 
-[Open full snapshot →](data/2026/10/12/trending.json)
+[Open full snapshot →](data/2026/10/13/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 285 days  
+[`2026`](data/2026/) · 286 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
