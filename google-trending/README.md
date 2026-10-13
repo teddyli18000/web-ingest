@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-12** | **675** | **675** | **675** | **675** | **674** |
+| **2024-11-28** | **2026-10-13** | **676** | **676** | **676** | **676** | **675** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 136 |
+| `google_trending_now` | 140 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-12
+### Latest SG snapshot — 2026-10-13
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | jamus lim | 10000+ |
-| 2 | tan su shan dbs ai financing | 10000+ |
-| 3 | f1 singapore grand prix trespassing charges | 2000+ |
-| 4 | transport | 2000+ |
-| 5 | national environment agency | 2000+ |
-| 6 | lawrence wong | 500+ |
-| 7 | public sector | 500+ |
-| 8 | maybank downgrades sheng siong hold | 1000+ |
-| 9 | 林志蔚 | 1000+ |
-| 10 | toto | 2000+ |
+| 1 | anna goh li bing jail | 10000+ |
+| 2 | rj mitte | 10000+ |
+| 3 | sumo salad | 5000+ |
+| 4 | the sandbox singapore film screening | 2000+ |
+| 5 | jet li | 5000+ |
+| 6 | yvonne lim psle party | 2000+ |
+| 7 | hospital | 5000+ |
+| 8 | currency | 2000+ |
+| 9 | health system | 5000+ |
+| 10 | southern alliance mining | 1000+ |
 
-### Latest US snapshot — 2026-10-12
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | ravens vs falcons | 1000000+ |
-| 2 | lions vs cardinals | 200000+ |
-| 3 | social security 2027 cola announcement | 100000+ |
-| 4 | columbus day | 200000+ |
-| 5 | bengals vs dolphins | 200000+ |
-| 6 | jennifer meyer | 50000+ |
-| 7 | dan miller | 50000+ |
-| 8 | kelly osbourne | 50000+ |
-| 9 | sahil jilani abrams falls recovery | 50000+ |
-| 10 | pumas - cruz azul | 100000+ |
-
-### Latest GB snapshot — 2026-10-12
+### Latest US snapshot — 2026-10-13
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | man city media rule breach | 50000+ |
-| 2 | ray quinn | 20000+ |
-| 3 | andy burnham russia brexit interference | 50000+ |
-| 4 | liverpool f.c. vs man city standings | 200000+ |
-| 5 | russell brand | 10000+ |
-| 6 | britain migrant housing community effects | 5000+ |
-| 7 | scottish emergency medicine winter pressure | 10000+ |
-| 8 | kelly osbourne | 5000+ |
-| 9 | siberian tiger | 10000+ |
-| 10 | princess kate princess charlotte london | 5000+ |
+| 1 | rj mitte | 2000000+ |
+| 2 | selma blair | 500000+ |
+| 3 | six flags over georgia | 500000+ |
+| 4 | bills | 1000000+ |
+| 5 | guardians vs rays | 200000+ |
+| 6 | 2028 democratic primary frontrunners harris | 100000+ |
+| 7 | rocket launch today | 100000+ |
+| 8 | bills rams | 50000+ |
+| 9 | diddy news | 100000+ |
+| 10 | hailee steinfeld | 100000+ |
 
-### Latest HK snapshot — 2026-10-12
+### Latest GB snapshot — 2026-10-13
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 新皇崗口岸 | 10000+ |
-| 2 | adidas | 2000+ |
-| 3 | 王祖藍 | 2000+ |
-| 4 | 李嘉欣 | 1000+ |
-| 5 | 古淖文 | 1000+ |
-| 6 | 德朗邨 | 500+ |
-| 7 | 璀璨之城 | 200+ |
-| 8 | 梅西 | 200+ |
-| 9 | b12 | 500+ |
-| 10 | samsung galaxy z fold8 ultra | 200+ |
+| 1 | rj mitte | 500000+ |
+| 2 | coventry vs newcastle | 200000+ |
+| 3 | selma blair | 20000+ |
+| 4 | martin brundle louise goodman tribute | 10000+ |
+| 5 | frank carr farmer | 50000+ |
+| 6 | champions league | 20000+ |
+| 7 | manchester city | 10000+ |
+| 8 | roller coaster georgia | 10000+ |
+| 9 | amelia earhart | 5000+ |
+| 10 | diddy | 10000+ |
 
-[Open full snapshot →](data/2026/10/12/trending.json)
+### Latest HK snapshot — 2026-10-13
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 洪金寶 | 5000+ |
+| 2 | 藍田 | 10000+ |
+| 3 | rj mitte | 5000+ |
+| 4 | 黄奇帆 | 2000+ |
+| 5 | 袁澧林 | 2000+ |
+| 6 | 王曼昱 | 2000+ |
+| 7 | 新垣結衣 | 1000+ |
+| 8 | 茶百道 | 500+ |
+| 9 | 電壓驟降 | 2000+ |
+| 10 | 5g | 500+ |
+
+[Open full snapshot →](data/2026/10/13/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 277 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 278 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
