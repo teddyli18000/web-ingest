@@ -12,27 +12,27 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-13** | **4,388** | **2,541** |
+| **2014-08-09** | **2026-10-14** | **4,389** | **2,542** |
 
-### Latest All-Languages snapshot — 2026-10-13
+### Latest All-Languages snapshot — 2026-10-14
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 45,327 |
-| 2 | [bilawalsidhu/gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view) | JavaScript | 1,895 |
-| 3 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 246 |
-| 4 | [storytold/artcraft](https://github.com/storytold/artcraft) | Rust | 4,095 |
-| 5 | [open-webui/open-webui](https://github.com/open-webui/open-webui) | Python | 157 |
-| 6 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 2,081 |
-| 7 | [lyogavin/airllm](https://github.com/lyogavin/airllm) | Jupyter Notebook | 879 |
-| 8 | [microsoft/BitNet](https://github.com/microsoft/BitNet) | C++ | 97 |
-| 9 | [Alishahryar1/free-claude-code](https://github.com/Alishahryar1/free-claude-code) | Python | 626 |
+| 1 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 54,679 |
+| 2 | [bilawalsidhu/gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view) | JavaScript | 1,961 |
+| 3 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 1,748 |
+| 4 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 969 |
+| 5 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 1,815 |
+| 6 | [vercel-labs/skills](https://github.com/vercel-labs/skills) | TypeScript | 190 |
+| 7 | [lyogavin/airllm](https://github.com/lyogavin/airllm) | Jupyter Notebook | 1,001 |
+| 8 | [storytold/artcraft](https://github.com/storytold/artcraft) | Rust | 4,081 |
+| 9 | [xtool-org/xtool](https://github.com/xtool-org/xtool) | Swift | 1,198 |
 
-[Open full snapshot →](data/2026/10/13/trending.json)
+[Open full snapshot →](data/2026/10/14/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 286 days  
+[`2026`](data/2026/) · 287 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
