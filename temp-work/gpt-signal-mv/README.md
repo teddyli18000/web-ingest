@@ -33,9 +33,18 @@ For a fast local check:
 python render.py --smoke --out out/smoke.mp4
 ```
 
-## CI
+## Validated result
 
-A disposable workflow at `.github/workflows/temp-gpt-signal-mv.yml` renders and validates the film, then uploads the MP4, poster, and SHA-256 manifest as a GitHub Actions artifact. Per repository policy, the workflow should be removed after a successful validated render; the workspace itself can remain until normal `temp-work` cleanup.
+The disposable GitHub Actions renderer completed successfully on source commit `bcd206774470cda62c270e127d737c919fdcb5ad`.
+
+- Actions run: `38532353027`
+- Artifact: `gpt-signal-mv-38532353027` (artifact ID `11877689131`)
+- Video size: `1,901,609` bytes
+- Video SHA-256: `67f9530b0682d1836c54ee59c86c133e2eeadda856156e2f5de085e81a83bbc8`
+- Poster SHA-256: `320db68602a33e8ca2722e8fbe82d837d5d094aec9548a6d6d4b24f4a79f5928`
+- CI performed a full ffmpeg decode check before uploading the artifact.
+
+The temporary workflow was removed after this successful validation, per repository policy. Recreate a one-shot workflow only if another CI render is needed.
 
 ## Result / promotion
 
