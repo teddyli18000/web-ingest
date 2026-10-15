@@ -12,27 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-14** | **4,389** | **2,542** |
+| **2014-08-09** | **2026-10-15** | **4,390** | **2,543** |
 
-### Latest All-Languages snapshot — 2026-10-14
+### Latest All-Languages snapshot — 2026-10-15
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 54,679 |
-| 2 | [bilawalsidhu/gods-eye-view](https://github.com/bilawalsidhu/gods-eye-view) | JavaScript | 1,961 |
-| 3 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 1,748 |
-| 4 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 969 |
-| 5 | [cathrynlavery/diagram-design](https://github.com/cathrynlavery/diagram-design) | HTML | 1,815 |
-| 6 | [vercel-labs/skills](https://github.com/vercel-labs/skills) | TypeScript | 190 |
-| 7 | [lyogavin/airllm](https://github.com/lyogavin/airllm) | Jupyter Notebook | 1,001 |
-| 8 | [storytold/artcraft](https://github.com/storytold/artcraft) | Rust | 4,081 |
-| 9 | [xtool-org/xtool](https://github.com/xtool-org/xtool) | Swift | 1,198 |
+| 1 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 41,034 |
+| 2 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 3,538 |
+| 3 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 947 |
+| 4 | [nvm-sh/nvm](https://github.com/nvm-sh/nvm) | Shell | 52 |
+| 5 | [K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills) | Python | 163 |
+| 6 | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything) | Python | 103 |
+| 7 | [ifixai-ai/iFixAi](https://github.com/ifixai-ai/iFixAi) | Python | 2,109 |
+| 8 | [vxcontrol/pentagi](https://github.com/vxcontrol/pentagi) | Go | 1,025 |
+| 9 | [rust-lang/rust](https://github.com/rust-lang/rust) | Rust | 207 |
+| 10 | [xtool-org/xtool](https://github.com/xtool-org/xtool) | Swift | 1,502 |
 
-[Open full snapshot →](data/2026/10/14/trending.json)
+[Open full snapshot →](data/2026/10/15/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 287 days  
+[`2026`](data/2026/) · 288 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
