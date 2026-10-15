@@ -35,7 +35,7 @@ jobs:
 
       - name: Render deterministic CI fixture cut
         run: |
-          python temp-work/gpt-mv-reboot/hero/render.py \
+          python temp-work/gpt-mv-reboot/hero/render_v2.py \
             --fixtures \
             --width 960 --height 540 --fps 24 \
             --out temp-work/gpt-mv-reboot/out/hero/gpt_hero_ci.mp4
