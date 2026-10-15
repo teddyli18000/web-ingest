@@ -1,4 +1,4 @@
-name: Temp GPT MV hero render
+name: Temp GPT MV sequence render
 
 on:
   workflow_dispatch:
@@ -33,17 +33,24 @@ jobs:
       - name: Install renderer dependencies
         run: python -m pip install --disable-pip-version-check -r temp-work/gpt-mv-reboot/hero/requirements.txt
 
-      - name: Render deterministic CI fixture cut
+      - name: Render deterministic CI fixture sequence
         run: |
-          python temp-work/gpt-mv-reboot/hero/render_v2.py \
+          python temp-work/gpt-mv-reboot/hero/sequence.py \
             --fixtures \
             --width 960 --height 540 --fps 24 \
-            --out temp-work/gpt-mv-reboot/out/hero/gpt_hero_ci.mp4
+            --out temp-work/gpt-mv-reboot/out/hero/gpt_sequence_ci.mp4
+
+      - name: Build full-timeline review sheet
+        run: |
+          ffmpeg -y -hide_banner -loglevel error \
+            -i temp-work/gpt-mv-reboot/out/hero/gpt_sequence_ci.mp4 \
+            -vf "fps=1/4.5,scale=480:-2,tile=4x3:padding=4:margin=4:color=white" \
+            -frames:v 1 temp-work/gpt-mv-reboot/out/hero/contact_sheet_sequence.jpg
 
       - name: Full decode and media assertions
         run: |
           set -euo pipefail
-          out=temp-work/gpt-mv-reboot/out/hero/gpt_hero_ci.mp4
+          out=temp-work/gpt-mv-reboot/out/hero/gpt_sequence_ci.mp4
           ffmpeg -v error -i "$out" -f null -
           meta="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height,r_frame_rate -show_entries format=duration -of default=nw=1 "$out")"
           printf '%s\n' "$meta"
@@ -52,30 +59,35 @@ jobs:
           grep -q '^r_frame_rate=24/1$' <<<"$meta"
           python - <<'PY'
           import json, subprocess
-          p='temp-work/gpt-mv-reboot/out/hero/gpt_hero_ci.mp4'
-          d=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','json',p]))['format']['duration']
-          d=float(d)
-          assert 23.9 <= d <= 24.1, d
+          p='temp-work/gpt-mv-reboot/out/hero/gpt_sequence_ci.mp4'
+          d=float(json.loads(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','json',p]))['format']['duration'])
+          assert 53.9 <= d <= 54.1, d
           print('duration_ok', d)
           PY
 
-      - name: Motion sanity check
+      - name: Motion sanity checks
         run: |
           set -euo pipefail
-          out=temp-work/gpt-mv-reboot/out/hero/gpt_hero_ci.mp4
-          ffmpeg -hide_banner -i "$out" -vf "freezedetect=n=0.0005:d=1.1" -an -f null - 2>freeze.log || true
+          out=temp-work/gpt-mv-reboot/out/hero/gpt_sequence_ci.mp4
+          ffmpeg -hide_banner -i "$out" -vf "freezedetect=n=0.0005:d=1.2" -an -f null - 2>freeze.log || true
           if grep -q 'freeze_duration' freeze.log; then
             cat freeze.log
             echo 'unexpected long freeze detected' >&2
+            exit 1
+          fi
+          ffmpeg -hide_banner -i "$out" -vf "blackdetect=d=0.35:pix_th=0.02" -an -f null - 2>black.log || true
+          if grep -q 'black_duration' black.log; then
+            cat black.log
+            echo 'unexpected black interval detected' >&2
             exit 1
           fi
 
       - name: Upload review artifact
         uses: actions/upload-artifact@v4
         with:
-          name: gpt-mv-hero-ci-${{ github.run_id }}
+          name: gpt-mv-sequence-ci-${{ github.run_id }}
           path: |
-            temp-work/gpt-mv-reboot/out/hero/gpt_hero_ci.mp4
-            temp-work/gpt-mv-reboot/out/hero/contact_sheet_v4.jpg
+            temp-work/gpt-mv-reboot/out/hero/gpt_sequence_ci.mp4
+            temp-work/gpt-mv-reboot/out/hero/contact_sheet_sequence.jpg
           retention-days: 14
           if-no-files-found: error
