@@ -32,11 +32,13 @@ SEQUENCE = [
 
     base.Shot(25.40,27.70,"drafts",  1.36, 1.23, .53, .49, .55, .49, "revision"),
     base.Shot(27.70,30.45,"quiet",   1.19, 1.10, .55, .50, .55, .49, "breath"),
-    base.Shot(30.45,33.10,"contact", 1.16, 1.06, .60, .51, .58, .50, "presence"),
+    # Return shots are intentionally much tighter than their first appearances.
+    # The place is familiar; the composition is not repeated.
+    base.Shot(30.45,33.10,"contact", 1.54, 1.38, .67, .42, .64, .45, "presence"),
     base.Shot(33.10,36.05,"drafts",  1.07, 1.02, .51, .53, .52, .50, "windows"),
-    base.Shot(36.05,39.30,"world",   1.15, 1.03, .57, .52, .56, .49, "world"),
+    base.Shot(36.05,39.30,"world",   1.38, 1.18, .52, .48, .55, .50, "world"),
 
-    base.Shot(39.30,42.15,"desk",    1.10, 1.04, .57, .54, .56, .52, "notes"),
+    base.Shot(39.30,42.15,"desk",    1.40, 1.26, .38, .56, .45, .53, "notes"),
     base.Shot(42.15,45.00,"quiet",   1.27, 1.17, .56, .48, .57, .47, "clearer"),
     base.Shot(45.00,48.00,"reach",   1.22, 1.10, .55, .55, .54, .52, "reach"),
     base.Shot(48.00,51.15,"world",   1.10, 1.00, .57, .52, .56, .49, "final_world"),
