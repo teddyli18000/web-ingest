@@ -33,12 +33,12 @@ SEQUENCE = [
     base.Shot(25.40,27.70,"drafts",  1.36, 1.23, .53, .49, .55, .49, "revision"),
     base.Shot(27.70,30.45,"quiet",   1.19, 1.10, .55, .50, .55, .49, "breath"),
     # Return shots are intentionally much tighter than their first appearances.
-    # The place is familiar; the composition is not repeated.
+    # The place is familiar; the composition and graphic job are not repeated.
     base.Shot(30.45,33.10,"contact", 1.54, 1.38, .67, .42, .64, .45, "presence"),
     base.Shot(33.10,36.05,"drafts",  1.07, 1.02, .51, .53, .52, .50, "windows"),
-    base.Shot(36.05,39.30,"world",   1.38, 1.18, .52, .48, .55, .50, "world"),
+    base.Shot(36.05,39.30,"world",   1.38, 1.18, .52, .48, .55, .50, "world_return"),
 
-    base.Shot(39.30,42.15,"desk",    1.40, 1.26, .38, .56, .45, .53, "notes"),
+    base.Shot(39.30,42.15,"desk",    1.40, 1.26, .38, .56, .45, .53, "resolve"),
     base.Shot(42.15,45.00,"quiet",   1.27, 1.17, .56, .48, .57, .47, "clearer"),
     base.Shot(45.00,48.00,"reach",   1.22, 1.10, .55, .55, .54, .52, "reach"),
     base.Shot(48.00,51.15,"world",   1.10, 1.00, .57, .52, .56, .49, "final_world"),
@@ -101,6 +101,21 @@ def sequence_scene_fx(self, frame, t, shot):
         y = .76 - .27 * math.sin(math.pi * p)
         self.card(frame, "next", x, y, .105, -6 + 12*p, a * .82)
         self.glow(frame, .72, .30, .28, .38*a, True)
+        return
+
+    if shot.mode == "world_return":
+        u = t - shot.start
+        a = _fade(shot, t, .45, .55)
+        # Same place, second visit: no labels. The widening warm light is the event.
+        self.glow(frame, .68, .48, .30, (.33 + .10*math.sin(u*.7))*a, True)
+        return
+
+    if shot.mode == "resolve":
+        u = t - shot.start
+        a = _fade(shot, t, .35, .50)
+        # Earlier the desk filled with questions. On return, only one choice remains.
+        self.card(frame, "keep this", .82 + .006*math.sin(u*.8), .20 - .010*u, .12, -3, a*.72)
+        self.glow(frame, .61, .43, .23, .22*a, False)
         return
 
     if shot.mode == "final_world":
