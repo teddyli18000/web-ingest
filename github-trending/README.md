@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-15** | **4,390** | **2,543** |
+| **2014-08-09** | **2026-10-16** | **4,391** | **2,544** |
 
-### Latest All-Languages snapshot — 2026-10-15
+### Latest All-Languages snapshot — 2026-10-16
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 41,034 |
-| 2 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 3,538 |
-| 3 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 947 |
-| 4 | [nvm-sh/nvm](https://github.com/nvm-sh/nvm) | Shell | 52 |
-| 5 | [K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills) | Python | 163 |
-| 6 | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything) | Python | 103 |
-| 7 | [ifixai-ai/iFixAi](https://github.com/ifixai-ai/iFixAi) | Python | 2,109 |
-| 8 | [vxcontrol/pentagi](https://github.com/vxcontrol/pentagi) | Go | 1,025 |
-| 9 | [rust-lang/rust](https://github.com/rust-lang/rust) | Rust | 207 |
-| 10 | [xtool-org/xtool](https://github.com/xtool-org/xtool) | Swift | 1,502 |
+| 1 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 32,314 |
+| 2 | [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) | Python | 307 |
+| 3 | [K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills) | Python | 1,091 |
+| 4 | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | Go | 433 |
+| 5 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 3,024 |
+| 6 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 582 |
+| 7 | [ruvnet/ruflo](https://github.com/ruvnet/ruflo) | TypeScript | 147 |
+| 8 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 904 |
+| 9 | [NationalSecurityAgency/ghidra](https://github.com/NationalSecurityAgency/ghidra) | Java | 1,369 |
+| 10 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 1,013 |
 
-[Open full snapshot →](data/2026/10/15/trending.json)
+[Open full snapshot →](data/2026/10/16/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 288 days  
+[`2026`](data/2026/) · 289 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
