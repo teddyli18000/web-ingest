@@ -2,47 +2,73 @@
 
 A clean restart of the GPT music-video experiment.
 
-The earlier `gpt-signal-mv` prototypes are treated as failed studies, not a base to extend. This workspace starts again from directing, character design, visual language, storyboard discipline, and staged review.
+The earlier `gpt-signal-mv` prototypes are failed studies, not a base to extend. This workspace was rebuilt from directing, character design, visual language, storyboard discipline and staged review.
 
 ## Target
 
-Create an original GPT/ChatGPT personification MV at the quality bar of a real authored music video rather than an AI explainer or technology visualizer.
+Create an original GPT/ChatGPT personification MV at the quality bar of an authored music video rather than an AI explainer or technology visualizer.
 
-The user supplied `Nyankomintsu/world-execute-me-lyric-mv` as a production reference. Its public prompts and process documents are treated as a **quality/process brief**: explicit directing rules, staged section work, render-and-review gates, deterministic rendering, and final QC. We do not copy or reuse its source code, assets, character design, storyboard, scene compositions, rendered media, or implementation.
+The user supplied `Nyankomintsu/world-execute-me-lyric-mv` as a production reference. Its public process documents are used only as a quality/process brief: strong directing constraints, staged render-and-review gates, deterministic export and final QC. We do not copy or reuse its source code, assets, character design, storyboard, scene compositions, timing or rendered media.
 
 ## Production model
 
-The reference repo confirmed the correct division of labour: high-quality character art is supplied as image assets while code acts as camera, compositor, editor and deterministic exporter. The reboot now follows that hybrid model rather than trying to procedurally draw finished character art.
+The accepted split is hybrid:
 
-See `RENDER_ARCHITECTURE.md` and `ASSET_MANIFEST.md`.
+- finished illustration supplies character acting and world detail;
+- code is camera, compositor, editor, typography/motion layer and deterministic exporter;
+- CI proves reproducibility and media integrity with obvious fixture art;
+- artistic approval comes from separately reviewing renders made from the real approved style frames.
+
+See `RENDER_ARCHITECTURE.md`, `ART_BIBLE.md` and `ASSET_MANIFEST.md`.
 
 ## Completed gates
 
 ### Stage 1 — direction and visual system
 
-- `DIRECTOR_BRIEF.md` — story, visual modes, shot rules, quality bar.
-- `ART_BIBLE.md` — GPT character, palette, typography, motif, environments.
-- `PRODUCTION_PLAN.md` — gated workflow from style frames to final export.
-- `ORIGINALITY.md` — explicit boundary between reference methodology and our original work.
+Completed director brief, art bible, originality boundary, production/QC plan and six style-frame briefs.
 
-### Stage 2 — style frames and hero motion test
+### Stage 2 — visual direction / hero gate
 
-Six original 1672×941 style frames established the approved visual direction: luminous anime-inspired illustration, blue/cream/gold light, a silver-haired GPT character, a dark-haired user, desk/chat/world imagery, and paper-fragment motifs.
+Six original 1672×941 style frames established the accepted visual language: luminous anime-inspired illustration, blue/cream/gold light, a silver-haired GPT character, a dark-haired user, desk/chat/world imagery and tactile paper fragments.
 
-`hero/render.sh` turns them into a deterministic 18 s 1080p motion test using restrained camera movement, sparse compositor-set text and short photographic crossfades. The locally rendered gate passed full ffmpeg decode.
+The initial moving gate proved that code could behave as a camera/editor without collapsing back into procedural cyber-neon illustration.
 
-See `hero/README.md`.
+### Stage 3 — authored 54-second sequence
 
-## Current stage
+`hero/sequence.py` now drives a 54.0 s / 20-shot sequence using the approved six-image system. It adds distinct visual grammar for questions, revisions, breathing room, handoff, return motifs and the final world opening.
 
-**Stage 3 — build an animation-ready original character/environment asset pack, then a 30–45 s recomposed sequence.**
+The real-art timeline was reviewed repeatedly at contact-sheet and key-frame level. Repeated `chat`, `world` and `desk` motifs were re-cropped and simplified until they read as narrative returns instead of accidental reuse.
 
-Do not extend to a full film using only the six full-frame illustrations. That would become a slideshow. Stage 3 needs isolated GPT poses, hands, user silhouettes, desk/window/paper/chat elements and world backgrounds so the compositor can create new shots and parallax rather than simply crop stills.
+Final temporary CI run `38790208739` passed:
+
+- complete 54 s render;
+- 960×540 at 24 fps fixture master;
+- H.264/AAC;
+- full ffmpeg decode;
+- dimensions/frame-rate/duration assertions;
+- long-freeze detection;
+- black-interval detection;
+- full-timeline contact sheet;
+- artifact upload.
+
+Artifact `11999527794`, digest `sha256:13e0a8837c4adf585f81589844a612617d8099b72a6c90e4786f11c5804cfe67`.
+
+## Current conclusion
+
+The reboot has crossed the important line from “style demo” into an authored sequence. The remaining limitation is no longer renderer quality; it is source-shot variety. Six full-frame illustrations cannot support a polished 2–3 minute film indefinitely without obvious reuse.
+
+The next meaningful production stage is therefore:
+
+1. establish a final song/cue map from user-supplied local audio, without committing copyrighted audio or lyrics;
+2. storyboard the complete film around that cue map;
+3. expand the approved separable asset pack where the storyboard genuinely needs new poses/layers;
+4. produce and review sections incrementally;
+5. only then make the full preview and high-resolution export.
 
 ## Source media boundary
 
-Do not commit copyrighted song audio or lyrics. If the final project is cut to a copyrighted track, the renderer must consume user-supplied local audio/lyrics that remain ignored by Git, and timing must be measured independently for this project rather than copied from another MV.
+Do not commit copyrighted song audio or lyrics. A final track must be supplied separately; timing must be measured independently for this project and must not be copied from the reference MV.
 
 ## Status
 
-Reboot direction accepted; hero motion gate completed; character-pack production is next. The rejected cyber/neon prototypes remain separate failed studies and are not reused.
+**54-second sequence gate passed.** Temporary render CI is disposable and should be removed after validation. The rejected cyber/neon prototypes remain separate failed studies and are not reused.
