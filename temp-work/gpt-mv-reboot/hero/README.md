@@ -2,7 +2,7 @@
 
 This directory contains the deterministic compositor/editor for the rebooted GPT concept film.
 
-The production split is now fixed:
+The production split is fixed:
 
 - approved illustration carries character acting and world detail;
 - Python/Pillow code acts as camera, compositor, editor, typography layer and deterministic frame renderer;
@@ -16,7 +16,7 @@ The production split is now fixed:
 - `sequence.py` — current authored 54.0 s / 20-shot sequence.
 - `requirements.txt` — renderer dependencies.
 
-The earlier shell/ASS 18 s test has been retired. It proved the basic hybrid production model, but it is no longer the current implementation.
+The earlier shell/ASS 18 s test has been retired and removed.
 
 ## 54-second review result
 
@@ -27,15 +27,20 @@ The sequence is structured as four phrases:
 3. uncertainty, revision and quiet support;
 4. return motifs, handoff and open ending.
 
-Repeated source illustrations are deliberately revisited with different crops and dramatic functions. After full-timeline review, the second `world` and `desk` returns were simplified so they read as intentional revisits rather than repeated slides.
+Repeated source illustrations are deliberately revisited with different crops and dramatic functions. Full-timeline review led to several targeted corrections instead of a blanket effects pass:
 
-Visual review with the six approved full-resolution style frames passed the current gate. The result is substantially beyond the discarded black/neon procedural prototypes: illustration and character now dominate, paper/light/interface elements behave as secondary cinematic layers, and the code no longer tries to draw a finished character.
+- the second `world` visit lost its labels and became light-only;
+- the second `desk` visit became one `keep this` decision rather than another cloud of notes;
+- the second chat/interface visit no longer duplicates the baked conversation with another compositor bubble;
+- the sunset return no longer places a second text panel over lettering already present in the approved art.
+
+Those changes make the later shots read as intentional returns rather than reused slides.
 
 ## Engineering validation
 
-Final temporary CI run: `38790208739`.
+Full 54 s CI gate: run `38790208739`.
 
-Validated in CI:
+Validated there:
 
 - 54.0 s deterministic render;
 - 960×540 at 24 fps fixture review master;
@@ -47,19 +52,23 @@ Validated in CI:
 - full-timeline contact sheet;
 - artifact upload.
 
-Final CI artifact:
+Artifact `11999527794`, ZIP digest `sha256:13e0a8837c4adf585f81589844a612617d8099b72a6c90e4786f11c5804cfe67`.
 
-- artifact id: `11999527794`;
-- name: `gpt-mv-sequence-ci-38790208739`;
-- ZIP digest: `sha256:13e0a8837c4adf585f81589844a612617d8099b72a6c90e4786f11c5804cfe67`.
+After the final two visual-cleanup changes, a disposable lightweight regression workflow ran the complete timeline again at 640×360 / 12 fps. Final check run `38925793794` passed decode, duration, dimensions/frame rate, freeze detection and black detection. That workflow was then removed.
 
-The CI artifact uses fixture art and is an engineering proof, not the final aesthetic master.
+## Real-art review master
+
+The final code direction was also reviewed against the six actual approved full-resolution illustrations, not only fixtures.
+
+A 1280×720 / 24 fps / 54.000 s real-art review master was rendered outside the repository so the binary art does not need to be committed here. It passed full ffmpeg decode, freeze detection and black-interval detection.
+
+Review-master SHA-256: `fcabd5cc9c33516f25c35128662bb560a30ff3b627c9fb5b4fcbe2738d023bed`.
 
 ## What is still missing for a full MV
 
 The six full-frame illustrations are enough to validate direction and sustain this 54 s authored sequence, but they are not enough for a polished 2–3 minute film without visible repetition.
 
-Before a complete film, production needs either additional approved separable assets or a track-specific shot plan that earns reuse through much stronger crops/masks/physical transitions. In particular, isolated character poses/hands, user silhouettes, desk/window/paper foregrounds and world plates would make substantially richer recomposition possible.
+Before a complete film, production needs either additional approved separable assets or a track-specific shot plan that earns reuse through much stronger crops/masks/physical transitions. Isolated character poses/hands, user silhouettes, desk/window/paper foregrounds and world plates would make substantially richer recomposition possible.
 
 No copyrighted song audio or lyrics belong in this repository. A final track must be supplied separately and cue timing must be derived independently for this project.
 
