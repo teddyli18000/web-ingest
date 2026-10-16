@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-13** | **676** | **676** | **676** | **676** | **675** |
+| **2024-11-28** | **2026-10-16** | **677** | **677** | **677** | **677** | **676** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 140 |
+| `google_trending_now` | 144 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-13
+### Latest SG snapshot — 2026-10-16
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | anna goh li bing jail | 10000+ |
-| 2 | rj mitte | 10000+ |
-| 3 | sumo salad | 5000+ |
-| 4 | the sandbox singapore film screening | 2000+ |
-| 5 | jet li | 5000+ |
-| 6 | yvonne lim psle party | 2000+ |
-| 7 | hospital | 5000+ |
-| 8 | currency | 2000+ |
-| 9 | health system | 5000+ |
-| 10 | southern alliance mining | 1000+ |
+| 1 | first resources haze response el nino | 5000+ |
+| 2 | tesla roadster | 5000+ |
+| 3 | sq31 flight back to san francisco | 10000+ |
+| 4 | ang mo kio | 2000+ |
+| 5 | haze malaysia | 5000+ |
+| 6 | stomp | 5000+ |
+| 7 | activesg closure | 10000+ |
+| 8 | msci | 1000+ |
+| 9 | porcelain | 500+ |
+| 10 | hukuman mati | 500+ |
 
-### Latest US snapshot — 2026-10-13
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | rj mitte | 2000000+ |
-| 2 | selma blair | 500000+ |
-| 3 | six flags over georgia | 500000+ |
-| 4 | bills | 1000000+ |
-| 5 | guardians vs rays | 200000+ |
-| 6 | 2028 democratic primary frontrunners harris | 100000+ |
-| 7 | rocket launch today | 100000+ |
-| 8 | bills rams | 50000+ |
-| 9 | diddy news | 100000+ |
-| 10 | hailee steinfeld | 100000+ |
-
-### Latest GB snapshot — 2026-10-13
+### Latest US snapshot — 2026-10-16
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | rj mitte | 500000+ |
-| 2 | coventry vs newcastle | 200000+ |
-| 3 | selma blair | 20000+ |
-| 4 | martin brundle louise goodman tribute | 10000+ |
-| 5 | frank carr farmer | 50000+ |
-| 6 | champions league | 20000+ |
-| 7 | manchester city | 10000+ |
-| 8 | roller coaster georgia | 10000+ |
-| 9 | amelia earhart | 5000+ |
-| 10 | diddy | 10000+ |
+| 1 | bend oregon | 500000+ |
+| 2 | david surkamp rock singer passes | 100000+ |
+| 3 | tesla | 200000+ |
+| 4 | seahawks | 1000000+ |
+| 5 | emilio sakraya | 200000+ |
+| 6 | you can see everything | 100000+ |
+| 7 | banana ball | 200000+ |
+| 8 | superficial blood clot | 200000+ |
+| 9 | freeze warning | 20000+ |
+| 10 | malibu fire | 20000+ |
 
-### Latest HK snapshot — 2026-10-13
+### Latest GB snapshot — 2026-10-16
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 洪金寶 | 5000+ |
-| 2 | 藍田 | 10000+ |
-| 3 | rj mitte | 5000+ |
-| 4 | 黄奇帆 | 2000+ |
-| 5 | 袁澧林 | 2000+ |
-| 6 | 王曼昱 | 2000+ |
-| 7 | 新垣結衣 | 1000+ |
-| 8 | 茶百道 | 500+ |
-| 9 | 電壓驟降 | 2000+ |
-| 10 | 5g | 500+ |
+| 1 | tesla roadster | 50000+ |
+| 2 | counterfeit money | 20000+ |
+| 3 | benfica vs celtic | 100000+ |
+| 4 | channel tunnel | 20000+ |
+| 5 | sibling | 5000+ |
+| 6 | bournemouth vs sturm graz | 20000+ |
+| 7 | oil refinery | 5000+ |
+| 8 | fourth wing | 10000+ |
+| 9 | phil parkinson | 5000+ |
+| 10 | anthony joshua | 5000+ |
 
-[Open full snapshot →](data/2026/10/13/trending.json)
+### Latest HK snapshot — 2026-10-16
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | tesla roadster | 10000+ |
+| 2 | 鄧兆尊 | 5000+ |
+| 3 | 陳瀅 | 5000+ |
+| 4 | 貓 | 2000+ |
+| 5 | apple store | 2000+ |
+| 6 | 陳奕迅 | 2000+ |
+| 7 | 超級 市場 | 2000+ |
+| 8 | storm | 2000+ |
+| 9 | 臺日電梯 | 2000+ |
+| 10 | 麥 玲玲 | 500+ |
+
+[Open full snapshot →](data/2026/10/16/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 278 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 279 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
