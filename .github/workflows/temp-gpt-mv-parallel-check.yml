@@ -1,0 +1,55 @@
+name: Temp GPT MV parallel exporter check
+
+on:
+  push:
+    paths:
+      - "temp-work/gpt-mv-reboot/hero/export_parallel.py"
+      - "temp-work/gpt-mv-reboot/hero/render.py"
+      - "temp-work/gpt-mv-reboot/hero/render_v2.py"
+      - "temp-work/gpt-mv-reboot/hero/sequence.py"
+      - "temp-work/gpt-mv-reboot/hero/requirements.txt"
+      - ".github/workflows/temp-gpt-mv-parallel-check.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: temp-gpt-mv-parallel-check
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          python -m pip install --disable-pip-version-check -r temp-work/gpt-mv-reboot/hero/requirements.txt
+      - name: Parallel-render full fixture sequence
+        run: |
+          python temp-work/gpt-mv-reboot/hero/export_parallel.py \
+            --fixtures --width 320 --height 180 --fps 8 --workers 3 --validate \
+            --out temp-work/gpt-mv-reboot/out/hero/parallel-check.mp4
+      - name: Validate output contract
+        run: |
+          set -euo pipefail
+          out=temp-work/gpt-mv-reboot/out/hero/parallel-check.mp4
+          meta="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height,r_frame_rate -show_entries format=duration -of default=nw=1 "$out")"
+          printf '%s\n' "$meta"
+          grep -q '^width=320$' <<<"$meta"
+          grep -q '^height=180$' <<<"$meta"
+          grep -q '^r_frame_rate=8/1$' <<<"$meta"
+          python - <<'PY'
+          import json, subprocess
+          p='temp-work/gpt-mv-reboot/out/hero/parallel-check.mp4'
+          d=float(json.loads(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','json',p]))['format']['duration'])
+          assert 53.9 <= d <= 54.1, d
+          print('duration_ok', d)
+          PY
