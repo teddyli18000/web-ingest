@@ -14,6 +14,8 @@ The production split is fixed:
 - `render.py` — shared deterministic renderer and CI fixture generator.
 - `render_v2.py` — thin visual-direction overrides accepted after the first 24 s review.
 - `sequence.py` — current authored 54.0 s / 20-shot sequence.
+- `review.py` — exact absolute-time contact sheets and short segment exports for cheap section review.
+- `export_parallel.py` — multi-process full-film export using absolute frame ranges, H.264 chunk concat and one final audio mux.
 - `requirements.txt` — renderer dependencies.
 
 The earlier shell/ASS 18 s test has been retired and removed.
@@ -54,11 +56,24 @@ Validated there:
 
 Artifact `11999527794`, ZIP digest `sha256:13e0a8837c4adf585f81589844a612617d8099b72a6c90e4786f11c5804cfe67`.
 
-After the final two visual-cleanup changes, a disposable lightweight regression workflow ran the complete timeline again at 640×360 / 12 fps. Final check run `38925793794` passed decode, duration, dimensions/frame rate, freeze detection and black detection. That workflow was then removed.
+After the final two visual-cleanup changes, disposable full-timeline regression run `38925793794` passed decode, timing, dimensions/frame rate, freeze detection and black detection. Its workflow was removed after validation.
+
+### Review/export tooling
+
+`review.py` was validated in run `38926295650`:
+
+- exact-time contact-sheet rendering;
+- absolute-timeline segment export;
+- deterministic audio alignment for the segment;
+- successful full decode and duration check.
+
+Artifact `12057435585`, ZIP digest `sha256:3a09bb4e5d919f2b1ca4235fa7e6661ca56bf4f2924d3a41b894c5dfc9fa27a2`. The disposable validation workflow was removed afterward.
+
+`export_parallel.py` was validated in run `38926621123` by rendering the complete 54 s fixture timeline across three workers, concatenating the encoded chunks, muxing audio and validating the final output contract. Its temporary workflow was also removed after the pass.
 
 ## Real-art review master
 
-The final code direction was also reviewed against the six actual approved full-resolution illustrations, not only fixtures.
+The final code direction was reviewed against the six actual approved full-resolution illustrations, not only fixtures.
 
 A 1280×720 / 24 fps / 54.000 s real-art review master was rendered outside the repository so the binary art does not need to be committed here. It passed full ffmpeg decode, freeze detection and black-interval detection.
 
