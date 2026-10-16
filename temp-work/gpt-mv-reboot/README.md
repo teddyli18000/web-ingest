@@ -19,7 +19,7 @@ The accepted split is hybrid:
 - CI proves reproducibility and media integrity with obvious fixture art;
 - artistic approval comes from separately reviewing renders made from the real approved style frames.
 
-See `RENDER_ARCHITECTURE.md`, `ART_BIBLE.md` and `ASSET_MANIFEST.md`.
+See `RENDER_ARCHITECTURE.md`, `ART_BIBLE.md`, `ASSET_MANIFEST.md` and `hero/README.md`.
 
 ## Completed gates
 
@@ -35,23 +35,15 @@ The initial moving gate proved that code could behave as a camera/editor without
 
 ### Stage 3 — authored 54-second sequence
 
-`hero/sequence.py` now drives a 54.0 s / 20-shot sequence using the approved six-image system. It adds distinct visual grammar for questions, revisions, breathing room, handoff, return motifs and the final world opening.
+`hero/sequence.py` drives a 54.0 s / 20-shot sequence using the approved six-image system. It adds distinct visual grammar for questions, revisions, breathing room, handoff, return motifs and the final world opening.
 
-The real-art timeline was reviewed repeatedly at contact-sheet and key-frame level. Repeated `chat`, `world` and `desk` motifs were re-cropped and simplified until they read as narrative returns instead of accidental reuse.
+The real-art timeline was reviewed repeatedly at contact-sheet and key-frame level. Repeated `chat`, `world` and `desk` motifs were re-cropped and simplified until they read as narrative returns instead of accidental reuse. The final review also removed a duplicate chat bubble on the return visit and removed a redundant compositor text panel from the sunset shot.
 
-Final temporary CI run `38790208739` passed:
+Full 54 s CI run `38790208739` passed complete rendering, decode, timing/dimension assertions, freeze/black checks, full-timeline contact sheet and artifact upload. Artifact `11999527794`, digest `sha256:13e0a8837c4adf585f81589844a612617d8099b72a6c90e4786f11c5804cfe67`.
 
-- complete 54 s render;
-- 960×540 at 24 fps fixture master;
-- H.264/AAC;
-- full ffmpeg decode;
-- dimensions/frame-rate/duration assertions;
-- long-freeze detection;
-- black-interval detection;
-- full-timeline contact sheet;
-- artifact upload.
+After the final two visual-cleanup changes, lightweight full-timeline CI run `38925793794` also passed. Its disposable workflow was removed immediately after validation.
 
-Artifact `11999527794`, digest `sha256:13e0a8837c4adf585f81589844a612617d8099b72a6c90e4786f11c5804cfe67`.
+A real-art 1280×720 / 24 fps / 54.000 s review master was then rendered and passed decode, freeze and black-interval checks. SHA-256: `fcabd5cc9c33516f25c35128662bb560a30ff3b627c9fb5b4fcbe2738d023bed`.
 
 ## Current conclusion
 
@@ -61,7 +53,7 @@ The next meaningful production stage is therefore:
 
 1. establish a final song/cue map from user-supplied local audio, without committing copyrighted audio or lyrics;
 2. storyboard the complete film around that cue map;
-3. expand the approved separable asset pack where the storyboard genuinely needs new poses/layers;
+3. expand the approved separable asset pack only where the storyboard genuinely needs new poses/layers;
 4. produce and review sections incrementally;
 5. only then make the full preview and high-resolution export.
 
@@ -71,4 +63,4 @@ Do not commit copyrighted song audio or lyrics. A final track must be supplied s
 
 ## Status
 
-**54-second sequence gate passed.** Temporary render CI is disposable and should be removed after validation. The rejected cyber/neon prototypes remain separate failed studies and are not reused.
+**54-second sequence gate passed and temporary CI cleaned up.** The rejected cyber/neon prototypes remain separate failed studies and are not reused.
