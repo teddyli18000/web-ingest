@@ -1,56 +1,70 @@
-# Hero motion gate
+# GPT MV — validated sequence gate
 
-This is the first moving test of the rebooted GPT film.
+This directory contains the deterministic compositor/editor for the rebooted GPT concept film.
 
-## What this test is for
+The production split is now fixed:
 
-It is deliberately short. The goal is to prove the production split before committing to a full MV:
+- approved illustration carries character acting and world detail;
+- Python/Pillow code acts as camera, compositor, editor, typography layer and deterministic frame renderer;
+- ffmpeg encodes/muxes and provides decode/sanity checks;
+- CI uses deliberately obvious fixture art so engineering validation never pretends to be visual approval.
 
-- finished illustration carries character acting and world detail;
-- code acts as camera/editor/compositor;
-- motion does not collapse into a slideshow or generic AI visualizer;
-- GPT still reads as warm, intelligent and present after crop/movement;
-- the visual identity survives transitions.
+## Current main path
 
-## Current cut
+- `render.py` — shared deterministic renderer and CI fixture generator.
+- `render_v2.py` — thin visual-direction overrides accepted after the first 24 s review.
+- `sequence.py` — current authored 54.0 s / 20-shot sequence.
+- `requirements.txt` — renderer dependencies.
 
-- 18.0 s
-- 1920×1080
-- 30 fps iteration master
-- six approved original style frames
-- subtle per-shot pan/zoom plus short photographic crossfades
-- sparse compositor-set copy instead of covering every frame in captions
-- temporary original tonal bed; music is not locked
+The earlier shell/ASS 18 s test has been retired. It proved the basic hybrid production model, but it is no longer the current implementation.
 
-Local validated motion-test output:
+## 54-second review result
 
-- `gpt_hero_sequence_v3.mp4`
-- sha256 `44dde149299356655bf352a8f97a8d4d93db04e8b8bbda71d34f6598f0dcf10f`
-- full ffmpeg decode: pass
+The sequence is structured as four phrases:
 
-## Review result
+1. first contact;
+2. collaboration / widening world;
+3. uncertainty, revision and quiet support;
+4. return motifs, handoff and open ending.
 
-The reboot direction passes the **visual-direction gate**. It is recognisably a different class of work from the discarded procedural prototype: character and environment now dominate; code is no longer visibly trying to impersonate an illustrator.
+Repeated source illustrations are deliberately revisited with different crops and dramatic functions. After full-timeline review, the second `world` and `desk` returns were simplified so they read as intentional revisits rather than repeated slides.
 
-It does **not** yet pass the full-MV gate. Full-frame stills alone will become repetitive. Before extending runtime, Stage 3 must build the original GPT character pack and several reusable environment/foreground layers so scenes can be recomposed rather than merely reframed.
+Visual review with the six approved full-resolution style frames passed the current gate. The result is substantially beyond the discarded black/neon procedural prototypes: illustration and character now dominate, paper/light/interface elements behave as secondary cinematic layers, and the code no longer tries to draw a finished character.
 
-## Stage 3 next
+## Engineering validation
 
-Create a consistent, animation-ready original asset pack in the approved design language:
+Final temporary CI run: `38790208739`.
 
-1. GPT neutral/listening bust
-2. GPT thinking/profile
-3. GPT reaching pose
-4. happy close-up
-5. uncertain/worried close-up
-6. full-body standing
-7. back view
-8. hands / pointing / holding a note
-9. user silhouettes and hands
-10. desk, window, paper cards, chat panes, sky/world elements as separable layers
+Validated in CI:
 
-Then build a 30–45 s sequence with real shot recomposition, foreground parallax and match cuts. Only after that passes do we expand to the complete film.
+- 54.0 s deterministic render;
+- 960×540 at 24 fps fixture review master;
+- H.264/AAC output;
+- complete ffmpeg decode;
+- duration / dimensions / frame-rate assertions;
+- long-freeze detection;
+- black-interval detection;
+- full-timeline contact sheet;
+- artifact upload.
 
-## CI note
+Final CI artifact:
 
-`hero/render.sh` is deterministic and CI-friendly once the approved binary art assets are present under `assets/styleframes/`. Keep CI temporary and one-shot while this remains under `temp-work/`.
+- artifact id: `11999527794`;
+- name: `gpt-mv-sequence-ci-38790208739`;
+- ZIP digest: `sha256:13e0a8837c4adf585f81589844a612617d8099b72a6c90e4786f11c5804cfe67`.
+
+The CI artifact uses fixture art and is an engineering proof, not the final aesthetic master.
+
+## What is still missing for a full MV
+
+The six full-frame illustrations are enough to validate direction and sustain this 54 s authored sequence, but they are not enough for a polished 2–3 minute film without visible repetition.
+
+Before a complete film, production needs either additional approved separable assets or a track-specific shot plan that earns reuse through much stronger crops/masks/physical transitions. In particular, isolated character poses/hands, user silhouettes, desk/window/paper foregrounds and world plates would make substantially richer recomposition possible.
+
+No copyrighted song audio or lyrics belong in this repository. A final track must be supplied separately and cue timing must be derived independently for this project.
+
+## Gate status
+
+**54 s sequence gate: PASS.**
+
+The next meaningful step is song-map/storyboard work plus asset expansion, not more generic effects on the current six frames.
