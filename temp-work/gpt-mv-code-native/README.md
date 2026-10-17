@@ -1,85 +1,59 @@
-# GPT MV — code-native reboot
+# GPT MV — code-native rebuild
 
-This workspace replaces the rejected still-image edit pipeline.
+This workspace builds the film as authored code, not as a slideshow of finished illustrations.
 
-## Goal
+The public `Nyankomintsu/world-execute-me-lyric-mv` repository is a production/process reference only. Its director prompt, review discipline, beat-driven timing and scene/engine separation define the **quality bar**. We do **not** copy or reuse its source, scene choreography, character art, compositions, timings, lyrics or assets.
 
-Build the film as authored code, not as a slideshow of finished illustrations.
+## Current status
 
-The public `Nyankomintsu/world-execute-me-lyric-mv` repository is a production/process reference only. We inspected its scene/engine split, deterministic time-driven rendering, staged review discipline, and the v4 director prompt. We do **not** copy or reuse its source, scene choreography, character art, compositions, timings, lyrics, or assets.
+The previously validated 30 s cut is **TECH PROTOTYPE ONLY — visually rejected**.
 
-## Hard rules
+It proved deterministic browser rendering, code-authored geometry, CI export and scene continuity. It did **not** meet the reference film's shot density, character performance, layered composition, musical editing or finish. Engineering green checks are not artistic approval.
 
-- no generated full-frame illustration is used as a shot background;
-- every visible environment, interface element, transition, typography treatment, light pool and camera move is produced by this renderer;
-- the GPT character is vector geometry authored in our own code (`Canvas Path2D`), not a raster still;
-- every frame is a pure function of absolute time;
-- first/key/last frames and dense transition sheets are reviewed before expanding runtime;
-- CI renders the same browser code that the preview uses;
-- temporary validation workflows are removed after a gate passes.
+Do not extend that cut as if it were a finished film.
 
-## Gate 01 — `boot / first reply` — PASSED
+## Production rules for the rebuild
 
-Runtime: 0–15 s.
+- every shot has at least backdrop / subject / foreground-interface layers;
+- cuts and major actions sit on the beat grid; secondary actions can fall between them;
+- a shot must contain authored internal events, not one transform stretched for several seconds;
+- camera, subject and foreground do not all move as one flat layer;
+- fast motion uses stagger / ghost exposure / secondary motion, never opacity fade alone;
+- text is an actor or a semantic element, never filler HUD;
+- the GPT character must react, look, move and hand objects through the scene rather than behave as a static mascot;
+- key transitions must transform existing geometry into the next shot instead of cross-fading two finished states;
+- each stage is rendered and visually reviewed before the next stage starts;
+- temporary CI workflows are removed after a gate passes.
 
-1. **0–3 s — surface wakes.** One cobalt rule unfolds into a code-authored ChatGPT client.
-2. **3–7 s — GPT resolves.** The character assembles from independent vector ink/color plates.
-3. **7–10 s — user arrives.** A gold cursor crosses the page and types into the composer.
-4. **10–15 s — reply becomes a world.** The same GPT walks out of the client while header/sidebar/composer geometry becomes horizon, perspective rails and page-buildings.
+## Opening v2 — 0–15 s — IN REVIEW
 
-Gate 01 required three visual passes: debug-like construction copy and face-overlap were removed; the UI→world transition was rewritten from a crossfade into structural geometry morphing; finally one continuous `Path2D` GPT replaced the old disappear/re-enter transition.
+The old `boot.js + reply.js` opening has been replaced in the active timeline by `src/scenes/opening_v2.js`.
 
-Validated CI run: `39001763083`  
-Artifact: `gpt-mv-code-native-39001763083` / ID `12088972944`  
-Artifact digest: `sha256:e92f80ff06594a0924515fa067d9c30a9334c83ea100bde4c751bcf80a026cbc`
+It contains four independently staged shots on one beat grid:
 
-Technical gate: 640×360 / 12 fps / 15.000 s / H.264 + AAC; full decode, media assertions and black-interval check passed. Gate 01 workflow was removed after validation.
+1. **threads** — four semantic strands and paper cards arrive from different depths and weave the conversation frame;
+2. **context orbit** — context / tools / memory / style move on separate arcs around GPT, with parallax, ghost exposure and a context spine forming behind the character;
+3. **composer performance** — the user types a false start, pauses, deletes it, types the real line, and sends; typing produces physical paper ticks and GPT reacts in the background;
+4. **reply architecture** — the sent words break into moving paper strips, cross the character's reach, then register into three large spatial planes instead of becoming a subtitle card.
 
-## Gate 02 — `revision room / handoff` — PASSED
+Review gate: 960×540 / 15 fps / 15 s. Contact sheet plus dense sheets around all three cut boundaries are required before this opening can pass.
 
-Runtime: 15–30 s.
+## Retained technical prototype
 
-1. the seven skyline/page-buildings detach and move toward camera on individual trajectories;
-2. the same objects settle around GPT as competing draft pages;
-3. GPT selects one page while the other six fold/slide away;
-4. coral appears only during revision: the old phrase is struck and rewritten as `keep what matters.`;
-5. the selected page stretches continuously into a paper ribbon and is handed toward the user's gold cursor.
+The old 0–30 s implementation remains in the repository only as reusable technical material:
 
-### Gate 02 review history
+- `src/scenes/boot.js`
+- `src/scenes/reply.js`
+- `src/scenes/drafts.js`
 
-- first implemented cut exposed two likely double-draw handoffs (world→revision room and revision page→ribbon); both were rewritten to share exact endpoint/startpoint geometry before visual approval;
-- dense 18 s / 22–25 s transition sheets confirmed page and GPT continuity;
-- the first approved composition still let the final ribbon cross too much of GPT's face/body;
-- final pass moved and shortened the ribbon so it leaves from the extended hand, keeps GPT readable, and keeps `keep what matters.` unobstructed.
+Its final engineering validation was run `39002735464`, but that status must not be interpreted as artistic approval.
 
-Validated CI run: `39002362793`  
-Artifact: `gpt-mv-code-native-gate02-39002362793` / ID `12089621537`  
-Artifact digest: `sha256:3547cbcd8608b7acab9fdbb555150ff5ca4628fa1273c2661dcb22461da50d7c`
-
-Technical gate: 640×360 / 12 fps / 15.000 s / H.264 + AAC; full decode, media assertions and black-interval check passed. Gate 02 workflow was removed after validation.
-
-## Integrated 0–30 s film — PASSED
-
-The first integrated review exposed one issue that the isolated gates could not: at exactly 15 s, Gate 01's title and foreground paper scraps disappeared as Gate 02 began, making the scene-file boundary visible even though GPT and the skyline were geometrically continuous.
-
-The boundary was rewritten so the title and foreground papers survive into Gate 02 and decay over the first ~0.7 s while GPT, horizon and skyline remain continuous. A dense 14.4–15.8 s review then showed no visible hard cut.
-
-Validated CI run: `39002735464`  
-Artifact: `gpt-mv-code-native-preview-39002735464` / ID `12090006768`  
-Artifact digest: `sha256:87876412dc1ee3e8848c8ea131629fd9b8e6e626df489c2bb6a55f64307bd5a5`
-
-Integrated technical result: 960×540 / 15 fps / 30.000 s / H.264 + AAC. Full decode, dimension/fps/duration assertions, black-interval check and freeze check passed. The temporary integrated-preview workflow was removed after validation.
-
-The rendered MP4 from this validated run has SHA-256 `ae0b5a9175c42cee7197464057705ea15a95f57f64dc0611f88fc62b3ad0472d`.
-
-## Current implementation
+## Rendering architecture
 
 - `src/engine/` — Canvas drawing primitives, semantic palette, deterministic timing;
-- `src/components/chat.js` — code-authored client, messages, composer, cursor and construction pieces;
-- `src/components/gpt.js` — original multi-plate vector GPT character and poses;
-- `src/scenes/boot.js` — line→client→character boot choreography;
-- `src/scenes/reply.js` — first conversation and client→world structural morph;
-- `src/scenes/drafts.js` — page detachment, revision room, selection/edit and user handoff;
-- `export/render.mjs` — deterministic static-mode Playwright capture using system Chrome + ffmpeg encode/contact-sheet generation.
+- `src/components/chat.js` — code-authored client, composer, cursor and construction pieces;
+- `src/components/gpt.js` — original multi-plate vector GPT character;
+- `src/scenes/opening_v2.js` — current dense opening rebuild;
+- `export/render.mjs` — static-mode Playwright capture through system Chrome + ffmpeg encode/contact-sheet generation.
 
-No generated illustration, reference-project image, or reference-project source code is part of the rendered film.
+No generated full-frame illustration, reference-project image, or reference-project source code is part of the rendered film.
