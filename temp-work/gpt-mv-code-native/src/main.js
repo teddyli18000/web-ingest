@@ -1,19 +1,21 @@
 import {Draw} from './engine/draw.js';
 import {renderBoot} from './scenes/boot.js';
 import {renderReply} from './scenes/reply.js';
+import {renderDrafts} from './scenes/drafts.js';
 
 const canvas=document.getElementById('stage');
 const g=canvas.getContext('2d',{alpha:false});
 const d=new Draw(g,canvas.width,canvas.height);
 
-export const DURATION=15;
+export const DURATION=30;
 
 export function renderFrame(t){
   t=Math.max(0,Math.min(DURATION,t));
   g.setTransform(1,0,0,1,0,0);
   g.clearRect(0,0,canvas.width,canvas.height);
   if(t<6.85)renderBoot(d,t);
-  else renderReply(d,t);
+  else if(t<15)renderReply(d,t);
+  else renderDrafts(d,t);
   return canvas;
 }
 
