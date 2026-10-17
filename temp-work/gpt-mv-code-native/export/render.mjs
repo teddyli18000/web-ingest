@@ -29,7 +29,9 @@ const port=server.address().port;
 const chrome=process.env.CHROME_PATH||'/usr/bin/google-chrome';
 const browser=await chromium.launch({headless:true,executablePath:chrome});
 const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
-await page.goto(`http://127.0.0.1:${port}/`,{waitUntil:'networkidle'});
+// ?t=0 selects the static/export mode in main.js. No requestAnimationFrame loop runs,
+// so every screenshot is the exact frame requested by renderFrame(t).
+await page.goto(`http://127.0.0.1:${port}/?t=0`,{waitUntil:'networkidle'});
 await page.waitForFunction(()=>window.GPT_MV_READY===true);
 // Important: the Canvas stays 1920×1080 internally. The viewport only scales its CSS presentation.
 // Scene code therefore uses one stable coordinate system at preview, CI, 1080p and 4K export.
