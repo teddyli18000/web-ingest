@@ -2,7 +2,7 @@ import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {spawn,spawnSync} from 'node:child_process';
+import {spawnSync} from 'node:child_process';
 import {chromium} from 'playwright';
 
 const HERE=path.dirname(fileURLToPath(import.meta.url));
@@ -30,7 +30,8 @@ const browser=await chromium.launch({headless:true});
 const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
 await page.goto(`http://127.0.0.1:${port}/`,{waitUntil:'networkidle'});
 await page.waitForFunction(()=>window.GPT_MV_READY===true);
-await page.evaluate(([w,h])=>{const c=document.getElementById('stage');c.width=w;c.height=h;},[width,height]);
+// Important: the Canvas stays 1920×1080 internally. The viewport only scales its CSS presentation.
+// Scene code therefore uses one stable coordinate system at preview, CI, 1080p and 4K export.
 
 const total=Math.round((end-start)*fps),canvas=page.locator('#stage');
 for(let n=0;n<total;n++){
