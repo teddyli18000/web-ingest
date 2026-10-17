@@ -1,0 +1,31 @@
+import {Draw} from './engine/draw.js';
+import {renderBoot} from './scenes/boot.js';
+import {renderReply} from './scenes/reply.js';
+
+const canvas=document.getElementById('stage');
+const g=canvas.getContext('2d',{alpha:false});
+const d=new Draw(g,canvas.width,canvas.height);
+
+export const DURATION=15;
+
+export function renderFrame(t){
+  t=Math.max(0,Math.min(DURATION,t));
+  g.setTransform(1,0,0,1,0,0);
+  g.clearRect(0,0,canvas.width,canvas.height);
+  if(t<6.85)renderBoot(d,t);
+  else renderReply(d,t);
+  return canvas;
+}
+
+window.renderFrame=renderFrame;
+window.GPT_MV_DURATION=DURATION;
+window.GPT_MV_READY=true;
+
+const params=new URLSearchParams(location.search);
+if(params.has('t')){
+  renderFrame(Number(params.get('t'))||0);
+}else{
+  let start=performance.now();
+  const tick=(now)=>{const t=((now-start)/1000)%DURATION;renderFrame(t);requestAnimationFrame(tick)};
+  requestAnimationFrame(tick);
+}
