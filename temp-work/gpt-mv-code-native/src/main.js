@@ -1,5 +1,5 @@
 import {Draw} from './engine/draw.js';
-import {renderOpeningV2} from './scenes/opening_v2.js';
+import {renderOpeningV3} from './scenes/opening_v3.js';
 import {renderDrafts} from './scenes/drafts.js';
 
 const canvas=document.getElementById('stage');
@@ -12,7 +12,7 @@ export function renderFrame(t){
   t=Math.max(0,Math.min(DURATION,t));
   g.setTransform(1,0,0,1,0,0);
   g.clearRect(0,0,canvas.width,canvas.height);
-  if(t<15)renderOpeningV2(d,t);
+  if(t<15)renderOpeningV3(d,t);
   else renderDrafts(d,t);
   return canvas;
 }
