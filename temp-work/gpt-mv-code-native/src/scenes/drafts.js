@@ -77,7 +77,6 @@ function revisionRoom(d,t){
     if(fold>.025||isChosen)page(d,{x,y,w,h:base.h*(isChosen?lerp(1,1.16,choice):1),rot,alpha:isChosen?1:fold,blue:i%3===0,text:NOTES[i],selected:isChosen?choice:0,shadow:.34});
   }
 
-  // Starts exactly where Gate 01 left GPT, then makes editorial room for the chosen page.
   const settleGX=lerp(850,750,settle),settleGY=lerp(225,190,settle),settleGS=lerp(.78,.72,settle);
   const gx=lerp(settleGX,430,choice),gy=lerp(settleGY,235,choice),gs=lerp(settleGS,.76,choice);
   drawGPT(d,gx,gy+Math.sin(t*1.05)*3,gs,{assemble:1,alpha:1,pose:choice>.45?'reply':'think',look:choice>.45?.10:.04});
@@ -94,8 +93,8 @@ function revisionRoom(d,t){
 
 function handoff(d,t){
   const p=easeInOut(prog(t,24.75,28.65)),finish=easeOut(prog(t,28.55,29.7));
-  // Starts at exactly the selected-page geometry from revisionRoom.
-  const x=lerp(1110,470,p),y=lerp(360,555,p),w=lerp(516,980,p),h=lerp(302,150,p),rot=lerp(-.025,-.015,p);
+  // Starts on the selected page, then lands to the right of GPT so the ribbon follows her hand rather than crossing her face.
+  const x=lerp(1110,760,p),y=lerp(360,555,p),w=lerp(516,900,p),h=lerp(302,150,p),rot=lerp(-.025,-.015,p);
   page(d,{x,y,w,h,rot,alpha:1,blue:false,text:'',lines:false,selected:1-p*.55,shadow:.34});
   d.text('keep what matters.',x+48,y+h*.56,{size:lerp(38,44,p),font:'serif',italic:true,color:P.ink,alpha:1});
   d.line(x+46,y+h*.70,x+46+(w-95)*easeOut(prog(t,25.25,27.2)),y+h*.70,{color:P.gold,width:4,alpha:.62});
@@ -103,9 +102,9 @@ function handoff(d,t){
   const gx=lerp(430,255,p),gy=lerp(235,260,p),gs=lerp(.76,.68,p);
   drawGPT(d,gx,gy+Math.sin(t)*2,gs,{assemble:1,alpha:1,pose:'reply',look:.12});
 
-  const cx=lerp(1860,1500,easeOut(prog(t,26.7,28.25))),cy=lerp(760,650,easeOut(prog(t,26.7,28.25)));
+  const cx=lerp(1860,1545,easeOut(prog(t,26.7,28.25))),cy=lerp(760,650,easeOut(prog(t,26.7,28.25)));
   cursor(d,cx,cy,{alpha:easeOut(prog(t,26.55,27.0)),click:prog(t,28.05,28.48)});
-  if(finish>0){d.glow(1500,650,190,P.gold,.28*finish);d.text('yours.',1540,735,{size:32,font:'serif',italic:true,color:P.ink2,alpha:.72*finish})}
+  if(finish>0){d.glow(1545,650,190,P.gold,.28*finish);d.text('yours.',1580,735,{size:32,font:'serif',italic:true,color:P.ink2,alpha:.72*finish})}
 }
 
 export function renderDrafts(d,t){
