@@ -3,8 +3,8 @@ name: Temp GPT MV character lab
 on:
   push:
     paths:
-      - "temp-work/gpt-mv-code-native/assets/gpt/**"
-      - "temp-work/gpt-mv-code-native/src/components/gpt_art.js"
+      - "temp-work/gpt-mv-code-native/assets/gpt/reach.svg"
+      - "temp-work/gpt-mv-code-native/src/engine/gpt_art.js"
       - "temp-work/gpt-mv-code-native/src/character_lab.js"
       - "temp-work/gpt-mv-code-native/character_lab.html"
       - "temp-work/gpt-mv-code-native/export/character_lab.mjs"
@@ -35,7 +35,7 @@ jobs:
           npm install --no-audit --no-fund
           echo "CHROME_PATH=$(which google-chrome)" >> "$GITHUB_ENV"
           google-chrome --version
-      - name: Render 1080p character lab
+      - name: Render 1080p vector character lab
         run: node export/character_lab.mjs out/gpt_character_lab.png
       - name: Validate image contract
         run: |
