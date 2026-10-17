@@ -41,10 +41,16 @@ jobs:
         run: |
           set -euo pipefail
           test -s out/gpt_character_lab.png
-          meta="$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of default=nw=1 out/gpt_character_lab.png)"
-          printf '%s\n' "$meta"
-          grep -q '^width=1920$' <<<"$meta"
-          grep -q '^height=1080$' <<<"$meta"
+          python - <<'PY'
+          import struct
+          p='out/gpt_character_lab.png'
+          with open(p,'rb') as f:
+              sig=f.read(24)
+          assert sig[:8] == b'\x89PNG\r\n\x1a\n', 'not png'
+          w,h=struct.unpack('>II',sig[16:24])
+          print('png_size',w,h)
+          assert (w,h)==(1920,1080), (w,h)
+          PY
       - name: Upload visual gate
         uses: actions/upload-artifact@v4
         with:
