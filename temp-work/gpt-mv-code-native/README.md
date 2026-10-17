@@ -31,6 +31,18 @@ Narrative:
 
 This gate deliberately proves the production method before any longer song map is attempted.
 
+## Implemented for first render review
+
+- Canvas drawing primitives and semantic palette;
+- deterministic time/easing helpers;
+- code-authored ChatGPT client geometry;
+- code-authored multi-plate GPT character using `Path2D`;
+- independent boot and reply/world scenes;
+- Playwright frame exporter + ffmpeg encode/contact-sheet generation;
+- temporary CI gate at 640×360 / 12 fps for fast visual review.
+
+The first CI review is intentionally low-resolution. It exists to expose composition and choreography errors cheaply before the 1080p gate.
+
 ## Layout
 
 ```text
