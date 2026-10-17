@@ -22,42 +22,45 @@ The public `Nyankomintsu/world-execute-me-lyric-mv` repository is a production/p
 
 Runtime: 0–15 s.
 
-Narrative:
+1. **0–3 s — surface wakes.** One cobalt rule unfolds into a code-authored ChatGPT client.
+2. **3–7 s — GPT resolves.** The character assembles from independent vector ink/color plates.
+3. **7–10 s — user arrives.** A gold cursor crosses the page and types into the composer.
+4. **10–15 s — reply becomes a world.** The same GPT walks out of the client while header/sidebar/composer geometry becomes horizon, perspective rails and page-buildings.
 
-1. **0–3 s — surface wakes.** A warm paper field is empty. One cobalt rule appears, unfolds into the ChatGPT client, and interface pieces settle into place.
-2. **3–7 s — GPT resolves.** The character assembles from independent vector ink plates: coat, face, hair, eyes and register details.
-3. **7–10 s — user arrives.** A gold cursor crosses the page and types a short message into the composer.
-4. **10–15 s — reply becomes a world.** The same GPT character walks out of the client while header/sidebar/composer geometry itself becomes horizon, perspective rails and page-buildings.
-
-### Review history
-
-Gate 01 required three visual passes after the engineering path worked:
-
-- **pass 1:** rejected visually — debug-like construction labels, message covered GPT's face, accidental double exposure in the client→world transition;
-- **pass 2:** fixed composition and made sidebar/header/composer geometry morph into the world, but dense 11.25–13.35 s review exposed a washed-out gap where old/new states were still effectively crossfading;
-- **pass 3:** passed — one continuous `Path2D` GPT remains visible through the transition, the client survives until its geometry has visibly transformed, and there is no blank transition gap.
+Gate 01 required three visual passes: debug-like construction copy and face-overlap were removed; the UI→world transition was rewritten from a crossfade into structural geometry morphing; finally one continuous `Path2D` GPT replaced the old disappear/re-enter transition.
 
 Validated CI run: `39001763083`  
 Artifact: `gpt-mv-code-native-39001763083` / ID `12088972944`  
 Artifact digest: `sha256:e92f80ff06594a0924515fa067d9c30a9334c83ea100bde4c751bcf80a026cbc`
 
-Technical gate: 640×360 / 12 fps / 15.000 s / H.264 + AAC; full decode, media assertions and black-interval check passed.
+Technical gate: 640×360 / 12 fps / 15.000 s / H.264 + AAC; full decode, media assertions and black-interval check passed. Gate 01 workflow was removed after validation.
 
-The temporary Gate 01 workflow is removed after this validation.
+## Gate 02 — `revision room / handoff` — PASSED
 
-## Gate 02 — `revision room / handoff` — NEXT
+Runtime: 15–30 s.
 
-Target: 15–30 s, still fully code-native.
+1. the seven skyline/page-buildings detach and move toward camera on individual trajectories;
+2. the same objects settle around GPT as competing draft pages;
+3. GPT selects one page while the other six fold/slide away;
+4. coral appears only during revision: the old phrase is struck and rewritten as `keep what matters.`;
+5. the selected page stretches continuously into a paper ribbon and is handed toward the user's gold cursor.
 
-The final paper skyline from Gate 01 becomes raw material rather than a background plate:
+### Gate 02 review history
 
-1. skyline pages detach and move toward camera;
-2. they arrange around GPT as competing draft pages;
-3. GPT works through the pages and selects one — no neural-network/AI-explainer graphics;
-4. rejected pages fold away;
-5. the selected page becomes a physical paper ribbon handed back toward the user's gold cursor.
+- first implemented cut exposed two likely double-draw handoffs (world→revision room and revision page→ribbon); both were rewritten to share exact endpoint/startpoint geometry before visual approval;
+- dense 18 s / 22–25 s transition sheets confirmed page and GPT continuity;
+- the first approved composition still let the final ribbon cross too much of GPT's face/body;
+- final pass moved and shortened the ribbon so it leaves from the extended hand, keeps GPT readable, and keeps `keep what matters.` unobstructed.
 
-Gate 02 must add authored camera movement and materially different staging while preserving the same palette/character identity.
+Validated CI run: `39002362793`  
+Artifact: `gpt-mv-code-native-gate02-39002362793` / ID `12089621537`  
+Artifact digest: `sha256:3547cbcd8608b7acab9fdbb555150ff5ca4628fa1273c2661dcb22461da50d7c`
+
+Technical gate: 640×360 / 12 fps / 15.000 s / H.264 + AAC; full decode, media assertions and black-interval check passed. Gate 02 workflow is removed after this validation.
+
+## Next — integrated 0–30 s preview
+
+Before authoring Gate 03, render Gates 01+02 as one higher-resolution preview and review the whole rhythm, especially the 14.6–15.4 s world→detached-page boundary. The integrated preview is a regression gate: fixing later sections must not quietly break the already-approved first 30 seconds.
 
 ## Current implementation
 
@@ -66,6 +69,7 @@ Gate 02 must add authored camera movement and materially different staging while
 - `src/components/gpt.js` — original multi-plate vector GPT character and poses;
 - `src/scenes/boot.js` — line→client→character boot choreography;
 - `src/scenes/reply.js` — first conversation and client→world structural morph;
+- `src/scenes/drafts.js` — page detachment, revision room, selection/edit and user handoff;
 - `export/render.mjs` — deterministic static-mode Playwright capture using system Chrome + ffmpeg encode/contact-sheet generation.
 
 No generated illustration, reference-project image, or reference-project source code is part of the rendered film.
