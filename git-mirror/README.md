@@ -11,6 +11,7 @@ This task is **not** a synchronization service. There is no recurring schedule a
 | Repository | Description | Source | Mirror |
 | --- | --- | --- | --- |
 | ARTEX | AI 自主渗透测试系统 \| 百度“agent+”攻防挑战赛冠军项目 | [mhtsec/ARTEX](https://github.com/mhtsec/ARTEX) | [Mirror](data/github.com/mhtsec/ARTEX/) |
+| dsh-infinite-gen-5 | DeepSeek v4.1 flash 逆向工具（无限五代） | [Minglink/dsh-infinite-gen-5](https://github.com/Minglink/dsh-infinite-gen-5) | [Mirror](data/github.com/Minglink/dsh-infinite-gen-5/) |
 
 Keep this table for people: one concise row per mirrored repository. Detailed provenance belongs inside that mirror, not here.
 
