@@ -38,6 +38,23 @@ function sky(d,t,alpha=1){
   for(const x of [220,520,880,1260,1660])d.line(960,HORIZON,x,1080,{color:P.gold,width:2,alpha:.17*alpha});
 }
 
+function gate01Carry(d,t){
+  const a=1-smooth(prog(t,15.0,15.78));
+  if(a<=0)return;
+  // These are the exact three foreground paper planes used at the end of reply.js.
+  // They cross the scene-file boundary, then drift/fade out instead of disappearing on frame 15.000.
+  const exit=1-a;
+  const scraps=[[-80,760,370,210,-.08],[1520,720,430,240,.07],[280,920,500,200,.03]];
+  scraps.forEach(([x,y,w,h,r],i)=>d.save(()=>{
+    const dir=i===1?1:-1,xx=x+dir*exit*(80+35*i),yy=y+exit*(35+18*i);
+    d.g.translate(xx+w/2,yy+h/2);d.g.rotate(r+Math.sin(t*.45+i)*.01+dir*exit*.025);d.g.translate(-(xx+w/2),-(yy+h/2));
+    d.rrect(xx,yy,w,h,18,{fill:i===1?'rgba(47,102,213,.10)':'rgba(255,253,248,.84)',stroke:'rgba(53,65,92,.15)',alpha:a,shadow:.25*a});
+    d.line(xx+28,yy+48,xx+w-40,yy+48,{color:i===1?P.cobalt:P.gold,width:5,alpha:.46*a});
+  }));
+  d.line(625,170,1295,170,{color:P.gold,width:2,alpha:.20*a});
+  d.text('the window was only the beginning.',960,150,{size:50,font:'serif',italic:true,align:'center',color:P.ink,alpha:a});
+}
+
 function pageSpec(i){const w=86+(i%3)*22,h=105+((i*67)%205),x=120+i*245,y=HORIZON+48-h;return{x,y,w,h,blue:i%3===0}}
 function mixBox(a,b,t){return{x:lerp(a.x,b.x,t),y:lerp(a.y,b.y,t),w:lerp(a.w,b.w,t),h:lerp(a.h,b.h,t),r:lerp(a.r||0,b.r||0,t)}}
 
@@ -93,7 +110,6 @@ function revisionRoom(d,t){
 
 function handoff(d,t){
   const p=easeInOut(prog(t,24.75,28.65)),finish=easeOut(prog(t,28.55,29.7));
-  // Starts on the selected page, then lands to the right of GPT so the ribbon follows her hand rather than crossing her face.
   const x=lerp(1110,760,p),y=lerp(360,555,p),w=lerp(516,900,p),h=lerp(302,150,p),rot=lerp(-.025,-.015,p);
   page(d,{x,y,w,h,rot,alpha:1,blue:false,text:'',lines:false,selected:1-p*.55,shadow:.34});
   d.text('keep what matters.',x+48,y+h*.56,{size:lerp(38,44,p),font:'serif',italic:true,color:P.ink,alpha:1});
@@ -115,6 +131,7 @@ export function renderDrafts(d,t){
   withCamera(d,{zoom,x:panX,y:panY},()=>{
     const worldFade=1-smooth(prog(t,16.7,19.15));sky(d,t,worldFade);
     if(t<15.42)skyline(d,worldFade);
+    gate01Carry(d,t);
     if(t>=15.30&&t<18.12)detachedPages(d,t);
     if(t<18.10)drawGPT(d,850,225+Math.sin(t*1.1)*3,.78,{assemble:1,alpha:1,pose:'reply',look:.05});
   });
