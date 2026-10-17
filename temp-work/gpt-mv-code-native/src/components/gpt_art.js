@@ -31,6 +31,8 @@ export async function loadGPTArt(){
   return new GPTArt(img);
 }
 
+const mix=(a,b,k)=>a+(b-a)*Math.max(0,Math.min(1,k));
+
 export class GPTArt{
   constructor(img){
     this.img=img;
@@ -46,8 +48,16 @@ export class GPTArt{
   }
 
   crop(name='full'){
-    const n=CROP_N[name]??CROP_N.full,W=this.img.naturalWidth,H=this.img.naturalHeight;
+    const n=typeof name==='string' ? (CROP_N[name]??CROP_N.full) : name;
+    const W=this.img.naturalWidth,H=this.img.naturalHeight;
     return {x:n.x*W,y:n.y*H,w:n.w*W,h:n.h*H};
+  }
+
+  // Interpolate the source window itself. This is a real camera pull-back on one artwork,
+  // not a crossfade between two separately rendered character crops.
+  morphCrop(from='bust',to='full',k=0){
+    const a=CROP_N[from]??CROP_N.full,b=CROP_N[to]??CROP_N.full;
+    return {x:mix(a.x,b.x,k),y:mix(a.y,b.y,k),w:mix(a.w,b.w,k),h:mix(a.h,b.h,k)};
   }
 
   _fit(dst,crop,cover=false){
