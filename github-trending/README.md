@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-16** | **4,391** | **2,544** |
+| **2014-08-09** | **2026-10-17** | **4,392** | **2,545** |
 
-### Latest All-Languages snapshot — 2026-10-16
+### Latest All-Languages snapshot — 2026-10-17
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [morluto/rea](https://github.com/morluto/rea) | TypeScript | 32,314 |
-| 2 | [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) | Python | 307 |
-| 3 | [K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills) | Python | 1,091 |
-| 4 | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | Go | 433 |
-| 5 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 3,024 |
-| 6 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 582 |
-| 7 | [ruvnet/ruflo](https://github.com/ruvnet/ruflo) | TypeScript | 147 |
-| 8 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 904 |
-| 9 | [NationalSecurityAgency/ghidra](https://github.com/NationalSecurityAgency/ghidra) | Java | 1,369 |
-| 10 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 1,013 |
+| 1 | [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) | Python | 1,552 |
+| 2 | [K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills) | Python | 1,158 |
+| 3 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 1,057 |
+| 4 | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything) | Python | 281 |
+| 5 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 449 |
+| 6 | [ruvnet/ruflo](https://github.com/ruvnet/ruflo) | TypeScript | 672 |
+| 7 | [android/skills](https://github.com/android/skills) | Kotlin | 36 |
+| 8 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 973 |
+| 9 | [cursor/plugins](https://github.com/cursor/plugins) | TypeScript | 278 |
+| 10 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 2,301 |
 
-[Open full snapshot →](data/2026/10/16/trending.json)
+[Open full snapshot →](data/2026/10/17/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 289 days  
+[`2026`](data/2026/) · 290 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
