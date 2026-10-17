@@ -11,7 +11,7 @@ const ROOT=path.resolve(HERE,'..');
 function arg(name,def){const i=process.argv.indexOf(`--${name}`);return i>=0?process.argv[i+1]:def}
 const width=Number(arg('width','960')),height=Number(arg('height','540')),fps=Number(arg('fps','18'));
 const start=Number(arg('start','0')),end=Number(arg('end','15'));
-const out=path.resolve(arg('out',path.join(ROOT,'out','gate01.mp4')));
+const out=path.resolve(arg('out',path.join(ROOT,'out','gate.mp4')));
 const frames=path.join(path.dirname(out),'.frames-code-native');
 await fs.mkdir(path.dirname(out),{recursive:true});
 await fs.rm(frames,{recursive:true,force:true});await fs.mkdir(frames,{recursive:true});
@@ -29,12 +29,8 @@ const port=server.address().port;
 const chrome=process.env.CHROME_PATH||'/usr/bin/google-chrome';
 const browser=await chromium.launch({headless:true,executablePath:chrome});
 const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
-// ?t=0 selects the static/export mode in main.js. No requestAnimationFrame loop runs,
-// so every screenshot is the exact frame requested by renderFrame(t).
 await page.goto(`http://127.0.0.1:${port}/?t=0`,{waitUntil:'networkidle'});
 await page.waitForFunction(()=>window.GPT_MV_READY===true);
-// Important: the Canvas stays 1920×1080 internally. The viewport only scales its CSS presentation.
-// Scene code therefore uses one stable coordinate system at preview, CI, 1080p and 4K export.
 
 const total=Math.round((end-start)*fps),canvas=page.locator('#stage');
 for(let n=0;n<total;n++){
@@ -53,10 +49,16 @@ r=spawnSync('ffmpeg',['-y','-hide_banner','-loglevel','error','-i',video,'-f','l
 if(r.status!==0)process.exit(r.status||1);
 await fs.rm(video,{force:true});
 
-const marks=[.6,2.3,4.2,6.2,7.7,9.3,11.2,13.1,14.6].filter(t=>t>=start&&t<end).map(t=>Math.max(0,Math.min(total-1,Math.round((t-start)*fps))));
+const reviewTimes=[
+  .6,2.3,4.2,6.2,7.7,9.3,11.2,13.1,14.6,
+  15.4,16.8,18.2,19.8,21.6,23.3,25.2,27.2,29.2
+];
+const marks=reviewTimes.filter(t=>t>=start&&t<end).map(t=>Math.max(0,Math.min(total-1,Math.round((t-start)*fps))));
+if(!marks.length)throw new Error(`no review marks inside ${start}..${end}`);
 const expr=marks.map(n=>`eq(n\\,${n})`).join('+');
+const cols=marks.length<=9?3:5,rows=Math.ceil(marks.length/cols);
 const sheet=out.replace(/\.mp4$/i,'.contact.jpg');
-r=spawnSync('ffmpeg',['-y','-hide_banner','-loglevel','error','-i',out,'-vf',`select='${expr}',scale=480:-2,tile=3x3:padding=5:margin=5:color=white`,'-frames:v','1',sheet],{stdio:'inherit'});
+r=spawnSync('ffmpeg',['-y','-hide_banner','-loglevel','error','-i',out,'-vf',`select='${expr}',scale=480:-2,tile=${cols}x${rows}:padding=5:margin=5:color=white`,'-frames:v','1',sheet],{stdio:'inherit'});
 if(r.status!==0)process.exit(r.status||1);
 spawnSync('ffmpeg',['-v','error','-i',out,'-f','null','-'],{stdio:'inherit'});
 console.log(out);console.log(sheet);
