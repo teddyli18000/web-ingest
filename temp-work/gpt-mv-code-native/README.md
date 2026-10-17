@@ -56,11 +56,21 @@ Validated CI run: `39002362793`
 Artifact: `gpt-mv-code-native-gate02-39002362793` / ID `12089621537`  
 Artifact digest: `sha256:3547cbcd8608b7acab9fdbb555150ff5ca4628fa1273c2661dcb22461da50d7c`
 
-Technical gate: 640×360 / 12 fps / 15.000 s / H.264 + AAC; full decode, media assertions and black-interval check passed. Gate 02 workflow is removed after this validation.
+Technical gate: 640×360 / 12 fps / 15.000 s / H.264 + AAC; full decode, media assertions and black-interval check passed. Gate 02 workflow was removed after validation.
 
-## Next — integrated 0–30 s preview
+## Integrated 0–30 s film — PASSED
 
-Before authoring Gate 03, render Gates 01+02 as one higher-resolution preview and review the whole rhythm, especially the 14.6–15.4 s world→detached-page boundary. The integrated preview is a regression gate: fixing later sections must not quietly break the already-approved first 30 seconds.
+The first integrated review exposed one issue that the isolated gates could not: at exactly 15 s, Gate 01's title and foreground paper scraps disappeared as Gate 02 began, making the scene-file boundary visible even though GPT and the skyline were geometrically continuous.
+
+The boundary was rewritten so the title and foreground papers survive into Gate 02 and decay over the first ~0.7 s while GPT, horizon and skyline remain continuous. A dense 14.4–15.8 s review then showed no visible hard cut.
+
+Validated CI run: `39002735464`  
+Artifact: `gpt-mv-code-native-preview-39002735464` / ID `12090006768`  
+Artifact digest: `sha256:87876412dc1ee3e8848c8ea131629fd9b8e6e626df489c2bb6a55f64307bd5a5`
+
+Integrated technical result: 960×540 / 15 fps / 30.000 s / H.264 + AAC. Full decode, dimension/fps/duration assertions, black-interval check and freeze check passed. The temporary integrated-preview workflow was removed after validation.
+
+The rendered MP4 from this validated run has SHA-256 `ae0b5a9175c42cee7197464057705ea15a95f57f64dc0611f88fc62b3ad0472d`.
 
 ## Current implementation
 
