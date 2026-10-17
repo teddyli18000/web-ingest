@@ -1,4 +1,4 @@
-name: Temp GPT MV opening v7
+name: Temp GPT MV opening v8
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
       - "temp-work/gpt-mv-code-native/src/scenes/opening_v5.js"
       - "temp-work/gpt-mv-code-native/src/scenes/opening_v6.js"
       - "temp-work/gpt-mv-code-native/src/scenes/opening_v7.js"
+      - "temp-work/gpt-mv-code-native/src/scenes/opening_v8.js"
       - "temp-work/gpt-mv-code-native/src/components/gpt_art.js"
       - "temp-work/gpt-mv-code-native/assets/gpt/**"
       - "temp-work/gpt-mv-code-native/export/render.mjs"
@@ -14,7 +15,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: temp-gpt-mv-opening-v7
+  group: temp-gpt-mv-opening-v8
   cancel-in-progress: true
 
 permissions:
@@ -39,27 +40,27 @@ jobs:
           sudo apt-get install -y -qq ffmpeg >/dev/null
           echo "CHROME_PATH=$(which google-chrome)" >> "$GITHUB_ENV"
       - name: Render 0-15s visual gate
-        run: node export/render.mjs --start 0 --end 15 --width 960 --height 540 --fps 15 --out out/gpt_opening_v7.mp4
+        run: node export/render.mjs --start 0 --end 15 --width 960 --height 540 --fps 15 --out out/gpt_opening_v8.mp4
       - name: Validate media
         run: |
           set -euo pipefail
-          test -s out/gpt_opening_v7.mp4
-          test -s out/gpt_opening_v7.contact.jpg
-          ffmpeg -v error -i out/gpt_opening_v7.mp4 -f null -
-          D=$(ffprobe -v error -show_entries format=duration -of default=nk=1:nw=1 out/gpt_opening_v7.mp4)
+          test -s out/gpt_opening_v8.mp4
+          test -s out/gpt_opening_v8.contact.jpg
+          ffmpeg -v error -i out/gpt_opening_v8.mp4 -f null -
+          D=$(ffprobe -v error -show_entries format=duration -of default=nk=1:nw=1 out/gpt_opening_v8.mp4)
           python - "$D" <<'PY'
           import sys
           d=float(sys.argv[1]); print('duration',d); assert 14.9 <= d <= 15.1
           PY
-          ffmpeg -hide_banner -i out/gpt_opening_v7.mp4 -vf "blackdetect=d=0.15:pix_th=0.02,freezedetect=n=0.001:d=1.0" -an -f null - 2>&1 | tee out/qc.txt
+          ffmpeg -hide_banner -i out/gpt_opening_v8.mp4 -vf "blackdetect=d=0.15:pix_th=0.02,freezedetect=n=0.001:d=1.0" -an -f null - 2>&1 | tee out/qc.txt
           if grep -q 'black_start' out/qc.txt; then echo 'unexpected black interval' >&2; exit 1; fi
       - name: Upload visual review
         uses: actions/upload-artifact@v4
         with:
-          name: gpt-mv-opening-v7-${{ github.run_id }}
+          name: gpt-mv-opening-v8-${{ github.run_id }}
           path: |
-            temp-work/gpt-mv-code-native/out/gpt_opening_v7.mp4
-            temp-work/gpt-mv-code-native/out/gpt_opening_v7.contact.jpg
+            temp-work/gpt-mv-code-native/out/gpt_opening_v8.mp4
+            temp-work/gpt-mv-code-native/out/gpt_opening_v8.contact.jpg
             temp-work/gpt-mv-code-native/out/qc.txt
           retention-days: 14
           if-no-files-found: error
