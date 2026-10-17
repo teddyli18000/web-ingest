@@ -26,12 +26,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Install ffmpeg and browser renderer
+      - name: Install renderer dependencies
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends ffmpeg
           npm install --no-audit --no-fund
-          npx playwright install --with-deps chromium
+          echo "CHROME_PATH=$(which google-chrome)" >> "$GITHUB_ENV"
+          google-chrome --version
       - name: Render code-native gate
         run: |
           node export/render.mjs --width 640 --height 360 --fps 12 --start 0 --end 15 --out out/gpt_code_native_gate01.mp4
