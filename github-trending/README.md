@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-17** | **4,392** | **2,545** |
+| **2014-08-09** | **2026-10-18** | **4,393** | **2,546** |
 
-### Latest All-Languages snapshot — 2026-10-17
+### Latest All-Languages snapshot — 2026-10-18
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) | Python | 1,552 |
-| 2 | [K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills) | Python | 1,158 |
-| 3 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 1,057 |
-| 4 | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything) | Python | 281 |
-| 5 | [mksglu/context-mode](https://github.com/mksglu/context-mode) | TypeScript | 449 |
-| 6 | [ruvnet/ruflo](https://github.com/ruvnet/ruflo) | TypeScript | 672 |
-| 7 | [android/skills](https://github.com/android/skills) | Kotlin | 36 |
-| 8 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 973 |
-| 9 | [cursor/plugins](https://github.com/cursor/plugins) | TypeScript | 278 |
-| 10 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 2,301 |
+| 1 | [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) | Python | 1,397 |
+| 2 | [MadsLorentzen/ai-job-search](https://github.com/MadsLorentzen/ai-job-search) | Python | 1,365 |
+| 3 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 1,145 |
+| 4 | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything) | Python | 574 |
+| 5 | [K-Dense-AI/scientific-agent-skills](https://github.com/K-Dense-AI/scientific-agent-skills) | Python | 878 |
+| 6 | [akitaonrails/ai-memory](https://github.com/akitaonrails/ai-memory) | Rust | 178 |
+| 7 | [android/skills](https://github.com/android/skills) | Kotlin | 355 |
+| 8 | [stablyai/orca](https://github.com/stablyai/orca) | TypeScript | 830 |
+| 9 | [anthropics/claude-code](https://github.com/anthropics/claude-code) | TypeScript | 179 |
+| 10 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 2,125 |
 
-[Open full snapshot →](data/2026/10/17/trending.json)
+[Open full snapshot →](data/2026/10/18/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 290 days  
+[`2026`](data/2026/) · 291 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
