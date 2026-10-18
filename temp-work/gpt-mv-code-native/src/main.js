@@ -1,7 +1,7 @@
 import {Draw} from './engine/draw.js';
 import {loadGPTArt} from './components/gpt_art.js';
 import {renderOpeningV8} from './scenes/opening_v8.js';
-import {renderDraftsV7} from './scenes/drafts_v7.js';
+import {renderDraftsV6} from './scenes/drafts_v6.js';
 
 const canvas=document.getElementById('stage');
 const g=canvas.getContext('2d',{alpha:false});
@@ -15,7 +15,7 @@ export function renderFrame(t){
   g.setTransform(1,0,0,1,0,0);
   g.clearRect(0,0,canvas.width,canvas.height);
   if(t<15)renderOpeningV8(d,t,gptArt);
-  else renderDraftsV7(d,t,gptArt);
+  else renderDraftsV6(d,t,gptArt);
   return canvas;
 }
 
