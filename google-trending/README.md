@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-16** | **677** | **677** | **677** | **677** | **676** |
+| **2024-11-28** | **2026-10-18** | **678** | **678** | **678** | **678** | **677** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 144 |
+| `google_trending_now` | 148 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-16
+### Latest SG snapshot — 2026-10-18
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | first resources haze response el nino | 5000+ |
-| 2 | tesla roadster | 5000+ |
-| 3 | sq31 flight back to san francisco | 10000+ |
-| 4 | ang mo kio | 2000+ |
-| 5 | haze malaysia | 5000+ |
-| 6 | stomp | 5000+ |
-| 7 | activesg closure | 10000+ |
-| 8 | msci | 1000+ |
-| 9 | porcelain | 500+ |
-| 10 | hukuman mati | 500+ |
+| 1 | hdb tengah kitchen layout explanation | 5000+ |
+| 2 | indonesia dry ice haze dispersion | 2000+ |
+| 3 | poison | 2000+ |
+| 4 | watery fuel complaints malaysia | 1000+ |
+| 5 | rent | 2000+ |
+| 6 | student | 500+ |
+| 7 | pakistan vs sri lanka | 500+ |
+| 8 | france | 500+ |
+| 9 | luxury goods | 200+ |
+| 10 | paris | 500+ |
 
-### Latest US snapshot — 2026-10-16
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | bend oregon | 500000+ |
-| 2 | david surkamp rock singer passes | 100000+ |
-| 3 | tesla | 200000+ |
-| 4 | seahawks | 1000000+ |
-| 5 | emilio sakraya | 200000+ |
-| 6 | you can see everything | 100000+ |
-| 7 | banana ball | 200000+ |
-| 8 | superficial blood clot | 200000+ |
-| 9 | freeze warning | 20000+ |
-| 10 | malibu fire | 20000+ |
-
-### Latest GB snapshot — 2026-10-16
+### Latest US snapshot — 2026-10-18
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | tesla roadster | 50000+ |
-| 2 | counterfeit money | 20000+ |
-| 3 | benfica vs celtic | 100000+ |
-| 4 | channel tunnel | 20000+ |
-| 5 | sibling | 5000+ |
-| 6 | bournemouth vs sturm graz | 20000+ |
-| 7 | oil refinery | 5000+ |
-| 8 | fourth wing | 10000+ |
-| 9 | phil parkinson | 5000+ |
-| 10 | anthony joshua | 5000+ |
+| 1 | notre dame vs byu | 1000000+ |
+| 2 | auburn vs georgia | 1000000+ |
+| 3 | florida state vs miami fl | 500000+ |
+| 4 | penn state vs michigan | 500000+ |
+| 5 | nebraska vs oregon | 200000+ |
+| 6 | florida vs texas | 500000+ |
+| 7 | kentucky vs oklahoma | 200000+ |
+| 8 | utah vs colorado | 100000+ |
+| 9 | france | 100000+ |
+| 10 | south african rugby player hyron andrews | 50000+ |
 
-### Latest HK snapshot — 2026-10-16
+### Latest GB snapshot — 2026-10-18
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | tesla roadster | 10000+ |
-| 2 | 鄧兆尊 | 5000+ |
-| 3 | 陳瀅 | 5000+ |
-| 4 | 貓 | 2000+ |
-| 5 | apple store | 2000+ |
-| 6 | 陳奕迅 | 2000+ |
-| 7 | 超級 市場 | 2000+ |
-| 8 | storm | 2000+ |
-| 9 | 臺日電梯 | 2000+ |
-| 10 | 麥 玲玲 | 500+ |
+| 1 | brentford vs liverpool | 200000+ |
+| 2 | man city vs ipswich town | 100000+ |
+| 3 | newcastle vs aston villa | 200000+ |
+| 4 | everton vs chelsea | 100000+ |
+| 5 | michael forest | 50000+ |
+| 6 | emi martinez | 100000+ |
+| 7 | paris | 20000+ |
+| 8 | heshi peixin kindergarten lead poisoning | 10000+ |
+| 9 | betis vs barcelona | 50000+ |
+| 10 | paul whitehouse | 10000+ |
 
-[Open full snapshot →](data/2026/10/16/trending.json)
+### Latest HK snapshot — 2026-10-18
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 梅艷芳 | 2000+ |
+| 2 | 陳淑蘭 | 1000+ |
+| 3 | 法國示威 | 1000+ |
+| 4 | 年金 | 500+ |
+| 5 | 天气 | 1000+ |
+| 6 | 伊藤美诚 | 500+ |
+| 7 | 皇崗口岸 | 2000+ |
+| 8 | 姜 濤 | 2000+ |
+| 9 | 劉浩龍 | 500+ |
+| 10 | 吳康民 | 100+ |
+
+[Open full snapshot →](data/2026/10/18/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 279 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 280 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
