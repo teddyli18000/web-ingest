@@ -1,59 +1,61 @@
 # GPT MV — code-native rebuild
 
-This workspace builds the film as authored code, not as a slideshow of finished illustrations.
+This workspace builds an original GPT/ChatGPT personification film as authored code, not as a slideshow of finished illustrations.
 
-The public `Nyankomintsu/world-execute-me-lyric-mv` repository is a production/process reference only. Its director prompt, review discipline, beat-driven timing and scene/engine separation define the **quality bar**. We do **not** copy or reuse its source, scene choreography, character art, compositions, timings, lyrics or assets.
+The public `Nyankomintsu/world-execute-me-lyric-mv` repository is a **production/process reference only**. Its directing discipline, staged review and deterministic render/QC define the quality bar. We do **not** copy or reuse its source, scene choreography, character art, compositions, timings, lyrics, audio or assets.
 
-## Current status
+## Current status — 0–30 s visual language locked
 
-The previously validated 30 s cut is **TECH PROTOTYPE ONLY — visually rejected**.
+The old technical prototype is rejected and retained only as history. The active timeline now has two visually reviewed sections:
 
-It proved deterministic browser rendering, code-authored geometry, CI export and scene continuity. It did **not** meet the reference film's shot density, character performance, layered composition, musical editing or finish. Engineering green checks are not artistic approval.
+- **0–15 s — opening v8 — PASS**
+  - character hand extreme close-up → midshot;
+  - tangible context objects, not generic HUD cards;
+  - composer unfolds into a physical proof sheet;
+  - send → nine paper strips → paper city/world is one continuous transformation;
+  - character/building/foreground occlusion was explicitly reviewed.
+- **15–30 s — revision v3 — PASS**
+  - opening world is wiped by the same physical paper language into a revision desk;
+  - a confident wrong route is visibly corrected by one vermilion user mark;
+  - corrected proof duplicates into three perspective sheets, fans out, then registers back together;
+  - the final sheet keeps the old wrong route as a faint graphite ghost;
+  - the final character is revealed by the moving paper edge at full opacity rather than fading in.
 
-Do not extend that cut as if it were a finished film.
+Both sections were reviewed from rendered video, contact sheets and dense boundary frames. Engineering green checks alone do not count as visual approval.
 
-## Production rules for the rebuild
+## Character master
 
-- every shot has at least backdrop / subject / foreground-interface layers;
-- cuts and major actions sit on the beat grid; secondary actions can fall between them;
-- a shot must contain authored internal events, not one transform stretched for several seconds;
-- camera, subject and foreground do not all move as one flat layer;
-- fast motion uses stagger / ghost exposure / secondary motion, never opacity fade alone;
-- text is an actor or a semantic element, never filler HUD;
-- the GPT character must react, look, move and hand objects through the scene rather than behave as a static mascot;
-- key transitions must transform existing geometry into the next shot instead of cross-fading two finished states;
-- each stage is rendered and visually reviewed before the next stage starts;
-- temporary CI workflows are removed after a gate passes.
+The active character is the approved silver-haired GPT artwork loaded through `src/components/gpt_art.js`.
 
-## Opening v2 — 0–15 s — IN REVIEW
+Primary source:
 
-The old `boot.js + reply.js` opening has been replaced in the active timeline by `src/scenes/opening_v2.js`.
+- `reach_hq.b64.0 … reach_hq.b64.10`
+- decoded WebP: **788×887**
+- SHA-256: `e44ef2e3a6d839f81104634c9d78dfdc3466ddfae909ac632da5b2cf0e8394ed`
+- runtime source name: `reach-hq`
 
-It contains four independently staged shots on one beat grid:
+The old 420×473 master exists only as an explicit fallback. Review CI uses `--art-source reach-hq`, so a silent fallback fails the gate.
 
-1. **threads** — four semantic strands and paper cards arrive from different depths and weave the conversation frame;
-2. **context orbit** — context / tools / memory / style move on separate arcs around GPT, with parallax, ghost exposure and a context spine forming behind the character;
-3. **composer performance** — the user types a false start, pauses, deletes it, types the real line, and sends; typing produces physical paper ticks and GPT reacts in the background;
-4. **reply architecture** — the sent words break into moving paper strips, cross the character's reach, then register into three large spatial planes instead of becoming a subtitle card.
+## Active timeline
 
-Review gate: 960×540 / 15 fps / 15 s. Contact sheet plus dense sheets around all three cut boundaries are required before this opening can pass.
+- `src/scenes/opening_v8.js` — 0–15 s
+- `src/scenes/drafts_v3.js` — 15–30 s
+- `src/main.js` — active routing
+- `src/components/gpt_art.js` — verified character source/crops/registration
+- `export/render.mjs` — deterministic Playwright frame capture + ffmpeg encode/contact-sheet generation
 
-## Retained technical prototype
+## Production rules
 
-The old 0–30 s implementation remains in the repository only as reusable technical material:
+- every shot has backdrop / subject / foreground depth;
+- camera, subject and foreground do not move as one flat layer;
+- text must perform a semantic role, not act as filler HUD;
+- the GPT character is never replaced by the rejected mascot path;
+- major transitions inherit physical geometry from the previous shot instead of cross-fading finished states;
+- opacity fade is not the main mechanism for important entrances/exits;
+- a correction remains visible as residue instead of being magically erased;
+- each section is rendered and visually reviewed before the next section starts;
+- temporary CI workflows are removed immediately after their gate passes.
 
-- `src/scenes/boot.js`
-- `src/scenes/reply.js`
-- `src/scenes/drafts.js`
+## Retained rejected material
 
-Its final engineering validation was run `39002735464`, but that status must not be interpreted as artistic approval.
-
-## Rendering architecture
-
-- `src/engine/` — Canvas drawing primitives, semantic palette, deterministic timing;
-- `src/components/chat.js` — code-authored client, composer, cursor and construction pieces;
-- `src/components/gpt.js` — original multi-plate vector GPT character;
-- `src/scenes/opening_v2.js` — current dense opening rebuild;
-- `export/render.mjs` — static-mode Playwright capture through system Chrome + ffmpeg encode/contact-sheet generation.
-
-No generated full-frame illustration, reference-project image, or reference-project source code is part of the rendered film.
+Old scenes/assets may remain temporarily for comparison or reusable low-level techniques, including `boot.js`, `reply.js`, `drafts.js` and earlier opening/revision versions. They are **not** approved film content and must not be reintroduced into the active timeline.
