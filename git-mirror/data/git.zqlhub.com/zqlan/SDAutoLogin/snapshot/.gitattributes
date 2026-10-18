@@ -1,0 +1,19 @@
+# Keep line endings stable across the platforms this tool builds on: store and
+# check out LF everywhere, so a file does not look wholly changed just because
+# another system wrote it. The Windows command scripts are the exception, since
+# cmd.exe wants its own spelling.
+* text=auto eol=lf
+*.go text eol=lf
+*.sh text eol=lf
+*.cmd text eol=crlf
+
+# The files under packaging/ are installed on the target, where a carriage
+# return at the end of a line breaks things: a shell script whose shebang ends
+# in one does not run. Some of them have no extension to match, so the whole
+# directory is pinned.
+packaging/** text eol=lf
+
+# The generated Windows resources are binaries: store them byte for byte and
+# keep git from touching their line endings.
+*.syso binary
+*.ico binary

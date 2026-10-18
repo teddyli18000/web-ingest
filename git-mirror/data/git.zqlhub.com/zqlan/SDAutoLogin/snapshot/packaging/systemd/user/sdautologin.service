@@ -1,0 +1,79 @@
+# SDAutoLogin as a user service: no root, no tray, starts with the login.
+#
+# Install:
+#   install -m 0755 dist/SDAutoLogin-linux-amd64 ~/.local/bin/SDAutoLogin
+#   install -D -m 0644 packaging/systemd/user/sdautologin.service \
+#           ~/.config/systemd/user/sdautologin.service
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now sdautologin
+#
+# The account is written down once, either on the command line:
+#
+#   printf '%s\n' SECRET > ~/.config/sdautologin.password
+#   chmod 600 ~/.config/sdautologin.password
+#   SDAutoLogin --home=~/.local/share/sdautologin \
+#       --username=s1234567 --password-file=~/.config/sdautologin.password \
+#       --isp=@zgyd --save config --show
+#
+# A password written as --password=... on the command line stands in the process
+# list for as long as that command runs, where every other user of the machine can
+# read it, so the file is handed over instead. The LoadCredential= form below keeps
+# the password off the disk as well.
+#
+# or from the settings page: add --settings=127.0.0.1:8088 to ExecStart below
+# and open the address the program prints on its console, which is what
+# "journalctl --user -u sdautologin" shows. The bare port will not open the page,
+# since the one-time token it needs is in that address, and the address is
+# replaced after every opening, so take the newest line.
+#
+# The password does not have to be written down. systemd can hand it over as a
+# credential the program picks up by itself, so neither the file nor the command
+# line holds one. Add this to the [Service] section below, with the secret on
+# the first line of a file this user reads (0600) and nobody else:
+#
+#   LoadCredential=password:/etc/sdautologin/password
+#
+# A user service stops when the last session ends unless lingering is on. Run
+# "loginctl enable-linger $USER" to keep it up with nobody logged in.
+
+[Unit]
+Description=SDAutoLogin campus network auto login
+Documentation=https://git.zqlhub.com/zqlan/SDAutoLogin
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+# config.json and logs/ are made on the first run, in the data directory.
+ExecStart=%h/.local/bin/SDAutoLogin run --home=%h/.local/share/sdautologin
+# The program reloads config.json when it is sent SIGHUP, so
+# systemctl --user reload sdautologin picks up an edited file without dropping
+# the session.
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+RestartSec=15
+
+# config.json holds the password and the log the account, and both are readable
+# by their owner alone; the umask covers whatever else the program writes.
+UMask=0077
+
+NoNewPrivileges=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+# These two need no namespace of their own, so a user unit can have them: the
+# program holds no capability and may ask the kernel for nothing but the ordinary
+# set of a service. Its single instance lock is the only unusual call in it, and
+# flock is part of @system-service.
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallFilter=@system-service
+
+# The mount namespace options of the system unit (PrivateTmp, ProtectSystem and
+# the rest) are left out here: a user manager needs unprivileged user namespaces
+# for them, which some kernels turn off.
+
+[Install]
+WantedBy=default.target

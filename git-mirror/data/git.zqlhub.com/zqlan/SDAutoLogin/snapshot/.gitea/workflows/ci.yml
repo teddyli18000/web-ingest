@@ -1,0 +1,428 @@
+# Continuous integration, run by Gitea Actions. Both jobs run in the golang
+# image, which has git and dpkg but no node, so the checkout is done with git.
+name: CI
+
+# Neither job names the permissions of the run at the top, since the two need
+# different ones: the packaging job writes a release and the wiki, the test job
+# only reads. Each job declares its own below, so code that runs in the test job
+# — a test, a vendored dependency, a tool it downloads — holds a token that
+# cannot write to the repository.
+
+# Runs on tags only. A branch is checked from the checkout instead, with the
+# same tasks: go run ./tools/build test, packages, verify.
+on:
+  push:
+    tags: ["v*"]
+  # A run started by hand builds, checks and signs, and stops there: the three
+  # steps that publish and the one that writes the wiki keep the tag condition,
+  # so a manual run cannot produce a release. It is how the signing key is tried
+  # without spending a tag on finding out that it is wrong.
+  workflow_dispatch:
+
+# The address the jobs fetch from and publish to. github.server_url gives the
+# instance's internal name, which no job container can resolve.
+env:
+  INSTANCE: https://git.zqlhub.com
+  # Where the job installs the tools of the formats from: the mirror the runner
+  # reaches on the internal network; the image's own sources are the fallback.
+  DEBIAN_MIRROR: mirrors.tencentyun.com
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: golang:1.26
+    permissions:
+      contents: read
+    steps:
+      # The tags are fetched as well as the history: the version a release is
+      # named after is read from the tag in front of the checkout.
+      - name: check out the sources
+        env:
+          # The token of the run goes by one of these names, depending on the
+          # version and the instance; the others expand to nothing.
+          TOKEN_CONTEXT: ${{ github.token }}
+          TOKEN_SECRET: ${{ secrets.GITHUB_TOKEN }}
+          TOKEN_GITEA: ${{ secrets.GITEA_TOKEN }}
+          REPO: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: |
+          set -eu
+          token="${TOKEN_CONTEXT:-${TOKEN_SECRET:-${TOKEN_GITEA:-}}}"
+          if [ -z "$token" ]; then
+            echo "this run has no token to fetch the repository with"
+            exit 1
+          fi
+
+          host=${INSTANCE#http://}
+          host=${host#https://}
+
+          # The token is handed to git through the environment, scoped to this
+          # instance: nothing is written into .git/config for anything that later
+          # prints or packs the working directory to carry away, and the value is
+          # not on a command line, where every user of this machine can read it
+          # out of /proc/*/cmdline. Basic with oauth2:<token> is what the remote
+          # URL carried before this, so the instance is sent exactly what it was
+          # sent yesterday.
+          #
+          # A GIT_ASKPASS program was tried first and does not work here: with the
+          # user name in the URL, git does not ask it for the password and sends
+          # "oauth2:" with an empty one. This needs git 2.31 for the environment
+          # configuration, which the image the job runs in has.
+          basic=$(printf 'oauth2:%s' "$token" | base64 | tr -d '\n')
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0="http.${INSTANCE}/.extraHeader"
+          export GIT_CONFIG_VALUE_0="Authorization: Basic $basic"
+          url="https://oauth2@${host}/${REPO}.git"
+
+          # The runner may or may not have left a checkout in the working
+          # directory, so init is run either way and the remote is added or
+          # pointed at the repository again.
+          git init -q .
+          git remote add origin "$url" 2>/dev/null || git remote set-url origin "$url"
+          git fetch --force --tags origin "$REF"
+          git checkout -q -f FETCH_HEAD
+
+      # gofmt reports what it would change and still exits 0, so the list is
+      # what decides.
+      - name: the sources are formatted
+        run: |
+          unformatted=$(gofmt -l cmd internal tools)
+          if [ -n "$unformatted" ]; then
+            echo "gofmt would change these files:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: vet and test
+        run: go run ./tools/build test
+
+  packages:
+    runs-on: ubuntu-latest
+    container: golang:1.26
+    # Only this job writes, and only the steps that publish and update the wiki
+    # are reached on a tag. The signing key of this job is a repository secret
+    # and never a token of the run.
+    permissions:
+      contents: write
+    steps:
+      # The tags have to be here: every package and the program inside it are
+      # named after the tag, and without it the build falls back on the sources.
+      - name: check out the sources
+        env:
+          TOKEN_CONTEXT: ${{ github.token }}
+          TOKEN_SECRET: ${{ secrets.GITHUB_TOKEN }}
+          TOKEN_GITEA: ${{ secrets.GITEA_TOKEN }}
+          REPO: ${{ github.repository }}
+          REF: ${{ github.ref }}
+        run: |
+          set -eu
+          token="${TOKEN_CONTEXT:-${TOKEN_SECRET:-${TOKEN_GITEA:-}}}"
+          if [ -z "$token" ]; then
+            echo "this run has no token to fetch the repository with"
+            exit 1
+          fi
+
+          host=${INSTANCE#http://}
+          host=${host#https://}
+
+          # The token is handed to git through the environment, scoped to this
+          # instance: nothing is written into .git/config for anything that later
+          # prints or packs the working directory to carry away, and the value is
+          # not on a command line, where every user of this machine can read it
+          # out of /proc/*/cmdline. Basic with oauth2:<token> is what the remote
+          # URL carried before this, so the instance is sent exactly what it was
+          # sent yesterday.
+          #
+          # A GIT_ASKPASS program was tried first and does not work here: with the
+          # user name in the URL, git does not ask it for the password and sends
+          # "oauth2:" with an empty one. This needs git 2.31 for the environment
+          # configuration, which the image the job runs in has.
+          basic=$(printf 'oauth2:%s' "$token" | base64 | tr -d '\n')
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0="http.${INSTANCE}/.extraHeader"
+          export GIT_CONFIG_VALUE_0="Authorization: Basic $basic"
+          url="https://oauth2@${host}/${REPO}.git"
+
+          git init -q .
+          git remote add origin "$url" 2>/dev/null || git remote set-url origin "$url"
+          git fetch --force --tags origin "$REF"
+          git checkout -q -f FETCH_HEAD
+
+      # The install sources come from .gitea/scripts/apt-mirror.sh, sourced
+      # because a function defined in one step is gone by the next.
+      - name: install the tools of the formats
+        run: |
+          set -eu
+          . .gitea/scripts/apt-mirror.sh
+          pointAptAtMirror
+
+          if ! apt-get update -qq; then
+            echo "the sources of $DEBIAN_MIRROR could not be read, going back to the image's own sources"
+            for f in $aptSourcesFiles; do
+              [ -f "$f" ] || continue
+              sed -i "s|$DEBIAN_MIRROR|deb.debian.org|g" "$f"
+            done
+            apt-get update
+          fi
+
+          apt-get install -y --no-install-recommends rpm libarchive-tools xz-utils zstd
+
+      - name: pack every format
+        run: go run ./tools/build packages
+
+      # The checksum list is signed, so a reader can tell a release this project
+      # published from anything else that arrives over the network. The program
+      # refuses to install a release it cannot check, so a tag whose key is
+      # missing or wrong fails here rather than going out as one nobody can
+      # update from. "go run ./tools/build keygen" makes a key and writes the
+      # public half into the program; the private half is kept out of the
+      # checkout and its contents go into the repository secret named below,
+      # which is the only place the signing step reads it from: a key file in
+      # the working tree is not read, and must not be committed.
+      #
+      # This is the last step that touches dist/packages, and it signs the list
+      # as it stands: nothing may be packed after it.
+      - name: sign the checksum list
+        # A tag signs, and so does a run started by hand on the default branch:
+        # that is how the key is tried without spending a tag. A run started by
+        # hand on any other ref stops here rather than running that ref's code
+        # with the signing key in its environment.
+        if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+        env:
+          SDAUTOLOGIN_SIGNING_KEY: ${{ secrets.SDAUTOLOGIN_SIGNING_KEY }}
+        run: go run ./tools/build sign
+
+      # Every package is read back with the tool that installs it, the pair the
+      # release carries is read back out of dist/packages and checked, and
+      # everything is then packed a second time to see whether a release built
+      # twice is the same release.
+      #
+      # This runs after signing, and the order is the point: the check compares
+      # the signature with the list next to it on the disk, so it checks
+      # something only when a signature is there. Run before signing it found
+      # none and passed, which is a gate that reports success for a release
+      # nobody signed. Nothing is packed between this and the publish step, and a
+      # repack that came out different fails here.
+      - name: check every package
+        run: go run ./tools/build verify
+
+      # Nothing is uploaded as an artifact: the publish step reads the packages
+      # from the working directory, where a run that stops leaves them.
+
+
+      - name: the tools to publish with
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          apt-get install -y --no-install-recommends curl jq
+
+      # A tag makes a release, with the version read from the tag. This instance
+      # keeps both attachments when a name repeats, so each name goes first.
+      - name: publish the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          TOKEN_CONTEXT: ${{ github.token }}
+          TOKEN_SECRET: ${{ secrets.GITHUB_TOKEN }}
+          TOKEN_GITEA: ${{ secrets.GITEA_TOKEN }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -eu
+          version=${TAG#v}
+
+          # The release is signed or it is not published. The signing step fails
+          # the run when the secret holds no usable key, and this is what keeps a
+          # release from going out unsigned if that step is ever skipped or moved
+          # after this one: nothing installs a release it cannot check, so an
+          # unsigned one is a release that reaches nobody who is already running
+          # the program. The signature is not checked here — verify runs before it
+          # is made, and packing again after signing is what invalidates it.
+          if [ ! -f dist/packages/SHA256SUMS.sig ]; then
+            echo "dist/packages/SHA256SUMS.sig is not there: $TAG would be published unsigned."
+            echo "the sign step has to run, and to run before this one"
+            exit 1
+          fi
+
+          # The deb is not named after the tag: each format spells a version
+          # that comes before the release its own way, and the deb spells it
+          # with a tilde. The name is asked of the build tool rather than worked
+          # out again here, or the two would drift apart at the next change.
+          debversion=$(go run ./tools/build version | sed -n 's/^deb=//p')
+          if [ ! -f "dist/packages/sdautologin_${debversion}-1_amd64.deb" ]; then
+            echo "there is no package for $version:"
+            echo "this build packaged $debversion, or nothing at all"
+            exit 1
+          fi
+
+          # The body of the release is the section CHANGELOG.md holds for this
+          # tag. A tag with no section is refused.
+          notes=$(awk -v want="$TAG" '
+            $1 == "##" {
+              if (seen) exit
+              if ($2 == want) { seen = 1; next }
+            }
+            seen && !started && $0 ~ /^[[:space:]]*$/ { next }
+            seen { started = 1; print }
+          ' CHANGELOG.md)
+          if [ -z "$notes" ]; then
+            echo "CHANGELOG.md holds no section for $TAG:"
+            echo "the body of the release is read out of it, so add one and push the tag again"
+            exit 1
+          fi
+
+          token="${TOKEN_CONTEXT:-${TOKEN_SECRET:-${TOKEN_GITEA:-}}}"
+          if [ -z "$token" ]; then
+            echo "this run has no token to write a release with"
+            exit 1
+          fi
+
+          # The header goes into a file only this user can read, and curl is told
+          # to read it from there: a token on a command line is readable by every
+          # user of this machine in /proc/*/cmdline.
+          header=$(mktemp)
+          trap 'rm -f "$header"' EXIT
+          chmod 600 "$header"
+          printf 'Authorization: token %s\n' "$token" > "$header"
+          auth="@$header"
+          api="$INSTANCE/api/v1/repos/$REPO/releases"
+
+          # A tag with anything after the version is a pre-release, and it is
+          # published as one: the same packages and the same notes, marked so
+          # that nobody installs it expecting the release it leads to.
+          case "$version" in
+            *-*) prerelease=true ;;
+            *)   prerelease=false ;;
+          esac
+
+          # The release of this tag, or a new one: pushing a tag twice, or
+          # creating the release by hand first, must not fail the run.
+          release=$(curl -sS -H "$auth" "$api/tags/$TAG")
+          id=$(printf '%s' "$release" | jq -r '.id // empty')
+          if [ -z "$id" ]; then
+            release=$(curl -sS -X POST \
+              -H "$auth" -H "Content-Type: application/json" \
+              -d "$(jq -n --arg tag "$TAG" --arg body "$notes" --argjson pre "$prerelease" \
+                    '{tag_name: $tag, name: $tag, draft: false, prerelease: $pre,
+                      body: $body}')" \
+              "$api")
+            id=$(printf '%s' "$release" | jq -r '.id // empty')
+          else
+            # A release that is already there keeps the id it has and is told what
+            # the changelog says now: a tag pushed again after its notes were
+            # corrected would otherwise go on showing the text of the first run.
+            # The flag goes with it, so a release made by hand before the run is
+            # marked the way the tag says.
+            curl -sS -X PATCH \
+              -H "$auth" -H "Content-Type: application/json" \
+              -d "$(jq -n --arg body "$notes" --argjson pre "$prerelease" \
+                    '{body: $body, prerelease: $pre}')" \
+              "$api/$id" >/dev/null
+          fi
+          if [ -z "$id" ]; then
+            echo "no release of $TAG could be reached or created:"
+            echo "check that the token of this run may write to the repository"
+            exit 1
+          fi
+
+          # Reported before anything is replaced: an attachment already there
+          # means this tag has been published before.
+          already=$(printf '%s' "$release" | jq -r '.assets | length')
+          if [ "$already" != "0" ]; then
+            echo "$TAG has been published before: the release already carries $already attachment(s)"
+            printf '%s' "$release" | jq -r '"  newest of them: " + (.assets | map(.created_at) | max)'
+            echo "  the files below replace the ones of the same name, and the release is left with one of each"
+          fi
+
+          # The packages and SHA256SUMS as the attachments of the release, where
+          # the two manifests say they are.
+          attached=0
+          replaced=0
+          for file in dist/packages/*; do
+            [ -f "$file" ] || continue
+            name=$(basename "$file")
+
+            # Every attachment already carrying this name goes. There is
+            # normally one; a release may carry two, and both of them go.
+            for old in $(printf '%s' "$release" | jq -r --arg name "$name" '.assets[] | select(.name == $name) | .id'); do
+              code=$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE -H "$auth" "$api/$id/assets/$old")
+              case "$code" in
+                200|204) replaced=$((replaced + 1)) ;;
+                *) echo "the attachment $old of $name could not be deleted (HTTP $code): the upload below may leave two of it" ;;
+              esac
+            done
+
+            curl -sS -H "$auth" -F "attachment=@$file" "$api/$id/assets?name=$name" \
+              | jq -r '"  " + (.name // .message)'
+            attached=$((attached + 1))
+          done
+          echo "attached $attached file(s), replacing $replaced earlier attachment(s) of the same names"
+
+      # The wiki is a repository of its own, written from here: the manual and
+      # the changelog come from the files the repository holds, the rest from
+      # docs/wiki/. A wiki that cannot be written to does not fail the run.
+      - name: update the wiki
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          TOKEN_CONTEXT: ${{ github.token }}
+          TOKEN_SECRET: ${{ secrets.GITHUB_TOKEN }}
+          TOKEN_GITEA: ${{ secrets.GITEA_TOKEN }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -eu
+          token="${TOKEN_CONTEXT:-${TOKEN_SECRET:-${TOKEN_GITEA:-}}}"
+          if [ -z "$token" ]; then
+            echo "this run has no token to write the wiki with"
+            exit 1
+          fi
+          host=${INSTANCE#http://}
+          host=${host#https://}
+
+          # The same two rules as the checkout above: the token is not in the
+          # remote and not on a command line, and the clone goes into a directory
+          # this run made rather than a fixed path in /tmp, which anything else on
+          # the machine can have prepared first.
+          header=$(mktemp)
+          work=$(mktemp -d)
+          trap 'cd /; rm -f "$header"; rm -rf "$work"' EXIT
+          chmod 600 "$header"
+          basic=$(printf 'oauth2:%s' "$token" | base64 | tr -d '\n')
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0="http.${INSTANCE}/.extraHeader"
+          export GIT_CONFIG_VALUE_0="Authorization: Basic $basic"
+          printf 'Authorization: token %s\n' "$token" > "$header"
+          url="https://oauth2@${host}/${REPO}.wiki.git"
+          wiki_api="$INSTANCE/api/v1/repos/$REPO/wiki"
+
+          # A wiki nobody has written to yet has no repository behind it: Gitea
+          # makes one when the first page is saved, and that page is saved here.
+          if ! git clone --quiet "$url" "$work/wiki"; then
+            echo "the wiki has no repository yet, saving its first page"
+            curl -sS -o /dev/null \
+              -X POST -H "@$header" -H "Content-Type: application/json" \
+              -d '{"title":"Home","content":"The pages of this wiki are written from the repository."}' \
+              "$wiki_api/new"
+            if ! git clone --quiet "$url" "$work/wiki"; then
+              echo "the wiki could not be cloned with a first page either: does the token of this run write it?"
+              exit 0
+            fi
+          fi
+
+          sh ./.gitea/scripts/wiki-pages.sh . "$work/wiki"
+
+          cd "$work/wiki"
+          # A wiki nobody has written to yet comes back with no branch, and the
+          # push is what creates it; one that has been written to is on the
+          # branch Gitea made for it.
+          branch=$(git symbolic-ref --short -q HEAD || echo master)
+          git add -A
+          if git diff --cached --quiet; then
+            echo "the wiki is already up to date"
+            exit 0
+          fi
+          git -c user.name=SDAutoLogin -c user.email=sdautologin@localhost \
+            commit --quiet -m "Pages from $TAG"
+          if git push --quiet origin "HEAD:$branch"; then
+            echo "the wiki was updated from $TAG"
+          else
+            echo "the wiki could not be pushed to: the token of this run may not write to it"
+          fi
