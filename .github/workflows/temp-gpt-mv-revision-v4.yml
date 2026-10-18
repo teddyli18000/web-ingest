@@ -1,10 +1,10 @@
-name: Temp GPT MV revision v5
+name: Temp GPT MV revision v6
 
 on:
   push:
     paths:
       - "temp-work/gpt-mv-code-native/src/main.js"
-      - "temp-work/gpt-mv-code-native/src/scenes/drafts_v5.js"
+      - "temp-work/gpt-mv-code-native/src/scenes/drafts_v6.js"
       - "temp-work/gpt-mv-code-native/src/components/gpt_art.js"
       - "temp-work/gpt-mv-code-native/assets/gpt/**"
       - "temp-work/gpt-mv-code-native/export/render.mjs"
@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: temp-gpt-mv-revision-v5
+  group: temp-gpt-mv-revision-v6
   cancel-in-progress: true
 
 permissions:
@@ -37,27 +37,27 @@ jobs:
           sudo apt-get install -y -qq ffmpeg >/dev/null
           echo "CHROME_PATH=$(which google-chrome)" >> "$GITHUB_ENV"
       - name: Render 15-30s visual gate
-        run: node export/render.mjs --start 15 --end 30 --width 960 --height 540 --fps 15 --art-source reach-hq --out out/gpt_revision_v5.mp4
+        run: node export/render.mjs --start 15 --end 30 --width 960 --height 540 --fps 15 --art-source reach-hq --out out/gpt_revision_v6.mp4
       - name: Validate media
         run: |
           set -euo pipefail
-          test -s out/gpt_revision_v5.mp4
-          test -s out/gpt_revision_v5.contact.jpg
-          ffmpeg -v error -i out/gpt_revision_v5.mp4 -f null -
-          D=$(ffprobe -v error -show_entries format=duration -of default=nk=1:nw=1 out/gpt_revision_v5.mp4)
+          test -s out/gpt_revision_v6.mp4
+          test -s out/gpt_revision_v6.contact.jpg
+          ffmpeg -v error -i out/gpt_revision_v6.mp4 -f null -
+          D=$(ffprobe -v error -show_entries format=duration -of default=nk=1:nw=1 out/gpt_revision_v6.mp4)
           python - "$D" <<'PY'
           import sys
           d=float(sys.argv[1]); print('duration',d); assert 14.9 <= d <= 15.1
           PY
-          ffmpeg -hide_banner -i out/gpt_revision_v5.mp4 -vf "blackdetect=d=0.15:pix_th=0.02,freezedetect=n=0.001:d=1.0" -an -f null - 2>&1 | tee out/qc.txt
+          ffmpeg -hide_banner -i out/gpt_revision_v6.mp4 -vf "blackdetect=d=0.15:pix_th=0.02,freezedetect=n=0.001:d=1.0" -an -f null - 2>&1 | tee out/qc.txt
           if grep -q 'black_start' out/qc.txt; then echo 'unexpected black interval' >&2; exit 1; fi
       - name: Upload visual review
         uses: actions/upload-artifact@v4
         with:
-          name: gpt-mv-revision-v5-${{ github.run_id }}
+          name: gpt-mv-revision-v6-${{ github.run_id }}
           path: |
-            temp-work/gpt-mv-code-native/out/gpt_revision_v5.mp4
-            temp-work/gpt-mv-code-native/out/gpt_revision_v5.contact.jpg
+            temp-work/gpt-mv-code-native/out/gpt_revision_v6.mp4
+            temp-work/gpt-mv-code-native/out/gpt_revision_v6.contact.jpg
             temp-work/gpt-mv-code-native/out/qc.txt
           retention-days: 14
           if-no-files-found: error
