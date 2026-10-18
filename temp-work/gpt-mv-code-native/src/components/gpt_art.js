@@ -5,13 +5,23 @@ const CROP_N = {
   hand:  {x:.28125,     y:.4166667,   w:.71875,     h:.5833333},
 };
 
-const CHUNKS=8;
-const EXPECTED_SHA='33e1f43e1df5fed02d32928673158dbcc3f1eb0ba16f59fbe51bf1579ed2e271';
+const SOURCES=[
+  {
+    name:'reach-hq', prefix:'reach_hq.b64.', chunks:11,
+    sha:'e44ef2e3a6d839f81104634c9d78dfdc3466ddfae909ac632da5b2cf0e8394ed',
+    width:788, height:887,
+  },
+  {
+    name:'reach-fallback', prefix:'reach.b64.', chunks:8,
+    sha:'33e1f43e1df5fed02d32928673158dbcc3f1eb0ba16f59fbe51bf1579ed2e271',
+    width:420, height:473,
+  },
+];
 
-async function loadPayload(){
-  const parts=await Promise.all(Array.from({length:CHUNKS},async(_,i)=>{
-    const r=await fetch(`/assets/gpt/reach.b64.${i}`,{cache:'no-store'});
-    if(!r.ok)throw new Error(`character chunk ${i} HTTP ${r.status}`);
+async function decodeSource(source){
+  const parts=await Promise.all(Array.from({length:source.chunks},async(_,i)=>{
+    const r=await fetch(`/assets/gpt/${source.prefix}${i}`,{cache:'no-store'});
+    if(!r.ok)throw new Error(`${source.name} chunk ${i} HTTP ${r.status}`);
     return (await r.text()).trim();
   }));
   const b64=parts.join('');
@@ -19,23 +29,39 @@ async function loadPayload(){
   for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
   const digest=await crypto.subtle.digest('SHA-256',bytes);
   const sha=[...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
-  if(sha!==EXPECTED_SHA)throw new Error(`character payload sha mismatch: ${sha}`);
-  return `data:image/webp;base64,${b64}`;
+  if(sha!==source.sha)throw new Error(`${source.name} payload sha mismatch: ${sha}`);
+
+  const img=new Image();
+  img.src=`data:image/webp;base64,${b64}`;
+  await img.decode();
+  if(img.naturalWidth!==source.width||img.naturalHeight!==source.height){
+    throw new Error(`${source.name} unexpected size ${img.naturalWidth}x${img.naturalHeight}`);
+  }
+  return {img,source};
 }
 
 export async function loadGPTArt(){
-  const img=new Image();
-  img.src=await loadPayload();
-  await img.decode();
-  if(img.naturalWidth!==420||img.naturalHeight!==473)throw new Error(`unexpected character size ${img.naturalWidth}x${img.naturalHeight}`);
-  return new GPTArt(img);
+  let lastError=null;
+  for(const source of SOURCES){
+    try{
+      const loaded=await decodeSource(source);
+      return new GPTArt(loaded.img,loaded.source);
+    }catch(err){
+      lastError=err;
+      console.warn(`[gpt-art] ${source.name} unavailable; trying fallback`,err);
+    }
+  }
+  throw lastError ?? new Error('no GPT character source available');
 }
 
 const mix=(a,b,k)=>a+(b-a)*Math.max(0,Math.min(1,k));
 
 export class GPTArt{
-  constructor(img){
+  constructor(img,source=null){
     this.img=img;
+    this.source=source?.name??'unknown';
+    this.sourceWidth=img.naturalWidth;
+    this.sourceHeight=img.naturalHeight;
     this.mask=document.createElement('canvas');
     this.mask.width=img.naturalWidth; this.mask.height=img.naturalHeight;
     const g=this.mask.getContext('2d');
