@@ -1,12 +1,13 @@
 import {Draw} from './engine/draw.js';
 import {loadGPTArt} from './components/gpt_art.js';
+import {loadGPTPoses} from './components/gpt_poses.js';
 import {renderOpeningV8} from './scenes/opening_v8.js';
-import {renderDraftsV6} from './scenes/drafts_v6.js';
+import {renderDraftsV8} from './scenes/drafts_v8.js';
 
 const canvas=document.getElementById('stage');
 const g=canvas.getContext('2d',{alpha:false});
 const d=new Draw(g,canvas.width,canvas.height);
-const gptArt=await loadGPTArt();
+const [gptArt,gptPoses]=await Promise.all([loadGPTArt(),loadGPTPoses()]);
 
 export const DURATION=30;
 
@@ -15,7 +16,7 @@ export function renderFrame(t){
   g.setTransform(1,0,0,1,0,0);
   g.clearRect(0,0,canvas.width,canvas.height);
   if(t<15)renderOpeningV8(d,t,gptArt);
-  else renderDraftsV6(d,t,gptArt);
+  else renderDraftsV8(d,t,gptArt,gptPoses);
   return canvas;
 }
 
@@ -23,6 +24,7 @@ window.renderFrame=renderFrame;
 window.GPT_MV_DURATION=DURATION;
 window.GPT_MV_READY=true;
 window.GPT_ART_SOURCE=gptArt.source;
+window.GPT_POSES_READY=true;
 
 const params=new URLSearchParams(location.search);
 if(params.has('t'))renderFrame(Number(params.get('t'))||0);
