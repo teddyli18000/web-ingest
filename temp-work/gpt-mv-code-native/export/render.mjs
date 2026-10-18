@@ -11,6 +11,7 @@ const ROOT=path.resolve(HERE,'..');
 function arg(name,def){const i=process.argv.indexOf(`--${name}`);return i>=0?process.argv[i+1]:def}
 const width=Number(arg('width','960')),height=Number(arg('height','540')),fps=Number(arg('fps','18'));
 const start=Number(arg('start','0')),end=Number(arg('end','15'));
+const expectedArtSource=arg('art-source','');
 const out=path.resolve(arg('out',path.join(ROOT,'out','gate.mp4')));
 const frames=path.join(path.dirname(out),'.frames-code-native');
 await fs.mkdir(path.dirname(out),{recursive:true});
@@ -31,6 +32,11 @@ const browser=await chromium.launch({headless:true,executablePath:chrome});
 const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
 await page.goto(`http://127.0.0.1:${port}/?t=0`,{waitUntil:'networkidle'});
 await page.waitForFunction(()=>window.GPT_MV_READY===true);
+const artSource=await page.evaluate(()=>window.GPT_ART_SOURCE??'unknown');
+console.log(`character source: ${artSource}`);
+if(expectedArtSource&&artSource!==expectedArtSource){
+  throw new Error(`expected character source ${expectedArtSource}, got ${artSource}`);
+}
 
 const total=Math.round((end-start)*fps),canvas=page.locator('#stage');
 for(let n=0;n<total;n++){
