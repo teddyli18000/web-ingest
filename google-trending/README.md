@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-18** | **678** | **678** | **678** | **678** | **677** |
+| **2024-11-28** | **2026-10-19** | **679** | **679** | **679** | **679** | **678** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 148 |
+| `google_trending_now` | 152 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-18
+### Latest SG snapshot — 2026-10-19
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | hdb tengah kitchen layout explanation | 5000+ |
-| 2 | indonesia dry ice haze dispersion | 2000+ |
-| 3 | poison | 2000+ |
-| 4 | watery fuel complaints malaysia | 1000+ |
-| 5 | rent | 2000+ |
-| 6 | student | 500+ |
-| 7 | pakistan vs sri lanka | 500+ |
-| 8 | france | 500+ |
-| 9 | luxury goods | 200+ |
-| 10 | paris | 500+ |
+| 1 | tembeling road | 5000+ |
+| 2 | turbulence | 10000+ |
+| 3 | jurong | 10000+ |
+| 4 | man blocks bus beach road | 5000+ |
+| 5 | wage | 2000+ |
+| 6 | tiger shroff | 2000+ |
+| 7 | youtrip | 1000+ |
+| 8 | barbara palvin | 500+ |
+| 9 | syed saddiq | 200+ |
+| 10 | leeds vs man utd | 10000+ |
 
-### Latest US snapshot — 2026-10-18
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | notre dame vs byu | 1000000+ |
-| 2 | auburn vs georgia | 1000000+ |
-| 3 | florida state vs miami fl | 500000+ |
-| 4 | penn state vs michigan | 500000+ |
-| 5 | nebraska vs oregon | 200000+ |
-| 6 | florida vs texas | 500000+ |
-| 7 | kentucky vs oklahoma | 200000+ |
-| 8 | utah vs colorado | 100000+ |
-| 9 | france | 100000+ |
-| 10 | south african rugby player hyron andrews | 50000+ |
-
-### Latest GB snapshot — 2026-10-18
+### Latest US snapshot — 2026-10-19
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | brentford vs liverpool | 200000+ |
-| 2 | man city vs ipswich town | 100000+ |
-| 3 | newcastle vs aston villa | 200000+ |
-| 4 | everton vs chelsea | 100000+ |
-| 5 | michael forest | 50000+ |
-| 6 | emi martinez | 100000+ |
-| 7 | paris | 20000+ |
-| 8 | heshi peixin kindergarten lead poisoning | 10000+ |
-| 9 | betis vs barcelona | 50000+ |
-| 10 | paul whitehouse | 10000+ |
+| 1 | chargers vs chiefs | 500000+ |
+| 2 | panthers vs eagles | 200000+ |
+| 3 | steelers vs buccaneers | 500000+ |
+| 4 | packers vs cowboys | 1000000+ |
+| 5 | saints vs giants | 500000+ |
+| 6 | cardinals vs rams | 500000+ |
+| 7 | jets vs patriots | 200000+ |
+| 8 | barbara palvin | 50000+ |
+| 9 | titans vs colts | 200000+ |
+| 10 | airman falls | 50000+ |
 
-### Latest HK snapshot — 2026-10-18
+### Latest GB snapshot — 2026-10-19
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 梅艷芳 | 2000+ |
-| 2 | 陳淑蘭 | 1000+ |
-| 3 | 法國示威 | 1000+ |
-| 4 | 年金 | 500+ |
-| 5 | 天气 | 1000+ |
-| 6 | 伊藤美诚 | 500+ |
-| 7 | 皇崗口岸 | 2000+ |
-| 8 | 姜 濤 | 2000+ |
-| 9 | 劉浩龍 | 500+ |
-| 10 | 吳康民 | 100+ |
+| 1 | leeds vs man utd | 200000+ |
+| 2 | nottm forest vs arsenal | 200000+ |
+| 3 | john craven | 50000+ |
+| 4 | king charles honors list forfeitures | 20000+ |
+| 5 | real madrid vs sevilla | 50000+ |
+| 6 | cindy crawford son presley gerber | 50000+ |
+| 7 | headphone dodgers | 20000+ |
+| 8 | tiger shroff | 10000+ |
+| 9 | barbara palvin | 5000+ |
+| 10 | helen haines | 5000+ |
 
-[Open full snapshot →](data/2026/10/18/trending.json)
+### Latest HK snapshot — 2026-10-19
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 全红婵 | 2000+ |
+| 2 | 李成昌 | 2000+ |
+| 3 | 鄭嘉穎 | 2000+ |
+| 4 | 朱麗蒨 | 200+ |
+| 5 | 債券 | 1000+ |
+| 6 | 全紅嬋 | 200+ |
+| 7 | 朱丽倩 | 200+ |
+| 8 | 曼徹斯特聯足球俱樂部 | 200+ |
+| 9 | 法國示威原因 | 500+ |
+| 10 | 出口管制 | 100+ |
+
+[Open full snapshot →](data/2026/10/19/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 280 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 281 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
