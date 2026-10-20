@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-19** | **4,394** | **2,547** |
+| **2014-08-09** | **2026-10-20** | **4,395** | **2,548** |
 
-### Latest All-Languages snapshot — 2026-10-19
+### Latest All-Languages snapshot — 2026-10-20
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [MadsLorentzen/ai-job-search](https://github.com/MadsLorentzen/ai-job-search) | Python | 2,232 |
-| 2 | [anthropics/claude-plugins-official](https://github.com/anthropics/claude-plugins-official) | Python | 1,175 |
-| 3 | [anomalyco/opencode](https://github.com/anomalyco/opencode) | TypeScript | 1,414 |
-| 4 | [cursor/plugins](https://github.com/cursor/plugins) | TypeScript | 350 |
-| 5 | [ruvnet/ruflo](https://github.com/ruvnet/ruflo) | TypeScript | 513 |
-| 6 | [akitaonrails/ai-memory](https://github.com/akitaonrails/ai-memory) | Rust | 512 |
-| 7 | [stablyai/orca](https://github.com/stablyai/orca) | TypeScript | 1,146 |
-| 8 | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything) | Python | 589 |
-| 9 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 2,082 |
-| 10 | [android/skills](https://github.com/android/skills) | Kotlin | 375 |
+| 1 | [MadsLorentzen/ai-job-search](https://github.com/MadsLorentzen/ai-job-search) | Python | 3,856 |
+| 2 | [anomalyco/opencode](https://github.com/anomalyco/opencode) | TypeScript | 1,311 |
+| 3 | [akitaonrails/ai-memory](https://github.com/akitaonrails/ai-memory) | Rust | 666 |
+| 4 | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI) | Python | 1,011 |
+| 5 | [ruvnet/ruflo](https://github.com/ruvnet/ruflo) | TypeScript | 564 |
+| 6 | [stablyai/orca](https://github.com/stablyai/orca) | TypeScript | 1,590 |
+| 7 | [headroomlabs-ai/headroom](https://github.com/headroomlabs-ai/headroom) | Python | 310 |
+| 8 | [withmarbleapp/os-taxonomy](https://github.com/withmarbleapp/os-taxonomy) | JavaScript | 284 |
+| 9 | [Kruk2/jasna](https://github.com/Kruk2/jasna) | Python | 498 |
+| 10 | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything) | Python | 606 |
 
-[Open full snapshot →](data/2026/10/19/trending.json)
+[Open full snapshot →](data/2026/10/20/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 292 days  
+[`2026`](data/2026/) · 293 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
