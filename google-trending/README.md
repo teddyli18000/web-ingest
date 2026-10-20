@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-19** | **679** | **679** | **679** | **679** | **678** |
+| **2024-11-28** | **2026-10-20** | **680** | **680** | **680** | **680** | **679** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 152 |
+| `google_trending_now` | 156 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-19
+### Latest SG snapshot — 2026-10-20
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | tembeling road | 5000+ |
-| 2 | turbulence | 10000+ |
-| 3 | jurong | 10000+ |
-| 4 | man blocks bus beach road | 5000+ |
-| 5 | wage | 2000+ |
-| 6 | tiger shroff | 2000+ |
-| 7 | youtrip | 1000+ |
-| 8 | barbara palvin | 500+ |
-| 9 | syed saddiq | 200+ |
-| 10 | leeds vs man utd | 10000+ |
+| 1 | kim jong un | 5000+ |
+| 2 | theft | 2000+ |
+| 3 | money laundering | 10000+ |
+| 4 | hasmah mohamad ali | 2000+ |
+| 5 | pakistan vs england | 1000+ |
+| 6 | bank | 2000+ |
+| 7 | elon musk | 500+ |
+| 8 | singapore airlines new flight sydney | 500+ |
+| 9 | lottery scam | 500+ |
+| 10 | bruno fernandes | 200+ |
 
-### Latest US snapshot — 2026-10-19
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | chargers vs chiefs | 500000+ |
-| 2 | panthers vs eagles | 200000+ |
-| 3 | steelers vs buccaneers | 500000+ |
-| 4 | packers vs cowboys | 1000000+ |
-| 5 | saints vs giants | 500000+ |
-| 6 | cardinals vs rams | 500000+ |
-| 7 | jets vs patriots | 200000+ |
-| 8 | barbara palvin | 50000+ |
-| 9 | titans vs colts | 200000+ |
-| 10 | airman falls | 50000+ |
-
-### Latest GB snapshot — 2026-10-19
+### Latest US snapshot — 2026-10-20
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | leeds vs man utd | 200000+ |
-| 2 | nottm forest vs arsenal | 200000+ |
-| 3 | john craven | 50000+ |
-| 4 | king charles honors list forfeitures | 20000+ |
-| 5 | real madrid vs sevilla | 50000+ |
-| 6 | cindy crawford son presley gerber | 50000+ |
-| 7 | headphone dodgers | 20000+ |
-| 8 | tiger shroff | 10000+ |
-| 9 | barbara palvin | 5000+ |
-| 10 | helen haines | 5000+ |
+| 1 | 49ers | 1000000+ |
+| 2 | is kim jong un still alive | 200000+ |
+| 3 | kayem foods meat recall usda | 200000+ |
+| 4 | richard riehle | 100000+ |
+| 5 | social security trust fund depletion | 100000+ |
+| 6 | social security administration cola increase | 50000+ |
+| 7 | horario de invierno | 20000+ |
+| 8 | luke mccaffrey | 100000+ |
+| 9 | farmers almanac thanksgiving weather 2026 | 20000+ |
+| 10 | gluten free ritz cracker launch | 50000+ |
 
-### Latest HK snapshot — 2026-10-19
+### Latest GB snapshot — 2026-10-20
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 全红婵 | 2000+ |
-| 2 | 李成昌 | 2000+ |
-| 3 | 鄭嘉穎 | 2000+ |
-| 4 | 朱麗蒨 | 200+ |
-| 5 | 債券 | 1000+ |
-| 6 | 全紅嬋 | 200+ |
-| 7 | 朱丽倩 | 200+ |
-| 8 | 曼徹斯特聯足球俱樂部 | 200+ |
-| 9 | 法國示威原因 | 500+ |
-| 10 | 出口管制 | 100+ |
+| 1 | spurs vs coventry | 200000+ |
+| 2 | pak vs eng | 50000+ |
+| 3 | revolut | 20000+ |
+| 4 | sahara ray | 20000+ |
+| 5 | air france af99 emergency landing | 10000+ |
+| 6 | chevron | 10000+ |
+| 7 | bbc denies celebrity traitors rumors | 20000+ |
+| 8 | storm | 20000+ |
+| 9 | tree | 10000+ |
+| 10 | is kim jong un still alive | 20000+ |
 
-[Open full snapshot →](data/2026/10/19/trending.json)
+### Latest HK snapshot — 2026-10-20
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 黎紀君 | 10000+ |
+| 2 | 方 媛 | 5000+ |
+| 3 | 警察 | 1000+ |
+| 4 | 金正恩 | 1000+ |
+| 5 | 熱帶 氣旋 | 2000+ |
+| 6 | 陳祖光 | 500+ |
+| 7 | 氣旋 | 500+ |
+| 8 | 繼承 | 500+ |
+| 9 | pak vs eng | 200+ |
+| 10 | 王文灵 | 100+ |
+
+[Open full snapshot →](data/2026/10/20/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 281 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 282 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
