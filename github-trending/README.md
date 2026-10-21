@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-20** | **4,395** | **2,548** |
+| **2014-08-09** | **2026-10-21** | **4,396** | **2,549** |
 
-### Latest All-Languages snapshot — 2026-10-20
+### Latest All-Languages snapshot — 2026-10-21
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [MadsLorentzen/ai-job-search](https://github.com/MadsLorentzen/ai-job-search) | Python | 3,856 |
-| 2 | [anomalyco/opencode](https://github.com/anomalyco/opencode) | TypeScript | 1,311 |
-| 3 | [akitaonrails/ai-memory](https://github.com/akitaonrails/ai-memory) | Rust | 666 |
-| 4 | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI) | Python | 1,011 |
-| 5 | [ruvnet/ruflo](https://github.com/ruvnet/ruflo) | TypeScript | 564 |
-| 6 | [stablyai/orca](https://github.com/stablyai/orca) | TypeScript | 1,590 |
-| 7 | [headroomlabs-ai/headroom](https://github.com/headroomlabs-ai/headroom) | Python | 310 |
-| 8 | [withmarbleapp/os-taxonomy](https://github.com/withmarbleapp/os-taxonomy) | JavaScript | 284 |
-| 9 | [Kruk2/jasna](https://github.com/Kruk2/jasna) | Python | 498 |
-| 10 | [HKUDS/CLI-Anything](https://github.com/HKUDS/CLI-Anything) | Python | 606 |
+| 1 | [MadsLorentzen/ai-job-search](https://github.com/MadsLorentzen/ai-job-search) | Python | 3,861 |
+| 2 | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | JavaScript | 1,712 |
+| 3 | [stablyai/orca](https://github.com/stablyai/orca) | TypeScript | 1,565 |
+| 4 | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | JavaScript | 1,208 |
+| 5 | [Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI) | Python | 1,206 |
+| 6 | [ruvnet/ruflo](https://github.com/ruvnet/ruflo) | TypeScript | 684 |
+| 7 | [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) | Python | 802 |
+| 8 | [anomalyco/opencode](https://github.com/anomalyco/opencode) | TypeScript | 1,240 |
+| 9 | [msitarzewski/agency-agents](https://github.com/msitarzewski/agency-agents) | Shell | 562 |
+| 10 | [headroomlabs-ai/headroom](https://github.com/headroomlabs-ai/headroom) | Python | 549 |
 
-[Open full snapshot →](data/2026/10/20/trending.json)
+[Open full snapshot →](data/2026/10/21/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 293 days  
+[`2026`](data/2026/) · 294 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
