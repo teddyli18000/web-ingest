@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-20** | **680** | **680** | **680** | **680** | **679** |
+| **2024-11-28** | **2026-10-22** | **681** | **681** | **681** | **681** | **680** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 156 |
+| `google_trending_now` | 160 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-20
+### Latest SG snapshot — 2026-10-22
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | kim jong un | 5000+ |
-| 2 | theft | 2000+ |
-| 3 | money laundering | 10000+ |
-| 4 | hasmah mohamad ali | 2000+ |
-| 5 | pakistan vs england | 1000+ |
-| 6 | bank | 2000+ |
-| 7 | elon musk | 500+ |
-| 8 | singapore airlines new flight sydney | 500+ |
-| 9 | lottery scam | 500+ |
-| 10 | bruno fernandes | 200+ |
+| 1 | ocbc malaysian ringgit savings account | 20000+ |
+| 2 | older workers returning to workforce | 10000+ |
+| 3 | singapore second round mask distribution | 2000+ |
+| 4 | php vulnerability | 5000+ |
+| 5 | new zealand vs india | 2000+ |
+| 6 | ding hui yun singapore immigration | 10000+ |
+| 7 | miss universe singapore | 2000+ |
+| 8 | mark zuckerberg | 2000+ |
+| 9 | lee biscuits pontian factory closure | 500+ |
+| 10 | taxpayers | 2000+ |
 
-### Latest US snapshot — 2026-10-20
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | 49ers | 1000000+ |
-| 2 | is kim jong un still alive | 200000+ |
-| 3 | kayem foods meat recall usda | 200000+ |
-| 4 | richard riehle | 100000+ |
-| 5 | social security trust fund depletion | 100000+ |
-| 6 | social security administration cola increase | 50000+ |
-| 7 | horario de invierno | 20000+ |
-| 8 | luke mccaffrey | 100000+ |
-| 9 | farmers almanac thanksgiving weather 2026 | 20000+ |
-| 10 | gluten free ritz cracker launch | 50000+ |
-
-### Latest GB snapshot — 2026-10-20
+### Latest US snapshot — 2026-10-22
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | spurs vs coventry | 200000+ |
-| 2 | pak vs eng | 50000+ |
-| 3 | revolut | 20000+ |
-| 4 | sahara ray | 20000+ |
-| 5 | air france af99 emergency landing | 10000+ |
-| 6 | chevron | 10000+ |
-| 7 | bbc denies celebrity traitors rumors | 20000+ |
-| 8 | storm | 20000+ |
-| 9 | tree | 10000+ |
-| 10 | is kim jong un still alive | 20000+ |
+| 1 | john anderson | 200000+ |
+| 2 | warriors vs lakers | 500000+ |
+| 3 | timberwolves vs heat | 200000+ |
+| 4 | bioware | 200000+ |
+| 5 | timberwolves | 200000+ |
+| 6 | suns vs trail blazers | 100000+ |
+| 7 | mavericks vs rockets | 200000+ |
+| 8 | bucks vs wizards | 100000+ |
+| 9 | valkyries vs dream | 200000+ |
+| 10 | kings vs clippers | 100000+ |
 
-### Latest HK snapshot — 2026-10-20
+### Latest GB snapshot — 2026-10-22
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 黎紀君 | 10000+ |
-| 2 | 方 媛 | 5000+ |
-| 3 | 警察 | 1000+ |
-| 4 | 金正恩 | 1000+ |
-| 5 | 熱帶 氣旋 | 2000+ |
-| 6 | 陳祖光 | 500+ |
-| 7 | 氣旋 | 500+ |
-| 8 | 繼承 | 500+ |
-| 9 | pak vs eng | 200+ |
-| 10 | 王文灵 | 100+ |
+| 1 | como vs man utd | 500000+ |
+| 2 | bayern vs arsenal | 200000+ |
+| 3 | moderate wind warning | 50000+ |
+| 4 | nz vs ind | 20000+ |
+| 5 | eng vs sl | 20000+ |
+| 6 | airbnb updated guest cleaning rules | 10000+ |
+| 7 | bioware | 20000+ |
+| 8 | real madrid vs rb leipzig | 50000+ |
+| 9 | aston villa vs viking | 50000+ |
+| 10 | royal family news | 20000+ |
 
-[Open full snapshot →](data/2026/10/20/trending.json)
+### Latest HK snapshot — 2026-10-22
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 葉蒨文 | 2000+ |
+| 2 | 陳 浩文 高級 督察 | 1000+ |
+| 3 | 明星皇宮 | 1000+ |
+| 4 | php 問題 | 1000+ |
+| 5 | cve-2026-91403 | 500+ |
+| 6 | php vulnerability | 2000+ |
+| 7 | 朱振國 | 200+ |
+| 8 | alexandra eala | 200+ |
+| 9 | 科莫對曼聯 | 10000+ |
+| 10 | judi dench | 100+ |
+
+[Open full snapshot →](data/2026/10/22/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 282 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 283 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
