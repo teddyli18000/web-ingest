@@ -12,27 +12,26 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-23** | **4,398** | **2,551** |
+| **2014-08-09** | **2026-10-24** | **4,399** | **2,552** |
 
-### Latest All-Languages snapshot — 2026-10-23
+### Latest All-Languages snapshot — 2026-10-24
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [php/php-src](https://github.com/php/php-src) | C | 287 |
-| 2 | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Python | 303 |
-| 3 | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) | JavaScript | 1,948 |
-| 4 | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | JavaScript | 2,979 |
-| 5 | [Graphify-Labs/graphify](https://github.com/Graphify-Labs/graphify) | Python | 1,408 |
-| 6 | [supabase/supabase](https://github.com/supabase/supabase) | TypeScript | 693 |
-| 7 | [fastapi/fastapi](https://github.com/fastapi/fastapi) | Python | 101 |
-| 8 | [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) | Python | 177 |
-| 9 | [Meloong-Git/PCL](https://github.com/Meloong-Git/PCL) | Visual Basic .NET | 119 |
+| 1 | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | JavaScript | 2,716 |
+| 2 | [php/php-src](https://github.com/php/php-src) | C | 716 |
+| 3 | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Python | 635 |
+| 4 | [NVIDIA/OpenShell](https://github.com/NVIDIA/OpenShell) | Rust | 1,119 |
+| 5 | [Renhuai123/ziwei-doushu](https://github.com/Renhuai123/ziwei-doushu) | TypeScript | 546 |
+| 6 | [SnailSploit/Claude-Red](https://github.com/SnailSploit/Claude-Red) | Python | 226 |
+| 7 | [OpenBMB/VoxCPM](https://github.com/OpenBMB/VoxCPM) | Python | 150 |
+| 8 | [nodejs/node](https://github.com/nodejs/node) | JavaScript | 66 |
 
-[Open full snapshot →](data/2026/10/23/trending.json)
+[Open full snapshot →](data/2026/10/24/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 296 days  
+[`2026`](data/2026/) · 297 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
