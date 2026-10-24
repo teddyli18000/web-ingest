@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-23** | **682** | **682** | **682** | **682** | **681** |
+| **2024-11-28** | **2026-10-24** | **683** | **683** | **683** | **683** | **682** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 164 |
+| `google_trending_now` | 168 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-23
+### Latest SG snapshot — 2026-10-24
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | lawsuit | 5000+ |
-| 2 | scoot | 10000+ |
-| 3 | singapore airlines | 10000+ |
-| 4 | goh keng swee command and staff college | 500+ |
-| 5 | bahlil lahadalia energy export warning | 2000+ |
-| 6 | ocbc online banking disruption reports | 2000+ |
-| 7 | iphone 17 pro max stolen singapore | 2000+ |
-| 8 | singapore airlines promotion | 5000+ |
-| 9 | amitabh bachchan | 200+ |
-| 10 | singapore | 500+ |
+| 1 | imda app store safety review singapore | 2000+ |
+| 2 | new zealand vs india | 2000+ |
+| 3 | singapore migrant workers unpaid wages | 2000+ |
+| 4 | natural gas | 2000+ |
+| 5 | arrest | 2000+ |
+| 6 | investor | 1000+ |
+| 7 | 8视界新闻 | 1000+ |
+| 8 | commuting | 500+ |
+| 9 | ariana grande | 1000+ |
+| 10 | police | 200+ |
 
-### Latest US snapshot — 2026-10-23
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | tom skerritt | 500000+ |
-| 2 | patriots | 1000000+ |
-| 3 | cavaliers vs 76ers | 500000+ |
-| 4 | nuggets vs thunder | 200000+ |
-| 5 | lindsey graham | 50000+ |
-| 6 | simone biles sells houston home | 50000+ |
-| 7 | gabriela rodriguez tezoco | 20000+ |
-| 8 | jeff goldblum | 20000+ |
-| 9 | james madison vs app state | 50000+ |
-| 10 | britt mchenry | 10000+ |
-
-### Latest GB snapshot — 2026-10-23
+### Latest US snapshot — 2026-10-24
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | gov uk £150 energy rebate | 50000+ |
-| 2 | aldi lidl land agreements cma rules | 50000+ |
-| 3 | durban | 50000+ |
-| 4 | uk government emergency preparedness | 100000+ |
-| 5 | tom skerritt | 50000+ |
-| 6 | bournemouth vs milan | 100000+ |
-| 7 | rugby player | 20000+ |
-| 8 | storm boelo | 200000+ |
-| 9 | celtic vs celta | 100000+ |
-| 10 | shamonda virus france | 10000+ |
+| 1 | knicks vs celtics | 500000+ |
+| 2 | rays vs brewers | 1000000+ |
+| 3 | rockets vs spurs | 200000+ |
+| 4 | clippers vs lakers | 200000+ |
+| 5 | ric flair | 100000+ |
+| 6 | grizzlies vs warriors | 200000+ |
+| 7 | pistons vs heat | 100000+ |
+| 8 | timberwolves vs magic | 100000+ |
+| 9 | education department drops pslf challenge | 20000+ |
+| 10 | mavericks vs pacers | 100000+ |
 
-### Latest HK snapshot — 2026-10-23
+### Latest GB snapshot — 2026-10-24
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | iphone duo 回收價 | 5000+ |
-| 2 | 徐子淇 | 1000+ |
-| 3 | 黃可盈 | 1000+ |
-| 4 | 邓兆尊 | 2000+ |
-| 5 | 歐倩怡 | 1000+ |
-| 6 | 司機 | 500+ |
-| 7 | 村上龍 | 200+ |
-| 8 | kddi | 500+ |
-| 9 | 黃得生 | 1000+ |
-| 10 | 鉅 利 醬園 | 200+ |
+| 1 | ipswich town vs nottm forest | 100000+ |
+| 2 | vincent kompany | 20000+ |
+| 3 | brighton pier | 50000+ |
+| 4 | ariana grande | 20000+ |
+| 5 | nz vs ind | 20000+ |
+| 6 | bolton vs middlesbrough | 50000+ |
+| 7 | rachel reeves stamp duty receipts fall | 10000+ |
+| 8 | ric flair | 10000+ |
+| 9 | edinburgh airport | 20000+ |
+| 10 | josh widdicombe | 10000+ |
 
-[Open full snapshot →](data/2026/10/23/trending.json)
+### Latest HK snapshot — 2026-10-24
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 翁靜晶 | 5000+ |
+| 2 | 惠 康 | 5000+ |
+| 3 | 杜如風 | 1000+ |
+| 4 | 李立仁 | 1000+ |
+| 5 | 拜仁慕尼黑足球俱樂部 | 500+ |
+| 6 | 張本智和 | 1000+ |
+| 7 | 金鐘獎 | 200+ |
+| 8 | 菲律宾 | 500+ |
+| 9 | 啟德演唱會 | 200+ |
+| 10 | 尚公主 | 500+ |
+
+[Open full snapshot →](data/2026/10/24/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 284 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 285 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
