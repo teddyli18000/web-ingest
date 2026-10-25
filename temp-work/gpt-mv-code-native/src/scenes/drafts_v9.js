@@ -59,12 +59,10 @@ function tornPosePath(g,x,y,w,h,offset=0){
 }
 function thinkingCutout(d,t,img){
   if(!img)return;
-  const enter=easeOut(prog(t,T1+.16,T1+.72));
-  const leave=1-smooth(prog(t,T2-.66,T2-.05));
-  const a=enter*leave;if(a<=0)return;
-  const x=lerp(-510,-80,enter),y=118,w=760,h=860,drift=prog(t,T1,T2);
+  const a=easeOut(prog(t,T1+.16,T1+.72));if(a<=0)return;
+  const x=lerp(-510,-80,a),y=118,w=760,h=860,drift=prog(t,T1,T2);
   const g=d.g;
-  // Offset print plates: the pose belongs to the scene, not to a framed photo card.
+  // Keep the actor solid. The exit is hidden by a real foreground proof sheet, never opacity.
   d.save(()=>{tornPosePath(g,x-18,y+15,w,h);g.fillStyle=P.cobalt;g.globalAlpha=.105*a;g.fill();});
   d.save(()=>{tornPosePath(g,x+17,y-10,w,h);g.fillStyle=P.gold;g.globalAlpha=.075*a;g.fill();});
   d.save(()=>{
@@ -72,12 +70,24 @@ function thinkingCutout(d,t,img){
     coverImage(g,img,x-22,y-12,w+90,h+42,{alpha:.94*a,pan:drift});
     const gr=g.createLinearGradient(x,y,x+w,y+h);gr.addColorStop(0,'rgba(243,239,228,.18)');gr.addColorStop(.58,'rgba(49,87,213,.03)');gr.addColorStop(1,'rgba(23,32,51,.16)');g.fillStyle=gr;g.globalAlpha=a;g.fillRect(x,y,w,h);
   });
-  // One quiet registration edge, no card chrome.
   d.line(x+w-86,y+120,x+w-126,y+h-90,{color:P.cobalt2,width:3,alpha:.24*a});
 }
 function foregroundSwipe(d,t){
   const q=prog(t,T1+.28,T1+1.08);if(q<=0||q>=1)return;
   d.save(()=>{d.g.translate(lerp(2060,-620,easeInOut(q)),900);d.g.rotate(-.105);d.rrect(0,0,560,155,14,{fill:P.white,stroke:P.line,width:1.2,alpha:.93,shadow:.34});d.line(34,40,430,40,{color:WRONG,width:7,alpha:.50});});
+}
+function exitProofWipe(d,t){
+  const q=prog(t,T2-.55,T2+.55);if(q<=0||q>=1)return;
+  const k=easeInOut(q),x=lerp(-2200,2100,k),w=1900,h=1480;
+  d.save(()=>{
+    const g=d.g;g.translate(x+w/2,520);g.rotate(.052);g.translate(-w/2,-740);
+    d.rrect(20,28,w,h,28,{fill:P.ink,alpha:.055,shadow:.32});
+    d.rrect(0,0,w,h,28,{fill:'#fffdf8',stroke:'rgba(53,65,92,.16)',width:2,alpha:.995,shadow:.48});
+    d.line(120,112,w-170,112,{color:P.cobalt,width:7,alpha:.38});
+    d.line(120,151,w*.62,151,{color:P.gold,width:3,alpha:.25});
+    d.text('REVISION / HANDOFF',126,205,{size:22,font:'mono',weight:700,color:P.ink2,alpha:.34});
+    d.text('keep the evidence.',126,274,{size:52,font:'serif',italic:true,color:P.ink,alpha:.46});
+  });
 }
 function compareScene(d,t,poses){
   base(d,t);
@@ -88,7 +98,6 @@ function compareScene(d,t,poses){
   const mark=easeOut(prog(t,T1+.42,T1+1.16));
   pagePose(d,wrong,(w,h)=>{paper(d,w,h,{accent:WRONG,shadow:.27});proof(d,w,h,{mode:'wrong',mark});});
 
-  // Corrected route is tracing paper physically pulled from behind the draft.
   const trace=easeOut(prog(t,T1+.78,T1+1.54));
   const corrected={cx:lerp(1040,1425,trace),cy:lerp(590,580,trace),rot:lerp(-.05,.055,trace),scale:lerp(.78,.83,trace)};
   if(trace>0)pagePose(d,corrected,(w,h)=>{
@@ -105,8 +114,8 @@ function compareScene(d,t,poses){
 function compareWithHandoff(d,t,model,poses){
   const k=easeInOut(prog(t,T1,T1+.62));
   if(k>=.999)return compareScene(d,t,poses);
-  // Hold the last valid frame from shot 1 and reveal the new scene behind a moving proof sheet.
-  renderDraftsV6(d,T1-.001,model);
+  // Preserve an actually visible prior pose, then hide the pose change behind the moving paper edge.
+  renderDraftsV6(d,T1-.42,model);
   const edge=lerp(1980,-120,k);
   d.save(()=>{
     const g=d.g;g.beginPath();g.rect(edge,-40,2100-edge,1160);g.clip();compareScene(d,t,poses);
@@ -115,8 +124,10 @@ function compareWithHandoff(d,t,model,poses){
 }
 
 export function renderDraftsV9(d,t,model,poses){
-  if(t<T1||t>=T2)return renderDraftsV6(d,t,model);
-  return compareWithHandoff(d,t,model,poses);
+  if(t<T1)return renderDraftsV6(d,t,model);
+  if(t<T2){compareWithHandoff(d,t,model,poses);exitProofWipe(d,t);return;}
+  if(t<T2+.55){renderDraftsV6(d,t,model);exitProofWipe(d,t);return;}
+  return renderDraftsV6(d,t,model);
 }
 
 export const DRAFTS_V9_CUTS=[15,T1,T2,25.20,30];
