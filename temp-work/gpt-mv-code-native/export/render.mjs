@@ -57,10 +57,14 @@ await fs.rm(video,{force:true});
 
 const reviewTimes=[
   .6,2.3,4.2,6.2,7.7,9.3,11.2,13.1,14.6,
-  15.4,16.8,18.2,19.8,21.6,23.3,25.2,27.2,29.2
+  15.4,16.8,18.2,19.8,21.6,23.3,25.2,27.2,29.2,
+  30.4,31.6,33.3,34.8,36.7,38.2,40.5,42.2,44.4
 ];
-const marks=reviewTimes.filter(t=>t>=start&&t<end).map(t=>Math.max(0,Math.min(total-1,Math.round((t-start)*fps))));
-if(!marks.length)throw new Error(`no review marks inside ${start}..${end}`);
+let chosen=reviewTimes.filter(t=>t>=start&&t<end);
+// Review tooling must never block a new scene merely because its authored marks have not
+// been added yet. Fall back to evenly spaced frames while still preferring director marks.
+if(!chosen.length){const n=9,span=end-start;chosen=Array.from({length:n},(_,i)=>start+span*(i+.5)/n);}
+const marks=[...new Set(chosen.map(t=>Math.max(0,Math.min(total-1,Math.round((t-start)*fps)))))];
 const expr=marks.map(n=>`eq(n\\,${n})`).join('+');
 const cols=marks.length<=9?3:5,rows=Math.ceil(marks.length/cols);
 const sheet=out.replace(/\.mp4$/i,'.contact.jpg');
