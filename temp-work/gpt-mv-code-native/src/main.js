@@ -3,20 +3,22 @@ import {loadGPTArt} from './components/gpt_art.js';
 import {loadGPTPoses} from './components/gpt_poses.js';
 import {renderOpeningV8} from './scenes/opening_v8.js';
 import {renderDraftsV10} from './scenes/drafts_v10.js';
+import {renderConstructV1} from './scenes/construct_v1.js';
 
 const canvas=document.getElementById('stage');
 const g=canvas.getContext('2d',{alpha:false});
 const d=new Draw(g,canvas.width,canvas.height);
 const [gptArt,gptPoses]=await Promise.all([loadGPTArt(),loadGPTPoses()]);
 
-export const DURATION=30;
+export const DURATION=45;
 
 export function renderFrame(t){
   t=Math.max(0,Math.min(DURATION,t));
   g.setTransform(1,0,0,1,0,0);
   g.clearRect(0,0,canvas.width,canvas.height);
   if(t<15)renderOpeningV8(d,t,gptArt);
-  else renderDraftsV10(d,t,gptArt,gptPoses);
+  else if(t<30)renderDraftsV10(d,t,gptArt,gptPoses);
+  else renderConstructV1(d,t,gptArt,gptPoses);
   return canvas;
 }
 
