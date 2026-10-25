@@ -62,7 +62,6 @@ function thinkingCutout(d,t,img){
   const a=easeOut(prog(t,T1+.16,T1+.72));if(a<=0)return;
   const x=lerp(-510,-80,a),y=118,w=760,h=860,drift=prog(t,T1,T2);
   const g=d.g;
-  // Keep the actor solid. The exit is hidden by a real foreground proof sheet, never opacity.
   d.save(()=>{tornPosePath(g,x-18,y+15,w,h);g.fillStyle=P.cobalt;g.globalAlpha=.105*a;g.fill();});
   d.save(()=>{tornPosePath(g,x+17,y-10,w,h);g.fillStyle=P.gold;g.globalAlpha=.075*a;g.fill();});
   d.save(()=>{
@@ -76,6 +75,25 @@ function foregroundSwipe(d,t){
   const q=prog(t,T1+.28,T1+1.08);if(q<=0||q>=1)return;
   d.save(()=>{d.g.translate(lerp(2060,-620,easeInOut(q)),900);d.g.rotate(-.105);d.rrect(0,0,560,155,14,{fill:P.white,stroke:P.line,width:1.2,alpha:.93,shadow:.34});d.line(34,40,430,40,{color:WRONG,width:7,alpha:.50});});
 }
+function handoffPlateContent(d,w,h){
+  d.text('REVISION',135,300,{size:128,font:'serif',weight:700,color:P.ink,alpha:.12});
+  d.text('/ 02',143,365,{size:31,font:'mono',weight:700,color:P.cobalt,alpha:.34});
+  d.text('KEEP',1110,260,{size:42,font:'mono',weight:700,color:P.ink2,alpha:.22});
+  d.text('THE EVIDENCE.',1105,338,{size:78,font:'serif',italic:true,color:P.ink,alpha:.27});
+  const pts=[[170,940],[410,770],[680,835],[920,590],[1190,675],[1510,405]];
+  for(let i=0;i<pts.length-1;i++){
+    const p=pts[i],n=pts[i+1];d.line(p[0],p[1],n[0],n[1],{color:P.cobalt,width:16,alpha:.30});
+  }
+  for(const [x,y] of pts)d.circle(x,y,13,{fill:P.cobalt,alpha:.34});
+  d.circle(1510,405,88,{fill:null,stroke:WRONG,width:12,alpha:.18});
+  d.line(1565,470,1740,665,{color:WRONG,width:12,alpha:.16});
+  d.text('wrong route / retained',1390,780,{size:24,font:'mono',weight:700,color:WRONG,alpha:.20});
+  for(let i=0;i<5;i++)d.line(140,1160+i*34,780-i*68,1160+i*34,{color:P.ink2,width:7,alpha:.075});
+  const m=78,l=64;
+  for(const [x,y,sx,sy] of [[m,m,1,1],[w-m,m,-1,1],[m,h-m,1,-1],[w-m,h-m,-1,-1]]){
+    d.line(x,y,x+sx*l,y,{color:P.cobalt2,width:4,alpha:.24});d.line(x,y,x,y+sy*l,{color:P.cobalt2,width:4,alpha:.24});
+  }
+}
 function exitProofWipe(d,t){
   const q=prog(t,T2-.55,T2+.55);if(q<=0||q>=1)return;
   const k=easeInOut(q),x=lerp(-2200,2100,k),w=1900,h=1480;
@@ -85,8 +103,7 @@ function exitProofWipe(d,t){
     d.rrect(0,0,w,h,28,{fill:'#fffdf8',stroke:'rgba(53,65,92,.16)',width:2,alpha:.995,shadow:.48});
     d.line(120,112,w-170,112,{color:P.cobalt,width:7,alpha:.38});
     d.line(120,151,w*.62,151,{color:P.gold,width:3,alpha:.25});
-    d.text('REVISION / HANDOFF',126,205,{size:22,font:'mono',weight:700,color:P.ink2,alpha:.34});
-    d.text('keep the evidence.',126,274,{size:52,font:'serif',italic:true,color:P.ink,alpha:.46});
+    handoffPlateContent(d,w,h);
   });
 }
 function compareScene(d,t,poses){
@@ -114,7 +131,6 @@ function compareScene(d,t,poses){
 function compareWithHandoff(d,t,model,poses){
   const k=easeInOut(prog(t,T1,T1+.62));
   if(k>=.999)return compareScene(d,t,poses);
-  // Preserve an actually visible prior pose, then hide the pose change behind the moving paper edge.
   renderDraftsV6(d,T1-.42,model);
   const edge=lerp(1980,-120,k);
   d.save(()=>{
