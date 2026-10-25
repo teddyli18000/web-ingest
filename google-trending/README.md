@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-24** | **683** | **683** | **683** | **683** | **682** |
+| **2024-11-28** | **2026-10-25** | **684** | **684** | **684** | **684** | **683** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 168 |
+| `google_trending_now` | 172 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-24
+### Latest SG snapshot — 2026-10-25
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | imda app store safety review singapore | 2000+ |
-| 2 | new zealand vs india | 2000+ |
-| 3 | singapore migrant workers unpaid wages | 2000+ |
-| 4 | natural gas | 2000+ |
-| 5 | arrest | 2000+ |
-| 6 | investor | 1000+ |
-| 7 | 8视界新闻 | 1000+ |
-| 8 | commuting | 500+ |
-| 9 | ariana grande | 1000+ |
-| 10 | police | 200+ |
+| 1 | singapore ministry manpower wage probe | 5000+ |
+| 2 | singapore haze indoor air quality | 1000+ |
+| 3 | england vs pakistan | 1000+ |
+| 4 | chef damu | 2000+ |
+| 5 | peter lim valencia stake sale | 2000+ |
+| 6 | singapore airlines a350 cabin refresh | 500+ |
+| 7 | migrant worker debt singapore straits times | 1000+ |
+| 8 | சாங்கி | 500+ |
+| 9 | india vs zimbabwe | 200+ |
+| 10 | asean agreement transboundary haze pollution | 500+ |
 
-### Latest US snapshot — 2026-10-24
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | knicks vs celtics | 500000+ |
-| 2 | rays vs brewers | 1000000+ |
-| 3 | rockets vs spurs | 200000+ |
-| 4 | clippers vs lakers | 200000+ |
-| 5 | ric flair | 100000+ |
-| 6 | grizzlies vs warriors | 200000+ |
-| 7 | pistons vs heat | 100000+ |
-| 8 | timberwolves vs magic | 100000+ |
-| 9 | education department drops pslf challenge | 20000+ |
-| 10 | mavericks vs pacers | 100000+ |
-
-### Latest GB snapshot — 2026-10-24
+### Latest US snapshot — 2026-10-25
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | ipswich town vs nottm forest | 100000+ |
-| 2 | vincent kompany | 20000+ |
-| 3 | brighton pier | 50000+ |
-| 4 | ariana grande | 20000+ |
-| 5 | nz vs ind | 20000+ |
-| 6 | bolton vs middlesbrough | 50000+ |
-| 7 | rachel reeves stamp duty receipts fall | 10000+ |
-| 8 | ric flair | 10000+ |
-| 9 | edinburgh airport | 20000+ |
-| 10 | josh widdicombe | 10000+ |
+| 1 | ole miss vs texas | 500000+ |
+| 2 | texas a&m vs alabama | 200000+ |
+| 3 | spurs vs mavericks | 200000+ |
+| 4 | tennessee vs south carolina | 200000+ |
+| 5 | indiana vs michigan | 500000+ |
+| 6 | bucks vs 76ers | 200000+ |
+| 7 | under the skin netflix departure | 200000+ |
+| 8 | warriors vs suns | 100000+ |
+| 9 | byu vs ucf | 500000+ |
+| 10 | virginia tech vs clemson | 200000+ |
 
-### Latest HK snapshot — 2026-10-24
+### Latest GB snapshot — 2026-10-25
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 翁靜晶 | 5000+ |
-| 2 | 惠 康 | 5000+ |
-| 3 | 杜如風 | 1000+ |
-| 4 | 李立仁 | 1000+ |
-| 5 | 拜仁慕尼黑足球俱樂部 | 500+ |
-| 6 | 張本智和 | 1000+ |
-| 7 | 金鐘獎 | 200+ |
-| 8 | 菲律宾 | 500+ |
-| 9 | 啟德演唱會 | 200+ |
-| 10 | 尚公主 | 500+ |
+| 1 | dvla october warning older drivers | 50000+ |
+| 2 | chelsea vs spurs | 200000+ |
+| 3 | aston villa vs man city | 200000+ |
+| 4 | arsenal vs everton | 200000+ |
+| 5 | have the clocks gone back | 50000+ |
+| 6 | hmrc bank account access powers | 20000+ |
+| 7 | england vs pakistan | 20000+ |
+| 8 | storm boelo weather warnings | 200000+ |
+| 9 | eng vs pak | 10000+ |
+| 10 | george pickford afc fylde loan | 10000+ |
 
-[Open full snapshot →](data/2026/10/24/trending.json)
+### Latest HK snapshot — 2026-10-25
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 沈大師 | 20000+ |
+| 2 | 金钟奖 | 5000+ |
+| 3 | 饼干 | 5000+ |
+| 4 | 廖碧兒 | 1000+ |
+| 5 | 宣 萱 | 2000+ |
+| 6 | 熱帶 氣旋 | 5000+ |
+| 7 | 亞洲桌球錦標賽 | 1000+ |
+| 8 | 谭咏麟 | 5000+ |
+| 9 | the weekend | 1000+ |
+| 10 | 餅乾 | 500+ |
+
+[Open full snapshot →](data/2026/10/25/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 285 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 286 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
