@@ -2,7 +2,7 @@ import {Draw} from './engine/draw.js';
 import {loadGPTArt} from './components/gpt_art.js';
 import {loadGPTPoses} from './components/gpt_poses.js';
 import {renderOpeningV8} from './scenes/opening_v8.js';
-import {renderDraftsV8} from './scenes/drafts_v8.js';
+import {renderDraftsV9} from './scenes/drafts_v9.js';
 
 const canvas=document.getElementById('stage');
 const g=canvas.getContext('2d',{alpha:false});
@@ -16,7 +16,7 @@ export function renderFrame(t){
   g.setTransform(1,0,0,1,0,0);
   g.clearRect(0,0,canvas.width,canvas.height);
   if(t<15)renderOpeningV8(d,t,gptArt);
-  else renderDraftsV8(d,t,gptArt,gptPoses);
+  else renderDraftsV9(d,t,gptArt,gptPoses);
   return canvas;
 }
 
