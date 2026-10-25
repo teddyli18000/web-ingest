@@ -12,26 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-24** | **4,399** | **2,552** |
+| **2014-08-09** | **2026-10-25** | **4,400** | **2,553** |
 
-### Latest All-Languages snapshot — 2026-10-24
+### Latest All-Languages snapshot — 2026-10-25
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | JavaScript | 2,716 |
-| 2 | [php/php-src](https://github.com/php/php-src) | C | 716 |
-| 3 | [anthropics/knowledge-work-plugins](https://github.com/anthropics/knowledge-work-plugins) | Python | 635 |
-| 4 | [NVIDIA/OpenShell](https://github.com/NVIDIA/OpenShell) | Rust | 1,119 |
-| 5 | [Renhuai123/ziwei-doushu](https://github.com/Renhuai123/ziwei-doushu) | TypeScript | 546 |
-| 6 | [SnailSploit/Claude-Red](https://github.com/SnailSploit/Claude-Red) | Python | 226 |
-| 7 | [OpenBMB/VoxCPM](https://github.com/OpenBMB/VoxCPM) | Python | 150 |
-| 8 | [nodejs/node](https://github.com/nodejs/node) | JavaScript | 66 |
+| 1 | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | JavaScript | 2,264 |
+| 2 | [NVIDIA/OpenShell](https://github.com/NVIDIA/OpenShell) | Rust | 896 |
+| 3 | [aws/agent-toolkit-for-aws](https://github.com/aws/agent-toolkit-for-aws) | Python | 13 |
+| 4 | [Nutlope/hallmark](https://github.com/Nutlope/hallmark) | CSS | 455 |
+| 5 | [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) | Python | 392 |
+| 6 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Rust | 619 |
+| 7 | [pollen-robotics/microduck](https://github.com/pollen-robotics/microduck) | Rust | 319 |
+| 8 | [google-gemini/gemini-cli](https://github.com/google-gemini/gemini-cli) | TypeScript | 44 |
+| 9 | [jbiaojerry/ebook-treasure-chest](https://github.com/jbiaojerry/ebook-treasure-chest) | Python | 227 |
+| 10 | [makecindy/cindy](https://github.com/makecindy/cindy) | TypeScript | 477 |
 
-[Open full snapshot →](data/2026/10/24/trending.json)
+[Open full snapshot →](data/2026/10/25/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 297 days  
+[`2026`](data/2026/) · 298 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
