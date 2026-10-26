@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-25** | **4,400** | **2,553** |
+| **2014-08-09** | **2026-10-26** | **4,401** | **2,554** |
 
-### Latest All-Languages snapshot — 2026-10-25
+### Latest All-Languages snapshot — 2026-10-26
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | JavaScript | 2,264 |
-| 2 | [NVIDIA/OpenShell](https://github.com/NVIDIA/OpenShell) | Rust | 896 |
-| 3 | [aws/agent-toolkit-for-aws](https://github.com/aws/agent-toolkit-for-aws) | Python | 13 |
-| 4 | [Nutlope/hallmark](https://github.com/Nutlope/hallmark) | CSS | 455 |
-| 5 | [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) | Python | 392 |
-| 6 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Rust | 619 |
-| 7 | [pollen-robotics/microduck](https://github.com/pollen-robotics/microduck) | Rust | 319 |
-| 8 | [google-gemini/gemini-cli](https://github.com/google-gemini/gemini-cli) | TypeScript | 44 |
-| 9 | [jbiaojerry/ebook-treasure-chest](https://github.com/jbiaojerry/ebook-treasure-chest) | Python | 227 |
-| 10 | [makecindy/cindy](https://github.com/makecindy/cindy) | TypeScript | 477 |
+| 1 | [makecindy/cindy](https://github.com/makecindy/cindy) | TypeScript | 675 |
+| 2 | [Nutlope/hallmark](https://github.com/Nutlope/hallmark) | CSS | 1,317 |
+| 3 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 1,592 |
+| 4 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Rust | 1,092 |
+| 5 | [pollen-robotics/microduck](https://github.com/pollen-robotics/microduck) | Rust | 647 |
+| 6 | [TauricResearch/TradingAgents](https://github.com/TauricResearch/TradingAgents) | Python | 381 |
+| 7 | [Renhuai123/ziwei-doushu](https://github.com/Renhuai123/ziwei-doushu) | TypeScript | 199 |
+| 8 | [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail) | TypeScript | 51 |
+| 9 | [coollabsio/coolify](https://github.com/coollabsio/coolify) | PHP | 152 |
+| 10 | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | JavaScript | 2,878 |
 
-[Open full snapshot →](data/2026/10/25/trending.json)
+[Open full snapshot →](data/2026/10/26/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 298 days  
+[`2026`](data/2026/) · 299 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
