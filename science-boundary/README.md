@@ -12,6 +12,7 @@ This workspace is permanent. It is **not** part of `temp-work/` and is not subje
 | --- | --- | --- |
 | [`shannon-capacity-c7/`](shannon-capacity-c7/) | Can `α(C7^⊠10)` be improved beyond the 134,753-point public construction? | Active — exact neutral2 MaxSAT reaches 134,753 and misses a breakthrough by one point. |
 | [`labs-100/`](labs-100/) | Can the length-100 LABS energy be improved below the public best-known value 578? | Active — incumbent Hamming radius 5 exhausted with no improvement; unrestricted tabu/memetic search underway. |
+| [`ramsey-r46/`](ramsey-r46/) | Can a `(4,6)`-graph on at least 36 vertices improve the lower bound for `R(4,6)`? | Active — 35-vertex baseline established; exact extension and destroy-and-repair search starting. |
 
 Keep this table short and human-readable. Add one row when a genuinely new direction is opened. Detailed state belongs inside that direction.
 
