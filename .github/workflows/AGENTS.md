@@ -22,9 +22,13 @@ For reliability-sensitive workflows, multiple cron entries may intentionally tar
 
 ## Temporary workflows
 
-One-shot backfill, repair, migration, probe, or diagnostic workflows may exist briefly but must never receive a recurring schedule. Remove them after successful validation.
+One-shot backfill, repair, migration, probe, diagnostic, experiment, or similar workflows may exist briefly but must never receive a recurring schedule. Remove them after successful validation.
 
-The durable `.github/workflows/temp-work-cleanup.yml` workflow is not a disposable probe: it is the registered repository-wide lifecycle manager for `temp-work/`, owned by `temp-work/README.md` and guarded by the integrity checker.
+Prefer a `temp-` prefix for disposable experimental workflows. Existing temporary markers such as `backfill`, `repair`, `migration`, `probe`, and `diagnostic`, plus generated `git-mirror-*` import workflows, are also recognized by repository CI trigger policy.
+
+Changes confined to clearly disposable workflow files are intentionally exempt from the full `repository-integrity` workflow. This avoids running the entire repository validation suite every time an Agent creates, adjusts, or self-deletes a one-shot Action. A disposable workflow is therefore responsible for validating the code/output it actually uses before committing durable results. If the same commit changes durable repository rules, task code, task documentation, or a persistent workflow, the normal repository-integrity triggers still apply.
+
+The durable `.github/workflows/temp-work-cleanup.yml` workflow is not a disposable probe despite its name: it is the registered repository-wide lifecycle manager for `temp-work/`, owned by `temp-work/README.md`, explicitly re-included in repository-integrity triggers, and guarded by the integrity checker.
 
 ## Public repository and Actions
 
