@@ -15,15 +15,16 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: baidu-drive-live-state
   cancel-in-progress: false
 
 jobs:
-  worker:
+  prepare:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 60
     env:
       GITHUB_TOKEN: ${{ github.token }}
       PYTHONDONTWRITEBYTECODE: '1'
@@ -36,16 +37,41 @@ jobs:
           sparse-checkout: |
             baidu-drive
 
-      - name: Reconcile active transfer worker state
-        run: >-
-          python3 baidu-drive/worker.py
-          --task-id '${{ inputs.task_id }}'
+      - name: Checkout pinned Baidu mover core
+        uses: actions/checkout@v4
+        with:
+          repository: teddyli18000/baidu-drive-mover
+          ref: a9e76feb18fe9ca1ac680d0ea555aac684d622de
+          path: .prepare-core
+          fetch-depth: 1
+          persist-credentials: false
 
-      # Authentication provisioning is intentionally absent in this phase.
-      # Once the owner chooses the OAuth/secret layout, preceding steps will
-      # create only ephemeral runner files and export these path variables:
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: .prepare-core/go.mod
+          cache-dependency-path: .prepare-core/go.sum
+
+      - name: Build relay preparation executable
+        run: |
+          mkdir -p .prepare-core/cmd/baidu-drive-prepare
+          cp baidu-drive/mover/prepare-main.go .prepare-core/cmd/baidu-drive-prepare/main.go
+          cp baidu-drive/mover/action_relay.go .prepare-core/cmd/baidu-drive-prepare/action_relay.go
+          cp baidu-drive/mover/action_recovery.go .prepare-core/internal/state/action_recovery.go
+          cd .prepare-core
+          go build -o "$RUNNER_TEMP/baidu-drive-prepare" ./cmd/baidu-drive-prepare
+          echo "BAIDU_DRIVE_PREPARE_BIN=$RUNNER_TEMP/baidu-drive-prepare" >> "$GITHUB_ENV"
+
+      # Authentication provisioning intentionally remains absent in this phase.
+      # The final auth layer will create only ephemeral runner files and export:
       #   BAIDU_DRIVE_BAIDU_AUTH_FILE
       #   BAIDU_DRIVE_RCLONE_CONFIG_FILE
       #   BAIDU_DRIVE_RCLONE_BIN
-      #   BAIDU_DRIVE_BRIDGE_BIN
-      # The Python worker already fails closed when they are missing.
+      # No credential or capability URL may be written to Git, Release text,
+      # artifacts, summaries, or logs.
+
+      - name: Prepare, reconcile and schedule relay work
+        run: >-
+          python3 baidu-drive/prepare_worker.py
+          --task-id '${{ inputs.task_id }}'
+          --reason '${{ inputs.reason }}'
