@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-26** | **4,401** | **2,554** |
+| **2014-08-09** | **2026-10-27** | **4,402** | **2,555** |
 
-### Latest All-Languages snapshot — 2026-10-26
+### Latest All-Languages snapshot — 2026-10-27
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [makecindy/cindy](https://github.com/makecindy/cindy) | TypeScript | 675 |
-| 2 | [Nutlope/hallmark](https://github.com/Nutlope/hallmark) | CSS | 1,317 |
-| 3 | [debpalash/VoiceStudio](https://github.com/debpalash/VoiceStudio) | Python | 1,592 |
-| 4 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Rust | 1,092 |
-| 5 | [pollen-robotics/microduck](https://github.com/pollen-robotics/microduck) | Rust | 647 |
-| 6 | [TauricResearch/TradingAgents](https://github.com/TauricResearch/TradingAgents) | Python | 381 |
-| 7 | [Renhuai123/ziwei-doushu](https://github.com/Renhuai123/ziwei-doushu) | TypeScript | 199 |
-| 8 | [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail) | TypeScript | 51 |
-| 9 | [coollabsio/coolify](https://github.com/coollabsio/coolify) | PHP | 152 |
-| 10 | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | JavaScript | 2,878 |
+| 1 | [Nutlope/hallmark](https://github.com/Nutlope/hallmark) | CSS | 2,244 |
+| 2 | [TauricResearch/TradingAgents](https://github.com/TauricResearch/TradingAgents) | Python | 1,395 |
+| 3 | [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail) | TypeScript | 1,173 |
+| 4 | [makecindy/cindy](https://github.com/makecindy/cindy) | TypeScript | 1,296 |
+| 5 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 896 |
+| 6 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Rust | 1,506 |
+| 7 | [NVIDIA/SkillSpector](https://github.com/NVIDIA/SkillSpector) | Python | 214 |
+| 8 | [pollen-robotics/microduck](https://github.com/pollen-robotics/microduck) | Rust | 843 |
+| 9 | [nightly-labs/openbot](https://github.com/nightly-labs/openbot) | TypeScript | 176 |
+| 10 | [Panniantong/Agent-Reach](https://github.com/Panniantong/Agent-Reach) | Python | 746 |
 
-[Open full snapshot →](data/2026/10/26/trending.json)
+[Open full snapshot →](data/2026/10/27/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 299 days  
+[`2026`](data/2026/) · 300 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
