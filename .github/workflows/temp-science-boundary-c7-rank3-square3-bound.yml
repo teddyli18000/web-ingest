@@ -1,0 +1,56 @@
+name: Temp Science Boundary C7 rank3 square3 bound
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-rank3-square3-bound.yml
+      - science-boundary/shannon-capacity-c7/code/rank3_square3_bound.cpp
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-rank3-square3-bound
+  cancel-in-progress: false
+
+jobs:
+  bound:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned public source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/shannon-source"
+          git -C "$RUNNER_TEMP/shannon-source" remote add origin https://github.com/nathanielitty/lower-bounds-for-shannon-capacity.git
+          git -C "$RUNNER_TEMP/shannon-source" fetch --depth 1 origin fe8966079013abaac21d1c08441500100f8e3b86
+          git -C "$RUNNER_TEMP/shannon-source" checkout FETCH_HEAD
+      - name: Compile and run exact bound
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/result"
+          g++ -O3 -DNDEBUG -std=c++20 science-boundary/shannon-capacity-c7/code/rank3_square3_bound.cpp -o "$RUNNER_TEMP/square3"
+          /usr/bin/time -v "$RUNNER_TEMP/square3" "$RUNNER_TEMP/shannon-source/c7/R367.txt" | tee "$RUNNER_TEMP/result/status.json"
+          python3 - "$RUNNER_TEMP/result/status.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          assert r.get('threshold3_reduces_to_threshold0') is True, r
+          assert r.get('max_pairwise_compatible_ports_unlocked_by_three_deletions') <= 3, r
+          print(r)
+          PY
+      - name: Upload bound
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-rank3-square3-bound
+          path: ${{ runner.temp }}/result/status.json
+          retention-days: 14
+      - name: Summarize
+        shell: bash
+        run: |
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat "$RUNNER_TEMP/result/status.json" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
