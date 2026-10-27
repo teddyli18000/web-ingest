@@ -20,6 +20,7 @@ on:
       - "git-mirror/**"
       - "baidu-drive/*.py"
       - "baidu-drive/tests/**"
+      - "baidu-drive/mover/**"
   pull_request:
     paths:
       - "README.md"
@@ -37,6 +38,7 @@ on:
       - "git-mirror/**"
       - "baidu-drive/*.py"
       - "baidu-drive/tests/**"
+      - "baidu-drive/mover/**"
   workflow_dispatch:
 
 permissions:
@@ -52,7 +54,7 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -82,3 +84,24 @@ jobs:
         run: |
           python3 -m py_compile baidu-drive/controller.py
           python3 -m unittest discover -s baidu-drive/tests -v
+      - name: Checkout pinned Baidu Drive Mover core
+        uses: actions/checkout@v4
+        with:
+          repository: teddyli18000/baidu-drive-mover
+          ref: f4ca661d367aa2a067344efa989f0bfc95b64618
+          path: .ci/baidu-drive-mover
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Set up Go for mover bridge
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: .ci/baidu-drive-mover/go.mod
+          cache-dependency-path: .ci/baidu-drive-mover/go.sum
+      - name: Compile Actions mover bridge against pinned core
+        run: |
+          mkdir -p .ci/baidu-drive-mover/cmd/baidu-drive-action
+          cp baidu-drive/mover/action-main.go .ci/baidu-drive-mover/cmd/baidu-drive-action/main.go
+          cp baidu-drive/mover/action_recovery.go .ci/baidu-drive-mover/internal/state/action_recovery.go
+          cd .ci/baidu-drive-mover
+          go test ./internal/state ./internal/app ./internal/download ./internal/drive ./internal/drive/rclone
+          go build ./cmd/baidu-drive-action
