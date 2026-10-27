@@ -103,8 +103,6 @@ def main():
         if winner:break
         singles,doubles,zeros=support_groups(bits,nbmask);zero_states+=bool(zeros);max_single_owners=max(max_single_owners,len(singles));max_double_groups=max(max_double_groups,len(doubles))
         if zeros:
-            # A zero-neighbour vertex would produce a 368-set in C7^5; retain
-            # the state in diagnostics rather than silently ignoring it.
             print('ZERO_CONFLICT',len(zeros),flush=True)
         # One-swap moves (needed after a two-swap bridge leaves the original component).
         for a,arr in singles.items():
@@ -124,7 +122,7 @@ def main():
                 for b in values(bits):
                     if b!=a:keys.add((a,b) if a<b else (b,a))
         for a,b in keys:
-            pool=sorted(set(singles.get(a,())+singles.get(b,())+doubles.get((a,b),())))
+            pool=sorted(set(list(singles.get(a,()))+list(singles.get(b,()))+list(doubles.get((a,b),()))))
             if len(pool)<2:continue
             for i,x in enumerate(pool):
                 for y in pool[i+1:]:
