@@ -77,6 +77,7 @@ def cmd_build(args: argparse.Namespace) -> None:
         print(json.dumps(status))
         return
 
+    removed: list[str] = []
     if kind == "direct":
         additions = [decode(int(result["add"]))]
         retained = points[:]
@@ -86,10 +87,27 @@ def cmd_build(args: argparse.Namespace) -> None:
             raise ValueError("remove_index out of range")
         if encode(points[remove_index]) != int(result["remove"]):
             raise ValueError("remove id does not match baseline ordering")
+        removed = [points[remove_index]]
         retained = points[:remove_index] + points[remove_index + 1 :]
         additions = [decode(int(x)) for x in result["add"]]
         if len(additions) != 2:
             raise ValueError("replace1 must add two points")
+    elif kind == "replace2":
+        indices = [int(x) for x in result["remove_indices"]]
+        remove_ids = [int(x) for x in result["remove"]]
+        if len(indices) != 2 or len(set(indices)) != 2 or len(remove_ids) != 2:
+            raise ValueError("replace2 must remove two distinct baseline points")
+        if any(not 0 <= i < len(points) for i in indices):
+            raise ValueError("replace2 remove index out of range")
+        for i, rid in zip(indices, remove_ids):
+            if encode(points[i]) != rid:
+                raise ValueError("replace2 remove id does not match baseline ordering")
+        removed = [points[i] for i in indices]
+        remove_set = set(indices)
+        retained = [p for i, p in enumerate(points) if i not in remove_set]
+        additions = [decode(int(x)) for x in result["add"]]
+        if len(additions) != 3:
+            raise ValueError("replace2 must add three points")
     else:
         raise ValueError(f"unknown search result kind: {kind!r}")
 
@@ -103,7 +121,14 @@ def cmd_build(args: argparse.Namespace) -> None:
         json.dumps({"points": candidate}, separators=(",", ":")) + "\n",
         encoding="utf-8",
     )
-    status.update({"candidate": True, "score": len(candidate), "additions": additions})
+    status.update(
+        {
+            "candidate": True,
+            "score": len(candidate),
+            "removed": removed,
+            "additions": additions,
+        }
+    )
     args.status.write_text(json.dumps(status, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(status))
 
