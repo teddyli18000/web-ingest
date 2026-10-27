@@ -110,11 +110,33 @@ func runRelayStep(ctx context.Context, input relayStepInput, cookie, accessToken
 	if input.HashOffset < 0 || input.HashOffset > input.Size {
 		return relayStepOutput{}, fmt.Errorf("invalid hash offset %d/%d", input.HashOffset, input.Size)
 	}
-	if input.Size == 0 {
-		return relayStepOutput{ErrorKind: "zero_file_pending"}, fmt.Errorf("zero-byte relay creation is not enabled yet")
-	}
 	if input.SourceMD5 != "" && !canonicalMD5.MatchString(input.SourceMD5) {
 		return relayStepOutput{}, fmt.Errorf("source MD5 is not canonical")
+	}
+
+	drive := &driveResumableHTTP{AccessToken: strings.TrimSpace(accessToken)}
+	if input.Size == 0 {
+		file, err := drive.CreateOrAdoptEmpty(ctx, input.Name, input.DriveParentID)
+		if err != nil {
+			if errors.Is(err, errDriveAuthRequired) {
+				return relayStepOutput{ErrorKind: "auth"}, err
+			}
+			return relayStepOutput{ErrorKind: "retryable"}, err
+		}
+		if strings.TrimSpace(file.FileID) == "" || !strings.EqualFold(file.MD5Checksum, emptyBlobMD5) {
+			return relayStepOutput{}, fmt.Errorf("empty Drive object failed independent verification")
+		}
+		if input.SourceMD5 != "" && !strings.EqualFold(input.SourceMD5, emptyBlobMD5) {
+			return relayStepOutput{}, fmt.Errorf("empty source MD5 does not match the empty blob digest")
+		}
+		return relayStepOutput{
+			ConfirmedOffset: 0,
+			HashOffset:      0,
+			ComputedMD5:     emptyBlobMD5,
+			Complete:        true,
+			DriveFileID:     strings.TrimSpace(file.FileID),
+			DriveMD5:        emptyBlobMD5,
+		}, nil
 	}
 
 	source, err := baidu.NewClient(cookie)
@@ -124,7 +146,6 @@ func runRelayStep(ctx context.Context, input relayStepInput, cookie, accessToken
 	if !source.HasLoginCookies() {
 		return relayStepOutput{ErrorKind: "auth"}, baidu.ErrAuthRequired
 	}
-	drive := &driveResumableHTTP{AccessToken: strings.TrimSpace(accessToken)}
 
 	sessionURI := ""
 	sealed := strings.TrimSpace(input.SessionSealed)
