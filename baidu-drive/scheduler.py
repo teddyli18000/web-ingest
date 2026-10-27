@@ -59,6 +59,10 @@ def _parse_time(value: Any) -> dt.datetime | None:
     return parsed.astimezone(dt.timezone.utc)
 
 
+def file_identity(file_state: dict[str, Any]) -> str:
+    return str(file_state.get("file_id") or file_state.get("id") or "")
+
+
 def remaining_bytes(file_state: dict[str, Any]) -> int:
     size = max(0, int(file_state.get("size") or 0))
     confirmed = max(0, int(file_state.get("confirmed_offset") or 0))
@@ -86,10 +90,11 @@ def is_active(file_state: dict[str, Any], now: dt.datetime, policy: Policy = Pol
 
 def is_runnable(file_state: dict[str, Any], now: dt.datetime, policy: Policy = Policy()) -> bool:
     status = str(file_state.get("status") or "").upper()
-    if remaining_bytes(file_state) == 0:
-        return False
+    size = max(0, int(file_state.get("size") or 0))
     if status in RUNNABLE_FILE_STATES:
-        return True
+        # Zero-byte files still need one worker to create and verify the empty
+        # Drive object even though there are no relay byte ranges.
+        return size == 0 or remaining_bytes(file_state) > 0
     return status == "ACTIVE" and heartbeat_is_stale(file_state, now, policy)
 
 
@@ -111,15 +116,15 @@ def choose_files(
     if slots == 0:
         return []
 
-    candidates = [item for item in values if is_runnable(item, now, policy)]
+    candidates = [item for item in values if is_runnable(item, now, policy) and file_identity(item)]
     candidates.sort(
         key=lambda item: (
             -remaining_bytes(item),
             str(item.get("logical_path") or ""),
-            str(item.get("id") or ""),
+            file_identity(item),
         )
     )
-    return [str(item["id"]) for item in candidates[:slots] if item.get("id")]
+    return [file_identity(item) for item in candidates[:slots]]
 
 
 def chunk_window(
