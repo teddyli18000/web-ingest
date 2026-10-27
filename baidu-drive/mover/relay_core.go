@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/teddyli18000/baidu-drive-mover/internal/baidu"
 )
@@ -141,9 +142,6 @@ func relayNextChunk(ctx context.Context, source relayRangeSource, drive relayDri
 		)
 	}
 
-	// The Baidu response body becomes the Drive request body directly. The
-	// Drive client sets Content-Length=want, so neither a chunk-sized file nor a
-	// chunk-sized in-memory buffer is needed on the runner.
 	after, uploadErr := drive.Upload(ctx, spec.SessionURI, start, end, spec.Total, io.LimitReader(stream.Body, want))
 	if uploadErr == nil {
 		if err := validateDriveProgress(after, spec.Total); err != nil {
@@ -158,9 +156,6 @@ func relayNextChunk(ctx context.Context, source relayRangeSource, drive relayDri
 		return resultFromDrive(after), nil
 	}
 
-	// Never infer progress from bytes read locally. A failed PUT may have
-	// committed none, some, or all of the request. Ask Drive and return that
-	// proven state to the scheduler.
 	reconciled, statusErr := drive.Status(ctx, spec.SessionURI, spec.Total)
 	if statusErr != nil {
 		return resultFromDrive(before), fmt.Errorf("Drive upload failed and status reconciliation failed: %v; %w", uploadErr, statusErr)
@@ -197,6 +192,7 @@ type driveResumableHTTP struct {
 	Client         *http.Client
 	AccessToken    string
 	UploadEndpoint string
+	ReconcileWait  func(context.Context) error
 }
 
 func (d *driveResumableHTTP) httpClient() *http.Client {
@@ -204,6 +200,20 @@ func (d *driveResumableHTTP) httpClient() *http.Client {
 		return d.Client
 	}
 	return http.DefaultClient
+}
+
+func (d *driveResumableHTTP) waitForReconcile(ctx context.Context) error {
+	if d != nil && d.ReconcileWait != nil {
+		return d.ReconcileWait(ctx)
+	}
+	timer := time.NewTimer(time.Second)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
 }
 
 func (d *driveResumableHTTP) Status(ctx context.Context, sessionURI string, total int64) (driveProgress, error) {
