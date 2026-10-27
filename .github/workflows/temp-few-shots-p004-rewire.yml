@@ -46,7 +46,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          g++ -O3 -DNDEBUG -march=native -std=c++20 \
+          g++ -O3 -DNDEBUG -DBASELINE_SCORE=134753u -march=native -std=c++20 \
             temp-work/few-shots-p004/gadget9-rewire.cpp \
             -o "$RUNNER_TEMP/p004-rewire"
 
