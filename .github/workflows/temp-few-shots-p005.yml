@@ -1,0 +1,120 @@
+name: Temp Few Shots p005 513-cap search
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-few-shots-p005.yml
+      - temp-work/few-shots-p005/search.cpp
+      - temp-work/few-shots-p005/extract.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-few-shots-p005
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        lane: [0,1,2,3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 270
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch upstream p005 read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p005-cap-set-8d
+
+      - name: Prepare baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 temp-work/few-shots-p005/extract.py extract \
+            "$RUNNER_TEMP/few-shots/problems/p005-cap-set-8d/baseline/certificate.json" \
+            "$RUNNER_TEMP/baseline.txt"
+
+      - name: Compile search
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -DNDEBUG -march=native -std=c++20 \
+            temp-work/few-shots-p005/search.cpp -o "$RUNNER_TEMP/search"
+
+      - name: Search fixed 513-point cap
+        id: search
+        shell: bash
+        run: |
+          set -euo pipefail
+          seed=$(( 0x5eed0000 + ${{ matrix.lane }} * 1000003 + GITHUB_RUN_ID % 1000000 ))
+          /usr/bin/time -v "$RUNNER_TEMP/search" \
+            "$RUNNER_TEMP/baseline.txt" "$RUNNER_TEMP/result.json" 15000 "$seed"
+          cat "$RUNNER_TEMP/result.json"
+          if grep -q '"kind":"found"' "$RUNNER_TEMP/result.json"; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+
+      - name: Materialize candidate
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/shot"
+          python3 temp-work/few-shots-p005/extract.py build \
+            "$RUNNER_TEMP/result.json" "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/status.json"
+          cat "$RUNNER_TEMP/status.json"
+
+      - name: Verify with upstream verifier
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p005-cap-set-8d/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/verify.json"
+          python3 - "$RUNNER_TEMP/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r['score']) <= 512:
+              raise SystemExit(r)
+          print(f"VERIFIED BREAKTHROUGH score={r['score']}")
+          PY
+
+      - name: Stage result artifact
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/artifact"
+          [[ -f "$RUNNER_TEMP/result.json" ]] && cp "$RUNNER_TEMP/result.json" "$RUNNER_TEMP/artifact/search-result.json" || true
+          [[ -f "$RUNNER_TEMP/status.json" ]] && cp "$RUNNER_TEMP/status.json" "$RUNNER_TEMP/artifact/status.json" || true
+          [[ -f "$RUNNER_TEMP/shot/certificate.json" ]] && cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/artifact/certificate.json" || true
+          [[ -f "$RUNNER_TEMP/verify.json" ]] && cp "$RUNNER_TEMP/verify.json" "$RUNNER_TEMP/artifact/verify.json" || true
+
+      - name: Upload result artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p005-cap513-${{ matrix.lane }}
+          path: ${{ runner.temp }}/artifact
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f "$RUNNER_TEMP/result.json" ]]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat "$RUNNER_TEMP/result.json" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [[ -f "$RUNNER_TEMP/verify.json" ]]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat "$RUNNER_TEMP/verify.json" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
