@@ -6,8 +6,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'baidu-drive/controller.py'
-      - 'baidu-drive/worker.py'
+      - 'baidu-drive/*.py'
       - 'baidu-drive/README.md'
       - 'baidu-drive/AGENTS.md'
       - 'baidu-drive/tests/**'
@@ -49,7 +48,7 @@ jobs:
       - name: Validate task implementation
         if: github.event_name == 'push'
         run: |
-          python3 -m py_compile baidu-drive/controller.py baidu-drive/worker.py
+          python3 -m py_compile baidu-drive/*.py
           python3 -m unittest discover -s baidu-drive/tests -v
 
       - name: Capture Release request baseline
