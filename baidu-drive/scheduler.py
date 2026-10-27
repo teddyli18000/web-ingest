@@ -21,6 +21,7 @@ DEFAULT_CHUNK_BYTES = 512 * MIB
 DEFAULT_SOFT_RUNTIME_SECONDS = 5 * 60 * 60
 DEFAULT_HARD_RUNTIME_SECONDS = 330 * 60
 DEFAULT_STALE_HEARTBEAT_SECONDS = 60 * 60
+DEFAULT_MAX_RETRYABLE_FAILURES = 3
 
 RUNNABLE_FILE_STATES = {"READY", "PAUSED", "FAILED_RETRYABLE"}
 
@@ -32,6 +33,7 @@ class Policy:
     soft_runtime_seconds: int = DEFAULT_SOFT_RUNTIME_SECONDS
     hard_runtime_seconds: int = DEFAULT_HARD_RUNTIME_SECONDS
     stale_heartbeat_seconds: int = DEFAULT_STALE_HEARTBEAT_SECONDS
+    max_retryable_failures: int = DEFAULT_MAX_RETRYABLE_FAILURES
 
     def validate(self) -> "Policy":
         if self.max_workers <= 0:
@@ -44,6 +46,8 @@ class Policy:
             raise ValueError("hard runtime must exceed soft runtime")
         if self.stale_heartbeat_seconds <= 0:
             raise ValueError("stale heartbeat window must be positive")
+        if self.max_retryable_failures <= 0:
+            raise ValueError("max_retryable_failures must be positive")
         return self
 
 
@@ -89,8 +93,11 @@ def is_active(file_state: dict[str, Any], now: dt.datetime, policy: Policy = Pol
 
 
 def is_runnable(file_state: dict[str, Any], now: dt.datetime, policy: Policy = Policy()) -> bool:
+    policy.validate()
     status = str(file_state.get("status") or "").upper()
     size = max(0, int(file_state.get("size") or 0))
+    if status == "FAILED_RETRYABLE" and int(file_state.get("retryable_failures") or 0) >= policy.max_retryable_failures:
+        return False
     if status in RUNNABLE_FILE_STATES:
         # Zero-byte files still need one worker to create and verify the empty
         # Drive object even though there are no relay byte ranges.
