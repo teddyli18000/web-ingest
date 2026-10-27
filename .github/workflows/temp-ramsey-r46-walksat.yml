@@ -135,7 +135,7 @@ jobs:
           set -euo pipefail
           mkdir -p /tmp/r46
           python3 - /tmp/lanes /tmp/r46/result.json /tmp/r46/best.json <<'PY'
-          import itertools, json, pathlib, shutil, sys
+          import itertools, json, os, pathlib, shutil, sys
           root, out, best_out = map(pathlib.Path, sys.argv[1:])
           rows = []
           for p in root.rglob('summary.json'):
@@ -159,7 +159,7 @@ jobs:
           public_rows = [{k:v for k,v in d.items() if k != '_dir'} for d in rows]
           result = {
               'campaign': 'walksat-all-37-exoo-cores',
-              'run_id': '${{ github.run_id }}',
+              'run_id': os.environ['GITHUB_RUN_ID'],
               'lanes_completed': len(rows),
               'best_core': winner['core'],
               'best': winner['best'],
@@ -170,7 +170,7 @@ jobs:
           }
           out.write_text(json.dumps(result, indent=2, sort_keys=True) + '\n')
           print(json.dumps({k:v for k,v in result.items() if k != 'lanes'}, sort_keys=True))
-          with open('${{ github.output }}', 'a') as f:
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
               f.write(f"found={'true' if result['found'] else 'false'}\n")
           PY
 
