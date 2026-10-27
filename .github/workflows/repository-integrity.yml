@@ -80,9 +80,9 @@ jobs:
           python3 -m py_compile git-mirror/*.py
           python3 -m unittest discover -s git-mirror/tests -v
           python3 git-mirror/validate_snapshots.py
-      - name: Validate Baidu Drive control plane
+      - name: Validate Baidu Drive control and worker code
         run: |
-          python3 -m py_compile baidu-drive/controller.py
+          python3 -m py_compile baidu-drive/controller.py baidu-drive/worker.py
           python3 -m unittest discover -s baidu-drive/tests -v
       - name: Checkout pinned Baidu Drive Mover core
         uses: actions/checkout@v4
