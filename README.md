@@ -49,7 +49,7 @@ Transient Action working files should stay in the runner workspace or runner tem
 | [`github-trending`](github-trending/) | Preserve daily GitHub Trending rankings and recover available historical snapshots | Active |
 | [`google-trending`](google-trending/) | Preserve Google Trends Trending Now for Singapore, the United States, the United Kingdom, and Hong Kong, with historical recovery where available | Active |
 | [`git-mirror`](git-mirror/) | Import one-shot file snapshots of public Git repositories through temporary self-cleaning Actions | Ready |
-| [`baidu-drive`](baidu-drive/) | Release-controlled transfer of public Baidu Netdisk shares to Google Drive | Control plane ready; auth pending |
+| [`baidu-drive`](baidu-drive/) | Release-controlled transfer of public Baidu Netdisk shares to Google Drive | Control + worker ready; auth pending |
 
 ## Repository management
 
