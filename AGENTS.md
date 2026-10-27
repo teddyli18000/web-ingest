@@ -1,12 +1,12 @@
 # AGENTS.md
 
-This repository is a small Internet data-ingestion workspace. Keep it boring, explicit, and easy to inspect.
+This repository is primarily a small Internet data-ingestion workspace. Keep it boring, explicit, and easy to inspect. The registered exception is `science-boundary/`, a durable multi-Agent scientific research workspace.
 
 ## Purpose
 
 Use GitHub Actions or small task-local scripts to collect public Internet data and save it in this repository.
 
-Do **not** turn this repository into the downstream analysis, reporting, archive, or email system.
+Do **not** turn ordinary ingestion tasks into downstream analysis, reporting, archive, or email systems. Durable scientific frontier research belongs only under `science-boundary/` and follows its own local rules.
 
 ## Navigation
 
@@ -20,17 +20,19 @@ When you need to inspect, run, repair, or extend a task:
 4. Keep changes scoped to that task unless a repository-wide rule truly needs to change.
 5. If behavior changes, update the task README in the same change so the next Agent can continue from documented state.
 
+For **durable scientific frontier exploration**, use `science-boundary/`. Read `science-boundary/README.md` and `science-boundary/AGENTS.md` before working there. Each genuinely distinct research direction lives directly under `science-boundary/<research-topic>/` and keeps its own durable handoff, evidence, experiments, dead ends, and reproducible artifacts. This workspace is permanent and is not subject to `temp-work/` cleanup.
+
 For **one-shot snapshots of public Git repositories**, use the existing `git-mirror/` task instead of creating a new root task per source repository. Read `git-mirror/README.md` and `git-mirror/AGENTS.md`; concrete imports use temporary self-cleaning workflows rendered from the retained task template and write only file snapshots plus source provenance.
 
 For repository-wide scheduling, workflow policy, audits, or maintenance helpers, use `tools/` as the manager workspace. Read `tools/README.md`, `tools/AGENTS.md`, and `tools/OPERATIONS.md` before changing repository-wide behavior.
 
-For temporary experiments, investigations, validation, one-shot maintenance, and short-lived collaboration that do not belong to an existing persistent task, use `temp-work/<work-name>/`. Read `temp-work/README.md` and `temp-work/AGENTS.md` first. Do not scatter temporary files across the repository or use another task directory as scratch space.
+For temporary experiments, investigations, validation, one-shot maintenance, and short-lived collaboration that do not belong to an existing persistent task or durable `science-boundary/` direction, use `temp-work/<work-name>/`. Read `temp-work/README.md` and `temp-work/AGENTS.md` first. Do not scatter temporary files across the repository or use another task directory as scratch space.
 
-Do not invent a `tasks/` wrapper. One root-level task folder = one independent Internet collection job.
+Do not invent a `tasks/` wrapper. One root-level collection-task folder = one independent Internet collection job; `tools/`, `temp-work/`, and `science-boundary/` are explicitly registered repository workspaces rather than collection tasks.
 
 ## Task layout
 
-Prefer this simple shape:
+Prefer this simple shape for ingestion tasks:
 
 ```text
 <task-name>/
@@ -44,7 +46,7 @@ Prefer this simple shape:
 
 Repository-wide maintenance tools and operational notes belong under `tools/`; do not move task implementation there.
 
-Transient Action working files belong in the runner workspace or runner temporary directory. Committed short-lived Agent work belongs under `temp-work/<work-name>/`, not at the repository root or inside a persistent task.
+Transient Action working files belong in the runner workspace or runner temporary directory. Committed short-lived Agent work belongs under `temp-work/<work-name>/`. Durable scientific research artifacts belong only in the owning `science-boundary/<research-topic>/` directory.
 
 ## Collection rules
 
@@ -57,6 +59,8 @@ Transient Action working files belong in the runner workspace or runner temporar
 - Keep workflows small and task-specific.
 - Scheduled tasks should also have a practical manual/backfill path when the source supports it.
 - A successful workflow is not enough if expected output was not actually written; validate the task's documented output condition.
+
+These collection rules do not define the scientific method inside `science-boundary/`; use its local `AGENTS.md` for research discipline and handoff rules.
 
 ## Action scheduling and load
 
@@ -74,7 +78,7 @@ Do not weaken the schedule guard just to accommodate a preferred time. Move the 
 
 Event-driven lightweight CI is not treated as persistent ingestion load, but it must remain short and path-scoped so normal data commits do not waste Actions.
 
-This is a public repository. Actions runner time is not treated as the same scarce resource as in a private repository, so Agents may use Actions aggressively when they materially improve reproduction, testing, validation, collection reliability, or temporary experiments. Do not create waste for its own sake, but do not avoid a useful Action merely to save public-repository minutes.
+This is a public repository. Actions runner time is not treated as the same scarce resource as in a private repository, so Agents may use Actions aggressively when they materially improve reproduction, testing, validation, collection reliability, scientific computation, or temporary experiments. Do not create waste for its own sake, but do not avoid a useful Action merely to save public-repository minutes.
 
 ## Adding a task
 
@@ -89,21 +93,24 @@ For a new ingestion job:
 
 Do not create a new task merely because the owner supplies another public Git repository URL; those one-shot file snapshots belong under `git-mirror/`.
 
+Do not register a scientific research direction as an ingestion task; durable frontier research belongs under `science-boundary/`.
+
 ## Temporary Agent work
 
-- If work is not clearly part of an existing persistent task, create `temp-work/<work-name>/` using `lowercase-kebab-case`.
+- If work is not clearly part of an existing persistent task, durable science-boundary direction, or repository-wide maintenance area, create `temp-work/<work-name>/` using `lowercase-kebab-case`.
 - One first-level workspace = one temporary task. Do not modify another workspace.
 - Every workspace must have a short non-empty `README.md` recording purpose, important context, outputs/conclusions, and whether anything should migrate into durable repository state.
 - `temp-work/` is disposable. `.github/workflows/temp-work-cleanup.yml` removes first-level workspaces with no meaningful commit for more than one month.
 - Do not keep temporary work alive with empty edits, file touching, or meaningless commits.
-- When an experiment produces a durable result, migrate only the validated long-term change into the appropriate task or `tools/`; do not let `temp-work/` become a second permanent task hierarchy.
+- When temporary scientific work becomes an intended long-term research direction, migrate the useful state into `science-boundary/<research-topic>/` instead of keeping it alive inside `temp-work/`.
+- When another experiment produces a durable result, migrate only the validated long-term change into the appropriate task or `tools/`; do not let `temp-work/` become a second permanent task hierarchy.
 
 ## Temporary and historical operations
 
-- Backfills, migrations, repairs, probes, diagnostics, and one-shot imports may use temporary workflows when Actions execution is useful.
+- Backfills, migrations, repairs, probes, diagnostics, scientific compute campaigns, and one-shot imports may use temporary workflows when Actions execution is useful.
 - Temporary workflows must not have a recurring `schedule:` trigger. The durable repository-wide `temp-work-cleanup.yml` lifecycle workflow is the explicit exception and is registered by the integrity checker.
 - Remove disposable workflows after successful output validation.
-- Keep reusable conversion/repair/import logic in the owning task directory; the workflow itself should remain disposable.
+- Keep reusable logic in the owning task or `science-boundary` topic directory; the workflow itself should remain disposable when the operation is one-shot.
 
 ## Public-repository safety
 
@@ -117,6 +124,7 @@ Never commit or expose:
 - signed, expiring, credential-bearing, or otherwise sensitive URLs
 - personal/private source data
 - private repository or private service contents
+- restricted or non-public research material
 - secrets copied from Action logs
 - diagnostic dumps containing credentials, user data, or private environment information
 
@@ -124,6 +132,6 @@ Use GitHub Actions secrets when a task genuinely needs credentials, and make sur
 
 ## Changes
 
-Before changing an existing task, read its README and current workflow/script first. Avoid unrelated cleanup. If an important external decision is not documented and cannot be safely inferred from the task itself, ask rather than inventing it.
+Before changing an existing task or research direction, read its README and current workflow/script first. Avoid unrelated cleanup. If an important external decision is not documented and cannot be safely inferred from the owning workspace itself, ask rather than inventing it.
 
 For repository-wide decisions that future Agents should remember, update durable rules in README/AGENTS or record a concise current-state note in `tools/OPERATIONS.md`. Do not leave important decisions only in chat history.
