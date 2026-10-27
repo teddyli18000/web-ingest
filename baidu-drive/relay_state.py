@@ -15,6 +15,7 @@ ACTIVE = "ACTIVE"
 PAUSED = "PAUSED"
 FAILED_RETRYABLE = "FAILED_RETRYABLE"
 FAILED_PERMANENT = "FAILED_PERMANENT"
+BLOCKED_RECONCILE = "BLOCKED_RECONCILE"
 VERIFIED = "VERIFIED"
 
 RUNNABLE = {READY, PAUSED, FAILED_RETRYABLE}
@@ -168,12 +169,12 @@ def attach_session(record: dict[str, Any], lease_id: str, sealed: str, now: dt.d
 
 
 def replace_expired_session(record: dict[str, Any], lease_id: str, sealed: str, now: dt.datetime) -> dict[str, Any]:
+    """Install a replacement session only after an external reconciliation proved it safe."""
     value = copy.deepcopy(record)
     require_lease(value, lease_id)
     sealed = str(sealed or "").strip()
     if not sealed.startswith("v1."):
         raise RelayStateError("invalid sealed session")
-    # A new Drive resumable session has none of the previous session's bytes.
     value["session_sealed"] = sealed
     value["confirmed_offset"] = 0
     value["hash_offset"] = 0
@@ -228,8 +229,6 @@ def apply_relay_checkpoint(
     if hashed > 0 and hashed < size and not state_text:
         raise RelayStateError("non-final relay hash checkpoint is missing state")
     if hashed == size and size > 0 and not digest:
-        # A completed byte stream must have its full local digest available
-        # before final Drive verification is accepted.
         raise RelayStateError("complete relay hash checkpoint is missing MD5")
     value["confirmed_offset"] = offset
     value["hash_offset"] = hashed
@@ -244,6 +243,19 @@ def pause(record: dict[str, Any], lease_id: str, now: dt.datetime, message: str 
     value = copy.deepcopy(record)
     require_lease(value, lease_id)
     value["status"] = PAUSED
+    value["lease_id"] = None
+    value["lease_started_at"] = None
+    value["heartbeat_at"] = None
+    value["last_error"] = str(message or "")[:300]
+    value["updated_at"] = now_iso(now)
+    return value
+
+
+def block_reconcile(record: dict[str, Any], lease_id: str, now: dt.datetime, message: str) -> dict[str, Any]:
+    """Release a lease while preserving all evidence needed to reconcile an expired session."""
+    value = copy.deepcopy(record)
+    require_lease(value, lease_id)
+    value["status"] = BLOCKED_RECONCILE
     value["lease_id"] = None
     value["lease_started_at"] = None
     value["heartbeat_at"] = None
