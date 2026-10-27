@@ -1,4 +1,4 @@
-name: temp ramsey r46 lazy shells
+name: Temp Ramsey R46 exact shell search
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: temp-ramsey-r46-shells
@@ -17,7 +17,7 @@ concurrency:
 jobs:
   shell:
     runs-on: ubuntu-latest
-    timeout-minutes: 330
+    timeout-minutes: 95
     strategy:
       fail-fast: false
       max-parallel: 5
@@ -40,26 +40,44 @@ jobs:
             degree: 16
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install PySAT
-        run: python -m pip install --disable-pip-version-check python-sat
-      - name: Search Hamming shell around Few Shots baseline
+      - name: Install pinned PySAT
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'python-sat==1.9.dev17'
+          python - <<'PY'
+          from pysat.solvers import Solver
+          with Solver(name='cadical195') as s:
+              s.add_clause([1])
+              assert s.solve()
+          print('cadical195 ok')
+          PY
+      - name: Search exact Hamming ball around Few Shots baseline
+        id: search
         shell: bash
         run: |
           set -uo pipefail
-          stem="r${{ matrix.radius }}-s${{ matrix.seed }}"
-          log="/tmp/${stem}.log"
-          candidate="/tmp/${stem}-candidate.json"
+          radius='${{ matrix.radius }}'
+          seed='${{ matrix.seed }}'
+          degree='${{ matrix.degree }}'
+          stem="shell-baseline-r$(printf '%02d' "$radius")"
+          log="$RUNNER_TEMP/${stem}.log"
+          candidate="$RUNNER_TEMP/${stem}-candidate.json"
+          started="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           set +e
-          timeout 300m python science-boundary/ramsey-r46/lazy_shell_search.py \
-            --radius '${{ matrix.radius }}' \
+          timeout 85m python science-boundary/ramsey-r46/lazy_shell_search.py \
+            --radius "$radius" \
             --solver cadical195 \
-            --seed '${{ matrix.seed }}' \
-            --new-degree '${{ matrix.degree }}' \
-            --output "$candidate" 2>&1 | tee "$log"
-          rc=${PIPESTATUS[0]}
+            --seed "$seed" \
+            --new-degree "$degree" \
+            --max-iterations 1000000 \
+            --output "$candidate" >"$log" 2>&1
+          rc=$?
           set -e
           case "$rc" in
             0) status=SAT ;;
@@ -68,17 +86,70 @@ jobs:
             124|137|143) status=TIMEOUT ;;
             *) status=ERROR ;;
           esac
-          printf 'status=%s\nexit_code=%s\n' "$status" "$rc" | tee "/tmp/${stem}-status.txt"
+          mkdir -p science-boundary/ramsey-r46/results
+          summary="science-boundary/ramsey-r46/results/${stem}.txt"
+          result_line="$(grep '^RESULT ' "$log" | tail -n 1 || true)"
+          {
+            echo "experiment=exact-hamming-ball"
+            echo "baseline=few-shots-p003-baseline"
+            echo "radius=$radius"
+            echo "seed=$seed"
+            echo "new_degree_phase=$degree"
+            echo "python=3.12"
+            echo "python_sat=1.9.dev17"
+            echo "solver=cadical195"
+            echo "started_utc=$started"
+            echo "exit_code=$rc"
+            echo "status=$status"
+            echo "result_line=$result_line"
+            echo
+            echo "--- log tail ---"
+            tail -n 100 "$log"
+          } > "$summary"
+          if [[ -f "$candidate" ]]; then
+            cp "$candidate" "science-boundary/ramsey-r46/results/${stem}-candidate.json"
+          fi
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          echo "stem=$stem" >> "$GITHUB_OUTPUT"
+          cat "$summary"
           if [[ "$status" == ERROR ]]; then
             exit "$rc"
           fi
-      - name: Upload shell-search evidence
+      - name: Verify any SAT candidate with Few Shots p003 verifier
+        if: steps.search.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          stem='${{ steps.search.outputs.stem }}'
+          candidate="science-boundary/ramsey-r46/results/${stem}-candidate.json"
+          git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          mkdir -p "$RUNNER_TEMP/candidate"
+          cp "$candidate" "$RUNNER_TEMP/candidate/certificate.json"
+          verify_out="science-boundary/ramsey-r46/results/${stem}-verify.json"
+          python "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/candidate" | tee "$verify_out"
+          python - "$verify_out" <<'PY'
+          import json, sys
+          r=json.load(open(sys.argv[1], encoding='utf-8'))
+          assert r['valid'] is True and r['score']=='36', r
+          print('Few Shots verifier accepted score 36')
+          PY
+      - name: Commit durable evidence
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ramsey-r46-shell-r${{ matrix.radius }}-s${{ matrix.seed }}
-          path: |
-            /tmp/r${{ matrix.radius }}-s${{ matrix.seed }}.log
-            /tmp/r${{ matrix.radius }}-s${{ matrix.seed }}-status.txt
-            /tmp/r${{ matrix.radius }}-s${{ matrix.seed }}-candidate.json
-          if-no-files-found: warn
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/results/
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "science-boundary: R(4,6) shell radius ${{ matrix.radius }}"
+          for attempt in 1 2 3 4 5 6; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            sleep $((attempt * 2))
+          done
+          exit 1
