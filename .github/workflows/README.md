@@ -49,6 +49,8 @@ Scheduled Actions are not exact clocks. For a task with a hard publication bound
 
 `repository-integrity.yml` is event-driven only. It validates repository rules, recurring schedules, task tests, and Python repository-management tools. Normal daily data commits do not trigger it.
 
+`baidu-drive-reconcile.yml` is also event-driven only. It owns the fixed `baidu-drive-live` Release control surface and the task's non-secret state under `baidu-drive/state/`. Human Release edits, manual dispatches, and control-plane code changes can wake it; bot-authored Release edits and normal state commits are not allowed to create a writer loop. All current and future `baidu-drive` state writers must share concurrency group `baidu-drive-live-state`. The transfer worker remains fail-closed until OAuth/secret provisioning is explicitly configured in the task.
+
 `temp-work-cleanup.yml` is the durable lifecycle manager for `temp-work/`. It is API-only, writes only when stale first-level workspaces actually need deletion, and records its audit trail in the Action Step Summary instead of committing status files.
 
 This is a public repository, so useful Actions execution is not treated as scarce private-runner budget. Reproduction, testing, validation, probes, and intentional warm-runner holding may use Actions time when that materially improves reliability. Public visibility is the hard constraint: workflows must not expose credentials, private data, private repository content, signed URLs, sensitive environment dumps, or secret-derived material.
