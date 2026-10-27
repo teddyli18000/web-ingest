@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import datetime as dt
 import json
 import os
@@ -27,12 +28,31 @@ def public_error(kind: str) -> str:
     return {
         "auth": "Relay authentication is unavailable or expired.",
         "retryable": "Relay transport remained unavailable after bounded retries.",
-        "session_expired": "Drive resumable session expired; destination reconciliation is required before any replay.",
+        "session_expired": "Drive resumable session expired before its destination could be reconciled.",
+        "session_absent": "Expired Drive session has no destination object; a fresh session may start safely.",
+        "reconcile_required": "Drive destination is ambiguous or conflicts with the Baidu source.",
         "state": "Encrypted relay capability state could not be opened.",
         "input": "Relay worker input was rejected.",
         "zero_file_pending": "Zero-byte Drive creation path is not enabled yet.",
         "runtime": "Relay runtime inputs are unavailable in this worker.",
     }.get(kind, "Relay worker stopped safely.")
+
+
+def clear_proven_absent_session(
+    record: dict[str, Any], lease_id: str, now: dt.datetime
+) -> dict[str, Any]:
+    """Clear session-scoped state only after Drive proved no final object exists."""
+    value = copy.deepcopy(record)
+    relay_state.require_lease(value, lease_id)
+    value["session_sealed"] = None
+    value["confirmed_offset"] = 0
+    value["hash_offset"] = 0
+    value["md5_state"] = None
+    value["computed_md5"] = None
+    value["heartbeat_at"] = relay_state.now_iso(now)
+    value["updated_at"] = value["heartbeat_at"]
+    value["last_error"] = ""
+    return value
 
 
 def apply_step_output(
@@ -184,11 +204,26 @@ def run_worker_loop(
             )
 
         kind = str(output.get("error_kind") or "").strip()
-        if kind == "session_expired":
-            # A 404 does not prove whether the expired session committed the
-            # final object immediately before expiring. Preserve all evidence,
-            # release the lease, and require destination reconciliation before
-            # a replacement session may be created.
+        if kind == "session_absent":
+            # The Go relay queried the exact destination and proved that the
+            # expired session did not leave a final object. Its partial upload
+            # is no longer usable, so reset only session-scoped progress and
+            # let the next loop create a fresh resumable session.
+            repo.mutate_record(
+                task_id,
+                file_id,
+                lambda current: clear_proven_absent_session(
+                    current, lease_id, now_fn()
+                ),
+                f"baidu-drive: reset proven-absent Drive session for {file_id}",
+            )
+            consecutive_retryable = 0
+            continue
+
+        if kind in {"session_expired", "reconcile_required"}:
+            # session_expired is kept as a conservative fallback for an older
+            # relay binary. Current code emits reconcile_required only when an
+            # exact destination query found ambiguous/conflicting evidence.
             repo.mutate_record(
                 task_id,
                 file_id,
@@ -196,9 +231,9 @@ def run_worker_loop(
                     current,
                     lease_id,
                     now_fn(),
-                    public_error("session_expired"),
+                    public_error(kind),
                 ),
-                f"baidu-drive: block expired Drive session for {file_id}",
+                f"baidu-drive: block Drive reconciliation for {file_id}",
             )
             return relay_state.BLOCKED_RECONCILE
 
