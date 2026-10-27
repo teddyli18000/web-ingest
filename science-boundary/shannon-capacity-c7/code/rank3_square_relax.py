@@ -26,12 +26,6 @@ def bit_indices(mask):
     return out
 
 
-def one_bit(mask):
-    if not mask or mask & (mask - 1):
-        raise ValueError("mask is not a singleton")
-    return (mask & -mask).bit_length() - 1
-
-
 def neighborhood(v, digits):
     d = digits[v]
     for delta in product((-1, 0, 1), repeat=g.D):
@@ -49,7 +43,7 @@ def load_rank3_state(r0, digits):
     return r
 
 
-def solve(r, xset, digits, supports):
+def solve(r, xset, digits, supports, max_square_conflicts):
     kset = set(RANK3_K9)
     bidx = [i for i in range(g.R_SIZE) if i not in kset]
     bmask = sum(1 << i for i in bidx)
@@ -59,8 +53,12 @@ def solve(r, xset, digits, supports):
     outside = [supports[v] & bmask for v in range(g.U)]
     outside_count = [m.bit_count() for m in outside]
     safe = [v for v in range(g.U) if v not in bvals and outside_count[v] == 0]
-    near1 = [v for v in range(g.U) if v not in bvals and outside_count[v] == 1]
-    all_non_b = [v for v in range(g.U) if v not in bvals]
+    count_hist = {}
+    for v in range(g.U):
+        if v in bvals:
+            continue
+        c = outside_count[v]
+        count_hist[c] = count_hist.get(c, 0) + 1
 
     x_bmask = [supports[xv] & bmask for xv in xset]
     x_bcount = [m.bit_count() for m in x_bmask]
@@ -71,14 +69,11 @@ def solve(r, xset, digits, supports):
     cand = []
     cand_sets = []
     for xi in range(g.R_SIZE):
-        c = x_bcount[xi]
-        if c == 0:
-            arr = all_non_b
-        elif c == 1:
-            arr = safe + near1
-        else:
-            arr = safe
-        arr = tuple(sorted(arr))
+        cc = x_bcount[xi]
+        arr = tuple(
+            v for v in range(g.U)
+            if v not in bvals and outside_count[v] * cc <= max_square_conflicts
+        )
         cand.append(arr)
         cand_sets.append(set(arr))
 
@@ -106,30 +101,33 @@ def solve(r, xset, digits, supports):
     touched = set()
     port_vars = 0
     extra_ports = 0
+    port_cost_hist = {}
     for xi in range(g.R_SIZE):
         cm = x_bmask[xi]
-        cc = x_bcount[xi]
+        cbits = bit_indices(cm)
+        cc = len(cbits)
         for e in cand[xi]:
             am = outside[e]
-            ac = outside_count[e]
-            if ac * cc > 1:
-                raise RuntimeError("candidate exceeds one square conflict")
+            abits = bit_indices(am)
+            cost = len(abits) * cc
+            if cost > max_square_conflicts:
+                raise RuntimeError("candidate exceeds square-conflict radius")
+            port_cost_hist[cost] = port_cost_hist.get(cost, 0) + 2
             h = vh(xi, e)
             v = vv(xi, e)
             wcnf.append([h], weight=1)
             wcnf.append([v], weight=1)
             port_vars += 2
-            if ac:
+            if cost:
                 extra_ports += 2
-            if ac * cc == 1:
-                a = one_bit(am)
-                b = one_bit(cm)
-                hp = (a, b)
-                vp = (b, a)
-                touched.add(hp)
-                touched.add(vp)
-                wcnf.append([-h, vd(*hp)])
-                wcnf.append([-v, vd(*vp)])
+            for a in abits:
+                for b in cbits:
+                    hp = (a, b)
+                    vp = (b, a)
+                    touched.add(hp)
+                    touched.add(vp)
+                    wcnf.append([-h, vd(*hp)])
+                    wcnf.append([-v, vd(*vp)])
 
     for a, b in sorted(touched):
         wcnf.append([-vd(a, b)], weight=1)
@@ -158,10 +156,12 @@ def solve(r, xset, digits, supports):
     setup = {
         "state": STATE_INDEX,
         "k9": list(RANK3_K9),
+        "max_port_square_conflicts": max_square_conflicts,
         "base_square": base_square,
         "safe_endpoints": len(safe),
-        "near1_endpoints": len(near1),
+        "endpoint_outside_conflict_histogram": count_hist,
         "x_conflict_histogram": x_hist,
+        "port_square_conflict_histogram": port_cost_hist,
         "candidate_ports": port_vars,
         "new_port_variables": extra_ports,
         "touched_square_vertices": len(touched),
@@ -236,7 +236,10 @@ def main():
     ap.add_argument("output", type=Path)
     ap.add_argument("model_output", type=Path)
     ap.add_argument("status", type=Path)
+    ap.add_argument("--max-port-square-conflicts", type=int, default=2)
     args = ap.parse_args()
+    if args.max_port_square_conflicts < 0:
+        raise SystemExit("max-port-square-conflicts must be nonnegative")
 
     digits = tuple(g.dec5(v) for v in range(g.U))
     r0 = g.load_r(args.r367)
@@ -244,13 +247,16 @@ def main():
     r = load_rank3_state(r0, digits)
     supports, _ = g.support_masks(r, digits)
 
-    bidx, hs, vs, deleted, stats = solve(r, xset, digits, supports)
+    bidx, hs, vs, deleted, stats = solve(
+        r, xset, digits, supports, args.max_port_square_conflicts
+    )
     candidate = build_candidate(r, xset, bidx, hs, vs, deleted)
     if len(candidate) != stats["score"]:
         raise RuntimeError("score mismatch")
 
+    method = f"rank3-maxsat-square-relax-conflict-le{args.max_port_square_conflicts}"
     model_data = {
-        "method": "rank3-maxsat-square-relax-conflict-le1",
+        "method": method,
         "state_index": STATE_INDEX,
         "k9": list(RANK3_K9),
         "neutral_remove_indices": list(EXPECTED_REMOVE),
@@ -267,7 +273,7 @@ def main():
     status = {
         "candidate": len(candidate) > BASELINE,
         "score": len(candidate),
-        "method": "rank3-maxsat-square-relax-conflict-le1",
+        "method": method,
         "stats": stats,
         "removed_vs_baseline": len(baseline - candidate),
         "added_vs_baseline": len(candidate - baseline),
