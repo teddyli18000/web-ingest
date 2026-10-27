@@ -14,6 +14,7 @@ import relay_worker  # noqa: E402
 
 UTC = dt.timezone.utc
 TEST_MD5 = "0123456789abcdef0123456789abcdef"
+EMPTY_MD5 = "d41d8cd98f00b204e9800998ecf8427e"
 
 
 class FakeRepo:
@@ -88,6 +89,25 @@ class RelayWorkerTests(unittest.TestCase):
         self.assertEqual(repo.record["confirmed_offset"], 100)
         self.assertEqual(repo.record["computed_md5"], TEST_MD5)
         self.assertIsNone(repo.record["session_sealed"])
+
+    def test_zero_byte_completion_needs_no_resumable_session(self):
+        repo = FakeRepo(make_record(self.now(), 0))
+        status = relay_worker.run_worker_loop(
+            repo,
+            "task-1", "file-1", "lease-1",
+            lambda record: (0, {
+                "confirmed_offset": 0,
+                "hash_offset": 0,
+                "computed_md5": EMPTY_MD5,
+                "complete": True,
+                "drive_file_id": "drive-empty",
+                "drive_md5": EMPTY_MD5,
+            }),
+            now_fn=self.now, monotonic_fn=lambda: 0.0, sleep_fn=lambda _: None,
+        )
+        self.assertEqual(status, relay_state.VERIFIED)
+        self.assertEqual(repo.record["drive_file_id"], "drive-empty")
+        self.assertEqual(repo.record["computed_md5"], EMPTY_MD5)
 
     def test_retryable_error_keeps_reconciled_checkpoint_before_retry(self):
         repo = FakeRepo(make_record(self.now(), 100))
@@ -166,7 +186,40 @@ class RelayWorkerTests(unittest.TestCase):
         self.assertFalse(called)
         self.assertIsNone(repo.record["lease_id"])
 
-    def test_expired_session_blocks_for_reconciliation_without_rewind(self):
+    def test_proven_absent_expired_session_resets_then_restarts(self):
+        repo = FakeRepo(make_record(self.now(), 100))
+        repo.record = relay_state.attach_session(repo.record, "lease-1", "v1.old.session", self.now())
+        repo.record = relay_state.apply_relay_checkpoint(
+            repo.record, "lease-1", 50, 50, "opaque-half", None, self.now()
+        )
+        calls = 0
+
+        def step(record):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                return 1, {"error_kind": "session_absent"}
+            self.assertIsNone(record["session_sealed"])
+            self.assertEqual(record["confirmed_offset"], 0)
+            self.assertEqual(record["hash_offset"], 0)
+            return 0, {
+                "session_sealed": "v1.new.session",
+                "confirmed_offset": 100,
+                "hash_offset": 100,
+                "computed_md5": TEST_MD5,
+                "complete": True,
+                "drive_file_id": "drive-file",
+                "drive_md5": TEST_MD5,
+            }
+
+        status = relay_worker.run_worker_loop(
+            repo, "task-1", "file-1", "lease-1", step,
+            now_fn=self.now, monotonic_fn=lambda: 0.0, sleep_fn=lambda _: None,
+        )
+        self.assertEqual(status, relay_state.VERIFIED)
+        self.assertEqual(calls, 2)
+
+    def test_ambiguous_expired_destination_blocks_without_rewind(self):
         repo = FakeRepo(make_record(self.now(), 100))
         repo.record = relay_state.attach_session(repo.record, "lease-1", "v1.old.session", self.now())
         repo.record = relay_state.apply_relay_checkpoint(
@@ -175,13 +228,7 @@ class RelayWorkerTests(unittest.TestCase):
         status = relay_worker.run_worker_loop(
             repo,
             "task-1", "file-1", "lease-1",
-            lambda record: (1, {
-                "session_sealed": "v1.old.session",
-                "confirmed_offset": 0,
-                "hash_offset": 50,
-                "md5_state": "opaque-half",
-                "error_kind": "session_expired",
-            }),
+            lambda record: (1, {"error_kind": "reconcile_required"}),
             now_fn=self.now, monotonic_fn=lambda: 0.0, sleep_fn=lambda _: None,
         )
         self.assertEqual(status, relay_state.BLOCKED_RECONCILE)
@@ -191,6 +238,16 @@ class RelayWorkerTests(unittest.TestCase):
         self.assertEqual(repo.record["session_sealed"], "v1.old.session")
         self.assertIsNone(repo.record["lease_id"])
         self.assertFalse(relay_state.runnable(repo.record, self.now()))
+
+    def test_legacy_session_expired_still_blocks_conservatively(self):
+        repo = FakeRepo(make_record(self.now(), 100))
+        status = relay_worker.run_worker_loop(
+            repo,
+            "task-1", "file-1", "lease-1",
+            lambda record: (1, {"error_kind": "session_expired"}),
+            now_fn=self.now, monotonic_fn=lambda: 0.0, sleep_fn=lambda _: None,
+        )
+        self.assertEqual(status, relay_state.BLOCKED_RECONCILE)
 
     def test_drive_truth_can_rewind_repo_checkpoint(self):
         record = make_record(self.now(), 100)
