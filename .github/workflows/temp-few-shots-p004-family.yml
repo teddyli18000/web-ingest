@@ -1,0 +1,101 @@
+name: Temp Few Shots p004 alternative 5D family
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-few-shots-p004-family.yml
+      - temp-work/few-shots-p004/family_ports.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-few-shots-p004-family
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout web-ingest
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch public sources read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/nathanielitty/lower-bounds-for-shannon-capacity.git "$RUNNER_TEMP/shannon-source"
+          git -C "$RUNNER_TEMP/shannon-source" sparse-checkout set c7
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/molind/c7-five.git "$RUNNER_TEMP/c7-five"
+          git -C "$RUNNER_TEMP/c7-five" sparse-checkout set data/family-f.json
+
+      - name: Test all Family F states for nine ports
+        id: search
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/shot"
+          /usr/bin/time -v python3 temp-work/few-shots-p004/family_ports.py \
+            "$RUNNER_TEMP/c7-five/data/family-f.json" \
+            "$RUNNER_TEMP/shannon-source/c7/R367.txt" \
+            "$RUNNER_TEMP/shot/certificate.json" \
+            "$RUNNER_TEMP/search-status.json"
+          cat "$RUNNER_TEMP/search-status.json"
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify breakthrough with upstream verifier
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" \
+            | tee "$RUNNER_TEMP/verify-result.json"
+          python3 - "$RUNNER_TEMP/verify-result.json" <<'PY'
+          import json, sys
+          result=json.load(open(sys.argv[1],encoding="utf-8"))
+          if not result.get("valid") or int(result["score"])<=134753:
+              raise SystemExit(f"not a verified breakthrough: {result}")
+          print(f"verified breakthrough score={result['score']}")
+          PY
+
+      - name: Save verified breakthrough in web-ingest only
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p temp-work/few-shots-p004/breakthrough
+          cp "$RUNNER_TEMP/shot/certificate.json" temp-work/few-shots-p004/breakthrough/certificate.json
+          cp "$RUNNER_TEMP/search-status.json" temp-work/few-shots-p004/breakthrough/family-status.json
+          cp "$RUNNER_TEMP/verify-result.json" temp-work/few-shots-p004/breakthrough/family-verify-result.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp-work/few-shots-p004/breakthrough
+          git commit -m "temp: save verified p004 family breakthrough"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
+
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Few Shots p004 alternative C7^5 family"
+            if [[ -f "$RUNNER_TEMP/search-status.json" ]]; then
+              echo '```json'; cat "$RUNNER_TEMP/search-status.json"; echo '```'
+            fi
+            if [[ -f "$RUNNER_TEMP/verify-result.json" ]]; then
+              echo '```json'; cat "$RUNNER_TEMP/verify-result.json"; echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
