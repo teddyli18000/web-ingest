@@ -3,22 +3,8 @@ name: Temp GPT MV final 1080p30
 on:
   push:
     paths:
-      - "temp-work/gpt-mv-code-native/src/main.js"
-      - "temp-work/gpt-mv-code-native/src/scenes/opening_v8.js"
-      - "temp-work/gpt-mv-code-native/src/scenes/drafts_v10.js"
-      - "temp-work/gpt-mv-code-native/src/scenes/construct_v3.js"
-      - "temp-work/gpt-mv-code-native/src/scenes/construct_v5.js"
-      - "temp-work/gpt-mv-code-native/src/scenes/ending_v1.js"
-      - "temp-work/gpt-mv-code-native/src/components/gpt_art.js"
-      - "temp-work/gpt-mv-code-native/src/components/gpt_poses.js"
-      - "temp-work/gpt-mv-code-native/assets/gpt/**"
-      - "temp-work/gpt-mv-code-native/export/render.mjs"
       - ".github/workflows/temp-gpt-mv-ending-v1.yml"
   workflow_dispatch:
-
-concurrency:
-  group: temp-gpt-mv-final-1080p30
-  cancel-in-progress: true
 
 permissions:
   contents: read
