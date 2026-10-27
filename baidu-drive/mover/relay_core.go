@@ -149,9 +149,10 @@ func relayNextChunk(ctx context.Context, source relayRangeSource, drive relayDri
 			return resultFromDrive(before), err
 		}
 		if after.NextOffset < start || after.NextOffset > end+1 {
-			if !after.Complete {
-				return resultFromDrive(before), fmt.Errorf("Drive confirmed impossible offset %d after range %d-%d", after.NextOffset, start, end)
-			}
+			return resultFromDrive(before), fmt.Errorf("Drive confirmed impossible offset %d after range %d-%d", after.NextOffset, start, end)
+		}
+		if after.Complete && end != spec.Total-1 {
+			return resultFromDrive(before), fmt.Errorf("Drive reported completion after non-final range %d-%d", start, end)
 		}
 		return resultFromDrive(after), nil
 	}
@@ -192,8 +193,9 @@ func resultFromDrive(progress driveProgress) relayResult {
 }
 
 type driveResumableHTTP struct {
-	Client      *http.Client
-	AccessToken string
+	Client         *http.Client
+	AccessToken    string
+	UploadEndpoint string
 }
 
 func (d *driveResumableHTTP) httpClient() *http.Client {
