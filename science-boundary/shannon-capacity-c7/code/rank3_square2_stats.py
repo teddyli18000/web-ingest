@@ -17,6 +17,37 @@ def bit_indices(mask):
     return out
 
 
+def port_conflict(a, b, xset, digits):
+    oa, ia, ea = a
+    ob, ib, eb = b
+    if oa == "H" and ob == "H":
+        return g.conflict(ea, eb, digits) and g.conflict(xset[ia], xset[ib], digits)
+    if oa == "V" and ob == "V":
+        return g.conflict(xset[ia], xset[ib], digits) and g.conflict(ea, eb, digits)
+    if oa == "H":
+        return g.conflict(ea, xset[ib], digits) and g.conflict(xset[ia], eb, digits)
+    return g.conflict(xset[ib], ea, digits) and g.conflict(eb, xset[ia], digits)
+
+
+def max_independent(pool, xset, digits):
+    # These pools are tiny (the observed raw maximum is 4), so exhaustive subset
+    # replay is both simpler and stronger than another SAT encoding.
+    p = [tuple(x) for x in dict.fromkeys(tuple(x) for x in pool)]
+    best = 0
+    checked = 0
+    for mask in range(1, 1 << len(p)):
+        k = mask.bit_count()
+        if k <= best:
+            continue
+        checked += 1
+        chosen = [i for i in range(len(p)) if mask >> i & 1]
+        if all(not port_conflict(p[a], p[b], xset, digits)
+               for ai, a in enumerate(chosen)
+               for b in chosen[ai + 1:]):
+            best = k
+    return best, checked
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("r367", type=Path)
@@ -75,22 +106,23 @@ def main():
                         two[hs].append(hdesc)
                         two[vs].append(vdesc)
 
-    # A deletion pair S unlocks all exact-cost-2 candidates with conflict set S,
-    # plus the exact-cost-1 candidate(s) attached to either member of S.
     records = []
-    all_pairs = set(two)
-    # Also include pairs formed solely from two cost-1 square vertices; they can
-    # never beat raw gain 2, but including them makes the maximum statement exact.
-    one_keys = sorted(one)
     max_one_mult = max((len(v) for v in one.values()), default=0)
     max_two_mult = max((len(v) for v in two.values()), default=0)
+    max_compatible = min(2, 2 * max_one_mult)
+    subset_checks = 0
 
-    for pair in all_pairs:
+    for pair in set(two):
         a, b = pair
-        unlocked = len(two[pair]) + len(one.get(a, ())) + len(one.get(b, ()))
+        pool = list(two[pair]) + list(one.get(a, ())) + list(one.get(b, ()))
+        unlocked = len(pool)
+        compatible, checks = max_independent(pool, xset, digits)
+        subset_checks += checks
+        max_compatible = max(max_compatible, compatible)
         records.append({
             "square_pair": [list(a), list(b)],
             "raw_unlocked": unlocked,
+            "max_pairwise_compatible_unlocked": compatible,
             "cost2_candidates": len(two[pair]),
             "cost1_at_first": len(one.get(a, ())),
             "cost1_at_second": len(one.get(b, ())),
@@ -98,22 +130,20 @@ def main():
             "sample_cost1_first": one.get(a, [])[:4],
             "sample_cost1_second": one.get(b, [])[:4],
         })
-    records.sort(key=lambda z: (-z["raw_unlocked"], z["square_pair"]))
+    records.sort(key=lambda z: (-z["raw_unlocked"], -z["max_pairwise_compatible_unlocked"], z["square_pair"]))
 
-    best_cost2_pair = records[0]["raw_unlocked"] if records else 0
-    # If there is no exact-cost-2 candidate, two independent cost-1 deletions can
-    # unlock at most 2*max_one_mult; cost1 multiplicity is also reported explicitly.
-    raw_pair_upper = max(best_cost2_pair, 2 * max_one_mult)
+    best_raw = max((z["raw_unlocked"] for z in records), default=0)
+    raw_pair_upper = max(best_raw, 2 * max_one_mult)
 
     out = {
         "state": rs.STATE_INDEX,
         "k9": list(rs.RANK3_K9),
         "endpoint_owner_group_histogram": {
-            str(k): sum(1 for owners, vs in endpoints_by_owners.items() if len(owners) == k for _ in vs)
+            str(k): sum(len(vs) for owners, vs in endpoints_by_owners.items() if len(owners) == k)
             for k in (0, 1, 2)
         },
         "companion_owner_group_histogram": {
-            str(k): sum(1 for owners, xs in x_by_owners.items() if len(owners) == k for _ in xs)
+            str(k): sum(len(xs) for owners, xs in x_by_owners.items() if len(owners) == k)
             for k in (0, 1, 2)
         },
         "cost1_square_vertices": len(one),
@@ -121,6 +151,9 @@ def main():
         "max_cost1_candidates_per_square": max_one_mult,
         "max_cost2_candidates_same_pair": max_two_mult,
         "max_raw_ports_unlocked_by_two_deletions": raw_pair_upper,
+        "max_pairwise_compatible_ports_unlocked_by_two_deletions": max_compatible,
+        "independent_subset_checks": subset_checks,
+        "threshold2_reduces_to_threshold0": max_compatible <= 2,
         "top_pairs": records[:100],
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
