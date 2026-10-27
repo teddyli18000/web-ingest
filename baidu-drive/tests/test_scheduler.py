@@ -55,6 +55,12 @@ class SchedulerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             scheduler.Policy(chunk_bytes=512 * scheduler.MIB + 1).validate()
 
+    def test_zero_byte_file_still_gets_one_worker(self):
+        self.assertEqual(
+            scheduler.choose_files([self.file("empty", 0)], self.now()),
+            ["empty"],
+        )
+
     def test_remote_confirmed_offset_wins(self):
         self.assertEqual(
             scheduler.reconcile_confirmed_offset(
