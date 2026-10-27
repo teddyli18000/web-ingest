@@ -196,6 +196,23 @@ def sync_manifest(repo: Any, task_id: str, manifest: list[dict[str, Any]], now: 
     return result
 
 
+def reset_retryable_files(repo: Any, task_id: str, now: dt.datetime) -> int:
+    """Re-arm retryable files only after an explicit human/task retry request."""
+    reset = 0
+    for record in repo.list_records(task_id):
+        if record.get("status") != relay_state.FAILED_RETRYABLE:
+            continue
+        file_id = str(record.get("file_id") or "")
+        repo.mutate_record(
+            task_id,
+            file_id,
+            lambda current: relay_state.reset_retryable(current, now),
+            f"baidu-drive: re-arm retryable relay file {file_id}",
+        )
+        reset += 1
+    return reset
+
+
 def make_lease_id(run_id: str) -> str:
     run = "".join(ch for ch in str(run_id or "local") if ch.isalnum())[-20:] or "local"
     return f"w-{run}-{uuid.uuid4().hex[:12]}"
@@ -217,7 +234,13 @@ def schedule_once(
         claimed = repo.mutate_record(
             task_id,
             file_id,
-            lambda current, lease=lease_id: relay_state.claim(current, lease, now, policy.stale_heartbeat_seconds),
+            lambda current, lease=lease_id: relay_state.claim(
+                current,
+                lease,
+                now,
+                policy.stale_heartbeat_seconds,
+                policy.max_retryable_failures,
+            ),
             f"baidu-drive: lease relay file {file_id}",
         )
         if claimed.get("lease_id") != lease_id:
@@ -265,9 +288,9 @@ def main(argv: list[str] | None = None) -> int:
     sync.add_argument("--task-id", required=True)
     sync.add_argument("--manifest", required=True)
 
-    schedule = sub.add_parser("schedule")
-    schedule.add_argument("--task-id", required=True)
-    schedule.add_argument("--workflow", default=DEFAULT_FILE_WORKFLOW)
+    schedule_cmd = sub.add_parser("schedule")
+    schedule_cmd.add_argument("--task-id", required=True)
+    schedule_cmd.add_argument("--workflow", default=DEFAULT_FILE_WORKFLOW)
 
     results = sub.add_parser("results")
     results.add_argument("--task-id", required=True)
