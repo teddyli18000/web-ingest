@@ -32,8 +32,8 @@ jobs:
           git -C "$RUNNER_TEMP/shannon-source" fetch --depth 1 origin fe8966079013abaac21d1c08441500100f8e3b86
           git -C "$RUNNER_TEMP/shannon-source" checkout FETCH_HEAD
 
-      - name: Install CP-SAT dependency
-        run: python3 -m pip install --disable-pip-version-check ortools
+      - name: Install solver dependencies
+        run: python3 -m pip install --disable-pip-version-check ortools python-sat
 
       - name: Optimize one-sided xzero subspace
         id: solve
