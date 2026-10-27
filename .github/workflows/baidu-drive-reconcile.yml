@@ -12,7 +12,6 @@ on:
       - 'baidu-drive/mover/**'
       - '.github/workflows/baidu-drive-reconcile.yml'
       - '.github/workflows/baidu-drive-worker.yml'
-      - '.github/workflows/baidu-drive-scheduler.yml'
       - '.github/workflows/baidu-drive-file-worker.yml'
   workflow_dispatch:
 
@@ -102,7 +101,7 @@ jobs:
       - name: Reconcile Release control and durable task state
         run: python3 baidu-drive/controller.py reconcile
 
-      - name: Queue transfer worker only for an accepted start or retry
+      - name: Queue master scheduler only for an accepted start or retry
         if: >-
           github.event_name == 'release' &&
           (steps.request.outputs.command == 'start' || steps.request.outputs.command == 'retry')
