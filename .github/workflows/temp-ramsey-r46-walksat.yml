@@ -1,0 +1,222 @@
+name: Temp Ramsey R46 WalkSAT sweep
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-walksat.yml
+      - science-boundary/ramsey-r46/walksat36.cpp
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-walksat
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        core: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and self-test incremental solver
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -std=c++20 -Wall -Wextra -pedantic \
+            science-boundary/ramsey-r46/walksat36.cpp -o /tmp/walksat36
+          /tmp/walksat36 --self-test
+
+      - name: Fetch and authenticate published core
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf -v tag 'h%04d' '${{ matrix.core }}'
+          curl --fail --location --retry 3 --silent --show-error \
+            "https://cs.indstate.edu/ge/RAMSEY/R46/${tag}" -o /tmp/core.txt
+          python3 - "$tag" /tmp/core.txt science-boundary/ramsey-r46/results/extension-all-37.json <<'PY'
+          import hashlib, json, pathlib, sys
+          tag, source, results = sys.argv[1:]
+          got = hashlib.sha256(pathlib.Path(source).read_bytes()).hexdigest()
+          data = json.load(open(results, encoding='utf-8'))
+          row = next(r for r in data['results'] if r['name'] == tag)
+          if got != row['sha256']:
+              raise SystemExit(f'source hash mismatch for {tag}: {got} != {row["sha256"]}')
+          print(tag, got)
+          PY
+
+      - name: Search one Exoo core
+        shell: bash
+        run: |
+          set -euo pipefail
+          core='${{ matrix.core }}'
+          seed=$(( core * 1000003 + 20261027 ))
+          mkdir -p /tmp/r46
+          /usr/bin/time -v /tmp/walksat36 \
+            --baseline /tmp/core.txt \
+            --complement-core \
+            --seed "$seed" \
+            --steps 800000 \
+            --restarts 8 \
+            --out /tmp/r46/best.json \
+            --summary /tmp/r46/summary.json \
+            | tee /tmp/r46/search.log
+          python3 - "$core" /tmp/r46/summary.json /tmp/core.txt <<'PY'
+          import hashlib, json, pathlib, sys
+          core, path, source = sys.argv[1:]
+          p = pathlib.Path(path)
+          d = json.loads(p.read_text())
+          d['core'] = int(core)
+          d['source_sha256'] = hashlib.sha256(pathlib.Path(source).read_bytes()).hexdigest()
+          p.write_text(json.dumps(d, indent=2, sort_keys=True) + '\n')
+          print(json.dumps(d, sort_keys=True))
+          PY
+
+      - name: Independently recount strong near-misses
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - /tmp/r46/summary.json /tmp/r46/best.json <<'PY'
+          import itertools, json, sys
+          summary_path, cert_path = sys.argv[1:]
+          summary = json.load(open(summary_path))
+          if summary['best'] > 25:
+              print('skip full recount for objective > 25')
+              raise SystemExit(0)
+          rows = json.load(open(cert_path))['adjacency']
+          n = len(rows)
+          k4 = sum(all(rows[a][b] == '1' for a,b in itertools.combinations(vs,2))
+                   for vs in itertools.combinations(range(n),4))
+          i6 = sum(all(rows[a][b] == '0' for a,b in itertools.combinations(vs,2))
+                   for vs in itertools.combinations(range(n),6))
+          if (k4, i6) != (summary['k4'], summary['independent6']):
+              raise SystemExit(f'recount mismatch {(k4,i6)} vs {(summary["k4"], summary["independent6"])}')
+          print(f'independent recount ok: k4={k4} independent6={i6}')
+          PY
+
+      - name: Upload lane result
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-walksat-core-${{ matrix.core }}
+          path: |
+            /tmp/r46/summary.json
+            /tmp/r46/best.json
+            /tmp/r46/search.log
+          retention-days: 7
+
+  collect:
+    if: always()
+    needs: search
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download lane results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ramsey-r46-walksat-core-*
+          path: /tmp/lanes
+
+      - name: Aggregate and independently verify best
+        id: aggregate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 - /tmp/lanes /tmp/r46/result.json /tmp/r46/best.json <<'PY'
+          import itertools, json, pathlib, shutil, sys
+          root, out, best_out = map(pathlib.Path, sys.argv[1:])
+          rows = []
+          for p in root.rglob('summary.json'):
+              d = json.loads(p.read_text())
+              d['_dir'] = str(p.parent)
+              rows.append(d)
+          rows.sort(key=lambda d: (d['best'], d['k4'], d['independent6'], d['core']))
+          if not rows:
+              raise SystemExit('no lane results')
+          winner = rows[0]
+          cert = pathlib.Path(winner['_dir']) / 'best.json'
+          shutil.copyfile(cert, best_out)
+          adj = json.loads(best_out.read_text())['adjacency']
+          n = len(adj)
+          k4 = sum(all(adj[a][b] == '1' for a,b in itertools.combinations(vs,2))
+                   for vs in itertools.combinations(range(n),4))
+          i6 = sum(all(adj[a][b] == '0' for a,b in itertools.combinations(vs,2))
+                   for vs in itertools.combinations(range(n),6))
+          if (k4, i6) != (winner['k4'], winner['independent6']):
+              raise SystemExit(f'global best recount mismatch {(k4,i6)}')
+          public_rows = [{k:v for k,v in d.items() if k != '_dir'} for d in rows]
+          result = {
+              'campaign': 'walksat-all-37-exoo-cores',
+              'run_id': '${{ github.run_id }}',
+              'lanes_completed': len(rows),
+              'best_core': winner['core'],
+              'best': winner['best'],
+              'k4': k4,
+              'independent6': i6,
+              'found': k4 == 0 and i6 == 0,
+              'lanes': public_rows,
+          }
+          out.write_text(json.dumps(result, indent=2, sort_keys=True) + '\n')
+          print(json.dumps({k:v for k,v in result.items() if k != 'lanes'}, sort_keys=True))
+          with open('${{ github.output }}', 'a') as f:
+              f.write(f"found={'true' if result['found'] else 'false'}\n")
+          PY
+
+      - name: Authoritative Few Shots verification on a hit
+        if: steps.aggregate.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse \
+            https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate
+          cp /tmp/r46/best.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/few-shots-verify.json
+          python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          assert d.get('valid') is True and d.get('score') == '36', d
+          PY
+
+      - name: Persist campaign result
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest=science-boundary/ramsey-r46/results
+          cp /tmp/r46/result.json "$dest/walksat-all-37.json"
+          cp /tmp/r46/best.json "$dest/walksat-all-37-best.json"
+          if [[ -f /tmp/r46/few-shots-verify.json ]]; then
+            cp /tmp/r46/few-shots-verify.json "$dest/walksat-all-37-few-shots-verify.json"
+          fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "$dest"
+          git commit -m 'ramsey-r46: record WalkSAT all-core sweep' || exit 0
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt * 4))
+          done
+          exit 1
+
+      - name: Upload campaign result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-walksat-all-37
+          path: /tmp/r46
+          if-no-files-found: warn
+          retention-days: 7
