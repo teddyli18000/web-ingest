@@ -59,6 +59,7 @@ jobs:
           SEARCH_SEED: ${{ github.event.inputs.seed || '12648430' }}
         run: |
           set -euo pipefail
+          ulimit -s unlimited
           /usr/bin/time -v "$RUNNER_TEMP/p004-swap" \
             "$RUNNER_TEMP/shannon-source/c7/R367.txt" \
             "$RUNNER_TEMP/swap-result.json" \
