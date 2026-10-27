@@ -1,0 +1,166 @@
+name: Temp Ramsey R46 degree-17 catalog SAT
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-degree17.yml
+      - science-boundary/ramsey-r46/degree17_catalog_sat.py
+      - science-boundary/ramsey-r46/data/r36_17.g6
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-degree17
+  cancel-in-progress: false
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      max-parallel: 7
+      matrix:
+        index: [0, 1, 2, 3, 4, 5, 6]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Authenticate pinned complete catalog
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '3286c5366ddc70f349c3f7e798d7acbc79dc026c7abe0c8f406cad41ca990361  science-boundary/ramsey-r46/data/r36_17.g6' | sha256sum -c -
+          test "$(wc -l < science-boundary/ramsey-r46/data/r36_17.g6)" -eq 7
+      - name: Install PySAT
+        run: python -m pip install --disable-pip-version-check python-sat
+      - name: Solve catalog branch
+        id: solve
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p /tmp/r46
+          set +e
+          timeout --signal=TERM --kill-after=30s 6600 \
+            python science-boundary/ramsey-r46/degree17_catalog_sat.py \
+              --catalog science-boundary/ramsey-r46/data/r36_17.g6 \
+              --index '${{ matrix.index }}' \
+              --solver cadical195 \
+              --seed "$(( 20261027 + ${{ matrix.index }} * 1009 ))" \
+              --output /tmp/r46/candidate.json \
+              --summary /tmp/r46/summary.json \
+            | tee /tmp/r46/search.log
+          rc=${PIPESTATUS[0]}
+          set -e
+          case "$rc" in
+            0) status=SAT ;;
+            20) status=UNSAT ;;
+            30) status=ITERATION_LIMIT ;;
+            124|137|143) status=TIMEOUT ;;
+            *) status=ERROR ;;
+          esac
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          if [[ ! -f /tmp/r46/summary.json ]]; then
+            printf '{"catalog_index":%s,"status":"%s","solver_exit":%s,"github_run_id":"%s"}\n' \
+              '${{ matrix.index }}' "$status" "$rc" "$GITHUB_RUN_ID" > /tmp/r46/summary.json
+          else
+            python3 - /tmp/r46/summary.json "$status" "$rc" <<'PY'
+          import json,os,sys
+          p,status,rc=sys.argv[1:]
+          d=json.load(open(p)); d['workflow_status']=status; d['solver_exit']=int(rc); d['github_run_id']=os.environ['GITHUB_RUN_ID']
+          open(p,'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          fi
+          cat /tmp/r46/summary.json
+          [[ "$status" != ERROR ]]
+      - name: Authoritative Few Shots verification on SAT
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate
+          cp /tmp/r46/candidate.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/few-shots-verify.json
+          python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1])); assert d.get('valid') is True and d.get('score')=='36', d
+          PY
+      - name: Upload branch result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-degree17-${{ matrix.index }}
+          path: /tmp/r46
+          if-no-files-found: warn
+          retention-days: 7
+
+  collect:
+    if: always()
+    needs: solve
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ramsey-r46-degree17-*
+          path: /tmp/branches
+      - name: Aggregate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 - /tmp/branches /tmp/r46/result.json <<'PY'
+          import json,os,pathlib,shutil,sys
+          root,out=map(pathlib.Path,sys.argv[1:]); rows=[]; hit=None
+          for p in root.rglob('summary.json'):
+              d=json.load(open(p)); d['_dir']=str(p.parent); rows.append(d)
+              if d.get('status')=='SAT' or d.get('workflow_status')=='SAT': hit=d
+          rows.sort(key=lambda d:d['catalog_index'])
+          result={'campaign':'degree-17-complete-r36-17-catalog','run_id':os.environ['GITHUB_RUN_ID'],
+                  'catalog_sha256':'3286c5366ddc70f349c3f7e798d7acbc79dc026c7abe0c8f406cad41ca990361',
+                  'branches_completed':len(rows),
+                  'all_unsat':len(rows)==7 and all((d.get('status')=='UNSAT' or d.get('workflow_status')=='UNSAT') for d in rows),
+                  'found':hit is not None,
+                  'branches':[{k:v for k,v in d.items() if k!='_dir'} for d in rows]}
+          if hit:
+              shutil.copyfile(pathlib.Path(hit['_dir'])/'candidate.json','/tmp/r46/candidate.json')
+              q=pathlib.Path(hit['_dir'])/'few-shots-verify.json'
+              if q.exists(): shutil.copyfile(q,'/tmp/r46/few-shots-verify.json')
+              result['hit_index']=hit['catalog_index']
+          out.write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({k:v for k,v in result.items() if k!='branches'},sort_keys=True))
+          PY
+      - name: Persist degree-17 result
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest=science-boundary/ramsey-r46/results
+          cp /tmp/r46/result.json "$dest/degree17-catalog-sat.json"
+          [[ ! -f /tmp/r46/candidate.json ]] || cp /tmp/r46/candidate.json "$dest/degree17-catalog-hit.json"
+          [[ ! -f /tmp/r46/few-shots-verify.json ]] || cp /tmp/r46/few-shots-verify.json "$dest/degree17-catalog-hit-verify.json"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "$dest"
+          git commit -m 'ramsey-r46: record degree-17 catalog SAT sweep' || exit 0
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
+      - name: Upload aggregate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-degree17-aggregate
+          path: /tmp/r46
+          retention-days: 7
