@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -33,8 +34,8 @@ std::vector<int> parse_X(const std::string&path){
 }
 
 std::unordered_set<int> obstruction(){
-  const int PH[D==5?9:9]={1553,3716,6494,13158,13065,13677,12277,15075,15384};
-  const int PV[D==5?9:9]={15910,6110,8888,10708,13358,14027,14329,14733,15685};
+  const int PH[9]={1553,3716,6494,13158,13065,13677,12277,15075,15384};
+  const int PV[9]={15910,6110,8888,10708,13358,14027,14329,14733,15685};
   std::array<unsigned char,U> a{},b{};
   for(int x:PH) for(int y:hood(x)) a[y]=1;
   for(int x:PV) for(int y:hood(x)) b[y]=1;
@@ -62,8 +63,6 @@ struct Search{
   }
   bool greedy(){
     while((int)selected.size()<TARGET&&!b0.empty()){
-      // Prefer a zero vertex that creates fewer count-1 candidates, a cheap proxy
-      // for preserving future augmentation room.
       int best=-1,bscore=1e9,tries=0; for(int q:b0){ int sc=0; for(int v:nb[q]) if(allowed[v]&&!sel[v]&&cnt[v]==0)++sc; if(sc<bscore){bscore=sc;best=q;} if(++tries>=64)break; }
       if(best<0)best=*b0.begin(); add(best);
     }
@@ -86,8 +85,6 @@ int main(int argc,char**argv){
     if((int)s.selected.size()>=TARGET){ std::ofstream out(argv[2]); std::sort(s.selected.begin(),s.selected.end()); for(int v:s.selected)out<<v<<"\n"; std::cout<<"FOUND size="<<s.selected.size()<<" iter="<<it<<" seed="<<seed<<"\n"; return 0; }
     if(!s.b0.empty()){ if(s.greedy())continue; }
     bool moved=false;
-    // Plateau 1-for-1 walk at size 366. Randomized and tabu-free; occasional
-    // multi-conflict kicks below prevent confinement to a finite swap component.
     if(!s.b1.empty() && (plateau<2000 || s.b2.empty())){
       int q=s.any(s.b1); auto bl=s.blockers(q); if(bl.size()==1){s.rem(bl[0]); if(s.cnt[q]!=0)throw std::runtime_error("swap count drift"); s.add(q); ++plateau; moved=true;}
     }
@@ -95,8 +92,7 @@ int main(int argc,char**argv){
       int q=s.any(s.b2); auto bl=s.blockers(q); if(bl.size()==2){s.rem(bl[0]);s.rem(bl[1]);if(s.cnt[q]!=0)throw std::runtime_error("kick count drift");s.add(q);s.greedy();++kicks;plateau=0;moved=true;}
     }
     if(!moved || (it>0 && it%20000==0)){
-      // Random perturbation of 2--5 selected vertices, then maximal greedy refill.
-      int k=2+(rng()%4); if((int)s.selected.size()<k)k=s.selected.size(); std::shuffle(s.selected.begin(),s.selected.end(),s.rng); std::vector<int> rm(s.selected.begin(),s.selected.begin()+k); for(int v:rm)if(s.sel[v])s.rem(v);s.greedy();plateau=0;++kicks;
+      int k=2+(s.rng()%4); if((int)s.selected.size()<k)k=s.selected.size(); std::shuffle(s.selected.begin(),s.selected.end(),s.rng); std::vector<int> rm(s.selected.begin(),s.selected.begin()+k); for(int v:rm)if(s.sel[v])s.rem(v);s.greedy();plateau=0;++kicks;
     }
     if(it%100000==0)std::cerr<<"iter="<<it<<" size="<<s.selected.size()<<" b1="<<s.b1.size()<<" b2="<<s.b2.size()<<" kicks="<<kicks<<"\n";
   }
