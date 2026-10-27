@@ -1,0 +1,94 @@
+name: Temp Science Boundary C7 x294 joint live-port MaxSAT
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-x294-joint-maxsat.yml
+      - science-boundary/shannon-capacity-c7/code/rank3_x294_joint_maxsat.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-x294-joint-maxsat
+  cancel-in-progress: false
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      matrix:
+        family: [r0, rank3, x]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch public sources read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          git init "$RUNNER_TEMP/shannon-source"
+          git -C "$RUNNER_TEMP/shannon-source" remote add origin https://github.com/nathanielitty/lower-bounds-for-shannon-capacity.git
+          git -C "$RUNNER_TEMP/shannon-source" fetch --depth 1 origin fe8966079013abaac21d1c08441500100f8e3b86
+          git -C "$RUNNER_TEMP/shannon-source" checkout FETCH_HEAD
+
+      - name: Install solver
+        run: python3 -m pip install --disable-pip-version-check python-sat
+
+      - name: Jointly optimize special H fiber and all live ports
+        id: solve
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/shot" "$RUNNER_TEMP/result"
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/rank3_x294_joint_maxsat.py \
+            "$RUNNER_TEMP/shannon-source/c7/R367.txt" \
+            "$RUNNER_TEMP/few-shots/problems/p004-shannon-capacity-c7/baseline/certificate.json" \
+            "$RUNNER_TEMP/shot/certificate.json" \
+            "$RUNNER_TEMP/result/status.json" \
+            --family '${{ matrix.family }}' \
+            > "$RUNNER_TEMP/result/solver.stdout" \
+            2> "$RUNNER_TEMP/result/solver.stderr"
+          cat "$RUNNER_TEMP/result/status.json"
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+
+      - name: Verify breakthrough with upstream verifier
+        if: steps.solve.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1)) <= 134753:
+              raise SystemExit(f'candidate not a verified breakthrough: {r}')
+          print(f"VERIFIED BREAKTHROUGH score={r['score']}")
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-x294-joint-${{ matrix.family }}
+          path: ${{ runner.temp }}/result
+          retention-days: 14
+
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## C7 X294 joint live-port MaxSAT: ${{ matrix.family }}"
+            for f in status.json verify.json; do
+              if [[ -f "$RUNNER_TEMP/result/$f" ]]; then echo '```json'; cat "$RUNNER_TEMP/result/$f"; echo '```'; fi
+            done
+            if [[ -f "$RUNNER_TEMP/result/solver.stdout" ]]; then echo '### stdout'; echo '```text'; tail -n 80 "$RUNNER_TEMP/result/solver.stdout"; echo '```'; fi
+            if [[ -f "$RUNNER_TEMP/result/solver.stderr" ]]; then echo '### stderr'; echo '```text'; tail -n 80 "$RUNNER_TEMP/result/solver.stderr"; echo '```'; fi
+          } >> "$GITHUB_STEP_SUMMARY"
