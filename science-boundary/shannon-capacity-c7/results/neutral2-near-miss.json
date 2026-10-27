@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-27",
+  "method": "exact-neutral-2-for-2-5d",
+  "source_run": 40521777051,
+  "parent_source": "R367.txt from nathanielitty/lower-bounds-for-shannon-capacity",
+  "neutral_parent_modifications_by_index": {
+    "267": 15083,
+    "294": 16388
+  },
+  "legal_neutral2_states_enumerated": 27,
+  "private_vertices": 10,
+  "private_centers": 10,
+  "best_strict_overlap": 1,
+  "best_ports": [
+    {"center":11283,"alt":13677,"side":0},
+    {"center":15083,"alt":14733,"side":1},
+    {"center":13108,"alt":13158,"side":0},
+    {"center":15953,"alt":15910,"side":1},
+    {"center":14328,"alt":12277,"side":0},
+    {"center":16388,"alt":16046,"side":0},
+    {"center":1321,"alt":15685,"side":1},
+    {"center":8601,"alt":6494,"side":0},
+    {"center":3660,"alt":6110,"side":1}
+  ],
+  "automorphism_followup": {
+    "source_run": 40522059829,
+    "signed_permutations_checked": 3840,
+    "forbidden_intersection_size": 1098,
+    "result": "none"
+  },
+  "interpretation": "This is the strongest strict-port near miss retained from the neutral2 search. The later MaxSAT relaxation of nine-center subsets reaches the full 134753 baseline at rank 3; see neutral2-maxsat-summary.md."
+}
