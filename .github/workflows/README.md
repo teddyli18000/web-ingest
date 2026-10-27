@@ -47,9 +47,11 @@ Scheduled Actions are not exact clocks. For a task with a hard publication bound
 
 ## CI and maintenance Actions
 
-`repository-integrity.yml` is event-driven only. It validates repository rules, recurring schedules, task tests, and Python repository-management tools. Normal daily data commits do not trigger it.
+`repository-integrity.yml` is event-driven only. It validates repository rules, recurring schedules, task tests, Python repository-management tools, and the Baidu Drive Go bridge against its pinned standalone mover core. Normal daily data commits do not trigger it.
 
-`baidu-drive-reconcile.yml` is also event-driven only. It owns the fixed `baidu-drive-live` Release control surface and the task's non-secret state under `baidu-drive/state/`. Human Release edits, manual dispatches, and control-plane code changes can wake it; bot-authored Release edits and normal state commits are not allowed to create a writer loop. All current and future `baidu-drive` state writers must share concurrency group `baidu-drive-live-state`. The transfer worker remains fail-closed until OAuth/secret provisioning is explicitly configured in the task.
+`baidu-drive-reconcile.yml` is event-driven only. It owns fixed Release `baidu-drive-live`, validates and consumes human control requests, writes non-secret control/task state, and dispatches `baidu-drive-worker.yml` only when a `start` or `retry` was actually accepted. Bot-authored Release edits and normal state/checkpoint commits do not create a writer loop.
+
+`baidu-drive-worker.yml` is manual/dispatch-only and has no recurring schedule. It owns durable transfer/checkpoint execution. Both Baidu Drive workflows share concurrency group `baidu-drive-live-state` with `cancel-in-progress: false`, so control, worker state, and eventual remote mutations serialize. Authentication provisioning is intentionally absent today; the worker therefore stops safely in `BLOCKED_AUTH_SETUP` until the owner chooses the OAuth/secret layout. Auth files must remain ephemeral runner files and must never be committed or uploaded as artifacts.
 
 `temp-work-cleanup.yml` is the durable lifecycle manager for `temp-work/`. It is API-only, writes only when stale first-level workspaces actually need deletion, and records its audit trail in the Action Step Summary instead of committing status files.
 
