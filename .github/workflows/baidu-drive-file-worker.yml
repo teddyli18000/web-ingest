@@ -67,9 +67,9 @@ jobs:
           go build -o "$RUNNER_TEMP/baidu-drive-relay" ./cmd/baidu-drive-relay
           echo "BAIDU_DRIVE_RELAY_BIN=$RUNNER_TEMP/baidu-drive-relay" >> "$GITHUB_ENV"
 
-      # Authentication provisioning intentionally remains separate. Once the
-      # owner chooses the final credential layout, preceding steps will create
-      # only runner-local files and export:
+      # Authentication provisioning intentionally remains separate. The final
+      # auth layer will create only runner-local files and export all three
+      # variables atomically so a partially configured worker cannot spin:
       #   BAIDU_DRIVE_BAIDU_AUTH_FILE
       #   BAIDU_DRIVE_GOOGLE_ACCESS_TOKEN_FILE
       #   BAIDU_DRIVE_STATE_KEY_FILE
@@ -82,14 +82,12 @@ jobs:
           --file-id '${{ inputs.file_id }}'
           --lease-id '${{ inputs.lease_id }}'
 
-      - name: Return control to scheduler after completion or soft stop
-        if: >-
-          always() &&
-          (steps.relay.outputs.relay_status == 'VERIFIED' ||
-           steps.relay.outputs.relay_status == 'PAUSED')
+      - name: Return control to the single master scheduler
+        if: always()
         env:
           GH_TOKEN: ${{ github.token }}
         run: >-
-          gh workflow run baidu-drive-scheduler.yml
+          gh workflow run baidu-drive-worker.yml
           --ref main
           -f task_id='${{ inputs.task_id }}'
+          -f reason=file-worker-finished
