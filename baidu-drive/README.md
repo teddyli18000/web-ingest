@@ -1,33 +1,35 @@
 # Baidu -> Google Drive
 
-`baidu-drive` is a Release-controlled, GitHub Actions-backed task for moving **public Baidu Netdisk shares** into Google Drive. It reuses the standalone `baidu-drive-mover` transfer core while adapting control, recovery, runner storage, and authentication boundaries for ephemeral GitHub-hosted runners.
+`baidu-drive` is a Release-controlled GitHub Actions task for moving **public Baidu Netdisk shares** into Google Drive.
+
+The fixed Release is the human control surface. The scheduler owns orchestration. GitHub-hosted VMs are disposable data pumps and must not own durable bytes or credentials.
 
 ## Current status
 
-**Release control plane, serialized worker, durable checkpointing, and the headless mover bridge are implemented. Authentication provisioning is intentionally still pending.**
+Implemented:
 
-Current behavior is therefore fail-closed:
+- fixed Release control plane;
+- serialized control-state reconciliation;
+- durable public task/checkpoint state;
+- headless bridge to the pinned standalone mover;
+- deterministic scheduler policy with tests.
 
-```text
-fixed GitHub Release
-        ↓ human edits request
-Baidu Drive Reconcile
-        ↓ accepted start/retry only
-Baidu Drive Worker
-        ↓ auth files missing today
-BLOCKED_AUTH_SETUP
-```
+Still intentionally pending before live transfer:
 
-No real transfer is attempted until the owner explicitly chooses and configures the credential/OAuth provisioning mechanism.
+- bounded Baidu Range -> Drive resumable relay;
+- per-file worker state and parallel dispatch;
+- encrypted resumable-session persistence;
+- authentication provisioning;
+- live cross-VM acceptance tests.
+
+Until authentication is configured, accepted tasks still fail closed at `BLOCKED_AUTH_SETUP`.
 
 ## Fixed Release
 
 Tag: `baidu-drive-live`  
 Title: `Baidu -> Google Drive`
 
-The Release is the human/bot control and status surface. It is public because this repository is public.
-
-Only edit the request fields:
+Only edit:
 
 ```text
 command: none
@@ -35,16 +37,16 @@ share_url: -
 extraction_code: -
 ```
 
-Supported commands:
+Commands:
 
-- `start` — create a new active task from a public Baidu share URL.
-- `retry` — retry the current task only from a retryable/blocked state.
-- `cancel` — cancel the current non-terminal task.
+- `start` — accept a new public Baidu share;
+- `retry` — retry the current retryable task;
+- `cancel` — cancel the current non-terminal task;
 - `none` — no request.
 
-Every non-`none` command is consumed back to `none` after processing, including rejected commands. Action-authored Release edits are ignored by the Release trigger, preventing recursion. A worker is queued only when Reconcile proves that `start` or `retry` was actually accepted; a rejected request cannot accidentally retry an older task.
+Every non-`none` command is consumed back to `none`, including rejected commands. Bot-authored Release edits do not recursively trigger the writer.
 
-### Example
+Example:
 
 ```text
 command: start
@@ -52,74 +54,120 @@ share_url: https://pan.baidu.com/s/...
 extraction_code: abcd
 ```
 
-Save the Release. Reconcile validates and consumes the request, creates durable task state, and queues the serialized worker. Until authentication provisioning is configured, that worker reports `BLOCKED_AUTH_SETUP` without attempting interactive login.
+The Release is only a public control/status projection. It is not a secret store, database, or normal file-transfer staging area.
 
 ## Architecture
+
+The target architecture is deliberately small:
 
 ```text
 Release baidu-drive-live
         ↓
-.github/workflows/baidu-drive-reconcile.yml
-        ↓ accepted request
-.github/workflows/baidu-drive-worker.yml
+single scheduler
         ↓
-baidu-drive/worker.py
+up to 3 independent file workers
         ↓
-headless Go bridge
+Baidu HTTP Range
         ↓
-pinned baidu-drive-mover core
+bounded runner buffer
         ↓
-Baidu staging -> bounded cache -> Drive verify -> cleanup
+Google Drive resumable upload
+        ↓
+independent Drive verification
+        ↓
+tool-owned Baidu staging cleanup
 ```
 
-All state writers share concurrency group `baidu-drive-live-state` with `cancel-in-progress: false`, so Release projection, task state, checkpoint state, and remote mutations are serialized through one logical writer lane.
+A small file is one relay chunk. A large file is many chunks through the same path. The runner never needs to hold the complete large file.
+
+See [`SCHEDULER.md`](SCHEDULER.md) for the durable scheduler/recovery contract.
+
+## Scheduling principles
+
+The scheduler is the only global decision maker. Workers execute one assigned file and do not choose their own work.
+
+Initial policy:
+
+```text
+max active file workers: 3
+relay chunk target:      512 MiB
+runner disk reserve:     4 GiB
+worker soft stop:        5 h
+workflow hard target:    5 h 30 m
+stale heartbeat window:  60 m
+```
+
+Independent files are scheduled longest-remaining-first to reduce the final long tail.
+
+The same Drive file is never actively written by multiple VMs. If a worker disappears, a replacement first asks Drive for the actual confirmed offset and resumes Baidu from that byte. Verified remote truth wins over the repository checkpoint.
+
+Release assets are not part of the normal transfer path. Baidu staging already provides the durable source copy, so adding GitHub as a second data staging service would add transfers and lifecycle complexity without required durability.
 
 ## Durable state
 
-The Release is a status projection, not the database.
+The existing task-level state is under:
 
 ```text
 baidu-drive/state/
 ├── runtime.json
 ├── tasks/
-│   └── bd-<timestamp>-<hash>.json
 └── checkpoints/
-    └── bd-<timestamp>-<hash>.sqlite.zlib.b64
 ```
 
-- `runtime.json` stores active/last task identity.
-- `tasks/*.json` stores public source parameters plus non-secret progress/status fields.
-- `checkpoints/*.sqlite.zlib.b64` is a compressed mover SQLite checkpoint. It may contain the manifest and transfer state for the submitted **public** share, but it must never contain account credentials, cookies, OAuth tokens, rclone configuration, signed credential-bearing URLs, private headers, or private-source data.
+The relay scheduler will extend durable state with per-file progress rather than putting large bytes in Git.
 
-The SQLite checkpoint is the durable transfer state across disposable runners. Runner-local downloaded file bytes are **not** committed. On a fresh runner, bridge recovery rewinds cache-dependent pre-verification states back to `BAIDU_STAGED`, preserving any known Drive object ID so the normal mover reconciliation can redownload and safely adopt/verify a remote object that may already have committed.
+Public state may contain public-share metadata, file size/hash, tool-owned staging identity, status, byte offset, and safe Drive identifiers.
+
+Sensitive capability state must never be plaintext in this public repository. In particular, Google resumable-session URIs will be authenticated-encrypted before persistence; only ciphertext is committed.
+
+A VM must be replaceable without copying its local filesystem.
 
 ## Transfer core
 
-The bridge reuses `teddyli18000/baidu-drive-mover` at the pinned source commit:
+The current bridge still reuses:
 
 ```text
+teddyli18000/baidu-drive-mover
 f4ca661d367aa2a067344efa989f0bfc95b64618
 ```
 
-The web-ingest bridge is copied into that pinned Go module at build time so it can reuse the mover's internal packages without duplicating the pipeline implementation.
-
-The inherited transfer invariants remain:
+The current mover pipeline is:
 
 ```text
-public Baidu share scan
-  -> bounded tool-owned Baidu staging
-  -> bounded resumable runner cache
-  -> Google Drive upload
-  -> independent Drive ID + size + MD5 verification
-  -> cleanup only tool-owned staging/cache
-  -> completed
+share scan
+  -> tool-owned Baidu staging
+  -> bounded local cache
+  -> Drive upload
+  -> Drive ID + size + MD5 verification
+  -> cleanup
 ```
 
-Google Drive destination objects are never cleanup targets. A file is not complete merely because an upload process returned success; the mover's independent Drive verification remains the completion gate.
+That bridge remains useful for scan/staging/recovery while the data path is upgraded from full-file local cache transfer to bounded Range/resumable relay.
 
-## Ephemeral authentication boundary
+The standalone mover pin or bridge contract must not change without passing the repository integration gate and updating this documentation.
 
-Authentication is deliberately separated from durable task state. The worker expects prepared files only inside the ephemeral runner:
+## Cross-VM recovery
+
+For data relay, the durable progress value is the byte offset Google Drive has actually confirmed.
+
+Example:
+
+```text
+repo says:   12.0 GiB
+Drive says:  12.5 GiB
+```
+
+The next VM resumes from **12.5 GiB**.
+
+It then asks Baidu for a bounded range beginning at that byte and advances Drive from the same offset. Local chunks are disposable and are removed after remote confirmation.
+
+This means VM replacement does not require preserving `.part` files.
+
+## Authentication boundary
+
+Authentication remains intentionally separate from public task state.
+
+The current worker recognizes runner-local prepared files:
 
 ```text
 BAIDU_DRIVE_BAIDU_AUTH_FILE
@@ -128,51 +176,45 @@ BAIDU_DRIVE_RCLONE_BIN
 BAIDU_DRIVE_BRIDGE_BIN
 ```
 
-These variables name runner-local files; they are not credential values themselves. The repository currently has **no step that provisions them**. When the owner chooses the final OAuth/secret design, preceding workflow steps may create these files from GitHub Actions secrets or another explicitly approved secret source, use them for the run, and let the runner destroy them afterward.
+These are internal path interfaces, not a final choice of credential mechanism.
 
-The bridge itself never opens an interactive browser. If the prepared Baidu session or Drive authorization is absent/expired and cannot be refreshed by the chosen future provisioning layer, the transfer stops safely for operator recovery.
+The final authentication layer must:
+
+- provision credentials only inside the ephemeral runner;
+- never echo them;
+- never persist plaintext tokens/cookies/session URLs in Git, Release bodies, artifacts, or summaries;
+- support non-interactive refresh/recovery suitable for bot operation.
+
+Until that is wired, the worker must remain fail-closed.
 
 ## Workflows
 
 ### `baidu-drive-reconcile.yml`
 
-Durable control-plane entry point. It wakes on:
-
-- human edit of Release `baidu-drive-live`;
-- manual `workflow_dispatch`;
-- pushes that change the task/control-plane implementation.
-
-It validates and consumes Release commands, commits non-secret task/control state, refreshes the Release status projection, and dispatches a worker only after an accepted `start` or `retry`.
+Owns the Release protocol and control-plane task state. It validates code changes and dispatches work only after proving a `start` or `retry` request was accepted.
 
 ### `baidu-drive-worker.yml`
 
-Serialized transfer worker. It currently runs the state adapter and stops at `BLOCKED_AUTH_SETUP` because auth provisioning is intentionally absent. Once provisioning is added, the same adapter restores the checkpoint, invokes the Go bridge, persists the next checkpoint, updates task progress, and refreshes the Release projection.
+Current serialized transfer adapter. It remains the fail-closed execution entry point while the per-file relay/scheduler worker is built.
 
-## Public-repository safety
+Control-plane serialization and data-plane parallelism are intentionally different concerns: the final scheduler will keep global decisions serialized while independent file workers execute concurrently.
 
-Use this task only for public Baidu shares whose link, extraction code, names, and manifest metadata are acceptable to persist publicly.
+## Safety invariants
 
-Never commit or expose:
-
-- account passwords;
-- Baidu account cookies/session tokens;
-- OAuth access or refresh tokens;
-- Google/rclone credential configuration;
-- private headers;
-- signed or temporary credential-bearing URLs;
-- private-source data;
-- secret-derived diagnostics.
-
-Do not upload credential-containing Actions artifacts or Step Summaries. Authentication files must remain runner-local and ephemeral.
+- Only public Baidu shares belong here.
+- Google Drive destination objects are never cleanup targets.
+- Cleanup may remove only durably registered tool-owned local/Baidu staging.
+- A file is complete only after independent Drive verification.
+- Remote mutations must be idempotent/reconcilable.
+- The repository checkpoint is not allowed to override proven remote state.
+- No credential, cookie, OAuth token, private header, signed URL, resumable-session URI, or private-source data may be committed in plaintext.
 
 ## Validation
 
-Normal repository validation covers both the control plane and the mover bridge:
-
 ```bash
-python3 -m py_compile baidu-drive/controller.py baidu-drive/worker.py
+python3 -m py_compile baidu-drive/*.py
 python3 -m unittest discover -s baidu-drive/tests -v
 python3 tools/check-repository-integrity.py
 ```
 
-`repository-integrity.yml` additionally checks out the pinned mover core, copies in `action-main.go` and `action_recovery.go`, runs the relevant mover package tests, and builds `cmd/baidu-drive-action` on Linux. A pin change is not complete until that integration gate passes.
+`repository-integrity.yml` additionally checks out the pinned mover core, runs relevant Go tests, and compiles the Linux Actions bridge.
