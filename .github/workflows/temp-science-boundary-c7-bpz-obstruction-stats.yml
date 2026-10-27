@@ -1,0 +1,45 @@
+name: Temp Science Boundary C7 BPZ obstruction stats
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-bpz-obstruction-stats.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_t9_obstruction_stats.py
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-science-boundary-c7-bpz-obstruction-stats
+  cancel-in-progress: false
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned BPZ/Tan source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+      - name: Rank all 160 distinct obstruction masks
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/result"
+          python3 science-boundary/shannon-capacity-c7/code/bpz_t9_obstruction_stats.py "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/stats.json"
+          cat "$RUNNER_TEMP/result/stats.json"
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-bpz-obstruction-stats
+          path: ${{ runner.temp }}/result/stats.json
+          retention-days: 14
+      - name: Summarize
+        shell: bash
+        run: |
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat "$RUNNER_TEMP/result/stats.json" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
