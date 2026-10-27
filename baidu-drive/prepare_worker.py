@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Serialized preparation worker for the direct relay data plane.
+"""Serialized master scheduler for the direct Baidu -> Drive relay data plane.
 
-This worker owns the SQLite checkpoint, Baidu staging batches, Drive directory
-reconciliation, and import of independently verified file-worker results. It
-never transfers file payload bytes to Drive.
+This is the only global scheduling brain below the Release control plane. It
+owns the shared SQLite checkpoint, safe staging/cleanup, and file-worker slot
+assignment. File workers never choose their own work.
 """
 from __future__ import annotations
 
@@ -19,6 +19,7 @@ from typing import Any
 import controller
 import relay_control
 import relay_state
+import scheduler
 import worker as legacy_worker
 
 RUNNABLE_TASK_STATES = {
@@ -104,7 +105,7 @@ def apply_prepare_result(task: dict[str, Any], result: dict[str, Any]) -> dict[s
         value["mover_task_id"] = mover_task
     progress = result.get("progress") or {}
     if isinstance(progress, dict):
-        for key in ("files_total", "files_done", "bytes_total", "bytes_done"):
+        for key in ("files_total", "bytes_total"):
             if key in progress:
                 value[key] = max(0, int(progress.get(key) or 0))
     drive_id = str(result.get("drive_root_id") or "").strip()
@@ -115,10 +116,12 @@ def apply_prepare_result(task: dict[str, Any], result: dict[str, Any]) -> dict[s
 
 
 def merge_relay_progress(task: dict[str, Any], records: list[dict[str, Any]]) -> dict[str, Any]:
+    """Project current remote-confirmed relay truth, even when it moves backward."""
     value = copy.deepcopy(task)
     aggregate = relay_state.aggregate(records)
-    value["files_done"] = max(int(value.get("files_done") or 0), aggregate["files_verified"])
-    value["bytes_done"] = max(int(value.get("bytes_done") or 0), aggregate["bytes_confirmed"])
+    value["files_done"] = aggregate["files_verified"]
+    value["bytes_done"] = aggregate["bytes_confirmed"]
+    value["relay_active_workers"] = aggregate["active_workers"]
     return value
 
 
@@ -154,6 +157,33 @@ def render_and_save(
     return next_runtime, value
 
 
+def schedule_projection(
+    task: dict[str, Any],
+    records: list[dict[str, Any]],
+    dispatched: list[tuple[str, str]],
+    now: dt.datetime,
+) -> tuple[str, str]:
+    active = sum(1 for record in records if scheduler.is_active(record, now))
+    blocked_reconcile = sum(1 for record in records if record.get("status") == relay_state.BLOCKED_RECONCILE)
+    permanent = sum(1 for record in records if record.get("status") == relay_state.FAILED_PERMANENT)
+    runnable = sum(1 for record in records if scheduler.is_runnable(record, now))
+
+    if not dispatched and active == 0 and runnable == 0 and (blocked_reconcile or permanent):
+        parts = []
+        if blocked_reconcile:
+            parts.append(f"{blocked_reconcile} file(s) require Drive destination reconciliation")
+        if permanent:
+            parts.append(f"{permanent} file(s) failed permanently")
+        return "BLOCKED", "; ".join(parts) + ". No unsafe replay was attempted."
+
+    detail = f"{len(dispatched)} new worker(s) dispatched; {active} worker(s) active"
+    if blocked_reconcile:
+        detail += f"; {blocked_reconcile} file(s) awaiting reconciliation"
+    if permanent:
+        detail += f"; {permanent} permanent failure(s)"
+    return "RUNNING", "Scheduler active: " + detail + "."
+
+
 def run_prepare_worker(
     gh: controller.GitHub,
     relay_repo: relay_control.GitHubRepo,
@@ -179,7 +209,7 @@ def run_prepare_worker(
             task,
             reason="relay-auth-setup-block",
             status="BLOCKED_AUTH_SETUP",
-            message="Relay control is ready, but ephemeral authentication inputs are not configured yet.",
+            message="Relay scheduler is ready, but ephemeral authentication inputs are not configured yet.",
         )
         return 0
 
@@ -200,7 +230,7 @@ def run_prepare_worker(
         task,
         reason="relay-prepare-start",
         status="RUNNING",
-        message="Preparing the next bounded relay batch.",
+        message="Scheduler is reconciling verified results and the next bounded staging batch.",
     )
     proc = subprocess.run(
         prepare_command(task, binary, work, checkpoint, result_path, manifest_path, verified_path),
@@ -215,13 +245,13 @@ def run_prepare_worker(
     task = apply_prepare_result(task, result)
 
     if proc.returncode != 0:
-        _, task = render_and_save(
+        render_and_save(
             gh,
             runtime,
             task,
             reason="relay-prepare-blocked",
             status="BLOCKED",
-            message="Relay preparation stopped safely at a durable checkpoint.",
+            message="Scheduler preparation stopped safely at a durable checkpoint.",
         )
         return 0
 
@@ -233,6 +263,8 @@ def run_prepare_worker(
     task = merge_relay_progress(task, records)
 
     if str(result.get("status") or "").upper() == "COMPLETED":
+        task["files_done"] = int(task.get("files_total") or task.get("files_done") or 0)
+        task["bytes_done"] = int(task.get("bytes_total") or task.get("bytes_done") or 0)
         render_and_save(
             gh,
             runtime,
@@ -250,23 +282,27 @@ def run_prepare_worker(
             task,
             reason="relay-empty-manifest-block",
             status="BLOCKED",
-            message="Relay preparation produced no runnable files before task completion.",
+            message="Scheduler found no staged relay files before task completion.",
         )
         return 0
 
+    now = utc_now()
     dispatched = relay_control.schedule_once(
         relay_repo,
         task_id,
-        utc_now(),
+        now,
         os.environ.get("GITHUB_RUN_ID", "prepare"),
     )
-    _, task = render_and_save(
+    records = relay_repo.list_records(task_id)
+    task = merge_relay_progress(task, records)
+    status, message = schedule_projection(task, records, dispatched, now)
+    render_and_save(
         gh,
         runtime,
         task,
-        reason="relay-batch-ready",
-        status="RUNNING",
-        message=f"Relay batch ready; {len(dispatched)} file worker(s) dispatched.",
+        reason="relay-schedule",
+        status=status,
+        message=message,
     )
     return 0
 
@@ -283,7 +319,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return run_prepare_worker(gh, relay_repo, args.task_id, args.reason)
     except (PrepareWorkerError, controller.ProtocolError, relay_control.ControlError, relay_state.RelayStateError) as exc:
-        print(f"relay preparation stopped safely: {str(exc)[:300]}")
+        print(f"relay scheduler stopped safely: {str(exc)[:300]}")
         return 1
 
 
