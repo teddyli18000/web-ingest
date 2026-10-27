@@ -49,6 +49,8 @@ Scheduled Actions are not exact clocks. For a task with a hard publication bound
 
 `repository-integrity.yml` is event-driven only. It validates repository rules, recurring schedules, task tests, Python repository-management tools, and the Baidu Drive Go adapters against the pinned standalone mover core. Normal daily data commits do not trigger it.
 
+The full integrity suite also deliberately ignores commits whose relevant changes are confined to disposable workflow files. In particular, `temp-*`, names carrying the established temporary markers `backfill`, `repair`, `migration`, `probe`, or `diagnostic`, and generated `git-mirror-*` workflows may be created, adjusted, and removed without rerunning repository-wide CI. These one-shot workflows must validate their own inputs/output. Durable task code, root/task rules and documentation, repository tools, and persistent workflows still trigger the full suite. `temp-work-cleanup.yml` is explicitly re-included because it is persistent repository infrastructure despite containing `temp` in its name.
+
 `baidu-drive-reconcile.yml` is event-driven only. It owns fixed Release `baidu-drive-live`, validates and consumes human control requests, writes non-secret control/task state, and dispatches `baidu-drive-worker.yml` only when a `start` or `retry` was actually accepted. Bot-authored Release edits and normal state/checkpoint commits do not create a writer loop.
 
 `baidu-drive-worker.yml` is the **single Baidu Drive master scheduler**. It is triggered by accepted/manual dispatches and by `workflow_run: completed` from `Baidu Drive File Worker`. Under the serialized `baidu-drive-live-state` concurrency group it restores the mover checkpoint, imports verified file results, runs guarded Baidu cleanup, scans/stages the next batch, reconciles the Drive directory tree, updates public task state, and leases up to three independent files. The workflow-completion trigger is also the hard-runner-loss wakeup path; there is deliberately no polling cron or second scheduler.
@@ -63,6 +65,6 @@ This is a public repository, so useful Actions execution is not treated as scarc
 
 ## Temporary workflows
 
-Backfills, migrations, repairs, probes, diagnostics, and smoke tests are one-shot operations. They must not receive a recurring `schedule:` trigger and must self-remove or be removed after validation.
+Backfills, migrations, repairs, probes, diagnostics, and smoke tests are one-shot operations. They must not receive a recurring `schedule:` trigger and must self-remove or be removed after validation. Prefer a `temp-` prefix for new disposable experimental workflows so both humans and CI can identify their lifecycle immediately.
 
 Large historical repairs should batch commits by natural archive boundaries such as year. Temporary manager scripts belong under `tools/` or, when they are experiment-specific and disposable, inside their `temp-work/<work-name>/` workspace; durable task schema/source rules belong in the task directory.
