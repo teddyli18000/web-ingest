@@ -1,0 +1,149 @@
+name: Temp Ramsey R46 exact near-miss radius 7
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-nearmiss-radius7.yml
+      - science-boundary/ramsey-r46/nearmiss_radius7_fast.cpp
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-nearmiss-radius7
+  cancel-in-progress: false
+
+jobs:
+  partition:
+    strategy:
+      fail-fast: false
+      matrix:
+        repair_count: [4, 5, 6, 7]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact witness-only enumerator
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -std=c++20 -Wall -Wextra -pedantic \
+            science-boundary/ramsey-r46/nearmiss_radius7_fast.cpp -o /tmp/radius7
+      - name: Exhaust partition
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          /usr/bin/time -v /tmp/radius7 \
+            science-boundary/ramsey-r46/results/algorithm22-calibration-best-14.json \
+            '${{ matrix.repair_count }}' \
+            | tee /tmp/r46/result.json
+          python3 - /tmp/r46/result.json '${{ matrix.repair_count }}' <<'PY'
+          import json,sys
+          p,r=sys.argv[1:]; d=json.load(open(p)); r=int(r)
+          expected={4:88278960,5:68573835,6:14355166,7:873618}
+          assert d['repair_count']==r and d['radius']==7, d
+          if not d['found']:
+              assert d['tested']==expected[r], (d,expected[r])
+          print(d)
+          PY
+      - name: Build and verify a hit
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - /tmp/r46/result.json science-boundary/ramsey-r46/results/algorithm22-calibration-best-14.json /tmp/r46/candidate.json <<'PY'
+          import json,sys
+          result,seed,out=sys.argv[1:]
+          d=json.load(open(result))
+          if not d['found']: raise SystemExit(0)
+          rows=[list(r) for r in json.load(open(seed))['adjacency']]
+          for u,v in d['hit']:
+              c='0' if rows[u][v]=='1' else '1'; rows[u][v]=rows[v][u]=c
+          json.dump({'adjacency':[''.join(r) for r in rows]},open(out,'w'),indent=2); open(out,'a').write('\n')
+          PY
+          if [[ -f /tmp/r46/candidate.json ]]; then
+            git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+            git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+            mkdir -p /tmp/candidate && cp /tmp/r46/candidate.json /tmp/candidate/certificate.json
+            (cd /tmp/few-shots && python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate) | tee /tmp/r46/few-shots-verify.json
+            python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1])); assert d.get('valid') is True and d.get('score')=='36', d
+          PY
+          fi
+      - name: Upload partition result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-nearmiss-r7-repair-${{ matrix.repair_count }}
+          path: /tmp/r46
+          if-no-files-found: warn
+          retention-days: 7
+
+  collect:
+    if: always()
+    needs: partition
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ramsey-r46-nearmiss-r7-repair-*
+          path: /tmp/parts
+      - name: Aggregate exact partition result
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 - /tmp/parts /tmp/r46/result.json <<'PY'
+          import json,os,pathlib,shutil,sys
+          root,out=map(pathlib.Path,sys.argv[1:]); rows=[]; hit=None
+          for p in root.rglob('result.json'):
+              d=json.load(open(p)); d['_dir']=str(p.parent); rows.append(d)
+              if d['found']: hit=d
+          rows.sort(key=lambda d:d['repair_count'])
+          expected={4:88278960,5:68573835,6:14355166,7:873618}
+          complete=len(rows)==4 and all(d['tested']==expected[d['repair_count']] for d in rows if not d['found'])
+          result={'campaign':'exact-radius7-around-algorithm22-nearmiss-14','run_id':os.environ['GITHUB_RUN_ID'],
+                  'partitions_completed':len(rows),'complete_no_hit':complete and hit is None,
+                  'found':hit is not None,'tested_total':sum(d['tested'] for d in rows),
+                  'k4free_total':sum(d['k4free'] for d in rows),
+                  'partitions':[{k:v for k,v in d.items() if k!='_dir'} for d in rows]}
+          if hit:
+              q=pathlib.Path(hit['_dir'])/'candidate.json'
+              if q.exists(): shutil.copyfile(q,'/tmp/r46/candidate.json')
+              q=pathlib.Path(hit['_dir'])/'few-shots-verify.json'
+              if q.exists(): shutil.copyfile(q,'/tmp/r46/few-shots-verify.json')
+          out.write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({k:v for k,v in result.items() if k!='partitions'},sort_keys=True))
+          PY
+      - name: Persist radius-7 result
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest=science-boundary/ramsey-r46/results
+          cp /tmp/r46/result.json "$dest/algorithm22-nearmiss-radius7.json"
+          [[ ! -f /tmp/r46/candidate.json ]] || cp /tmp/r46/candidate.json "$dest/algorithm22-nearmiss-radius7-hit.json"
+          [[ ! -f /tmp/r46/few-shots-verify.json ]] || cp /tmp/r46/few-shots-verify.json "$dest/algorithm22-nearmiss-radius7-hit-verify.json"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "$dest"
+          git commit -m 'ramsey-r46: record exact radius-7 near-miss sweep' || exit 0
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
+      - name: Upload aggregate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-nearmiss-radius7-aggregate
+          path: /tmp/r46
+          retention-days: 7
