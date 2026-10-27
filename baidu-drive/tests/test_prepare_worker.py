@@ -33,8 +33,8 @@ class PrepareWorkerTests(unittest.TestCase):
     def now(self):
         return dt.datetime(2026, 10, 27, 16, 0, tzinfo=UTC)
 
-    def test_apply_prepare_result_keeps_public_total_and_drive_root(self):
-        task = {"id": "task-1", "files_total": 0, "bytes_total": 0}
+    def test_apply_prepare_result_keeps_manifest_totals_and_drive_root(self):
+        task = {"id": "task-1", "files_total": 0, "bytes_total": 0, "files_done": 9, "bytes_done": 900}
         value = prepare_worker.apply_prepare_result(
             task,
             {
@@ -51,10 +51,11 @@ class PrepareWorkerTests(unittest.TestCase):
         self.assertEqual(value["mover_task_id"], "mover-1")
         self.assertEqual(value["files_total"], 10)
         self.assertEqual(value["bytes_total"], 1000)
+        self.assertEqual(value["files_done"], 9)
+        self.assertEqual(value["bytes_done"], 900)
         self.assertEqual(value["drive_folder_id"], "drive-root")
-        self.assertIn("drive-root", value["drive_folder_url"])
 
-    def test_relay_progress_never_moves_public_progress_backwards(self):
+    def test_relay_projection_follows_current_remote_truth_even_backward(self):
         task = {
             "id": "task-1",
             "files_done": 5,
@@ -76,27 +77,33 @@ class PrepareWorkerTests(unittest.TestCase):
             second, "lease-b", "drive-b", TEST_MD5, TEST_MD5, self.now()
         )
         value = prepare_worker.merge_relay_progress(task, [first, second])
-        self.assertEqual(value["files_done"], 5)
-        self.assertEqual(value["bytes_done"], 500)
+        self.assertEqual(value["files_done"], 1)
+        self.assertEqual(value["bytes_done"], 250)
         self.assertEqual(value["files_total"], 10)
         self.assertEqual(value["bytes_total"], 1000)
 
-    def test_relay_progress_can_advance_beyond_last_cleanup_checkpoint(self):
-        task = {
-            "id": "task-1",
-            "files_done": 0,
-            "bytes_done": 0,
-            "files_total": 2,
-            "bytes_total": 300,
-        }
-        record = relay_state.new_record("task-1", source("a", 200), self.now())
-        record = relay_state.claim(record, "lease-a", self.now())
-        record = relay_state.apply_relay_checkpoint(
-            record, "lease-a", 150, 150, "opaque", None, self.now()
+    def test_schedule_projection_blocks_only_when_no_safe_work_remains(self):
+        blocked = relay_state.new_record("task-1", source("a", 100), self.now())
+        blocked = relay_state.claim(blocked, "lease-a", self.now())
+        blocked = relay_state.block_reconcile(blocked, "lease-a", self.now(), "expired")
+        status, message = prepare_worker.schedule_projection(
+            {"id": "task-1"}, [blocked], [], self.now()
         )
-        value = prepare_worker.merge_relay_progress(task, [record])
-        self.assertEqual(value["bytes_done"], 150)
-        self.assertEqual(value["files_done"], 0)
+        self.assertEqual(status, "BLOCKED")
+        self.assertIn("reconciliation", message.lower())
+        self.assertIn("no unsafe replay", message.lower())
+
+    def test_schedule_projection_can_continue_other_independent_files(self):
+        blocked = relay_state.new_record("task-1", source("a", 100), self.now())
+        blocked = relay_state.claim(blocked, "lease-a", self.now())
+        blocked = relay_state.block_reconcile(blocked, "lease-a", self.now(), "expired")
+        active = relay_state.new_record("task-1", source("b", 100), self.now())
+        active = relay_state.claim(active, "lease-b", self.now())
+        status, message = prepare_worker.schedule_projection(
+            {"id": "task-1"}, [blocked, active], [], self.now()
+        )
+        self.assertEqual(status, "RUNNING")
+        self.assertIn("awaiting reconciliation", message.lower())
 
 
 if __name__ == "__main__":
