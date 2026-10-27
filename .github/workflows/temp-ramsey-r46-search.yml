@@ -1,0 +1,125 @@
+name: temp ramsey r46 search
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-search.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-search
+  cancel-in-progress: false
+
+jobs:
+  exact-restricted-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exhaust all 36-vertex undirected circulants
+        run: |
+          set -euxo pipefail
+          g++ -O3 -std=c++20 science-boundary/ramsey-r46/circulant36.cpp -o /tmp/circulant36
+          /tmp/circulant36 | tee /tmp/circulant36.txt
+          grep -Fx 'checked=262144' /tmp/circulant36.txt
+          grep -Fx 'k4_free=17859' /tmp/circulant36.txt
+          grep -Fx 'valid=0' /tmp/circulant36.txt
+          grep -Fx 'best_objective=72' /tmp/circulant36.txt
+          grep -Fx 'best_k4=0' /tmp/circulant36.txt
+          grep -Fx 'best_independent6=72' /tmp/circulant36.txt
+          grep -Fx 'best_mask=11459' /tmp/circulant36.txt
+      - name: Check all 37 published Exoo one-vertex extensions
+        run: |
+          set -euxo pipefail
+          python3 science-boundary/ramsey-r46/extension_check.py \
+            --fetch-all \
+            --timeout 30 \
+            --json-out /tmp/exoo-extension-results.json \
+            | tee /tmp/exoo-extension.log
+          python3 - <<'PY'
+          import json
+          p = '/tmp/exoo-extension-results.json'
+          d = json.load(open(p))
+          assert d['graphs'] == 37, d
+          assert d['all_solver_agreement'] is True, d
+          print('graphs', d['graphs'], 'extendable', d['extendable'])
+          PY
+      - name: Upload restricted-search evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-restricted-checks
+          path: |
+            /tmp/circulant36.txt
+            /tmp/exoo-extension-results.json
+            /tmp/exoo-extension.log
+          if-no-files-found: warn
+
+  direct-sat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - solver: cadical195
+            phase: mixed
+            seed: 1
+          - solver: cadical195
+            phase: cyclic
+            seed: 2
+          - solver: glucose42
+            phase: mixed
+            seed: 3
+          - solver: maplesat
+            phase: random
+            seed: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PySAT
+        run: python -m pip install --disable-pip-version-check python-sat
+      - name: Direct n=36 SAT search
+        id: search
+        shell: bash
+        run: |
+          set -uo pipefail
+          stem="${{ matrix.solver }}-${{ matrix.phase }}-${{ matrix.seed }}"
+          log="/tmp/${stem}.log"
+          candidate="/tmp/${stem}-candidate.json"
+          set +e
+          timeout 300m python science-boundary/ramsey-r46/sat_search.py \
+            --solver '${{ matrix.solver }}' \
+            --phase '${{ matrix.phase }}' \
+            --seed '${{ matrix.seed }}' \
+            --output "$candidate" 2>&1 | tee "$log"
+          rc=${PIPESTATUS[0]}
+          set -e
+          case "$rc" in
+            0) status=SAT ;;
+            20) status=UNSAT ;;
+            124|137|143) status=TIMEOUT ;;
+            *) status=ERROR ;;
+          esac
+          echo "status=$status" | tee "/tmp/${stem}-status.txt"
+          echo "exit_code=$rc" | tee -a "/tmp/${stem}-status.txt"
+          if [[ "$status" == ERROR ]]; then
+            exit "$rc"
+          fi
+      - name: Upload SAT worker evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-sat-${{ matrix.solver }}-${{ matrix.phase }}-${{ matrix.seed }}
+          path: |
+            /tmp/${{ matrix.solver }}-${{ matrix.phase }}-${{ matrix.seed }}.log
+            /tmp/${{ matrix.solver }}-${{ matrix.phase }}-${{ matrix.seed }}-status.txt
+            /tmp/${{ matrix.solver }}-${{ matrix.phase }}-${{ matrix.seed }}-candidate.json
+          if-no-files-found: warn
