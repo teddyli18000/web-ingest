@@ -21,11 +21,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Install renderer
+      - name: Prepare renderer
         run: |
+          set -euo pipefail
           npm install --no-audit --no-fund
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg >/dev/null
+          command -v ffmpeg
+          command -v ffprobe
+          command -v google-chrome
+          ffmpeg -version | head -n 1
           echo "CHROME_PATH=$(which google-chrome)" >> "$GITHUB_ENV"
       - name: Render final film
         run: node export/render.mjs --start 0 --end 60 --width 1920 --height 1080 --fps 30 --art-source reach-hq --out out/GPT_Shared_Draft_Final.mp4
