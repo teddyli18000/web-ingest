@@ -1,0 +1,139 @@
+name: Temp Few Shots p004 5D swap search
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-few-shots-p004-swap.yml
+      - temp-work/few-shots-p004/swap_ports.cpp
+      - temp-work/few-shots-p004/swap_build.py
+  workflow_dispatch:
+    inputs:
+      seconds:
+        description: Search seconds
+        required: false
+        default: "120"
+      seed:
+        description: Random seed
+        required: false
+        default: "12648430"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-few-shots-p004-swap
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout web-ingest
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch public source data read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/nathanielitty/lower-bounds-for-shannon-capacity.git "$RUNNER_TEMP/shannon-source"
+          git -C "$RUNNER_TEMP/shannon-source" sparse-checkout set c7
+
+      - name: Compile swap search
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -DNDEBUG -march=native -std=c++20 \
+            temp-work/few-shots-p004/swap_ports.cpp \
+            -o "$RUNNER_TEMP/p004-swap"
+
+      - name: Search private-swap graph
+        id: search
+        shell: bash
+        env:
+          SEARCH_SECONDS: ${{ github.event.inputs.seconds || '120' }}
+          SEARCH_SEED: ${{ github.event.inputs.seed || '12648430' }}
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v "$RUNNER_TEMP/p004-swap" \
+            "$RUNNER_TEMP/shannon-source/c7/R367.txt" \
+            "$RUNNER_TEMP/swap-result.json" \
+            "$SEARCH_SECONDS" "$SEARCH_SEED" 200000 100000
+          cat "$RUNNER_TEMP/swap-result.json"
+          if grep -q '"kind": "swap-ports-found"' "$RUNNER_TEMP/swap-result.json"; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Materialize 134770 candidate
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/shot"
+          python3 temp-work/few-shots-p004/swap_build.py \
+            "$RUNNER_TEMP/swap-result.json" \
+            "$RUNNER_TEMP/shannon-source/c7/R367.txt" \
+            "$RUNNER_TEMP/shot/certificate.json" \
+            "$RUNNER_TEMP/search-status.json"
+          cat "$RUNNER_TEMP/search-status.json"
+
+      - name: Verify breakthrough with upstream verifier
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" \
+            | tee "$RUNNER_TEMP/verify-result.json"
+          python3 - "$RUNNER_TEMP/verify-result.json" <<'PY'
+          import json, sys
+          result = json.load(open(sys.argv[1], encoding="utf-8"))
+          if not result.get("valid") or int(result["score"]) <= 134753:
+              raise SystemExit(f"not a verified breakthrough: {result}")
+          print(f"verified breakthrough score={result['score']}")
+          PY
+
+      - name: Save verified breakthrough in web-ingest only
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p temp-work/few-shots-p004/breakthrough
+          cp "$RUNNER_TEMP/shot/certificate.json" temp-work/few-shots-p004/breakthrough/certificate.json
+          cp "$RUNNER_TEMP/swap-result.json" temp-work/few-shots-p004/breakthrough/swap-result.json
+          cp "$RUNNER_TEMP/search-status.json" temp-work/few-shots-p004/breakthrough/swap-status.json
+          cp "$RUNNER_TEMP/verify-result.json" temp-work/few-shots-p004/breakthrough/swap-verify-result.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp-work/few-shots-p004/breakthrough
+          git commit -m "temp: save verified p004 swap breakthrough"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
+
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Few Shots p004 5D private-swap search"
+            echo
+            if [[ -f "$RUNNER_TEMP/swap-result.json" ]]; then
+              echo '```json'
+              cat "$RUNNER_TEMP/swap-result.json"
+              echo '```'
+            fi
+            if [[ -f "$RUNNER_TEMP/verify-result.json" ]]; then
+              echo
+              echo "Upstream verifier:"
+              echo '```json'
+              cat "$RUNNER_TEMP/verify-result.json"
+              echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
