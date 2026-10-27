@@ -43,7 +43,7 @@ def load_rank3_state(r0, digits):
     return r
 
 
-def solve(r, xset, digits, supports, max_square_conflicts):
+def solve(r, xset, digits, supports, max_square_conflicts, include_b_zero=False):
     kset = set(RANK3_K9)
     bidx = [i for i in range(g.R_SIZE) if i not in kset]
     bmask = sum(1 << i for i in bidx)
@@ -72,7 +72,8 @@ def solve(r, xset, digits, supports, max_square_conflicts):
         cc = x_bcount[xi]
         arr = tuple(
             v for v in range(g.U)
-            if v not in bvals and outside_count[v] * cc <= max_square_conflicts
+            if (v not in bvals or (include_b_zero and cc == 0))
+            and outside_count[v] * cc <= max_square_conflicts
         )
         cand.append(arr)
         cand_sets.append(set(arr))
@@ -157,6 +158,7 @@ def solve(r, xset, digits, supports, max_square_conflicts):
         "state": STATE_INDEX,
         "k9": list(RANK3_K9),
         "max_port_square_conflicts": max_square_conflicts,
+        "include_b_endpoints_on_zero_conflict_fibers": include_b_zero,
         "base_square": base_square,
         "safe_endpoints": len(safe),
         "endpoint_outside_conflict_histogram": count_hist,
@@ -237,6 +239,7 @@ def main():
     ap.add_argument("model_output", type=Path)
     ap.add_argument("status", type=Path)
     ap.add_argument("--max-port-square-conflicts", type=int, default=2)
+    ap.add_argument("--include-b-endpoints-on-zero-conflict-fibers", action="store_true")
     args = ap.parse_args()
     if args.max_port_square_conflicts < 0:
         raise SystemExit("max-port-square-conflicts must be nonnegative")
@@ -248,13 +251,19 @@ def main():
     supports, _ = g.support_masks(r, digits)
 
     bidx, hs, vs, deleted, stats = solve(
-        r, xset, digits, supports, args.max_port_square_conflicts
+        r,
+        xset,
+        digits,
+        supports,
+        args.max_port_square_conflicts,
+        args.include_b_endpoints_on_zero_conflict_fibers,
     )
     candidate = build_candidate(r, xset, bidx, hs, vs, deleted)
     if len(candidate) != stats["score"]:
         raise RuntimeError("score mismatch")
 
-    method = f"rank3-maxsat-square-relax-conflict-le{args.max_port_square_conflicts}"
+    suffix = "-bzero" if args.include_b_endpoints_on_zero_conflict_fibers else ""
+    method = f"rank3-maxsat-square-relax-conflict-le{args.max_port_square_conflicts}{suffix}"
     model_data = {
         "method": method,
         "state_index": STATE_INDEX,
