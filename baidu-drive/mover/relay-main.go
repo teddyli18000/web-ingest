@@ -184,8 +184,29 @@ func runRelayStep(ctx context.Context, input relayStepInput, cookie, accessToken
 	}
 	if relayErr != nil {
 		if errors.Is(relayErr, errDriveSessionExpired) {
-			output.ErrorKind = "session_expired"
-		} else if errors.Is(relayErr, errDriveAuthRequired) || errors.Is(relayErr, baidu.ErrAuthRequired) {
+			reconciled, disposition, reconcileErr := reconcileExpiredSession(ctx, source, drive, input)
+			if reconcileErr != nil {
+				if errors.Is(reconcileErr, errDriveDestinationConflict) {
+					output.ErrorKind = "reconcile_required"
+				} else if errors.Is(reconcileErr, errDriveAuthRequired) || errors.Is(reconcileErr, baidu.ErrAuthRequired) {
+					output.ErrorKind = "auth"
+				} else {
+					output.ErrorKind = "retryable"
+				}
+				return output, reconcileErr
+			}
+			if disposition == expiredSessionAdopted {
+				return reconciled, nil
+			}
+			if disposition == expiredSessionAbsent {
+				// The expired session no longer has a destination object. The
+				// Python worker may now discard this session-scoped offset/hash
+				// checkpoint and start a fresh resumable session on the next step.
+				return relayStepOutput{ErrorKind: "session_absent"}, errDriveSessionExpired
+			}
+			return output, fmt.Errorf("expired Drive session reconciliation returned no disposition")
+		}
+		if errors.Is(relayErr, errDriveAuthRequired) || errors.Is(relayErr, baidu.ErrAuthRequired) {
 			output.ErrorKind = "auth"
 		} else {
 			output.ErrorKind = "retryable"
@@ -216,6 +237,9 @@ func runRelayStep(ctx context.Context, input relayStepInput, cookie, accessToken
 func classifyRelayStepError(err error) string {
 	if err == nil {
 		return ""
+	}
+	if errors.Is(err, errDriveDestinationConflict) {
+		return "reconcile_required"
 	}
 	if errors.Is(err, errDriveSessionExpired) {
 		return "session_expired"
