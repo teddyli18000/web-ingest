@@ -1,147 +1,193 @@
 # Baidu Drive Scheduler
 
-This document is the durable design contract for the Actions scheduler that moves public Baidu Netdisk shares to Google Drive.
+This is the durable scheduler/recovery contract for moving public Baidu Netdisk shares to Google Drive through GitHub Actions.
 
-The design starts from four facts:
+## First principles
 
-1. GitHub-hosted VMs are disposable and may disappear at any time.
-2. The Baidu staging file is the durable readable source.
-3. Google Drive resumable upload state is the durable writable destination state.
-4. A repository checkpoint is only a recovery hint; verified remote state is authoritative.
+1. GitHub-hosted VMs are disposable.
+2. Tool-owned Baidu staging is the durable readable source.
+3. Google Drive's verified object/resumable state is the durable writable truth.
+4. Repository state is a public checkpoint and coordination record, not authority over contradictory remote evidence.
+5. There is one master scheduler. File workers execute leases; they do not make global scheduling decisions.
 
-Everything else follows from those facts.
+## One normal byte path
 
-## One data path
-
-Do not maintain separate "small file" and "large file" transfer engines.
-
-Every file uses the same direct relay:
+For every non-empty file:
 
 ```text
 Baidu staged file
-    ↓ exact HTTP byte range
-response body stream
+    ↓ exact HTTP Range
+bounded response-body stream
     ↓ exact Drive resumable PUT
 Google Drive
 ```
 
-The scheduled 512 MiB chunk is a **network byte window**, not a file written to runner disk. A small file naturally completes in one final chunk. A large file uses many fixed-size non-final chunks. No complete source file or relay chunk has to fit on runner disk.
+The configured 512 MiB value is a network byte window, not a local file or in-memory allocation. HTTP transport buffers remain bounded independently of window size.
 
-Google Drive requires non-final resumable chunks to be aligned to 256 KiB. The initial 512 MiB chunk size is a fixed compatible multiple. Do not make chunk size depend on runner disk capacity.
+Small files naturally finish in one final window. Large files use many fixed-size non-final windows. Non-final Drive windows remain multiples of 256 KiB.
 
-Release assets are not part of the normal data path. Baidu already provides the durable source copy, so uploading chunks to GitHub and downloading them again would add another transfer, another lifecycle, and another failure surface without adding required durability.
+Zero-byte files are the only byte-path exception because there is no source range to read. They use an idempotent Drive create/adopt operation under the already-created task directory and still require exact destination reconciliation.
 
-## Scheduler ownership
+Do not introduce Release-asset staging or disk-backed chunk files without a measured failure mode that the direct relay cannot solve.
 
-There is one logical scheduler. It is the only component allowed to decide what work should run next.
+## Master scheduler
 
-Workers do not choose files, split ownership, or infer global concurrency. A worker receives one file assignment and advances that file until it completes, reaches the soft runtime boundary, or hits a retryable block.
+The master is `baidu-drive-worker.yml` running `prepare_worker.py` under the serialized `baidu-drive-live-state` concurrency group.
 
-The scheduler policy is deterministic and lives in `scheduler.py`.
+It alone may:
+
+- restore/write the mover SQLite checkpoint;
+- import independently verified file-worker results;
+- authorize/run tool-owned staging cleanup;
+- scan/resume a share and stage the next bounded batch;
+- create/reconcile the Drive task directory tree;
+- synchronize file-scoped relay records;
+- decide which independent files receive leases;
+- dispatch up to the global worker limit;
+- project aggregate status back to the fixed Release.
+
+A file worker never selects another file or edits task-global SQLite state.
+
+## File scheduling policy
 
 Initial policy:
 
-- maximum active file workers: **3**;
-- relay chunk target: **512 MiB**;
-- worker soft stop: **5 hours**;
-- workflow hard timeout target: **5 hours 30 minutes**;
-- stale worker heartbeat window: **60 minutes**.
+```text
+maximum active file workers = 3
+relay window                 = 512 MiB
+worker soft stop             = 5 h
+workflow hard timeout        = 5 h 30 m
+stale lease window           = 60 m
+```
 
-These values are safety defaults, not performance promises. Change them only from measured operating evidence.
+Among runnable files, prefer the largest remaining byte count first. The policy is deterministic and implemented in `scheduler.py`.
 
-## Parallelism
-
-Parallelize independent files first.
+Parallelize independent files first:
 
 ```text
-scheduler
+master
 ├── VM 1 → file A
 ├── VM 2 → file B
 └── VM 3 → file C
 ```
 
-Use longest-remaining-file first among runnable files. This reduces the final long tail while keeping the rule inspectable.
+Never lease one Drive file to two live workers. Same-file workflow concurrency is additionally keyed by task + file.
 
-Do **not** assign two live workers to the same Drive file. A single resumable Drive upload has one authoritative confirmed offset, so same-file writes remain serialized.
+Do not add adaptive scheduling, multi-VM same-file prefetching, or speculative heuristics without measured evidence that this simple policy is the bottleneck.
 
-If one worker disappears, its stale assignment may be reclaimed after the heartbeat safety window. The replacement worker must reconcile the remote Drive offset before requesting the next Baidu range.
+## File-worker lifecycle
 
-## Cross-VM recovery
+A file worker owns exactly one persisted lease. During one VM lifetime it repeatedly:
 
-A VM owns no durable bytes.
+1. opens/recovers the file's sealed Drive resumable session;
+2. asks Drive for the actual confirmed offset;
+3. aligns the persisted streaming-MD5 state to that offset;
+4. asks Baidu for exactly the next bounded byte range;
+5. streams that response body directly into one Drive PUT;
+6. records only Drive-confirmed progress and its matching MD5 state;
+7. repeats until verified completion or the soft runtime boundary.
 
-For a file of size `N`, the durable progress value is the byte offset that Drive has actually confirmed. Example:
+At 5 hours the worker stops starting new windows, checkpoints, releases the lease, and exits before the 5h30 workflow timeout.
+
+## Wakeup and hard VM loss
+
+Normal progress does not rely on a worker's final shell step.
+
+`baidu-drive-worker.yml` listens to `workflow_run: completed` for `Baidu Drive File Worker`. GitHub therefore wakes the same master when a file-worker workflow finishes successfully, fails, is cancelled, or reaches its workflow timeout.
+
+The master re-reads durable state instead of trusting the completed VM. If a lease has become stale, normal scheduler rules may reclaim it.
+
+No cron watchdog and no second scheduler are used.
+
+## Cross-VM offset and hash recovery
+
+A VM owns no durable payload bytes.
+
+Example:
 
 ```text
-repo checkpoint:  12.0 GiB
-Drive says:       12.5 GiB
+repo checkpoint: 12.0 GiB
+Drive status:    12.5 GiB
 ```
 
-The next worker resumes from **12.5 GiB**.
+The replacement aligns its hash state to 12.5 GiB and requests Baidu beginning at 12.5 GiB. If Drive proves less progress than a stale optimistic repo hint, the worker may rebuild the MD5 prefix from Baidu and move the checkpoint backward to the proven Drive offset.
 
-The repository value must never force Drive backwards. Remote reconciliation wins because a previous VM may have committed a chunk immediately before it disappeared.
+A failed PUT may have committed none, some, or all of the request. Never infer progress from bytes read or written locally; query Drive.
 
-The next Baidu request starts at that confirmed byte:
+## Resumable-session persistence
 
-```http
-Range: bytes=<confirmed_offset>-<bounded_end>
+The Drive resumable-session URI is a capability and must never be plaintext in this public repo.
+
+The implementation seals it with AES-256-GCM:
+
+- one future Actions secret supplies a 32-byte master key;
+- a fresh nonce is used for every seal;
+- AAD binds ciphertext to the task ID and file ID;
+- Git stores only the versioned sealed string.
+
+This is intentionally narrow. Do not build a general secret database.
+
+## Expired-session recovery
+
+A 404 from a resumable session is not followed by blind replay.
+
+The same file worker queries the exact destination parent + filename:
+
+1. **One matching object:** require expected size and canonical Drive MD5, then re-read/hash the Baidu staged source and adopt only if the MD5 matches. If a canonical Baidu MD5 is present, it must match too.
+2. **No object:** the expired partial session is no longer usable; clear only session-scoped offset/hash state and start a fresh resumable session from byte zero.
+3. **Multiple/conflicting objects:** preserve evidence and enter `BLOCKED_RECONCILE`.
+4. **Reconciliation transport/auth failure:** retry or block on auth; do not invent a destination result.
+
+This keeps replay automatic in the safe case without risking duplicate Drive objects.
+
+## Batch lifecycle
+
+The master stages one bounded batch at a time. The batch may contain a file larger than the staging byte target because Actions does not cache the whole file locally.
+
+When every file in the current batch has a verified Drive ID, the next master run imports those results into SQLite. Existing mover cleanup gates then verify provenance and remove only the registered tool-owned Baidu staging batch. The master may then stage the next batch.
+
+Task completion requires all manifest files to be verified and all tool-owned Baidu staging cleanup to reconcile cleanly.
+
+Drive destination objects are never cleanup targets.
+
+## Public state
+
+Task-level:
+
+```text
+baidu-drive/state/runtime.json
+baidu-drive/state/tasks/<task-id>.json
+baidu-drive/state/checkpoints/<task-id>.sqlite.zlib.b64
 ```
 
-That Baidu response body is streamed directly as the Drive request body. When Drive confirms the request, the scheduler may advance the durable confirmed offset. If the connection or VM dies first, the replacement asks Drive what it actually retained and re-requests only the remaining Baidu bytes.
+File-level:
 
-## Runner resource safety
+```text
+baidu-drive/state/files/<task-id>/<file-id>.json
+```
 
-The normal relay does not materialize a 512 MiB chunk on disk. Memory usage must also stay bounded by the HTTP transport buffers rather than by chunk size.
+File state may contain public share metadata, source size/hash, staging identity, Drive parent/verified ID, lease/heartbeat, confirmed byte offset, serialized MD5 state, and encrypted session capability.
 
-Runner disk remains available for tiny state/configuration/runtime files only. File size therefore does not determine whether a GitHub-hosted runner can execute the transfer.
-
-Do not add disk-backed chunk buffering or double-buffer files merely for throughput. If measurements later prove direct streaming insufficient, document the concrete bottleneck before introducing another buffering layer.
-
-## Runtime safety
-
-A worker stops starting new chunks at the 5-hour soft boundary. It uses the remaining workflow margin to reconcile any in-flight Drive request, save durable state, refresh public status, and hand control back to the scheduler.
-
-The workflow hard timeout target is 5 hours 30 minutes. Do not intentionally run to GitHub's absolute limit.
-
-A hard VM loss is handled by the same Drive-offset reconciliation path; it is not a separate recovery mode.
-
-## State split
-
-Public durable state may contain:
-
-- task/file IDs;
-- public logical paths and source metadata;
-- file size/hash;
-- Baidu tool-owned staging identity;
-- public status/progress;
-- confirmed byte offset;
-- Drive object ID after it is safe to expose.
-
-Sensitive durable state must never be plaintext in the public repository. In particular, a Google resumable-session URI is capability-bearing state and must be authenticated-encrypted before persistence. The encryption key comes from an Actions secret; the repository stores only ciphertext.
-
-Do not build a general secret database. Encrypt only the small capability state that must survive VM replacement.
-
-## Completion
-
-A file is complete only after independent Drive verification succeeds. Task completion additionally requires cleanup of only the tool-owned Baidu staging objects that were durably registered for that task.
-
-Google Drive destination objects are never cleanup targets.
+State writes should represent semantic changes. Avoid timestamp-only commits.
 
 ## Current implementation boundary
 
-Implemented now:
+Implemented:
 
-- Release-backed control plane;
-- durable task/checkpoint handling;
-- headless mover bridge;
-- pure deterministic scheduler policy and tests;
-- a Baidu API primitive for exact bounded byte ranges.
+- Release control plane;
+- single serialized master scheduler;
+- deterministic 3-file scheduling and file leases;
+- scan/stage/Drive-tree/cleanup prepare bridge;
+- exact bounded Baidu Range reads;
+- Drive resumable-session creation/status/upload;
+- direct stream relay;
+- cross-VM MD5 checkpoints;
+- AES-GCM session sealing;
+- zero-byte create/adopt;
+- expired-session destination reconciliation;
+- workflow-completion wakeup after disposable workers.
 
-Still to implement before live transfer:
+Pending for live operation:
 
-- direct Baidu-range-to-Drive-resumable relay executor;
-- Drive resumable-session creation and remote-offset query;
-- per-file durable worker state/heartbeats;
-- encrypted resumable-session persistence;
-- scheduler-to-worker dispatch with independent-file parallelism;
-- final authentication provisioning and live cross-VM acceptance tests.
+- final non-interactive credential provisioning;
+- real-provider acceptance covering multi-VM resume, session refresh/expiry, parallel files, zero-byte files, and cleanup.
