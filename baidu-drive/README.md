@@ -12,11 +12,12 @@ Implemented:
 - serialized control-state reconciliation;
 - durable public task/checkpoint state;
 - headless bridge to the pinned standalone mover;
-- deterministic scheduler policy with tests.
+- deterministic scheduler policy with tests;
+- exact bounded Baidu byte-range primitive for the relay path.
 
 Still intentionally pending before live transfer:
 
-- bounded Baidu Range -> Drive resumable relay;
+- direct Baidu Range -> Drive resumable streaming executor;
 - per-file worker state and parallel dispatch;
 - encrypted resumable-session persistence;
 - authentication provisioning;
@@ -67,18 +68,18 @@ single scheduler
         ↓
 up to 3 independent file workers
         ↓
-Baidu HTTP Range
+Baidu exact HTTP byte range
+        ↓ direct response-body stream
+Google Drive resumable PUT
         ↓
-bounded runner buffer
-        ↓
-Google Drive resumable upload
+remote offset reconciliation
         ↓
 independent Drive verification
         ↓
 tool-owned Baidu staging cleanup
 ```
 
-A small file is one relay chunk. A large file is many chunks through the same path. The runner never needs to hold the complete large file.
+A small file is one final relay chunk. A large file is many fixed-size non-final chunks through the same path. A scheduled chunk is a network byte window, not a temporary 512 MiB file, so runner disk capacity does not set the maximum transferable file size.
 
 See [`SCHEDULER.md`](SCHEDULER.md) for the durable scheduler/recovery contract.
 
@@ -91,11 +92,12 @@ Initial policy:
 ```text
 max active file workers: 3
 relay chunk target:      512 MiB
-runner disk reserve:     4 GiB
 worker soft stop:        5 h
 workflow hard target:    5 h 30 m
 stale heartbeat window:  60 m
 ```
+
+The 512 MiB non-final chunk is a fixed multiple of Google Drive's 256 KiB resumable-upload alignment requirement. Final chunks may be smaller.
 
 Independent files are scheduled longest-remaining-first to reduce the final long tail.
 
@@ -124,14 +126,14 @@ A VM must be replaceable without copying its local filesystem.
 
 ## Transfer core
 
-The current bridge still reuses:
+The current compatibility bridge still reuses:
 
 ```text
 teddyli18000/baidu-drive-mover
 f4ca661d367aa2a067344efa989f0bfc95b64618
 ```
 
-The current mover pipeline is:
+The current mover pipeline is still:
 
 ```text
 share scan
@@ -142,7 +144,7 @@ share scan
   -> cleanup
 ```
 
-That bridge remains useful for scan/staging/recovery while the data path is upgraded from full-file local cache transfer to bounded Range/resumable relay.
+That bridge remains useful for scan/staging/recovery while the Actions data path is upgraded to direct byte-range relay. The standalone mover now also has a bounded range primitive ready to be pinned after its CI gate passes.
 
 The standalone mover pin or bridge contract must not change without passing the repository integration gate and updating this documentation.
 
@@ -159,9 +161,9 @@ Drive says:  12.5 GiB
 
 The next VM resumes from **12.5 GiB**.
 
-It then asks Baidu for a bounded range beginning at that byte and advances Drive from the same offset. Local chunks are disposable and are removed after remote confirmation.
+It asks Baidu for an exact bounded range beginning at that byte and streams the response directly into the Drive resumable request. If the VM dies after Drive accepted more data than Git recorded, the next worker discovers that by querying Drive and continues from Drive's offset rather than replaying the stale checkpoint.
 
-This means VM replacement does not require preserving `.part` files.
+No `.part` file is required for cross-VM recovery.
 
 ## Authentication boundary
 
@@ -195,9 +197,9 @@ Owns the Release protocol and control-plane task state. It validates code change
 
 ### `baidu-drive-worker.yml`
 
-Current serialized transfer adapter. It remains the fail-closed execution entry point while the per-file relay/scheduler worker is built.
+Current serialized compatibility worker. It remains the fail-closed execution entry point while the per-file direct relay worker is built.
 
-Control-plane serialization and data-plane parallelism are intentionally different concerns: the final scheduler will keep global decisions serialized while independent file workers execute concurrently.
+Control-plane serialization and data-plane parallelism are intentionally different concerns: the final scheduler keeps global decisions serialized while independent file workers execute concurrently.
 
 ## Safety invariants
 
