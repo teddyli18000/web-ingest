@@ -64,6 +64,7 @@ jobs:
           cp baidu-drive/mover/relay_secret.go .relay-core/cmd/baidu-drive-relay/relay_secret.go
           cp baidu-drive/mover/relay_hash.go .relay-core/cmd/baidu-drive-relay/relay_hash.go
           cp baidu-drive/mover/relay_drive_objects.go .relay-core/cmd/baidu-drive-relay/relay_drive_objects.go
+          cp baidu-drive/mover/relay_reconcile.go .relay-core/cmd/baidu-drive-relay/relay_reconcile.go
           cd .relay-core
           go build -o "$RUNNER_TEMP/baidu-drive-relay" ./cmd/baidu-drive-relay
           echo "BAIDU_DRIVE_RELAY_BIN=$RUNNER_TEMP/baidu-drive-relay" >> "$GITHUB_ENV"
