@@ -4,9 +4,9 @@ This workspace builds an original GPT/ChatGPT personification film as authored c
 
 The public `Nyankomintsu/world-execute-me-lyric-mv` repository is a **production/process reference only**. Its directing discipline, staged review and deterministic render/QC define the quality bar. We do **not** copy or reuse its source, scene choreography, character art, compositions, timings, lyrics, audio or assets.
 
-## Current status — 0–45 s locked
+## Current status — 0–60 s visual structure complete
 
-The old technical prototype is rejected and retained only as history. The active film now has three visually reviewed sections, accepted from real rendered video, contact sheets and dense transition frames rather than from code or green CI alone.
+The old technical prototype is rejected and retained only as history. The active 60-second film has four visually reviewed sections. Section gates are accepted from real rendered video, contact sheets and dense boundary frames rather than from code or green CI alone. The remaining gate is the final 1920×1080 / 30 fps full-film export and QC.
 
 ### 0–15 s — opening v8
 
@@ -28,13 +28,13 @@ The old technical prototype is rejected and retained only as history. The active
 ### 30–45 s — shared construction v5
 
 - the 30 s handoff is physically swallowed by a rising paper floor; the blue correction line continues across the boundary instead of restarting;
-- the map is no longer a floating board/card: it becomes the floor of a low-angle paper architecture space;
+- the map becomes the floor of a low-angle paper architecture space rather than a floating board/card;
 - arches, stairs, canopy, beacon and bridge have front/side/top faces, cast shadows and foreground occlusion;
 - the rejected rectangular hand/photo overlay is gone from the final join;
 - GPT and user are represented by cobalt/gold physical paper contributions inside the shared space;
-- the final v5 join uses small perspective-folded pieces rather than long flat color bars, and the two sides complete the bridge gap together.
+- small perspective-folded pieces from both sides complete the bridge gap together.
 
-Full locked regression:
+Locked 0–45 regression:
 
 - GitHub Actions run: `40498732693`
 - 0–45 s, 960×540, 15 fps
@@ -42,7 +42,23 @@ Full locked regression:
 - dense 30 s inspection confirmed handoff → paper-floor entry remains one physical action;
 - dense 40.55 s inspection confirmed build → shared join is hidden by a near-lens paper wipe with no subject pop or opacity exit.
 
-Engineering green checks alone do not count as visual approval; this state was accepted only after rendered-frame review.
+### 45–60 s — quiet continuation v1
+
+- the completed paper world is physically covered and collected by a near-lens working sheet, revealing a warm desk underneath;
+- three proof layers register into one shared working page instead of fading away;
+- the page retains blue/gold route history and visible construction residue;
+- user and GPT marks enter from opposite sides and meet near one deliberately unfinished corner;
+- the final frame does not say goodbye or fade to black: `from here.` and `SHARED DRAFT / STILL OPEN` remain with two live marks and a subtle warm-light breath.
+
+Ending gate:
+
+- GitHub Actions run: `40499859576`
+- 45–60 s, 960×540, 15 fps
+- full decode / duration / black-frame / freeze checks passed
+- dense 45–48 s review confirmed the paper-world → desk transition is a physical occlusion, not a crossfade;
+- dense 57.7–60 s review confirmed the quiet hold remains visually alive rather than becoming a dead frame.
+
+Engineering green checks alone do not count as visual approval; every locked section above passed rendered-frame review.
 
 ## Character masters
 
@@ -53,7 +69,7 @@ Primary reach character: `src/components/gpt_art.js`
 - SHA-256: `e44ef2e3a6d839f81104634c9d78dfdc3466ddfae909ac632da5b2cf0e8394ed`
 - runtime source name: `reach-hq`
 
-The old 420×473 master is an explicit fallback only. Review CI uses `--art-source reach-hq`, so silent fallback is rejected.
+The old 420×473 master is an explicit fallback only. Review/final CI uses `--art-source reach-hq`, so silent fallback is rejected.
 
 Secondary thinking pose: `src/components/gpt_poses.js`
 
@@ -66,10 +82,11 @@ Secondary thinking pose: `src/components/gpt_poses.js`
 - `src/scenes/opening_v8.js` — 0–15 s
 - `src/scenes/drafts_v10.js` — 15–30 s
 - `src/scenes/construct_v5.js` — 30–45 s, with the immersive v3 space and refined v5 join
-- `src/main.js` — active routing
+- `src/scenes/ending_v1.js` — 45–60 s quiet continuation
+- `src/main.js` — 60 s active routing
 - `src/components/gpt_art.js` — primary character source/crops/registration
 - `src/components/gpt_poses.js` — secondary pose loader
-- `export/render.mjs` — deterministic Playwright frame capture + ffmpeg encode/contact-sheet generation; review marks extend with the timeline instead of failing new sections.
+- `export/render.mjs` — deterministic Playwright frame capture + ffmpeg encode/contact-sheet generation with authored review marks through 60 s.
 
 ## Production rules
 
@@ -84,9 +101,9 @@ Secondary thinking pose: `src/components/gpt_poses.js`
 - each section is rendered and visually reviewed before the next section starts;
 - temporary CI workflows are removed immediately after their gate passes.
 
-## Next gate — 45–60 s / quiet continuation
+## Final gate
 
-The last section must resolve the paper world without turning into a conventional “goodbye.” The completed bridge/world should fold back into one shared working page, keeping both cobalt and gold marks alive near an unfinished corner. The emotional read is continuation: the work can resume from here.
+Render the full 0–60 s film at **1920×1080, 30 fps**, verify the HQ character source, decode the complete media, assert resolution/fps/duration, inspect black/freeze diagnostics and the full contact sheet, then remove the temporary export workflow.
 
 ## Retained rejected material
 
