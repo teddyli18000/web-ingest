@@ -33,7 +33,7 @@ jobs:
           git clone --depth 1 --filter=blob:none --sparse https://github.com/nathanielitty/lower-bounds-for-shannon-capacity.git "$RUNNER_TEMP/shannon-source"
           git -C "$RUNNER_TEMP/shannon-source" sparse-checkout set c7
           git clone --depth 1 --filter=blob:none --sparse https://github.com/molind/c7-five.git "$RUNNER_TEMP/c7-five"
-          git -C "$RUNNER_TEMP/c7-five" sparse-checkout set data/family-f.json
+          git -C "$RUNNER_TEMP/c7-five" sparse-checkout set data
 
       - name: Test all Family F states for nine ports
         id: search
