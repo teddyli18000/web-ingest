@@ -90,7 +90,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: teddyli18000/baidu-drive-mover
-          ref: f4ca661d367aa2a067344efa989f0bfc95b64618
+          ref: a9e76feb18fe9ca1ac680d0ea555aac684d622de
           path: .ci/baidu-drive-mover
           fetch-depth: 1
           persist-credentials: false
@@ -105,5 +105,5 @@ jobs:
           cp baidu-drive/mover/action-main.go .ci/baidu-drive-mover/cmd/baidu-drive-action/main.go
           cp baidu-drive/mover/action_recovery.go .ci/baidu-drive-mover/internal/state/action_recovery.go
           cd .ci/baidu-drive-mover
-          go test ./internal/state ./internal/app ./internal/download ./internal/drive ./internal/drive/rclone
+          go test ./internal/state ./internal/app ./internal/download ./internal/drive ./internal/drive/rclone ./internal/baidu
           go build ./cmd/baidu-drive-action
