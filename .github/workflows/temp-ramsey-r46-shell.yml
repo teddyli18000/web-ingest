@@ -1,0 +1,84 @@
+name: temp ramsey r46 lazy shells
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-shell.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-shells
+  cancel-in-progress: false
+
+jobs:
+  shell:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        include:
+          - radius: 2
+            seed: 11
+            degree: 14
+          - radius: 4
+            seed: 22
+            degree: 13
+          - radius: 8
+            seed: 33
+            degree: 15
+          - radius: 16
+            seed: 44
+            degree: 14
+          - radius: 32
+            seed: 55
+            degree: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PySAT
+        run: python -m pip install --disable-pip-version-check python-sat
+      - name: Search Hamming shell around Few Shots baseline
+        shell: bash
+        run: |
+          set -uo pipefail
+          stem="r${{ matrix.radius }}-s${{ matrix.seed }}"
+          log="/tmp/${stem}.log"
+          candidate="/tmp/${stem}-candidate.json"
+          set +e
+          timeout 300m python science-boundary/ramsey-r46/lazy_shell_search.py \
+            --radius '${{ matrix.radius }}' \
+            --solver cadical195 \
+            --seed '${{ matrix.seed }}' \
+            --new-degree '${{ matrix.degree }}' \
+            --output "$candidate" 2>&1 | tee "$log"
+          rc=${PIPESTATUS[0]}
+          set -e
+          case "$rc" in
+            0) status=SAT ;;
+            20) status=UNSAT ;;
+            30) status=ITERATION_LIMIT ;;
+            124|137|143) status=TIMEOUT ;;
+            *) status=ERROR ;;
+          esac
+          printf 'status=%s\nexit_code=%s\n' "$status" "$rc" | tee "/tmp/${stem}-status.txt"
+          if [[ "$status" == ERROR ]]; then
+            exit "$rc"
+          fi
+      - name: Upload shell-search evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-shell-r${{ matrix.radius }}-s${{ matrix.seed }}
+          path: |
+            /tmp/r${{ matrix.radius }}-s${{ matrix.seed }}.log
+            /tmp/r${{ matrix.radius }}-s${{ matrix.seed }}-status.txt
+            /tmp/r${{ matrix.radius }}-s${{ matrix.seed }}-candidate.json
+          if-no-files-found: warn
