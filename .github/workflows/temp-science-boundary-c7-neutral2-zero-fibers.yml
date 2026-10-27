@@ -1,0 +1,50 @@
+name: Temp Science Boundary C7 neutral2 zero fibers
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-neutral2-zero-fibers.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-neutral2-zero-fibers
+  cancel-in-progress: false
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/shannon-source"
+          git -C "$RUNNER_TEMP/shannon-source" remote add origin https://github.com/nathanielitty/lower-bounds-for-shannon-capacity.git
+          git -C "$RUNNER_TEMP/shannon-source" fetch --depth 1 origin fe8966079013abaac21d1c08441500100f8e3b86
+          git -C "$RUNNER_TEMP/shannon-source" checkout FETCH_HEAD
+      - name: Install dependency
+        run: python3 -m pip install --disable-pip-version-check python-sat
+      - name: Scan all ten ranks
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/result"
+          python3 science-boundary/shannon-capacity-c7/code/neutral2_zero_fiber_stats.py \
+            "$RUNNER_TEMP/shannon-source/c7/R367.txt" \
+            "$RUNNER_TEMP/result/stats.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: c7-neutral2-zero-fibers
+          path: ${{ runner.temp }}/result/stats.json
+          retention-days: 14
+      - name: Summarize
+        shell: bash
+        run: |
+          echo '```json' >> "$GITHUB_STEP_SUMMARY"
+          cat "$RUNNER_TEMP/result/stats.json" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
