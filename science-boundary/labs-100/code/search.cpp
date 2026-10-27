@@ -136,7 +136,7 @@ int main(int argc, char** argv) {
     int runs=200, threads=0, tenure_lo=6, tenure_hi=16, kick_every=3000, kick_size=12;
     long long steps=300000, target=574;
     uint64_t seed=1;
-    std::string mode="mixed";
+    std::string mode="mixed", start_str="";
     for(int i=1;i<argc;i++) {
         std::string a=argv[i];
         auto need=[&](){ if(i+1>=argc) throw std::runtime_error("missing value after "+a); return std::string(argv[++i]); };
@@ -150,6 +150,7 @@ int main(int argc, char** argv) {
         else if(a=="--kick-every") kick_every=std::stoi(need());
         else if(a=="--kick-size") kick_size=std::stoi(need());
         else if(a=="--target") target=std::stoll(need());
+        else if(a=="--start") start_str=need();
         else throw std::runtime_error("unknown arg: "+a);
     }
     if(threads<=0) {
@@ -163,8 +164,10 @@ int main(int argc, char** argv) {
     omp_set_num_threads(threads);
 #endif
     Seq incumbent=parse_seq(incumbent_str);
+    Seq supplied = start_str.empty() ? incumbent : parse_seq(start_str);
     if(score_exact(incumbent,nullptr)!=578) throw std::runtime_error("incumbent score check failed");
-    long long global_best=578; Seq global_seq=incumbent;
+    long long global_best=std::numeric_limits<long long>::max(); Seq global_seq=incumbent;
+    std::vector<long long> run_best(runs, std::numeric_limits<long long>::max());
     auto t0=std::chrono::steady_clock::now();
 #pragma omp parallel for schedule(dynamic,1) if(runs>1)
     for(int r=0;r<runs;r++) {
@@ -172,8 +175,11 @@ int main(int argc, char** argv) {
         Seq start{};
         if(mode=="random") start=random_seq(rng);
         else if(mode=="incumbent") start=perturb(incumbent,rng, 10 + int(rng()%31));
+        else if(mode=="start") start=supplied;
+        else if(mode=="start-perturb") start=perturb(supplied,rng, 1 + int(rng()%21));
         else { start = (r%2==0) ? random_seq(rng) : perturb(incumbent,rng, 10 + int(rng()%41)); }
         Result got=tabu_run(start,rng,steps,tenure_lo,tenure_hi,kick_every,kick_size,target);
+        run_best[r]=got.e;
 #pragma omp critical
         {
             if(got.e<global_best) {
@@ -184,6 +190,9 @@ int main(int argc, char** argv) {
     }
     auto t1=std::chrono::steady_clock::now();
     double sec=std::chrono::duration<double>(t1-t0).count();
+    auto sorted=run_best; std::sort(sorted.begin(), sorted.end());
+    auto q=[&](double f){ size_t i=(size_t)(f*(sorted.size()-1)); return sorted[i]; };
+    std::cout<<"SUMMARY runs="<<runs<<" min="<<sorted.front()<<" p10="<<q(0.10)<<" median="<<q(0.50)<<" p90="<<q(0.90)<<" max="<<sorted.back()<<" record=578\n";
     std::cout<<"FINAL energy="<<global_best<<" seconds="<<sec<<" seq="<<fmt(global_seq)<<"\n";
     return global_best<=target?0:1;
 }
