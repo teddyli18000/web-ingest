@@ -51,13 +51,15 @@ An exact full-space coverage convolution over all `7^10 = 282,475,249` vertices 
 
 The full-space method uses separable cyclic `[1,1,1]` transforms in each coordinate to count how many baseline vertices conflict with every ambient vertex, then groups low-coverage candidates by their exact conflicting owners.
 
+Detailed counts, memory/runtime data, and the CI-status caveat for the 4→5 run are preserved in [`results/exact-local-search.md`](results/exact-local-search.md).
+
 ### Structural ninth-port search
 
 The public construction can be viewed as a large square block plus two families of port fibers. Replacing the eight-center deletion set by nine centers has a nominal gain of +17 if all 18 endpoint choices per companion fiber can be retained. Strict SAT and several rewirings were UNSAT.
 
 ### Neutral2 parent search
 
-Exact enumeration found 27 legal neutral 2-for-2 parent states. One state (historically labeled state 18) has 10 private centers and thus 10 possible nine-center subsets. Strict generalized SAT over these subsets was UNSAT.
+Exact enumeration found 27 legal neutral 2-for-2 parent states. One state (historically labeled state 18) has 10 private centers and thus 10 possible nine-center subsets. Strict generalized SAT over these subsets was UNSAT. A compact, exactly reconstructible description of the strongest strict near miss is frozen in [`results/neutral2-near-miss.json`](results/neutral2-near-miss.json).
 
 ### MaxSAT relaxation
 
@@ -78,11 +80,18 @@ Core reusable research logic is under `code/`:
 - `generalized9.py` — 5D parent/companion model, safe-endpoint SAT machinery, and candidate construction.
 - `neutral2_sweep.py` — exact neutral 2-for-2 parent enumeration and nine-center sweep.
 - `neutral2_maxsat.py` — exact maximum-cardinality relaxation used for the present frontier.
+- `search_exact.cpp` — exact full-space 0→1 / 1→2 / 2→3 neighborhood search.
+- `search3.cpp` — exact remove-3/add-4 search.
+- `search4.cpp` — exact remove-4/add-5 search.
+- `neutral2.cpp` and `neutral2_autosym.cpp` — strict neutral2 near-miss and full signed-permutation/translation follow-up.
+- `neutral2_generalized9.py` — generalized SAT repair probe on the best strict neutral2 state.
 
 Public inputs are intentionally not copied here:
 
 - Few Shots p004 baseline certificate and verifier: `few-shots/few-shots`, `problems/p004-shannon-capacity-c7/`.
 - 367-point `C7^⊠5` source set `R367.txt`: `nathanielitty/lower-bounds-for-shannon-capacity`, `c7/R367.txt`.
+
+Exact source provenance and input conventions are recorded in [`data/README.md`](data/README.md).
 
 The original exploratory implementations remain historically available in `temp-work/few-shots-p004/` and in the `web-ingest` Git history, but this directory is the durable handoff.
 
