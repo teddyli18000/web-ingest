@@ -1,0 +1,36 @@
+experiment=exact-hamming-ball
+baseline=few-shots-p003-baseline
+baseline_git_blob=858e9b6c71938a24964ce38e228524d20c4a1870
+radius=4
+seed=22
+new_degree_phase=13
+python=3.12
+python_sat=1.9.dev17
+solver=cadical195
+started_utc=2026-10-27T23:14:24Z
+exit_code=20
+status=UNSAT
+result_line=RESULT UNSAT radius=4 iterations=19 learned_ramsey_clauses=1215 elapsed=744.749s
+
+--- log tail ---
+hamming_bound radius=4 old_edges=595 clauses=5315 max_var=23514
+iter=1 k4=7 ind6=88 added=95 total_added=95 distance=0 elapsed=1.554s
+iter=2 k4=22 ind6=21 added=43 total_added=138 distance=0 elapsed=3.057s
+iter=3 k4=24 ind6=13 added=37 total_added=175 distance=0 elapsed=4.558s
+iter=4 k4=25 ind6=11 added=36 total_added=211 distance=0 elapsed=6.061s
+iter=5 k4=9 ind6=82 added=91 total_added=302 distance=0 elapsed=7.569s
+iter=6 k4=17 ind6=21 added=38 total_added=340 distance=0 elapsed=9.067s
+iter=7 k4=22 ind6=34 added=56 total_added=396 distance=2 elapsed=10.554s
+iter=8 k4=24 ind6=18 added=42 total_added=438 distance=1 elapsed=12.044s
+iter=9 k4=27 ind6=62 added=89 total_added=527 distance=4 elapsed=13.543s
+iter=10 k4=28 ind6=33 added=61 total_added=588 distance=3 elapsed=15.062s
+iter=11 k4=35 ind6=38 added=73 total_added=661 distance=3 elapsed=16.686s
+iter=12 k4=21 ind6=61 added=82 total_added=743 distance=4 elapsed=18.772s
+iter=13 k4=24 ind6=22 added=46 total_added=789 distance=4 elapsed=20.634s
+iter=14 k4=27 ind6=61 added=88 total_added=877 distance=4 elapsed=24.416s
+iter=15 k4=30 ind6=22 added=52 total_added=929 distance=4 elapsed=26.690s
+iter=16 k4=42 ind6=10 added=52 total_added=981 distance=4 elapsed=33.146s
+iter=17 k4=20 ind6=42 added=62 total_added=1043 distance=4 elapsed=35.145s
+iter=18 k4=46 ind6=34 added=80 total_added=1123 distance=4 elapsed=46.604s
+iter=19 k4=31 ind6=61 added=92 total_added=1215 distance=4 elapsed=129.757s
+RESULT UNSAT radius=4 iterations=19 learned_ramsey_clauses=1215 elapsed=744.749s
