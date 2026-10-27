@@ -15,17 +15,19 @@ Everything else follows from those facts.
 
 Do not maintain separate "small file" and "large file" transfer engines.
 
-Every file uses the same bounded relay:
+Every file uses the same direct relay:
 
 ```text
 Baidu staged file
-    ↓ HTTP Range
-bounded runner buffer
-    ↓ Drive resumable upload
+    ↓ exact HTTP byte range
+response body stream
+    ↓ exact Drive resumable PUT
 Google Drive
 ```
 
-A small file naturally completes in one chunk. A large file uses many chunks. No complete source file has to fit on runner disk.
+The scheduled 512 MiB chunk is a **network byte window**, not a file written to runner disk. A small file naturally completes in one final chunk. A large file uses many fixed-size non-final chunks. No complete source file or relay chunk has to fit on runner disk.
+
+Google Drive requires non-final resumable chunks to be aligned to 256 KiB. The initial 512 MiB chunk size is a fixed compatible multiple. Do not make chunk size depend on runner disk capacity.
 
 Release assets are not part of the normal data path. Baidu already provides the durable source copy, so uploading chunks to GitHub and downloading them again would add another transfer, another lifecycle, and another failure surface without adding required durability.
 
@@ -41,7 +43,6 @@ Initial policy:
 
 - maximum active file workers: **3**;
 - relay chunk target: **512 MiB**;
-- runner disk reserve: **4 GiB**;
 - worker soft stop: **5 hours**;
 - workflow hard timeout target: **5 hours 30 minutes**;
 - stale worker heartbeat window: **60 minutes**.
@@ -86,30 +87,23 @@ The next Baidu request starts at that confirmed byte:
 Range: bytes=<confirmed_offset>-<bounded_end>
 ```
 
-The worker discards the local chunk only after Drive has confirmed the corresponding range.
+That Baidu response body is streamed directly as the Drive request body. When Drive confirms the request, the scheduler may advance the durable confirmed offset. If the connection or VM dies first, the replacement asks Drive what it actually retained and re-requests only the remaining Baidu bytes.
 
-## Runner disk safety
+## Runner resource safety
 
-The scheduler never plans against the runner's advertised disk size directly.
+The normal relay does not materialize a 512 MiB chunk on disk. Memory usage must also stay bounded by the HTTP transport buffers rather than by chunk size.
 
-For each chunk:
+Runner disk remains available for tiny state/configuration/runtime files only. File size therefore does not determine whether a GitHub-hosted runner can execute the transfer.
 
-```text
-usable = free_disk - 4 GiB reserve
-chunk  = min(512 MiB, usable, remaining file bytes)
-```
-
-If no positive chunk fits, the worker pauses instead of filling the filesystem.
-
-The implementation should require at most a small bounded number of chunks on disk. Download/upload overlap may later use double buffering, but it must remain bounded and must not change durable semantics.
+Do not add disk-backed chunk buffering or double-buffer files merely for throughput. If measurements later prove direct streaming insufficient, document the concrete bottleneck before introducing another buffering layer.
 
 ## Runtime safety
 
-A worker stops taking new chunks at the 5-hour soft boundary. It uses the remaining workflow margin to finish/reconcile the current operation, save durable state, refresh public status, and hand control back to the scheduler.
+A worker stops starting new chunks at the 5-hour soft boundary. It uses the remaining workflow margin to reconcile any in-flight Drive request, save durable state, refresh public status, and hand control back to the scheduler.
 
 The workflow hard timeout target is 5 hours 30 minutes. Do not intentionally run to GitHub's absolute limit.
 
-A hard VM loss is handled by the same remote reconciliation path; it is not a separate recovery mode.
+A hard VM loss is handled by the same Drive-offset reconciliation path; it is not a separate recovery mode.
 
 ## State split
 
@@ -140,12 +134,13 @@ Implemented now:
 - Release-backed control plane;
 - durable task/checkpoint handling;
 - headless mover bridge;
-- pure deterministic scheduler policy and tests.
+- pure deterministic scheduler policy and tests;
+- a Baidu API primitive for exact bounded byte ranges.
 
 Still to implement before live transfer:
 
-- bounded Baidu range relay instead of full-file cache transfer;
-- resumable Drive chunk writer and remote-offset query;
+- direct Baidu-range-to-Drive-resumable relay executor;
+- Drive resumable-session creation and remote-offset query;
 - per-file durable worker state/heartbeats;
 - encrypted resumable-session persistence;
 - scheduler-to-worker dispatch with independent-file parallelism;
