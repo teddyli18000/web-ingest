@@ -120,6 +120,8 @@ jobs:
           cp baidu-drive/mover/relay_hash_test.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_hash_test.go
           cp baidu-drive/mover/relay_drive_objects.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_drive_objects.go
           cp baidu-drive/mover/relay_drive_objects_test.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_drive_objects_test.go
+          cp baidu-drive/mover/relay_reconcile.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_reconcile.go
+          cp baidu-drive/mover/relay_reconcile_test.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_reconcile_test.go
 
           cd .ci/baidu-drive-mover
           go test ./internal/state ./internal/app ./internal/download ./internal/drive ./internal/drive/rclone ./internal/baidu ./cmd/baidu-drive-relay
