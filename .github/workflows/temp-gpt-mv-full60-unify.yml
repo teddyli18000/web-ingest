@@ -4,10 +4,11 @@ on:
   push:
     paths:
       - "temp-work/gpt-mv-code-native/src/main.js"
-      - "temp-work/gpt-mv-code-native/src/scenes/opening_v9.js"
-      - "temp-work/gpt-mv-code-native/src/scenes/drafts_v11.js"
+      - "temp-work/gpt-mv-code-native/src/scenes/opening_v10.js"
+      - "temp-work/gpt-mv-code-native/src/scenes/drafts_v12.js"
+      - "temp-work/gpt-mv-code-native/src/scenes/construct_v6.js"
       - "temp-work/gpt-mv-code-native/src/scenes/construct_v5.js"
-      - "temp-work/gpt-mv-code-native/src/scenes/ending_v1.js"
+      - "temp-work/gpt-mv-code-native/src/scenes/ending_v3.js"
       - "temp-work/gpt-mv-code-native/src/components/gpt_art.js"
       - "temp-work/gpt-mv-code-native/src/components/gpt_poses.js"
       - "temp-work/gpt-mv-code-native/assets/gpt/**"
@@ -36,10 +37,15 @@ jobs:
           node-version: "22"
       - name: Install renderer
         run: |
+          set -euo pipefail
           npm install --no-audit --no-fund
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg >/dev/null
-          echo "CHROME_PATH=$(which google-chrome)" >> "$GITHUB_ENV"
+          if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg >/dev/null
+          fi
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$CHROME"
+          echo "CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
       - name: Render full 0-60s visual gate
         run: node export/render.mjs --start 0 --end 60 --width 960 --height 540 --fps 15 --art-source reach-hq --out out/gpt_full60_unify.mp4
       - name: Validate media
