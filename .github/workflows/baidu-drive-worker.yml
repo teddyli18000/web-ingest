@@ -12,6 +12,9 @@ on:
         required: false
         default: manual
         type: string
+  workflow_run:
+    workflows: [Baidu Drive File Worker]
+    types: [completed]
 
 permissions:
   contents: write
@@ -28,6 +31,8 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ github.token }}
       PYTHONDONTWRITEBYTECODE: '1'
+      BAIDU_DRIVE_TASK_ID: ${{ inputs.task_id || '' }}
+      BAIDU_DRIVE_REASON: ${{ github.event_name == 'workflow_run' && 'file-worker-completed' || inputs.reason || 'manual' }}
     steps:
       - name: Checkout Baidu Drive task
         uses: actions/checkout@v4
@@ -73,5 +78,5 @@ jobs:
       - name: Prepare, reconcile and schedule relay work
         run: >-
           python3 baidu-drive/prepare_worker.py
-          --task-id '${{ inputs.task_id }}'
-          --reason '${{ inputs.reason }}'
+          --task-id "$BAIDU_DRIVE_TASK_ID"
+          --reason "$BAIDU_DRIVE_REASON"
