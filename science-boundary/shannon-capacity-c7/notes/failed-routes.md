@@ -52,6 +52,14 @@ Strict SAT on all ten subsets is UNSAT.
 
 However, this route is **not dead**: its MaxSAT relaxation reaches 134,753 exactly for rank 3. Therefore only the strict all-port requirement is closed; the underlying parent state remains the current best frontier.
 
+## Rank-3 one-swap parent neighborhood
+
+Starting from the rank-3 neutral2 state, every legal private one-for-one parent replacement was enumerated and the port MaxSAT problem was re-solved exactly with the rank-3 nine deleted indices fixed.
+
+There are exactly 10 such one-swap moves. Nine of them leave the exact optimum unchanged at **134,753** with 6,589 selected port vertices. The only move at the one undeleted private center (owner index 294, replacing 16388 by 16046) is worse: it reduces the safe endpoint set from 18 to 17 and the exact score to **134,703**.
+
+So the complete legal one-swap parent neighborhood around this state does not improve the record. This closes the simplest version of “move one parent point, then re-optimize all ports”; future parent changes must either involve multiple coupled swaps, change the deleted-center set simultaneously, or be combined with square-block relaxation.
+
 ## Neutral 3-for-3 and neutral walks
 
 An exact neutral 3-for-3 parent search and deeper sequential neutral-swap walks were implemented to look for 5D parents with at least nine useful private centers and lower H/V obstruction. They did not yield a verified 10D improvement in the completed campaign.
