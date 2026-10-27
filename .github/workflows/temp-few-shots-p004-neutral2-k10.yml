@@ -1,0 +1,81 @@
+name: Temp Few Shots p004 neutral2 k10 SAT
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-few-shots-p004-neutral2-k10.yml
+      - temp-work/few-shots-p004/neutral2_k10.py
+      - temp-work/few-shots-p004/generalized9.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-few-shots-p004-neutral2-k10
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch public source data read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/nathanielitty/lower-bounds-for-shannon-capacity.git "$RUNNER_TEMP/shannon-source"
+          git -C "$RUNNER_TEMP/shannon-source" sparse-checkout set c7
+      - name: Install SAT solver
+        run: python3 -m pip install --disable-pip-version-check python-sat
+      - name: Search ten-center construction
+        id: search
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/shot"
+          /usr/bin/time -v python3 temp-work/few-shots-p004/neutral2_k10.py \
+            "$RUNNER_TEMP/shannon-source/c7/R367.txt" \
+            "$RUNNER_TEMP/few-shots/problems/p004-shannon-capacity-c7/baseline/certificate.json" \
+            "$RUNNER_TEMP/shot/certificate.json" \
+            "$RUNNER_TEMP/status.json"
+          cat "$RUNNER_TEMP/status.json"
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+      - name: Verify breakthrough with upstream verifier
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/verify.json"
+          python3 - "$RUNNER_TEMP/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r['score'])<=134753: raise SystemExit(r)
+          print(f"verified breakthrough score={r['score']}")
+          PY
+      - name: Save verified breakthrough in web-ingest only
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p temp-work/few-shots-p004/breakthrough
+          cp "$RUNNER_TEMP/shot/certificate.json" temp-work/few-shots-p004/breakthrough/certificate.json
+          cp "$RUNNER_TEMP/status.json" temp-work/few-shots-p004/breakthrough/neutral2-k10-status.json
+          cp "$RUNNER_TEMP/verify.json" temp-work/few-shots-p004/breakthrough/neutral2-k10-verify-result.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp-work/few-shots-p004/breakthrough
+          git commit -m "temp: save verified p004 neutral2 k10 breakthrough"
+          git fetch origin main && git rebase origin/main && git push origin HEAD:main
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f "$RUNNER_TEMP/status.json" ]]; then cat "$RUNNER_TEMP/status.json" >> "$GITHUB_STEP_SUMMARY"; fi
+          if [[ -f "$RUNNER_TEMP/verify.json" ]]; then cat "$RUNNER_TEMP/verify.json" >> "$GITHUB_STEP_SUMMARY"; fi
