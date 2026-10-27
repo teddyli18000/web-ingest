@@ -1,0 +1,201 @@
+name: Few Shots p005 cap-set search
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/few-shots-cap-set.yml
+  workflow_dispatch:
+    inputs:
+      generation:
+        description: Search wave (0-3)
+        required: false
+        default: "0"
+  repository_dispatch:
+    types: [few-shots-cap-set-continue]
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: few-shots-cap-set-temp
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_SHA: b3424ef44107cd31cc76db4dfaa7537462d78fc7
+  TARGET: "513"
+  GENERATION: ${{ github.event.client_payload.generation || inputs.generation || '0' }}
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        seed: [104729, 130363, 155921, 181081, 206369, 231779, 257053, 282413]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stop if a breakthrough is already recorded
+        id: guard
+        shell: bash
+        run: |
+          if [[ -f temp-work/few-shots-cap-set/breakthrough/certificate.json ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fetch pinned baseline
+        if: steps.guard.outputs.skip != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 4 --retry-all-errors \
+            -o baseline.json \
+            "https://raw.githubusercontent.com/few-shots/few-shots/${UPSTREAM_SHA}/problems/p005-cap-set-8d/baseline/certificate.json"
+          python3 temp-work/few-shots-cap-set/capset_tools.py to-ids baseline.json baseline.ids
+          [[ "$(wc -l < baseline.ids)" -eq 512 ]]
+
+      - name: Build searcher
+        if: steps.guard.outputs.skip != 'true'
+        shell: bash
+        run: |
+          g++ -O3 -std=c++20 -march=native \
+            temp-work/few-shots-cap-set/search.cpp -o search
+
+      - name: Search
+        if: steps.guard.outputs.skip != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          seed=$(( ${{ matrix.seed }} + GENERATION * 1000003 ))
+          ./search baseline.ids best.ids 10000 "$seed" "$TARGET" | tee score.txt
+          python3 temp-work/few-shots-cap-set/capset_tools.py validate best.ids
+          python3 temp-work/few-shots-cap-set/capset_tools.py to-certificate best.ids certificate.json
+          printf '{"generation":%s,"seed":%s,"score":%s}\n' \
+            "$GENERATION" "$seed" "$(tail -n1 score.txt)" > result.json
+
+      - name: Upload shard result
+        if: steps.guard.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: capset-${{ env.GENERATION }}-${{ matrix.seed }}
+          path: |
+            best.ids
+            certificate.json
+            result.json
+          retention-days: 7
+
+  aggregate:
+    needs: search
+    if: ${{ always() && needs.search.result != 'cancelled' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stop if a breakthrough is already recorded
+        id: guard
+        shell: bash
+        run: |
+          if [[ -f temp-work/few-shots-cap-set/breakthrough/certificate.json ]]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download shard results
+        if: steps.guard.outputs.skip != 'true'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: capset-${{ env.GENERATION }}-*
+          path: shard-results
+
+      - name: Select and validate best candidate
+        if: steps.guard.outputs.skip != 'true'
+        id: best
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(find shard-results -name best.ids -type f | sort)
+          if [[ ${#files[@]} -eq 0 ]]; then
+            echo "No shard artifacts were produced." >&2
+            exit 1
+          fi
+          python3 temp-work/few-shots-cap-set/capset_tools.py select best.ids "${files[@]}" | tee selection.json
+          score="$(python3 -c 'import json; print(json.load(open("selection.json"))["score"])')"
+          python3 temp-work/few-shots-cap-set/capset_tools.py to-certificate best.ids certificate.json
+          echo "score=$score" >> "$GITHUB_OUTPUT"
+          {
+            echo "## Few Shots p005 wave ${GENERATION}"
+            echo
+            echo "Best verified local-search score: **${score}**"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify breakthrough with pinned upstream verifier
+        if: steps.guard.outputs.skip != 'true' && steps.best.outputs.score >= 513
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/few-shots/problems/p005-cap-set-8d/verify /tmp/shot
+          base="https://raw.githubusercontent.com/few-shots/few-shots/${UPSTREAM_SHA}/problems/p005-cap-set-8d"
+          curl --fail --location --retry 4 --retry-all-errors -o /tmp/few-shots/problems/p005-cap-set-8d/problem.toml "$base/problem.toml"
+          curl --fail --location --retry 4 --retry-all-errors -o /tmp/few-shots/problems/p005-cap-set-8d/verify/verify.py "$base/verify/verify.py"
+          cp certificate.json /tmp/shot/certificate.json
+          python3 /tmp/few-shots/problems/p005-cap-set-8d/verify/verify.py /tmp/shot | tee verifier.json
+          python3 - <<'PY'
+          import json
+          r = json.load(open('verifier.json'))
+          if not r.get('valid') or int(r['score']) < 513:
+              raise SystemExit(f"official verifier rejected candidate: {r}")
+          PY
+
+      - name: Record verified breakthrough in web-ingest only
+        if: steps.guard.outputs.skip != 'true' && steps.best.outputs.score >= 513
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p temp-work/few-shots-cap-set/breakthrough
+          cp certificate.json temp-work/few-shots-cap-set/breakthrough/certificate.json
+          cp verifier.json temp-work/few-shots-cap-set/breakthrough/verifier.json
+          cat > temp-work/few-shots-cap-set/breakthrough/README.md <<EOF2
+          # Verified p005 breakthrough
+
+          A p005 cap-set candidate with score $(python3 -c 'import json; print(json.load(open("verifier.json"))["score"])') was found by the temporary web-ingest search campaign and accepted by the official verifier pinned at upstream commit \`${UPSTREAM_SHA}\`.
+
+          This result has **not** been submitted upstream. Owner review is required before any action outside this repository.
+          EOF2
+          git config user.name "web-ingest-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp-work/few-shots-cap-set/breakthrough
+          git commit -m "record verified p005 cap-set breakthrough"
+          if ! git push; then
+            git pull --rebase origin main
+            git push
+          fi
+
+      - name: Dispatch next bounded wave
+        if: steps.guard.outputs.skip != 'true' && steps.best.outputs.score < 513
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if (( GENERATION >= 3 )); then
+            echo "Campaign reached final bounded wave without a breakthrough." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          next=$((GENERATION + 1))
+          payload="$(printf '{\"event_type\":\"few-shots-cap-set-continue\",\"client_payload\":{\"generation\":%d}}' "$next")"
+          curl --fail-with-body --location \
+            --request POST \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/dispatches" \
+            --data "$payload"
+          echo "Dispatched wave ${next}." >> "$GITHUB_STEP_SUMMARY"
