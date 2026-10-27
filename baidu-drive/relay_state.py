@@ -21,6 +21,7 @@ VERIFIED = "VERIFIED"
 RUNNABLE = {READY, PAUSED, FAILED_RETRYABLE}
 TERMINAL = {VERIFIED, FAILED_PERMANENT}
 DEFAULT_STALE_SECONDS = 60 * 60
+DEFAULT_MAX_RETRYABLE_FAILURES = 3
 
 
 class RelayStateError(RuntimeError):
@@ -110,6 +111,7 @@ def new_record(task_id: str, source: dict[str, Any], now: dt.datetime | None = N
         "lease_started_at": None,
         "heartbeat_at": None,
         "attempts": 0,
+        "retryable_failures": 0,
         "last_error": "",
         "created_at": stamp,
         "updated_at": stamp,
@@ -125,17 +127,30 @@ def heartbeat_stale(record: dict[str, Any], now: dt.datetime, stale_seconds: int
     return (now.astimezone(dt.timezone.utc) - heartbeat).total_seconds() >= stale_seconds
 
 
-def runnable(record: dict[str, Any], now: dt.datetime, stale_seconds: int = DEFAULT_STALE_SECONDS) -> bool:
+def runnable(
+    record: dict[str, Any],
+    now: dt.datetime,
+    stale_seconds: int = DEFAULT_STALE_SECONDS,
+    max_retryable_failures: int = DEFAULT_MAX_RETRYABLE_FAILURES,
+) -> bool:
     status = str(record.get("status") or "")
+    if status == FAILED_RETRYABLE and int(record.get("retryable_failures") or 0) >= max_retryable_failures:
+        return False
     if status in RUNNABLE:
         return int(record.get("confirmed_offset") or 0) < int(record.get("size") or 0) or int(record.get("size") or 0) == 0
     return status == ACTIVE and heartbeat_stale(record, now, stale_seconds)
 
 
-def claim(record: dict[str, Any], lease_id: str, now: dt.datetime, stale_seconds: int = DEFAULT_STALE_SECONDS) -> dict[str, Any]:
+def claim(
+    record: dict[str, Any],
+    lease_id: str,
+    now: dt.datetime,
+    stale_seconds: int = DEFAULT_STALE_SECONDS,
+    max_retryable_failures: int = DEFAULT_MAX_RETRYABLE_FAILURES,
+) -> dict[str, Any]:
     lease_id = _safe_id(lease_id, "lease id")
     value = copy.deepcopy(record)
-    if not runnable(value, now, stale_seconds):
+    if not runnable(value, now, stale_seconds, max_retryable_failures):
         raise RelayStateError(f"file is not runnable from {value.get('status')}")
     stamp = now_iso(now)
     value["status"] = ACTIVE
@@ -186,22 +201,21 @@ def replace_expired_session(record: dict[str, Any], lease_id: str, sealed: str, 
 
 
 def apply_remote_progress(record: dict[str, Any], lease_id: str, remote_offset: int, now: dt.datetime) -> dict[str, Any]:
-    """Persist Drive truth when no synchronized hash checkpoint is available.
-
-    A changed remote offset invalidates any independently persisted MD5 state;
-    the relay worker will rebuild it from Baidu before the next upload.
-    """
+    """Persist Drive truth when no synchronized hash checkpoint is available."""
     value = copy.deepcopy(record)
     require_lease(value, lease_id)
     size = int(value.get("size") or 0)
     offset = int(remote_offset)
     if offset < 0 or offset > size:
         raise RelayStateError("remote offset is outside file size")
+    old_offset = int(value.get("confirmed_offset") or 0)
     if int(value.get("hash_offset") or 0) != offset:
         value["hash_offset"] = 0
         value["md5_state"] = None
         value["computed_md5"] = None
     value["confirmed_offset"] = offset
+    if offset > old_offset:
+        value["retryable_failures"] = 0
     value["heartbeat_at"] = now_iso(now)
     value["updated_at"] = value["heartbeat_at"]
     return value
@@ -230,10 +244,13 @@ def apply_relay_checkpoint(
         raise RelayStateError("non-final relay hash checkpoint is missing state")
     if hashed == size and size > 0 and not digest:
         raise RelayStateError("complete relay hash checkpoint is missing MD5")
+    old_offset = int(value.get("confirmed_offset") or 0)
     value["confirmed_offset"] = offset
     value["hash_offset"] = hashed
     value["md5_state"] = state_text or None
     value["computed_md5"] = digest or None
+    if offset > old_offset:
+        value["retryable_failures"] = 0
     value["heartbeat_at"] = now_iso(now)
     value["updated_at"] = value["heartbeat_at"]
     return value
@@ -268,10 +285,25 @@ def fail(record: dict[str, Any], lease_id: str, now: dt.datetime, message: str, 
     value = copy.deepcopy(record)
     require_lease(value, lease_id)
     value["status"] = FAILED_PERMANENT if permanent else FAILED_RETRYABLE
+    if not permanent:
+        value["retryable_failures"] = int(value.get("retryable_failures") or 0) + 1
     value["lease_id"] = None
     value["lease_started_at"] = None
     value["heartbeat_at"] = None
     value["last_error"] = str(message or "")[:300]
+    value["updated_at"] = now_iso(now)
+    return value
+
+
+def reset_retryable(record: dict[str, Any], now: dt.datetime) -> dict[str, Any]:
+    value = copy.deepcopy(record)
+    if value.get("status") != FAILED_RETRYABLE:
+        return value
+    if value.get("lease_id"):
+        raise RelayStateError("cannot reset a leased retryable file")
+    value["retryable_failures"] = 0
+    value["status"] = PAUSED
+    value["last_error"] = ""
     value["updated_at"] = now_iso(now)
     return value
 
@@ -305,6 +337,7 @@ def complete(
     value["drive_md5"] = remote_md5
     value["session_sealed"] = None
     value["status"] = VERIFIED
+    value["retryable_failures"] = 0
     value["lease_id"] = None
     value["lease_started_at"] = None
     value["heartbeat_at"] = None
