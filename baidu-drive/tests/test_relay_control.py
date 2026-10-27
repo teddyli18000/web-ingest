@@ -13,6 +13,7 @@ import relay_control  # noqa: E402
 import relay_state  # noqa: E402
 
 UTC = dt.timezone.utc
+TEST_MD5 = "0123456789abcdef0123456789abcdef"
 
 
 class FakeRepo:
@@ -132,7 +133,12 @@ class RelayControlTests(unittest.TestCase):
         for file_id in ("a", "b"):
             record = relay_state.claim(repo.records[("task-1", file_id)], f"lease-{file_id}", self.now())
             repo.records[("task-1", file_id)] = relay_state.complete(
-                record, f"lease-{file_id}", f"drive-{file_id}", "", self.now()
+                record,
+                f"lease-{file_id}",
+                f"drive-{file_id}",
+                TEST_MD5,
+                TEST_MD5,
+                self.now(),
             )
         self.assertEqual(
             relay_control.verified_results(repo.list_records("task-1")),
