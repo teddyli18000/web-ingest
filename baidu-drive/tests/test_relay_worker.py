@@ -134,8 +134,9 @@ class RelayWorkerTests(unittest.TestCase):
             sleep_fn=sleeps.append,
         )
         self.assertEqual(status, relay_state.VERIFIED)
-        self.assertEqual(sleeps, [1.0])
+        self.assertEqual(sleeps, [])
         self.assertEqual(calls, 2)
+        self.assertEqual(repo.record["confirmed_offset"], 100)
 
     def test_bounded_retry_failure_releases_lease(self):
         repo = FakeRepo(make_record(self.now(), 100))
@@ -193,7 +194,54 @@ class RelayWorkerTests(unittest.TestCase):
         self.assertEqual(repo.record["status"], relay_state.PAUSED)
         self.assertIsNone(repo.record["lease_id"])
 
-    def test_session_expiry_fails_closed_instead_of_blind_recreate(self):
+    def test_expired_session_restarts_from_zero_then_finishes(self):
+        repo = FakeRepo(make_record(self.now(), 100))
+        calls = 0
+
+        def step(record):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                return 0, {
+                    "session_sealed": "v1.old.session",
+                    "confirmed_offset": 50,
+                    "hash_offset": 50,
+                    "md5_state": "opaque-half",
+                }
+            if calls == 2:
+                return 1, {
+                    "session_sealed": "v1.old.session",
+                    "error_kind": "session_expired",
+                }
+            self.assertFalse(record.get("session_sealed"))
+            self.assertEqual(record.get("confirmed_offset"), 0)
+            self.assertEqual(record.get("hash_offset"), 0)
+            return 0, {
+                "session_sealed": "v1.new.session",
+                "confirmed_offset": 100,
+                "hash_offset": 100,
+                "md5_state": "opaque-final",
+                "computed_md5": TEST_MD5,
+                "complete": True,
+                "drive_file_id": "drive-file",
+                "drive_md5": TEST_MD5,
+            }
+
+        status = relay_worker.run_worker_loop(
+            repo,
+            "task-1",
+            "file-1",
+            "lease-1",
+            step,
+            now_fn=self.now,
+            monotonic_fn=lambda: 0.0,
+            sleep_fn=lambda _: None,
+        )
+        self.assertEqual(status, relay_state.VERIFIED)
+        self.assertEqual(calls, 3)
+        self.assertEqual(repo.record["confirmed_offset"], 100)
+
+    def test_repeated_expiry_becomes_retryable_not_permanent(self):
         repo = FakeRepo(make_record(self.now(), 100))
         status = relay_worker.run_worker_loop(
             repo,
@@ -201,18 +249,16 @@ class RelayWorkerTests(unittest.TestCase):
             "file-1",
             "lease-1",
             lambda record: (1, {
-                "session_sealed": "v1.a.b",
-                "confirmed_offset": 0,
-                "hash_offset": 0,
+                "session_sealed": str(record.get("session_sealed") or "v1.a.b"),
                 "error_kind": "session_expired",
             }),
             now_fn=self.now,
             monotonic_fn=lambda: 0.0,
             sleep_fn=lambda _: None,
+            session_restart_limit=1,
         )
-        self.assertEqual(status, relay_state.FAILED_PERMANENT)
-        self.assertEqual(repo.record["status"], relay_state.FAILED_PERMANENT)
-        self.assertIn("reconciliation", repo.record["last_error"].lower())
+        self.assertEqual(status, relay_state.FAILED_RETRYABLE)
+        self.assertEqual(repo.record["status"], relay_state.FAILED_RETRYABLE)
 
     def test_step_cannot_swap_session_capability(self):
         record = make_record(self.now(), 100)
@@ -225,6 +271,25 @@ class RelayWorkerTests(unittest.TestCase):
                     "session_sealed": "v1.new.session",
                     "confirmed_offset": 0,
                     "hash_offset": 0,
+                },
+                self.now(),
+            )
+
+    def test_step_cannot_rewind_confirmed_offset(self):
+        record = make_record(self.now(), 100)
+        record = relay_state.attach_session(record, "lease-1", "v1.a.b", self.now())
+        record = relay_state.apply_relay_checkpoint(
+            record, "lease-1", 50, 50, "opaque-half", None, self.now()
+        )
+        with self.assertRaises(relay_worker.WorkerError):
+            relay_worker.apply_step_output(
+                record,
+                "lease-1",
+                {
+                    "session_sealed": "v1.a.b",
+                    "confirmed_offset": 25,
+                    "hash_offset": 25,
+                    "md5_state": "opaque-quarter",
                 },
                 self.now(),
             )
