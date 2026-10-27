@@ -1,0 +1,120 @@
+name: Temp Science Boundary C7 exhaustive 4-for-5 union search
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-search4-full.yml
+      - science-boundary/shannon-capacity-c7/code/search4_full.cpp
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-search4-full
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [original, jplus]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch pinned public sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+
+      - name: Prepare and verify seed ${{ matrix.seed }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/seed" "$RUNNER_TEMP/result"
+          if [[ '${{ matrix.seed }}' == 'jplus' ]]; then
+            python3 science-boundary/shannon-capacity-c7/code/bpz_jplus_seed.py \
+              "$RUNNER_TEMP/tan" "$RUNNER_TEMP/seed/certificate.json" "$RUNNER_TEMP/result/seed-status.json"
+          else
+            cp "$RUNNER_TEMP/few-shots/problems/p004-shannon-capacity-c7/baseline/certificate.json" "$RUNNER_TEMP/seed/certificate.json"
+          fi
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/seed" | tee "$RUNNER_TEMP/result/seed-verify.json"
+          python3 - "$RUNNER_TEMP/result/seed-verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          if not r.get('valid') or int(r.get('score',-1)) != 134753: raise SystemExit(r)
+          PY
+
+      - name: Compile and run connected owner-union search
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE"
+          python3 temp-work/few-shots-p004/materialize.py extract "$RUNNER_TEMP/seed/certificate.json" "$RUNNER_TEMP/seed-ids.txt"
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp \
+            science-boundary/shannon-capacity-c7/code/search4_full.cpp -o "$RUNNER_TEMP/search4-full"
+          export OMP_NUM_THREADS="$(nproc)"
+          /usr/bin/time -v "$RUNNER_TEMP/search4-full" "$RUNNER_TEMP/seed-ids.txt" \
+            > "$RUNNER_TEMP/result/search.json" 2> "$RUNNER_TEMP/result/search.stderr"
+          cat "$RUNNER_TEMP/result/search.json"
+          tail -n 80 "$RUNNER_TEMP/result/search.stderr"
+
+      - name: Materialize candidate
+        id: candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/shot"
+          python3 temp-work/few-shots-p004/materialize.py build \
+            "$RUNNER_TEMP/seed/certificate.json" "$RUNNER_TEMP/result/search.json" \
+            "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/search-status.json"
+          cat "$RUNNER_TEMP/result/search-status.json"
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+
+      - name: Verify breakthrough
+        if: steps.candidate.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/candidate-verify.json"
+          python3 - "$RUNNER_TEMP/result/candidate-verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          if not r.get('valid') or int(r.get('score',-1)) <= 134753: raise SystemExit(r)
+          print(f"VERIFIED BREAKTHROUGH score={r['score']}")
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-search4-full-${{ matrix.seed }}
+          path: ${{ runner.temp }}/result
+          retention-days: 14
+
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## C7 exhaustive connected 4-for-5: ${{ matrix.seed }}"
+            for f in search.json search-status.json candidate-verify.json; do
+              if [[ -f "$RUNNER_TEMP/result/$f" ]]; then echo '```json'; cat "$RUNNER_TEMP/result/$f"; echo '```'; fi
+            done
+            if [[ -f "$RUNNER_TEMP/result/search.stderr" ]]; then echo '```text'; tail -n 90 "$RUNNER_TEMP/result/search.stderr"; echo '```'; fi
+          } >> "$GITHUB_STEP_SUMMARY"
