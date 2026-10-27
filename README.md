@@ -49,6 +49,7 @@ Transient Action working files should stay in the runner workspace or runner tem
 | [`github-trending`](github-trending/) | Preserve daily GitHub Trending rankings and recover available historical snapshots | Active |
 | [`google-trending`](google-trending/) | Preserve Google Trends Trending Now for Singapore, the United States, the United Kingdom, and Hong Kong, with historical recovery where available | Active |
 | [`git-mirror`](git-mirror/) | Import one-shot file snapshots of public Git repositories through temporary self-cleaning Actions | Ready |
+| [`baidu-drive`](baidu-drive/) | Release-controlled transfer of public Baidu Netdisk shares to Google Drive | Control plane ready; auth pending |
 
 ## Repository management
 
@@ -65,7 +66,7 @@ Transient Action working files should stay in the runner workspace or runner tem
 - Task-specific scripts and configuration stay inside the task folder.
 - Repository-wide maintenance code and notes belong in `tools/`.
 - Temporary Agent work belongs in `temp-work/<work-name>/`, never at the `temp-work/` root or inside an unrelated persistent task.
-- Recurring snapshots use `<task-name>/data/YYYY/MM/DD/`; explicitly one-shot tasks may document a source-keyed layout instead.
+- Recurring snapshots use `<task-name>/data/YYYY/MM/DD/` unless a task README explicitly documents a source-keyed one-shot layout instead.
 - Keep raw or minimally normalized source data whenever practical.
 - Historical data should be append-only; do not silently rewrite old snapshots.
 - Scheduled collection jobs must be load-balanced rather than clustered; the repository guard checks declared timeouts plus a buffer.
