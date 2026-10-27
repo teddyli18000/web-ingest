@@ -3,8 +3,22 @@ name: Temp GPT MV final 1080p30
 on:
   push:
     paths:
+      - "temp-work/gpt-mv-code-native/src/main.js"
+      - "temp-work/gpt-mv-code-native/src/scenes/opening_v10.js"
+      - "temp-work/gpt-mv-code-native/src/scenes/drafts_v12.js"
+      - "temp-work/gpt-mv-code-native/src/scenes/construct_v6.js"
+      - "temp-work/gpt-mv-code-native/src/scenes/construct_v5.js"
+      - "temp-work/gpt-mv-code-native/src/scenes/ending_v3.js"
+      - "temp-work/gpt-mv-code-native/src/components/gpt_art.js"
+      - "temp-work/gpt-mv-code-native/src/components/gpt_poses.js"
+      - "temp-work/gpt-mv-code-native/assets/gpt/**"
+      - "temp-work/gpt-mv-code-native/export/render.mjs"
       - ".github/workflows/temp-gpt-mv-ending-v1.yml"
   workflow_dispatch:
+
+concurrency:
+  group: temp-gpt-mv-final-1080p30
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -40,9 +54,10 @@ jobs:
           fi
           command -v ffmpeg
           command -v ffprobe
-          command -v google-chrome
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          test -n "$CHROME"
           ffmpeg -version | head -n 1
-          echo "CHROME_PATH=$(which google-chrome)" >> "$GITHUB_ENV"
+          echo "CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
       - name: Render final film
         run: node export/render.mjs --start 0 --end 60 --width 1920 --height 1080 --fps 30 --art-source reach-hq --out out/GPT_Shared_Draft_Final.mp4
       - name: Validate final media
@@ -64,6 +79,7 @@ jobs:
           PY
           ffmpeg -hide_banner -i out/GPT_Shared_Draft_Final.mp4 -vf "blackdetect=d=0.15:pix_th=0.02,freezedetect=n=0.001:d=1.0" -an -f null - 2>&1 | tee out/qc.txt
           if grep -q 'black_start' out/qc.txt; then echo 'unexpected black interval' >&2; exit 1; fi
+          if grep -q 'freeze_start' out/qc.txt; then echo 'unexpected >=1s freeze interval' >&2; exit 1; fi
           sha256sum out/GPT_Shared_Draft_Final.mp4 | tee out/sha256.txt
       - name: Upload final review
         uses: actions/upload-artifact@v4
