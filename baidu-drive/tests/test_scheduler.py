@@ -29,37 +29,31 @@ class SchedulerTests(unittest.TestCase):
         }
 
     def test_small_file_is_one_relay_chunk(self):
-        policy = scheduler.Policy(
-            chunk_bytes=512 * scheduler.MIB,
-            disk_reserve_bytes=4 * scheduler.GIB,
-        )
-        window = scheduler.chunk_window(
-            0,
-            100 * scheduler.MIB,
-            8 * scheduler.GIB,
-            policy,
-        )
+        policy = scheduler.Policy(chunk_bytes=512 * scheduler.MIB)
+        window = scheduler.chunk_window(0, 100 * scheduler.MIB, policy)
         self.assertEqual(window, (0, 100 * scheduler.MIB - 1))
 
-    def test_large_file_is_bounded_by_chunk_size(self):
+    def test_large_file_uses_fixed_drive_compatible_chunk(self):
         window = scheduler.chunk_window(
             2 * scheduler.GIB,
             20 * scheduler.GIB,
-            10 * scheduler.GIB,
         )
         self.assertEqual(
             window,
             (2 * scheduler.GIB, 2 * scheduler.GIB + 512 * scheduler.MIB - 1),
         )
 
-    def test_disk_reserve_can_pause_before_taking_next_chunk(self):
-        self.assertIsNone(
-            scheduler.chunk_window(
-                0,
-                20 * scheduler.GIB,
-                4 * scheduler.GIB,
-            )
+    def test_final_chunk_may_be_smaller(self):
+        start = 2 * scheduler.GIB
+        total = start + 7 * scheduler.MIB + 13
+        self.assertEqual(
+            scheduler.chunk_window(start, total),
+            (start, total - 1),
         )
+
+    def test_chunk_size_must_be_drive_aligned(self):
+        with self.assertRaises(ValueError):
+            scheduler.Policy(chunk_bytes=512 * scheduler.MIB + 1).validate()
 
     def test_remote_confirmed_offset_wins(self):
         self.assertEqual(
@@ -69,6 +63,16 @@ class SchedulerTests(unittest.TestCase):
                 20 * scheduler.GIB,
             ),
             5 * scheduler.GIB,
+        )
+
+    def test_remote_offset_can_prove_less_than_stale_repo_hint(self):
+        self.assertEqual(
+            scheduler.reconcile_confirmed_offset(
+                5 * scheduler.GIB,
+                4 * scheduler.GIB,
+                20 * scheduler.GIB,
+            ),
+            4 * scheduler.GIB,
         )
 
     def test_scheduler_prefers_independent_longest_remaining_files(self):
