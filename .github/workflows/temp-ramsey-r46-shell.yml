@@ -75,6 +75,7 @@ jobs:
             --solver cadical195 \
             --seed "$seed" \
             --new-degree "$degree" \
+            --baseline science-boundary/ramsey-r46/data/few-shots-baseline.json \
             --max-iterations 1000000 \
             --output "$candidate" >"$log" 2>&1
           rc=$?
@@ -92,6 +93,7 @@ jobs:
           {
             echo "experiment=exact-hamming-ball"
             echo "baseline=few-shots-p003-baseline"
+            echo "baseline_git_blob=858e9b6c71938a24964ce38e228524d20c4a1870"
             echo "radius=$radius"
             echo "seed=$seed"
             echo "new_degree_phase=$degree"
