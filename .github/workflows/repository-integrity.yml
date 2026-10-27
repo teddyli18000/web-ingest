@@ -103,6 +103,11 @@ jobs:
           mkdir -p .ci/baidu-drive-mover/cmd/baidu-drive-action
           cp baidu-drive/mover/action-main.go .ci/baidu-drive-mover/cmd/baidu-drive-action/main.go
           cp baidu-drive/mover/action_recovery.go .ci/baidu-drive-mover/internal/state/action_recovery.go
+
+          mkdir -p .ci/baidu-drive-mover/cmd/baidu-drive-prepare
+          cp baidu-drive/mover/prepare-main.go .ci/baidu-drive-mover/cmd/baidu-drive-prepare/main.go
+          cp baidu-drive/mover/action_relay.go .ci/baidu-drive-mover/cmd/baidu-drive-prepare/action_relay.go
+
           mkdir -p .ci/baidu-drive-mover/cmd/baidu-drive-relay
           cp baidu-drive/mover/relay_core.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_core.go
           cp baidu-drive/mover/relay_core_test.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_core_test.go
@@ -110,6 +115,8 @@ jobs:
           cp baidu-drive/mover/relay_session_test.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_session_test.go
           cp baidu-drive/mover/relay_secret.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_secret.go
           cp baidu-drive/mover/relay_secret_test.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_secret_test.go
+
           cd .ci/baidu-drive-mover
           go test ./internal/state ./internal/app ./internal/download ./internal/drive ./internal/drive/rclone ./internal/baidu ./cmd/baidu-drive-relay
           go build ./cmd/baidu-drive-action
+          go build ./cmd/baidu-drive-prepare
