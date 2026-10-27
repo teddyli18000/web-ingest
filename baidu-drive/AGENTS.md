@@ -10,8 +10,8 @@ Read `README.md` and `SCHEDULER.md` before changing scheduling, worker state, tr
 - Baidu tool-owned staging is the durable readable source.
 - Google Drive resumable/verified remote state is the durable writable destination truth.
 - Repository state is a recovery hint and public status projection; it must never force a proven remote state backwards.
-- Keep one normal data path: bounded Baidu Range -> bounded runner buffer -> Drive resumable upload. Small files are one chunk; large files are many chunks.
-- Do not add Release assets as routine transfer staging unless a concrete failure mode proves the direct relay insufficient.
+- Keep one normal data path: exact Baidu Range response body -> direct Drive resumable PUT. Small files are one final chunk; large files are many fixed-size non-final chunks.
+- A relay chunk is a network byte window, not a disk-backed file. Do not reintroduce chunk files or Release assets without a measured, concrete failure mode.
 
 ## Control plane
 
@@ -42,11 +42,12 @@ Initial policy:
 ```text
 max active file workers = 3
 chunk target            = 512 MiB
-runner disk reserve     = 4 GiB
 soft runtime stop       = 5 h
 hard workflow target    = 5 h 30 m
 stale heartbeat window  = 60 m
 ```
+
+The non-final chunk size must remain a positive multiple of Google Drive's 256 KiB resumable-upload quantum. Final chunks may be smaller.
 
 Scheduling rules:
 
@@ -55,8 +56,8 @@ Scheduling rules:
 - never assign two live workers to the same Drive file;
 - a stale worker may be reclaimed only through the documented heartbeat/reconciliation path;
 - replacement workers query Drive before deciding the next Baidu byte range;
-- Drive-confirmed offset wins over the repo checkpoint;
-- stop taking new chunks at the soft runtime boundary and leave margin for reconciliation/state persistence.
+- Drive-confirmed offset wins over the repo checkpoint, even when it proves less than a stale optimistic repo hint;
+- stop starting new chunks at the soft runtime boundary and leave margin for reconciliation/state persistence.
 
 Do not add speculative heuristics or adaptive machinery without measured evidence that the simple policy is insufficient.
 
@@ -82,19 +83,20 @@ The normal transfer contract is:
 
 ```text
 Baidu staged file
-  -> bounded HTTP Range
-  -> bounded runner buffer
-  -> Drive resumable upload
+  -> exact bounded HTTP Range
+  -> direct response-body stream
+  -> Drive resumable PUT for the same byte window
   -> query/confirm remote offset
-  -> discard local chunk
   -> repeat
   -> independent final Drive verification
   -> tool-owned staging cleanup
 ```
 
-A runner's `.part`, chunk, TCP connection, or filesystem is never required for recovery.
+Do not buffer a whole relay chunk in RAM or on disk. HTTP transport buffers must remain bounded and independent of the configured 512 MiB byte window.
 
-The current standalone mover bridge still uses a full-file local-cache pipeline while the relay executor is being implemented. Do not mistake that compatibility bridge for the final data-path design.
+A runner's local files, TCP connection, or filesystem are never required for recovery. If an upload request is interrupted, query Drive first, then request only the unconfirmed remainder from Baidu.
+
+The current standalone mover bridge still uses a full-file local-cache pipeline while the direct relay executor is being implemented. Do not mistake that compatibility bridge for the final Actions data path.
 
 Google Drive destination objects are never cleanup targets. Cleanup may remove only durably registered tool-owned local/Baidu staging after destination verification.
 
@@ -109,6 +111,8 @@ teddyli18000/baidu-drive-mover
 f4ca661d367aa2a067344efa989f0bfc95b64618
 ```
 
+The standalone mover has a newer exact bounded-range primitive under CI. Update this pin only after that source commit passes its normal gate and the web-ingest integration gate.
+
 `repository-integrity.yml` copies:
 
 - `mover/action-main.go` -> pinned module `cmd/baidu-drive-action/main.go`;
@@ -121,7 +125,7 @@ The bridge must not launch interactive browsers.
 ## Workflows and concurrency
 
 - `baidu-drive-reconcile.yml` owns Release control and accepted-request dispatch.
-- `baidu-drive-worker.yml` is the current fail-closed serialized worker while the file relay is built.
+- `baidu-drive-worker.yml` is the current fail-closed serialized compatibility worker while the file relay is built.
 - Control-plane writes remain serialized.
 - Data-plane file workers will use independent file ownership; do not serialize all data transfer behind the control-plane concurrency group once file-scoped state is live.
 - Same-file writes must still be serialized.
