@@ -11,10 +11,12 @@ on:
       - 'baidu-drive/AGENTS.md'
       - 'baidu-drive/tests/**'
       - '.github/workflows/baidu-drive-reconcile.yml'
+      - '.github/workflows/baidu-drive-worker.yml'
   workflow_dispatch:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: baidu-drive-live-state
@@ -45,8 +47,31 @@ jobs:
       - name: Validate task implementation
         if: github.event_name == 'push'
         run: |
-          python3 -m py_compile baidu-drive/controller.py
+          python3 -m py_compile baidu-drive/controller.py baidu-drive/worker.py
           python3 -m unittest discover -s baidu-drive/tests -v
 
       - name: Reconcile Release control and durable task state
         run: python3 baidu-drive/controller.py reconcile
+
+      - name: Queue transfer worker for start or retry request
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          import subprocess
+
+          with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as fh:
+              event = json.load(fh)
+          body = ((event.get("release") or {}).get("body") or "")
+          match = re.search(r"(?im)^\s*command\s*[:=]\s*(.*?)\s*$", body)
+          command = (match.group(1).strip().lower() if match else "")
+          if command in {"start", "retry"}:
+              subprocess.run(
+                  ["gh", "workflow", "run", "baidu-drive-worker.yml", "--ref", "main", "-f", f"reason={command}"],
+                  check=True,
+              )
+          PY
