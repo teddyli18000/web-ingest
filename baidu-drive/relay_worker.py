@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import copy
 import datetime as dt
 import json
 import os
@@ -18,7 +17,6 @@ import scheduler
 
 MAX_STEP_OUTPUT_BYTES = 1 << 20
 DEFAULT_RETRY_LIMIT = 3
-DEFAULT_SESSION_RESTART_LIMIT = 2
 
 
 class WorkerError(RuntimeError):
@@ -29,28 +27,12 @@ def public_error(kind: str) -> str:
     return {
         "auth": "Relay authentication is unavailable or expired.",
         "retryable": "Relay transport remained unavailable after bounded retries.",
-        "session_expired": "Drive resumable session repeatedly expired.",
+        "session_expired": "Drive resumable session expired; destination reconciliation is required before any replay.",
         "state": "Encrypted relay capability state could not be opened.",
         "input": "Relay worker input was rejected.",
         "zero_file_pending": "Zero-byte Drive creation path is not enabled yet.",
+        "runtime": "Relay runtime inputs are unavailable in this worker.",
     }.get(kind, "Relay worker stopped safely.")
-
-
-def restart_expired_session(
-    record: dict[str, Any], lease_id: str, now: dt.datetime
-) -> dict[str, Any]:
-    """Discard only the expired Drive session and its session-scoped progress."""
-    value = copy.deepcopy(record)
-    relay_state.require_lease(value, lease_id)
-    value["session_sealed"] = None
-    value["confirmed_offset"] = 0
-    value["hash_offset"] = 0
-    value["md5_state"] = None
-    value["computed_md5"] = None
-    value["heartbeat_at"] = relay_state.now_iso(now)
-    value["updated_at"] = value["heartbeat_at"]
-    value["last_error"] = ""
-    return value
 
 
 def apply_step_output(
@@ -69,40 +51,43 @@ def apply_step_output(
             value = relay_state.attach_session(value, lease_id, sealed, now)
         elif existing != sealed:
             raise WorkerError("relay step returned an unexpected replacement session")
-    elif not str(value.get("session_sealed") or "").strip():
-        raise WorkerError("relay step returned no resumable session")
 
     confirmed = int(output.get("confirmed_offset") or 0)
     hashed = int(output.get("hash_offset") or 0)
-    current_confirmed = int(value.get("confirmed_offset") or 0)
-    if confirmed < current_confirmed:
-        # This record contains only Drive-confirmed offsets. A lower offset on
-        # the same live session is not a valid reconciliation result.
-        raise WorkerError(
-            f"relay step tried to move confirmed offset backwards: {confirmed} < {current_confirmed}"
-        )
-
     state_text = str(output.get("md5_state") or "").strip() or None
     computed = str(output.get("computed_md5") or "").strip() or None
-    if confirmed != hashed:
-        raise WorkerError("relay step returned misaligned Drive/hash offsets")
-    current_hash = int(value.get("hash_offset") or 0)
-    has_new_checkpoint = (
-        confirmed != current_confirmed
-        or hashed != current_hash
-        or state_text != (str(value.get("md5_state") or "").strip() or None)
-        or computed != (str(value.get("computed_md5") or "").strip() or None)
-    )
-    if has_new_checkpoint or output.get("complete"):
-        value = relay_state.apply_relay_checkpoint(
-            value,
-            lease_id,
-            confirmed,
-            hashed,
-            state_text,
-            computed,
-            now,
+
+    # A trusted checkpoint always has Drive and MD5 state aligned. It may move
+    # backward because Drive remote truth is authoritative over a stale repo
+    # hint; the Go relay rebuilds the hash state to that proven remote offset.
+    if confirmed == hashed:
+        current_confirmed = int(value.get("confirmed_offset") or 0)
+        current_hash = int(value.get("hash_offset") or 0)
+        has_new_checkpoint = (
+            confirmed != current_confirmed
+            or hashed != current_hash
+            or state_text != (str(value.get("md5_state") or "").strip() or None)
+            or computed != (str(value.get("computed_md5") or "").strip() or None)
         )
+        # If an early status request failed, Go can return its zero-value
+        # result before it has remote evidence. Do not let that erase a nonzero
+        # checkpoint. A genuine remote rewind carries a marshaled MD5 state.
+        trusted = bool(
+            output.get("complete")
+            or state_text
+            or computed
+            or confirmed == current_confirmed
+        )
+        if (has_new_checkpoint or output.get("complete")) and trusted:
+            value = relay_state.apply_relay_checkpoint(
+                value,
+                lease_id,
+                confirmed,
+                hashed,
+                state_text,
+                computed,
+                now,
+            )
 
     if bool(output.get("complete")):
         value = relay_state.complete(
@@ -114,6 +99,31 @@ def apply_step_output(
             now,
         )
     return value
+
+
+def stop_with_failure(
+    repo: Any,
+    task_id: str,
+    file_id: str,
+    lease_id: str,
+    now: dt.datetime,
+    kind: str,
+    *,
+    permanent: bool,
+) -> str:
+    repo.mutate_record(
+        task_id,
+        file_id,
+        lambda current: relay_state.fail(
+            current,
+            lease_id,
+            now,
+            public_error(kind),
+            permanent=permanent,
+        ),
+        f"baidu-drive: stop relay file {file_id}",
+    )
+    return relay_state.FAILED_PERMANENT if permanent else relay_state.FAILED_RETRYABLE
 
 
 def run_worker_loop(
@@ -128,14 +138,12 @@ def run_worker_loop(
     sleep_fn: Callable[[float], None] | None = None,
     soft_runtime_seconds: int = scheduler.DEFAULT_SOFT_RUNTIME_SECONDS,
     retry_limit: int = DEFAULT_RETRY_LIMIT,
-    session_restart_limit: int = DEFAULT_SESSION_RESTART_LIMIT,
 ) -> str:
     now_fn = now_fn or (lambda: dt.datetime.now(dt.timezone.utc))
     monotonic_fn = monotonic_fn or time.monotonic
     sleep_fn = sleep_fn or time.sleep
     started = monotonic_fn()
     consecutive_retryable = 0
-    session_restarts = 0
 
     while True:
         record, _ = repo.read_record(task_id, file_id)
@@ -152,63 +160,59 @@ def run_worker_loop(
             )
             return relay_state.PAUSED
 
-        before_offset = int(record.get("confirmed_offset") or 0)
-        returncode, output = step(record)
+        try:
+            returncode, output = step(record)
+        except WorkerError:
+            return stop_with_failure(
+                repo,
+                task_id,
+                file_id,
+                lease_id,
+                now_fn(),
+                "runtime",
+                permanent=False,
+            )
         if not isinstance(output, dict):
-            raise WorkerError("relay step result is not an object")
-        kind = str(output.get("error_kind") or "").strip()
+            return stop_with_failure(
+                repo,
+                task_id,
+                file_id,
+                lease_id,
+                now_fn(),
+                "runtime",
+                permanent=False,
+            )
 
+        kind = str(output.get("error_kind") or "").strip()
         if kind == "session_expired":
-            session_restarts += 1
-            if session_restarts > session_restart_limit:
-                repo.mutate_record(
-                    task_id,
-                    file_id,
-                    lambda current: relay_state.fail(
-                        current,
-                        lease_id,
-                        now_fn(),
-                        public_error("session_expired"),
-                        permanent=False,
-                    ),
-                    f"baidu-drive: stop repeatedly expired relay file {file_id}",
-                )
-                return relay_state.FAILED_RETRYABLE
+            # A 404 does not prove whether the expired session committed the
+            # final object immediately before expiring. Preserve all evidence,
+            # release the lease, and require destination reconciliation before
+            # a replacement session may be created.
             repo.mutate_record(
                 task_id,
                 file_id,
-                lambda current: restart_expired_session(current, lease_id, now_fn()),
-                f"baidu-drive: restart expired Drive session for {file_id}",
+                lambda current: relay_state.block_reconcile(
+                    current,
+                    lease_id,
+                    now_fn(),
+                    public_error("session_expired"),
+                ),
+                f"baidu-drive: block expired Drive session for {file_id}",
             )
-            consecutive_retryable = 0
-            continue
+            return relay_state.BLOCKED_RECONCILE
 
-        # A command can fail before it has a trustworthy Drive reconciliation.
-        # Only apply an output that carries the same/new session and does not
-        # contradict an already persisted confirmed offset.
-        sealed = str(output.get("session_sealed") or "").strip()
-        candidate_offset = int(output.get("confirmed_offset") or 0)
-        applied = False
-        after_offset = before_offset
-        if sealed and candidate_offset >= before_offset:
-            updated = repo.mutate_record(
-                task_id,
-                file_id,
-                lambda current: apply_step_output(current, lease_id, output, now_fn()),
-                f"baidu-drive: checkpoint relay file {file_id}",
-            )
-            applied = True
-            after_offset = int(updated.get("confirmed_offset") or 0)
-            if updated.get("status") == relay_state.VERIFIED and returncode == 0:
-                return relay_state.VERIFIED
+        repo.mutate_record(
+            task_id,
+            file_id,
+            lambda current: apply_step_output(current, lease_id, output, now_fn()),
+            f"baidu-drive: checkpoint relay file {file_id}",
+        )
+
+        if bool(output.get("complete")) and returncode == 0:
+            return relay_state.VERIFIED
 
         if returncode == 0 and not kind:
-            if not applied:
-                raise WorkerError("successful relay step returned no durable progress state")
-            consecutive_retryable = 0
-            continue
-
-        if kind == "retryable" and after_offset > before_offset:
             consecutive_retryable = 0
             continue
 
@@ -218,20 +222,15 @@ def run_worker_loop(
             continue
 
         permanent = kind in {"state", "input", "zero_file_pending"}
-        message = public_error(kind or "retryable")
-        repo.mutate_record(
+        return stop_with_failure(
+            repo,
             task_id,
             file_id,
-            lambda current: relay_state.fail(
-                current,
-                lease_id,
-                now_fn(),
-                message,
-                permanent=permanent,
-            ),
-            f"baidu-drive: stop relay file {file_id}",
+            lease_id,
+            now_fn(),
+            kind or "retryable",
+            permanent=permanent,
         )
-        return relay_state.FAILED_PERMANENT if permanent else relay_state.FAILED_RETRYABLE
 
 
 def subprocess_step(record: dict[str, Any]) -> tuple[int, dict[str, Any]]:
@@ -276,9 +275,6 @@ def subprocess_step(record: dict[str, Any]) -> tuple[int, dict[str, Any]]:
         raise WorkerError(f"relay step output is invalid: {exc}") from None
     if not isinstance(value, dict):
         raise WorkerError("relay step output is not an object")
-    # The Go command may include a diagnostic message in its runner-local JSON.
-    # Never copy that free-form message into Git/public logs; state uses only the
-    # fixed public_error() strings above.
     value.pop("message", None)
     return completed.returncode, value
 
@@ -305,7 +301,7 @@ def main(argv: list[str] | None = None) -> int:
     status = run_worker_loop(repo, args.task_id, args.file_id, args.lease_id, subprocess_step)
     write_status_output(status)
     print(f"relay worker stopped in {status}")
-    return 0 if status in {relay_state.VERIFIED, relay_state.PAUSED} else 1
+    return 0 if status in {relay_state.VERIFIED, relay_state.PAUSED, relay_state.BLOCKED_RECONCILE} else 1
 
 
 if __name__ == "__main__":
