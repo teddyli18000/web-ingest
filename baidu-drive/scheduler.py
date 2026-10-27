@@ -11,12 +11,13 @@ import datetime as dt
 from dataclasses import dataclass
 from typing import Any, Iterable
 
+KIB = 1 << 10
 MIB = 1 << 20
 GIB = 1 << 30
 
+DRIVE_CHUNK_QUANTUM = 256 * KIB
 DEFAULT_MAX_WORKERS = 3
 DEFAULT_CHUNK_BYTES = 512 * MIB
-DEFAULT_DISK_RESERVE_BYTES = 4 * GIB
 DEFAULT_SOFT_RUNTIME_SECONDS = 5 * 60 * 60
 DEFAULT_HARD_RUNTIME_SECONDS = 330 * 60
 DEFAULT_STALE_HEARTBEAT_SECONDS = 60 * 60
@@ -28,7 +29,6 @@ RUNNABLE_FILE_STATES = {"READY", "PAUSED", "FAILED_RETRYABLE"}
 class Policy:
     max_workers: int = DEFAULT_MAX_WORKERS
     chunk_bytes: int = DEFAULT_CHUNK_BYTES
-    disk_reserve_bytes: int = DEFAULT_DISK_RESERVE_BYTES
     soft_runtime_seconds: int = DEFAULT_SOFT_RUNTIME_SECONDS
     hard_runtime_seconds: int = DEFAULT_HARD_RUNTIME_SECONDS
     stale_heartbeat_seconds: int = DEFAULT_STALE_HEARTBEAT_SECONDS
@@ -36,10 +36,8 @@ class Policy:
     def validate(self) -> "Policy":
         if self.max_workers <= 0:
             raise ValueError("max_workers must be positive")
-        if self.chunk_bytes <= 0:
-            raise ValueError("chunk_bytes must be positive")
-        if self.disk_reserve_bytes < 0:
-            raise ValueError("disk_reserve_bytes cannot be negative")
+        if self.chunk_bytes <= 0 or self.chunk_bytes % DRIVE_CHUNK_QUANTUM != 0:
+            raise ValueError("chunk_bytes must be a positive multiple of 256 KiB")
         if self.soft_runtime_seconds <= 0:
             raise ValueError("soft_runtime_seconds must be positive")
         if self.hard_runtime_seconds <= self.soft_runtime_seconds:
@@ -127,19 +125,20 @@ def choose_files(
 def chunk_window(
     confirmed_offset: int,
     total_size: int,
-    free_disk_bytes: int,
     policy: Policy = Policy(),
 ) -> tuple[int, int] | None:
-    """Return inclusive [start, end] for the next bounded relay chunk."""
+    """Return inclusive [start, end] for the next Drive-compatible relay chunk.
+
+    The relay streams the Baidu response directly into Drive; it does not
+    materialize a chunk on runner disk. Every non-final chunk therefore keeps
+    the configured fixed Drive-compatible size.
+    """
     policy.validate()
     total = max(0, int(total_size))
     start = max(0, int(confirmed_offset))
     if start >= total:
         return None
-    usable = max(0, int(free_disk_bytes) - policy.disk_reserve_bytes)
-    chunk = min(policy.chunk_bytes, usable, total - start)
-    if chunk <= 0:
-        return None
+    chunk = min(policy.chunk_bytes, total - start)
     return start, start + chunk - 1
 
 
