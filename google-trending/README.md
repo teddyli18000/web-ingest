@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-25** | **684** | **684** | **684** | **684** | **683** |
+| **2024-11-28** | **2026-10-27** | **685** | **685** | **685** | **685** | **684** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 172 |
+| `google_trending_now` | 176 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-25
+### Latest SG snapshot — 2026-10-27
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | singapore ministry manpower wage probe | 5000+ |
-| 2 | singapore haze indoor air quality | 1000+ |
-| 3 | england vs pakistan | 1000+ |
-| 4 | chef damu | 2000+ |
-| 5 | peter lim valencia stake sale | 2000+ |
-| 6 | singapore airlines a350 cabin refresh | 500+ |
-| 7 | migrant worker debt singapore straits times | 1000+ |
-| 8 | சாங்கி | 500+ |
-| 9 | india vs zimbabwe | 200+ |
-| 10 | asean agreement transboundary haze pollution | 500+ |
+| 1 | apartment | 5000+ |
+| 2 | 姆巴佩 | 5000+ |
+| 3 | ocbc strongest bank asia pacific | 1000+ |
+| 4 | ai bubble | 5000+ |
+| 5 | alan tam | 2000+ |
+| 6 | wrongful dismissal | 5000+ |
+| 7 | sembcorp | 2000+ |
+| 8 | marina bay police car chase | 500+ |
+| 9 | 姆巴佩辱华 | 1000+ |
+| 10 | preschool | 1000+ |
 
-### Latest US snapshot — 2026-10-25
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | ole miss vs texas | 500000+ |
-| 2 | texas a&m vs alabama | 200000+ |
-| 3 | spurs vs mavericks | 200000+ |
-| 4 | tennessee vs south carolina | 200000+ |
-| 5 | indiana vs michigan | 500000+ |
-| 6 | bucks vs 76ers | 200000+ |
-| 7 | under the skin netflix departure | 200000+ |
-| 8 | warriors vs suns | 100000+ |
-| 9 | byu vs ucf | 500000+ |
-| 10 | virginia tech vs clemson | 200000+ |
-
-### Latest GB snapshot — 2026-10-25
+### Latest US snapshot — 2026-10-27
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | dvla october warning older drivers | 50000+ |
-| 2 | chelsea vs spurs | 200000+ |
-| 3 | aston villa vs man city | 200000+ |
-| 4 | arsenal vs everton | 200000+ |
-| 5 | have the clocks gone back | 50000+ |
-| 6 | hmrc bank account access powers | 20000+ |
-| 7 | england vs pakistan | 20000+ |
-| 8 | storm boelo weather warnings | 200000+ |
-| 9 | eng vs pak | 10000+ |
-| 10 | george pickford afc fylde loan | 10000+ |
+| 1 | eagles | 1000000+ |
+| 2 | texas roadhouse steak complaint kenneth card | 200000+ |
+| 3 | warriors vs nuggets | 100000+ |
+| 4 | alan dysert | 100000+ |
+| 5 | walter koenig | 200000+ |
+| 6 | timberwolves vs cavaliers | 200000+ |
+| 7 | at&t 2024 data breach settlement | 50000+ |
+| 8 | harry kane | 1000000+ |
+| 9 | bulls vs celtics | 100000+ |
+| 10 | 姆巴佩 | 50000+ |
 
-### Latest HK snapshot — 2026-10-25
+### Latest GB snapshot — 2026-10-27
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 沈大師 | 20000+ |
-| 2 | 金钟奖 | 5000+ |
-| 3 | 饼干 | 5000+ |
-| 4 | 廖碧兒 | 1000+ |
-| 5 | 宣 萱 | 2000+ |
-| 6 | 熱帶 氣旋 | 5000+ |
-| 7 | 亞洲桌球錦標賽 | 1000+ |
-| 8 | 谭咏麟 | 5000+ |
-| 9 | the weekend | 1000+ |
-| 10 | 餅乾 | 500+ |
+| 1 | harry kane | 1000000+ |
+| 2 | toilet | 100000+ |
+| 3 | alexia putellas | 20000+ |
+| 4 | walter koenig | 20000+ |
+| 5 | psg vs ol | 20000+ |
+| 6 | sir tom jones us tour flu | 10000+ |
+| 7 | nz vs ind | 20000+ |
+| 8 | sir jim ratcliffe lausanne sport sale | 10000+ |
+| 9 | pakistan vs sri lanka | 20000+ |
+| 10 | meghan | 10000+ |
 
-[Open full snapshot →](data/2026/10/25/trending.json)
+### Latest HK snapshot — 2026-10-27
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 姆巴佩 | 20000+ |
+| 2 | 朱咪咪 | 5000+ |
+| 3 | 單立文 | 5000+ |
+| 4 | 姆巴佩不當言論 | 1000+ |
+| 5 | harry kane | 5000+ |
+| 6 | 筲箕灣爆水管 | 1000+ |
+| 7 | father | 1000+ |
+| 8 | mbappe | 2000+ |
+| 9 | 施駿興 | 500+ |
+| 10 | 中華航空 | 500+ |
+
+[Open full snapshot →](data/2026/10/27/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 286 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 287 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
