@@ -58,7 +58,8 @@ await fs.rm(video,{force:true});
 const reviewTimes=[
   .6,2.3,4.2,6.2,7.7,9.3,11.2,13.1,14.6,
   15.4,16.8,18.2,19.8,21.6,23.3,25.2,27.2,29.2,
-  30.4,31.6,33.3,34.8,36.7,38.2,40.5,42.2,44.4
+  30.4,31.6,33.3,34.8,36.7,38.2,40.5,42.2,44.4,
+  45.4,46.7,48.4,50.2,52.5,54.3,56.5,58.1,59.4
 ];
 let chosen=reviewTimes.filter(t=>t>=start&&t<end);
 // Review tooling must never block a new scene merely because its authored marks have not
