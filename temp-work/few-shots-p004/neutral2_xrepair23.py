@@ -32,8 +32,8 @@ def main():
     for i, v in MODS.items():
         r[i] = v
 
-    hs = [a if side == 0 else b for a, b, side in PORTS]
-    vs = [b if side == 0 else a for a, b, side in PORTS]
+    hs = [a if side == 0 else z for a, z, side in PORTS]
+    vs = [z if side == 0 else a for a, z, side in PORTS]
 
     def forbidden(q):
         return any(g.conflict(q, h, digits) for h in hs) and any(g.conflict(q, v, digits) for v in vs)
@@ -44,18 +44,26 @@ def main():
     b = bad[0]
     xset = set(x)
 
-    # Exact support of every outside, port-safe vertex against the current X.
-    supports = {}
+    # Group every port-safe outside vertex by its exact conflict support in X.
+    groups = {}
     support_hist = {}
     for q in range(g.U):
         if q in xset or forbidden(q):
             continue
         s = tuple(i for i, z in enumerate(x) if g.conflict(q, z, digits))
         support_hist[len(s)] = support_hist.get(len(s), 0) + 1
-        if 1 <= len(s) <= 3:
-            supports[q] = s
+        if len(s) <= 3:
+            groups.setdefault(s, []).append(q)
 
     print("bad", b, x[b], "support_hist", json.dumps(support_hist, sort_keys=True), flush=True)
+
+    def pool(rem):
+        rr = set(rem)
+        ans = []
+        for s, vals in groups.items():
+            if set(s).issubset(rr):
+                ans.extend(vals)
+        return sorted(set(ans))
 
     def emit(remove, add, kind):
         xp = [z for i, z in enumerate(x) if i not in remove] + list(add)
@@ -81,53 +89,42 @@ def main():
         args.out.write_text(json.dumps(result, separators=(",", ":")) + "\n", encoding="utf-8")
         print("FOUND", json.dumps({k: result[k] for k in ("method", "remove_x_indices", "remove_x_points", "add_x_points")}, sort_keys=True), flush=True)
 
-    # Exact 2->2: bad point plus one other removed X point.
+    # r=1 is included here as a sanity check. A support-empty candidate would replace the bad X directly.
+    cand1 = pool({b})
+    if cand1:
+        emit({b}, (cand1[0],), "neutral2-companion-exact-1for1")
+        return
+
+    # Exact 2->2: bad point plus one arbitrary other X point.
+    tested2 = 0
+    maxpool2 = 0
     for j in range(g.R_SIZE):
         if j == b:
             continue
         rem = {b, j}
-        cand = [q for q, s in supports.items() if set(s).issubset(rem)]
+        cand = pool(rem)
+        maxpool2 = max(maxpool2, len(cand))
+        if len(cand) < 2:
+            continue
+        tested2 += 1
         for u, v in combinations(cand, 2):
             if not g.conflict(u, v, digits):
                 emit(rem, (u, v), "neutral2-companion-exact-2for2")
                 return
-    print("exact 2-for-2 none", flush=True)
+    print("exact 2-for-2 none", "tested", tested2, "maxpool", maxpool2, flush=True)
 
-    # Exact 3->3: bad point plus any two other removed X points. Generate only
-    # owner triples that can actually support at least three admissible additions.
-    owner_pairs = set()
-    for s in supports.values():
-        if b in s:
-            others = [i for i in s if i != b]
-            if len(others) == 2:
-                owner_pairs.add(tuple(sorted(others)))
-            elif len(others) == 1:
-                # Pair this mandatory owner with every owner seen in a support-1/2 candidate.
-                a = others[0]
-                relevant = set()
-                for t in supports.values():
-                    if len(t) <= 2:
-                        relevant.update(t)
-                for k in relevant:
-                    if k not in (b, a):
-                        owner_pairs.add(tuple(sorted((a, k))))
-    # Also include pairs formed from owners of low-support vertices involving b or alone.
-    relevant = set()
-    for s in supports.values():
-        if len(s) <= 2 and (b in s or len(s) == 1):
-            relevant.update(i for i in s if i != b)
-    for j, k in combinations(sorted(relevant), 2):
-        owner_pairs.add((j, k))
-
-    tested_triples = 0
-    for j, k in sorted(owner_pairs):
-        if b in (j, k) or j == k:
-            continue
+    # Exact 3->3: bad point plus any two arbitrary X points. 366 choose 2 is small;
+    # enumerating all pairs avoids heuristic owner filtering and makes this layer exhaustive.
+    tested3 = 0
+    maxpool3 = 0
+    others = [i for i in range(g.R_SIZE) if i != b]
+    for j, k in combinations(others, 2):
         rem = {b, j, k}
-        cand = [q for q, s in supports.items() if set(s).issubset(rem)]
+        cand = pool(rem)
+        maxpool3 = max(maxpool3, len(cand))
         if len(cand) < 3:
             continue
-        tested_triples += 1
+        tested3 += 1
         for u, v, w in combinations(cand, 3):
             if (not g.conflict(u, v, digits) and not g.conflict(u, w, digits)
                     and not g.conflict(v, w, digits)):
@@ -136,12 +133,15 @@ def main():
 
     result = {
         "kind": "none",
-        "method": "neutral2-companion-exact-2for2-3for3",
+        "method": "neutral2-companion-exact-1to3",
         "bad_index": b,
         "bad_point": x[b],
         "support_histogram": support_hist,
-        "candidate_vertices_le3": len(supports),
-        "tested_3for3_owner_pairs": tested_triples,
+        "candidate_vertices_le3": sum(len(v) for v in groups.values()),
+        "tested_2for2_removals": tested2,
+        "max_2for2_pool": maxpool2,
+        "tested_3for3_removals": tested3,
+        "max_3for3_pool": maxpool3,
     }
     args.out.write_text(json.dumps(result, separators=(",", ":")) + "\n", encoding="utf-8")
     print("NONE", json.dumps(result, sort_keys=True), flush=True)
