@@ -1,8 +1,8 @@
 import {Draw} from './engine/draw.js';
 import {loadGPTArt} from './components/gpt_art.js';
 import {loadGPTPoses} from './components/gpt_poses.js';
-import {renderOpeningV8} from './scenes/opening_v8.js';
-import {renderDraftsV10} from './scenes/drafts_v10.js';
+import {renderOpeningV9} from './scenes/opening_v9.js';
+import {renderDraftsV11} from './scenes/drafts_v11.js';
 import {renderConstructV5} from './scenes/construct_v5.js';
 import {renderEndingV1} from './scenes/ending_v1.js';
 
@@ -17,8 +17,8 @@ export function renderFrame(t){
   t=Math.max(0,Math.min(DURATION,t));
   g.setTransform(1,0,0,1,0,0);
   g.clearRect(0,0,canvas.width,canvas.height);
-  if(t<15)renderOpeningV8(d,t,gptArt);
-  else if(t<30)renderDraftsV10(d,t,gptArt,gptPoses);
+  if(t<15)renderOpeningV9(d,t,gptArt);
+  else if(t<30)renderDraftsV11(d,t,gptArt,gptPoses);
   else if(t<45)renderConstructV5(d,t,gptArt,gptPoses);
   else renderEndingV1(d,t,gptArt,gptPoses);
   return canvas;
