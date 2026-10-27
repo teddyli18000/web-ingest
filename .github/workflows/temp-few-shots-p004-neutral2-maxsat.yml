@@ -1,0 +1,104 @@
+name: Temp Few Shots p004 neutral2 MaxSAT
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-few-shots-p004-neutral2-maxsat.yml
+      - temp-work/few-shots-p004/neutral2_maxsat.py
+      - temp-work/few-shots-p004/neutral2_sweep.py
+      - temp-work/few-shots-p004/generalized9.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-few-shots-p004-neutral2-maxsat
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        combo: [0,1,2,3,4,5,6,7,8,9]
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch public sources read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/nathanielitty/lower-bounds-for-shannon-capacity.git "$RUNNER_TEMP/shannon-source"
+          git -C "$RUNNER_TEMP/shannon-source" sparse-checkout set c7
+
+      - name: Install MaxSAT solver
+        run: python3 -m pip install --disable-pip-version-check python-sat
+
+      - name: Optimize partial ninth-port construction
+        id: search
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/shot"
+          /usr/bin/time -v python3 temp-work/few-shots-p004/neutral2_maxsat.py \
+            "$RUNNER_TEMP/shannon-source/c7/R367.txt" \
+            "$RUNNER_TEMP/few-shots/problems/p004-shannon-capacity-c7/baseline/certificate.json" \
+            "$RUNNER_TEMP/shot/certificate.json" \
+            "$RUNNER_TEMP/status.json" \
+            --combo-index ${{ matrix.combo }}
+          cat "$RUNNER_TEMP/status.json"
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo "found=true" >> "$GITHUB_OUTPUT"; else echo "found=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Verify candidate with upstream verifier
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/verify.json"
+          python3 - "$RUNNER_TEMP/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r['score']) <= 134753:
+              raise SystemExit(r)
+          print(f"VERIFIED BREAKTHROUGH score={r['score']}")
+          PY
+
+      - name: Stage result artifact
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/result"
+          [[ -f "$RUNNER_TEMP/status.json" ]] && cp "$RUNNER_TEMP/status.json" "$RUNNER_TEMP/result/status.json" || true
+          [[ -f "$RUNNER_TEMP/shot/certificate.json" ]] && cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/certificate.json" || true
+          [[ -f "$RUNNER_TEMP/verify.json" ]] && cp "$RUNNER_TEMP/verify.json" "$RUNNER_TEMP/result/verify.json" || true
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p004-neutral2-maxsat-${{ matrix.combo }}
+          path: ${{ runner.temp }}/result
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f "$RUNNER_TEMP/status.json" ]]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat "$RUNNER_TEMP/status.json" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [[ -f "$RUNNER_TEMP/verify.json" ]]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat "$RUNNER_TEMP/verify.json" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
