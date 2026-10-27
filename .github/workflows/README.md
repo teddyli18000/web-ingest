@@ -47,11 +47,15 @@ Scheduled Actions are not exact clocks. For a task with a hard publication bound
 
 ## CI and maintenance Actions
 
-`repository-integrity.yml` is event-driven only. It validates repository rules, recurring schedules, task tests, Python repository-management tools, and the Baidu Drive Go bridge against its pinned standalone mover core. Normal daily data commits do not trigger it.
+`repository-integrity.yml` is event-driven only. It validates repository rules, recurring schedules, task tests, Python repository-management tools, and the Baidu Drive Go adapters against the pinned standalone mover core. Normal daily data commits do not trigger it.
 
 `baidu-drive-reconcile.yml` is event-driven only. It owns fixed Release `baidu-drive-live`, validates and consumes human control requests, writes non-secret control/task state, and dispatches `baidu-drive-worker.yml` only when a `start` or `retry` was actually accepted. Bot-authored Release edits and normal state/checkpoint commits do not create a writer loop.
 
-`baidu-drive-worker.yml` is manual/dispatch-only and has no recurring schedule. It owns durable transfer/checkpoint execution. Both Baidu Drive workflows share concurrency group `baidu-drive-live-state` with `cancel-in-progress: false`, so control, worker state, and eventual remote mutations serialize. Authentication provisioning is intentionally absent today; the worker therefore stops safely in `BLOCKED_AUTH_SETUP` until the owner chooses the OAuth/secret layout. Auth files must remain ephemeral runner files and must never be committed or uploaded as artifacts.
+`baidu-drive-worker.yml` is the **single Baidu Drive master scheduler**. It is triggered by accepted/manual dispatches and by `workflow_run: completed` from `Baidu Drive File Worker`. Under the serialized `baidu-drive-live-state` concurrency group it restores the mover checkpoint, imports verified file results, runs guarded Baidu cleanup, scans/stages the next batch, reconciles the Drive directory tree, updates public task state, and leases up to three independent files. The workflow-completion trigger is also the hard-runner-loss wakeup path; there is deliberately no polling cron or second scheduler.
+
+`baidu-drive-file-worker.yml` is the data plane. Each run owns one persisted task/file lease and has a task+file concurrency key, so independent files may transfer concurrently while one Drive file never has two active writers. Its Go relay streams exact Baidu ranges into Drive resumable PUTs, checkpoints Drive-confirmed offsets plus streamed-MD5 state, seals session URIs, reconciles expired sessions before replay, and handles zero-byte files with a small idempotent create/adopt branch. File workers do not write the global SQLite checkpoint.
+
+Authentication provisioning remains intentionally absent. Both Baidu Drive paths fail closed until the owner chooses the final OAuth/secret layout. Auth files must remain ephemeral runner files and must never be committed or uploaded as artifacts.
 
 `temp-work-cleanup.yml` is the durable lifecycle manager for `temp-work/`. It is API-only, writes only when stale first-level workspaces actually need deletion, and records its audit trail in the Action Step Summary instead of committing status files.
 
