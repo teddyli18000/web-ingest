@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - .github/workflows/temp-few-shots-p004.yml
+      - temp-work/few-shots-p004/search.cpp
+      - temp-work/few-shots-p004/materialize.py
   workflow_dispatch:
 
 permissions:
@@ -46,7 +48,7 @@ jobs:
             temp-work/few-shots-p004/search.cpp \
             -o "$RUNNER_TEMP/p004-search"
 
-      - name: Search direct and remove-1-add-2 improvements
+      - name: Search exact local breakthroughs through remove-2-add-3
         shell: bash
         env:
           OMP_PROC_BIND: "true"
