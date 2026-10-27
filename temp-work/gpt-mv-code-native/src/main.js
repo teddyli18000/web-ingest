@@ -4,7 +4,7 @@ import {loadGPTPoses} from './components/gpt_poses.js';
 import {renderOpeningV9} from './scenes/opening_v9.js';
 import {renderDraftsV11} from './scenes/drafts_v11.js';
 import {renderConstructV5} from './scenes/construct_v5.js';
-import {renderEndingV1} from './scenes/ending_v1.js';
+import {renderEndingV2} from './scenes/ending_v2.js';
 
 const canvas=document.getElementById('stage');
 const g=canvas.getContext('2d',{alpha:false});
@@ -20,7 +20,7 @@ export function renderFrame(t){
   if(t<15)renderOpeningV9(d,t,gptArt);
   else if(t<30)renderDraftsV11(d,t,gptArt,gptPoses);
   else if(t<45)renderConstructV5(d,t,gptArt,gptPoses);
-  else renderEndingV1(d,t,gptArt,gptPoses);
+  else renderEndingV2(d,t,gptArt,gptPoses);
   return canvas;
 }
 
