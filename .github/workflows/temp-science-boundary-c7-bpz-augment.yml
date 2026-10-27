@@ -1,0 +1,86 @@
+name: Temp Science Boundary C7 BPZ obstruction augment
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-bpz-augment.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_obstruction_augment.cpp
+      - science-boundary/shannon-capacity-c7/code/bpz_aux_ids_materialize.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-bpz-augment
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned public sources read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+      - name: Compile augmentation search
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -DNDEBUG -march=native -std=c++20 science-boundary/shannon-capacity-c7/code/bpz_obstruction_augment.cpp -o "$RUNNER_TEMP/augment"
+      - name: Search multiple randomized augmentation walks
+        id: search
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+          : > "$RUNNER_TEMP/result/search.log"
+          for seed in 1 2 3 4 5 6 7 8; do
+            echo "=== seed $seed ===" | tee -a "$RUNNER_TEMP/result/search.log"
+            /usr/bin/time -v "$RUNNER_TEMP/augment" "$RUNNER_TEMP/tan/data/base_c7.json" "$RUNNER_TEMP/result/auxiliary.ids" 2000000 "$seed" \
+              >> "$RUNNER_TEMP/result/search.log" 2>> "$RUNNER_TEMP/result/search.log"
+            if [[ -s "$RUNNER_TEMP/result/auxiliary.ids" ]]; then break; fi
+          done
+          if [[ -s "$RUNNER_TEMP/result/auxiliary.ids" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+      - name: Replay auxiliary and materialize 134770 candidate
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/bpz_aux_ids_materialize.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/auxiliary.ids" "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/status.json"
+          cat "$RUNNER_TEMP/result/status.json"
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1))<=134753: raise SystemExit(r)
+          print(f"VERIFIED BREAKTHROUGH score={r['score']}")
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-bpz-obstruction-augment
+          path: ${{ runner.temp }}/result
+          retention-days: 14
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          { echo '## C7 BPZ obstruction augmentation search'; for f in status.json verify.json; do if [[ -f "$RUNNER_TEMP/result/$f" ]]; then echo '```json'; cat "$RUNNER_TEMP/result/$f"; echo '```'; fi; done; echo '### search tail'; echo '```text'; tail -n 160 "$RUNNER_TEMP/result/search.log" 2>/dev/null || true; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
