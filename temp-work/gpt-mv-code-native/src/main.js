@@ -12,15 +12,27 @@ const d=new Draw(g,canvas.width,canvas.height);
 const [gptArt,gptPoses]=await Promise.all([loadGPTArt(),loadGPTPoses()]);
 
 export const DURATION=60;
+const CAMERA_CUTS=[0,3.35,7.10,11.10,15,18.35,21.75,25.20,28.10,30,33.20,36.40,40.55,45];
+
+function withShotCamera(t,fn){
+  let i=-1;
+  for(let j=0;j<CAMERA_CUTS.length-1;j++)if(t>=CAMERA_CUTS[j]&&t<CAMERA_CUTS[j+1]){i=j;break;}
+  if(i<0)return fn();
+  const a=CAMERA_CUTS[i],b=CAMERA_CUTS[i+1],raw=Math.max(0,Math.min(1,(t-a)/(b-a))),u=raw*raw*(3-2*raw);
+  const dir=i%2?-1:1,s=1.012+.012*u,dx=dir*(-7+14*u),dy=4-8*u;
+  g.save();g.translate(960,540);g.scale(s,s);g.translate(-960+dx,-540+dy);fn();g.restore();
+}
 
 export function renderFrame(t){
   t=Math.max(0,Math.min(DURATION,t));
   g.setTransform(1,0,0,1,0,0);
   g.clearRect(0,0,canvas.width,canvas.height);
-  if(t<15)renderOpeningV10(d,t,gptArt);
-  else if(t<30)renderDraftsV12(d,t,gptArt,gptPoses);
-  else if(t<45)renderConstructV6(d,t,gptArt,gptPoses);
-  else renderEndingV3(d,t,gptArt,gptPoses);
+  const body=()=>{
+    if(t<15)renderOpeningV10(d,t,gptArt);
+    else if(t<30)renderDraftsV12(d,t,gptArt,gptPoses);
+    else renderConstructV6(d,t,gptArt,gptPoses);
+  };
+  if(t<45)withShotCamera(t,body);else renderEndingV3(d,t,gptArt,gptPoses);
   return canvas;
 }
 
