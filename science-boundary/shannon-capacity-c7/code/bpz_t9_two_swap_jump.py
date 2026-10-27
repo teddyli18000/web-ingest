@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Exact simultaneous 2-for-2 bridge search from the BPZ C7^5 main set.
 
-The complete component reachable by sequential one-point private swaps has only
-235 states and contains no t=9 Definition-2 gadget with the published X.  This
+The complete component reachable by sequential one-point private swaps has 243
+states and contains no t=9 Definition-2 gadget with the published X.  This
 program enumerates every valid simultaneous two-point replacement of the
 published I0 whose added vertices have I0-conflict support contained in the two
 removed owners.  Such moves include bridges that cannot be decomposed into
-single private swaps.  States already in the 235-state component are skipped.
+single private swaps.  States already in the 243-state component are skipped.
 
 Every genuinely new 367-set is tested exactly: all its private pairs are
 recomputed from the ambient C7^5 graph; every 9-subset of distinct owners and
@@ -77,8 +77,8 @@ def main():
     raw=json.loads((root/'data'/'base_c7.json').read_text());I0=set(map(int,raw['I0']));X=set(map(int,raw['X']));ring=Ring(D);digits=tuple(ring.decode(v) for v in range(U));nbmask=[sum(1<<z for z in ring.NB[v]) for v in range(U)]
     if len(I0)!=N or len(X)!=N or not independent(I0,digits) or not independent(X,digits):raise RuntimeError('base drift')
     start=sum(1<<z for z in I0);component=one_swap_component(start,nbmask)
-    if len(component)!=235:raise RuntimeError(f'one-swap component drift {len(component)}')
-    ilist=sorted(I0);pos={v:i for i,v in enumerate(ilist)}
+    if len(component)!=243:raise RuntimeError(f'one-swap component drift {len(component)}')
+    ilist=sorted(I0)
     # Candidates whose conflict support against I0 has size 1 or 2, represented
     # by actual owner vertices rather than ordering-dependent indices.
     cand=[];support_hist={1:0,2:0}
