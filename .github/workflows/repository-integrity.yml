@@ -109,6 +109,7 @@ jobs:
           cp baidu-drive/mover/action_relay.go .ci/baidu-drive-mover/cmd/baidu-drive-prepare/action_relay.go
 
           mkdir -p .ci/baidu-drive-mover/cmd/baidu-drive-relay
+          cp baidu-drive/mover/relay-main.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/main.go
           cp baidu-drive/mover/relay_core.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_core.go
           cp baidu-drive/mover/relay_core_test.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_core_test.go
           cp baidu-drive/mover/relay_session.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_session.go
@@ -122,3 +123,4 @@ jobs:
           go test ./internal/state ./internal/app ./internal/download ./internal/drive ./internal/drive/rclone ./internal/baidu ./cmd/baidu-drive-relay
           go build ./cmd/baidu-drive-action
           go build ./cmd/baidu-drive-prepare
+          go build ./cmd/baidu-drive-relay
