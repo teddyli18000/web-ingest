@@ -3,7 +3,7 @@ import {loadGPTArt} from './components/gpt_art.js';
 import {loadGPTPoses} from './components/gpt_poses.js';
 import {renderOpeningV8} from './scenes/opening_v8.js';
 import {renderDraftsV10} from './scenes/drafts_v10.js';
-import {renderConstructV2} from './scenes/construct_v2.js';
+import {renderConstructV3} from './scenes/construct_v3.js';
 
 const canvas=document.getElementById('stage');
 const g=canvas.getContext('2d',{alpha:false});
@@ -18,7 +18,7 @@ export function renderFrame(t){
   g.clearRect(0,0,canvas.width,canvas.height);
   if(t<15)renderOpeningV8(d,t,gptArt);
   else if(t<30)renderDraftsV10(d,t,gptArt,gptPoses);
-  else renderConstructV2(d,t,gptArt,gptPoses);
+  else renderConstructV3(d,t,gptArt,gptPoses);
   return canvas;
 }
 
