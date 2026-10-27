@@ -1,0 +1,40 @@
+name: temp labs-100 transfer radius 6
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-labs-100-transfer-radius6.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-labs-100-transfer-radius6
+  cancel-in-progress: false
+
+jobs:
+  exact-transfer-radius6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exhaust exact Hamming radius 6 around E=606 transfer seed
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/sphere_shell.cpp \
+            -o /tmp/labs100-sphere-shell
+          seed='+++++--++----++--++++--++++++++++++--+----+++++----++-+----++--++-+++--+--+-+-++-++-+-+-+-+-+--+-+-+'
+          /tmp/labs100-sphere-shell "$seed" 6 | tee /tmp/transfer-radius6.txt
+          grep -F 'BASE energy=606' /tmp/transfer-radius6.txt
+          grep -F 'RADIUS radius=6 tested=1192052400 ' /tmp/transfer-radius6.txt
+      - name: Upload exact-shell evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-transfer-radius6
+          path: /tmp/transfer-radius6.txt
+          if-no-files-found: warn
