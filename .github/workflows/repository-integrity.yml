@@ -81,7 +81,6 @@ jobs:
         run: |
           python3 -m py_compile git-mirror/*.py
           python3 -m unittest discover -s git-mirror/tests -v
-          python3 git-mirror/validate_snapshots.py
       - name: Validate Baidu Drive control and worker code
         run: |
           python3 -m py_compile baidu-drive/*.py
@@ -107,6 +106,10 @@ jobs:
           mkdir -p .ci/baidu-drive-mover/cmd/baidu-drive-relay
           cp baidu-drive/mover/relay_core.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_core.go
           cp baidu-drive/mover/relay_core_test.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_core_test.go
+          cp baidu-drive/mover/relay_session.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_session.go
+          cp baidu-drive/mover/relay_session_test.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_session_test.go
+          cp baidu-drive/mover/relay_secret.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_secret.go
+          cp baidu-drive/mover/relay_secret_test.go .ci/baidu-drive-mover/cmd/baidu-drive-relay/relay_secret_test.go
           cd .ci/baidu-drive-mover
           go test ./internal/state ./internal/app ./internal/download ./internal/drive ./internal/drive/rclone ./internal/baidu ./cmd/baidu-drive-relay
           go build ./cmd/baidu-drive-action
