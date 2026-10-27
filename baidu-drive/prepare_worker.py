@@ -163,15 +163,24 @@ def schedule_projection(
     dispatched: list[tuple[str, str]],
     now: dt.datetime,
 ) -> tuple[str, str]:
-    active = sum(1 for record in records if scheduler.is_active(record, now))
+    policy = scheduler.Policy()
+    active = sum(1 for record in records if scheduler.is_active(record, now, policy))
     blocked_reconcile = sum(1 for record in records if record.get("status") == relay_state.BLOCKED_RECONCILE)
     permanent = sum(1 for record in records if record.get("status") == relay_state.FAILED_PERMANENT)
-    runnable = sum(1 for record in records if scheduler.is_runnable(record, now))
+    retry_exhausted = sum(
+        1
+        for record in records
+        if record.get("status") == relay_state.FAILED_RETRYABLE
+        and int(record.get("retryable_failures") or 0) >= policy.max_retryable_failures
+    )
+    runnable = sum(1 for record in records if scheduler.is_runnable(record, now, policy))
 
-    if not dispatched and active == 0 and runnable == 0 and (blocked_reconcile or permanent):
+    if not dispatched and active == 0 and runnable == 0 and (blocked_reconcile or permanent or retry_exhausted):
         parts = []
         if blocked_reconcile:
             parts.append(f"{blocked_reconcile} file(s) require Drive destination reconciliation")
+        if retry_exhausted:
+            parts.append(f"{retry_exhausted} file(s) reached the automatic VM retry limit")
         if permanent:
             parts.append(f"{permanent} file(s) failed permanently")
         return "BLOCKED", "; ".join(parts) + ". No unsafe replay was attempted."
@@ -179,6 +188,8 @@ def schedule_projection(
     detail = f"{len(dispatched)} new worker(s) dispatched; {active} worker(s) active"
     if blocked_reconcile:
         detail += f"; {blocked_reconcile} file(s) awaiting reconciliation"
+    if retry_exhausted:
+        detail += f"; {retry_exhausted} file(s) at retry limit"
     if permanent:
         detail += f"; {permanent} permanent failure(s)"
     return "RUNNING", "Scheduler active: " + detail + "."
@@ -212,6 +223,9 @@ def run_prepare_worker(
             message="Relay scheduler is ready, but ephemeral authentication inputs are not configured yet.",
         )
         return 0
+
+    if reason == "retry":
+        relay_control.reset_retryable_files(relay_repo, task_id, utc_now())
 
     binary = prepare_binary()
     assert binary is not None
