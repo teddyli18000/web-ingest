@@ -5,6 +5,7 @@ on:
     paths:
       - .github/workflows/temp-few-shots-p004.yml
       - temp-work/few-shots-p004/search.cpp
+      - temp-work/few-shots-p004/search_exact.cpp
       - temp-work/few-shots-p004/materialize.py
   workflow_dispatch:
 
@@ -45,7 +46,7 @@ jobs:
         run: |
           set -euo pipefail
           g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp \
-            temp-work/few-shots-p004/search.cpp \
+            temp-work/few-shots-p004/search_exact.cpp \
             -o "$RUNNER_TEMP/p004-search"
 
       - name: Search exact local breakthroughs through remove-2-add-3
