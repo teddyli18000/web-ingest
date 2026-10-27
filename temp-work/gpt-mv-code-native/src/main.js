@@ -4,13 +4,14 @@ import {loadGPTPoses} from './components/gpt_poses.js';
 import {renderOpeningV8} from './scenes/opening_v8.js';
 import {renderDraftsV10} from './scenes/drafts_v10.js';
 import {renderConstructV5} from './scenes/construct_v5.js';
+import {renderEndingV1} from './scenes/ending_v1.js';
 
 const canvas=document.getElementById('stage');
 const g=canvas.getContext('2d',{alpha:false});
 const d=new Draw(g,canvas.width,canvas.height);
 const [gptArt,gptPoses]=await Promise.all([loadGPTArt(),loadGPTPoses()]);
 
-export const DURATION=45;
+export const DURATION=60;
 
 export function renderFrame(t){
   t=Math.max(0,Math.min(DURATION,t));
@@ -18,7 +19,8 @@ export function renderFrame(t){
   g.clearRect(0,0,canvas.width,canvas.height);
   if(t<15)renderOpeningV8(d,t,gptArt);
   else if(t<30)renderDraftsV10(d,t,gptArt,gptPoses);
-  else renderConstructV5(d,t,gptArt,gptPoses);
+  else if(t<45)renderConstructV5(d,t,gptArt,gptPoses);
+  else renderEndingV1(d,t,gptArt,gptPoses);
   return canvas;
 }
 
