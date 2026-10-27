@@ -60,13 +60,33 @@ For the N=102 source, the best deletion removes positions 0 and 100 (zero-based 
 
 The public skew-symmetric `N=103`, `E=555` sequence was also tested. Exhaustive deletion of all three positions (`C(103,3)=176,851`) produced best length-100 energy `714` (deleting the first three positions), again far above the incumbent.
 
+## 2025 unrestricted N=104 record -> N=100
+
+Zhang et al. report a new unrestricted `N=104` record with energy `600`, encoded as:
+
+`0F80F3C20AAB1844295B6ED666`
+
+This encoding is exactly 104 bits long and independently rescored to `600` before transfer.
+
+`code/delete_to_100.cpp` exhaustively scanned all `C(104,4)=4,598,126` ways to delete four positions. The best length-100 result was only:
+
+`E=802`
+
+obtained by deleting zero-based positions `88,90,93,95`. Best transferred sequence:
+
+`++++-----+++++++----++----++++-+++++-+-+-+-+-+--+++--++++-+++-++++-+-++-+-+--+--+--+---+--+-+--++--+`
+
+The complete scan took about 1.64 seconds on the local optimized build because the resulting 100-bit sequence is packed into a 128-bit integer and each autocorrelation is evaluated by XOR/popcount.
+
 ## Interpretation
 
-Low energy at a neighboring length is not preserved well enough by raw insertion/deletion to challenge `E=578` at length 100. The strongest transfer found is `606` from the new 2025 N=99 record, and even that candidate has no better point within Hamming radius 5. Cross-length transfer should not be repeated in this simple form; any future use should combine structural recombination or a substantially stronger basin-crossing optimizer.
+Low energy at a neighboring length is not preserved well enough by raw insertion/deletion to challenge `E=578` at length 100. The strongest transfer found is `606` from the new 2025 N=99 record, and even that candidate has no better point within Hamming radius 5. The new N=104 record also degrades to 802 after the best of all 4.6 million four-deletion choices. Cross-length transfer should not be repeated in this simple form; any future use should combine structural recombination or a substantially stronger basin-crossing optimizer.
 
 ## Reproduction
 
-`code/cross_length.py` reproduces the N=98, N=99 and N=102 scans. `code/sphere.cpp` or `code/sphere_shell.cpp` can reproduce exact Hamming-neighborhood checks.
+- `code/cross_length.py` reproduces the N=98, N=99 and N=102 scans.
+- `code/delete_to_100.cpp` provides fast exact deletion scans for source lengths 101 through 104.
+- `code/sphere.cpp` or `code/sphere_shell.cpp` reproduces exact Hamming-neighborhood checks.
 
 ## Sources
 
