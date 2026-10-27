@@ -126,14 +126,16 @@ A VM must be replaceable without copying its local filesystem.
 
 ## Transfer core
 
-The current compatibility bridge still reuses:
+The current compatibility bridge reuses the CI-pinned standalone mover commit:
 
 ```text
 teddyli18000/baidu-drive-mover
-f4ca661d367aa2a067344efa989f0bfc95b64618
+a9e76feb18fe9ca1ac680d0ea555aac684d622de
 ```
 
-The current mover pipeline is still:
+That revision includes the exact bounded Baidu `bytes=start-end` primitive required by the direct relay and passed the standalone mover CI before it was pinned here.
+
+The current compatibility pipeline is still:
 
 ```text
 share scan
@@ -144,7 +146,7 @@ share scan
   -> cleanup
 ```
 
-That bridge remains useful for scan/staging/recovery while the Actions data path is upgraded to direct byte-range relay. The standalone mover now also has a bounded range primitive ready to be pinned after its CI gate passes.
+That bridge remains useful for scan/staging/recovery while the Actions data path is upgraded to direct byte-range relay.
 
 The standalone mover pin or bridge contract must not change without passing the repository integration gate and updating this documentation.
 
