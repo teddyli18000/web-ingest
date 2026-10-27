@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"hash"
 	"io"
+
+	"github.com/teddyli18000/baidu-drive-mover/internal/baidu"
 )
 
 type relayHashState struct {
