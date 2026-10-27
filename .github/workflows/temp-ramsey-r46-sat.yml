@@ -1,0 +1,160 @@
+name: Temp Ramsey R46 direct SAT sweep
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-sat.yml
+      - science-boundary/ramsey-r46/sat_r46.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-sat-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      matrix:
+        degree: [11, 12, 13, 14, 15, 16, 17]
+    runs-on: ubuntu-latest
+    timeout-minutes: 270
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build pinned Kissat 4.0.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone https://github.com/arminbiere/kissat.git "$RUNNER_TEMP/kissat"
+          git -C "$RUNNER_TEMP/kissat" checkout 8af8e56f174b778aef3aa45af9f739b2a5f492c2
+          cd "$RUNNER_TEMP/kissat"
+          ./configure
+          make -j2
+          build/kissat --version
+
+      - name: Generate degree branch CNF
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/ramsey-r46/sat_r46.py generate \
+            ${{ matrix.degree }} "$RUNNER_TEMP/r46.cnf" | tee "$RUNNER_TEMP/generate.json"
+          head -n 1 "$RUNNER_TEMP/r46.cnf"
+          du -h "$RUNNER_TEMP/r46.cnf"
+
+      - name: Solve for at most four hours
+        id: solve
+        shell: bash
+        run: |
+          set -uo pipefail
+          started=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          set +e
+          /usr/bin/time -v timeout --signal=TERM --kill-after=30s 14400 \
+            "$RUNNER_TEMP/kissat/build/kissat" "$RUNNER_TEMP/r46.cnf" \
+            > "$RUNNER_TEMP/solver.log" 2>&1
+          rc=$?
+          set -e
+          finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          case "$rc" in
+            10) status=sat ;;
+            20) status=unsat ;;
+            124|137|143) status=timeout ;;
+            *) status=error ;;
+          esac
+          printf '{"degree":%s,"status":"%s","solver_exit":%s,"started":"%s","finished":"%s","kissat_commit":"8af8e56f174b778aef3aa45af9f739b2a5f492c2","github_run_id":"%s"}\n' \
+            '${{ matrix.degree }}' "$status" "$rc" "$started" "$finished" "$GITHUB_RUN_ID" \
+            > "$RUNNER_TEMP/result.json"
+          cat "$RUNNER_TEMP/result.json"
+          tail -n 80 "$RUNNER_TEMP/solver.log" || true
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          if [[ "$status" == error ]]; then exit 1; fi
+
+      - name: Decode SAT model
+        if: steps.solve.outputs.status == 'sat'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/ramsey-r46/sat_r46.py decode \
+            "$RUNNER_TEMP/solver.log" "$RUNNER_TEMP/certificate.json"
+
+      - name: Verify SAT model with Few Shots verifier
+        if: steps.solve.outputs.status == 'sat'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse \
+            https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p "$RUNNER_TEMP/candidate"
+          cp "$RUNNER_TEMP/certificate.json" "$RUNNER_TEMP/candidate/certificate.json"
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p003-ramsey-r46/verify/verify.py "$RUNNER_TEMP/candidate" \
+            | tee "$RUNNER_TEMP/verify.json"
+          python3 - "$RUNNER_TEMP/verify.json" <<'PY'
+          import json,sys
+          result=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not result.get('valid') or result.get('score') != '36':
+              raise SystemExit(result)
+          print('VERIFIED R(4,6,36) CANDIDATE')
+          PY
+
+      - name: Persist compact lane result
+        if: always() && steps.solve.outcome != 'skipped'
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ -f "$RUNNER_TEMP/result.json" ]] || exit 0
+          degree='${{ matrix.degree }}'
+          dest="science-boundary/ramsey-r46/results/sat-degree-${degree}-run-${GITHUB_RUN_ID}.json"
+          mkdir -p "$(dirname "$dest")"
+          cp "$RUNNER_TEMP/result.json" "$dest"
+          if [[ -f "$RUNNER_TEMP/verify.json" ]]; then
+            python3 - "$dest" "$RUNNER_TEMP/verify.json" <<'PY'
+          import json,sys
+          p,v=sys.argv[1:]
+          d=json.load(open(p,encoding='utf-8'))
+          d['few_shots_verify']=json.load(open(v,encoding='utf-8'))
+          open(p,'w',encoding='utf-8').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          fi
+          if [[ -f "$RUNNER_TEMP/certificate.json" ]]; then
+            cp "$RUNNER_TEMP/certificate.json" \
+              "science-boundary/ramsey-r46/results/sat-degree-${degree}-candidate-${GITHUB_RUN_ID}.json"
+          fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/results/
+          git commit -m "science-boundary: record R(4,6) SAT degree ${degree} result" || exit 0
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt * 3))
+          done
+          exit 1
+
+      - name: Upload solver result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-sat-degree-${{ matrix.degree }}
+          path: |
+            ${{ runner.temp }}/generate.json
+            ${{ runner.temp }}/result.json
+            ${{ runner.temp }}/solver.log
+            ${{ runner.temp }}/certificate.json
+            ${{ runner.temp }}/verify.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          echo "## R(4,6,36) SAT degree ${{ matrix.degree }}" >> "$GITHUB_STEP_SUMMARY"
+          [[ -f "$RUNNER_TEMP/result.json" ]] && cat "$RUNNER_TEMP/result.json" >> "$GITHUB_STEP_SUMMARY" || true
+          [[ -f "$RUNNER_TEMP/verify.json" ]] && cat "$RUNNER_TEMP/verify.json" >> "$GITHUB_STEP_SUMMARY" || true
