@@ -25,6 +25,7 @@ var (
 	errDriveSessionExpired = errors.New("Drive resumable session expired")
 	errDriveAuthRequired   = errors.New("Drive authorization required")
 	driveRangePattern      = regexp.MustCompile(`^bytes=0-([0-9]+)$`)
+	driveMD5Pattern        = regexp.MustCompile(`^[0-9a-fA-F]{32}$`)
 )
 
 type relayRangeSource interface {
@@ -280,29 +281,38 @@ func parseDriveResponse(resp *http.Response, total int64) (driveProgress, error)
 		if err != nil {
 			return driveProgress{}, fmt.Errorf("read final Drive response: %w", err)
 		}
-		var file driveFileResponse
-		if len(strings.TrimSpace(string(data))) != 0 {
-			if err := json.Unmarshal(data, &file); err != nil {
-				return driveProgress{}, fmt.Errorf("parse final Drive response: %w", err)
-			}
+		if len(strings.TrimSpace(string(data))) == 0 {
+			return driveProgress{}, fmt.Errorf("Drive final response is missing verification metadata")
 		}
-		size := total
-		if strings.TrimSpace(file.Size) != "" {
-			parsed, err := strconv.ParseInt(file.Size, 10, 64)
-			if err != nil || parsed < 0 {
-				return driveProgress{}, fmt.Errorf("invalid Drive final size %q", file.Size)
-			}
-			size = parsed
-			if size != total {
-				return driveProgress{}, fmt.Errorf("Drive final size %d does not match expected %d", size, total)
-			}
+		var file driveFileResponse
+		if err := json.Unmarshal(data, &file); err != nil {
+			return driveProgress{}, fmt.Errorf("parse final Drive response: %w", err)
+		}
+		fileID := strings.TrimSpace(file.ID)
+		if fileID == "" {
+			return driveProgress{}, fmt.Errorf("Drive final response is missing file ID")
+		}
+		sizeText := strings.TrimSpace(file.Size)
+		if sizeText == "" {
+			return driveProgress{}, fmt.Errorf("Drive final response is missing size")
+		}
+		size, err := strconv.ParseInt(sizeText, 10, 64)
+		if err != nil || size < 0 {
+			return driveProgress{}, fmt.Errorf("invalid Drive final size %q", file.Size)
+		}
+		if size != total {
+			return driveProgress{}, fmt.Errorf("Drive final size %d does not match expected %d", size, total)
+		}
+		md5Checksum := strings.ToLower(strings.TrimSpace(file.MD5Checksum))
+		if !driveMD5Pattern.MatchString(md5Checksum) {
+			return driveProgress{}, fmt.Errorf("Drive final response is missing canonical MD5")
 		}
 		return driveProgress{
 			NextOffset:  total,
 			Complete:    true,
-			FileID:      strings.TrimSpace(file.ID),
+			FileID:      fileID,
 			Size:        size,
-			MD5Checksum: strings.TrimSpace(file.MD5Checksum),
+			MD5Checksum: md5Checksum,
 		}, nil
 	case http.StatusNotFound:
 		_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, maxDriveResponseBytes))
