@@ -1,0 +1,52 @@
+name: Baidu Drive Reconcile
+
+on:
+  release:
+    types: [edited]
+  push:
+    branches: [main]
+    paths:
+      - 'baidu-drive/controller.py'
+      - 'baidu-drive/README.md'
+      - 'baidu-drive/AGENTS.md'
+      - 'baidu-drive/tests/**'
+      - '.github/workflows/baidu-drive-reconcile.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: baidu-drive-live-state
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    if: >-
+      (github.event_name == 'release' &&
+       github.event.release.tag_name == 'baidu-drive-live' &&
+       github.actor != 'github-actions[bot]') ||
+      (github.event_name == 'push' && github.actor != 'github-actions[bot]') ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Checkout task control plane
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            baidu-drive
+
+      - name: Validate task implementation
+        if: github.event_name == 'push'
+        run: |
+          python3 -m py_compile baidu-drive/controller.py
+          python3 -m unittest discover -s baidu-drive/tests -v
+
+      - name: Reconcile Release control and durable task state
+        run: python3 baidu-drive/controller.py reconcile
