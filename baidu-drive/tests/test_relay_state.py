@@ -11,6 +11,7 @@ sys.path.insert(0, str(TASK_DIR))
 import relay_state  # noqa: E402
 
 UTC = dt.timezone.utc
+SOURCE_MD5 = "0123456789abcdef0123456789abcdef"
 
 
 class RelayStateTests(unittest.TestCase):
@@ -25,7 +26,7 @@ class RelayStateTests(unittest.TestCase):
             "parent_path": "/alpha",
             "name": "file.bin",
             "size": size,
-            "md5": "0123456789abcdef0123456789abcdef",
+            "md5": SOURCE_MD5,
             "baidu_staging_path": "/BaiduDriveMover/task/batch/file-1",
             "drive_parent_id": "drive-parent",
         }
@@ -37,6 +38,8 @@ class RelayStateTests(unittest.TestCase):
         record = self.record()
         self.assertEqual(record["status"], relay_state.READY)
         self.assertEqual(record["confirmed_offset"], 0)
+        self.assertEqual(record["hash_offset"], 0)
+        self.assertIsNone(record["md5_state"])
         self.assertEqual(
             relay_state.state_path("task-1", "file-1"),
             "baidu-drive/state/files/task-1/file-1.json",
@@ -77,7 +80,9 @@ class RelayStateTests(unittest.TestCase):
 
     def test_drive_remote_truth_may_move_checkpoint_backwards(self):
         record = relay_state.claim(self.record(4096), "lease-1", self.now())
-        record = relay_state.apply_remote_progress(record, "lease-1", 2048, self.now())
+        record = relay_state.apply_relay_checkpoint(
+            record, "lease-1", 2048, 2048, "opaque-md5-state", None, self.now()
+        )
         record = relay_state.apply_remote_progress(
             record,
             "lease-1",
@@ -85,6 +90,33 @@ class RelayStateTests(unittest.TestCase):
             self.now() + dt.timedelta(minutes=1),
         )
         self.assertEqual(record["confirmed_offset"], 1024)
+        self.assertEqual(record["hash_offset"], 0)
+        self.assertIsNone(record["md5_state"])
+
+    def test_aligned_hash_checkpoint_is_persisted_atomically(self):
+        record = relay_state.claim(self.record(4096), "lease-1", self.now())
+        record = relay_state.apply_relay_checkpoint(
+            record,
+            "lease-1",
+            2048,
+            2048,
+            "opaque-md5-state",
+            None,
+            self.now(),
+        )
+        self.assertEqual(record["confirmed_offset"], 2048)
+        self.assertEqual(record["hash_offset"], 2048)
+        self.assertEqual(record["md5_state"], "opaque-md5-state")
+        with self.assertRaises(relay_state.RelayStateError):
+            relay_state.apply_relay_checkpoint(
+                record,
+                "lease-1",
+                3072,
+                2048,
+                "opaque-md5-state",
+                None,
+                self.now(),
+            )
 
     def test_attach_session_refuses_implicit_replacement(self):
         record = relay_state.claim(self.record(), "lease-1", self.now())
@@ -92,10 +124,12 @@ class RelayStateTests(unittest.TestCase):
         with self.assertRaises(relay_state.RelayStateError):
             relay_state.attach_session(record, "lease-1", "v1.c.d", self.now())
 
-    def test_expired_session_reset_rewinds_remote_offset(self):
+    def test_expired_session_reset_rewinds_remote_and_hash_state(self):
         record = relay_state.claim(self.record(4096), "lease-1", self.now())
         record = relay_state.attach_session(record, "lease-1", "v1.a.b", self.now())
-        record = relay_state.apply_remote_progress(record, "lease-1", 3072, self.now())
+        record = relay_state.apply_relay_checkpoint(
+            record, "lease-1", 3072, 3072, "opaque-md5-state", None, self.now()
+        )
         record = relay_state.replace_expired_session(
             record,
             "lease-1",
@@ -103,32 +137,53 @@ class RelayStateTests(unittest.TestCase):
             self.now() + dt.timedelta(minutes=1),
         )
         self.assertEqual(record["confirmed_offset"], 0)
+        self.assertEqual(record["hash_offset"], 0)
+        self.assertIsNone(record["md5_state"])
         self.assertEqual(record["session_sealed"], "v1.c.d")
 
-    def test_pause_releases_lease_but_keeps_session_and_progress(self):
+    def test_pause_releases_lease_but_keeps_session_and_hash_progress(self):
         record = relay_state.claim(self.record(4096), "lease-1", self.now())
         record = relay_state.attach_session(record, "lease-1", "v1.a.b", self.now())
-        record = relay_state.apply_remote_progress(record, "lease-1", 2048, self.now())
+        record = relay_state.apply_relay_checkpoint(
+            record, "lease-1", 2048, 2048, "opaque-md5-state", None, self.now()
+        )
         record = relay_state.pause(record, "lease-1", self.now(), "soft stop")
         self.assertEqual(record["status"], relay_state.PAUSED)
         self.assertIsNone(record["lease_id"])
         self.assertEqual(record["confirmed_offset"], 2048)
+        self.assertEqual(record["hash_offset"], 2048)
+        self.assertEqual(record["md5_state"], "opaque-md5-state")
         self.assertEqual(record["session_sealed"], "v1.a.b")
 
-    def test_complete_clears_capability_and_lease(self):
+    def test_complete_requires_matching_stream_and_drive_md5(self):
         record = relay_state.claim(self.record(4096), "lease-1", self.now())
         record = relay_state.attach_session(record, "lease-1", "v1.a.b", self.now())
         record = relay_state.complete(
             record,
             "lease-1",
             "drive-file",
-            "abcdef",
+            SOURCE_MD5,
+            SOURCE_MD5,
             self.now(),
         )
         self.assertEqual(record["status"], relay_state.VERIFIED)
         self.assertEqual(record["confirmed_offset"], 4096)
+        self.assertEqual(record["hash_offset"], 4096)
+        self.assertEqual(record["computed_md5"], SOURCE_MD5)
         self.assertIsNone(record["session_sealed"])
         self.assertIsNone(record["lease_id"])
+
+    def test_complete_rejects_drive_md5_mismatch(self):
+        record = relay_state.claim(self.record(4096), "lease-1", self.now())
+        with self.assertRaises(relay_state.RelayStateError):
+            relay_state.complete(
+                record,
+                "lease-1",
+                "drive-file",
+                "f" * 32,
+                SOURCE_MD5,
+                self.now(),
+            )
 
     def test_zero_byte_file_is_runnable(self):
         record = self.record(0)
