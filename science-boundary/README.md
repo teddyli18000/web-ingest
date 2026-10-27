@@ -10,6 +10,7 @@ This workspace is permanent. It is **not** part of `temp-work/` and is not subje
 
 | Direction | Question | State |
 | --- | --- | --- |
+| [`shannon-capacity-c7/`](shannon-capacity-c7/) | Can `α(C7^⊠10)` be improved beyond the 134,753-point public construction? | Active — exact neutral2 MaxSAT reaches 134,753 and misses a breakthrough by one point. |
 
 Keep this table short and human-readable. Add one row when a genuinely new direction is opened. Detailed state belongs inside that direction.
 
