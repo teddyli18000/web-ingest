@@ -18,6 +18,8 @@ on:
       - "google-trending/*.py"
       - "google-trending/tests/**"
       - "git-mirror/**"
+      - "baidu-drive/*.py"
+      - "baidu-drive/tests/**"
   pull_request:
     paths:
       - "README.md"
@@ -33,6 +35,8 @@ on:
       - "google-trending/*.py"
       - "google-trending/tests/**"
       - "git-mirror/**"
+      - "baidu-drive/*.py"
+      - "baidu-drive/tests/**"
   workflow_dispatch:
 
 permissions:
@@ -74,3 +78,7 @@ jobs:
           python3 -m py_compile git-mirror/*.py
           python3 -m unittest discover -s git-mirror/tests -v
           python3 git-mirror/validate_snapshots.py
+      - name: Validate Baidu Drive control plane
+        run: |
+          python3 -m py_compile baidu-drive/controller.py
+          python3 -m unittest discover -s baidu-drive/tests -v
