@@ -68,6 +68,7 @@ def validate_new_points(retained: list[str], additions: list[str]) -> None:
 
 def cmd_build(args: argparse.Namespace) -> None:
     points = load_points(args.certificate)
+    point_ids = [encode(p) for p in points]
     result = json.loads(args.search_result.read_text(encoding="utf-8"))
     kind = result.get("kind")
 
@@ -78,6 +79,8 @@ def cmd_build(args: argparse.Namespace) -> None:
         return
 
     removed: list[str] = []
+    full_python_validation = True
+
     if kind == "direct":
         additions = [decode(int(result["add"]))]
         retained = points[:]
@@ -85,7 +88,7 @@ def cmd_build(args: argparse.Namespace) -> None:
         remove_index = int(result["remove_index"])
         if not 0 <= remove_index < len(points):
             raise ValueError("remove_index out of range")
-        if encode(points[remove_index]) != int(result["remove"]):
+        if point_ids[remove_index] != int(result["remove"]):
             raise ValueError("remove id does not match baseline ordering")
         removed = [points[remove_index]]
         retained = points[:remove_index] + points[remove_index + 1 :]
@@ -100,7 +103,7 @@ def cmd_build(args: argparse.Namespace) -> None:
         if any(not 0 <= i < len(points) for i in indices):
             raise ValueError("replace2 remove index out of range")
         for i, rid in zip(indices, remove_ids):
-            if encode(points[i]) != rid:
+            if point_ids[i] != rid:
                 raise ValueError("replace2 remove id does not match baseline ordering")
         removed = [points[i] for i in indices]
         remove_set = set(indices)
@@ -108,13 +111,42 @@ def cmd_build(args: argparse.Namespace) -> None:
         additions = [decode(int(x)) for x in result["add"]]
         if len(additions) != 3:
             raise ValueError("replace2 must add three points")
+    elif kind == "bulk":
+        remove_ids = [int(x) for x in result["remove"]]
+        add_ids = [int(x) for x in result["add"]]
+        if len(remove_ids) != len(set(remove_ids)):
+            raise ValueError("bulk removal contains duplicates")
+        if len(add_ids) != len(set(add_ids)):
+            raise ValueError("bulk additions contain duplicates")
+        baseline_id_set = set(point_ids)
+        if not set(remove_ids) <= baseline_id_set:
+            raise ValueError("bulk removal contains a non-baseline point")
+        remove_set = set(remove_ids)
+        retained = [p for p, pid in zip(points, point_ids) if pid not in remove_set]
+        removed = [decode(x) for x in remove_ids]
+        additions = [decode(x) for x in add_ids]
+        if set(add_ids) & (baseline_id_set - remove_set):
+            raise ValueError("bulk addition duplicates a retained baseline point")
+        # The C++ structural search replays its exact coverage and 2-SAT constraints.
+        # The authoritative upstream verifier immediately follows in the workflow;
+        # avoid an O(|retained|*|additions|) Python duplicate verification here.
+        full_python_validation = False
     else:
         raise ValueError(f"unknown search result kind: {kind!r}")
 
-    validate_new_points(retained, additions)
+    if full_python_validation:
+        validate_new_points(retained, additions)
+    else:
+        if len(set(additions)) != len(additions):
+            raise ValueError("duplicate additions")
+        if set(retained) & set(additions):
+            raise ValueError("addition already in retained set")
+
     candidate = retained + additions
     if len(candidate) <= BASELINE_SCORE:
         raise ValueError("search result is not an improvement")
+    if len(candidate) != len(set(candidate)):
+        raise ValueError("candidate contains duplicate points")
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
@@ -125,10 +157,14 @@ def cmd_build(args: argparse.Namespace) -> None:
         {
             "candidate": True,
             "score": len(candidate),
-            "removed": removed,
-            "additions": additions,
+            "removed_count": len(removed),
+            "additions_count": len(additions),
         }
     )
+    if len(removed) <= 10:
+        status["removed"] = removed
+    if len(additions) <= 10:
+        status["additions"] = additions
     args.status.write_text(json.dumps(status, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(status))
 
