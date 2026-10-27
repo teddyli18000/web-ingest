@@ -25,6 +25,19 @@ jobs:
         run: |
           set -euo pipefail
           npm install --no-audit --no-fund
+          if ! command -v ffmpeg >/dev/null 2>&1 || ! command -v ffprobe >/dev/null 2>&1; then
+            ok=0
+            for attempt in 1 2 3; do
+              echo "ffmpeg install attempt ${attempt}/3"
+              if sudo timeout 180 apt-get update -qq -o Acquire::Retries=3 && \
+                 sudo env DEBIAN_FRONTEND=noninteractive timeout 180 apt-get install -y -qq ffmpeg >/dev/null; then
+                ok=1
+                break
+              fi
+              sleep 5
+            done
+            test "$ok" -eq 1
+          fi
           command -v ffmpeg
           command -v ffprobe
           command -v google-chrome
