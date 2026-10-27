@@ -1,0 +1,80 @@
+name: Temp Few Shots p004 archived 5D parents
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-few-shots-p004-parents.yml
+      - temp-work/few-shots-p004/parent_ports.py
+      - temp-work/few-shots-p004/family_ports.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-few-shots-p004-parents
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch public sources read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/nathanielitty/lower-bounds-for-shannon-capacity.git "$RUNNER_TEMP/shannon-source"
+          git -C "$RUNNER_TEMP/shannon-source" sparse-checkout set c7
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/molind/c7-five.git "$RUNNER_TEMP/c7-five"
+          git -C "$RUNNER_TEMP/c7-five" sparse-checkout set data
+      - name: Test archived parents
+        id: search
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/shot"
+          python3 temp-work/few-shots-p004/parent_ports.py \
+            "$RUNNER_TEMP/c7-five/data/core-overlap.json.gz" \
+            "$RUNNER_TEMP/shannon-source/c7/R367.txt" \
+            "$RUNNER_TEMP/shot/certificate.json" \
+            "$RUNNER_TEMP/status.json"
+          cat "$RUNNER_TEMP/status.json"
+          [[ -f "$RUNNER_TEMP/shot/certificate.json" ]] && echo found=true >> "$GITHUB_OUTPUT" || echo found=false >> "$GITHUB_OUTPUT"
+      - name: Verify with upstream verifier
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/verify.json"
+          python3 - "$RUNNER_TEMP/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          if not r.get("valid") or int(r["score"])<=134753: raise SystemExit(r)
+          PY
+      - name: Save verified breakthrough in web-ingest only
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p temp-work/few-shots-p004/breakthrough
+          cp "$RUNNER_TEMP/shot/certificate.json" temp-work/few-shots-p004/breakthrough/certificate.json
+          cp "$RUNNER_TEMP/status.json" temp-work/few-shots-p004/breakthrough/parents-status.json
+          cp "$RUNNER_TEMP/verify.json" temp-work/few-shots-p004/breakthrough/parents-verify-result.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add temp-work/few-shots-p004/breakthrough
+          git commit -m "temp: save verified p004 archived-parent breakthrough"
+          git fetch origin main && git rebase origin/main && git push origin HEAD:main
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f "$RUNNER_TEMP/status.json" ]]; then cat "$RUNNER_TEMP/status.json" >> "$GITHUB_STEP_SUMMARY"; fi
+          if [[ -f "$RUNNER_TEMP/verify.json" ]]; then cat "$RUNNER_TEMP/verify.json" >> "$GITHUB_STEP_SUMMARY"; fi
