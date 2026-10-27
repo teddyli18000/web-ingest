@@ -1,0 +1,51 @@
+name: Baidu Drive Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_id:
+        description: Optional web-ingest task ID; blank uses the active task
+        required: false
+        type: string
+      reason:
+        description: Dispatch reason for operator/audit context
+        required: false
+        default: manual
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: baidu-drive-live-state
+  cancel-in-progress: false
+
+jobs:
+  worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Checkout Baidu Drive task
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            baidu-drive
+
+      - name: Reconcile active transfer worker state
+        run: >-
+          python3 baidu-drive/worker.py
+          --task-id '${{ inputs.task_id }}'
+
+      # Authentication provisioning is intentionally absent in this phase.
+      # Once the owner chooses the OAuth/secret layout, preceding steps will
+      # create only ephemeral runner files and export these path variables:
+      #   BAIDU_DRIVE_BAIDU_AUTH_FILE
+      #   BAIDU_DRIVE_RCLONE_CONFIG_FILE
+      #   BAIDU_DRIVE_RCLONE_BIN
+      #   BAIDU_DRIVE_BRIDGE_BIN
+      # The Python worker already fails closed when they are missing.
