@@ -4,9 +4,9 @@ This workspace builds an original GPT/ChatGPT personification film as authored c
 
 The public `Nyankomintsu/world-execute-me-lyric-mv` repository is a **production/process reference only**. Its directing discipline, staged review and deterministic render/QC define the quality bar. We do **not** copy or reuse its source, scene choreography, character art, compositions, timings, lyrics, audio or assets.
 
-## Current status — first act 0–30 s locked
+## Current status — 0–45 s locked
 
-The old technical prototype is rejected and retained only as history. The active first act has been rebuilt and visually reviewed from real rendered video, contact sheets and dense transition frames.
+The old technical prototype is rejected and retained only as history. The active film now has three visually reviewed sections, accepted from real rendered video, contact sheets and dense transition frames rather than from code or green CI alone.
 
 ### 0–15 s — opening v8
 
@@ -25,12 +25,22 @@ The old technical prototype is rejected and retained only as history. The active
 - the thinking pose stays solid and the 21.8 s pose/scene change happens behind a composed near-lens revision plate;
 - 25.2–30 s turns the corrected proof into a handoff: its route leaves the page, reaches the user mark, then a proof-sheet wipe changes camera distance into a hand close-up from the **same** character master.
 
-Full first-act regression:
+### 30–45 s — shared construction v5
 
-- GitHub Actions run: `40187330969`
-- 0–30 s, 960×540, 15 fps
+- the 30 s handoff is physically swallowed by a rising paper floor; the blue correction line continues across the boundary instead of restarting;
+- the map is no longer a floating board/card: it becomes the floor of a low-angle paper architecture space;
+- arches, stairs, canopy, beacon and bridge have front/side/top faces, cast shadows and foreground occlusion;
+- the rejected rectangular hand/photo overlay is gone from the final join;
+- GPT and user are represented by cobalt/gold physical paper contributions inside the shared space;
+- the final v5 join uses small perspective-folded pieces rather than long flat color bars, and the two sides complete the bridge gap together.
+
+Full locked regression:
+
+- GitHub Actions run: `40498732693`
+- 0–45 s, 960×540, 15 fps
 - full decode / duration / black-frame / freeze checks passed
-- dense 14.4–16.0 s inspection confirmed the opening→revision boundary is physically continuous.
+- dense 30 s inspection confirmed handoff → paper-floor entry remains one physical action;
+- dense 40.55 s inspection confirmed build → shared join is hidden by a near-lens paper wipe with no subject pop or opacity exit.
 
 Engineering green checks alone do not count as visual approval; this state was accepted only after rendered-frame review.
 
@@ -54,11 +64,12 @@ Secondary thinking pose: `src/components/gpt_poses.js`
 ## Active timeline
 
 - `src/scenes/opening_v8.js` — 0–15 s
-- `src/scenes/drafts_v10.js` — 15–30 s, wrapping the accepted v9/v6 mechanics where appropriate
+- `src/scenes/drafts_v10.js` — 15–30 s
+- `src/scenes/construct_v5.js` — 30–45 s, with the immersive v3 space and refined v5 join
 - `src/main.js` — active routing
 - `src/components/gpt_art.js` — primary character source/crops/registration
 - `src/components/gpt_poses.js` — secondary pose loader
-- `export/render.mjs` — deterministic Playwright frame capture + ffmpeg encode/contact-sheet generation
+- `export/render.mjs` — deterministic Playwright frame capture + ffmpeg encode/contact-sheet generation; review marks extend with the timeline instead of failing new sections.
 
 ## Production rules
 
@@ -69,13 +80,14 @@ Secondary thinking pose: `src/components/gpt_poses.js`
 - major transitions inherit physical geometry from the previous shot instead of cross-fading finished states;
 - opacity fade is not the main mechanism for important entrances/exits;
 - correction remains visible as residue instead of being magically erased;
+- a character source with an opaque background may not be pasted as a rectangular photo into a spatial scene;
 - each section is rendered and visually reviewed before the next section starts;
 - temporary CI workflows are removed immediately after their gate passes.
 
-## Next gate — 30–45 s / shared construction
+## Next gate — 45–60 s / quiet continuation
 
-The next section begins from the v10 handoff close-up. The blue corrected route and gold user mark become shared physical material: the camera follows them into a paper-map workspace where GPT and the user jointly fold/build a new structure. This section must introduce a new spatial language instead of extending the revision desk.
+The last section must resolve the paper world without turning into a conventional “goodbye.” The completed bridge/world should fold back into one shared working page, keeping both cobalt and gold marks alive near an unfinished corner. The emotional read is continuation: the work can resume from here.
 
 ## Retained rejected material
 
-Old scenes/assets may remain temporarily for comparison or reusable low-level techniques. Earlier opening/revision versions and the original mascot are **not** approved film content and must not be reintroduced into the active timeline.
+Old scenes/assets may remain temporarily for comparison or reusable low-level techniques. Earlier opening/revision/construction versions and the original mascot are **not** approved film content and must not be reintroduced into the active timeline.
