@@ -1,0 +1,71 @@
+name: temp labs-100 memetic tabu
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-labs-100-memetic.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-labs-100-memetic
+  cancel-in-progress: false
+
+jobs:
+  memetic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        seed: [101, 202, 303, 404]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run independent memetic-tabu replicas
+        shell: bash
+        run: |
+          set -uo pipefail
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/memetic.cpp \
+            -o /tmp/labs100-memetic
+          set +e
+          /tmp/labs100-memetic \
+            --replicas 4 \
+            --threads 4 \
+            --seconds 3300 \
+            --seed '${{ matrix.seed }}' \
+            --target 574 \
+            | tee /tmp/memetic-${{ matrix.seed }}.log
+          rc=${PIPESTATUS[0]}
+          set -e
+          if [[ "$rc" != 0 && "$rc" != 1 ]]; then
+            exit "$rc"
+          fi
+          python3 - /tmp/memetic-${{ matrix.seed }}.log <<'PY'
+          import re, subprocess, sys
+          path = sys.argv[1]
+          text = open(path, encoding='utf-8').read()
+          m = re.search(r'^FINAL energy=(\d+) seq=([+-]{100})$', text, re.M)
+          if not m:
+              raise SystemExit('missing FINAL line')
+          claimed = int(m.group(1))
+          seq = m.group(2)
+          out = subprocess.check_output([
+              'python3', 'science-boundary/labs-100/code/verify.py', seq
+          ], text=True).strip()
+          verified = int(out)
+          print(f'claimed={claimed} independently_verified={verified}')
+          if claimed != verified:
+              raise SystemExit('independent score mismatch')
+          PY
+      - name: Upload campaign evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-memetic-${{ matrix.seed }}
+          path: /tmp/memetic-${{ matrix.seed }}.log
+          if-no-files-found: warn
