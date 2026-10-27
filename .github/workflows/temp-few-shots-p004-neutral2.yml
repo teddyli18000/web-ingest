@@ -1,0 +1,48 @@
+name: Temp Few Shots p004 neutral 2-for-2 5D search
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-few-shots-p004-neutral2.yml
+      - temp-work/few-shots-p004/neutral2.cpp
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-few-shots-p004-neutral2
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch source R367 read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/nathanielitty/lower-bounds-for-shannon-capacity.git "$RUNNER_TEMP/shannon-source"
+          git -C "$RUNNER_TEMP/shannon-source" sparse-checkout set c7
+      - name: Compile exact neutral exchange scan
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -DNDEBUG -march=native -std=c++20 temp-work/few-shots-p004/neutral2.cpp -o "$RUNNER_TEMP/neutral2"
+      - name: Enumerate all neutral 2-for-2 states
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v "$RUNNER_TEMP/neutral2" "$RUNNER_TEMP/shannon-source/c7/R367.txt" "$RUNNER_TEMP/result.json"
+          cat "$RUNNER_TEMP/result.json"
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f "$RUNNER_TEMP/result.json" ]]; then
+            echo '```json' >> "$GITHUB_STEP_SUMMARY"
+            cat "$RUNNER_TEMP/result.json" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
