@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """Reproduce targeted neighboring-length transfers into length 100.
 
-Public source sequences are from Table 2 of Zhang et al. (2025), arXiv:2504.00987.
-The paper encodes sequences as hexadecimal and pads zero bits on the right to a
-multiple of four. Bit complementation does not change LABS energy, so mapping
-0 -> +1 and 1 -> -1 is sufficient for exact energy checks.
+Sources:
+- Zhang et al. (2025), arXiv:2504.00987, Table 2, for new N=98 and N=99 records.
+- Knauer's historical record table mirrored by borkob/git_labs for the N=102 record.
+
+The Zhang paper encodes sequences as hexadecimal and pads zero bits on the right
+to a multiple of four. Bit complementation does not change LABS energy, so
+mapping 0 -> +1 and 1 -> -1 is sufficient for exact energy checks.
 """
 
 from itertools import combinations, product
@@ -12,6 +15,15 @@ from itertools import combinations, product
 
 def bits(hex_string: str) -> str:
     return "".join(f"{int(ch, 16):04b}" for ch in hex_string)
+
+
+def from_runs(runs: list[int]) -> str:
+    out = []
+    bit = "0"
+    for run in runs:
+        out.extend(bit * run)
+        bit = "1" if bit == "0" else "0"
+    return "".join(out)
 
 
 def energy(bit_string: str) -> int:
@@ -59,6 +71,17 @@ def best_insert_two(source: str):
     return best
 
 
+def best_delete_two(source: str):
+    assert len(source) == 102
+    best = None
+    for p, q in combinations(range(102), 2):
+        candidate = "".join(ch for i, ch in enumerate(source) if i not in (p, q))
+        item = (energy(candidate), p, q, candidate)
+        if best is None or item < best:
+            best = item
+    return best
+
+
 def main() -> None:
     seq99 = bits("0CF30C003783CBCC8DA92AAD4")[:99]
     seq98 = bits("993A76393CDB4BCF78FF00AA8")[:98]
@@ -74,6 +97,19 @@ def main() -> None:
     print("N98 source energy=529")
     print(f"N98->100 best energy={e98} inserted_positions={p},{q} inserted_bits={a},{b}")
     print(to_pm(candidate98))
+
+    runs102 = [
+        3, 5, 6, 4, 2, 4, 3, 3, 1, 1, 1, 2, 1, 2, 2, 1, 1, 1, 1, 1,
+        3, 1, 1, 1, 2, 2, 2, 2, 3, 2, 2, 1, 1, 2, 1, 9, 1, 2, 1, 1,
+        1, 1, 2, 1, 1, 1, 1, 2, 1, 3, 1, 2,
+    ]
+    seq102 = from_runs(runs102)
+    assert len(seq102) == 102
+    assert energy(seq102) == 567
+    e102, p, q, candidate102 = best_delete_two(seq102)
+    print("N102 source energy=567")
+    print(f"N102->100 best energy={e102} deleted_positions={p},{q}")
+    print(to_pm(candidate102))
 
 
 if __name__ == "__main__":
