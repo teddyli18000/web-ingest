@@ -108,10 +108,10 @@ The integration currently pins:
 
 ```text
 teddyli18000/baidu-drive-mover
-f4ca661d367aa2a067344efa989f0bfc95b64618
+a9e76feb18fe9ca1ac680d0ea555aac684d622de
 ```
 
-The standalone mover has a newer exact bounded-range primitive under CI. Update this pin only after that source commit passes its normal gate and the web-ingest integration gate.
+That revision includes exact bounded Baidu byte-range reads and passed the standalone mover CI before being pinned here.
 
 `repository-integrity.yml` copies:
 
