@@ -34,6 +34,8 @@ jobs:
           git -C "$RUNNER_TEMP/c7-five" checkout FETCH_HEAD
           git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
           git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+      - name: Install FFT dependency
+        run: python3 -m pip install --disable-pip-version-check numpy
       - name: Scan every translation of 38 public auxiliary seeds
         id: search
         shell: bash
