@@ -5,10 +5,10 @@ Let v have degree 12, A=N(v) (|A|=12), and B be the 23 non-neighbours.
 Then A is a Ramsey(3,6,12) graph, B is a Ramsey(4,5,23) graph, and every
 vertex of the full graph has degree 11 or 12.
 
-For b in B write X_b=N(b)∩A.  Every X_b must hit every independent 5-set
-of A, otherwise b together with such a 5-set is an independent 6-set.  For
+For b in B write X_b=N(b)∩A. Every X_b must hit every independent 5-set
+of A, otherwise b together with such a 5-set is an independent 6-set. For
 an independent 4-set P of A, the vertices b whose X_b misses P form a clique
-in B; since B is K4-free, at most three columns can miss P.  Therefore
+in B; since B is K4-free, at most three columns can miss P. Therefore
 
     sum_b q_|X_b|(A) <= 3 i_4(A),
 
@@ -17,7 +17,7 @@ subset of A that hits every independent 5-set, and i_4(A) is the number of
 independent 4-sets of A.
 
 This program computes q_s exactly for each catalogue A and minimizes the
-left-hand side over a RELAXATION of all possible B degree sequences.  If even
+left-hand side over a RELAXATION of all possible B degree sequences. If even
 that relaxed minimum exceeds 3 i_4(A), that A type is rigorously impossible.
 The relaxation uses only the published exact lower edge bound e(B)>=101 and
 the elementary Ramsey degree range 5<=d_B<=12; it never assumes a complete
@@ -29,7 +29,6 @@ import argparse
 import gzip
 import itertools
 import json
-import math
 from collections import Counter
 from pathlib import Path
 
@@ -114,10 +113,6 @@ def q_profile(adj: list[int]) -> tuple[list[int], list[int], int, int]:
     indep = independent_table(adj)
     if any(indep[sum(1 << v for v in vs)] for vs in itertools.combinations(range(N_A), 6)):
         raise ValueError("catalogue A contains an independent 6-set")
-    # A should be triangle-free in R(3,6,12).
-    for i in range(N_A):
-        if adj[i] & sum((1 << j) for j in range(i + 1, N_A) if (adj[i] >> j) & 1):
-            pass
     f4 = subset_independent_counts(indep, 4, N_A)
     f5 = subset_independent_counts(indep, 5, N_A)
     i4 = f4[FULL]
@@ -155,7 +150,7 @@ def group_costs(q: list[int], max_x: int, max_n: int = 23) -> list[list[int]]:
 
 def best_relaxed_capacity(a_edges: int, q: list[int], i4: int) -> dict:
     # Degree-11 B vertices have x=11-d_B in 0..6; degree-12 vertices have
-    # x=12-d_B in 0..7.  Here 5<=d_B follows from R(4,4)=18, and d_B<=12
+    # x=12-d_B in 0..7. Here 5<=d_B follows from R(4,4)=18, and d_B<=12
     # follows from the full graph's maximum degree 12.
     dp11 = group_costs(q, 6)
     dp12 = group_costs(q, 7)
@@ -164,8 +159,8 @@ def best_relaxed_capacity(a_edges: int, q: list[int], i4: int) -> dict:
     b_hi = min(122, a_edges + 78)
     for b_edges in range(101, b_hi + 1):
         for t_a in range(13):
-            # t_a/t_b are counts of degree-12 vertices in A/B.  v itself has
-            # degree 12.  Cross-edge double counting gives the formulas below.
+            # t_a/t_b are counts of degree-12 vertices in A/B. v itself has
+            # degree 12. Cross-edge double counting gives the formulas below.
             t_b = 2 * (b_edges - a_edges) - 133 + t_a
             if not 0 <= t_b <= 23:
                 continue
@@ -236,7 +231,8 @@ def analyze(path: Path, wanted_edges: int) -> dict:
             continue
         ordinal = selected
         selected += 1
-        # R(3,6,12) catalogue authentication: triangle-free.
+        # Authenticate the structural properties expected from the published
+        # complete R(3,6,12) catalogue before using a record in a proof filter.
         if any((adj[u] & adj[v]) for u in range(N_A) for v in range(u + 1, N_A) if (adj[u] >> v) & 1):
             raise ValueError(f"raw_index={raw_index}: triangle in claimed R(3,6,12) graph")
         q, witness, i4, i5 = q_profile(adj)
@@ -263,7 +259,7 @@ def analyze(path: Path, wanted_edges: int) -> dict:
             **cap,
         }
         # Keep the 30 cases closest to violation, with survivors first and then
-        # smallest absolute margins.  This is diagnostic only; survivor ordinals
+        # smallest absolute margins. This is diagnostic only; survivor ordinals
         # below are the complete machine-readable continuation set.
         rank = (0 if not cap["ruled_out"] else 1, abs(slack) if slack is not None else INF)
         closest.append((rank, detail))
@@ -303,17 +299,25 @@ def brute_q(adj: list[int]) -> list[int]:
 
 
 def self_test() -> None:
-    # Deterministic family of 12-vertex graphs; compare the zeta-transform q_s
-    # computation with a direct definition.
-    for salt in range(6):
+    # A dense 7-vertex side completely joined to an independent 5-set has
+    # alpha exactly 5, so q_s is non-trivial but q_profile's R(3,6)-relevant
+    # no-I6 precondition is satisfied. Vary the dense side while preserving it.
+    for removed in range(4):
         adj = [0] * N_A
-        for i in range(N_A):
-            for j in range(i + 1, N_A):
-                if ((i * 17 + j * 11 + salt * 7) % 13) < 4:
+        for i in range(7):
+            for j in range(i + 1, 7):
+                if (i + 2 * j) % 5 != removed:
                     adj[i] |= 1 << j
                     adj[j] |= 1 << i
+        for i in range(7):
+            for j in range(7, 12):
+                adj[i] |= 1 << j
+                adj[j] |= 1 << i
+        indep = independent_table(adj)
+        assert not any(indep[m] and m.bit_count() == 6 for m in range(1 << N_A))
         q, _, _, _ = q_profile(adj)
-        assert q == brute_q(adj), (salt, q, brute_q(adj))
+        want = brute_q(adj)
+        assert q == want, (removed, q, want)
 
     # Check group DP against exhaustive products on small cardinalities.
     q = [7, 5, 3, 2, 1, 0, 0, 0] + [INF] * 5
