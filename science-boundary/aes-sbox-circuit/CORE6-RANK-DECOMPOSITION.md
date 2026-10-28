@@ -2,7 +2,7 @@
 
 ## Goal
 
-The merged 102-gate circuit would fall to 101 if its 18-gate core were replaced by a 17-gate circuit exposing the same nine tail factors on the complete care set.  The only gate-count split not already excluded by the five-AND multiplicative lower bound is
+The merged 102-gate circuit would fall to 101 if its 18-gate core were replaced by a 17-gate circuit exposing the same nine tail factors on the complete care set.  The only gate-count splits still relevant are
 
 ```text
 5 AND + 12 linear
@@ -40,19 +40,19 @@ If the raw-AND quotient rank is six, every AND adds a new nonlinear class.  Let 
 T subset E,  dim(T)=4,  dim(E)=6.
 ```
 
-The exact quotient-level census in `enumerate_core6_envelopes.py` gives:
+The exact quotient-level census in `enumerate_core6_envelopes.py` follows only branches for which `span(T,current)` is still rank five.  At the first transition to rank six, the final envelope `E` is fixed; all later independent AND classes must lie inside it.  This gives the complete first-exposure frontier:
 
 ```text
-first-AND spans: 35
-first step join-rank distribution: rank 5 -> 35
-second-AND spans: 2485
-second step join-rank distribution: rank 5 -> 60, rank 6 -> 2425
-unique rank-6 envelopes E after two steps: 585
+depth 2: rank-5 frontier  60, exposed  585 envelopes,  585 new, total  585
+depth 3: rank-5 frontier 210, exposed 1515 envelopes,  960 new, total 1545
+depth 4: rank-5 frontier 270, exposed 1515 envelopes,    0 new, total 1545
+depth 5: rank-5 frontier  30, exposed 1515 envelopes,    0 new, total 1545
+depth 6: rank-5 frontier   0, exposed 1515 envelopes,    0 new, total 1545
 ```
 
-Once `span(T,current)` has rank six, every later independent nonlinear class must lie in that same envelope `E`; otherwise the final six-AND span could not contain both the target space and all six independent AND classes.  Thus the 585 envelopes are complete natural shards for the quotient-rank-six search after the first two nonlinear steps.
+The first AND has 35 reachable nonlinear classes, all of which put `span(T,current)` at rank five.  The rank-five frontier is exhausted after the sixth AND, so every independent six-AND circuit whose final span contains `T` must first expose one of exactly **1,545 reachable six-dimensional envelopes**.  There are no new envelope classes after depth three even though some rank-five partial spans persist longer.
 
-This is only a search-space decomposition, not a 101 construction or an impossibility proof.  The remaining task is to test whether any envelope admits a physical six-AND witness whose AND operands plus nine target forms can be scheduled with at most eleven XOR/XNOR gates.
+This is only a search-space decomposition, not a 101 construction or an impossibility proof.  The remaining task is to test whether any of the 1,545 envelopes admits a physical six-AND witness whose AND operands plus nine target forms can be scheduled with at most eleven XOR/XNOR gates.
 
 ## Current implication
 
@@ -60,5 +60,5 @@ The direct fixed-interface route is now split cleanly:
 
 1. finish the 16-case affine five-AND exact mandatory-form campaign;
 2. if every case has minimum at least 13, discard both `5+12` and quotient-rank-five `6+11`;
-3. search only quotient-rank-six `6+11`, sharded by the 585 reachable nonlinear envelopes;
+3. search only quotient-rank-six `6+11`, sharded by the 1,545 reachable nonlinear envelopes;
 4. if that also fails, the remaining credible 101 routes require changing the middle/core interface or reducing the retained-core outer linear cost.
