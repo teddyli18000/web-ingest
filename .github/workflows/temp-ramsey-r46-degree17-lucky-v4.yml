@@ -1,0 +1,196 @@
+name: Temp Ramsey R46 lucky degree17 SAT v4
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - science-boundary/ramsey-r46/degree17_static_sat_v4.py
+      - .github/workflows/temp-ramsey-r46-degree17-lucky-v4.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-degree17-lucky-v4
+  cancel-in-progress: false
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      max-parallel: 7
+      matrix:
+        index: [0, 1, 2, 3, 4, 5, 6]
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticate catalogue and self-test all encoders
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '3286c5366ddc70f349c3f7e798d7acbc79dc026c7abe0c8f406cad41ca990361  science-boundary/ramsey-r46/data/r36_17.g6' | sha256sum -c -
+          test "$(wc -l < science-boundary/ramsey-r46/data/r36_17.g6)" -eq 7
+          python3 science-boundary/ramsey-r46/degree17_static_sat_v2.py --self-test
+          python3 science-boundary/ramsey-r46/degree17_static_sat_v3.py --self-test
+          python3 science-boundary/ramsey-r46/degree17_static_sat_v4.py --self-test
+      - name: Build pinned Kissat 4.0.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/arminbiere/kissat.git "$RUNNER_TEMP/kissat"
+          git -C "$RUNNER_TEMP/kissat" checkout --quiet 8af8e56f174b778aef3aa45af9f739b2a5f492c2
+          cd "$RUNNER_TEMP/kissat"
+          ./configure >/dev/null
+          make -j2 >/dev/null
+          test "$(build/kissat --version)" = '4.0.4'
+      - name: Generate lucky branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 science-boundary/ramsey-r46/degree17_static_sat_v4.py \
+            --catalog science-boundary/ramsey-r46/data/r36_17.g6 \
+            --index '${{ matrix.index }}' --output /tmp/r46/branch.cnf \
+            | tee /tmp/r46/generate.json
+          head -n 1 /tmp/r46/branch.cnf
+          du -h /tmp/r46/branch.cnf
+      - name: Solve exact lucky branch
+        id: solve
+        shell: bash
+        run: |
+          set -uo pipefail
+          started=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          set +e
+          /usr/bin/time -v timeout --signal=TERM --kill-after=30s 3600 \
+            "$RUNNER_TEMP/kissat/build/kissat" /tmp/r46/branch.cnf \
+            > /tmp/r46/solver.log 2>&1
+          rc=$?
+          set -e
+          finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          case "$rc" in
+            10) status=SAT ;;
+            20) status=UNSAT ;;
+            124|137|143) status=TIMEOUT ;;
+            *) status=ERROR ;;
+          esac
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          python3 - /tmp/r46/generate.json /tmp/r46/summary.json "$status" "$rc" "$started" "$finished" <<'PY'
+          import json,os,sys
+          gen_path,out,status,rc,started,finished=sys.argv[1:]
+          d=json.load(open(gen_path,encoding='utf-8'))
+          d.update(status=status,solver_exit=int(rc),started=started,finished=finished,
+                   kissat_commit='8af8e56f174b778aef3aa45af9f739b2a5f492c2',
+                   github_run_id=os.environ['GITHUB_RUN_ID'])
+          open(out,'w',encoding='utf-8').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          cat /tmp/r46/summary.json
+          tail -n 30 /tmp/r46/solver.log || true
+          [[ "$status" != ERROR ]]
+      - name: Decode and verify SAT model locally
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/ramsey-r46/sat_r46.py decode /tmp/r46/solver.log /tmp/r46/candidate.json
+          python3 science-boundary/ramsey-r46/sat_r46.py verify /tmp/r46/candidate.json
+      - name: Authoritative Few Shots verification on SAT
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate
+          cp /tmp/r46/candidate.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/few-shots-verify.json
+          python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert d.get('valid') is True and str(d.get('score')) == '36', d
+          PY
+      - name: Upload branch evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-degree17-lucky-v4-${{ matrix.index }}
+          path: |
+            /tmp/r46/summary.json
+            /tmp/r46/generate.json
+            /tmp/r46/solver.log
+            /tmp/r46/candidate.json
+            /tmp/r46/few-shots-verify.json
+          if-no-files-found: warn
+          retention-days: 7
+
+  collect:
+    if: always()
+    needs: solve
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ramsey-r46-degree17-lucky-v4-*
+          path: /tmp/parts
+      - name: Aggregate exact branch results
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 - /tmp/parts /tmp/r46/result.json <<'PY'
+          import json,pathlib,sys
+          root=pathlib.Path(sys.argv[1]); out=pathlib.Path(sys.argv[2])
+          rows=[]; hits=[]
+          for p in sorted(root.rglob('summary.json')):
+              d=json.load(open(p,encoding='utf-8')); rows.append(d)
+              cand=p.parent/'candidate.json'; ver=p.parent/'few-shots-verify.json'
+              if cand.exists():
+                  hits.append({'index':d['catalog_index'],'candidate':str(cand),'verify':str(ver) if ver.exists() else None})
+          rows.sort(key=lambda d:d['catalog_index'])
+          result={
+              'campaign':'degree17-lucky-v4',
+              'logical_scope':'all R(4,6,36) graphs whose guaranteed lucky vertex has degree 17',
+              'lucky_identity':'e(B) <= e(A)+17',
+              'b_edge_min':50,
+              'rows':rows,
+              'statuses':{str(d['catalog_index']):d['status'] for d in rows},
+              'all_unsat':len(rows)==7 and all(d['status']=='UNSAT' for d in rows),
+              'sat_count':sum(d['status']=='SAT' for d in rows),
+              'timeout_count':sum(d['status']=='TIMEOUT' for d in rows),
+              'hits':hits,
+          }
+          out.write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({k:v for k,v in result.items() if k not in {'rows','hits'}},sort_keys=True))
+          PY
+      - name: Persist campaign and retire one-shot workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/r46/result.json science-boundary/ramsey-r46/results/degree17-lucky-v4.json
+          for cand in /tmp/parts/*/candidate.json; do
+            [[ -f "$cand" ]] || continue
+            idx=$(python3 - "$cand" <<'PY'
+          import pathlib,sys
+          print(pathlib.Path(sys.argv[1]).parent.name.rsplit('-',1)[-1])
+          PY
+          )
+            cp "$cand" "science-boundary/ramsey-r46/results/degree17-lucky-v4-hit-${idx}.json"
+            ver="$(dirname "$cand")/few-shots-verify.json"
+            [[ ! -f "$ver" ]] || cp "$ver" "science-boundary/ramsey-r46/results/degree17-lucky-v4-hit-${idx}-verify.json"
+          done
+          git rm .github/workflows/temp-ramsey-r46-degree17-lucky-v4.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/results/degree17-lucky-v4*
+          git commit -m 'ramsey-r46: record lucky degree17 v4 campaign'
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
