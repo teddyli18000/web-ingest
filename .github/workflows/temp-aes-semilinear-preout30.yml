@@ -1,0 +1,52 @@
+name: temp-aes-semilinear-preout30
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-semilinear-preout30.yml'
+      - 'science-boundary/aes-sbox-circuit/screen_semilinear_preout30.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-semilinear-preout30
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    strategy:
+      fail-fast: false
+      max-parallel: 9
+      matrix:
+        transform:
+          - {name: A, c: '0x01', k: 0}
+          - {name: B, c: '0x9d', k: 3}
+          - {name: C, c: '0x5b', k: 3}
+        prefix: [0,1,2,3,4,5,6,7,8]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Exact pre+output <=30 screen
+        run: |
+          out=/tmp/aes-preout30-${{ matrix.transform.name }}-${{ matrix.prefix }}
+          mkdir -p "$out"
+          python science-boundary/aes-sbox-circuit/screen_semilinear_preout30.py \
+            --c ${{ matrix.transform.c }} --k ${{ matrix.transform.k }} \
+            --prefix ${{ matrix.prefix }} --out "$out" | tee "$out/run.log"
+          python - <<'PY'
+          import json, glob
+          p=glob.glob('/tmp/aes-preout30-*/summary.json')[0]
+          d=json.load(open(p))
+          if d['counts']['hits_pre_plus_out_le_30']:
+              raise SystemExit('support>=6 budget remains possible; inspect artifact')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-preout30-${{ matrix.transform.name }}-${{ matrix.prefix }}
+          path: /tmp/aes-preout30-${{ matrix.transform.name }}-${{ matrix.prefix }}
