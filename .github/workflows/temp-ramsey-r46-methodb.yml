@@ -1,0 +1,178 @@
+name: Temp Ramsey R46 Method-B shaped search
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-methodb.yml
+      - science-boundary/ramsey-r46/methodb36.cpp
+      - science-boundary/ramsey-r46/results/algorithm22-calibration-best-14.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-methodb
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        mode: [p4, profile]
+        tradeoff: [32, 96, 256]
+        seed: [11, 23]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and self-test Method-B searcher
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -std=c++20 -Wall -Wextra -pedantic \
+            science-boundary/ramsey-r46/methodb36.cpp -o /tmp/methodb36
+          /tmp/methodb36 --self-test
+      - name: Search a shaped basin family
+        id: search
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p /tmp/r46
+          set +e
+          /usr/bin/time -v /tmp/methodb36 \
+            --seed-graph science-boundary/ramsey-r46/results/algorithm22-calibration-best-14.json \
+            --mode '${{ matrix.mode }}' \
+            --tradeoff '${{ matrix.tradeoff }}' \
+            --seed '${{ matrix.seed }}' \
+            --steps 5000000 \
+            --restarts 20 \
+            --slack 1 \
+            --shape-threshold 40 \
+            --kick-percent 25 \
+            --out /tmp/r46/candidate.json \
+            --summary /tmp/r46/summary.json \
+            > /tmp/r46/search.log 2>&1
+          rc=$?
+          set -e
+          cat /tmp/r46/summary.json
+          tail -n 80 /tmp/r46/search.log || true
+          case "$rc" in
+            0) status=FOUND ;;
+            1) status=NO_HIT ;;
+            *) status=ERROR ;;
+          esac
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          python3 - /tmp/r46/summary.json "$status" <<'PY'
+          import json,os,sys
+          p,status=sys.argv[1:]
+          d=json.load(open(p,encoding='utf-8'))
+          d['status']=status
+          d['github_run_id']=os.environ['GITHUB_RUN_ID']
+          d['job_mode']='${{ matrix.mode }}'
+          d['job_tradeoff']=${{ matrix.tradeoff }}
+          d['job_seed']=${{ matrix.seed }}
+          open(p,'w',encoding='utf-8').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          [[ "$status" != ERROR ]]
+      - name: Verify zero-defect candidate with Few Shots
+        if: steps.search.outputs.status == 'FOUND'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate
+          cp /tmp/r46/candidate.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/few-shots-verify.json
+          python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert d.get('valid') is True and d.get('score') == '36', d
+          PY
+      - name: Upload lane result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-methodb-${{ matrix.mode }}-${{ matrix.tradeoff }}-${{ matrix.seed }}
+          path: |
+            /tmp/r46/summary.json
+            /tmp/r46/candidate.json
+            /tmp/r46/search.log
+            /tmp/r46/few-shots-verify.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+  collect:
+    if: always()
+    needs: search
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ramsey-r46-methodb-*
+          path: /tmp/lanes
+      - name: Aggregate campaign
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 - /tmp/lanes /tmp/r46/campaign.json <<'PY'
+          import json,os,pathlib,shutil,sys
+          root,out=map(pathlib.Path,sys.argv[1:])
+          rows=[]
+          for p in root.rglob('summary.json'):
+              d=json.load(open(p,encoding='utf-8'))
+              d['_dir']=str(p.parent)
+              rows.append(d)
+          if not rows:
+              raise SystemExit('no Method-B lane summaries')
+          rows.sort(key=lambda d:(int(d['best_defects']), float(d['profile_distance_scaled']), -int(d['p4']), d['job_mode'], int(d['job_tradeoff']), int(d['job_seed'])))
+          best=rows[0]
+          src=pathlib.Path(best['_dir'])
+          shutil.copyfile(src/'candidate.json','/tmp/r46/best.json')
+          verify=src/'few-shots-verify.json'
+          if verify.exists(): shutil.copyfile(verify,'/tmp/r46/best-verify.json')
+          result={
+              'campaign':'methodb36-shaped',
+              'run_id':os.environ['GITHUB_RUN_ID'],
+              'lanes_completed':len(rows),
+              'found':any(bool(d.get('found')) for d in rows),
+              'best':{k:v for k,v in best.items() if k!='_dir'},
+              'lanes':[{k:v for k,v in d.items() if k!='_dir'} for d in rows],
+          }
+          out.write_text(json.dumps(result,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          print(json.dumps({k:v for k,v in result.items() if k!='lanes'},sort_keys=True))
+          PY
+      - name: Persist compact result
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest=science-boundary/ramsey-r46/results
+          cp /tmp/r46/campaign.json "$dest/methodb36-campaign.json"
+          cp /tmp/r46/best.json "$dest/methodb36-best.json"
+          [[ ! -f /tmp/r46/best-verify.json ]] || cp /tmp/r46/best-verify.json "$dest/methodb36-best-verify.json"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "$dest"
+          git commit -m 'ramsey-r46: record Method-B shaped search' || exit 0
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
+      - name: Upload aggregate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-methodb-aggregate
+          path: /tmp/r46
+          retention-days: 7
