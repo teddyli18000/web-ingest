@@ -1,0 +1,36 @@
+name: temp Thomson 960 D upward index1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-d-upward-index1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  upward:
+    strategy:
+      fail-fast: false
+      matrix:
+        sign: [-1, 1]
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Follow D softest mode upward to index-1
+        run: |
+          python3 science-boundary/thomson-960/code/upward_index1_eigenfollow.py \
+            science-boundary/thomson-960/data/basin-d-018586.json \
+            --mode 0 --sign ${{ matrix.sign }} --escape-amp 0.0015 \
+            --steps 100 --k 10 --curv-floor 0.35 --residual-scale 0.01 \
+            --max-step-rms 0.00018 --grad-tol 0.00003 --max-energy-rise 0.08 \
+            --out "$RUNNER_TEMP/d-up-m0-s${{ matrix.sign }}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-d-up-m0-s${{ matrix.sign }}
+          retention-days: 7
+          path: ${{ runner.temp }}/d-up-m0-s${{ matrix.sign }}.json
