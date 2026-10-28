@@ -1,0 +1,40 @@
+name: temp-aes-plane-prelinear17
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-plane-prelinear17.yml'
+      - 'science-boundary/aes-sbox-circuit/search_plane_prelinear17.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-plane-prelinear17
+  cancel-in-progress: false
+
+jobs:
+  screen:
+    strategy:
+      fail-fast: false
+      matrix:
+        prefix: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Exhaust fixed-field plane orientations
+        run: |
+          mkdir -p /tmp/aes-plane-${{ matrix.prefix }}
+          python science-boundary/aes-sbox-circuit/search_plane_prelinear17.py \
+            --prefix ${{ matrix.prefix }} \
+            --out /tmp/aes-plane-${{ matrix.prefix }}
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-plane-prelinear17-${{ matrix.prefix }}
+          path: /tmp/aes-plane-${{ matrix.prefix }}
