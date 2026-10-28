@@ -1,0 +1,144 @@
+name: temp-aes-semilinear-third-gaps
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-semilinear-third-gaps.yml'
+      - 'science-boundary/aes-sbox-circuit/run_semilinear_third_shard.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-semilinear-third-gaps
+  cancel-in-progress: false
+
+jobs:
+  exactcorr-id:
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        prefix: [0,1,2,3,4]
+        third: [0,1,2]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Exact correction identity shard
+        run: |
+          out=/tmp/aes-gap-id-${{ matrix.prefix }}-${{ matrix.third }}
+          mkdir -p "$out"
+          python science-boundary/aes-sbox-circuit/run_semilinear_third_shard.py \
+            --module search_semilinear_exactcorr --third ${{ matrix.third }} -- \
+            --c 0x01 --k 0 --prefix ${{ matrix.prefix }} --max-support 4 \
+            --max-pre 19 --max-out 17 --out "$out" | tee "$out/run.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-gap-id-${{ matrix.prefix }}-${{ matrix.third }}
+          path: /tmp/aes-gap-id-${{ matrix.prefix }}-${{ matrix.third }}
+
+  exactcorr-9d:
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        prefix: [0,1,2,6,7,8]
+        third: [0,1,2]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Exact correction 9d shard
+        run: |
+          out=/tmp/aes-gap-9d-${{ matrix.prefix }}-${{ matrix.third }}
+          mkdir -p "$out"
+          python science-boundary/aes-sbox-circuit/run_semilinear_third_shard.py \
+            --module search_semilinear_exactcorr --third ${{ matrix.third }} -- \
+            --c 0x9d --k 3 --prefix ${{ matrix.prefix }} --max-support 4 \
+            --max-pre 19 --max-out 17 --out "$out" | tee "$out/run.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-gap-9d-${{ matrix.prefix }}-${{ matrix.third }}
+          path: /tmp/aes-gap-9d-${{ matrix.prefix }}-${{ matrix.third }}
+
+  exactcorr-5b:
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        prefix: [0,3,6]
+        third: [0,1,2]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Exact correction 5b shard
+        run: |
+          out=/tmp/aes-gap-5b-${{ matrix.prefix }}-${{ matrix.third }}
+          mkdir -p "$out"
+          python science-boundary/aes-sbox-circuit/run_semilinear_third_shard.py \
+            --module search_semilinear_exactcorr --third ${{ matrix.third }} -- \
+            --c 0x5b --k 3 --prefix ${{ matrix.prefix }} --max-support 4 \
+            --max-pre 19 --max-out 17 --out "$out" | tee "$out/run.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-gap-5b-${{ matrix.prefix }}-${{ matrix.third }}
+          path: /tmp/aes-gap-5b-${{ matrix.prefix }}-${{ matrix.third }}
+
+  support5-5b:
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        third: [0,1,2]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Rank-four support5 5b shard
+        run: |
+          out=/tmp/aes-gap-support5-5b-3-${{ matrix.third }}
+          mkdir -p "$out"
+          python science-boundary/aes-sbox-circuit/run_semilinear_third_shard.py \
+            --module search_semilinear_support5 --third ${{ matrix.third }} -- \
+            --c 0x5b --k 3 --prefix 3 --max-pre 19 --max-out 17 --out "$out" \
+            | tee "$out/run.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-gap-support5-5b-3-${{ matrix.third }}
+          path: /tmp/aes-gap-support5-5b-3-${{ matrix.third }}
+
+  rank3-5b:
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        third: [0,1,2]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Rank-three support5 5b shard
+        run: |
+          out=/tmp/aes-gap-rank3-5b-3-${{ matrix.third }}
+          mkdir -p "$out"
+          python science-boundary/aes-sbox-circuit/run_semilinear_third_shard.py \
+            --module search_semilinear_support5_rank3 --third ${{ matrix.third }} -- \
+            --c 0x5b --k 3 --prefix 3 --max-pre 19 --max-out 17 --out "$out" \
+            | tee "$out/run.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-gap-rank3-5b-3-${{ matrix.third }}
+          path: /tmp/aes-gap-rank3-5b-3-${{ matrix.third }}
