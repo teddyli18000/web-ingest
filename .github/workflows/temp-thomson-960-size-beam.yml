@@ -1,0 +1,66 @@
+name: temp Thomson 960 multi-step size beam
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-size-beam.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - id: down2
+            route: down
+            depth: 2
+            branch: 3
+            beam: 2
+          - id: up2
+            route: up
+            depth: 2
+            branch: 3
+            beam: 2
+          - id: down3
+            route: down
+            depth: 3
+            branch: 2
+            beam: 2
+          - id: up3
+            route: up
+            depth: 3
+            branch: 2
+            beam: 2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Run multi-step neighboring-size beam
+        run: |
+          python3 science-boundary/thomson-960/code/search_size_beam.py \
+            "$RUNNER_TEMP/few-shots" \
+            --route ${{ matrix.route }} --depth ${{ matrix.depth }} \
+            --branch ${{ matrix.branch }} --beam ${{ matrix.beam }} \
+            --out "$RUNNER_TEMP/result-${{ matrix.id }}.json"
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'result-${{ matrix.id }}.json')
+          d=json.load(open(p)); d.pop('best_points',None)
+          print(json.dumps(d,indent=2))
+          PY
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: thomson-size-beam-${{ matrix.id }}
+          path: ${{ runner.temp }}/result-${{ matrix.id }}.json
+          retention-days: 7
