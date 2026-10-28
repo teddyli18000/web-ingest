@@ -1,0 +1,39 @@
+name: temp labs-100 exact d3 cplus skew-core
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-skewcore-d3-cplus.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build exact enumerator
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/skewcore_d3_cplus_exact.cpp \
+            -o /tmp/d3-cplus
+      - name: Exhaust 2^25 branch and independently verify optimum
+        shell: bash
+        run: |
+          set -euo pipefail
+          /tmp/d3-cplus 4 | tee /tmp/d3-cplus.txt
+          grep -F 'tested=33554432 expected=33554432 ' /tmp/d3-cplus.txt
+          seq=$(sed -n 's/^BESTSEQ energy=[0-9]* odd=[0-9]* seq=//p' /tmp/d3-cplus.txt)
+          python3 science-boundary/labs-100/code/verify.py -- "$seq" | tee /tmp/verify.txt
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: labs100-skewcore-d3-cplus
+          path: |
+            /tmp/d3-cplus.txt
+            /tmp/verify.txt
+          if-no-files-found: warn
