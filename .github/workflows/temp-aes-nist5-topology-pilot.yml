@@ -1,0 +1,46 @@
+name: temp-aes-nist5-topology-pilot
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-nist5-topology-pilot.yml'
+      - 'science-boundary/aes-sbox-circuit/screen_nist5_topologies.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-nist5-topology-pilot
+  cancel-in-progress: false
+
+jobs:
+  screen:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install solver
+        run: python -m pip install --disable-pip-version-check z3-solver==4.13.4.0
+      - name: Screen topology pilot
+        run: |
+          mkdir -p /tmp/aes-nist5-${{ matrix.shard }}
+          python science-boundary/aes-sbox-circuit/screen_nist5_topologies.py \
+            --shard ${{ matrix.shard }} \
+            --shards 4 \
+            --max-topologies 40 \
+            --timeout-ms 1000 \
+            --seed 20261027 \
+            --out /tmp/aes-nist5-${{ matrix.shard }}/results.jsonl
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-nist5-pilot-${{ matrix.shard }}
+          path: /tmp/aes-nist5-${{ matrix.shard }}
