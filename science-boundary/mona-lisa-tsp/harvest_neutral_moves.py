@@ -6,7 +6,7 @@ enumerate every sparse-graph 2-edge reconnect anywhere in the full instance.
 Freeze a distinct neutral exchange per face if found. Any gain > 0 is written
 as a full, independently verifiable p010 certificate, never only a claim.
 """
-import argparse,gzip,importlib.util,json,os,time
+import argparse,gzip,importlib.util,json,math,os,time
 from pathlib import Path
 import networkx as nx
 
@@ -117,6 +117,24 @@ def main():
                   tuple(tuple(q) for q in move['added']))
         unique.setdefault(identity,move)
     neutral=list(unique.values())
+    spec=importlib.util.spec_from_file_location('v',Path(os.environ['FEWSHOTS_ROOT'])/
+        'problems/p010-mona-lisa-tsp/verify/verify.py')
+    v=importlib.util.module_from_spec(spec);spec.loader.exec_module(v)
+    xs,ys=v.coordinates()
+    assert v.tour_length([x+1 for x in tour])==5757191
+    # Independently re-evaluate each full 4-edge edit as an actual 100K-city tour.
+    for k,move in enumerate(neutral):
+        rem=[tuple(q-1 for q in pair) for pair in move['removed']]
+        add=[tuple(q-1 for q in pair) for pair in move['added']]
+        switch(adj,rem,add)
+        candidate=reconstruct(adj)
+        assert v.tour_length(candidate)==5757191
+        switch(adj,add,rem)
+        def eu(edge):
+            a,b=edge
+            return math.hypot(xs[a]-xs[b],ys[a]-ys[b])
+        move['euclidean_delta']=math.fsum(map(eu,add))-math.fsum(map(eu,rem))
+        if k%50==0:print(json.dumps({'stage':'verify','index':k}),flush=True)
     data={'source':'few-shots p010 baseline and ElimTSP public sparse graph',
           'baseline_score':5757191,'positive_faces':len(faces),
           'neutral_moves':neutral,'positive_moves':positive,
@@ -127,10 +145,6 @@ def main():
     dest.write_text(json.dumps(data,indent=2)+'\n')
     print(json.dumps({k:v for k,v in data.items()
       if k not in ['neutral_moves','positive_moves']}),flush=True)
-    spec=importlib.util.spec_from_file_location('v',Path(os.environ['FEWSHOTS_ROOT'])/
-        'problems/p010-mona-lisa-tsp/verify/verify.py')
-    v=importlib.util.module_from_spec(spec);spec.loader.exec_module(v)
     if positive:
         assert v.tour_length(json.loads(Path(z.candidate).read_text())['tour'])==best_score
-    assert v.tour_length([x+1 for x in tour])==5757191
 if __name__=='__main__':main()
