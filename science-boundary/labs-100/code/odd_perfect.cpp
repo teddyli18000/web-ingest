@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <iostream>
 #include <limits>
@@ -59,7 +60,6 @@ static bool make_odd_perfect(Seq&s,Corr&c,long long&e,std::mt19937_64&rng,int ma
         std::shuffle(order.begin(),order.end(),rng);
         for(int p:order){ long long x=score_after_flip(s,c,e,p,true); if(x<best){best=x;bp=p;} }
         if(bp>=0){ flip(s,c,e,bp); oe=best; continue; }
-        // escape odd-energy local minima with a random 2-flip kick
         int a=int(rng()%100),b=int(rng()%100); if(a==b)b=(b+1)%100;
         flip(s,c,e,a); flip(s,c,e,b); oe=odd_energy(c);
     }
