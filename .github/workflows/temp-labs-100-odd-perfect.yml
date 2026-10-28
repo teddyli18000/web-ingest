@@ -1,8 +1,9 @@
-name: temp labs-100 odd-perfect calibration
+name: temp labs-100 structured calibration
 on:
   push:
     paths:
       - 'science-boundary/labs-100/code/odd_perfect.cpp'
+      - 'science-boundary/labs-100/code/lag_homotopy.cpp'
       - '.github/workflows/temp-labs-100-odd-perfect.yml'
   workflow_dispatch:
 permissions:
@@ -13,14 +14,14 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - name: Build and run
+      - name: Build and run homotopy search
         shell: bash
         run: |
           set -euo pipefail
-          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG science-boundary/labs-100/code/odd_perfect.cpp -o /tmp/odd-perfect
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG science-boundary/labs-100/code/lag_homotopy.cpp -o /tmp/lag-homotopy
           set +e
-          /tmp/odd-perfect --runs 16 --threads 4 --proposals 20000 --repair 80 --seed 1 | tee /tmp/odd-perfect.txt
+          /tmp/lag-homotopy --runs 24 --threads 4 --steps 15000 --seed 1 | tee /tmp/lag-homotopy.txt
           rc=${PIPESTATUS[0]}
           set -e
-          grep -F 'FINAL energy=' /tmp/odd-perfect.txt
+          grep -F 'FINAL energy=' /tmp/lag-homotopy.txt
           exit 0
