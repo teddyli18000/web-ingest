@@ -1,0 +1,49 @@
+name: temp-aes-sbox-twoexact
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-sbox-twoexact.yml'
+permissions:
+  contents: read
+jobs:
+  twoexact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        relation: [exact, odc-zero]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build current ABC
+        run: |
+          git clone --depth 1 https://github.com/berkeley-abc/abc.git /tmp/abc
+          make -C /tmp/abc -j2 ABC_USE_PIC=1
+          /tmp/abc/abc -c 'twoexact -h' > /tmp/twoexact-help.txt 2>&1 || true
+      - name: Generate merged-102 relation
+        run: |
+          mkdir -p /tmp/aes-twoexact
+          python3 science-boundary/aes-sbox-circuit/make_102_core_relation.py --outdir /tmp/aes-twoexact
+          wc -l /tmp/aes-twoexact/*.pla
+      - name: Run 17-node XAIG relation synthesis
+        run: |
+          cd /tmp/aes-twoexact
+          set +e
+          timeout 600s /tmp/abc/abc -c "twoexact -g -I 4 -N 17 ${{ matrix.relation }}.pla" \
+            > "${{ matrix.relation }}-N17.log" 2>&1
+          rc=$?
+          set -e
+          echo "exit_code=$rc" | tee "${{ matrix.relation }}-status.txt"
+          cat "${{ matrix.relation }}-N17.log"
+          # ABC twoexact counts AIG/XAIG nodes with complemented edges. Any SAT
+          # result is only a candidate generator for p008 and must be translated
+          # and re-costed in the stricter AND/XOR/XNOR library before use.
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-twoexact-${{ matrix.relation }}
+          path: |
+            /tmp/aes-twoexact
+            /tmp/twoexact-help.txt
