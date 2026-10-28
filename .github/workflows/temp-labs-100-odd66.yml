@@ -1,0 +1,52 @@
+name: temp labs-100 exact O66 layer
+
+on:
+  push:
+    paths:
+      - 'science-boundary/labs-100/code/cpsat_odd66.py'
+      - '.github/workflows/temp-labs-100-odd66.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check -q 'ortools==9.15.6755'
+      - name: Recover known O66 single18 witness
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/cpsat_odd66.py \
+            --case single18 --target 33562 --seconds 120 --workers 4 --seed 1 --smoke \
+            | tee /tmp/smoke.txt
+          grep -F 'SMOKE energy=33562 odd=66 asum=0 bsum=2 classes=([17], [], [])' /tmp/smoke.txt
+          grep -F 'FOUND case=single18 energy=33562 odd=66' /tmp/smoke.txt
+
+  target:
+    needs: smoke
+    strategy:
+      fail-fast: false
+      matrix:
+        case: [single18, double-same, double-mixed]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check -q 'ortools==9.15.6755'
+      - name: Exact target search for ${{ matrix.case }}
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/cpsat_odd66.py \
+            --case '${{ matrix.case }}' --target 574 --seconds 720 --workers 4 --seed 1 \
+            | tee /tmp/out.txt
+          grep -E '^(STATUS|PROVED_INFEASIBLE|UNRESOLVED|FOUND)' /tmp/out.txt
