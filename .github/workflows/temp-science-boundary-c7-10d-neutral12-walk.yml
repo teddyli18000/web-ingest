@@ -1,0 +1,95 @@
+name: Temp Science Boundary C7 10D neutral1-neutral2 walks
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-10d-neutral12-walk.yml
+      - science-boundary/shannon-capacity-c7/code/c7_10d_neutral12_walk.cpp
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  walk:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        seed: [38001,38002,38003,38004]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch and verify current Few Shots p004 baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          mkdir -p "$RUNNER_TEMP/base" "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+          cp "$RUNNER_TEMP/few-shots/problems/p004-shannon-capacity-c7/baseline/certificate.json" "$RUNNER_TEMP/base/certificate.json"
+          python3 - "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/base/ids.txt" <<'PY'
+          import json,sys
+          pts=json.load(open(sys.argv[1]))['points']
+          if len(pts)!=134753 or len(set(pts))!=134753: raise SystemExit('baseline drift')
+          open(sys.argv[2],'w').write(''.join(f'{int(p,7)}\n' for p in pts))
+          PY
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/base" | tee "$RUNNER_TEMP/result/base-verify.json"
+          python3 - "$RUNNER_TEMP/result/base-verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]));
+          if not r.get('valid') or int(r.get('score',-1))!=134753: raise SystemExit(r)
+          PY
+      - name: Build and run mixed plateau walk
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp science-boundary/shannon-capacity-c7/code/c7_10d_neutral12_walk.cpp -o "$RUNNER_TEMP/walk"
+          export OMP_NUM_THREADS="$(nproc)"
+          /usr/bin/time -v "$RUNNER_TEMP/walk" "$RUNNER_TEMP/base/ids.txt" "$RUNNER_TEMP/result/winner-ids.txt" 5000 '${{ matrix.seed }}' 10 \
+            > "$RUNNER_TEMP/result/walk.json" 2> "$RUNNER_TEMP/result/walk.stderr"
+          cat "$RUNNER_TEMP/result/walk.json"
+          tail -n 160 "$RUNNER_TEMP/result/walk.stderr"
+      - name: Materialize candidate
+        id: materialize
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -f "$RUNNER_TEMP/result/winner-ids.txt" ]]; then echo found=false >> "$GITHUB_OUTPUT"; exit 0; fi
+          python3 - "$RUNNER_TEMP/result/winner-ids.txt" "$RUNNER_TEMP/shot/certificate.json" <<'PY'
+          import json,sys
+          ids=[int(x) for x in open(sys.argv[1]) if x.strip()]
+          if len(ids)!=134754 or len(set(ids))!=134754: raise SystemExit('winner size drift')
+          def enc(z):
+              d=[]
+              for _ in range(10):d.append(str(z%7));z//=7
+              return ''.join(reversed(d))
+          json.dump({'points':[enc(z) for z in ids]},open(sys.argv[2],'w'),separators=(',',':'));open(sys.argv[2],'a').write('\n')
+          PY
+          echo found=true >> "$GITHUB_OUTPUT"
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.materialize.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]));
+          if not r.get('valid') or int(r.get('score',-1))<=134753: raise SystemExit(r)
+          print(f"VERIFIED BREAKTHROUGH score={r['score']}")
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-neutral12-walk-${{ matrix.seed }}
+          path: ${{ runner.temp }}/result
+          retention-days: 14
