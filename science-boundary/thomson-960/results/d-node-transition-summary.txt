@@ -20,12 +20,13 @@ A<->B transverse exits (same run)
   It is reached by mode 2 / negative sign at transverse 0.012 (reaction -0.0006 or 0) and independently by mode 3 / positive sign at transverse 0.020.
 - Larger mode-2 exits reach much higher minima (+0.1577,+0.1782,+0.9264,+0.9705).
 
-Deterministic D harvest (run 40731597265, harvest stage succeeded)
+Deterministic D harvest / durable state
 - Replayed from the clean A<->B saddle with mode 2, sign -1, transverse RMS 0.012, reaction 0.
 - E = 444368.410993084486 = R + 0.0185868871631.
 - L-BFGS iterations = 732, success=True.
 - Delaunay coordination = 36 five / 900 six / 24 seven: same 24-dislocation composition as R/A/B and stationary state C.
 - z-axis C3 nearest-neighbor RMS mismatch = 0.00379058, so D is symmetry-broken rather than exact C3.
+- Full-space Hessian confirms index 0; durable coordinates are now `data/basin-d-018586.json` on main.
 
 C reproduction
 - E = 444368.411417883064 = R + 0.0190116857411.
@@ -41,7 +42,7 @@ C:
 - lambda2 = +1.56333826701
 - lambda3/4 = +3.93738263542 / +3.93738716638
 - exactly two internal negative modes among the computed low spectrum.
-- The near-degenerate negative pair strongly suggests a C3 nontrivial two-dimensional irrep / symmetry-breaking unstable manifold.
+- The near-degenerate negative pair is a C3 symmetry-breaking two-dimensional unstable subspace.
 - Classification: C is an index-2 stationary point, not a basin.
 
 D:
@@ -51,20 +52,31 @@ D:
 - lambda2 = +3.03400938639
 - lambda3 = +4.08218186195
 - all 14 computed low modes positive; zero negative modes.
-- Classification: D is a genuine local minimum. Its very soft lambda0 makes D-centered transition searches scientifically attractive.
+- Classification: D is a genuine local minimum.
 
-B<->D string (run 40731597265)
-- 9 images, 240 descent/reparameterization iterations, no climbing.
+D low-mode exits (run 40733174426)
+- Modes 0..3 x both signs, amplitudes 0.0015,0.003,0.006,0.012,0.020,0.032,0.045; all eight jobs completed successfully.
+- No endpoint below R and no new low basin beyond A/B/D.
+- mode0, lambda~0.423628, BOTH signs: every amplitude 0.0015..0.032 goes to B. At 0.045 only high minima appear (about R+0.427 or R+1.322). Thus D's very softest mode is not a hidden lower portal; it robustly feeds B on both sides after relaxation.
+- mode1+, lambda~1.396821: 0.0015 stays D; 0.003..0.032 -> B; 0.045 -> R+0.835 high state.
+- mode1-: 0.0015 -> B; 0.003..0.020 -> A; larger amplitudes -> high states.
+- mode2+: small amplitudes alternate D/B; 0.045 -> A; 0.032 -> R+0.828 high state.
+- mode2-: 0.0015..0.006 stay D; 0.012 -> B; >=0.020 -> A.
+- mode3-: 0.0015 stays D; 0.003..0.012 -> B; 0.020..0.032 -> A; 0.045 high.
+- mode3+: 0.0015..0.006 stay D; 0.012..0.032 -> B; 0.045 -> R+0.312 high state.
+- Interpretation: D is a small side well embedded in the A/B transition neighborhood. Fixed D eigenmode scanning through mode 3 is saturated and retired; do not extend it mechanically.
+
+B<->D string
+- Initial run 40731597265: 9 images, 240 descent/reparameterization iterations, no climbing.
 - Initial max E = 444368.4344175272.
 - Final observed max E = 444368.4125963093 at interior image 4.
 - Final barrier relative to B = 0.00962344767.
-- This part completed successfully before the subsequent D<->C string terminated under the old endpoint-collapse behavior.
+- Certification run 40733671982 is active: a finer 11-image/360-step string followed by two independent refiners (retained-path-tangent and hybrid eigenfollow). Require a genuine index-1 stationary point before calling B<->D certified.
 
-D<->C string and its reinterpretation (same run)
+D<->C string and its reinterpretation
 - Initial max was only 444368.4114221905, about 4.31e-6 above C.
 - By iteration 10 the maximum became the C endpoint itself: 444368.4114178833 at image 8 of 9.
 - It stayed at the endpoint through iteration 239 while interior descent steps shrank to 1.67e-7.
-- Old code raised `maximum collapsed to endpoint` and aborted the batch.
 - The Hessian result explains this cleanly: there need not be a D<->C first-order barrier because C itself is an index-2 saddle and D lies on one of its symmetry-breaking downhill branches.
 - Therefore do NOT spend compute trying to certify a D<->C index-1 saddle unless later evidence contradicts the Morse-index classification.
 
@@ -75,12 +87,14 @@ Earlier B<->C attempt (run 40647978833)
 - This is not a certified B<->C saddle. In hindsight the failure is consistent with mixing an index-2 C endpoint into an algorithm designed to refine a single reaction coordinate.
 
 Method corrections
-- `string_between_seeds.py` now records endpoint collapse rather than throwing away the batch; it preserves the nearest interior probe, two neighboring images and local path tangent.
-- `refine_saddle_path_tangent.py` performs all-dimensional transverse relaxation while retaining the string tangent as the reaction coordinate; useful for genuinely shallow index-1 interfaces.
-- `diagnose_seed_modes.py` provides full-space Hessian classification for arbitrary saved seeds.
-- `search_seed_c3_negative_pair.py` canonicalizes C's negative doublet under C3 and maps its full unstable manifold by phase in a symmetry-reduced fundamental sector.
+- `string_between_seeds.py` records endpoint collapse rather than throwing away the batch; it preserves an interior probe, neighboring images and local path tangent.
+- `refine_saddle_path_tangent.py` performs all-dimensional transverse relaxation while retaining the string tangent as reaction coordinate.
+- `diagnose_seed_modes.py` provides full-space Hessian classification for arbitrary seeds.
+- `search_seed_c3_negative_pair.py` canonicalizes C's negative doublet under C3 and maps its unstable manifold by phase.
+- C3 alone identifies phase modulo 120 degrees, not 60 degrees; theta and theta+60 can differ through cubic C3 invariants. The authoritative portrait therefore covers 0..115 degrees.
 
 Current frontier
-- Run 40732550803 maps C's complete two-dimensional negative eigenspace: phases 0..55 degrees in 5-degree increments, amplitudes 0.0015/0.003/0.006/0.012, with full unconstrained stable relaxation.
-- This is the correct next experiment: enumerate all inequivalent downhill basins of the known index-2 state instead of random full-space kicks.
+- Half-domain C portrait run 40732986870 (0..55 deg x four amplitudes) is computing and is useful only as early evidence.
+- Authoritative full C portrait run 40733401539 covers 0..115 deg in 5-deg steps x amplitudes 0.0015/0.003/0.006/0.012 = 96 full relaxations.
+- B<->D saddle certification run 40733671982 is computing independently with fixed-path-tangent and hybrid refiners.
 - Any endpoint below live_score - 2e-7 immediately triggers stable repolish, live-record re-check, rationalization and official verifier.
