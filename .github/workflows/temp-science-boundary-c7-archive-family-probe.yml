@@ -1,0 +1,62 @@
+name: Temp Science Boundary C7 archive family probe
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-archive-family-probe.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned c7-five archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/c7-five"
+          git -C "$RUNNER_TEMP/c7-five" remote add origin https://github.com/molind/c7-five.git
+          git -C "$RUNNER_TEMP/c7-five" fetch --depth 1 origin ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+          git -C "$RUNNER_TEMP/c7-five" checkout FETCH_HEAD
+          mkdir -p "$RUNNER_TEMP/src" "$RUNNER_TEMP/result"
+          tar -xzf "$RUNNER_TEMP/c7-five/archive/source.tar.gz" -C "$RUNNER_TEMP/src"
+      - name: Inventory historical 367-set families
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/src" "$RUNNER_TEMP/result/report.txt" <<'PY'
+          import pathlib,re,sys
+          root=pathlib.Path(sys.argv[1]); out=pathlib.Path(sys.argv[2])
+          family=re.compile(r'family[_ -]?[abde]',re.I)
+          key=re.compile(r'(367|parent|witness|seed|component|exchange|json|txt)',re.I)
+          rows=[]
+          for p in sorted(root.rglob('*')):
+              if not p.is_file() or p.suffix not in {'.py','.cpp','.h','.md','.txt'}: continue
+              try: text=p.read_text(errors='replace')
+              except Exception: continue
+              if not family.search(p.name+'\n'+text): continue
+              hits=[]
+              for n,line in enumerate(text.splitlines(),1):
+                  if family.search(line) or (key.search(line) and any(x in line.lower() for x in ('367','parent','witness','seed','.json','.txt'))):
+                      hits.append(f'{n}: {line[:300]}')
+              rows.append((str(p.relative_to(root)),len(text),hits[:80]))
+          with out.open('w') as h:
+              h.write(f'family_related_files={len(rows)}\n')
+              for name,size,hits in rows:
+                  h.write(f'\n===== {name} bytes={size} =====\n')
+                  h.write('\n'.join(hits)+'\n')
+          print(out.read_text()[:60000])
+          PY
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-archive-family-probe
+          path: ${{ runner.temp }}/result/report.txt
+          retention-days: 14
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          { echo '## C7 archive family probe'; echo '```text'; head -n 300 "$RUNNER_TEMP/result/report.txt" 2>/dev/null || true; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
