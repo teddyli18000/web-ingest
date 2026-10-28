@@ -1,0 +1,42 @@
+name: temp-aes-core5-cost-beam
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-core5-cost-beam.yml'
+      - 'science-boundary/aes-sbox-circuit/search_core5_cost.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-core5-cost-beam
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [2026102701, 2026102702, 2026102703, 2026102704]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Search cost-aware five-AND witnesses
+        run: |
+          mkdir -p /tmp/aes-core5-cost-${{ matrix.seed }}
+          python science-boundary/aes-sbox-circuit/search_core5_cost.py \
+            --beam 32 \
+            --bucket-factor 4 \
+            --seed ${{ matrix.seed }} \
+            --out /tmp/aes-core5-cost-${{ matrix.seed }}
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-core5-cost-${{ matrix.seed }}
+          path: /tmp/aes-core5-cost-${{ matrix.seed }}
