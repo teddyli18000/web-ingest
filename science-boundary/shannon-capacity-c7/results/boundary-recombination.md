@@ -67,10 +67,22 @@ The same Action run computed:
 
 Again exact perfect matching, no pairwise gain.
 
-## New direction: multi-state union
+## Five-state plateau union: exact MaxSAT optimum
 
-Pairwise perfect matchings do **not** imply that the union of three or more independent sets has maximum independent set 134,753; the difference conflict graph is no longer bipartite in general.  This is a genuinely different search space from bounded exchanges.
+Pairwise perfect matchings do **not** imply that the union of three or more independent sets has maximum independent set 134,753; the difference conflict graph is no longer bipartite in general.  `code/recombine_multi_independent_sets_maxsat.py` therefore removes the universal intersection (which is provably isolated in the whole union), constructs the exact remaining conflict graph with the same base-7 trie, and solves maximum independent set exactly with weighted MaxSAT/RC2.
 
-`code/recombine_multi_independent_sets_maxsat.py` therefore removes the universal intersection (which is provably isolated in the whole union), constructs the exact remaining conflict graph with the same base-7 trie, and solves maximum independent set exactly with weighted MaxSAT/RC2.
+Action run `40651066840`, job `122690982312` regenerated four deterministic distant 134,753 plateau endpoints (seeds 48101–48104), independently Few-Shots-verified all four, and solved the exact MIS of their union with the original Few Shots baseline.
 
-The active experiment generates four distant 134,753 tie states by the deterministic private-pair-guided neutral plateau walk and solves the exact union MIS of `baseline + 4 ties`.  The original walk accepts thousands of legal neutral swaps (seed 48101 accepted 2,264 / 10,000 proposals and improved the radius-1 potential from 26 to 32), so these are not tiny one-exchange variants.
+Exact result:
+
+```json
+{"inputs":5,"input_sizes":[134753,134753,134753,134753,134753],"universal_intersection":133231,"union_size":136281,"difference_vertices":3050,"conflict_edges":1573,"degree_min":1,"degree_max":7,"rc2_cost":1528,"selected_difference":1522,"score":134753,"gain_over_best_input":0}
+```
+
+Thus the complete five-state endpoint union has exact independence number 134,753.  This closes a genuinely multi-state search family, not merely all ten pairwise unions.
+
+The next stronger recombination is the **entire plateau trajectory history** rather than only final endpoints.  Seed 48101 accepted 2,264 legal neutral swaps in 10,000 proposals.  `code/patch_private_guided_trace.py` records every accepted outside point together with all of its original-baseline blockers, and `code/optimize_plateau_trace_maxsat.py` solves exactly over arbitrary combinations of every visited addition plus arbitrary required baseline deletions.  The direct objective is
+
+`134753 + chosen_visited_additions - removed_baseline_points`.
+
+This trajectory-union model strictly contains every individual state visited by that walk and many recombinations that no endpoint union contains.
