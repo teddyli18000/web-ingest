@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Exact lazy-SAT search inside a Hamming ball around a 36-vertex near-miss.
+"""Exact lazy-SAT search in a Hamming ball or annulus around a 36-vertex seed.
 
-All 630 graph edges are variables.  The candidate is constrained to differ from
-an input 36-vertex graph on at most ``radius`` edges.  Safe degree bounds
-11..17 are imposed.  Ramsey clauses are separated lazily: every K4 and every
-independent 6-set found in a SAT model yields a globally valid blocking clause.
-Thus SAT yields an explicit R(4,6,36) witness and UNSAT rigorously excludes the
-entire labelled Hamming ball.
+All 630 graph edges are variables. The candidate is constrained to differ from
+an input 36-vertex graph on ``min_radius..radius`` edges (``min_radius``
+defaults to 0, recovering the original ball search). Safe degree bounds 11..17
+are imposed. Ramsey clauses are separated lazily: every K4 and every independent
+6-set found in a SAT model yields a globally valid blocking clause. Thus SAT
+yields an explicit R(4,6,36) witness and UNSAT rigorously excludes the entire
+labelled ball/annulus.
 
 Requires python-sat.
 """
@@ -62,8 +63,13 @@ def add_degree_bounds(solver: Solver, edge: list[list[int]], start: int) -> int:
     return pool.top
 
 
-def add_hamming_bound(
-    solver: Solver, edge: list[list[int]], seed: list[str], radius: int, start: int
+def add_hamming_bounds(
+    solver: Solver,
+    edge: list[list[int]],
+    seed: list[str],
+    min_radius: int,
+    radius: int,
+    start: int,
 ) -> int:
     pool = IDPool(start_from=start)
     flips = []
@@ -71,12 +77,21 @@ def add_hamming_bound(
         for j in range(i + 1, N):
             var = edge[i][j]
             flips.append(-var if seed[i][j] == "1" else var)
-    cnf = CardEnc.atmost(flips, radius, vpool=pool, encoding=EncType.seqcounter)
-    for clause in cnf.clauses:
+
+    clause_count = 0
+    if min_radius > 0:
+        lower = CardEnc.atleast(flips, min_radius, vpool=pool, encoding=EncType.seqcounter)
+        for clause in lower.clauses:
+            solver.add_clause(clause)
+        clause_count += len(lower.clauses)
+    upper = CardEnc.atmost(flips, radius, vpool=pool, encoding=EncType.seqcounter)
+    for clause in upper.clauses:
         solver.add_clause(clause)
+    clause_count += len(upper.clauses)
+
     print(
-        f"hamming_ball radius={radius} edges={len(flips)} "
-        f"clauses={len(cnf.clauses)} max_var={pool.top}",
+        f"hamming_annulus min_radius={min_radius} radius={radius} edges={len(flips)} "
+        f"clauses={clause_count} max_var={pool.top}",
         flush=True,
     )
     return pool.top
@@ -128,14 +143,16 @@ def distance(rows: list[str], seed: list[str]) -> int:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed-graph", type=Path, required=True)
+    ap.add_argument("--min-radius", type=int, default=0)
     ap.add_argument("--radius", type=int, required=True)
     ap.add_argument("--solver", default="cadical195")
     ap.add_argument("--max-iterations", type=int, default=200_000)
     ap.add_argument("--output", type=Path, default=Path("candidate.json"))
     ap.add_argument("--summary", type=Path)
     args = ap.parse_args()
-    if not 0 <= args.radius <= N * (N - 1) // 2:
-        ap.error("invalid radius")
+    max_radius = N * (N - 1) // 2
+    if not 0 <= args.min_radius <= args.radius <= max_radius:
+        ap.error("require 0 <= min-radius <= radius <= 630")
 
     seed = load_seed(args.seed_graph)
     edge, edge_vars = edge_variables()
@@ -143,6 +160,7 @@ def main() -> int:
     learned: set[tuple[int, tuple[int, ...]]] = set()
     total_added = 0
     result: dict[str, object] = {
+        "min_radius": args.min_radius,
         "radius": args.radius,
         "solver": args.solver,
         "seed_graph": str(args.seed_graph),
@@ -163,10 +181,10 @@ def main() -> int:
 
     with Solver(name=args.solver, bootstrap_with=[]) as solver:
         top = add_degree_bounds(solver, edge, edge_vars + 1)
-        add_hamming_bound(solver, edge, seed, args.radius, top + 1)
+        add_hamming_bounds(solver, edge, seed, args.min_radius, args.radius, top + 1)
         solver.set_phases(seed_phases(edge, seed))
 
-        # Seed with the known near-miss conflicts so the first SAT call need not rediscover them.
+        # These clauses are globally valid, even if min_radius excludes the seed itself.
         k4, ind6 = find_violations(seed)
         print(f"seed_conflicts k4={len(k4)} ind6={len(ind6)}", flush=True)
         for kind, violations in ((4, k4), (6, ind6)):
@@ -180,9 +198,11 @@ def main() -> int:
             if not solver.solve():
                 return finish("UNSAT", 20, iterations=iteration - 1)
             rows = rows_from_model(solver.get_model(), edge)
+            d = distance(rows, seed)
+            if not args.min_radius <= d <= args.radius:
+                raise RuntimeError("cardinality encoding returned an out-of-annulus model")
             k4, ind6 = find_violations(rows)
             if not k4 and not ind6:
-                d = distance(rows, seed)
                 args.output.parent.mkdir(parents=True, exist_ok=True)
                 args.output.write_text(json.dumps({"adjacency": rows}, indent=2) + "\n")
                 return finish("SAT", 0, iterations=iteration, distance=d, output=str(args.output))
@@ -200,8 +220,7 @@ def main() -> int:
             if iteration <= 20 or iteration % 100 == 0:
                 print(
                     f"iter={iteration} k4={len(k4)} ind6={len(ind6)} added={added_now} "
-                    f"total={total_added} distance={distance(rows, seed)} "
-                    f"elapsed={time.monotonic()-started:.3f}s",
+                    f"total={total_added} distance={d} elapsed={time.monotonic()-started:.3f}s",
                     flush=True,
                 )
             if added_now == 0:
