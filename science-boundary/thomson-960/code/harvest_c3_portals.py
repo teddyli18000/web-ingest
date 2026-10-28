@@ -7,11 +7,12 @@ state shows why this distinction matters: a constrained C3 minimum can be a
 useful higher-index portal whose unstable manifold exposes symmetry-broken
 minima.
 
-The search reuses the deterministic low-order global C3 perturbations from
-`search_c3_smooth.py`, but retains one representative geometry for every
-distinct constrained stationary energy below a requested cutoff.  The output is
-intended for a second stage (`diagnose_seed_modes.py` / CHiSD downward search),
-not as a claim that these are full-space minima.
+The trial schedule exactly reproduces the original 40-start C3 smooth search:
+seeds 101/202/303/404, ten trials each, base scales `geomspace(0.008,0.20,9)`
+with the same lognormal jitter.  Unlike the original script, one representative
+geometry for every distinct constrained stationary energy below a requested
+cutoff is retained.  These are portal candidates for later full-space Morse
+classification, not claims of full-space minima.
 """
 from __future__ import annotations
 import argparse, json, math, pathlib
@@ -22,15 +23,14 @@ import search_c3_smooth as c3
 
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument('few_shots')
-    ap.add_argument('--seed',type=int,required=True); ap.add_argument('--trials',type=int,default=20)
+    ap.add_argument('--seed',type=int,required=True); ap.add_argument('--trials',type=int,default=10)
     ap.add_argument('--cutoff-delta',type=float,default=0.5)
     ap.add_argument('--cluster-tol',type=float,default=2e-7); ap.add_argument('--out',required=True)
     args=ap.parse_args(); root=pathlib.Path(args.few_shots)
     live_score,shot=c3.find_live(root); points=c3.load_cert(shot/'certificate.json')
     reps=c3.c3_representatives(points); v0=c3.xyz_to_vars(reps); base=c3.polish(v0,1200)
-    rng=np.random.default_rng(args.seed); scales=np.geomspace(0.008,0.25,11)
+    rng=np.random.default_rng(args.seed); scales=np.geomspace(0.008,0.20,9)
     portals=[]; rows=[]
-    # Include the constrained live state explicitly, but mark it as the reference.
     xbase,_,_=c3.vars_to_full(base.x)
     portals.append({'energy':float(base.fun),'delta_vs_live':float(base.fun)-live_score,
                     'hits':[{'trial':'reference','scale':0.0}],'points':xbase.tolist()})
