@@ -1,0 +1,225 @@
+name: Temp Ramsey R46 lucky d12 residual symmetry
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-d12-residual.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-d12-residual
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      ordinals: ${{ steps.matrix.outputs.ordinals }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: matrix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          p='science-boundary/ramsey-r46/results/d12-anchor-orbits.json'
+          d=json.load(open(p,encoding='utf-8'))
+          todo=sorted(r['branch_ordinal'] for r in d['rows'] if r['status']=='TIMEOUT')
+          assert len(todo)==14, todo
+          include=[{'ordinal':o,'mode':m} for o in todo for m in ('generators','all')]
+          print('matrix='+json.dumps({'include':include},separators=(',',':')))
+          print('ordinals='+json.dumps(todo,separators=(',',':')))
+          PY
+
+  solve:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned encoder dependency and authenticate inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'python-sat==1.9.dev17'
+          echo '3598adba0f769168ae666fb1d0e4ddc653b646a48d12e6b4d5ddfa70ed2c4ce9  science-boundary/ramsey-r46/data/r36_12_e29.g6' | sha256sum -c -
+          echo 'bf403d6b148c60a26d2536ade61d74d552972f701f3fdbb143478d97652c20ec  science-boundary/ramsey-r46/data/r45_23_e101.g6' | sha256sum -c -
+          python science-boundary/ramsey-r46/d12_anchor_orbit_dimacs.py self-test
+      - name: Build pinned Kissat 4.0.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/arminbiere/kissat.git "$RUNNER_TEMP/kissat"
+          git -C "$RUNNER_TEMP/kissat" checkout --quiet 8af8e56f174b778aef3aa45af9f739b2a5f492c2
+          cd "$RUNNER_TEMP/kissat"
+          ./configure >/dev/null
+          make -j2 >/dev/null
+          test "$(build/kissat --version)" = '4.0.4'
+      - name: Generate exact residual-symmetry branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python science-boundary/ramsey-r46/d12_anchor_orbit_dimacs.py generate \
+            --a-catalog science-boundary/ramsey-r46/data/r36_12_e29.g6 \
+            --b-catalog science-boundary/ramsey-r46/data/r45_23_e101.g6 \
+            --ordinal '${{ matrix.ordinal }}' \
+            --residual-symmetry '${{ matrix.mode }}' \
+            --output /tmp/r46/branch.cnf --meta /tmp/r46/meta.json
+          head -n 1 /tmp/r46/branch.cnf
+      - name: Solve exact branch
+        id: solve
+        shell: bash
+        run: |
+          set -uo pipefail
+          started=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          set +e
+          /usr/bin/time -v timeout --signal=TERM --kill-after=30s 600 \
+            "$RUNNER_TEMP/kissat/build/kissat" /tmp/r46/branch.cnf \
+            > /tmp/r46/solver.log 2>&1
+          rc=$?
+          set -e
+          finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          case "$rc" in
+            10) status=SAT ;;
+            20) status=UNSAT ;;
+            124|137|143) status=TIMEOUT ;;
+            *) status=ERROR ;;
+          esac
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          python3 - /tmp/r46/meta.json /tmp/r46/summary.json "$status" "$rc" "$started" "$finished" <<'PY'
+          import json,os,sys
+          meta,out,status,rc,started,finished=sys.argv[1:]
+          d=json.load(open(meta,encoding='utf-8'))
+          d.update(status=status,solver_exit=int(rc),started=started,finished=finished,
+                   github_run_id=os.environ['GITHUB_RUN_ID'],solver='kissat-4.0.4')
+          open(out,'w',encoding='utf-8').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          cat /tmp/r46/summary.json
+          tail -n 20 /tmp/r46/solver.log || true
+          [[ "$status" != ERROR ]]
+      - name: Decode and verify SAT model locally
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python science-boundary/ramsey-r46/d12_anchor_orbit_dimacs.py decode \
+            --a-catalog science-boundary/ramsey-r46/data/r36_12_e29.g6 \
+            --b-catalog science-boundary/ramsey-r46/data/r45_23_e101.g6 \
+            --solver-log /tmp/r46/solver.log --output /tmp/r46/candidate.json
+          python science-boundary/ramsey-r46/sat_r46.py verify /tmp/r46/candidate.json
+      - name: Authoritative Few Shots verification on SAT
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate
+          cp /tmp/r46/candidate.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/few-shots-verify.json
+          python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert d.get('valid') is True and str(d.get('score'))=='36', d
+          PY
+      - name: Upload branch evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-d12-residual-${{ matrix.ordinal }}-${{ matrix.mode }}
+          path: |
+            /tmp/r46/summary.json
+            /tmp/r46/solver.log
+            /tmp/r46/candidate.json
+            /tmp/r46/few-shots-verify.json
+          if-no-files-found: warn
+          retention-days: 7
+
+  collect:
+    if: always()
+    needs: [prepare, solve]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ramsey-r46-d12-residual-*
+          path: /tmp/parts
+      - name: Aggregate residual campaign
+        shell: bash
+        env:
+          EXPECTED_ORDINALS: ${{ needs.prepare.outputs.ordinals }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 - /tmp/parts /tmp/r46/result.json "$EXPECTED_ORDINALS" <<'PY'
+          import json,pathlib,sys
+          root=pathlib.Path(sys.argv[1]); out=pathlib.Path(sys.argv[2]); expected=json.loads(sys.argv[3])
+          rows=[]; verified=[]
+          for p in root.rglob('summary.json'):
+              rows.append(json.load(open(p,encoding='utf-8')))
+              v=p.parent/'few-shots-verify.json'
+              if v.exists(): verified.append(json.load(open(v,encoding='utf-8')))
+          rows.sort(key=lambda r:(r['branch_ordinal'],r['residual_mode']))
+          by={o:[r for r in rows if r['branch_ordinal']==o] for o in expected}
+          decisions={}
+          for o,rs in by.items():
+              if any(r['status']=='SAT' for r in rs): decisions[str(o)]='SAT'
+              elif any(r['status']=='UNSAT' for r in rs): decisions[str(o)]='UNSAT'
+              else: decisions[str(o)]='UNKNOWN'
+          result={
+              'campaign':'lucky-d12-residual-symmetry-timeouts',
+              'source_campaign':'results/d12-anchor-orbits.json',
+              'expected_ordinals':expected,
+              'rows':rows,
+              'decisions':decisions,
+              'closed_unsat':sum(v=='UNSAT' for v in decisions.values()),
+              'sat_count':sum(v=='SAT' for v in decisions.values()),
+              'unknown_count':sum(v=='UNKNOWN' for v in decisions.values()),
+              'verified_sat_count':sum(v.get('valid') is True and str(v.get('score'))=='36' for v in verified),
+              'complete':len(rows)==2*len(expected),
+          }
+          out.write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({k:v for k,v in result.items() if k!='rows'},sort_keys=True))
+          PY
+      - name: Persist campaign and retire one-shot workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/r46/result.json science-boundary/ramsey-r46/results/d12-residual-symmetry.json
+          for cand in /tmp/parts/*/candidate.json; do
+            [[ -f "$cand" ]] || continue
+            d=$(dirname "$cand")
+            tag=$(basename "$d" | sed 's/ramsey-r46-d12-residual-//')
+            cp "$cand" "science-boundary/ramsey-r46/results/d12-residual-${tag}-candidate.json"
+            [[ ! -f "$d/few-shots-verify.json" ]] || cp "$d/few-shots-verify.json" "science-boundary/ramsey-r46/results/d12-residual-${tag}-verify.json"
+          done
+          git rm .github/workflows/temp-ramsey-r46-d12-residual.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/results/d12-residual-*
+          git commit -m 'ramsey-r46: record lucky d12 residual symmetry campaign' || exit 0
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
