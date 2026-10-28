@@ -2,16 +2,16 @@
 """ODC-aware affine beam search for a 5-AND / <=12-linear p008 core.
 
 The fixed 102-gate tail observes all nine core factors on states 1..15 and does
-not observe them at state 0.  Earlier cost beams searched only the exact,
-zero-preserving target functions.  This search enumerates the 16 coherent
+not observe them at state 0. Earlier cost beams searched only the exact,
+zero-preserving target functions. This search enumerates the 16 coherent
 completions of four independent target factors at state 0 and allows affine
 (complemented) AND operands, which models XNOR-generated constants without
 making the nonlinear-span search fully gate-topological.
 
-A witness is only a candidate.  `full_mandatory_count <= 12` is a necessary
+A witness is only a candidate. `full_mandatory_count <= 12` is a necessary
 linear-gate count bound, not sufficient unless `zero_helper_closure` is true.
-Any candidate still needs exact gate scheduling and the full 101-gate splice
-verification before it can support a record claim.
+When that complete 12-linear closure exists, the script also emits `core.json`
+in the format consumed by `splice_core_into_102.py`.
 """
 from __future__ import annotations
 
@@ -26,6 +26,7 @@ import search_core5_cost as base
 MASK16 = 0xFFFF
 CONST_CODE = 1 << 9  # final coordinate system: 4 inputs + 5 AND outputs + constant
 BASIS_TARGET_INDICES = (0, 1, 2, 3)
+CORE_INPUT_NAMES = ("q34", "q36", "q39", "q41")
 
 
 def completion_data(pattern: int):
@@ -126,7 +127,7 @@ def full_target_data(state, completed_targets):
     forms = target_forms(state, completed_targets)
     if forms is None:
         return None
-    raw, mandatory, _ops = state
+    _raw, mandatory, _ops = state
     full = set(mandatory)
     for form in forms:
         if not is_free(form):
@@ -227,6 +228,35 @@ def zero_helper_closure(ops, target_form_list, full_mandatory):
     return not remaining, sequence
 
 
+def materialize_core(sequence, target_form_list):
+    """Convert a complete 17-step coordinate closure into an explicit core DAG."""
+    assert len(sequence) == 17, len(sequence)
+    wire_for_code = {1 << i: name for i, name in enumerate(CORE_INPUT_NAMES)}
+    gates = []
+    for op, ac, bc, outc in sequence:
+        assert ac in wire_for_code and bc in wire_for_code, (op, ac, bc, outc)
+        assert wire_for_code[ac] != wire_for_code[bc]
+        out = f"r{len(gates)}"
+        gates.append({
+            "op": op,
+            "a": wire_for_code[ac],
+            "b": wire_for_code[bc],
+            "out": out,
+        })
+        assert outc not in wire_for_code
+        wire_for_code[outc] = out
+
+    target_wire = {}
+    for name, form in zip(base.TARGET_NAMES, target_form_list):
+        code = form_code(form)
+        assert code in wire_for_code, (name, form, code)
+        target_wire[name] = wire_for_code[code]
+    assert len(set(target_wire.values())) == len(base.TARGET_NAMES)
+    assert sum(g["op"] == "AND" for g in gates) == 5
+    assert len(gates) == 17
+    return {"gates": gates, "target_wire": target_wire, "odc_zero": True}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--completion", type=int, required=True, choices=range(16))
@@ -321,6 +351,7 @@ def main():
         print(json.dumps(row, sort_keys=True), flush=True)
 
     candidates = []
+    materialized = None
     for nonlinear_basis, witnesses in states.items():
         for state in witnesses:
             raw_ands, mandatory, ops = state
@@ -331,6 +362,8 @@ def main():
             if len(full) > 12:
                 continue
             closure_ok, closure_sequence = zero_helper_closure(ops, forms, full)
+            if closure_ok and materialized is None:
+                materialized = materialize_core(closure_sequence, forms)
             candidates.append({
                 "completion": args.completion,
                 "completed_target_bit0": [x & 1 for x in completed_targets],
@@ -361,12 +394,15 @@ def main():
         "best_full_mandatory": candidates[0]["full_mandatory_count"] if candidates else None,
         "candidate_count_le_12": len(candidates),
         "zero_helper_closure_count": sum(x["zero_helper_closure"] for x in candidates),
+        "materialized_core": materialized is not None,
         "elapsed_seconds": round(time.time() - started, 3),
     }
     out = pathlib.Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     (out / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     (out / "candidates.json").write_text(json.dumps(candidates[:200], indent=2) + "\n")
+    if materialized is not None:
+        (out / "core.json").write_text(json.dumps(materialized, indent=2) + "\n")
     print(json.dumps(summary, sort_keys=True), flush=True)
 
 
