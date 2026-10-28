@@ -1,0 +1,37 @@
+experiment=exact-hamming-ball
+baseline=few-shots-p003-baseline
+baseline_git_blob=858e9b6c71938a24964ce38e228524d20c4a1870
+radius=8
+seed=33
+new_degree_phase=15
+python=3.12
+python_sat=1.9.dev17
+solver=cadical195
+started_utc=2026-10-27T23:14:25Z
+exit_code=20
+status=UNSAT
+result_line=RESULT UNSAT radius=8 iterations=55 learned_ramsey_clauses=4765 elapsed=4302.300s
+
+--- log tail ---
+hamming_bound radius=8 old_edges=595 clauses=9971 max_var=25846
+iter=1 k4=8 ind6=128 added=136 total_added=136 distance=2 elapsed=2.045s
+iter=2 k4=22 ind6=21 added=43 total_added=179 distance=0 elapsed=4.053s
+iter=3 k4=24 ind6=20 added=44 total_added=223 distance=0 elapsed=6.060s
+iter=4 k4=7 ind6=33 added=40 total_added=263 distance=2 elapsed=8.109s
+iter=5 k4=25 ind6=37 added=62 total_added=325 distance=2 elapsed=10.059s
+iter=6 k4=32 ind6=19 added=51 total_added=376 distance=1 elapsed=12.017s
+iter=7 k4=31 ind6=44 added=75 total_added=451 distance=2 elapsed=13.977s
+iter=8 k4=23 ind6=25 added=48 total_added=499 distance=1 elapsed=15.946s
+iter=9 k4=34 ind6=57 added=91 total_added=590 distance=8 elapsed=17.997s
+iter=10 k4=88 ind6=36 added=124 total_added=714 distance=8 elapsed=20.163s
+iter=11 k4=19 ind6=98 added=117 total_added=831 distance=8 elapsed=22.227s
+iter=12 k4=52 ind6=37 added=89 total_added=920 distance=8 elapsed=24.665s
+iter=13 k4=47 ind6=5 added=52 total_added=972 distance=8 elapsed=26.667s
+iter=14 k4=67 ind6=23 added=90 total_added=1062 distance=8 elapsed=28.723s
+iter=15 k4=50 ind6=65 added=115 total_added=1177 distance=8 elapsed=31.097s
+iter=16 k4=49 ind6=21 added=70 total_added=1247 distance=8 elapsed=33.777s
+iter=17 k4=28 ind6=57 added=85 total_added=1332 distance=8 elapsed=35.791s
+iter=18 k4=58 ind6=4 added=62 total_added=1394 distance=7 elapsed=37.895s
+iter=19 k4=43 ind6=16 added=59 total_added=1453 distance=7 elapsed=39.894s
+iter=20 k4=45 ind6=24 added=69 total_added=1522 distance=8 elapsed=44.209s
+RESULT UNSAT radius=8 iterations=55 learned_ramsey_clauses=4765 elapsed=4302.300s
