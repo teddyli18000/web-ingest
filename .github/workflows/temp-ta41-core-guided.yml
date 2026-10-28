@@ -1,0 +1,49 @@
+name: temp-ta41-core-guided
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/core_guided_lns.py'
+      - '.github/workflows/temp-ta41-core-guided.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-core-guided
+  cancel-in-progress: false
+jobs:
+  explore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install reproducible CP-SAT backend
+        run: python -m pip install 'ortools==9.14.6206'
+      - name: Test feasibility obstruction cores, not another local random walk
+        run: |
+          python3 science-boundary/job-shop-ta41/core_guided_lns.py --seconds 630 --call-seconds 16 --seed 4107 --target 2005 --output science-boundary/job-shop-ta41/results/core-seed4107
+      - name: Independently verify any candidate before saving
+        run: |
+          set -euo pipefail
+          dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/core-seed4107"
+          if test -f "$dir/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$dir" | tee "$dir/upstream-verdict.json"
+            python3 - "$dir" <<'PY'
+          import json, sys
+          from pathlib import Path
+          p = Path(sys.argv[1])
+          s = json.loads((p / 'upstream-verdict.json').read_text())
+          assert s['valid'] and int(s['score']) <= 2005, s
+          PY
+          fi
+      - name: Persist inspection record to main
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/job-shop-ta41/results/core-seed4107/
+          if ! git diff --cached --quiet; then
+            git commit -m 'research(ta41): record deadline-driven infeasibility cores'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
