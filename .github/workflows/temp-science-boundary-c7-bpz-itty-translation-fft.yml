@@ -31,6 +31,8 @@ jobs:
           git -C "$RUNNER_TEMP/itty" checkout FETCH_HEAD
           git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
           git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+      - name: Install FFT dependency
+        run: python3 -m pip install --disable-pip-version-check numpy
       - name: Scan all translations of Itty R367 and companion
         id: search
         shell: bash
@@ -67,6 +69,9 @@ jobs:
         if: always()
         shell: bash
         run: |
-          echo '```json' >> "$GITHUB_STEP_SUMMARY"
-          cat "$RUNNER_TEMP/result/status.json" >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo '## C7 BPZ Itty translated auxiliary seeds via FFT'
+            for f in status.json verify.json; do
+              if [[ -f "$RUNNER_TEMP/result/$f" ]]; then echo '```json'; cat "$RUNNER_TEMP/result/$f"; echo '```'; fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
