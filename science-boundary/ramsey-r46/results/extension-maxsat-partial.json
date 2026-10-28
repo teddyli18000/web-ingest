@@ -1,0 +1,41 @@
+{
+  "campaign": "exact-frozen-core-extension-maxsat-partial",
+  "github_run_id": "40558395307",
+  "solver": "g3",
+  "status": "cancelled-after-2h",
+  "graphs_completed": 2,
+  "note": "The original sequential campaign completed two exact RC2 optima before the 120-minute workflow timeout. These are exact per-core results, but not a ranking of all 37 cores.",
+  "results": [
+    {
+      "name": "h0001",
+      "sha256": "940c4e29a99db3351d21ea821ef53e926140aa3d618705b9800fd7df1810b432",
+      "orientation": "complemented",
+      "triangles": 386,
+      "independent5": 808,
+      "optimum_conflicts": 18,
+      "k4_conflicts": 18,
+      "independent6_conflicts": 0,
+      "new_degree": 14,
+      "neighbor_set": [1, 2, 3, 4, 9, 10, 19, 21, 22, 25, 27, 28, 30, 32],
+      "seconds": 3468.829018
+    },
+    {
+      "name": "h0002",
+      "sha256": "6579602e4175199eea387c1166e81d591e22e8b39db51db65c5d7131591755d4",
+      "orientation": "complemented",
+      "triangles": 390,
+      "independent5": 783,
+      "optimum_conflicts": 18,
+      "k4_conflicts": 11,
+      "independent6_conflicts": 7,
+      "new_degree": 14,
+      "neighbor_set": [0, 2, 4, 10, 11, 19, 23, 24, 27, 28, 30, 32, 33, 34],
+      "seconds": 3397.048968
+    }
+  ],
+  "provenance": {
+    "workflow_commit": "a9246ab1d6ab8b47b7778799326904d4f62f30d7",
+    "artifact_id": "12768270133",
+    "artifact_digest": "sha256:c5e26fac22bf10577e730a99393965dfce3645f76b934cf9321477f146024158"
+  }
+}
