@@ -47,6 +47,29 @@ struct State{
 };
 static int template_coord(int v){return INC[1+v]=='+'?1:-1;}
 
+#ifndef NDEBUG
+static void debug_validate(const State&st){
+ I f{},cnt{},pair{},cancel{};int es=0,ec=0;
+ for(int i=0;i<N;i++)if(st.used[i]){
+  if((i&1)==0){es+=st.s[i];ec++;}
+  for(int j=i+1;j<N;j++)if(st.used[j]){int k=j-i;if((k&1)==0){f[k]+=int(st.s[i])*int(st.s[j]);cnt[k]++;}}
+ }
+ for(int k=2;k<N;k+=2)for(int q=k;q+k<N;q++)if(!st.used[q]&&st.used[q-k]&&st.used[q+k]){
+  pair[k]++;if(st.s[q-k]!=st.s[q+k])cancel[k]++;
+ }
+ if(es!=st.even_sum||ec!=st.even_count){std::cerr<<"even summary mismatch\n";std::abort();}
+ for(int k=2;k<N;k+=2){
+  if(f[k]!=st.fixed[k]||cnt[k]!=st.count[k]||pair[k]!=st.pair[k]||cancel[k]!=st.cancel[k]){
+   std::cerr<<"state mismatch k="<<k<<" fixed "<<f[k]<<"/"<<st.fixed[k]
+            <<" count "<<cnt[k]<<"/"<<st.count[k]<<" pair "<<pair[k]<<"/"<<st.pair[k]
+            <<" cancel "<<cancel[k]<<"/"<<st.cancel[k]<<"\n";std::abort();
+  }
+ }
+}
+#else
+static inline void debug_validate(const State&){}
+#endif
+
 static void add_endpoint_pairs(State&st,int p,int val,int delta){
  // delta=+1 when p becomes fixed, -1 when p ceases to be fixed.
  for(int k=2;k<N;k+=2){
@@ -66,29 +89,20 @@ static void add_middle_pairs_after_unassign(State&st,int p){
 }
 
 static void assign_pos(State&st,int p,int val){
- // Before p becomes fixed it may be the free middle of a cancellation or
- // reinforcement pair; those pairs disappear. Then p may become a fixed
- // endpoint of new pairs.
  remove_middle_pairs_before_assign(st,p);
  add_endpoint_pairs(st,p,val,+1);
  for(int j=0;j<N;j++)if(st.used[j]){int k=std::abs(p-j);if(k>0&&(k%2==0)){st.fixed[k]+=val*int(st.s[j]);st.count[k]++;}}
  st.s[p]=int8_t(val);st.used[p]=1;if((p&1)==0){st.even_sum+=val;st.even_count++;}
-#ifndef NDEBUG
- for(int k=2;k<N;k+=2){int f=(N-k)-st.count[k];if(st.cancel[k]<0||st.pair[k]<st.cancel[k]||2*st.pair[k]>f){std::cerr<<"pair invariant failed assign k="<<k<<"\n";std::abort();}}
-#endif
+ debug_validate(st);
 }
 static void unassign_pos(State&st,int p){
  int val=st.s[p];
- // Remove pairs for which p is currently a fixed endpoint.
  add_endpoint_pairs(st,p,val,-1);
  st.used[p]=0;if((p&1)==0){st.even_sum-=val;st.even_count--;}
  for(int j=0;j<N;j++)if(st.used[j]){int k=std::abs(p-j);if(k>0&&(k%2==0)){st.fixed[k]-=val*int(st.s[j]);st.count[k]--;}}
- // Once p is free it may become the middle of a new pair.
  add_middle_pairs_after_unassign(st,p);
  st.s[p]=0;
-#ifndef NDEBUG
- for(int k=2;k<N;k+=2){int f=(N-k)-st.count[k];if(st.cancel[k]<0||st.pair[k]<st.cancel[k]||2*st.pair[k]>f){std::cerr<<"pair invariant failed unassign k="<<k<<"\n";std::abort();}}
-#endif
+ debug_validate(st);
 }
 static void assign_coord(State&st,int v,int val){int p=1+v;assign_pos(st,p,val);if(v!=49){int q=99-v;int factor=(p&1)?-1:1;assign_pos(st,q,factor*val);}}
 static void unassign_coord(State&st,int v){if(v!=49)unassign_pos(st,99-v);unassign_pos(st,1+v);}
@@ -109,20 +123,15 @@ static int effective_free(const State&st,int k){
 static bool known_residue(const State&st,int k,int&residue){
  bool have=false;int r=0;
  auto merge=[&](int x){x=mod4(x);if(!have){have=true;r=x;}else if(r!=x){r=-1;}};
- // Specialized near-skew identity.
  if(st.used[k])merge(st.s[k]>0?0:2);
- // Wiggenbrock: C_k + C_{N-k} == N (mod 4).  When C_{N-k} is fixed,
- // this determines C_k modulo four. C_{N-k} has exactly k product terms.
  int kk=N-k;
  if(kk>0&&st.count[kk]==k)merge(N-st.fixed[kk]);
- // Prestwich reinforcement: if every free product belongs to a two-edge
- // cancellation/reinforcement pair, the free contribution has fixed residue.
  int f=(N-k)-st.count[k];
  if(f==2*st.pair[k]){
   int reinf=st.pair[k]-st.cancel[k];
   merge(st.fixed[k]+2*reinf);
  }
- if(r<0){residue=-1;return true;} // inconsistent residues => impossible node
+ if(r<0){residue=-1;return true;}
  residue=r;return have;
 }
 
@@ -143,10 +152,6 @@ static bool sum_feasible(const State&st,int target){
  if(target==999)return true;int u=50-st.even_count,d=target-st.even_sum;return std::abs(d)<=u&&((d-u)%2==0);
 }
 
-// Convex interval relaxation subject to the exact sum of all even
-// correlations. Cancellation pairs shrink each independent interval before
-// this joint minimization; residue constraints are handled independently by
-// product_lower_bound.
 static long long coupled_lower_bound(const State&st,int asum,int cap){
  if(asum==999)return product_lower_bound(st,cap);
  const int target_y=(asum*asum-100)/4;
