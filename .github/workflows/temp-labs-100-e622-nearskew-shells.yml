@@ -1,0 +1,49 @@
+name: temp labs-100 E622 near-skew shells
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-e622-nearskew-shells.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-shells:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build E622-seeded corrected near-skew scanner
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('science-boundary/labs-100/code/nss_shell.cpp')
+          s=p.read_text()
+          old='++++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-'
+          new='++--+--+++++++++++++++-------++++--+--+--+--+++--+---++-++---+++---++-+--+-+-+--+-+-+-+-+-+-+--+++--'
+          if old not in s: raise SystemExit('seed anchor missing')
+          s=s.replace(old,new,1)
+          s=s.replace('if(be!=578||odd!=50)return 2;','if(be!=622||odd!=50)return 2;',1)
+          Path('/tmp/nss622.cpp').write_text(s)
+          PY
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG /tmp/nss622.cpp -o /tmp/nss622
+      - name: Exhaust free-coordinate radii 1 through 8
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > /tmp/e622-nearskew-shells.txt
+          for r in 1 2 3 4 5 6 7 8; do
+            /tmp/nss622 "$r" 4 | tee -a /tmp/e622-nearskew-shells.txt
+          done
+          grep -F 'RADIUS free_radius=8 tested=536878650 expected=536878650 ' /tmp/e622-nearskew-shells.txt
+      - name: Upload exact-shell evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-e622-nearskew-shells
+          path: /tmp/e622-nearskew-shells.txt
