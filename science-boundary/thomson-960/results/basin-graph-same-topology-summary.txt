@@ -1,0 +1,48 @@
+Thomson N=960 same-topology low-energy basin graph — local/Actions summary
+Date: 2026-10-27/28
+Live Few Shots record R: 444368.3924061973
+
+Nodes repeatedly identified
+- R: live C3 record, 24 dislocations (36 five / 900 six / 24 seven).
+- A: symmetry-broken same-topology neighbor. Harvested double energy 444368.395686237141; stable termwise-difference repolish gives ~444368.395686226. Delta ~+0.003280029.
+- B: second symmetry-broken same-topology node ~444368.402972861. Delta ~+0.010566664. Same 36/900/24 coordination counts.
+
+Connectivity evidence
+- R -> A independently via:
+  * the softest full-space Hessian doublet over many phases;
+  * 960 -> 961 -> 960 size oscillation;
+  * screened R x B spatial cut-and-splice children.
+- A -> R via A mode 0/+ and other low modes at suitable amplitudes.
+- A -> B via A modes 1/2.
+- B -> A via B modes 0/1/2/3 and random low-mode combinations.
+- B -> R via B mode 3/+ at ~0.018–0.024 rad.
+No fourth low node was found by these same-topology local routes.
+
+Bare corresponding-point geodesic energy profiles (41-point scan; not minimum-energy paths)
+- R -> A: max ~444368.4291307905 at t~0.50; barrier above lower endpoint ~0.036724593.
+- A -> B: max ~444368.4335666153 at t~0.525; barrier above lower endpoint ~0.037880378.
+- R -> B: max ~444368.4663142961 at t~0.525; barrier above R ~0.073908098.
+The direct R->B barrier is approximately the sum of the two segment barriers, consistent with A acting as a genuine intermediate basin along this correspondence.
+
+B Hessian (local independent matrix-free physical-tangent calculation; rigid rotations lifted)
+lowest eigenvalues approximately:
+1.42143383, 2.73430561, 3.59487562, 4.06473996, 5.15833004, 5.48208516, 7.86912020, 9.01757540, ...
+All first modes are positive; B is substantially softer than A (lowest ~2.80384) and R (lowest ~4.82418).
+
+Individual / mixed-mode negative results from B
+- Lowest single modes 0–3: only return to R/A/B or go much higher.
+- Six low-start random combinations of first 8 B modes at 0.010 rad: 3 -> A, 3 -> B.
+- Stratified mixed-mode combinations at RMS 0.016/0.024/0.032 rad, with raw starts ranging ~444372.20 to 444415.38: 5 -> A, 1 -> B.
+Thus larger mixed soft-mode pushes still collapse into the established R/A/B network.
+
+Same-topology cut-and-splice negative results
+- R x A: 5 random equal-half spatial splices; clean seams return R/A, seam-collision children land >R+0.36.
+- R x B: 5 random equal-half splices; clean seams return A, bad seams >R+0.40.
+- R x B screened GA-style test: 160 random planes/split fractions; 59 children passed min-pair >0.06. Relaxed the five lowest raw-energy starts (444368.8996576–444368.9562473): all 5/5 converged to A.
+Conclusion: simple spatial crossover among the 24-dislocation R/A/B family is strongly basin-dominated by A and is not worth repeating without changing parent topology or operator.
+
+Numerical note
+Direct absolute-E L-BFGS can terminate with residual physical gradient because E~4.4e5 and pair summation loses line-search resolution near 1e-10 changes. Stable local work now uses termwise pair-energy differences relative to the start accumulated in long double; gradient remains analytic. Stable repolish changes A by only ~1.1e-8, confirming the basin energies/topology are real rather than underconvergence artifacts.
+
+Current implication
+Pivot away from further same-topology local kicks. Active next routes explicitly mix the merged 20-dislocation D2 family with the 24-dislocation family via (1) screened cut-and-splice after ICP/Kabsch alignment and (2) continuous ICP+Hungarian spherical morphs, looking for 20/22/24-dislocation minima not represented in R/A/B.
