@@ -1,0 +1,45 @@
+name: temp labs-100 conditional low-energy basins
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-half-basin.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  half:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {id: e622-odd-618, fix: odd, target: 618, seed: '++--+--+++++++++++++++-------++++--+--+--+--+++--+---++-++---+++---++-+--+-+-+--+-+-+-+-+-+-+--+++--'}
+          - {id: e622-odd-610, fix: odd, target: 610, seed: '++--+--+++++++++++++++-------++++--+--+--+--+++--+---++-++---+++---++-+--+-+-+--+-+-+-+-+-+-+--+++--'}
+          - {id: e622-odd-598, fix: odd, target: 598, seed: '++--+--+++++++++++++++-------++++--+--+--+--+++--+---++-++---+++---++-+--+-+-+--+-+-+-+-+-+-+--+++--'}
+          - {id: e622-odd-574, fix: odd, target: 574, seed: '++--+--+++++++++++++++-------++++--+--+--+--+++--+---++-++---+++---++-+--+-+-+--+-+-+-+-+-+-+--+++--'}
+          - {id: e622-even-618, fix: even, target: 618, seed: '++--+--+++++++++++++++-------++++--+--+--+--+++--+---++-++---+++---++-+--+-+-+--+-+-+-+-+-+-+--+++--'}
+          - {id: e622-even-574, fix: even, target: 574, seed: '++--+--+++++++++++++++-------++++--+--+--+--+++--+---++-++---+++---++-+--+-+-+--+-+-+-+-+-+-+--+++--'}
+          - {id: e650-odd-618, fix: odd, target: 618, seed: '++--+++++--+++++-+++++--+++++------+++-+---+--+-+-++++++---+----+--+-+-++-+-++--+-+---+-+--++-+-++--'}
+          - {id: e650-odd-574, fix: odd, target: 574, seed: '++--+++++--+++++-+++++--+++++------+++-+---+--+-+-++++++---+----+--+-+-++-+-++--+-+---+-+--++-+-++--'}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Install OR-Tools
+        run: python3 -m pip install --disable-pip-version-check ortools==9.15.6755
+      - name: Conditional exact search
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/cpsat_half_fast.py \
+            --seed '${{ matrix.seed }}' \
+            --fix '${{ matrix.fix }}' \
+            --target '${{ matrix.target }}' \
+            --seconds 900 \
+            --workers 4 | tee /tmp/half.txt
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: labs100-half-${{ matrix.id }}
+          path: /tmp/half.txt
+          if-no-files-found: warn
