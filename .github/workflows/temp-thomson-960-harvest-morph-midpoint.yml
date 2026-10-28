@@ -1,0 +1,39 @@
+name: temp Thomson 960 harvest topology midpoint
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-harvest-morph-midpoint.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  harvest:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Harvest t=0.5 topology-morph basin
+        run: |
+          python3 science-boundary/thomson-960/code/harvest_morph_midpoint.py \
+            "$RUNNER_TEMP/few-shots" --seed 5011 --t 0.5 \
+            --out "$RUNNER_TEMP/midpoint.json"
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'midpoint.json')
+          d=json.load(open(p)); d.pop('points',None)
+          print(json.dumps(d,indent=2))
+          PY
+      - name: Upload midpoint basin
+        uses: actions/upload-artifact@v4
+        with:
+          name: thomson-topology-midpoint
+          path: ${{ runner.temp }}/midpoint.json
+          retention-days: 7
