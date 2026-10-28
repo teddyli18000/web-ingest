@@ -1,0 +1,57 @@
+name: temp-aes-core5-affine-span
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-core5-affine-span.yml'
+      - 'science-boundary/aes-sbox-circuit/prove_core5_rank5_completions.py'
+      - 'science-boundary/aes-sbox-circuit/screen_core5_affine_spans.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-core5-affine-span
+  cancel-in-progress: false
+
+jobs:
+  rank5-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prove rank-5 completions need at least six ANDs
+        run: |
+          mkdir -p /tmp/aes-core5-rank5
+          python science-boundary/aes-sbox-circuit/prove_core5_rank5_completions.py \
+            | tee /tmp/aes-core5-rank5/result.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-core5-rank5-proof
+          path: /tmp/aes-core5-rank5
+
+  rank4-span:
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        case: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Exact affine five-AND span screen
+        run: |
+          out=/tmp/aes-core5-affine-${{ matrix.case }}
+          mkdir -p "$out"
+          python science-boundary/aes-sbox-circuit/screen_core5_affine_spans.py \
+            --case ${{ matrix.case }} --out "$out" | tee "$out/run.log"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-core5-affine-span-${{ matrix.case }}
+          path: /tmp/aes-core5-affine-${{ matrix.case }}
