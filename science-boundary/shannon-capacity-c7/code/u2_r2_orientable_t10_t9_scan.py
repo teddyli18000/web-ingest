@@ -3,14 +3,14 @@
 
 The frozen U2 depth-2 parent has maximum orientable private-pair subset 8, but
 its exact neutral radius<=2 neighborhood contains states with 9,10,11,12
-distinct private pairs.  The previous t=11 search only asked for orientable 11.
+distinct private pairs. The previous t=11 search only asked for orientable 11.
 This program closes the important gap: enumerate the same exact 59-state
 neighborhood, enumerate every size-10 and size-9 private-pair subset and binary
 orientation, deduplicate exact obstruction masks, then scan every translation
 of the public 367-point auxiliary catalog.
 
 For t=10 a record improvement permits at most one auxiliary obstruction hit;
-for t=9 it permits zero.  Any promising FFT shift is replayed exactly and a
+for t=9 it permits zero. Any promising FFT shift is replayed exactly and a
 Few-Shots-ready 10D certificate is materialized.
 """
 import argparse,json,runpy,sys
@@ -63,20 +63,13 @@ def exact_states(P,ring,digits):
     return states,{'states':len(states),'support1_groups':len(one),'support2_pairs':len(two),'owner_pairs':len(ownerpairs),'candidate_pair_trials':trials,'max_pool':maxpool}
 
 
-def private_pairs(state,ring):
-    S=set(state); out=[]
-    for q in range(base.U):
-        if q in S:continue
-        hits=[a for a in S if q in ring.NB[a]]
-        if len(hits)==1:out.append((hits[0],q))
-    return out
-
-
-def orientable_obstructions(state,ring,digits):
-    pp=private_pairs(state,ring); by={}
+def orientable_obstructions(state,ring,digits,nb):
+    Ibits=sum(1<<z for z in state)
+    pp=base.private(Ibits,nb)
+    by={}
     for a,q in pp:by.setdefault(a,[]).append(q)
     owners=sorted(by)
-    Ibits=sum(1<<z for z in state); out={t:{} for t in TS}; stats={}
+    out={t:{} for t in TS}; stats={}
     for t in TS:
         raw=0;subsets=0
         if len(owners)>=t:
@@ -128,13 +121,13 @@ def build(Ibits,X,pairs,PH,PV,ring):
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('tan_root',type=Path);ap.add_argument('c7five_root',type=Path);ap.add_argument('parent_json',type=Path);ap.add_argument('output',type=Path);ap.add_argument('status',type=Path);args=ap.parse_args()
     sys.path.insert(0,str(args.tan_root.resolve()));from shannon.certificates import Ring
-    ring=Ring(base.D);digits=tuple(ring.decode(v) for v in range(base.U))
-    frozen=json.loads(args.parent_json.read_text());P=sorted(map(int,frozen['points']));
+    ring=Ring(base.D);digits=tuple(ring.decode(v) for v in range(base.U));nb=[sum(1<<z for z in ring.NB[v]) for v in range(base.U)]
+    frozen=json.loads(args.parent_json.read_text());P=sorted(map(int,frozen['points']))
     if len(P)!=N or not base.independent(P,digits):raise RuntimeError('parent invalid')
     states,nstat=exact_states(P,ring,digits);print('STATES',json.dumps(nstat,sort_keys=True),flush=True)
-    allobs={t:{} for t in TS};state_stats=[];best_orient=0
+    allobs={t:{} for t in TS};state_stats=[];best_orient=8
     for si,(S,move) in enumerate(states):
-        obs,st=orientable_obstructions(S,ring,digits);mx=max((t for t in TS if obs[t]),default=8);best_orient=max(best_orient,mx)
+        obs,st=orientable_obstructions(S,ring,digits,nb);mx=max((t for t in TS if obs[t]),default=8);best_orient=max(best_orient,mx)
         rec={'state_index':si,'move':move,'stats':st,'max_relevant_orientable':mx};state_stats.append(rec)
         for t in TS:
             for mask,w in obs[t].items():allobs[t].setdefault(mask,(si,w))
@@ -164,7 +157,7 @@ def main():
                 rec={'t':t,'seed':name,'obstruction_index':oi,'parent_state_index':si,'min_hits':mn,'allowed_hits':allowed,'obstruction_size':mask.bit_count()}
                 if best is None or (mn-allowed,-t,mn)<(best['min_hits']-best['allowed_hits'],-best['t'],best['min_hits']):best=rec;print('NEW_BEST',json.dumps(best,sort_keys=True),flush=True)
                 if mn>allowed:continue
-                D=set(base.values(mask));
+                D=set(base.values(mask))
                 for idx in np.argwhere(corr<=allowed):
                     tr=tuple(int(z) for z in idx)
                     for sign in (1,-1):
