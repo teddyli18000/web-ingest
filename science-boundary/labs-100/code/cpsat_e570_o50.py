@@ -8,9 +8,10 @@ B_sum in {2,6,10,14,18}.
 
 The model enforces exact even energy 520, opposite-even-lag mod-4 tables,
 C_50==0 (mod 4), the exact even-correlation sum, and the z=i Fourier identity.
-For the B_sum=10 class, the public E=578 incumbent is supplied as a hint; a
-linear Hamming-distance >=8 constraint excludes the exhaustively checked
-incumbent ball.  UNKNOWN is never treated as a proof.
+For the B_sum=10 class, the normalized reverse+alternate symmetry image of the
+public E=578 incumbent is supplied as a hint; a linear Hamming-distance >=8
+constraint excludes its exhaustively checked radius-7 ball. UNKNOWN is never
+treated as a proof.
 """
 from __future__ import annotations
 
@@ -23,7 +24,9 @@ TARGET=570
 ODD_ENERGY=50
 EVEN_ENERGY=520
 VALID_BSUM=(2,6,10,14,18)
-INC="++++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-"
+# reverse+alternate image of the public E=578 record, normalized to
+# A_sum=0, B_sum=10 and first sign +.
+INC_NORM="+++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-+"
 
 
 def exact(seq:str):
@@ -99,10 +102,12 @@ def build(bsum_value:int):
     model.Add(a2+b2==N+2*alt_even)
 
     if bsum_value==10:
-        # The current record lies in this class.  The exact radius-7 scan proves
-        # no improving sequence occurs in the incumbent ball.
+        ie,io,_,ia,ib=exact(INC_NORM)
+        if (ie,io,ia,ib)!=(578,50,0,10):
+            raise RuntimeError('normalized incumbent check failed')
+        # The radius-7 exclusion transfers to this standard symmetry image.
         diff=[]
-        for i,ch in enumerate(INC):
+        for i,ch in enumerate(INC_NORM):
             incbit=0 if ch=='+' else 1
             diff.append(x[i] if incbit==0 else 1-x[i])
             model.AddHint(x[i],incbit)
