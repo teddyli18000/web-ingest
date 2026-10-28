@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Continue an exact BPZ t=9 blocker-budget exchange search from a root index.
+"""Continue or shard an exact BPZ t=9 blocker-budget exchange search.
 
-This is mathematically the same increasing-index DFS as bpz_t9_exchange_repair.py,
-but passes --root-start to the pinned c7-five solver.  Roots below root_start
-must already have been exhaustively completed by an identical earlier run.
+This is mathematically the same increasing-index DFS as
+``bpz_t9_exchange_repair.py``.  ``--root-start A`` skips root subtrees already
+proved by identical earlier runs.  Optional ``--root-end B`` maps to the pinned
+solver's ``--root-prefix B``, giving an exact independent shard [A,B).
 """
 import argparse,json,subprocess,sys,tempfile
 from pathlib import Path
@@ -17,11 +18,16 @@ def main():
     ap.add_argument('tan_root',type=Path); ap.add_argument('family_root',type=Path)
     ap.add_argument('solver',type=Path); ap.add_argument('output',type=Path); ap.add_argument('status',type=Path)
     ap.add_argument('--case',type=int,required=True); ap.add_argument('--budget',type=int,required=True)
-    ap.add_argument('--root-start',type=int,required=True); ap.add_argument('--cutoff',type=int,default=540)
+    ap.add_argument('--root-start',type=int,required=True)
+    ap.add_argument('--root-end',type=int,default=None,
+                    help='optional exclusive root bound; searches exactly [root-start,root-end)')
+    ap.add_argument('--cutoff',type=int,default=540)
     args=ap.parse_args()
     if not 0<=args.case<20: raise SystemExit('case must be 0..19')
     if not 1<=args.budget<=9: raise SystemExit('budget must be 1..9')
     if args.root_start<0: raise SystemExit('root-start must be nonnegative')
+    if args.root_end is not None and args.root_end < args.root_start:
+        raise SystemExit('root-end must be >= root-start')
 
     sys.path.insert(0,str(args.tan_root.resolve()))
     from shannon.certificates import Ring
@@ -35,18 +41,27 @@ def main():
     with tempfile.TemporaryDirectory() as td:
         inp=Path(td)/'exchange.txt'
         retained,candidates,blockers=ex.export_input(inp,S,bad,Dset,ring,args.budget)
+        cmd=[str(args.solver),str(args.cutoff),'--budget-bitsets','--root-start',str(args.root_start)]
+        if args.root_end is not None:
+            if args.root_end > len(candidates):
+                raise RuntimeError(f'root-end {args.root_end} exceeds candidate count {len(candidates)}')
+            cmd += ['--root-prefix',str(args.root_end)]
         with inp.open('rb') as src:
-            p=subprocess.run([str(args.solver),str(args.cutoff),'--budget-bitsets','--root-start',str(args.root_start)],stdin=src,stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=False,text=True)
+            p=subprocess.run(cmd,stdin=src,stdout=subprocess.PIPE,stderr=subprocess.PIPE,check=False,text=True)
     if p.returncode!=0: raise RuntimeError(f'exchange_dfs failed rc={p.returncode}: {p.stderr[-2000:]}')
     lines=[z for z in p.stdout.splitlines() if z.strip()]
     if not lines: raise RuntimeError('exchange_dfs produced no JSON')
     search=json.loads(lines[-1]); target=args.budget+1
+    expected_end = args.root_end if args.root_end is not None else len(candidates)
+    if int(search.get('root_start',-1)) != args.root_start or int(search.get('root_end',-1)) != expected_end:
+        raise RuntimeError(f'root interval replay drift: requested [{args.root_start},{expected_end}), got {search}')
     status={
         'method':'bpz-t9-one-hit-c7-five-blocker-budget-exchange-dfs-continuation',
         'case_index':args.case,'seed':c['seed'],'obstruction_index':c['obstruction_index'],
         'translation':list(c['translation']),'translation_sign':c['translation_sign'],'bad':bad,
         'budget':args.budget,'target_additions':target,'candidate_vertices':len(candidates),
-        'requested_root_start':args.root_start,'search':search,'solver_stderr_tail':p.stderr[-2000:],
+        'requested_root_start':args.root_start,'requested_root_end':expected_end,
+        'search':search,'solver_stderr_tail':p.stderr[-2000:],
         'candidate':search.get('status')=='witness','complete_tail':search.get('status') in ('witness','exhausted'),
         'family_source_commit':'ae81e0d24b356aef3d388238f6fb4d02c4aa32a5',
         'exchange_solver_source_commit':'ae81e0d24b356aef3d388238f6fb4d02c4aa32a5',
