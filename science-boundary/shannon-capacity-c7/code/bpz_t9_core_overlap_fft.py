@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Scan the portable c7-five core-overlap witnesses against all BPZ t=9 obstructions.
+"""Scan portable c7-five core-overlap witnesses against all BPZ t=9 obstructions.
 
-The portable core-overlap bundle contains two verified 367-word parents whose
-intersection has size 315 and one verified 367-word witness.  These are far from
-the 360-core Family-F component used by the original 38-seed scan.  For each of
-the three explicit sets, this script scans all 160 t=9 obstruction masks and all
-7^5 translations by exact-rounded FFT.  Every zero is replayed combinatorially
-before materializing a 134770-point C7^10 certificate.
+The pinned portable bundle supplies two verified 367-word parents and one
+verified 367-word witness from a different basin than the 360-core Family-F
+component.  We validate the explicit sets and recompute their parent overlap
+instead of hard-coding historical metadata.  For each set, scan all 160 t=9
+obstruction masks and all 7^5 translations by exact-rounded FFT.  Every zero is
+replayed combinatorially before materializing a 134770-point C7^10 certificate.
 """
 import argparse,gzip,json,sys
 from pathlib import Path
@@ -18,8 +18,13 @@ def main():
     sys.path.insert(0,str(args.tan_root.resolve()));from shannon.certificates import Ring
     raw=json.loads((args.tan_root/'data'/'base_c7.json').read_text());I0=set(map(int,raw['I0']));ring=Ring(f.D);digits=tuple(ring.decode(v) for v in range(f.U));nb=[sum(1<<z for z in ring.NB[v]) for v in range(f.U)];obs=f.obstruction_witnesses(I0,ring,digits,nb)
     with gzip.open(args.c7five_root/'data'/'core-overlap.json.gz','rt') as h:b=json.load(h)
-    if int(b.get('parent_intersection_size',-1))!=315:raise RuntimeError('core-overlap intersection drift')
-    seeds=[('core-parent-0',set(map(int,b['parents'][0]))),('core-parent-1',set(map(int,b['parents'][1]))),('core-witness',set(map(int,b['witness'])))]
+    parents=[set(map(int,z)) for z in b['parents']]
+    if len(parents)!=2:raise RuntimeError(f'expected two parents, got {len(parents)}')
+    parent_intersection=len(parents[0]&parents[1])
+    meta=b.get('parent_intersection_size')
+    if meta is not None and int(meta)!=parent_intersection:
+        raise RuntimeError(f'core-overlap metadata mismatch: stored={meta} recomputed={parent_intersection}')
+    seeds=[('core-parent-0',parents[0]),('core-parent-1',parents[1]),('core-witness',set(map(int,b['witness'])))]
     for name,S in seeds:
         if len(S)!=367 or not f.independent(S,digits):raise RuntimeError(f'{name} invalid')
     obs_items=list(obs.items());Fobs=[(mask,w,np.fft.fftn(f.arr(f.values(mask),digits))) for mask,w in obs_items]
@@ -45,7 +50,7 @@ def main():
             if winner:break
         per.append({'seed':name,'min_hits':sb,'histogram':sh});print('SEED_DONE',json.dumps(per[-1],sort_keys=True),flush=True)
         if winner:break
-    status={'method':'bpz-t9-core-overlap-three-portable-seeds-all-translations-fft','candidate':winner is not None,'seed_count':3,'obstruction_masks':160,'cases':cases,'best':best,'per_seed':per,'min_hit_histogram':hist,'one_hit_examples':near[:100],'c7five_source_commit':'ae81e0d24b356aef3d388238f6fb4d02c4aa32a5'};args.status.parent.mkdir(parents=True,exist_ok=True)
+    status={'method':'bpz-t9-core-overlap-three-portable-seeds-all-translations-fft','candidate':winner is not None,'seed_count':3,'parent_intersection_size':parent_intersection,'obstruction_masks':160,'cases':cases,'best':best,'per_seed':per,'min_hit_histogram':hist,'one_hit_examples':near[:100],'c7five_source_commit':'ae81e0d24b356aef3d388238f6fb4d02c4aa32a5'};args.status.parent.mkdir(parents=True,exist_ok=True)
     if not winner:
         status['score']=134753;args.status.write_text(json.dumps(status,indent=2,sort_keys=True)+'\n');print('NONE',json.dumps(status,sort_keys=True));return
     name,oi,t,sign,X,w=winner;Ibits,pairs,o,PH,PV=w;pts,xp=f.build(Ibits,sum(1<<z for z in X),pairs,PH,PV,ring);status.update({'score':len(pts),'winning_seed':name,'winning_obstruction_index':oi,'winning_translation':list(t),'translation_sign':sign,'private_pairs':[list(z) for z in pairs],'orientation':list(o),'PH':PH,'PV':PV,'X_partition':{'X0':xp[0],'XH':xp[1],'XV':xp[2]}});args.output.parent.mkdir(parents=True,exist_ok=True);args.output.write_text(json.dumps({'points':pts},separators=(',',':'))+'\n');args.status.write_text(json.dumps(status,indent=2,sort_keys=True)+'\n');print('FOUND',json.dumps(status,sort_keys=True))
