@@ -10,7 +10,7 @@ import networkx as nx
 def edge(u,v):return (u,v) if u<v else (v,u)
 def main():
  p=argparse.ArgumentParser()
- for k in ['graph','tour','output-graph','output-faces','report']:p.add_argument('--'+k,required=True)
+ for k in ['graph','tour','output-graph','output-faces','output-tour','report']:p.add_argument('--'+k,required=True)
  a=p.parse_args()
  tour=[int(x)-1 for x in json.loads(Path(a.tour).read_text())['tour']]
  n=len(tour);assert n==100000 and len(set(tour))==n
@@ -44,6 +44,7 @@ def main():
  faces.sort(key=lambda x:(-x[0],x[1:]))
  Path(a.output_graph).write_text(f'{n} {len(W)}\n'+''.join(f'{u} {v} {w}\n' for (u,v),w in W.items()))
  Path(a.output_faces).write_text(str(len(faces))+'\n'+''.join(' '.join(map(str,rec))+'\n' for rec in faces))
+ Path(a.output_tour).write_text(str(n)+'\n'+' '.join(map(str,tour))+'\n')
  report={'nodes':n,'edges':len(W),'faces_total':sum(all_lengths.values()),
          'quadrilateral_alternating_faces':len(faces),
          'face_gain_histogram':{str(v):sum(rec[0]==v for rec in faces) for v in sorted({rec[0] for rec in faces})},
