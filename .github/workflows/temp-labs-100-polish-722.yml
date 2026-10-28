@@ -1,0 +1,29 @@
+name: temp labs-100 polish far 722
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-polish-722.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  polish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build search kernels
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG science-boundary/labs-100/code/search.cpp -o /tmp/search
+          g++ -O3 -march=native -std=c++20 -DNDEBUG science-boundary/labs-100/code/priority_queue.cpp -o /tmp/pq
+      - name: Polish 722 seed
+        shell: bash
+        run: |
+          set -euo pipefail
+          seed='---+++++---++---+-+++------+++-+-+--+-+-+--+-++--++----++--+-+---+---+---+-++--+----+--+--+++++++++-'
+          set +e
+          /tmp/search --runs 24 --threads 4 --steps 250000 --seed 101 --mode start --start "$seed" | tee /tmp/tabu.txt
+          /tmp/search --runs 24 --threads 4 --steps 250000 --seed 202 --mode start-perturb --start "$seed" | tee /tmp/tabu-perturb.txt
+          /tmp/pq "$seed" 20000 4 12000000 | tee /tmp/pq.txt
+          set -e
+          grep -E '^(BEST|FINAL|SUMMARY|initial=|best=)' /tmp/tabu.txt /tmp/tabu-perturb.txt /tmp/pq.txt || true
