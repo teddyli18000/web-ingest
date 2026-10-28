@@ -19,11 +19,12 @@ def build(target:int, odd_perfect:bool, asum=None, bsum=None):
         model.Add(x[0]==0)
         model.Add(x[1]==0)
     else:
+        # P=sum of signs on 0-based even positions, Q=sum on odd positions.
         model.Add(50-2*sum(x[0::2]) == asum)
         model.Add(50-2*sum(x[1::2]) == bsum)
 
     qvars=[]
-    odd_pos=[]
+    odd_pos_by_k={}
     even_corr=[]
     for k in range(1,N):
         L=N-k
@@ -38,8 +39,9 @@ def build(target:int, odd_perfect:bool, asum=None, bsum=None):
         model.Add(c==L-2*m)
         if odd_perfect and (k&1):
             pos=model.NewBoolVar(f'odd_pos{k}')
+            # pos=1 means C_k=+1, pos=0 means C_k=-1.
             model.AddAllowedAssignments([m,pos],[((L-1)//2,1),((L+1)//2,0)])
-            odd_pos.append(pos)
+            odd_pos_by_k[k]=pos
         else:
             q=model.NewIntVar(0,target,f'q{k}')
             rows=[]
@@ -51,10 +53,21 @@ def build(target:int, odd_perfect:bool, asum=None, bsum=None):
             if not (k&1): even_corr.append(c)
 
     model.Add(sum(qvars) <= (target-50 if odd_perfect else target))
+    if odd_perfect:
+        # For every binary sequence, C_k + C_{N-k} == 0 (mod 4) when N is
+        # divisible by 4.  For odd k in an odd-perfect sequence both terms are
+        # +/-1, hence they must be exact opposites.  State this redundant
+        # consequence explicitly because it is much stronger propagation than
+        # asking CP-SAT to rediscover it through thousands of XOR variables.
+        for k in range(1,N//2,2):
+            model.Add(odd_pos_by_k[k] + odd_pos_by_k[N-k] == 1)
+
     if odd_perfect and asum is not None:
-        # Sum of all odd-lag correlations equals (sum A)(sum B).
-        model.Add(sum(odd_pos) == (50 + asum*bsum)//2)
-        # Sum of all even-lag correlations equals (a^2+b^2-N)/2.
+        # Sum of all odd-lag correlations equals P*Q.  The antipair equations
+        # above force this sum to zero, so any class with P*Q != 0 is
+        # immediately infeasible.
+        model.Add(sum(odd_pos_by_k.values()) == (50 + asum*bsum)//2)
+        # Sum of all even-lag correlations equals (P^2+Q^2-N)/2.
         model.Add(sum(even_corr) == (asum*asum + bsum*bsum - N)//2)
     return model,x
 
