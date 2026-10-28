@@ -1,0 +1,58 @@
+Thomson N=960 — D-node / shallow-C transition evidence
+Date: 2026-10-28/29
+Live merged record: 444368.3924061973
+
+A<->B saddle certification (run 40647777986)
+- Clean hybrid saddle: E = 444368.4117741097, grad RMS = 8.93599e-6.
+- Hessian reaction eigenvalue = -9.58883287; exactly one internal negative mode.
+- Pure reaction pushes are reproducible:
+  negative reaction side (-0.0015,-0.003 RMS) -> B = 444368.4029728613;
+  positive reaction side (+0.0015,+0.003 RMS) -> A = 444368.3956862260.
+- Therefore this is a certified A<->B first-order transition edge.
+
+A<->B transverse exits (same run)
+- Positive modes 1..3 x both signs were scanned at transverse RMS 0.003,0.006,0.012,0.020 with reaction offsets -0.0006,0,+0.0006.
+- No endpoint below the live record; returns at ~1e-10 below/above R are floating summation noise.
+- Modes 1 and 3 can return R/A/B at larger amplitudes.
+- A new reproducible low-energy endpoint D appears at
+    E = 444368.4109930845 = R + 0.0185868872.
+  It is reached by mode 2 / negative sign at transverse 0.012 (reaction -0.0006 or 0) and independently by mode 3 / positive sign at transverse 0.020.
+- Larger mode-2 exits reach much higher minima (+0.1577,+0.1782,+0.9264,+0.9705).
+
+Deterministic D harvest (failed mapping run 40731597265, harvest stage succeeded)
+- Replayed from the clean A<->B saddle with mode 2, sign -1, transverse RMS 0.012, reaction 0.
+- E = 444368.410993084486 = R + 0.0185868871631.
+- L-BFGS iterations = 732, success=True.
+- Delaunay coordination = 36 five / 900 six / 24 seven: same 24-dislocation composition as R/A/B/C.
+- z-axis C3 nearest-neighbor RMS mismatch = 0.00379058, so D is symmetry-broken rather than exact C3.
+
+C reproduction in the same run
+- E = 444368.411417883064 = R + 0.0190116857411.
+- coordination = 36/900/24.
+- C comes from composing the three C3-equivalent R->A global-shear events and relaxing from an exactly/highly C3-symmetric start.
+
+B<->D string (run 40731597265)
+- 9 images, 240 descent/reparameterization iterations, no climbing.
+- Initial max E = 444368.4344175272.
+- Final observed max E = 444368.4125963093 at interior image 4.
+- Final barrier relative to B = 0.00962344767.
+- This part completed successfully before the next D<->C string raised.
+
+D<->C string anomaly (same run)
+- Initial max was only 444368.4114221905, about 4.31e-6 above C.
+- By iteration 10 the maximum became the C endpoint itself: 444368.4114178833 at image 8 of 9.
+- It stayed at the endpoint through iteration 239 while interior descent steps shrank to 1.67e-7.
+- The generic string code then intentionally raised `maximum collapsed to endpoint`, so later refinements/artifact upload were skipped.
+- This is inconsistent with treating C as an ordinary well-resolved full-space local minimum. Leading hypothesis: C is a C3-symmetric stationary point that is unstable to symmetry-breaking full-space directions, with D on a downhill branch. An alternative is an extremely shallow barrier below the current string resolution.
+- Full-space Hessian diagnostic of C and D launched as run 40732118945 to decide between these interpretations.
+
+Earlier B<->C attempt (run 40647978833)
+- C reproduced at 444368.411417882890.
+- 7-image string max after 180 iterations: 444368.411787349673, only ~3.69e-4 above C.
+- Hybrid eigenmode refinement initially saw lambda0 ~ -0.788 but then crossed into B; final E = 444368.402972861426 with zero negative modes. This was not a saddle certification.
+- Failure mechanism: reselecting the lowest Hessian mode can switch from the shallow reaction direction to a positive basin mode after one oversized reaction correction.
+
+Method correction
+- `string_between_seeds.py` now persists the two neighboring string images and local Cartesian path tangent.
+- `refine_saddle_path_tangent.py` was added: transverse all-dimensional minimization plus damped 1-D Newton along the retained string tangent, with final Hessian classification independent of that tangent.
+- This is the preferred refiner for shallow interfaces such as D<->C/B<->C if C is confirmed stable.
