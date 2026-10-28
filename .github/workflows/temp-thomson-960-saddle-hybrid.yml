@@ -1,0 +1,47 @@
+name: temp Thomson 960 hybrid saddle refinement
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-saddle-hybrid.yml"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  refine:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Download best truncated-Newton saddle
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-saddle-newton-damp05
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ github.token }}
+          run-id: 40633364828
+      - name: Hybrid eigenvector-following refinement
+        run: |
+          python3 science-boundary/thomson-960/code/refine_saddle_hybrid.py \
+            "$RUNNER_TEMP/seed/newton-damp05.json" \
+            --outer 5 --penalty 200000 --perp-maxiter 500 \
+            --newton-damping 0.8 --max-reaction-rms 0.0005 \
+            --out "$RUNNER_TEMP/hybrid.json"
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'hybrid.json')
+          d=json.load(open(p)); d.pop('saddle_points',None); d.pop('eigenvectors_physical',None)
+          print(json.dumps(d,indent=2))
+          PY
+      - name: Upload hybrid saddle
+        uses: actions/upload-artifact@v4
+        with:
+          name: thomson-saddle-hybrid
+          path: ${{ runner.temp }}/hybrid.json
+          retention-days: 7
