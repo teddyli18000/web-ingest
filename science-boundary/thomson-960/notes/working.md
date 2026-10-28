@@ -15,7 +15,7 @@ Let R be the live record.
 
 - `R`: verifier `444368.3924061973`; C3; coordination 36 five / 900 six / 24 seven (24 dislocations).
 - `A`: symmetry-broken same-topology neighbor near `444368.395686226`, `R + ~0.003280029`. Durable coordinates `data/neighbor-soft-003280.json`; 36/900/24; z-C3 match RMS ~`5.68e-3`.
-- `B`: symmetry-broken same-topology node near `444368.402972861`, `R + ~0.010566664`; 36/900/24.
+- `B`: symmetry-broken same-topology node `444368.402972861484`, `R + ~0.010566664`. Durable coordinates now `data/basin-b-010566.json` (persisted by run `40633594145`); 36/900/24.
 - `C`: C3-symmetric node `444368.4114178827`, `R + 0.0190116854`; 36/900/24. Both sequential orders `0,1,2` and `0,2,1` of the three C3-equivalent nonlinear R→A shear events converge to C over all tested event scales 0.55–1.35, so C is structurally a closed three-event global-shear/scar-rearrangement state.
 
 Independent mechanisms repeatedly show `R <-> A <-> B`, some direct `R <-> B`, and nonlinear composed-shear routes R→C. Bare corresponding-point geodesic barriers were ~0.0367 (R→A), ~0.0379 (A→B), ~0.0739 (R→B).
@@ -28,7 +28,7 @@ Independent mechanisms repeatedly show `R <-> A <-> B`, some direct `R <-> B`, a
 4. Record full-space Hessian: lowest internal modes `4.82417658, 4.82417750, 4.88882190, 5.88540229, 5.88540341, 6.28297677, ...`; multiple C3-breaking doublets; Hessian symmetry relative defect `1.94e-8`.
 5. Record soft-mode scans: softest 0/1 doublet robustly reaches A; deeper doublets reach A, B and `+0.029215`; no improvement.
 6. A Hessian lowest modes ~`2.80383834, 4.02949457, 4.57411004, 5.05622790, 5.67154221, 6.06109536, ...`. A second-hop Actions scan modes 0..7 × ± (run `40624586144`) yielded no candidate; directions return R/A/B, `+0.029215`, or high minima.
-7. B stable energy ~`444368.40297286137`; Hessian lowest modes ~`1.42143383, 2.73430561, 3.59487562, 4.06473996, 5.15833004, ...`. Single modes and random combinations of first eight modes only return R/A/B.
+7. B stable energy `444368.402972861484`; Hessian lowest modes ~`1.42143383, 2.73430561, 3.59487562, 4.06473996, 5.15833004, ...`. Single modes and random combinations of first eight modes only return R/A/B.
 8. Same-topology cut-and-splice: R×A/R×B clean children return R/A. A 160-cut R×B screen found 59 collision-safe children; the five lowest raw-energy starts all converged to A. Summary `results/basin-graph-same-topology-summary.txt`.
 9. D2(20-dislocation) × R/A(24) spherical cut-and-splice, run `40626019263`: ICP mismatch ~0.042; almost all children fail seam safety; rare safe child relaxed to `R+1.498`. Summary `results/cross-topology-summary.txt`.
 10. Continuous D2→C3 ICP+Hungarian morph, run `40626089044`: `t<=0.4 -> R`, `t>=0.6 -> D2`; `t=0.5` gives high transition minima. The reproducible seed5011 midpoint is `444370.5305536334 = R+2.138147436`, coordination **37/898/25 = 25 dislocations**. Thus this 24→20 route first creates an extra dislocation rather than monotonically deleting defects.
@@ -56,26 +56,43 @@ Run `40628689846`, code `code/string_record_neighbor.py`.
 
 ### Minimum-mode/eigenvector-following refinement
 
-Run `40632990227`. Conservative job completed from the climbing image:
+Run `40632990227` completed both refinements from the climbing image.
 
-- energy `444368.403955672286`;
-- physical gradient RMS `0.00139739`;
-- Hessian lowest modes `-3.09616865, +3.50214671, +4.79765302, +5.24363225, +5.79306663, ...`;
-- exactly **one internal negative mode** below `-1e-3`;
-- rotation overlaps ~`1e-19`, Hessian eigenpair residuals mostly `~3e-5`.
+- conservative: `E=444368.403955672286`, gradient RMS `0.00139739`, lowest modes `-3.09616865,+3.50214671,+4.79765302,+5.24363225,...`, exactly one internal negative mode.
+- standard: `E=444368.403916123265`, gradient RMS `0.0010026875`, lowest modes `-3.19930950,+3.49535993,+4.79762153,+5.22922276,...`, exactly one internal negative mode.
+- rotation overlaps are ~`1e-19` or smaller and low-mode residuals ~`3e-5`, so both jobs independently locate the same first-order-saddle branch.
 
-This is not yet a converged stationary saddle because the gradient remains ~`1.4e-3`, but the first-order saddle signature is unambiguous. The standard minimum-mode job remains active. A faster truncated-Newton refinement was launched as run `40633364828` from the conservative artifact.
+Run `40633364828` then applied truncated Newton in the first ten Hessian modes:
+
+- damp05: `E=444368.403965246282`, gradient RMS `8.43633e-4`, exactly one negative mode, final `lambda0=-5.55542462`; reaction-gradient coefficient was reduced from about `-0.034` to `~1.5e-4`.
+- damp08 drove the reaction-mode coefficient to `~1e-6` but left total gradient RMS worse (`1.436e-3`).
+- Interpretation: reaction-coordinate stationarity is nearly solved; most residual gradient lives in the large unresolved positive-curvature subspace. This motivated `code/refine_saddle_hybrid.py`, which alternates constrained all-dimensional positive-subspace L-BFGS with reaction-mode Newton updates.
+
+### First transverse branch evidence
+
+Run `40633502573` scans positive saddle modes 1..4 × both signs with transverse RMS amplitudes `0.002,0.004,0.008,0.014` and reaction offsets `-0.0008,0,+0.0008`.
+
+The first completed job, positive mode 2 / negative sign (`lambda≈4.79762153`), produced only known low basins:
+
+- small/moderate branches relax to R or A depending reaction-side bias;
+- at transverse `0.014` with reaction `-0.0008`, the endpoint is B: `444368.402972861484`;
+- no endpoint below R beyond `~1e-10` floating summation noise.
+
+This is important structural evidence: the R↔A saddle neighborhood has a transverse route that directly enters B at larger amplitude, so R/A/B genuinely share a nearby low-energy transition network rather than merely being minima found by unrelated perturbations. No fourth node from this direction.
 
 ## Active compute / current frontier
 
-- `40632990227`: standard minimum-mode saddle refinement still active; conservative result above is complete.
-- `40633364828`: two truncated-Newton refinements (`damping=0.5/0.8`) from the conservative saddle. Acceptance target: substantially lower gradient while retaining exactly one negative internal mode.
-- `code/search_saddle_transverse.py` is ready. Once the best refined saddle is selected, perturb along low positive Hessian modes 1.. and both signs, with small ± reaction-mode offsets, then fully stable-relax. The scientific question is whether the R↔A saddle neighborhood has only the two known downhill basins or transverse exits to a new low minimum.
+- `40633736125`: hybrid R↔A saddle refinement, using all-dimensional constrained minimization plus reaction-mode Newton; active.
+- `40633502573`: remaining R↔A transverse modes 1..4 × ±; active. Any new low endpoint gets frozen and recursively mapped; any record candidate triggers verifier immediately.
+- `40633962357`: reaction-only validation of the standard one-negative-mode saddle; four starts at ±0.0015/0.003 RMS should verify that the two negative-mode sides descend to R and A.
+- `40633926646`: A↔B spherical string. It reproduces B locally then optimizes a 7-image string and climbing image. Generic tool is `code/string_between_seeds.py`; B is now durable so future runs need not reproduce it.
+- `code/refine_saddle_hybrid.py` and `code/search_saddle_transverse.py` are the active transition-network infrastructure.
 
 ## Immediate next
 
-1. Select the most stationary one-negative-mode saddle from runs `40632990227` / `40633364828`.
-2. Launch transverse branch search on low positive saddle modes (initially modes 1–4 × ±, multiple RMS amplitudes, with small ± reaction pushes).
-3. Deduplicate relaxed endpoints against R/A/B/C. Any new low node is frozen durably and recursively mapped; any candidate below `live_score-2e-7` immediately triggers stable repolish and exact-verifier pipeline.
-4. If all low transverse modes only return R/A, extend the transition network to A↔B and R↔B saddles rather than reverting to minimum-centered random kicks.
-5. Before any claim/submission: re-check Few Shots main/open p007 PRs, rationalize, run official verifier and `tools/check.py`, then submit only a verified >=`1e-6` improvement.
+1. Finish R↔A transverse modes and reaction-only endpoint validation. If all low transverse exits are R/A/B, treat the local three-basin neighborhood as mapped rather than extending random amplitudes indefinitely.
+2. Finish hybrid saddle refinement; use the hybrid saddle for a second transverse pass only if it materially changes the saddle location or low eigenspace.
+3. Finish A↔B string; if it yields a clean low saddle, refine and scan its transverse exits. This changes the interface being searched rather than repeating R↔A.
+4. Deduplicate all relaxed endpoints against R/A/B/C. Any genuinely new low node is frozen durably and recursively mapped; any candidate below `live_score-2e-7` immediately triggers stable repolish and exact-verifier pipeline.
+5. If R↔A and A↔B transition neighborhoods are saturated, next justified edge is R↔B or B↔C; do not return to ordinary random kicks, same-topology splices, local flips, or shallow neighboring-N moves.
+6. Before any claim/submission: re-check Few Shots main/open p007 PRs, rationalize, run official verifier and `tools/check.py`, then submit only a verified >=`1e-6` improvement.
