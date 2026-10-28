@@ -1,0 +1,44 @@
+name: temp labs-100 split O58 radius9 p2
+
+on:
+  push:
+    paths:
+      - 'science-boundary/labs-100/code/sphere_odd58_pattern_first.cpp'
+      - '.github/workflows/temp-labs-100-odd58-radius9-p2-shards.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  p2-shard:
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        first: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build exact first-index shard scanner
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/sphere_odd58_pattern_first.cpp \
+            -o /tmp/sphere-odd58-first
+      - name: Scan p2 shard
+        shell: bash
+        run: |
+          set -euo pipefail
+          incumbent='++++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-'
+          /tmp/sphere-odd58-first "$incumbent" 5 1 1 2 '${{ matrix.first }}' "$(nproc)" \
+            | tee /tmp/shard.txt
+          grep -F 'odd58=0 best=-1 ' /tmp/shard.txt
+      - name: Upload exact shard evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: labs100-odd58-radius9-p2-first-${{ matrix.first }}
+          path: /tmp/shard.txt
+          if-no-files-found: warn
