@@ -1,0 +1,50 @@
+Thomson N=960 low-Hessian-doublet escape scan (first/random-basis batch)
+Actions run: 40623512119
+Live record double energy used: 444368.3924061972
+Live verifier score: 444368.3924061973
+
+Method
+- Full 1920-dimensional physical tangent Hessian, rigid rotations lifted.
+- Two near-degenerate C3-breaking doublets tested: modes 0/1 (~4.82418) and 3/4 (~5.88540).
+- 6 independent jobs per pair, nominal phases 0,10,...,50 degrees; because this first batch recomputed an arbitrary basis inside each degenerate eigenspace, these are best interpreted as 6 independent/random phase samples, not an exact common phase grid.
+- RMS geodesic amplitudes: 0.004, 0.008, 0.016, 0.032, 0.064, 0.10, 0.15 rad.
+- Every start was fully relaxed with no symmetry constraint.
+- All 12 artifacts had best_points=null, so no floating improvement exceeded the 2e-7 candidate-save threshold; in fact best_improvement was 0 for every job.
+
+Pair 0/1 observations
+Nominal phase | first clearly distinct returned basin
+0   | amp 0.008 -> delta +0.003280040633
+10  | amp 0.008 -> delta +0.003280041856
+20  | amp 0.008 -> delta +0.003280041448
+30  | amp 0.008 -> delta +0.003280038887
+40  | amp 0.008 -> delta +0.003280041390
+50  | amp 0.008 -> delta +0.003280036151
+
+Thus all six independent phase samples cross from the record basin into the same energy family near
+  E = 444368.39568624  (record + ~0.00328004)
+at only ~0.008 rad RMS displacement.
+
+This energy family independently appeared in the earlier 960->961->960 size-bounce campaign (best non-record return around 444368.395686237). Agreement between unrelated escape mechanisms strongly suggests this is a genuine low-lying neighboring minimum / basin adjacent to the current C3 record, not optimizer noise.
+
+Pair 3/4 observations
+Nominal phase | first clearly distinct returned basin
+0   | amp 0.016 -> delta +0.003280042380
+10  | amp 0.016 -> delta +0.010566675744
+20  | amp 0.032 -> delta +0.029215053364
+30  | amp 0.016 -> delta +0.029215061979
+40  | amp 0.016 -> delta +0.029215063201
+50  | amp 0.016 -> delta +0.029215065879
+
+Repeated low-lying distinct families across all rows (rounded delta):
+- +0.003280 : 20 returns
+- +0.010567 : 3 returns
+- +0.029215 : 7 returns
+plus larger >~0.28 energy basins at the largest amplitudes.
+
+C3 representation check
+For pair 3/4 in one completed job, the group action inside the computed pair was
+  [[-0.5, +0.8660254],[-0.8660254,-0.5]]
+with subspace residual 4.15e-6; other pair jobs gave the equivalent +/-120-degree real rotation representation. This confirms these doublets are symmetry-breaking two-dimensional C3 mode subspaces to numerical precision.
+
+Interpretation / next route
+The most actionable result is the reproducible +0.003280 neighbor reached both by the softest Hessian doublet and by size oscillation. Freeze a coordinate realization of that neighbor, diagnose its own low Hessian modes, and search a second barrier from it. This turns the search into an explicit low-energy basin graph rather than repeated one-step kicks from the record.
