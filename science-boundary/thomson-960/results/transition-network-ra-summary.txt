@@ -1,0 +1,67 @@
+Thomson N=960 R<->A transition-state summary
+===========================================
+
+Live record R (Few Shots main):
+  444368.3924061973
+A basin:
+  ~444368.395686226
+  durable coordinates: ../data/neighbor-soft-003280.json
+
+Optimized R<->A first-order saddle
+----------------------------------
+Construction:
+  raw spherical string -> minimum-mode/eigenvector following -> truncated Newton
+  -> hybrid constrained positive-subspace minimization + reaction-mode Newton.
+
+Best hybrid result (Actions run 40633736125):
+  energy                         444368.403948984458
+  physical gradient RMS         6.310208277709283e-06
+  negative internal modes       exactly 1
+  lowest eigenvalue             -5.865579689356803
+  next eigenvalues              +3.455911422645129
+                                +4.741371092438867
+                                +5.122588085157221
+                                +5.765702808882025
+                                +6.2191052150415755
+                                +6.636845602203255
+                                +9.43797636644952
+                                +10.687130314871451
+                                +12.002208026785503
+  final reaction-gradient       ~7.5e-08
+  rigid-rotation overlaps       ~1e-23
+  low-mode eigenpair residuals  ~2.5e-05
+
+Reaction-side certification (run 40633962357):
+  negative reaction side, RMS 0.0015 / 0.003 -> A
+  positive reaction side, RMS 0.0015 / 0.003 -> R
+Thus this is an empirically certified R<->A transition state, not merely a nearby
+one-negative-mode stationary point.
+
+Transverse basin map
+--------------------
+Run 40633502573 scanned positive modes 1..4 x both signs from the standard saddle,
+with transverse RMS amplitudes 0.002, 0.004, 0.008, 0.014 and reaction offsets
+-0.0008, 0, +0.0008. All 8 jobs completed.
+
+Result:
+  - no endpoint below R beyond ~1e-10 floating summation noise;
+  - no fourth low-energy basin;
+  - endpoints are R, A, B, plus occasional much-higher minima;
+  - basin B is reached transversely from several low positive directions at larger
+    amplitudes, proving B is a broad neighboring basin of the R/A transition region.
+
+Higher-mode check from the cleaner hybrid saddle:
+  run 40634209722, mode 5 negative sign completed first.
+  lambda(mode5) = 6.2191052150415755
+  transverse RMS 0.004, 0.008, 0.014, 0.022 x reaction offsets -0.0005,0,+0.0005
+  -> 12/12 relaxations converge to A (~444368.395686226).
+  No new branch from this direction.
+
+Scientific conclusion
+---------------------
+The local R<->A transition interface is now well characterized. Straight enumeration
+of additional positive Hessian mode indices has diminishing information value.
+After the remaining already-launched high-mode jobs finish, prefer changing the
+search representation: A<->B edge mapping and/or MOTO-like diversity/feasibility/
+spectral-gap screening of mixed low-mode starts, rather than mechanical mode-number
+extension.
