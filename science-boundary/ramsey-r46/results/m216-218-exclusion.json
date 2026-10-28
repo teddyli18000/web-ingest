@@ -1,0 +1,175 @@
+{
+  "campaign": "m216-m218-exclusion-via-closed-lucky-d12",
+  "conclusion": "Any R(4,6,36) graph, if one exists, has at least 219 edges.",
+  "lucky_d12_evidence": {
+    "all_lucky_d12_unsat": true,
+    "anchor_orbits": 118,
+    "anchor_timeouts_closed_by_residual": 14,
+    "anchor_unsat": 104
+  },
+  "m216": {
+    "S12": 144,
+    "degree_sequence": {
+      "12": 36
+    },
+    "excluded_by_complete_lucky_d12_campaign": true,
+    "lucky_d12_threshold": 144
+  },
+  "m217": {
+    "all_unsat": true,
+    "exact_orbit_branches": 39
+  },
+  "m218": {
+    "excluded": true,
+    "final_cross_edge_contradiction": {
+      "contradiction": true,
+      "cross_edges_lower_from_degree13": 40,
+      "cross_edges_upper_from_S12": 32,
+      "degree_sequence": {
+        "12": 32,
+        "13": 4
+      },
+      "internal_13_edges_relaxed_upper": 6
+    },
+    "input_survivor_count": 13,
+    "killed_by_sum_S_after_no_lucky_d12": [
+      {
+        "degree_sequence": {
+          "12": 33,
+          "13": 2,
+          "14": 1
+        },
+        "max_sum_S_after_no_lucky_d12": 5285,
+        "slack": -1,
+        "sum_d_squared": 5286
+      },
+      {
+        "degree_sequence": {
+          "12": 34,
+          "14": 2
+        },
+        "max_sum_S_after_no_lucky_d12": 5282,
+        "slack": -6,
+        "sum_d_squared": 5288
+      },
+      {
+        "degree_sequence": {
+          "11": 6,
+          "12": 20,
+          "13": 10
+        },
+        "max_sum_S_after_no_lucky_d12": 5288,
+        "slack": -8,
+        "sum_d_squared": 5296
+      },
+      {
+        "degree_sequence": {
+          "11": 6,
+          "12": 21,
+          "13": 8,
+          "14": 1
+        },
+        "max_sum_S_after_no_lucky_d12": 5285,
+        "slack": -13,
+        "sum_d_squared": 5298
+      },
+      {
+        "degree_sequence": {
+          "11": 6,
+          "12": 22,
+          "13": 6,
+          "14": 2
+        },
+        "max_sum_S_after_no_lucky_d12": 5282,
+        "slack": -18,
+        "sum_d_squared": 5300
+      },
+      {
+        "degree_sequence": {
+          "11": 6,
+          "12": 23,
+          "13": 4,
+          "14": 3
+        },
+        "max_sum_S_after_no_lucky_d12": 5279,
+        "slack": -23,
+        "sum_d_squared": 5302
+      },
+      {
+        "degree_sequence": {
+          "11": 7,
+          "12": 18,
+          "13": 11
+        },
+        "max_sum_S_after_no_lucky_d12": 5288,
+        "slack": -10,
+        "sum_d_squared": 5298
+      },
+      {
+        "degree_sequence": {
+          "11": 7,
+          "12": 19,
+          "13": 9,
+          "14": 1
+        },
+        "max_sum_S_after_no_lucky_d12": 5285,
+        "slack": -15,
+        "sum_d_squared": 5300
+      },
+      {
+        "degree_sequence": {
+          "11": 7,
+          "12": 20,
+          "13": 7,
+          "14": 2
+        },
+        "max_sum_S_after_no_lucky_d12": 5282,
+        "slack": -20,
+        "sum_d_squared": 5302
+      },
+      {
+        "degree_sequence": {
+          "11": 8,
+          "12": 16,
+          "13": 12
+        },
+        "max_sum_S_after_no_lucky_d12": 5288,
+        "slack": -12,
+        "sum_d_squared": 5300
+      },
+      {
+        "degree_sequence": {
+          "11": 8,
+          "12": 17,
+          "13": 10,
+          "14": 1
+        },
+        "max_sum_S_after_no_lucky_d12": 5285,
+        "slack": -17,
+        "sum_d_squared": 5302
+      },
+      {
+        "degree_sequence": {
+          "11": 9,
+          "12": 14,
+          "13": 13
+        },
+        "max_sum_S_after_no_lucky_d12": 5288,
+        "slack": -14,
+        "sum_d_squared": 5302
+      }
+    ],
+    "remaining_before_cross_edge_contradiction": [
+      {
+        "degree_sequence": {
+          "12": 32,
+          "13": 4
+        },
+        "max_sum_S_after_no_lucky_d12": 5288,
+        "slack": 4,
+        "sum_d_squared": 5284
+      }
+    ]
+  },
+  "minimum_edges_remaining": 219
+}
