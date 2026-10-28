@@ -1,0 +1,23 @@
+Thomson N=960 reproducible low-lying neighbor structure
+Source: Actions run 40624209787, artifact thomson-960-soft-neighbor (artifact id 12788881839)
+Source record: Ronnie2025/c3-replica-exchange-scars
+Record double energy used: 444368.392406197207
+Neighbor double energy: 444368.395686237141
+Delta vs record double energy: +0.003280039934907
+Softest record-mode push used: canonical 0/1 Hessian doublet, RMS geodesic amplitude 0.010 rad
+Full-space relaxation: 382 L-BFGS iterations, success=True
+
+Local independent structural analysis of the downloaded 960x3 artifact:
+- Spherical Delaunay/3-D convex-hull coordination counts:
+  z=5: 36
+  z=6: 900
+  z=7: 24
+  other coordination: 0
+- Sum_i (6-z_i) = 12, as required topologically.
+- Therefore the neighbor has the same defect-composition counts as the current C3 record (12 full 5-7-5-7-5 scars / 24 dislocations in aggregate), rather than the 20-dislocation D2 family.
+- Second-moment eigenvalues: 319.99191730, 319.99855462, 320.00952809.
+- Rotation by 120 degrees about the record's z axis matches the neighbor point set only at nearest-neighbor RMS 5.6810e-3 (max 3.6985e-2), versus ~2e-9 RMS for the record. The mapping is bijective but not close geometrically, so the neighbor strongly breaks the record's C3 symmetry.
+- z-axis C2/C4/C5/C6 tests have ~4.6e-2 RMS and are not symmetries.
+
+Interpretation:
+This +0.003280 node is a symmetry-broken global shear/rearrangement of the same defect-composition family, not a change in the number of dislocations. It is reached independently by (a) the record's softest full-space Hessian doublet and (b) 960->961->960 size oscillation, making it a high-confidence adjacent basin for second-hop exploration.
