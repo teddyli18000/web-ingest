@@ -18,6 +18,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build current ABC
         run: |
+          sudo apt-get update
+          sudo apt-get install -y libreadline-dev
           git clone --depth 1 https://github.com/berkeley-abc/abc.git /tmp/abc
           make -C /tmp/abc -j2 ABC_USE_PIC=1
           /tmp/abc/abc -c 'twoexact -h' > /tmp/twoexact-help.txt 2>&1 || true
