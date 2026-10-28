@@ -1,0 +1,61 @@
+name: temp labs-100 near-skew bnb calibration
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-nearskew-bnb-calibrate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build exact branch and bound
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/nearskew_bnb.cpp -o /tmp/nearskew-bnb
+      - name: Compile and short smoke
+        shell: bash
+        run: |
+          set +e
+          /tmp/nearskew-bnb --threads 4 --prefix 6 --seconds 5 --asum 10 | tee /tmp/smoke.txt
+          rc=${PIPESTATUS[0]}
+          set -e
+          test "$rc" -le 1
+          grep -F 'SUMMARY asum=10 ' /tmp/smoke.txt
+
+  calibrate:
+    needs: smoke
+    strategy:
+      fail-fast: false
+      matrix:
+        asum: [0, 4, 10, 20]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build exact branch and bound
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/nearskew_bnb.cpp -o /tmp/nearskew-bnb
+      - name: Search class for 120 seconds
+        shell: bash
+        run: |
+          set +e
+          /tmp/nearskew-bnb --threads 4 --prefix 10 --seconds 120 --asum '${{ matrix.asum }}' | tee /tmp/bnb.txt
+          rc=${PIPESTATUS[0]}
+          set -e
+          if [ "$rc" -gt 1 ]; then exit "$rc"; fi
+          grep -F 'SUMMARY asum=${{ matrix.asum }} ' /tmp/bnb.txt
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: labs100-nearskew-bnb-${{ matrix.asum }}
+          path: /tmp/bnb.txt
+          if-no-files-found: warn
