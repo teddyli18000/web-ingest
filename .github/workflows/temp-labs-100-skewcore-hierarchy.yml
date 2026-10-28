@@ -1,0 +1,41 @@
+name: temp labs-100 skew-core hierarchy
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-skewcore-hierarchy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        d: [1, 3, 5, 7, 9, 11, 13]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build skew-core search
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/skewcore_walk.cpp -o /tmp/skewcore
+      - name: Search structural class
+        shell: bash
+        run: |
+          set -euo pipefail
+          /tmp/skewcore --d '${{ matrix.d }}' --runs 32 --phase1 30000 --phase2 50000 \
+            --threads 4 --seed "$((71000000 + ${{ matrix.d }} * 1009))" \
+            --tenure-lo 5 --tenure-hi 15 | tee /tmp/skewcore.txt
+          grep -F 'SUMMARY d=${{ matrix.d }} ' /tmp/skewcore.txt
+          grep -F 'BESTSEQ ' /tmp/skewcore.txt || true
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: labs100-skewcore-d${{ matrix.d }}
+          path: /tmp/skewcore.txt
+          if-no-files-found: warn
