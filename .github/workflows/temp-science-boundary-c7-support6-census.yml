@@ -56,10 +56,13 @@ jobs:
           python3 - "$RUNNER_TEMP/result/support6.json" <<'PY'
           import json,sys
           s=json.load(open(sys.argv[1],encoding='utf-8'))
-          expected={0:0,1:6308,2:143680,3:999531,4:2123481}
+          # The support-list census counts baseline vertices themselves in coverage1.
+          # The older unrestricted solvers report only outside candidates, so add
+          # baseline_size when comparing the coverage-one layer.
+          expected={0:0,1:6308+134752,2:143680,3:999531,4:2123481}
           for k,v in expected.items():
               if int(s.get(f'coverage{k}',-1)) != v: raise SystemExit((k,v,s.get(f'coverage{k}')))
-          print('support-list replay matches known exact coverage0..4 counts')
+          print('support-list replay matches known exact coverage0..4 counts (including baseline self-coverage at k=1)')
           PY
       - name: Upload result
         if: always()
