@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - science-boundary/mona-lisa-tsp/planar_face_probe.py
+      - science-boundary/mona-lisa-tsp/pair_face_search.py
       - .github/workflows/temp-monalisa-planar-probe.yml
 permissions:
   contents: read
@@ -30,9 +31,21 @@ jobs:
             --edges elimtsp/results/mona.248972.edg.gz \
             --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
             --report science-boundary/mona-lisa-tsp/results/planar-report.json
+      - name: Coupled planar-face tour search
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          python science-boundary/mona-lisa-tsp/pair_face_search.py \
+            --edges elimtsp/results/mona.248972.edg.gz \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --report science-boundary/mona-lisa-tsp/results/pair-face-report.json \
+            --output science-boundary/mona-lisa-tsp/results/certificate.json
+          if test -f science-boundary/mona-lisa-tsp/results/certificate.json; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py science-boundary/mona-lisa-tsp/results
+          fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: monalisa-p010-planar-report
-          path: science-boundary/mona-lisa-tsp/results/planar-report.json
+          path: science-boundary/mona-lisa-tsp/results/
           if-no-files-found: ignore
