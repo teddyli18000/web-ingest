@@ -3,15 +3,15 @@
 
 For degree sequence 12^30 13^6, the induced graph H on the six degree-13
 vertices has at least 9 edges (each degree-12 vertex has at most two H
-neighbours).  Hence a maximum-H-degree vertex has h>=3 H-neighbours.  Anchoring
+neighbours). Hence a maximum-H-degree vertex has h>=3 H-neighbours. Anchoring
 at that degree-13 vertex gives
     S=156+h, b-a=63-h, and b>=88,
 so a=e(A)>=25+h>=28.
 
-For degree sequence 12^31 13^4 14, anchor the unique degree-14 vertex.  If h of
+For degree sequence 12^31 13^4 14, anchor the unique degree-14 vertex. If h of
 the four degree-13 vertices are in its neighbourhood,
     S=168+h, b-a=51-h, and b>=77,
-so a>=26+h.  This script authenticates the complete A catalogues and records
+so a>=26+h. This script authenticates the complete A catalogues and records
 edge-stratum sizes/records for precisely these high-edge ranges.
 """
 from __future__ import annotations
@@ -61,7 +61,7 @@ def main():
     ap=argparse.ArgumentParser();ap.add_argument('--r36-13',type=Path,required=True);ap.add_argument('--r36-14',type=Path,required=True);ap.add_argument('--output',type=Path,required=True)
     a=ap.parse_args()
     out={'r36_13_ge28':scan(a.r36_13,13,275086,28),
-         'r36_14_ge26':scan(a.r36_14,14,2833847,26),
+         'r36_14_ge26':scan(a.r36_14,14,263520,26),
          'derivation':{
            '12^30_13^6':{'H_edges_min':9,'anchor_H_degree_min':3,'A_edges_min':28},
            '12^31_13^4_14':{'unique_anchor_degree':14,'A_edges_min_by_h':'26+h, h in 0..4'}}}
