@@ -1,0 +1,54 @@
+name: Temp Ramsey R46 m219 n11=6 K222 scan
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - science-boundary/ramsey-r46/m219_n11_6_k222_scan.py
+      - .github/workflows/temp-ramsey-r46-m219-n11-6-k222-scan.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download authenticated complete R(4,5,24) catalogue and scan 116/117 strata
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          curl --fail --location --retry 3 --silent --show-error \
+            https://users.cecs.anu.edu.au/~bdm/data/r45_24.g6 -o /tmp/r46/r45_24.g6
+          echo '83ca4028f206b2fa4315ef219b8c2c57c7835209673dd8183d8fb4353bd4fdd0  /tmp/r46/r45_24.g6' | sha256sum -c -
+          PYTHONPATH=science-boundary/ramsey-r46 python science-boundary/ramsey-r46/m219_n11_6_k222_scan.py \
+            --r45-24 /tmp/r46/r45_24.g6 --output /tmp/r46/result.json | tee /tmp/r46/summary.txt
+          python - /tmp/r46/result.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1])); assert d['B_strata']['116']['count']==9 and d['B_strata']['117']['count']==90,d
+          assert d['K222_impossible'] is True,d
+          PY
+      - name: Persist evidence and retire one-shot workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/r46/result.json science-boundary/ramsey-r46/results/m219-n11-6-k222-scan.json
+          git rm .github/workflows/temp-ramsey-r46-m219-n11-6-k222-scan.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/results/m219-n11-6-k222-scan.json
+          git commit -m 'ramsey-r46: record K222 antineighborhood obstruction'
+          for attempt in 1 2 3 4 5; do git pull --rebase origin main && git push origin HEAD:main && exit 0; sleep $((attempt*4)); done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ramsey-r46-m219-n11-6-k222-scan
+          path: /tmp/r46
+          retention-days: 7
