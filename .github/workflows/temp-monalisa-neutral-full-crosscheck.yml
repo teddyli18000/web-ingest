@@ -1,0 +1,52 @@
+name: temp-monalisa-neutral-full-crosscheck
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/validate_universal_tours.py
+      - .github/workflows/temp-monalisa-neutral-full-crosscheck.yml
+permissions:
+  contents: write
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch authoritative upstream and exact solver proof report
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          gh run download 40697459440 --repo teddyli18000/web-ingest --name monalisa-universal-neutral-sat-proof --dir /tmp/p010-sat
+      - name: Fully independently reconstruct and verify four distinct tours
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          mkdir -p science-boundary/mona-lisa-tsp/results/universal-verified
+          python science-boundary/mona-lisa-tsp/validate_universal_tours.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --proof /tmp/p010-sat/report.json \
+            --report science-boundary/mona-lisa-tsp/data/universal-family-check.json \
+            --candidate-dir science-boundary/mona-lisa-tsp/results/universal-verified
+      - name: Commit durable official-scoring crosschecks
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/mona-lisa-tsp/data/universal-family-check.json
+          git commit -m 'science(p010): freeze official-verifier checks for 51-dimensional neutral family'
+          git pull --rebase origin main
+          git push origin main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-universal-family-full-tours
+          path: science-boundary/mona-lisa-tsp/results/universal-verified/
+          if-no-files-found: ignore
