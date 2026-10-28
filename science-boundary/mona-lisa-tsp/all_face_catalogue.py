@@ -11,10 +11,10 @@ def edge(u,v):return (u,v) if u<v else (v,u)
 def main():
  p=argparse.ArgumentParser()
  for k in ['graph','tour','output-graph','output-faces','output-tour','report']:p.add_argument('--'+k,required=True)
- a=p.parse_args()
- tour=[int(x)-1 for x in json.loads(Path(a.tour).read_text())['tour']]
+ args=p.parse_args()
+ tour=[int(x)-1 for x in json.loads(Path(args.tour).read_text())['tour']]
  n=len(tour);assert n==100000 and len(set(tour))==n
- with gzip.open(a.graph,'rt') as f:
+ with gzip.open(args.graph,'rt') as f:
   head=list(map(int,f.readline().split()))
   source=[tuple(map(int,line.split())) for line in f if line.strip()]
  assert head==[n,len(source)]
@@ -42,9 +42,9 @@ def main():
    gain=sum(W[e] for e in old)-sum(W[e] for e in new)
    faces.append((gain,*old[0],*old[1],*new[0],*new[1]))
  faces.sort(key=lambda x:(-x[0],x[1:]))
- Path(a.output_graph).write_text(f'{n} {len(W)}\n'+''.join(f'{u} {v} {w}\n' for (u,v),w in W.items()))
- Path(a.output_faces).write_text(str(len(faces))+'\n'+''.join(' '.join(map(str,rec))+'\n' for rec in faces))
- Path(a.output_tour).write_text(str(n)+'\n'+' '.join(map(str,tour))+'\n')
+ Path(args.output_graph).write_text(f'{n} {len(W)}\n'+''.join(f'{u} {v} {w}\n' for (u,v),w in W.items()))
+ Path(args.output_faces).write_text(str(len(faces))+'\n'+''.join(' '.join(map(str,rec))+'\n' for rec in faces))
+ Path(args.output_tour).write_text(str(n)+'\n'+' '.join(map(str,tour))+'\n')
  report={'nodes':n,'edges':len(W),'faces_total':sum(all_lengths.values()),
          'quadrilateral_alternating_faces':len(faces),
          'face_gain_histogram':{str(v):sum(rec[0]==v for rec in faces) for v in sorted({rec[0] for rec in faces})},
@@ -52,6 +52,6 @@ def main():
          'zero_face_count':sum(rec[0]==0 for rec in faces),
          'negative_face_count':sum(rec[0]<0 for rec in faces),
          'max_face_gain':max(rec[0] for rec in faces),'min_face_gain':min(rec[0] for rec in faces)}
- Path(a.report).write_text(json.dumps(report,indent=2)+'\n')
+ Path(args.report).write_text(json.dumps(report,indent=2)+'\n')
  print(json.dumps({k:v for k,v in report.items() if k!='face_gain_histogram'}),flush=True)
 if __name__=='__main__':main()
