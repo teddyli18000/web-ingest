@@ -12,6 +12,12 @@ B column to one of those representatives.  Therefore the disjunction of the
 118 branch CNFs is EXACTLY complete for the original fixed-pair problem up to
 A relabelling.  Each branch otherwise contains the same complete mixed
 K4/I6 and degree 11..17 encoding as d12_fixed_ab_sat.py.
+
+After a canonical anchor mask is fixed, its stabilizer in Aut(A) is still an
+exact symmetry of that branch.  The generator/all modes add sound lex-leader
+constraints for this *residual* stabilizer (and for Aut(B), whose nontrivial
+element fixes the unique degree-10 anchor).  This changes only representation,
+not the logical branch cover.
 """
 from __future__ import annotations
 
@@ -60,7 +66,6 @@ def orbit_data(A: list[int], B: list[int]) -> dict:
         rep = min(image_mask(mask, p) for p in autos)
         canonical.setdefault(rep, []).append(mask)
     reps = sorted(canonical)
-    # Exact orbit-cover authentication on the finite allowed set.
     for mask in allowed:
         rep = min(image_mask(mask, p) for p in autos)
         if rep not in canonical:
@@ -94,17 +99,85 @@ def load_pair(a_catalog: Path, b_catalog: Path):
 def manifest(a_catalog: Path, b_catalog: Path, out: Path | None = None) -> dict:
     ag6, A, bg6, B = load_pair(a_catalog, b_catalog)
     data = orbit_data(A, B)
-    data.update(a_graph6=ag6, b_graph6=bg6)
+    autos = sym.automorphisms(A)
+    stab_sizes = []
+    stab_gen_sizes = []
+    for mask in data["representatives"]:
+        stab = [p for p in autos if image_mask(mask, p) == mask]
+        stab_sizes.append(len(stab))
+        stab_gen_sizes.append(len(sym.greedy_generators(stab)))
+    data.update(
+        a_graph6=ag6,
+        b_graph6=bg6,
+        stabilizer_sizes=stab_sizes,
+        stabilizer_generator_counts=stab_gen_sizes,
+    )
     if data["allowed_labelled_masks"] != 2873 or data["orbit_count"] != 118:
         raise AssertionError((data["allowed_labelled_masks"], data["orbit_count"]))
     if out is not None:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
-    print(json.dumps({k: v for k, v in data.items() if k not in {"representatives", "orbit_sizes", "representative_sizes", "a_graph6", "b_graph6"}}, sort_keys=True))
+    print(json.dumps({
+        "anchor_b": data["anchor_b"],
+        "aut_A_order": data["aut_A_order"],
+        "allowed_labelled_masks": data["allowed_labelled_masks"],
+        "orbit_count": data["orbit_count"],
+        "stabilizer_size_min": min(stab_sizes),
+        "stabilizer_size_max": max(stab_sizes),
+        "stabilizer_generators_max": max(stab_gen_sizes),
+    }, sort_keys=True))
     return data
 
 
-def generate(a_catalog: Path, b_catalog: Path, ordinal: int, out: Path, meta: Path) -> dict:
+def add_residual_symmetry(sink: ClauseSink, pool: IDPool, x: list[list[int]], A: list[int], B: list[int], mask: int, mode: str) -> dict:
+    if mode == "none":
+        return {
+            "residual_mode": mode,
+            "stabilizer_A_order": None,
+            "stabilizer_A_generators": 0,
+            "used_A_permutations": 0,
+            "aut_B_order": None,
+            "used_B_permutations": 0,
+            "residual_lex_aux_variables": 0,
+            "residual_lex_clauses": 0,
+        }
+    autos_a = sym.automorphisms(A)
+    stab_a = [p for p in autos_a if image_mask(mask, p) == mask]
+    gens_a = sym.greedy_generators(stab_a)
+    ident_a = tuple(range(NA))
+    use_a = gens_a if mode == "generators" else [p for p in stab_a if p != ident_a]
+
+    autos_b = sym.automorphisms(B)
+    ident_b = tuple(range(NB))
+    # The anchor is unique by internal degree, so every B automorphism must fix it.
+    anchor = next(b for b, d in enumerate(base.degrees(B)) if d == 10)
+    if any(p[anchor] != anchor for p in autos_b):
+        raise AssertionError("B automorphism moved unique degree-10 anchor")
+    use_b = [p for p in autos_b if p != ident_b]
+
+    flat = [x[a][b] for a in range(NA) for b in range(NB)]
+    aux = clauses = 0
+    for p in use_a:
+        right = [x[p[a]][b] for a in range(NA) for b in range(NB)]
+        a, c = sym.add_lex_leader(sink, pool, flat, right)
+        aux += a; clauses += c
+    for p in use_b:
+        right = [x[a][p[b]] for a in range(NA) for b in range(NB)]
+        a, c = sym.add_lex_leader(sink, pool, flat, right)
+        aux += a; clauses += c
+    return {
+        "residual_mode": mode,
+        "stabilizer_A_order": len(stab_a),
+        "stabilizer_A_generators": len(gens_a),
+        "used_A_permutations": len(use_a),
+        "aut_B_order": len(autos_b),
+        "used_B_permutations": len(use_b),
+        "residual_lex_aux_variables": aux,
+        "residual_lex_clauses": clauses,
+    }
+
+
+def generate(a_catalog: Path, b_catalog: Path, ordinal: int, out: Path, meta: Path, residual_symmetry: str = "none") -> dict:
     ag6, A, bg6, B = load_pair(a_catalog, b_catalog)
     od = orbit_data(A, B)
     reps = od["representatives"]
@@ -119,6 +192,7 @@ def generate(a_catalog: Path, b_catalog: Path, ordinal: int, out: Path, meta: Pa
     ramsey_counts = sym.add_all_constraints(sink, pool, x, A, B, 11, 17)
     for a in range(NA):
         sink.add_clause([x[a][anchor] if ((mask >> a) & 1) else -x[a][anchor]])
+    residual = add_residual_symmetry(sink, pool, x, A, B, mask, residual_symmetry)
 
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", encoding="ascii", buffering=1024 * 1024) as f:
@@ -136,6 +210,7 @@ def generate(a_catalog: Path, b_catalog: Path, ordinal: int, out: Path, meta: Pa
         "anchor_orbit_size": od["orbit_sizes"][ordinal],
         "allowed_labelled_masks": od["allowed_labelled_masks"],
         "aut_A_order": od["aut_A_order"],
+        **residual,
         "variables": pool.top,
         "clauses": len(sink.clauses),
         "ramsey_counts": ramsey_counts,
@@ -150,11 +225,12 @@ def generate(a_catalog: Path, b_catalog: Path, ordinal: int, out: Path, meta: Pa
 
 
 def self_test() -> None:
-    # Pure permutation-mask sanity independent of catalogue files.
     p = tuple(reversed(range(NA)))
     for m in (0, 1, 3, 0x555, (1 << NA) - 1):
         assert image_mask(image_mask(m, p), p) == m
         assert image_mask(m, tuple(range(NA))) == m
+    # Lex-leader semantics itself is exhaustively tested by the imported module.
+    sym.self_test()
     print("d12 anchor-orbit DIMACS self-test ok")
 
 
@@ -170,6 +246,7 @@ def main() -> int:
     p.add_argument("--a-catalog", type=Path, required=True)
     p.add_argument("--b-catalog", type=Path, required=True)
     p.add_argument("--ordinal", type=int, required=True)
+    p.add_argument("--residual-symmetry", choices=("none", "generators", "all"), default="none")
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--meta", type=Path, required=True)
     p = sub.add_parser("decode")
@@ -183,7 +260,7 @@ def main() -> int:
     if args.cmd == "manifest":
         manifest(args.a_catalog, args.b_catalog, args.output); return 0
     if args.cmd == "generate":
-        generate(args.a_catalog, args.b_catalog, args.ordinal, args.output, args.meta); return 0
+        generate(args.a_catalog, args.b_catalog, args.ordinal, args.output, args.meta, args.residual_symmetry); return 0
     decode_model(args.a_catalog, args.b_catalog, args.solver_log, args.output); return 0
 
 
