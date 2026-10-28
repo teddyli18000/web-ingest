@@ -1,0 +1,54 @@
+name: temp labs-100 exact near-skew target
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-nearskew-cpsat.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check ortools==9.15.6755
+      - name: Validate model on incumbent
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/cpsat_nearskew.py \
+            --target 578 --seconds 60 --workers 4 --seed 1 --smoke | tee /tmp/smoke.txt
+          grep -F 'FOUND energy 578 odd 50 even 528 asum 10 bsum 0 nss True ' /tmp/smoke.txt
+
+  search:
+    needs: smoke
+    strategy:
+      fail-fast: false
+      matrix:
+        asum: [-20, -18, -16, -14, -12, -10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check ortools==9.15.6755
+      - name: Search sign-sum class
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/cpsat_nearskew.py \
+            --target 574 --seconds 600 --workers 4 \
+            --seed "$((1000 + ${{ matrix.asum }}))" --asum '${{ matrix.asum }}' \
+            | tee /tmp/nearskew.txt
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: labs100-nearskew-cpsat-${{ matrix.asum }}
+          path: /tmp/nearskew.txt
+          if-no-files-found: warn
