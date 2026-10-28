@@ -1,0 +1,43 @@
+name: temp-aes-core6-rank5-affine
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-core6-rank5-affine.yml'
+      - 'science-boundary/aes-sbox-circuit/screen_core6_rank5_affine.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-core6-rank5-affine
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    strategy:
+      fail-fast: false
+      max-parallel: 35
+      matrix:
+        first: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34]
+        shard: [0,1,2,3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Exact rank5 six-AND mandatory-form shard
+        run: |
+          out=/tmp/aes-core6-rank5-${{ matrix.first }}-${{ matrix.shard }}
+          mkdir -p "$out"
+          python science-boundary/aes-sbox-circuit/screen_core6_rank5_affine.py \
+            --first-index ${{ matrix.first }} \
+            --prefix-shard ${{ matrix.shard }} --prefix-shards 4 \
+            --out "$out" | tee "$out/run.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-core6-rank5-${{ matrix.first }}-${{ matrix.shard }}
+          path: /tmp/aes-core6-rank5-${{ matrix.first }}-${{ matrix.shard }}
