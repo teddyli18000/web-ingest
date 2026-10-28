@@ -1,30 +1,24 @@
 #!/usr/bin/env python3
-"""Exact LABS-100 feasibility for E<=574, odd energy 50, outside near-skew.
+"""Calibration-only CP-SAT model for E<=574, odd energy 50, outside near-skew.
 
 Use parity halves A_i=s_{2i}, B_i=s_{2i+1}. Odd-perfect implies a*b=0,
-where a=sum A and b=sum B. Reversal swaps the halves and global/alternating
-sign changes normalize every solution to
+where a=sum A and b=sum B. A safe standard-symmetry normalization is:
 
-    A_0=B_0=+1, b=0, a in {0,2,...,20}.
+* use reversal if needed so b=0;
+* independently flip the even-position half so a>=0;
+* independently flip the odd-position half so B_0=s_1=+1.
 
-The bound |a|<=20 follows from Cauchy and even energy <=524.
+Thus b=0, a in {0,2,...,20}, B_0=+1, while A_0=s_0 MUST remain free
+when a>0. The bound |a|<=20 follows from Cauchy and even energy <=524.
 
 The model directly enforces all 50 odd correlations to be +/-1, the 49 scaled
 even correlations D_r=C_{2r}/2 with sum D_r^2<=131, exact correlation-sum
 and z=i Fourier identities, and excludes both skew-99 endpoint orientations.
 
-Optional --defect d partitions the odd-perfect space by a cheap endpoint
-coordinate. If L is the length-99 sequence obtained by deleting s_0, then for
-odd k<=97
-
-    C_k(L)=C_k(s)-s_0*s_k in {0,+/-2}.
-
-Let d_L count its nonzero odd correlations, and define d_R analogously after
-deleting s_99. The option fixes min(d_L,d_R)=d exactly. The defect booleans
-are derived directly from the already-modeled signs of C_k(s), so this adds no
-new autocorrelation sums. Pseudo-/near-skew endpoints occur at defect zero;
-the explicit near-skew exclusions remain in force, so d=0 is also a useful
-exact test for any nonstandard zero-odd-correlation endpoint.
+Optional --defect d fixes the symmetry-invariant endpoint-deletion defect
+min(d_L,d_R). This generic XOR CP model is retained only as a calibration and
+cross-check route: representative target runs remain UNKNOWN. Exact low-defect
+work should use oddperfect_outer_bnb.cpp instead.
 """
 from __future__ import annotations
 
@@ -94,8 +88,7 @@ def add_not_nearskew(model: cp_model.CpModel, A, B):
         suffix_viol.append(z.Not() if p & 1 else z)
     model.AddBoolOr(suffix_viol)
 
-    # Prefix positions 0..98 skew (the reversal of the suffix orientation):
-    # s_q*s_{98-q}=(-1)^(q+1), q=0..48.
+    # Prefix positions 0..98 skew (reversal of the suffix orientation).
     prefix_viol = []
     for q in range(0, 49):
         z = xor_var(model, bit_at(A,B,q), bit_at(A,B,98-q), f"ns_p_{q}")
@@ -113,9 +106,9 @@ def build(asum: int, target: int, defect: int | None = None):
         raise ValueError("defect must be in 0..49")
 
     model = cp_model.CpModel()
-    A = [model.NewBoolVar(f"A{i}") for i in range(N)] # 0 => +1, 1 => -1
+    A = [model.NewBoolVar(f"A{i}") for i in range(N)]  # 0 => +1, 1 => -1
     B = [model.NewBoolVar(f"B{i}") for i in range(N)]
-    model.Add(A[0] == 0)
+    # Safe normalization fixes only B_0 after choosing b=0 and a>=0.
     model.Add(B[0] == 0)
     model.Add(50 - 2*sum(A) == asum)
     model.Add(50 - 2*sum(B) == 0)
@@ -133,17 +126,17 @@ def build(asum: int, target: int, defect: int | None = None):
         model.Add(sum(terms) == (L+1)//2 - pos)
         odd_pos.append(pos)
 
-    # Opposite odd lags cancel in every odd-perfect N=100 sequence.
     for r in range(25):
         model.Add(odd_pos[r] + odd_pos[49-r] == 1)
 
-    # Endpoint-deletion skew defects. For k=2r+1<=97, s_k=B_r because s0=+.
-    # A defect after deleting s0 occurs iff sign(C_k) differs from B_r.
+    # Endpoint deletion defects. C-negative is odd_pos.Not().
     dl_bits = []
     dr_bits = []
     for r in range(49):
-        dl_bits.append(xor_var(model, odd_pos[r].Not(), B[r], f"defL_{r}"))
-        # Removed right endpoint product is s_{98-2r}*s_99=A_{49-r}*B_49.
+        # Removed left product is s0*s_{2r+1}=A0*B_r.
+        left_product_neg = xor_var(model, A[0], B[r], f"defLprod_{r}")
+        dl_bits.append(xor_var(model, odd_pos[r].Not(), left_product_neg, f"defL_{r}"))
+        # Removed right product is s_{98-2r}*s99=A_{49-r}*B_49.
         right_product_neg = xor_var(model, A[49-r], B[49], f"defRprod_{r}")
         dr_bits.append(xor_var(model, odd_pos[r].Not(), right_product_neg, f"defR_{r}"))
     DL = model.NewIntVar(0, 49, "defect_left")
