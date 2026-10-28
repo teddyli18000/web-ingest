@@ -1,0 +1,174 @@
+name: Temp Ramsey R46 m219 n11=0 fixed-H cover
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - science-boundary/ramsey-r46/m219_n11_0_H_types.py
+      - science-boundary/ramsey-r46/m219_n11_0_fixedH_sat.py
+      - .github/workflows/temp-ramsey-r46-m219-n11-0-fixedH.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-m219-n11-0-fixedH
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.mk.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Enumerate exact unlabeled H cover
+        id: mk
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'networkx==3.5'
+          mkdir -p /tmp/r46
+          python science-boundary/ramsey-r46/m219_n11_0_H_types.py --output /tmp/r46/types.json | tee /tmp/r46/types-summary.json
+          python - /tmp/r46/types.json "$GITHUB_OUTPUT" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1])); assert d['counts']=={'sequence0':25,'sequence1':4,'total':29},d['counts']
+          inc=[{'sequence':s,'index':r['index']} for s in (0,1) for r in d[f'sequence{s}']]
+          with open(sys.argv[2],'a') as f:f.write('matrix='+json.dumps({'include':inc},separators=(',',':'))+'\n')
+          print('branches',len(inc))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-m219-n11-0-H-types
+          path: /tmp/r46/types.json
+          retention-days: 7
+
+  solve:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ramsey-r46-m219-n11-0-H-types
+          path: /tmp/r46
+      - name: Build pinned Kissat 4.0.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/arminbiere/kissat.git "$RUNNER_TEMP/kissat"
+          git -C "$RUNNER_TEMP/kissat" checkout --quiet 8af8e56f174b778aef3aa45af9f739b2a5f492c2
+          cd "$RUNNER_TEMP/kissat" && ./configure >/dev/null && make -j2 >/dev/null
+          test "$(build/kissat --version)" = '4.0.4'
+      - name: Generate exact fixed-H branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          python science-boundary/ramsey-r46/m219_n11_0_fixedH_sat.py \
+            --types /tmp/r46/types.json --sequence '${{ matrix.sequence }}' --index '${{ matrix.index }}' \
+            --output /tmp/r46/branch.cnf | tee /tmp/r46/generate.json
+          head -n1 /tmp/r46/branch.cnf; du -h /tmp/r46/branch.cnf
+      - name: Solve exact branch
+        id: solve
+        shell: bash
+        run: |
+          set -uo pipefail
+          set +e
+          /usr/bin/time -v timeout --signal=TERM --kill-after=30s 1080 \
+            "$RUNNER_TEMP/kissat/build/kissat" /tmp/r46/branch.cnf > /tmp/r46/solver.log 2>&1
+          rc=$?
+          set -e
+          case "$rc" in 10) status=SAT;;20) status=UNSAT;;124|137|143) status=TIMEOUT;;*) status=ERROR;;esac
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          python - /tmp/r46/generate.json /tmp/r46/summary.json "$status" "$rc" <<'PY'
+          import json,os,sys
+          d=json.load(open(sys.argv[1]));d.update(status=sys.argv[3],solver_exit=int(sys.argv[4]),solver='kissat-4.0.4',
+            kissat_commit='8af8e56f174b778aef3aa45af9f739b2a5f492c2',github_run_id=os.environ['GITHUB_RUN_ID'])
+          open(sys.argv[2],'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({'sequence':d['sequence'],'H_index':d['H_index'],'status':d['status'],'variables':d['variables'],'clauses':d['clauses']},sort_keys=True))
+          PY
+          tail -n20 /tmp/r46/solver.log || true
+          [[ "$status" != ERROR ]]
+      - name: Decode SAT model
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: python science-boundary/ramsey-r46/sat_r46.py decode /tmp/r46/solver.log /tmp/r46/candidate.json
+      - name: Authoritative Few Shots verification on SAT
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate; cp /tmp/r46/candidate.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/few-shots-verify.json
+          python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]));assert d.get('valid') is True and str(d.get('score'))=='36',d
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ramsey-r46-m219-n11-0-${{ matrix.sequence }}-${{ matrix.index }}
+          path: |
+            /tmp/r46/generate.json
+            /tmp/r46/summary.json
+            /tmp/r46/solver.log
+            /tmp/r46/candidate.json
+            /tmp/r46/few-shots-verify.json
+          if-no-files-found: warn
+          retention-days: 7
+
+  collect:
+    if: always()
+    needs: [prepare, solve]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ramsey-r46-m219-n11-0-*
+          path: /tmp/parts
+      - name: Aggregate 29 fixed-H branches
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python - /tmp/parts /tmp/r46/result.json <<'PY'
+          import json,pathlib,sys
+          root=pathlib.Path(sys.argv[1]);rows=[];verified=[]
+          for p in root.rglob('summary.json'):rows.append(json.load(open(p)))
+          for p in root.rglob('few-shots-verify.json'):verified.append(json.load(open(p)))
+          rows.sort(key=lambda r:(r['sequence'],r['H_index']))
+          d={'campaign':'m219-n11-0-fixedH-exact-cover','logical_scope':'both m=219 n11=0 degree sequences','expected_branches':29,
+             'rows':rows,'statuses':{f"{r['sequence']}-{r['H_index']}":r['status'] for r in rows},'complete':len(rows)==29,
+             'all_unsat':len(rows)==29 and all(r['status']=='UNSAT' for r in rows),'sat_count':sum(r['status']=='SAT' for r in rows),
+             'timeout_count':sum(r['status']=='TIMEOUT' for r in rows),'verified_sat_count':sum(v.get('valid') is True and str(v.get('score'))=='36' for v in verified)}
+          open(sys.argv[2],'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n');print(json.dumps({k:v for k,v in d.items() if k not in {'rows','statuses'}},sort_keys=True))
+          PY
+      - name: Persist result and retire workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/r46/result.json science-boundary/ramsey-r46/results/m219-n11-0-fixedH.json
+          git rm .github/workflows/temp-ramsey-r46-m219-n11-0-fixedH.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/results/m219-n11-0-fixedH.json
+          git commit -m 'ramsey-r46: record m219 n11=0 fixed-H campaign'
+          for attempt in 1 2 3 4 5; do git pull --rebase origin main && git push origin HEAD:main && exit 0; sleep $((attempt*4)); done
+          exit 1
