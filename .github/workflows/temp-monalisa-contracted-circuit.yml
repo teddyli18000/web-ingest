@@ -1,0 +1,59 @@
+
+name: temp-monalisa-contracted-circuit
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/contracted_circuit_search.py
+      - .github/workflows/temp-monalisa-contracted-circuit.yml
+permissions:
+  contents: read
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {faces: 16, with_neutral: true}
+          - {faces: 64, with_neutral: true}
+          - {faces: 128, with_neutral: true}
+          - {faces: 279, with_neutral: false}
+          - {faces: 279, with_neutral: true}
+          - {faces: 494, with_neutral: true}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch public authoritative inputs
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          git clone --depth 1 https://github.com/bicobico2/ElimTSP.git elimtsp
+          python -m pip install networkx ortools
+          python upstream/problems/p010-mona-lisa-tsp/verify/verify.py upstream/problems/p010-mona-lisa-tsp/baseline
+      - name: Solve exact nonlocal contracted TSP
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+          WITH_NEUTRAL: ${{ matrix.with_neutral }}
+        run: |
+          mkdir -p science-boundary/mona-lisa-tsp/results/circuit-${{ matrix.faces }}-${{ matrix.with_neutral }}
+          args=()
+          if test "$WITH_NEUTRAL" = true; then args+=(--extra-neutral); fi
+          python science-boundary/mona-lisa-tsp/contracted_circuit_search.py \
+            --edges elimtsp/results/mona.248972.edg.gz \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --neutral-moves science-boundary/mona-lisa-tsp/data/neutral-harvest.json \
+            --report science-boundary/mona-lisa-tsp/results/circuit-${{ matrix.faces }}-${{ matrix.with_neutral }}/report.json \
+            --output science-boundary/mona-lisa-tsp/results/circuit-${{ matrix.faces }}-${{ matrix.with_neutral }}/certificate.json \
+            --faces ${{ matrix.faces }} --time-limit 100 --workers 4 "${args[@]}"
+          if test -f science-boundary/mona-lisa-tsp/results/circuit-${{ matrix.faces }}-${{ matrix.with_neutral }}/certificate.json; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py science-boundary/mona-lisa-tsp/results/circuit-${{ matrix.faces }}-${{ matrix.with_neutral }}
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-exact-circuit-${{ matrix.faces }}-${{ matrix.with_neutral }}
+          path: science-boundary/mona-lisa-tsp/results/circuit-${{ matrix.faces }}-${{ matrix.with_neutral }}/
+          if-no-files-found: ignore
