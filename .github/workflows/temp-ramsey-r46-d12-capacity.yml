@@ -1,0 +1,118 @@
+name: Temp Ramsey R46 D12 capacity filter
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - science-boundary/ramsey-r46/d12_capacity_filter.py
+      - .github/workflows/temp-ramsey-r46-d12-capacity.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-d12-capacity
+  cancel-in-progress: false
+
+jobs:
+  analyze:
+    strategy:
+      fail-fast: false
+      max-parallel: 7
+      matrix:
+        a_edges: [23, 24, 25, 26, 27, 28, 29]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download authenticated complete R(3,6,12) catalogue
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          curl --fail --location --retry 3 --silent --show-error \
+            https://users.cecs.anu.edu.au/~bdm/data/r36_12.g6.gz \
+            -o /tmp/r46/r36_12.g6.gz
+          echo '17e176a0f7e7397dbca7c9cb6295034dd74cf529ca62e7e717226dc1b0b7b96d  /tmp/r46/r36_12.g6.gz' | sha256sum -c -
+          python science-boundary/ramsey-r46/d12_capacity_filter.py self-test
+      - name: Apply exact capacity necessary condition
+        shell: bash
+        run: |
+          set -euo pipefail
+          python science-boundary/ramsey-r46/d12_capacity_filter.py analyze \
+            --catalog /tmp/r46/r36_12.g6.gz \
+            --edge-count '${{ matrix.a_edges }}' \
+            --out '/tmp/r46/a${{ matrix.a_edges }}.json'
+      - name: Upload edge stratum
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-d12-capacity-a${{ matrix.a_edges }}
+          path: /tmp/r46/a${{ matrix.a_edges }}.json
+          if-no-files-found: error
+          retention-days: 7
+
+  collect:
+    if: always()
+    needs: analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ramsey-r46-d12-capacity-a*
+          path: /tmp/parts
+      - name: Aggregate and validate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 - /tmp/parts /tmp/r46/result.json <<'PY'
+          import json, pathlib, sys
+          root=pathlib.Path(sys.argv[1]); out=pathlib.Path(sys.argv[2])
+          parts=[]
+          for p in sorted(root.rglob('a*.json')):
+              parts.append(json.load(open(p)))
+          edges=sorted(x['a_edges'] for x in parts)
+          assert edges == list(range(23,30)), edges
+          result={
+              'method':'D12 independent-4 miss capacity inequality with relaxed B degrees',
+              'catalog_source':'https://users.cecs.anu.edu.au/~bdm/data/r36_12.g6.gz',
+              'catalog_sha256':'17e176a0f7e7397dbca7c9cb6295034dd74cf529ca62e7e717226dc1b0b7b96d',
+              'edge_strata':parts,
+              'selected_types':sum(x['selected_types'] for x in parts),
+              'ruled_out_types':sum(x['ruled_out_types'] for x in parts),
+              'survivor_count':sum(x['survivor_count'] for x in parts),
+          }
+          out.write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({k:v for k,v in result.items() if k!='edge_strata'},sort_keys=True))
+          for x in parts:
+              print(f"a={x['a_edges']} selected={x['selected_types']} ruled={x['ruled_out_types']} survivors={x['survivor_count']}")
+          PY
+      - name: Persist result and remove one-shot workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest=science-boundary/ramsey-r46/results/d12-capacity-filter.json
+          cp /tmp/r46/result.json "$dest"
+          git rm .github/workflows/temp-ramsey-r46-d12-capacity.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "$dest"
+          git commit -m 'ramsey-r46: record D12 capacity filter'
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
+      - name: Upload aggregate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-d12-capacity-aggregate
+          path: /tmp/r46
+          if-no-files-found: warn
+          retention-days: 7
