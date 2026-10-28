@@ -1,0 +1,50 @@
+name: temp-aes-semilinear-aggregate-support5
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-semilinear-aggregate-support5.yml'
+      - 'science-boundary/aes-sbox-circuit/aggregate_semilinear_summaries.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: temp-aes-semilinear-aggregate-support5
+  cancel-in-progress: false
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Download historical support5 evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/support5
+          gh run download 40638295317 -R teddyli18000/web-ingest -D /tmp/support5
+      - name: Aggregate summaries
+        run: |
+          mkdir -p /tmp/aes-support5-aggregate
+          python science-boundary/aes-sbox-circuit/aggregate_semilinear_summaries.py \
+            /tmp/support5 --out /tmp/aes-support5-aggregate/aggregate.json \
+            | tee /tmp/aes-support5-aggregate/run.log
+          python - <<'PY'
+          import json
+          p='/tmp/aes-support5-aggregate/aggregate.json'
+          d=json.load(open(p))
+          assert d['summary_files'] == 18, d['summary_files']
+          assert d['total_candidates_101'] == 0, d['nonzero_candidate_rows']
+          assert d['total_best_witnesses_saved'] == 0, d['nonzero_witness_rows']
+          print('verified 18/18 summaries, zero 101 candidates/witnesses')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-support5-ab-aggregate
+          path: /tmp/aes-support5-aggregate
