@@ -50,7 +50,7 @@ def main():
     bestowners=baseowners; bestpairs=len(basepp); best=[]; hist={}
 
     for a,b in sorted(ownerpairs):
-        pool=sorted(set(one.get(a,())+one.get(b,())+two.get((a,b),())))
+        pool=sorted(set(one.get(a,[])+one.get(b,[])+two.get((a,b),[])))
         max_pool=max(max_pool,len(pool))
         for u,v in combinations(pool,2):
             pair_trials+=1
