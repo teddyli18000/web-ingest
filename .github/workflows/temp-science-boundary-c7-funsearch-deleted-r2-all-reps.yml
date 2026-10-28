@@ -1,0 +1,110 @@
+name: Temp Science Boundary C7 FunSearch deleted-seed r2 all reps
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-funsearch-deleted-r2-all-reps.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_t9_funsearch_deleted_seed.py
+      - science-boundary/shannon-capacity-c7/code/search_net2_r2.cpp
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        case: [0,1,2,3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned public sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+      - name: Materialize and verify 134752 seed
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check numpy
+          mkdir -p "$RUNNER_TEMP/base" "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+          python3 science-boundary/shannon-capacity-c7/code/bpz_t9_funsearch_deleted_seed.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/base/ids.txt" "$RUNNER_TEMP/result/base-status.json" --case '${{ matrix.case }}'
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/base" | tee "$RUNNER_TEMP/result/base-verify.json"
+          python3 - "$RUNNER_TEMP/result/base-verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1)) != 134752: raise SystemExit(r)
+          PY
+      - name: Exact unrestricted remove2-add4 net-plus-two search
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp science-boundary/shannon-capacity-c7/code/search_net2_r2.cpp -o "$RUNNER_TEMP/search-net2-r2"
+          export OMP_NUM_THREADS="$(nproc)"
+          /usr/bin/time -v "$RUNNER_TEMP/search-net2-r2" "$RUNNER_TEMP/base/ids.txt" > "$RUNNER_TEMP/result/search.json" 2> "$RUNNER_TEMP/result/search.stderr"
+          cat "$RUNNER_TEMP/result/search.json"
+          tail -n 80 "$RUNNER_TEMP/result/search.stderr"
+      - name: Materialize candidate
+        id: materialize
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/result/search.json" "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/status.json" <<'PY'
+          import json,sys
+          bp,sp,outp,stp=sys.argv[1:]
+          pts=set(json.load(open(bp,encoding='utf-8'))['points']); s=json.load(open(sp,encoding='utf-8'))
+          def dec(z):
+              d=[]
+              for _ in range(10): d.append(str(z%7)); z//=7
+              return ''.join(reversed(d))
+          kind=s.get('kind'); rem=[]; adds=[]
+          if kind=='add2': adds=[dec(int(z)) for z in s['add']]
+          elif kind=='replace1add3': rem=[dec(int(z)) for z in s['remove']]; adds=[dec(int(z)) for z in s['add']]
+          elif kind=='replace2add4': rem=[dec(int(z)) for z in s['remove']]; adds=[dec(int(z)) for z in s['add']]
+          status={'search':s,'candidate':False,'score':len(pts)}
+          if kind in ('add2','replace1add3','replace2add4'):
+              if any(p not in pts for p in rem): raise SystemExit('bad removal')
+              for p in rem: pts.remove(p)
+              if any(p in pts for p in adds) or len(adds)!=len(set(adds)): raise SystemExit('bad addition')
+              pts.update(adds)
+              if len(pts)!=134754: raise SystemExit(len(pts))
+              status.update(candidate=True,score=134754,removed_points=rem,added_points=adds)
+              json.dump({'points':sorted(pts)},open(outp,'w',encoding='utf-8'),separators=(',',':'));open(outp,'a').write('\n')
+          json.dump(status,open(stp,'w',encoding='utf-8'),indent=2,sort_keys=True);open(stp,'a').write('\n')
+          PY
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.materialize.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1)) <= 134753: raise SystemExit(r)
+          print(f"VERIFIED BREAKTHROUGH score={r['score']}")
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-funsearch-deleted-r2-case-${{ matrix.case }}
+          path: ${{ runner.temp }}/result
+          retention-days: 14
