@@ -1,0 +1,21 @@
+name: temp-aes-public5-splice
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-public5-splice.yml'
+permissions:
+  contents: read
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Screen released five-AND cores against live 102 prefix
+        run: python3 science-boundary/aes-sbox-circuit/screen_public5_splices.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-public5-splice
+          path: /tmp/aes-public5-splice
