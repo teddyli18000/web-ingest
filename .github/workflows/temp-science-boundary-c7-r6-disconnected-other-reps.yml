@@ -1,0 +1,89 @@
+name: Temp Science Boundary C7 r6 disconnected other reps
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-r6-disconnected-other-reps.yml
+      - science-boundary/shannon-capacity-c7/code/patch_search_net2_r3_r6_census.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  census:
+    strategy:
+      fail-fast: false
+      matrix:
+        case: [1, 2, 3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned public sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+      - name: Materialize and verify representative 134752 seed
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check numpy
+          mkdir -p "$RUNNER_TEMP/base" "$RUNNER_TEMP/result"
+          python3 science-boundary/shannon-capacity-c7/code/bpz_t9_funsearch_deleted_seed.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/base/ids.txt" "$RUNNER_TEMP/result/base-status.json" --case '${{ matrix.case }}'
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/base" | tee "$RUNNER_TEMP/result/base-verify.json"
+          python3 - "$RUNNER_TEMP/result/base-verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1)) != 134752: raise SystemExit(r)
+          PY
+      - name: Replay exact r4 precondition
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/patch_search_net2_r4.py \
+            science-boundary/shannon-capacity-c7/code/search_net2_r4.cpp "$RUNNER_TEMP/r4.cpp"
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp "$RUNNER_TEMP/r4.cpp" -o "$RUNNER_TEMP/r4"
+          export OMP_NUM_THREADS="$(nproc)"
+          "$RUNNER_TEMP/r4" "$RUNNER_TEMP/base/ids.txt" > "$RUNNER_TEMP/result/r4.json" 2> "$RUNNER_TEMP/result/r4.stderr"
+          python3 - "$RUNNER_TEMP/result/r4.json" <<'PY'
+          import json,sys
+          s=json.load(open(sys.argv[1],encoding='utf-8'))
+          if s.get('kind')!='none': raise SystemExit(s)
+          PY
+      - name: Exact saturated-three-owner census
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/patch_search_net2_r3_r6_census.py \
+            science-boundary/shannon-capacity-c7/code/search_net2_r3.cpp "$RUNNER_TEMP/r6-census.cpp"
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp "$RUNNER_TEMP/r6-census.cpp" -o "$RUNNER_TEMP/r6-census"
+          export OMP_NUM_THREADS="$(nproc)"
+          /usr/bin/time -v "$RUNNER_TEMP/r6-census" "$RUNNER_TEMP/base/ids.txt" > "$RUNNER_TEMP/result/r6-census.json" 2> "$RUNNER_TEMP/result/r6-census.stderr"
+          cat "$RUNNER_TEMP/result/r6-census.json"
+          python3 - "$RUNNER_TEMP/result/r6-census.json" <<'PY'
+          import json,sys
+          s=json.load(open(sys.argv[1],encoding='utf-8'))
+          if s.get('kind')!='census': raise SystemExit(s)
+          PY
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-r6-disconnected-census-case-${{ matrix.case }}
+          path: ${{ runner.temp }}/result
+          retention-days: 14
