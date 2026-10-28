@@ -23,3 +23,17 @@ Pinned complete catalogue of all seven non-isomorphic Ramsey `(3,6,17)` graphs, 
 - SHA-256 of the 175-byte pinned file: `3286c5366ddc70f349c3f7e798d7acbc79dc026c7abe0c8f406cad41ca990361`
 
 `degree17_catalog_sat.py` independently decodes and validates every record as triangle-free with no independent 6-set before using it.
+
+## `r45_23_e101.g6`
+
+Pinned unique 23-vertex Ramsey `(4,5)` graph with 101 edges. It is the entire minimum-edge stratum and therefore the unique possible antineighborhood in the lucky degree-12 reduction.
+
+- Authoritative source archive: Brendan McKay, `https://users.cecs.anu.edu.au/~bdm/data/r45extreme.tar.gz`
+- Source archive SHA-256: `9cfac9dbd1c209cfa342e5d5424df2a7a3fbb008ca00bf0a992e5bbe72f925b6`
+- Source member: `r45extreme/r4523.101.g6`
+- Source member contains exactly one graph6 record.
+- Pinned file SHA-256: `bf403d6b148c60a26d2536ade61d74d552972f701f3fdbb143478d97652c20ec`
+- Independently reproduced archive inventory: `../results/r45extreme-inventory.json` records exactly one `(n=23,e=101)` graph.
+- Evidence artifact: GitHub Actions run `40628847295`, artifact `12790493429` (`ramsey-r46-r45extreme-inventory`), whose uploaded ZIP includes the authenticated source archive and inventory.
+
+This tiny pinned record should be preferred for repeated exact gluing runs. Re-downloading and scanning the ~90 MB source archive is unnecessary once its provenance and uniqueness have been authenticated.
