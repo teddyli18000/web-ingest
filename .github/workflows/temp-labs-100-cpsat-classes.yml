@@ -12,17 +12,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ab: ['0,0','2,0','2,2','4,0','4,2','4,4','6,0','6,2','6,4','6,6','8,0','8,2','8,4','8,6','10,0','10,2','10,4','12,0','12,2','12,4','14,0','14,2','16,0','16,2','18,0','18,2','20,0','20,2']
+        # For N=100, C_k+C_{100-k}=0 (mod 4).  In the odd-perfect
+        # subspace this forces C_{100-k}=-C_k at odd k, hence P*Q=0.
+        # Reversal/sign/alternation symmetry lets us take P>=Q>=0, so Q=0.
+        pq: ['0,0','2,0','4,0','6,0','8,0','10,0','12,0','14,0','16,0','18,0','20,0']
     runs-on: ubuntu-24.04
     timeout-minutes: 6
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - name: Install OR-Tools
-        run: python3 -m pip install --disable-pip-version-check -q ortools
-      - name: Search class ${{ matrix.ab }}
+        with:
+          persist-credentials: false
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check -q 'ortools==9.15.6755'
+      - name: Search class ${{ matrix.pq }}
         shell: bash
         run: |
           set -euo pipefail
-          IFS=, read -r A B <<< '${{ matrix.ab }}'
-          python3 science-boundary/labs-100/code/cpsat_target.py --target 574 --seconds 240 --workers 4 --seed 1 --asum "$A" --bsum "$B" | tee /tmp/out.txt
+          IFS=, read -r P Q <<< '${{ matrix.pq }}'
+          python3 science-boundary/labs-100/code/cpsat_target.py --target 574 --seconds 240 --workers 4 --seed 1 --asum "$P" --bsum "$Q" | tee /tmp/out.txt
           grep -E '^(STATUS|FOUND|NO_CERTIFICATE)' /tmp/out.txt
