@@ -41,7 +41,7 @@ Relative to canonical current core inputs `(a,b,c,d)`, four independent Jain-sid
 
 with the fifth nominal function `J50 = a XOR b XOR c` (mask 7) dependent.
 
-Inside the Jain five-AND core, current tail factors `w57`, `w56`, `w58`, and `w53` appear directly; these four have rank three, so one additional independent current factor is still needed for a direct four-factor basis.
+Inside the Jain five-AND core, several current tail factors appear directly, but this does **not** give a 17-gate splice by input relabeling alone; see the exact GL screening below.
 
 ## Nine tail factors have rank four
 
@@ -57,15 +57,36 @@ Thus any four independent factors form a basis of all nine. Once four such facto
 
 This yields a reduced sufficient route to a 17-gate core: synthesize **four independent required factors in at most 12 gates with at most five ANDs**, then append the five-XOR closure. This is a smaller exact problem than the upstream six-AND generic core timeout and than our earlier nine-output 17-gate encoding.
 
+## Exact GL(4,2) screening of Jain `sbox106_d34`
+
+A complete 20,160-map input-GL enumeration was run on exact 16-state truth tables.
+
+- If the three post-core factor XORs are included, the Jain nine-factor set is in the same GL(4,2) orbit as the current nine-factor set for exactly **six** input maps. One map is just the permutation `(J41,J48,J49,J51)=(a,c,d,b)`.
+- However, three of Jain's nine final factors are *outside* its 17-gate / five-AND core: `j86=j59 XOR j66`, `j87=j86 XOR j64`, `j88=j87 XOR j67`. Therefore the complete nine-factor exposure is 20 gates, not 17.
+- Enumerating **all 17 wires of the original Jain core** under all 20,160 input GL maps proves the unchanged core can directly contain at most **6 of the 9** current factors. The hit distribution is: 0→19,812 maps; 1→294; 2→6; 3→18; 4→12; 5→12; 6→6.
+- Consequently, `input basis change + unchanged Jain 17-gate core` is exhaustively ruled out as a 101 route. A successful five-AND 17-gate core must change the five-AND decomposition and/or its operand linear forms, not merely relabel Jain's inputs or linear tail.
+
+This result corrects an initially tempting but invalid direct-splice interpretation: the nine-factor set equivalence is real, but the last three factor XORs were not inside the 17-gate core.
+
+## Public five-AND cores being exhausted before original synthesis
+
+The released `ahrazzle/gf2m-circuits` forward S-box pack has two verified **32-AND** points found so far: `sbox106_d34` and `sbox110_d38`; the other released forward points checked (`sbox106_d24`, 111/112/113/116/121 depth points) use 34 ANDs.
+
+Both released inverse-S-box 109-gate points, `invsbox109_d30` and `invsbox109_d31`, also use **32 ANDs**. Because AES S-box and inverse S-box share inversion up to affine layers, these are legitimate sources of alternate five-AND decompositions.
+
+`analyze_public5_cores.py` was added to identify `9 + 5 + 18` by AND ancestry, extract each four-dimensional core boundary and nine final factors, and screen all 20,160 GL(4,2) input changes against the live-102 factor set. This upstream-reuse screen is prioritized before inventing a new five-AND decomposition.
+
 ## Fixed-output-layer exclusion
 
 For the 102 certificate's fixed output matrix, the transposed `8 -> 18` problem has 18 required targets, five already equal to inputs. A hypothetical 13-XOR implementation would therefore have no room for helper gates: every one of the 13 remaining targets would have to be produced directly, one per gate. Closure over the required-target set cannot generate all 13 under that constraint, so 13 XORs is impossible for that fixed matrix. The known 14-XOR transpose, hence the 24-gate original output network, is optimal for the fixed matrix. Any output-layer saving must change the surrounding representation rather than resynthesize that same matrix.
 
 ## Running exact searches
 
-1. `temp-aes-sbox-core5-template`: four Jain-topology rewiring instances, including current, Jain, and cheap interface bases.
-2. `temp-aes-sbox-core5-min`: symmetry-broken 17-gate / five-AND searches over several input bases.
-3. `temp-aes-sbox-basis12` (run 40626627456): eight reduced 12-gate four-factor searches on the **current identity input basis**, followed by a deterministic five-XOR closure if SAT. Six of the eight target bases were chosen to reuse as much of the Jain factor structure as possible.
+1. `temp-aes-sbox-core5-template`: four Jain-topology rewiring instances; completed as solver `unknown`/timeouts, not UNSAT.
+2. `temp-aes-sbox-core5-min` (run 40626122929): symmetry-broken 17-gate / five-AND searches over several input bases.
+3. `temp-aes-sbox-basis12` (run 40626627456): eight reduced 12-gate four-factor searches on the **current identity input basis**, followed by a deterministic five-XOR closure if SAT.
+4. `temp-aes-sbox-core5-set`: a smaller target-set encoding of the 17-gate / five-AND problem using Jain's five-AND time positions and no nine separate output selectors.
+5. `temp-aes-public5-orbits`: exact GL(4,2) orbit screening of all four released 32-AND forward/inverse constructions before any new nonlinear decomposition is invented.
 
 Older exact linear-interface runs aimed at the 103 outer representation are retained as evidence but are not treated as searches over the new 102 outer representation.
 
