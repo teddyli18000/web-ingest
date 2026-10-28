@@ -37,3 +37,13 @@ Pinned unique 23-vertex Ramsey `(4,5)` graph with 101 edges. It is the entire mi
 - Evidence artifact: GitHub Actions run `40628847295`, artifact `12790493429` (`ramsey-r46-r45extreme-inventory`), whose uploaded ZIP includes the authenticated source archive and inventory.
 
 This tiny pinned record should be preferred for repeated exact gluing runs. Re-downloading and scanning the ~90 MB source archive is unnecessary once its provenance and uniqueness have been authenticated.
+
+## `r36_12_e29.g6`
+
+Pinned unique 12-vertex Ramsey `(3,6)` graph with 29 edges, the unique neighbourhood side in the lucky degree-12 reduction.
+
+- Authoritative source: Brendan McKay complete `r36_12.g6.gz` catalogue.
+- Source SHA-256: `17e176a0f7e7397dbca7c9cb6295034dd74cf529ca62e7e717226dc1b0b7b96d`.
+- Complete catalogue edge histogram has exactly one 29-edge record.
+- Pinned one-line file SHA-256: `3598adba0f769168ae666fb1d0e4ddc653b646a48d12e6b4d5ddfa70ed2c4ce9`.
+- Its exact automorphism enumeration is in `../results/r36-12-e29-automorphisms.json`.
