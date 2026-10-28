@@ -39,6 +39,10 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 RESULTS = HERE / "results"
 
+# Same exact endpoint extrema used by m217_structure.py / m218_structure.py.
+A_MAX = {11: 26, 12: 29, 13: 32, 14: 35, 15: 37, 16: 40, 17: 42}
+B_MIN = {11: 116, 12: 101, 13: 88, 14: 77, 15: 68, 16: 57, 17: 50}
+
 
 def load(name: str) -> dict:
     return json.loads((RESULTS / name).read_text(encoding="utf-8"))
@@ -73,9 +77,13 @@ def degree_square_sum(seq: dict[str, int]) -> int:
 
 
 def upper_s_sum_after_d12(seq: dict[str, int]) -> int:
-    # Exact m=218 per-degree catalogue upper bounds.  The d=12 upper bound is
-    # strengthened from 146 to 145 by the complete lucky-d12 exclusion.
-    upper = {11: 128, 12: 145, 13: 162, 14: 176, 15: 180, 16: 201, 17: 210}
+    # Exact m=218 per-degree catalogue upper bounds are m+A_MAX[d]-B_MIN[d].
+    # The d=12 upper bound is strengthened from 146 to 145 by the complete
+    # lucky-d12 exclusion.  Keep the formula here so future reuse cannot
+    # silently inherit a hand-transcription error (the d=15 value is 187).
+    upper = {d: 218 + A_MAX[d] - B_MIN[d] for d in A_MAX}
+    assert upper == {11: 128, 12: 146, 13: 162, 14: 176, 15: 187, 16: 201, 17: 210}
+    upper[12] = 145
     return sum(upper[int(d)] * int(n) for d, n in seq.items())
 
 
