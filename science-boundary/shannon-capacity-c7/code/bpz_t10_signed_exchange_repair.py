@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run exact blocker-budget repair on every signed BPZ-X t=10 two-hit geometry.
 
-The full signed-coordinate orbit of BPZ-X has 1920 distinct images.  Prior
+The full signed-coordinate orbit of BPZ-X has 3840 distinct images.  Prior
 exact scanning found 50 image-obstruction pairs with minimum hit count 2 and no
 one-hit pair.  This driver regenerates every exact two-hit translated geometry,
 deduplicates the resulting 365-point retained instances, and runs the pinned
@@ -30,7 +30,7 @@ def signed_two_hit_cases(I0,X0,ring,digits,nb):
         for negmask in range(1<<t10.D):
             S=frozenset(t10.enc(tuple(((-digits[v][perm[j]])%t10.Q if ((negmask>>j)&1) else digits[v][perm[j]]) for j in range(t10.D))) for v in X0)
             images.setdefault(S,(perm,negmask))
-    if len(images)!=1920: raise RuntimeError(f'signed orbit drift {len(images)}')
+    if len(images)!=3840: raise RuntimeError(f'signed orbit drift {len(images)}')
     out=[];seen=set();pair_count=0
     for ii,(Sfro,meta) in enumerate(images.items()):
         S=set(Sfro);perm,negmask=meta;FS=np.fft.fftn(t10.arr(S,digits))
