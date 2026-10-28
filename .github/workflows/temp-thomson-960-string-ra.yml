@@ -1,0 +1,44 @@
+name: temp Thomson 960 R-A string barrier
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-string-ra.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  string:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Optimize spherical R-A string and climbing image
+        run: |
+          python3 science-boundary/thomson-960/code/string_record_neighbor.py \
+            "$RUNNER_TEMP/few-shots" \
+            --neighbor-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --images 7 --iterations 160 --eta 0.00025 --max-step 0.0007 \
+            --climb-iterations 120 \
+            --out "$RUNNER_TEMP/string-ra.json"
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'string-ra.json')
+          d=json.load(open(p)); d.pop('saddle_points',None)
+          d['history']=d['history'][-4:]
+          d['climb_history']=d['climb_history'][-4:]
+          print(json.dumps(d,indent=2))
+          PY
+      - name: Upload saddle result
+        uses: actions/upload-artifact@v4
+        with:
+          name: thomson-string-ra
+          path: ${{ runner.temp }}/string-ra.json
+          retention-days: 7
