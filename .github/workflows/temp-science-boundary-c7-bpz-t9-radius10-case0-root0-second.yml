@@ -1,0 +1,117 @@
+name: Temp Science Boundary C7 BPZ t9 radius10 case0 root0 second shards
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-bpz-t9-radius10-case0-root0-second.yml
+      - science-boundary/shannon-capacity-c7/code/patch_exchange_dfs_second_level.py
+      - science-boundary/shannon-capacity-c7/code/bpz_t9_exchange_second_continue.py
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-science-boundary-c7-bpz-t9-radius10-case0-root0-second
+  cancel-in-progress: false
+jobs:
+  shard:
+    strategy:
+      fail-fast: false
+      max-parallel: 11
+      matrix:
+        include:
+          - {start: 1, end: 2}
+          - {start: 2, end: 4}
+          - {start: 4, end: 8}
+          - {start: 8, end: 16}
+          - {start: 16, end: 32}
+          - {start: 32, end: 64}
+          - {start: 64, end: 128}
+          - {start: 128, end: 256}
+          - {start: 256, end: 512}
+          - {start: 512, end: 2048}
+          - {start: 2048, end: 15283}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned public sources read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          git init "$RUNNER_TEMP/c7-five"
+          git -C "$RUNNER_TEMP/c7-five" remote add origin https://github.com/molind/c7-five.git
+          git -C "$RUNNER_TEMP/c7-five" fetch --depth 1 origin ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+          git -C "$RUNNER_TEMP/c7-five" checkout FETCH_HEAD
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+      - name: Patch and compile exact DFS
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check numpy
+          python3 science-boundary/shannon-capacity-c7/code/patch_exchange_dfs_second_level.py \
+            "$RUNNER_TEMP/c7-five/search/exchange_dfs.cpp" "$RUNNER_TEMP/exchange_dfs_second.cpp"
+          g++ -O3 -DNDEBUG -march=native -std=c++20 "$RUNNER_TEMP/exchange_dfs_second.cpp" -o "$RUNNER_TEMP/exchange-dfs-second"
+      - name: Exact radius10 case0 root0 second-choice shard
+        id: search
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/science-boundary/shannon-capacity-c7/code
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/shot" "$RUNNER_TEMP/result"
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_t9_exchange_second_continue.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/c7-five" "$RUNNER_TEMP/exchange-dfs-second" \
+            "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/status.json" \
+            --case 0 --budget 9 --root 0 --second-start '${{ matrix.start }}' --second-end '${{ matrix.end }}' --cutoff 540 \
+            > "$RUNNER_TEMP/result/stdout.txt" 2> "$RUNNER_TEMP/result/stderr.txt"
+          cat "$RUNNER_TEMP/result/status.json"
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+      - name: Require exact shard completion or witness
+        if: steps.search.outputs.found != 'true'
+        shell: bash
+        run: |
+          python3 - "$RUNNER_TEMP/result/status.json" <<'PY'
+          import json,sys
+          s=json.load(open(sys.argv[1]))
+          if not s.get('complete_shard',False):
+              q=s.get('search',{})
+              raise SystemExit(f"INCOMPLETE second shard [{s.get('requested_second_start')},{s.get('requested_second_end')}), next_second={q.get('next_second')}")
+          print('exact second-level shard exhausted')
+          PY
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1)) <= 134753:
+              raise SystemExit(f'candidate not a verified breakthrough: {r}')
+          print(f"VERIFIED BREAKTHROUGH score={r['score']}")
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-bpz-t9-radius10-case0-root0-second-${{ matrix.start }}-${{ matrix.end }}
+          path: ${{ runner.temp }}/result
+          retention-days: 14
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## C7 t9 radius10 case0 root0 second choices [${{ matrix.start }},${{ matrix.end }})"
+            for f in status.json verify.json; do
+              if [[ -f "$RUNNER_TEMP/result/$f" ]]; then echo '```json'; cat "$RUNNER_TEMP/result/$f"; echo '```'; fi
+            done
+            if [[ -f "$RUNNER_TEMP/result/stderr.txt" ]]; then echo '```text'; tail -n 80 "$RUNNER_TEMP/result/stderr.txt"; echo '```'; fi
+          } >> "$GITHUB_STEP_SUMMARY"
