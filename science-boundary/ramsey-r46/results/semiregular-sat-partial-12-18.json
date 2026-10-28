@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-28",
+  "campaign": "semiregular-cyclic-automorphism-sat",
+  "github_run_id": "40613531660",
+  "scope": "Exact decision for labelled 36-vertex graphs invariant under a fixed semiregular cyclic automorphism with all cycles of the stated order.",
+  "solver": "Kissat 4.0.4",
+  "kissat_commit": "8af8e56f174b778aef3aa45af9f739b2a5f492c2",
+  "completed": [
+    {
+      "order": 12,
+      "cycles": 3,
+      "variables": 54,
+      "k4_clauses": 4806,
+      "i6_clauses": 158002,
+      "clauses": 162808,
+      "status": "UNSAT",
+      "solver_exit": 20,
+      "elapsed_wall": "6:23.03",
+      "artifact": "ramsey-r46-semiregular-12"
+    },
+    {
+      "order": 18,
+      "cycles": 2,
+      "variables": 36,
+      "k4_clauses": 3093,
+      "i6_clauses": 102612,
+      "clauses": 105705,
+      "status": "UNSAT",
+      "solver_exit": 20,
+      "elapsed_wall_seconds_approximately": 3.02,
+      "artifact": "ramsey-r46-semiregular-18"
+    }
+  ],
+  "still_running_when_recorded": [6, 9],
+  "verification": "Both completed jobs skipped the SAT-only decode/verifier steps. Downloaded artifacts independently show solver_exit 20 and status UNSAT."
+}
