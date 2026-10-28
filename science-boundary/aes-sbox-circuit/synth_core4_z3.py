@@ -15,7 +15,6 @@ def opv(op,a,b):
     if op=='AND':return a&b
     raise ValueError(op)
 def primary_truths(c):
-    # Evaluate the published 18-gate core on all 16 assignments of its four independent inputs.
     vals={}
     for i,w in enumerate(PRIMARY_INPUTS):
         t=0
@@ -49,13 +48,13 @@ def synth(basis_masks,G,and_count,timeout_ms,seed,fixed_pattern):
         inp.append(z3.BitVecVal(v,16))
     s=z3.Solver(); s.set(timeout=timeout_ms,random_seed=seed)
     vals=list(inp); A=[];B=[];O=[];ands=[]
-    pattern=[2,0,2,0,2,0,2,0,0,2,0,0,2,0,0,0,0,0]  # primary core: 2=AND,0=XOR
+    pattern=[2,0,2,0,2,0,2,0,0,2,0,0,2,0,0,0,0,0]
     for i in range(G):
         n=len(vals); a=z3.Int(f'a{i}');b=z3.Int(f'b{i}');o=z3.Int(f'o{i}')
         s.add(a>=0,b>=0,a<n,b<n,a<b)
         if fixed_pattern and i<len(pattern):
             if pattern[i]==2:s.add(o==2)
-            else:s.add(o>=0,o<=1)  # permit XOR/XNOR orientation
+            else:s.add(o>=0,o<=1)
         else:s.add(o>=0,o<=2)
         av=zselect(z3,a,vals);bv=zselect(z3,b,vals)
         v=z3.If(o==0,av^bv,z3.If(o==1,~(av^bv),av&bv))
@@ -72,19 +71,16 @@ def synth(basis_masks,G,and_count,timeout_ms,seed,fixed_pattern):
         ai=m.eval(A[i]).as_long();bi=m.eval(B[i]).as_long();oi=m.eval(O[i]).as_long();name=f'c{i}'
         gates.append({'op':ops[oi],'a':names[ai],'b':names[bi],'out':name});names.append(name)
     outsel=[m.eval(q).as_long() for q in outs]
-    # Independent 16-state check of reconstructed model.
     rv=[]
     for x in range(16):
-        vv={f'b{i}':sum((((sum(((x>>k)&1) for k in range(4) if (basis_masks[i]>>k)&1))&1))<<0) for _ in [0]) for i in range(4)}
-        # simpler direct parity
+        vv={}
         for i,bm in enumerate(basis_masks):vv[f'b{i}']=(bm & x).bit_count()&1
         for g in gates:
             a=vv[g['a']];b=vv[g['b']]
-            vv[g['out']]= (a^b) if g['op']=='XOR' else ((1^a^b) if g['op']=='XNOR' else (a&b))
+            vv[g['out']]=(a^b) if g['op']=='XOR' else ((1^a^b) if g['op']=='XNOR' else (a&b))
         rv.append([vv[names[q]] for q in outsel])
     for x in range(16):
-        for j,t in enumerate(targets):
-            assert rv[x][j]==((t>>x)&1),(x,j)
+        for j,t in enumerate(targets):assert rv[x][j]==((t>>x)&1),(x,j)
     summary.update({'output_selectors':outsel,'ops':[g['op'] for g in gates]})
     return summary,{'basis_masks':basis_masks,'gates':gates,'outputs':[names[q] for q in outsel]}
 
