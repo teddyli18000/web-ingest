@@ -43,9 +43,11 @@ E = span(U, r0).
 
 `screen_core6_rank5_exact.cpp` exhausts all 35 such envelopes on exact 16-state truth tables. It models arbitrary XOR/XNOR phases, exact AND operands, every distinct non-free affine form, and all 496 rank-five zero-state completions simultaneously. It prunes only when an optimistic lower bound already exceeds the eleven-linear budget.
 
-A local unrestricted run completed **35/35 envelopes with zero hits**. The heaviest envelope visited only 22,752 DFS suffix nodes after the optimized incremental coordinate-map reduction. An independent 35-job GitHub Actions run (`40738521634`) was launched to reproduce the result; record its final matrix status before treating the Action as a second implementation check.
+A local unrestricted run completed **35/35 envelopes with zero hits**. The heaviest envelope visited only 22,752 DFS suffix nodes after the optimized incremental coordinate-map reduction.
 
-Thus the current exact local result excludes quotient-rank-six `6 AND + 11 linear` cores for all 496 rank-five completions.
+Independent GitHub Actions run **`40738521634`** then completed **35/35 jobs successfully**. The program exits nonzero if a `<=11` mandatory-form witness is found, so the all-green matrix independently reproduces the zero-hit result.
+
+Therefore quotient-rank-six `6 AND + 11 linear` cores are excluded for **all 496 rank-five completions**.
 
 ## What remains: rank-four completion + quotient rank six
 
