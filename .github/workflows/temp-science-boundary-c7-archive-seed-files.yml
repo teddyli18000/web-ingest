@@ -1,0 +1,65 @@
+name: Temp Science Boundary C7 archive seed files
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-archive-seed-files.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned c7-five archive and inspect seed files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/c7-five"
+          git -C "$RUNNER_TEMP/c7-five" remote add origin https://github.com/molind/c7-five.git
+          git -C "$RUNNER_TEMP/c7-five" fetch --depth 1 origin ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+          git -C "$RUNNER_TEMP/c7-five" checkout FETCH_HEAD
+          mkdir -p "$RUNNER_TEMP/src" "$RUNNER_TEMP/result"
+          tar -xzf "$RUNNER_TEMP/c7-five/archive/source.tar.gz" -C "$RUNNER_TEMP/src"
+          python3 - "$RUNNER_TEMP/src" "$RUNNER_TEMP/result/seeds.json" <<'PY'
+          import json,pathlib,sys
+          root=pathlib.Path(sys.argv[1]); out=pathlib.Path(sys.argv[2])
+          wanted={
+            'PS':'exchange-dfs-original-words.txt',
+            'A':'exchange-dfs-family-a-words.txt',
+            'B':'family-b-seed-words.txt',
+            'B-farthest':'family-b-farthest-words.txt',
+            'C':'exchange-dfs-family-c-words.txt',
+            'D':'family-d-seed-words.txt',
+            'E':'family-e-seed-words.txt',
+            'F':'family-f-seed-words.txt',
+          }
+          rows=[]
+          for label,name in wanted.items():
+              hits=list(root.rglob(name))
+              rec={'label':label,'name':name,'matches':[str(p.relative_to(root)) for p in hits]}
+              if hits:
+                  toks=hits[0].read_text().split()
+                  rec.update(tokens=len(toks),sample=toks[:3],all_len5=all(len(t)==5 and set(t)<=set('0123456') for t in toks))
+              rows.append(rec)
+          # Also find every likely explicit 367-word text file in the source archive.
+          extras=[]
+          for p in root.rglob('*.txt'):
+              try:toks=p.read_text().split()
+              except Exception:continue
+              if len(toks)==367 and all(len(t)==5 and set(t)<=set('0123456') for t in toks):
+                  extras.append(str(p.relative_to(root)))
+          result={'wanted':rows,'all_367_word_txt':sorted(extras)}
+          out.write_text(json.dumps(result,indent=2)+'\n')
+          print(json.dumps(result,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: c7-archive-seed-files
+          path: ${{ runner.temp }}/result/seeds.json
+          retention-days: 14
+      - name: Summarize
+        if: always()
+        run: |
+          { echo '## C7 archive seed files'; echo '```json'; cat "$RUNNER_TEMP/result/seeds.json" 2>/dev/null || true; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
