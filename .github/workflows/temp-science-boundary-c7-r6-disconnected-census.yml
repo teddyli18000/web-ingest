@@ -48,8 +48,8 @@ jobs:
           OMP_PLACES: cores
         run: |
           set -euo pipefail
-          cp science-boundary/shannon-capacity-c7/code/search_net2_r4.cpp "$RUNNER_TEMP/r4.cpp"
-          python3 science-boundary/shannon-capacity-c7/code/patch_search_net2_r4.py "$RUNNER_TEMP/r4.cpp"
+          python3 science-boundary/shannon-capacity-c7/code/patch_search_net2_r4.py \
+            science-boundary/shannon-capacity-c7/code/search_net2_r4.cpp "$RUNNER_TEMP/r4.cpp"
           g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp "$RUNNER_TEMP/r4.cpp" -o "$RUNNER_TEMP/r4"
           export OMP_NUM_THREADS="$(nproc)"
           "$RUNNER_TEMP/r4" "$RUNNER_TEMP/base/ids.txt" > "$RUNNER_TEMP/result/r4.json" 2> "$RUNNER_TEMP/result/r4.stderr"
