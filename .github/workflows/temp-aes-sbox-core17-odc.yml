@@ -1,0 +1,53 @@
+name: temp-aes-sbox-core17-odc
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-sbox-core17-odc.yml'
+permissions:
+  contents: read
+jobs:
+  core17odc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {ands: 5, xnor: false, seed: 2026102871, tag: a5-xor}
+          - {ands: 5, xnor: true,  seed: 2026102872, tag: a5-xnor}
+          - {ands: 6, xnor: false, seed: 2026102881, tag: a6-xor}
+          - {ands: 6, xnor: true,  seed: 2026102882, tag: a6-xnor}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install solver
+        run: python3 -m pip install --disable-pip-version-check z3-solver
+      - name: Solve 17-gate core with exact merged-102 ODC
+        run: |
+          out="/tmp/aes-core17-odc-${{ matrix.tag }}"
+          mkdir -p "$out"
+          extra=""
+          if [ "${{ matrix.xnor }}" = "true" ]; then extra="--allow-xnor"; fi
+          python3 science-boundary/aes-sbox-circuit/synth_core17_array_z3.py \
+            --ands "${{ matrix.ands }}" \
+            --odc-zero \
+            --timeout 900 \
+            --seed "${{ matrix.seed }}" \
+            $extra \
+            --out "$out" | tee "$out/run.log"
+
+          if [ -f "$out/core.json" ]; then
+            python3 science-boundary/aes-sbox-circuit/splice_core_into_102.py \
+              "$out/core.json" --out "$out/certificate.json" | tee "$out/splice-check.txt"
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/aes-101-candidate
+            cp "$out/certificate.json" /tmp/aes-101-candidate/certificate.json
+            python3 /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py \
+              /tmp/aes-101-candidate | tee "$out/official-verifier.txt"
+          fi
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-core17-odc-${{ matrix.tag }}
+          path: /tmp/aes-core17-odc-${{ matrix.tag }}
