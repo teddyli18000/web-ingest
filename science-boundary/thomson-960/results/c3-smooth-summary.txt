@@ -1,0 +1,38 @@
+C3 smooth global-deformation search summary
+Date: 2026-10-27/28
+GitHub Actions run: 40619792492
+Live merged p007 record used dynamically: Ronnie2025/c3-replica-exchange-scars
+Verifier score: 444368.3924061973
+Exact-C3 reconstructed floating energy: 444368.392406197148
+
+Method
+------
+The rational record certificate was regrouped into 320 exact C3 orbits about the z axis and averaged back to exact symmetry. Four independent seeds (101, 202, 303, 404) each generated 10 low-order global tangent deformations using m=0,3,6 fields over amplitudes roughly 0.007--0.30 rad, followed by C3-orbit-space L-BFGS minimization.
+
+Result
+------
+40/40 trials failed to produce a lower C3 minimum. Small and moderate perturbations overwhelmingly returned to the record basin to floating-point resolution. Larger perturbations produced higher distinct minima, including approximately:
+
+  444368.4114178973
+  444368.5645391991
+  444368.8023036475
+  444369.5782785724
+  444369.5866373755
+  444370.0854824161
+  444370.4665031825
+  444370.6661659343
+  444370.7805962272
+  444370.4954053365
+  444371.3166454894
+  444371.3527442113
+  444371.3678499662
+  444371.4795814656
+  444371.8240951048
+  444372.4374375472
+  444374.3694805968
+
+Best observed energy was the reconstructed incumbent itself, 444368.392406197148. No candidate approached the required next-record threshold 444368.3924051973.
+
+Interpretation
+--------------
+This is not an exhaustion proof for C3 space. It does show that coherent low-order smooth C3 deformations across a wide amplitude range do not trivially expose a nearby lower basin; the current C3 record has a robust attraction basin under this move family. Future C3 search should therefore use discrete topology-changing/crossover/replica-exchange mechanisms rather than simply scaling up smooth perturbations.
