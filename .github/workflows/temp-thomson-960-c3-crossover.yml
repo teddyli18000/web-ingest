@@ -1,0 +1,54 @@
+name: temp Thomson 960 C3 crossover
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-c3-crossover.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - id: low-parent
+            parent_seed: 404
+            target_trial: 2
+            seed: 7311
+          - id: farther-parent
+            parent_seed: 303
+            target_trial: 3
+            seed: 8422
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Reproduce distinct C3 parent and screen symmetry-preserving crossovers
+        run: |
+          python3 science-boundary/thomson-960/code/search_c3_crossover.py \
+            "$RUNNER_TEMP/few-shots" \
+            --parent-seed ${{ matrix.parent_seed }} --target-trial ${{ matrix.target_trial }} \
+            --seed ${{ matrix.seed }} --children 60 --relax-top 6 \
+            --out "$RUNNER_TEMP/result-${{ matrix.id }}.json"
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'result-${{ matrix.id }}.json')
+          d=json.load(open(p)); d.pop('best_points',None)
+          print(json.dumps(d,indent=2))
+          PY
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: thomson-c3-cross-${{ matrix.id }}
+          path: ${{ runner.temp }}/result-${{ matrix.id }}.json
+          retention-days: 7
