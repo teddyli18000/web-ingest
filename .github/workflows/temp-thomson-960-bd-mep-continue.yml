@@ -1,0 +1,47 @@
+name: temp Thomson 960 B-D MEP continuation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-bd-mep-continue.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  continue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-bd-mep
+          path: ${{ runner.temp }}/mep0
+          github-token: ${{ github.token }}
+          run-id: 40735463455
+      - name: Continue perpendicular-force string
+        run: |
+          python3 science-boundary/thomson-960/code/string_between_seeds.py \
+            science-boundary/thomson-960/data/basin-b-010566.json \
+            science-boundary/thomson-960/data/basin-d-018586.json \
+            --resume-json "$RUNNER_TEMP/mep0/bd-mep.json" \
+            --iterations 5000 --eta 0.00042 --max-step 0.00035 \
+            --perp-tol 0.00002 --climb-iterations 0 \
+            --out "$RUNNER_TEMP/bd-mep-cont.json"
+          python3 - <<'PY'
+          import json, os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'bd-mep-cont.json')))
+          print('converged',d['string_converged'],'continued_iters',d['performed_iterations'])
+          print('max_perp',d['max_path_perpendicular_gradient_rms'])
+          print('max_image',d['max_image_index'],'E',max(d['path_energies']))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-bd-mep-cont
+          retention-days: 7
+          path: ${{ runner.temp }}/bd-mep-cont.json
