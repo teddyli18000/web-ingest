@@ -31,6 +31,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test -s science-boundary/ramsey-r46/data/r45extreme_n23_e101_unique.g6
           mkdir -p /tmp/r46/lowedge/m216 /tmp/r46/lowedge/m217 /tmp/r46/lowedge/candidates
           python science-boundary/ramsey-r46/verify_m217_closure.py \
             | tee /tmp/r46/lowedge/m217-closure-verifier.txt
@@ -88,20 +89,14 @@ jobs:
           python3 - <<'PY'
           import json
           from pathlib import Path
-
           root = Path('/tmp/r46/lowedge')
           m216 = [json.loads(p.read_text()) for p in sorted((root/'m216').glob('*.json'))]
           assert {r['solver'] for r in m216} == {'cadical195','glucose42'}, m216
           m216_status = {r['solver']: r['status'] for r in m216}
-
           rows = [json.loads((root/'m217'/f'ordinal-{i}.json').read_text()) for i in range(39)]
           assert [int(r['branch_ordinal']) for r in rows] == list(range(39))
           m217_counts = {s: sum(r['status']==s for r in rows) for s in ('UNSAT','SAT')}
-
-          exact = (
-              set(m216_status.values()) == {'UNSAT'}
-              and m217_counts == {'UNSAT': 39, 'SAT': 0}
-          )
+          exact = set(m216_status.values()) == {'UNSAT'} and m217_counts == {'UNSAT': 39, 'SAT': 0}
           result = {
               'campaign': 'ramsey-r46-low-edge-exclusion-through-217',
               'edge_counts_198_215': 'excluded by exact endpoint-extrema degree-sum relaxation',
@@ -139,14 +134,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cp /tmp/r46/lowedge/low-edge-closure.json \
-            science-boundary/ramsey-r46/results/low-edge-closure-through-217.json
-          cp /tmp/r46/lowedge/m217-closure-verifier.txt \
-            science-boundary/ramsey-r46/results/m217-closure-verifier.txt
-          cp /tmp/r46/lowedge/m216/cadical195.json \
-            science-boundary/ramsey-r46/results/m216-fixed-pair-cadical195.json
-          cp /tmp/r46/lowedge/m216/glucose42.json \
-            science-boundary/ramsey-r46/results/m216-fixed-pair-glucose42.json
+          cp /tmp/r46/lowedge/low-edge-closure.json science-boundary/ramsey-r46/results/low-edge-closure-through-217.json
+          cp /tmp/r46/lowedge/m217-closure-verifier.txt science-boundary/ramsey-r46/results/m217-closure-verifier.txt
+          cp /tmp/r46/lowedge/m216/cadical195.json science-boundary/ramsey-r46/results/m216-fixed-pair-cadical195.json
+          cp /tmp/r46/lowedge/m216/glucose42.json science-boundary/ramsey-r46/results/m216-fixed-pair-glucose42.json
           python3 - <<'PY'
           import json
           from pathlib import Path
