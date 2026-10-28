@@ -1,0 +1,38 @@
+name: temp-aes-sbox-odc
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/temp-aes-sbox-odc.yml'
+      - 'science-boundary/aes-sbox-circuit/search_odc.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  odc:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [2026102701, 2026102702, 2026102703, 2026102704]
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run ODC neutral walk from live 103-gate record
+        run: |
+          mkdir -p /tmp/aes-odc-${{ matrix.seed }}
+          python3 science-boundary/aes-sbox-circuit/search_odc.py \
+            --seed ${{ matrix.seed }} \
+            --seconds 900 \
+            --trials 1600 \
+            --out /tmp/aes-odc-${{ matrix.seed }}
+      - name: Upload search evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-sbox-odc-${{ matrix.seed }}
+          path: /tmp/aes-odc-${{ matrix.seed }}
+          if-no-files-found: warn
