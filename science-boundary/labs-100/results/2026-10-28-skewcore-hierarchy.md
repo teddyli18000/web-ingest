@@ -121,7 +121,7 @@ Inside a boundary+skew-core class, one parity-half sum is fixed entirely by the 
 
 ### d=3 target proof
 
-The normalized `d=3 + skew97` O=58 automaton has `419,430,400` structural completions. `code/skewcore_d3_o58_bnb.cpp` searches them implicitly with the exact parity-sum/defect constraint and the even-correlation lower bound. A local 4-thread run visited 946,025 BnB nodes and proved `E<=574` infeasible in about 0.25 s. A GitHub Actions reproduction is included in the hierarchy verification workflow described below.
+The normalized `d=3 + skew97` O=58 automaton has `419,430,400` structural completions. `code/skewcore_d3_o58_bnb.cpp` searches them implicitly with the exact parity-sum/defect constraint and the even-correlation lower bound. A local 4-thread run visited 946,025 BnB nodes and proved `E<=574` infeasible in about 0.25 s. The independent GitHub Actions reproduction in run `40642312008` also passed.
 
 ### Exact minima for d=5..25
 
@@ -133,17 +133,17 @@ For these classes the O=58 automata are small enough to enumerate every completi
 | 7 | 628,671 | 2854 |
 | 9 | 679,752 | 2598 |
 | 11 | 641,901 | 2430 |
-| 13 | 436,918 | **2278** |
+| 13 | 436,918 | 2278 |
 | 15 | 245,699 | 2702 |
 | 17 | 217,533 | 2478 |
-| 19 | 498,028 | 2510 |
-| 21 | 246,544 | 2678 |
-| 23 | 14,336 | 3350 |
-| 25 | 2,304 | 6854 |
+| 19 | 179,404 | 2294 |
+| 21 | 166,112 | 2446 |
+| 23 | 107,902 | 2294 |
+| 25 | 112,329 | **2022** |
 
-Every reported minimum was independently rescored inside the program; every winner has exact odd energy 58. The best member of all these enumerated classes is `E=2278` at `d=13`, still very far from the target 574.
+Every reported minimum is rescored inside the enumerator; every winner has exact odd energy 58. The best member of these enumerated classes is `E=2022` at `d=25`, still far above the target 574.
 
-Local exact winners were also checked with a separate straightforward scorer during development. The generic enumeration and d=3 target proof are being independently rerun by temporary Actions workflow `temp-labs-100-o58-skewcore.yml` (run `40642312008`). Do not promote the workflow to a permanent job; remove it after the expected counts/minima are validated.
+The first independent Actions pass, run `40642312008`, reproduced d=5..17 and the d=3 target proof. It deliberately failed its grep assertions at d=19/21/23/25 because the workflow still contained superseded local expectations; the actual runner outputs above were lower (`2294,2446,2294,2022`) and each passed the program's internal exact `odd=58` rescore. The workflow expectations were corrected in commit `c615afd648d5f5dc47ecd684a89f434a5987dec6` and a clean rerun was triggered. Treat the corrected runner values, not the superseded local table, as authoritative.
 
 ## Interpretation
 
@@ -152,6 +152,6 @@ The useful result is not merely another failed heuristic. A substantial nested f
 - odd-perfect target feasibility is ruled out for full boundary classes `d=5,7,9,11,13`;
 - the first odd-defect layer O=58 is target-infeasible for `d=3` and has exact minima far above the record for every odd `d=5..25`.
 
-The O=58 classes becoming *smaller* over much of this range is especially informative: allowing one 1/3 odd-correlation defect does not open a hidden low-energy corridor inside these skew-core geometries.
+Allowing one 1/3 odd-correlation defect does not open a hidden low-energy corridor in any of these skew-core geometries. The d=19..25 audit is also a useful reminder to trust independent reruns over cached local summaries: those corrected minima are materially lower than the first local table, but still nowhere near 574.
 
 This does **not** prove global optimality of 578. Boundary+skew-core is still a structural restriction; for sufficiently large boundary the skew core becomes short and the representation approaches the unrestricted problem. Future work should therefore use the exact O=58 pair structure and parity-half identities without assuming a long skew core, rather than mechanically extending the same hierarchy indefinitely.
