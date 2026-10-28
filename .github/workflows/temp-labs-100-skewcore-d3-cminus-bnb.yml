@@ -1,0 +1,57 @@
+name: temp labs-100 exact d3 cminus bnb
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-skewcore-d3-cminus-bnb.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  positive-control:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build exact d3 branch-and-bound
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/skewcore_d3_cminus_bnb.cpp \
+            -o /tmp/d3-bnb
+      - name: Recover known E1162 structural basin
+        shell: bash
+        run: |
+          set -euo pipefail
+          /tmp/d3-bnb --threads 1 --prefix 0 --cap 1112 --seconds 30 | tee /tmp/control.txt
+          grep -F 'found=1 ' /tmp/control.txt
+          grep -F 'FOUND energy=1162 odd=50 even=1112 ' /tmp/control.txt
+
+  target:
+    needs: positive-control
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build exact d3 branch-and-bound
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/skewcore_d3_cminus_bnb.cpp \
+            -o /tmp/d3-bnb
+      - name: Search E<=574 target for 300 seconds
+        shell: bash
+        run: |
+          set +e
+          /tmp/d3-bnb --threads 4 --prefix 8 --cap 524 --seconds 300 | tee /tmp/target.txt
+          rc=${PIPESTATUS[0]}
+          set -e
+          if [ "$rc" -gt 1 ]; then exit "$rc"; fi
+          grep -F 'SUMMARY branch=d3-cminus cap=524 ' /tmp/target.txt
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: labs100-skewcore-d3-cminus-bnb
+          path: /tmp/target.txt
+          if-no-files-found: warn
