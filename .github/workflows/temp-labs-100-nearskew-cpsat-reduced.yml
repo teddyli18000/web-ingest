@@ -1,0 +1,54 @@
+name: temp labs-100 reduced near-skew CP-SAT
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-nearskew-cpsat-reduced.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  positive-control:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check ortools==9.15.6755
+      - name: Recover incumbent in reduced model
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/cpsat_nearskew_reduced.py \
+            --asum 10 --target 578 --seconds 60 --workers 4 --seed 1 --smoke | tee /tmp/control.txt
+          grep -F 'FOUND energy 578 odd 50 even 528 asum 10 nss True ' /tmp/control.txt
+
+  calibrate:
+    needs: positive-control
+    strategy:
+      fail-fast: false
+      matrix:
+        asum: [-18, -16, 0, 10, 16, 18, 20]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check ortools==9.15.6755
+      - name: Search reduced class
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/cpsat_nearskew_reduced.py \
+            --asum '${{ matrix.asum }}' --target 574 --seconds 240 --workers 4 \
+            --seed "$((3300 + ${{ matrix.asum }}))" | tee /tmp/reduced.txt
+          grep -E 'STATUS (INFEASIBLE|OPTIMAL|FEASIBLE|UNKNOWN) ' /tmp/reduced.txt
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: labs100-nearskew-reduced-${{ matrix.asum }}
+          path: /tmp/reduced.txt
+          if-no-files-found: warn
