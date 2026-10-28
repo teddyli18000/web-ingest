@@ -24,6 +24,8 @@ jobs:
           git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
           git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
           git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+      - name: Install dependency
+        run: python3 -m pip install --disable-pip-version-check numpy
       - name: Census full neutral component
         shell: bash
         env:
