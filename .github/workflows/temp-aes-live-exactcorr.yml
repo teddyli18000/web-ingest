@@ -1,0 +1,41 @@
+name: temp-aes-live-exactcorr
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-live-exactcorr.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-live-exactcorr
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      max-parallel: 9
+      matrix:
+        prefix: [0,1,2,3,4,5,6,7,8]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Exact correction search at live 102 field transform
+        run: |
+          out=/tmp/aes-live-exactcorr-${{ matrix.prefix }}
+          mkdir -p "$out"
+          python science-boundary/aes-sbox-circuit/search_semilinear_exactcorr.py \
+            --c 0x1b --k 4 --prefix ${{ matrix.prefix }} --max-support 4 \
+            --max-pre 19 --max-out 17 --out "$out" | tee "$out/run.log"
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-live-exactcorr-${{ matrix.prefix }}
+          path: /tmp/aes-live-exactcorr-${{ matrix.prefix }}
