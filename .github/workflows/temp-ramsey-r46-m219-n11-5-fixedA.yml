@@ -1,0 +1,200 @@
+name: Temp Ramsey R46 m219 n11=5 fixed-A cover
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - science-boundary/ramsey-r46/m219_n11_5_structure.py
+      - science-boundary/ramsey-r46/m219_n11_5_fixedA_sat.py
+      - .github/workflows/temp-ramsey-r46-m219-n11-5-fixedA.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-m219-n11-5-fixedA
+  cancel-in-progress: false
+
+jobs:
+  structure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prove four local orbits and no L-H edges
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'networkx==3.5'
+          mkdir -p /tmp/r46
+          python science-boundary/ramsey-r46/m219_n11_5_structure.py --output /tmp/r46/structure.json
+          python science-boundary/ramsey-r46/m219_n11_5_fixedA_sat.py --self-test
+          python - /tmp/r46/structure.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          assert d['total_fixedA_local_orbits']==4, d
+          assert d['e_high_case_impossible'] is True, d
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-m219-n11-5-structure
+          path: /tmp/r46/structure.json
+          retention-days: 7
+
+  solve:
+    needs: structure
+    strategy:
+      fail-fast: false
+      max-parallel: 12
+      matrix:
+        sequence: [0, 1, 2]
+        local: [0, 1, 2, 3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build pinned Kissat 4.0.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/arminbiere/kissat.git "$RUNNER_TEMP/kissat"
+          git -C "$RUNNER_TEMP/kissat" checkout --quiet 8af8e56f174b778aef3aa45af9f739b2a5f492c2
+          cd "$RUNNER_TEMP/kissat"
+          ./configure >/dev/null
+          make -j2 >/dev/null
+          test "$(build/kissat --version)" = '4.0.4'
+      - name: Generate exact fixed-A branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python science-boundary/ramsey-r46/m219_n11_5_fixedA_sat.py \
+            --sequence '${{ matrix.sequence }}' --local '${{ matrix.local }}' \
+            --output /tmp/r46/branch.cnf | tee /tmp/r46/generate.json
+          head -n 1 /tmp/r46/branch.cnf
+          du -h /tmp/r46/branch.cnf
+      - name: Solve exact branch
+        id: solve
+        shell: bash
+        run: |
+          set -uo pipefail
+          started=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          set +e
+          /usr/bin/time -v timeout --signal=TERM --kill-after=30s 1500 \
+            "$RUNNER_TEMP/kissat/build/kissat" /tmp/r46/branch.cnf \
+            > /tmp/r46/solver.log 2>&1
+          rc=$?
+          set -e
+          finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          case "$rc" in
+            10) status=SAT ;;
+            20) status=UNSAT ;;
+            124|137|143) status=TIMEOUT ;;
+            *) status=ERROR ;;
+          esac
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          python - /tmp/r46/generate.json /tmp/r46/summary.json "$status" "$rc" "$started" "$finished" <<'PY'
+          import json,os,sys
+          gen,out,status,rc,started,finished=sys.argv[1:]
+          d=json.load(open(gen)); d.update(status=status,solver_exit=int(rc),started=started,finished=finished,
+              solver='kissat-4.0.4',kissat_commit='8af8e56f174b778aef3aa45af9f739b2a5f492c2',github_run_id=os.environ['GITHUB_RUN_ID'])
+          open(out,'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({k:d[k] for k in ('sequence_index','local_index','status','variables','clauses')},sort_keys=True))
+          PY
+          tail -n 25 /tmp/r46/solver.log || true
+          [[ "$status" != ERROR ]]
+      - name: Decode SAT model
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python science-boundary/ramsey-r46/sat_r46.py decode /tmp/r46/solver.log /tmp/r46/candidate.json
+      - name: Authoritative Few Shots verification on SAT
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate
+          cp /tmp/r46/candidate.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/few-shots-verify.json
+          python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1])); assert d.get('valid') is True and str(d.get('score'))=='36', d
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ramsey-r46-m219-n11-5-${{ matrix.sequence }}-${{ matrix.local }}
+          path: |
+            /tmp/r46/generate.json
+            /tmp/r46/summary.json
+            /tmp/r46/solver.log
+            /tmp/r46/candidate.json
+            /tmp/r46/few-shots-verify.json
+          if-no-files-found: warn
+          retention-days: 7
+
+  collect:
+    if: always()
+    needs: [structure, solve]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ramsey-r46-m219-n11-5-*
+          path: /tmp/parts
+      - name: Aggregate exact 12-branch cover
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python - /tmp/parts /tmp/r46/result.json <<'PY'
+          import json,pathlib,sys
+          root=pathlib.Path(sys.argv[1]); out=pathlib.Path(sys.argv[2])
+          rows=[]; verified=[]; structures=[]
+          for p in root.rglob('summary.json'): rows.append(json.load(open(p)))
+          for p in root.rglob('few-shots-verify.json'): verified.append(json.load(open(p)))
+          for p in root.rglob('structure.json'): structures.append(json.load(open(p)))
+          rows.sort(key=lambda r:(r['sequence_index'],r['local_index']))
+          result={
+            'campaign':'m219-n11-5-fixedA-exact-cover',
+            'logical_scope':'all m=219 degree vectors with n11=5',
+            'expected_branches':12,
+            'rows':rows,
+            'statuses':{f"{r['sequence_index']}-{r['local_index']}":r['status'] for r in rows},
+            'complete':len(rows)==12,
+            'all_unsat':len(rows)==12 and all(r['status']=='UNSAT' for r in rows),
+            'sat_count':sum(r['status']=='SAT' for r in rows),
+            'timeout_count':sum(r['status']=='TIMEOUT' for r in rows),
+            'verified_sat_count':sum(v.get('valid') is True and str(v.get('score'))=='36' for v in verified),
+            'structure_proof':structures[0] if structures else None,
+          }
+          out.write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({k:v for k,v in result.items() if k not in {'rows','statuses','structure_proof'}},sort_keys=True))
+          PY
+      - name: Persist campaign and retire one-shot workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/r46/result.json science-boundary/ramsey-r46/results/m219-n11-5-fixedA.json
+          git rm .github/workflows/temp-ramsey-r46-m219-n11-5-fixedA.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/results/m219-n11-5-fixedA.json
+          git commit -m 'ramsey-r46: record m219 n11=5 fixed-A campaign'
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
