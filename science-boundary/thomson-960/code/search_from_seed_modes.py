@@ -6,6 +6,12 @@ lowest full-space physical tangent Hessian modes after lifting rigid rotations,
 push along one selected eigenvector in either sign over increasing RMS angular
 amplitudes, and fully relax. Results are compared both to the seed and to the
 live Few Shots p007 record discovered at runtime.
+
+For local relaxation we minimize a *termwise pair-energy difference* relative
+to the perturbed start, accumulated in long double, while keeping the analytic
+gradient unchanged. This avoids L-BFGS line-search/ftol loss of resolution from
+optimizing an absolute Coulomb energy of order 4.4e5 when the scientifically
+relevant local changes are 1e-8--1e-3.
 """
 from __future__ import annotations
 
@@ -15,10 +21,13 @@ import math
 import pathlib
 
 import numpy as np
+from scipy.optimize import minimize
 from scipy.sparse.linalg import eigsh
 
 import diagnose_soft_modes as sm
 import search_soft_pair as sp
+
+PI=math.pi
 
 
 def load_seed(path):
@@ -29,6 +38,49 @@ def load_seed(path):
     x=np.asarray(pts,dtype=float)
     x/=np.linalg.norm(x,axis=1)[:,None]
     return d,x
+
+
+def _geometry_and_gradient(v):
+    """Return xyz and analytic angular gradient without trusting total-E sum."""
+    x,dth,dph=sm.vars_to_xyz(v)
+    dots=np.clip(x@x.T,-1.0,1.0)
+    r2=np.maximum(2.0-2.0*dots,1e-300)
+    np.fill_diagonal(r2,np.inf)
+    inv=1.0/np.sqrt(r2)
+    w=inv/r2
+    np.fill_diagonal(w,0.0)
+    gc=w@x-np.sum(w,axis=1)[:,None]*x
+    gt=np.sum(gc*dth,axis=1)
+    gp=np.sum(gc*dph,axis=1)
+    return x,inv,np.column_stack([gt,gp]).ravel()
+
+
+def stable_relax_q(qstart,maxiter=1800):
+    """L-BFGS on a stable pairwise energy difference relative to qstart."""
+    n=len(qstart)//2
+    tri=np.triu_indices(n,1)
+    _,inv0,_=_geometry_and_gradient(qstart)
+    ref_terms=np.asarray(inv0[tri],dtype=np.longdouble)
+    # Absolute reference is used only to report the final energy. Its ordinary
+    # double summation uncertainty is ~1e-9 here, safely below the 1e-6 record
+    # margin; any candidate is subsequently judged by the exact verifier.
+    ref_abs=float(np.sum(inv0[tri],dtype=np.float64))
+
+    def obj(v):
+        _x,inv,g=_geometry_and_gradient(v)
+        delta=np.sum(np.asarray(inv[tri],dtype=np.longdouble)-ref_terms,
+                     dtype=np.longdouble)
+        return float(delta),g
+
+    bounds=[(1e-8,PI-1e-8),(None,None)]*n
+    res=minimize(obj,qstart,jac=True,method="L-BFGS-B",bounds=bounds,
+                 options={"maxiter":maxiter,"gtol":1e-9,"ftol":1e-15,
+                          "maxls":60,"maxcor":40})
+    delta,_=obj(res.x)
+    x,_,_=sm.vars_to_xyz(res.x)
+    # Also expose an ordinary absolute-energy recomputation as a diagnostic.
+    raw_abs,_=sm.fg(res.x)
+    return ref_abs+delta,float(raw_abs),x,int(res.nit),bool(res.success),str(res.message)
 
 
 def main():
@@ -67,11 +119,12 @@ def main():
     for amp in amps:
         qs=sp.exp_perturb(q0,direction,amp)
         es,_=sm.fg(qs)
-        e,x,nit,ok=sp.relax_q(qs,1600)
-        row={"amp":amp,"start_energy":es,"energy":e,"delta_vs_seed":e-e0,
-             "delta_vs_live_score":e-live_score,"nit":nit,"success":ok}
+        e,raw_e,x,nit,ok,msg=stable_relax_q(qs)
+        row={"amp":amp,"start_energy":es,"energy":e,"raw_absolute_energy":raw_e,
+             "delta_vs_seed":e-e0,"delta_vs_live_score":e-live_score,
+             "nit":nit,"success":ok,"message":msg}
         rows.append(row)
-        print(f"amp={amp:.5f} start={es:.9f} min={e:.12f} dseed={e-e0:+.9g} dlive={e-live_score:+.9g} nit={nit} ok={ok}",flush=True)
+        print(f"amp={amp:.5f} start={es:.9f} min={e:.12f} raw={raw_e:.12f} dseed={e-e0:+.9g} dlive={e-live_score:+.9g} nit={nit} ok={ok}",flush=True)
         if e<best_e:
             best_e=e; best_x=x.copy()
 
@@ -79,7 +132,7 @@ def main():
       "seed_json":str(args.seed_json),"seed_energy":e0,
       "live_shot":str(live_shot.relative_to(root)),"live_score":live_score,
       "mode":args.mode,"sign":args.sign,"eigenvalue":float(vals[args.mode]),
-      "rotation_overlap":rot_overlap,"rows":rows,
+      "rotation_overlap":rot_overlap,"stable_difference_objective":True,"rows":rows,
       "best_float_energy":best_e,"best_delta_vs_seed":best_e-e0,
       "best_delta_vs_live_score":best_e-live_score,
       "gradient_calls_for_modes":calls["n"],
