@@ -1,0 +1,41 @@
+name: temp-aes-sbox-core5-template
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-sbox-core5-template.yml'
+permissions:
+  contents: read
+jobs:
+  template:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {basis: '1,2,4,8', seed: 2026102831, tag: current-a}
+          - {basis: '1,2,4,8', seed: 2026102832, tag: current-b}
+          - {basis: '6,9,11,12', seed: 2026102833, tag: jain-basis}
+          - {basis: '1,2,7,11', seed: 2026102834, tag: cheapA}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install solver
+        run: python3 -m pip install --disable-pip-version-check z3-solver
+      - name: Rewire Jain 17-gate five-AND topology
+        run: |
+          out="/tmp/aes-core5-template-${{ matrix.tag }}"
+          mkdir -p "$out"
+          python3 science-boundary/aes-sbox-circuit/synth_core4_z3.py \
+            --basis "${{ matrix.basis }}" \
+            --gates 17 \
+            --ands 5 \
+            --d34-pattern \
+            --timeout 600 \
+            --seed "${{ matrix.seed }}" \
+            --out "$out" | tee "$out/run.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-core5-template-${{ matrix.tag }}
+          path: /tmp/aes-core5-template-${{ matrix.tag }}
