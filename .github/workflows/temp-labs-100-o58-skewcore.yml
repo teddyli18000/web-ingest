@@ -1,0 +1,56 @@
+name: temp labs-100 O58 skew-core hierarchy
+
+on:
+  push:
+    paths:
+      - 'science-boundary/labs-100/code/skewcore_d3_o58_bnb.cpp'
+      - 'science-boundary/labs-100/code/skewcore_o58_exact.cpp'
+      - '.github/workflows/temp-labs-100-o58-skewcore.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  d3-target:
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Prove d=3 O58 target infeasible
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/skewcore_d3_o58_bnb.cpp -o /tmp/d3-o58
+          /tmp/d3-o58 --threads "$(nproc)" --split 9 | tee /tmp/result.txt
+          grep -F 'RESULT status=INFEASIBLE target=574 odd=58 even_cap=516' /tmp/result.txt
+
+  exact-minima:
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {d: 5, leaves: 4164745, best: 2358}
+          - {d: 7, leaves: 628671, best: 2854}
+          - {d: 9, leaves: 679752, best: 2598}
+          - {d: 11, leaves: 641901, best: 2430}
+          - {d: 13, leaves: 436918, best: 2278}
+          - {d: 15, leaves: 245699, best: 2702}
+          - {d: 17, leaves: 217533, best: 2478}
+          - {d: 19, leaves: 498028, best: 2510}
+          - {d: 21, leaves: 246544, best: 2678}
+          - {d: 23, leaves: 14336, best: 3350}
+          - {d: 25, leaves: 2304, best: 6854}
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Enumerate exact O58 class
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/skewcore_o58_exact.cpp -o /tmp/o58
+          /tmp/o58 '${{ matrix.d }}' "$(nproc)" | tee /tmp/result.txt
+          grep -F 'leaves=${{ matrix.leaves }} best=${{ matrix.best }} odd=58' /tmp/result.txt
