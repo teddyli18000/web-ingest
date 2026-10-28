@@ -60,42 +60,105 @@ following complete low-edge strata relevant here:
 
 The archive does **not** contain all intermediate edge strata in the lucky
 windows for d=13..17. Therefore an approach that requires a complete B
-catalogue would stall. The better formulation is to fix A, keep B internal
-edges as SAT variables, and impose the exact B edge window directly.
+catalogue would stall. It can still be valuable on the lowest edge strata,
+where fixing B removes all B-internal SAT variables.
 
-## Active exact formulations
+## d=12: complete orbit closure
 
-### d=12
+The unique lucky-d12 branch fixes A to the unique 12-vertex `(3,6)` graph with
+29 edges and B to the unique 23-vertex `(4,5)` graph with 101 edges. There are
+276 cross edges.
 
-`d12_fixed_ab_sat.py` fixes both unique graphs A29 and B101. Only the 276
-cross edges remain. A SAT model is exhaustively checked as a 36-vertex
-certificate; UNSAT eliminates lucky degree 12 entirely (with degree range
-11..17) and, in particular, eliminates the whole global `Delta=12` branch.
+`d12_anchor_orbit_dimacs.py` uses the unique internal-degree-10 vertex of B as
+an anchor. Its cross-neighbourhood in A must satisfy the exact degree bounds
+and hit every independent 5-set of A. There are 2,873 feasible labelled
+12-bit masks. Quotienting by `Aut(A)` of order 576 gives exactly **118** orbit
+representatives, and every full solution can be A-relabeled into one of these
+branches.
 
-### d=17
+The first exact Kissat campaign in `results/d12-anchor-orbits.json` decided
+104 of the 118 representatives UNSAT and timed out on 14. The unresolved
+ordinals were
 
-The earlier `degree17_static_sat_v3.py` fixed each of the seven complete A
-types, left the 18-vertex B graph and cross edges free, and added global degree
-bounds plus symmetry breaking. Its hard branch timed out after 90 minutes
-because B was allowed to range over essentially its entire Ramsey-feasible
-edge spectrum.
+```
+0, 1, 3, 9, 17, 19, 28, 30, 46, 69, 70, 71, 73, 88
+```
 
-`degree17_static_sat_v4.py` changes the search space by adding the lucky-edge
-window `50 <= e(B) <= e(A)+17`. This is a sound exact restriction on the lucky
-degree-17 branch and shrinks the 153 free B-internal edge variables to a very
-narrow cardinality band. The seven A types are run independently.
+For each timeout, the fixed anchor mask leaves a nontrivial stabilizer in
+`Aut(A)`. `d12_anchor_orbit_dimacs.py` adds exact lex-leaders for either the
+whole residual stabilizer or a generator set returned by
+`d12_fixed_ab_sym_sat.py::greedy_generators`; that routine explicitly verifies
+that the chosen generators close back to the full group. The second campaign
+`results/d12-residual-symmetry.json` closes **all 14/14** remaining branches
+UNSAT. Generator lex-leaders are sound even when they are not a complete
+canonicalization: the lexicographically least member of every finite group
+orbit satisfies every generator inequality.
 
-## Priority after current runs
+Therefore the recorded exact cover is
 
-1. Decide the unique lucky-d12 fixed pair.
-2. Decide the seven lucky-d17 v4 branches.
-3. If both are UNSAT, the guaranteed lucky vertex of any hypothetical graph
-   must have degree 13..16. Attack d=16 next: its complete A catalogue has only
-   2,576 types, orders of magnitude smaller than d=13..15.
-4. For d=16, use the same formulation principle (fixed A, variable 19-vertex
-   B, exact `57 <= e(B) <= e(A)+32`, full mixed Ramsey clauses), then add
-   catalogue automorphism symmetry and cheap local capacity filters before
-   spending large SAT time.
+```
+2873 feasible labelled masks
+ -> 118 Aut(A) orbit branches
+ -> 104 first-stage UNSAT + 14 residual-symmetry UNSAT
+ -> 118/118 closed, no SAT branch
+```
+
+Subject to the recorded SAT solver results, the lucky-degree-12 stratum is
+fully excluded. Together with the analytic d=11 contradiction, a hypothetical
+36-vertex solution must have a lucky vertex of degree 13..17.
+
+`verify_d12_lucky_closure.py` is the durable accounting/structure verifier. It
+regenerates the 2,873-to-118 orbit manifest from the pinned A29/B101 inputs,
+runs the symmetry self-tests, and checks exact first/second-stage branch
+coverage. It intentionally does not pretend to be an UNSAT proof-certificate
+checker; an independent/proof-producing solver rerun is the next level of
+solver certification.
+
+## d=17: exact variable-B formulation plateaued
+
+`degree17_static_sat_v4.py` fixes each of the seven complete A types, keeps the
+18-vertex B graph and cross edges variable, imposes all mixed Ramsey clauses,
+global degree bounds, and the lucky window `50 <= e(B) <= e(A)+17`.
+
+`results/degree17-lucky-v4.json` records **TIMEOUT on all seven branches after
+3600 s each**. This is not negative mathematical evidence about the branch;
+it is evidence that the variable-B formulation remains too broad. Do not
+repeat it with a larger timeout without changing the representation.
+
+The extreme catalogue gives a natural next split: the complete e(B)=50 layer
+has 326 B graphs and the complete e(B)=51 layer has 29,160. These can be
+turned into fixed-A/fixed-B cross-edge gluing instances, while e(B)>=52 remains
+in a separate variable-B search space.
+
+## d=16: weak filters and e(A)=32 pilot plateaued
+
+A cheap cross-capacity relaxation was run over all 2,576 complete A types and
+kept **2,576/2,576**. It has no pruning power and should not be extended.
+
+The first exact split-SAT pilot fixed the five minimum-edge A types with
+e(A)=32, kept B variable, imposed the exact lucky window `57 <= e(B) <= 64`,
+and ran each branch for 3600 s. `results/d16-e32-exact-pilot.json` records
+**TIMEOUT on all 5/5**. Again, this only rejects that formulation/time budget.
+
+Here the public extreme B catalogue is much stronger than for d17: for n=19
+it contains exactly one graph at e(B)=57 and exactly one at e(B)=58. Thus the
+lowest two B strata across the five e(A)=32 types require only ten fixed-pair
+gluing problems (304 cross variables each), with all B-internal variables
+removed. This is the next exact d16 probe before returning to e(B)>=59.
+
+## Priority after d12 closure
+
+1. Independently rerun/cross-check the 118 d12 orbit branches with residual
+   generator symmetry and a second solver backend; keep solver-certification
+   strength distinct from logical coverage.
+2. For d16, exploit the singleton B57 and B58 strata first: five A32 types x
+   two fixed B graphs. Add `Aut(A) x Aut(B)`/anchor symmetry before spending
+   another long SAT budget.
+3. For d17, inventory automorphism/degree structure of the 326 B50 graphs
+   before launching 7 x 326 fixed-pair gluings; only then decide whether B51's
+   29,160 graphs are tractable directly or need another orbit/local split.
+4. Treat e(B)>=59 (d16) and e(B)>=52 (d17) as different search spaces rather
+   than extending the timed-out variable-B instances unchanged.
 
 ## Sources
 
