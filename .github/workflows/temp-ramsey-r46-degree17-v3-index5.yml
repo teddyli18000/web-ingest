@@ -1,0 +1,136 @@
+name: Temp Ramsey R46 degree-17 static SAT v3 index5
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-degree17-v3-index5.yml
+      - science-boundary/ramsey-r46/degree17_static_sat_v3.py
+      - science-boundary/ramsey-r46/degree17_static_sat_v2.py
+      - science-boundary/ramsey-r46/degree17_static_sat.py
+      - science-boundary/ramsey-r46/data/r36_17.g6
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-degree17-v3-index5
+  cancel-in-progress: false
+
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticate catalog and self-test encoders
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '3286c5366ddc70f349c3f7e798d7acbc79dc026c7abe0c8f406cad41ca990361  science-boundary/ramsey-r46/data/r36_17.g6' | sha256sum -c -
+          test "$(wc -l < science-boundary/ramsey-r46/data/r36_17.g6)" -eq 7
+          python3 science-boundary/ramsey-r46/degree17_static_sat_v2.py --self-test
+          python3 science-boundary/ramsey-r46/degree17_static_sat_v3.py --self-test
+      - name: Build pinned Kissat 4.0.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone https://github.com/arminbiere/kissat.git "$RUNNER_TEMP/kissat"
+          git -C "$RUNNER_TEMP/kissat" checkout 8af8e56f174b778aef3aa45af9f739b2a5f492c2
+          cd "$RUNNER_TEMP/kissat"
+          ./configure
+          make -j2
+          build/kissat --version
+      - name: Generate automorphism-aware branch 5
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 science-boundary/ramsey-r46/degree17_static_sat_v3.py \
+            --catalog science-boundary/ramsey-r46/data/r36_17.g6 \
+            --index 5 \
+            --output /tmp/r46/branch.cnf \
+            | tee /tmp/r46/generate.json
+          head -n 1 /tmp/r46/branch.cnf
+          du -h /tmp/r46/branch.cnf
+      - name: Solve v3 branch
+        id: solve
+        shell: bash
+        run: |
+          set -uo pipefail
+          started=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          set +e
+          /usr/bin/time -v timeout --signal=TERM --kill-after=30s 5400 \
+            "$RUNNER_TEMP/kissat/build/kissat" /tmp/r46/branch.cnf \
+            > /tmp/r46/solver.log 2>&1
+          rc=$?
+          set -e
+          finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          case "$rc" in
+            10) status=SAT ;;
+            20) status=UNSAT ;;
+            124|137|143) status=TIMEOUT ;;
+            *) status=ERROR ;;
+          esac
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          python3 - /tmp/r46/generate.json /tmp/r46/summary.json "$status" "$rc" "$started" "$finished" <<'PY'
+          import json,os,sys
+          gen_path,out,status,rc,started,finished=sys.argv[1:]
+          d=json.load(open(gen_path,encoding='utf-8'))
+          d.update(status=status,solver_exit=int(rc),started=started,finished=finished,
+                   kissat_commit='8af8e56f174b778aef3aa45af9f739b2a5f492c2',
+                   github_run_id=os.environ['GITHUB_RUN_ID'])
+          open(out,'w',encoding='utf-8').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          cat /tmp/r46/summary.json
+          tail -n 100 /tmp/r46/solver.log || true
+          [[ "$status" != ERROR ]]
+      - name: Decode SAT model
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/ramsey-r46/sat_r46.py decode /tmp/r46/solver.log /tmp/r46/candidate.json
+      - name: Authoritative Few Shots verification on SAT
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate
+          cp /tmp/r46/candidate.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/few-shots-verify.json
+          python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert d.get('valid') is True and d.get('score') == '36', d
+          PY
+      - name: Persist result
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest=science-boundary/ramsey-r46/results/degree17-static-v3-index5.json
+          test -f /tmp/r46/summary.json || exit 0
+          cp /tmp/r46/summary.json "$dest"
+          [[ ! -f /tmp/r46/candidate.json ]] || cp /tmp/r46/candidate.json science-boundary/ramsey-r46/results/degree17-static-v3-index5-hit.json
+          [[ ! -f /tmp/r46/few-shots-verify.json ]] || cp /tmp/r46/few-shots-verify.json science-boundary/ramsey-r46/results/degree17-static-v3-index5-hit-verify.json
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/results
+          git commit -m 'ramsey-r46: record degree-17 SAT v3 index5' || exit 0
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-degree17-v3-index5
+          path: /tmp/r46
+          retention-days: 7
