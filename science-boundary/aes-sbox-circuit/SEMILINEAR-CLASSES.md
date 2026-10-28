@@ -57,7 +57,7 @@ Grouping the 18 transforms by the complete distribution over all 19,683 orientat
  unrestricted minimum middle correction support)
 ```
 
-gives three six-member lower-bound classes.
+gives three six-member classes.
 
 ### Class A
 
@@ -67,7 +67,7 @@ gives three six-member lower-bound classes.
 (0x1b,4), (0x66,4), (0x7d,4)
 ```
 
-Representative searches use identity `(0x01,0)` and, independently, the live-102 field transform `(0x1b,4)`. Each Class-A transform has 17,191 orientations with cheap lower bound <=36.
+Representative: identity `(0x01,0)`. Each Class-A transform has 17,191 orientations with cheap lower bound <=36.
 
 ### Class B
 
@@ -89,11 +89,62 @@ Representative: `(0x9d,3)`. Each has 17,028 orientations with cheap lower bound 
 
 Representative: `(0x5b,3)`. Each has 17,033 orientations with cheap lower bound <=36.
 
-Important scope: equality of the cheap orientation distributions is **not** a proof that exact XOR/XNOR synthesis costs are identical within a class. The classification is a search-priority device, not a permanent exclusion of nonrepresentatives.
+## Exact class automorphisms
+
+The three six-member classes are now proved to be **exact retained-core outer-construction equivalence orbits**, not merely equal cheap-LB distributions.
+
+`prove_semilinear_class_automorphisms.py` takes one representative from each class and, for every one of the five nonrepresentative members, constructs:
+
+1. a permutation of the nine product planes;
+2. a per-plane permutation of the three orientation choices;
+3. an invertible four-bit middle-coordinate map `M`.
+
+For every one of all `3^9 = 19,683` orientations per member it checks exactly that:
+
+- the selected prelinear operand target set is identical after plane/orientation relabeling;
+- the selected transposed-output target set is identical after the same plane relabeling;
+- the middle correction equation is transported by `M`;
+- the retained 18-gate core has the matching factor covariance
+
+```text
+F_{sigma(i)}(M y) = F_i(y)
+```
+
+for all nine factors and all 16 four-bit core states.
+
+Only three plane permutations occur:
+
+```text
+identity
+(1,7,5,6,2,4,8,0,3)
+(7,0,4,8,5,2,3,1,6)
+```
+
+and the corresponding middle maps have column tuples
+
+```text
+(1,2,4,8)
+(5,8,1,10)
+(4,10,5,2).
+```
+
+The two nontrivial transformations have order three. Since the prelinear target sets are literally the same after relabeling, arbitrary helper-wire choices and exact linear-network costs transport without change; the same holds for output networks and middle-support corrections.
+
+Independent GitHub Actions run **`40743531094`** completed successfully and checked all 15 nonrepresentative members, each over all 19,683 orientations.
+
+### Consequence
+
+Within the retained-18-core semilinear family, exact search of one representative is sufficient for the entire six-member class:
+
+- identity `(0x01,0)` covers all Class A members, including the live `(0x1b,4)` transform;
+- `(0x9d,3)` covers all Class B members;
+- `(0x5b,3)` covers all Class C members.
+
+This equivalence is specific to the retained-core outer construction. It is not a statement about arbitrary AES circuits or about constructions that change the nonlinear core/interface.
 
 ## Exact searches layered on the frontier
 
-For Class A/B/C representatives, the current exact-correction campaigns cover complementary middle-correction families:
+For the Class A/B/C representatives, the exact-correction campaigns cover complementary middle-correction families:
 
 - `search_semilinear_exactcorr.py`: full-column-rank correction supports of size <=4;
 - `search_semilinear_support5.py`: all 117 five-position supports whose fixed middle columns have rank four, including the free-byte family;
@@ -101,8 +152,22 @@ For Class A/B/C representatives, the current exact-correction campaigns cover co
 
 The rank-3 event reduction is independently checked against full `2^16` `(z,w)` brute force on 135 random synthetic cases with no misses; details are in `RANK3-SUPPORT5.md`.
 
-At the current live 102 transform and identity, completed rank-3 prefixes have produced no 101 candidate; many orientations are already eliminated by exact pre/output budget before correction enumeration. The Class-B/Class-C rank-3 matrix is still being completed.
+Class A/B rank-four support-5 evidence has also been aggregated independently: Action run `40742805378` loaded all 18 shard summaries from historical run `40638295317`, covering 39,366 orientations in total, and verified `candidates_101 = 0` and zero saved witnesses.
+
+Historical runner cancellations left exact-correction gaps in Class A/B and Class C, plus one Class-C rank-three-support-5 shard. Dedicated low-parallel gap workflows are closing only those missing shards; cancelled work is not treated as a negative result.
+
+## Support >=6
+
+A retained-core 101 construction with middle support at least six would require
+
+```text
+prelinear + output_transpose <= 30.
+```
+
+A separate exact 0/1-helper linear-network lower-bound proof (`prove_semilinear_support6_impossible.py`) has been added for the three class representatives. The local exhaustive computation finds no orientation meeting this budget; independent Action verification is pending at the time of this update. Until that Action completes, keep the support>=6 exclusion labeled as locally verified rather than independently reproduced.
 
 ## How to use this frontier
 
-Do not launch expensive exact synthesis uniformly over all 2040 transforms. First prioritize the three structurally distinct LB=31 classes and then the LB=32 tier if the representative exact searches saturate. A transform with best cheap lower bound >=37 is already excluded from 101 in the retained-18-core family and should not receive further exact-synthesis budget unless the nonlinear core/interface itself changes.
+Do not launch expensive exact synthesis uniformly over all 2040 transforms. For the LB=31 tier, search only the three exact class representatives. Once their complete 101 budget is closed, the next genuinely new retained-core search space is the LB=32 tier of 30 transforms, subject to any analogous automorphism reduction.
+
+A transform with best cheap lower bound >=37 is already excluded from 101 in the retained-18-core family and should not receive further exact-synthesis budget unless the nonlinear core/interface itself changes.
