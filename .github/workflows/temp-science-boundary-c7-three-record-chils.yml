@@ -1,0 +1,119 @@
+name: Temp Science Boundary C7 three-record seeded CHILS
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-three-record-chils.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          git init "$RUNNER_TEMP/shannon-source"
+          git -C "$RUNNER_TEMP/shannon-source" remote add origin https://github.com/nathanielitty/lower-bounds-for-shannon-capacity.git
+          git -C "$RUNNER_TEMP/shannon-source" fetch --depth 1 origin fe8966079013abaac21d1c08441500100f8e3b86
+          git -C "$RUNNER_TEMP/shannon-source" checkout FETCH_HEAD
+          git init "$RUNNER_TEMP/chils"
+          git -C "$RUNNER_TEMP/chils" remote add origin https://github.com/KarlsruheMIS/CHILS.git
+          git -C "$RUNNER_TEMP/chils" fetch --depth 1 origin 515952724cd3dcc6c4365a340ecf0f1da782119a
+          git -C "$RUNNER_TEMP/chils" checkout FETCH_HEAD
+      - name: Install dependency and compile CHILS
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check python-sat
+          make -C "$RUNNER_TEMP/chils" -j"$(nproc)"
+          test -x "$RUNNER_TEMP/chils/CHILS"
+      - name: Materialize and independently verify all three 134753 records
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/base" "$RUNNER_TEMP/jp" "$RUNNER_TEMP/rank3" "$RUNNER_TEMP/result" "$RUNNER_TEMP/search" "$RUNNER_TEMP/shot"
+          cp "$RUNNER_TEMP/few-shots/problems/p004-shannon-capacity-c7/baseline/certificate.json" "$RUNNER_TEMP/base/certificate.json"
+          python3 science-boundary/shannon-capacity-c7/code/bpz_jplus_seed.py "$RUNNER_TEMP/tan" "$RUNNER_TEMP/jp/certificate.json" "$RUNNER_TEMP/result/jp-status.json"
+          python3 science-boundary/shannon-capacity-c7/code/neutral2_rank3_tie_seed.py \
+            "$RUNNER_TEMP/shannon-source/c7/R367.txt" "$RUNNER_TEMP/rank3/certificate.json" "$RUNNER_TEMP/result/rank3-status.json"
+          for x in base jp rank3; do
+            cd "$RUNNER_TEMP/few-shots"
+            python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/$x" | tee "$RUNNER_TEMP/result/$x-verify.json"
+            cd "$GITHUB_WORKSPACE"
+            python3 - "$RUNNER_TEMP/result/$x-verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1))!=134753: raise SystemExit(r)
+          PY
+          done
+      - name: Export exact three-record union conflict graph
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/recombine_three_record_chils.py export \
+            "$RUNNER_TEMP/search/graph.metis" "$RUNNER_TEMP/search/init.sol" "$RUNNER_TEMP/result/export.json" \
+            "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/jp/certificate.json" "$RUNNER_TEMP/rank3/certificate.json" \
+            > "$RUNNER_TEMP/result/export.stdout" 2> "$RUNNER_TEMP/result/export.stderr"
+          cat "$RUNNER_TEMP/result/export.json"
+          tail -n 40 "$RUNNER_TEMP/result/export.stderr"
+      - name: Seeded global CHILS on full three-record union
+        shell: bash
+        env:
+          OMP_PROC_BIND: spread
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          THREADS="$(nproc)"; export OMP_NUM_THREADS="$THREADS"
+          /usr/bin/time -v "$RUNNER_TEMP/chils/CHILS" \
+            -g "$RUNNER_TEMP/search/graph.metis" -i "$RUNNER_TEMP/search/init.sol" -o "$RUNNER_TEMP/search/best.sol" \
+            -p "$THREADS" -c "$THREADS" -t 600 -s 10 -r 2026102901 -v \
+            > "$RUNNER_TEMP/result/chils.stdout" 2> "$RUNNER_TEMP/result/chils.stderr"
+          test -s "$RUNNER_TEMP/search/best.sol"
+          tail -n 100 "$RUNNER_TEMP/result/chils.stdout" || true
+      - name: Exact replay and materialize candidate
+        id: replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/recombine_three_record_chils.py replay \
+            "$RUNNER_TEMP/search/best.sol" "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/replay.json" \
+            "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/jp/certificate.json" "$RUNNER_TEMP/rank3/certificate.json"
+          cat "$RUNNER_TEMP/result/replay.json"
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.replay.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1))<=134753: raise SystemExit(r)
+          print('VERIFIED BREAKTHROUGH',r)
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-three-record-chils
+          path: |
+            ${{ runner.temp }}/result
+            ${{ runner.temp }}/search/init.sol
+            ${{ runner.temp }}/search/best.sol
+          retention-days: 14
