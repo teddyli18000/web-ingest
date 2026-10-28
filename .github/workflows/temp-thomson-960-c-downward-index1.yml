@@ -1,5 +1,6 @@
 name: temp Thomson 960 C downward index1
 
+# retry: tracked reaction direction uses HiSD +g/|lambda| sign rule
 on:
   push:
     branches: [main]
@@ -32,8 +33,8 @@ jobs:
         run: |
           python3 science-boundary/thomson-960/code/downward_index2_to_index1.py \
             "$RUNNER_TEMP/c.json" --escape-phase-deg ${{ matrix.phase }} --escape-amp 0.002 \
-            --outer 8 --k 8 --penalty 300000 --perp-maxiter 650 \
-            --newton-damping 0.35 --max-reaction-rms 0.00008 \
+            --outer 10 --k 8 --penalty 300000 --perp-maxiter 650 \
+            --reaction-damping 0.35 --curv-floor 0.15 --max-reaction-rms 0.00008 \
             --out "$RUNNER_TEMP/c-i1-p${{ matrix.phase }}.json"
       - uses: actions/upload-artifact@v4
         with:
