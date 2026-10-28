@@ -1,0 +1,121 @@
+name: Temp Ramsey R46 D12 unique lucky pair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - science-boundary/ramsey-r46/d12_fixed_ab_sat.py
+      - science-boundary/ramsey-r46/notes/d12-lucky-vertex-reduction-2026-10-28.md
+      - .github/workflows/temp-ramsey-r46-d12-lucky-pair.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-d12-lucky-pair
+  cancel-in-progress: false
+
+jobs:
+  decide:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned solver and fetch authenticated catalogues
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'python-sat==1.9.dev17'
+          mkdir -p /tmp/r46/out
+          curl --fail --location --retry 3 --silent --show-error \
+            https://users.cecs.anu.edu.au/~bdm/data/r36_12.g6.gz -o /tmp/r46/r36_12.g6.gz
+          echo '17e176a0f7e7397dbca7c9cb6295034dd74cf529ca62e7e717226dc1b0b7b96d  /tmp/r46/r36_12.g6.gz' | sha256sum -c -
+          curl --fail --location --retry 3 --silent --show-error \
+            https://users.cecs.anu.edu.au/~bdm/data/r45extreme.tar.gz -o /tmp/r46/r45extreme.tar.gz
+          echo '9cfac9dbd1c209cfa342e5d5424df2a7a3fbb008ca00bf0a992e5bbe72f925b6  /tmp/r46/r45extreme.tar.gz' | sha256sum -c -
+          python science-boundary/ramsey-r46/d12_fixed_ab_sat.py self-test
+          python science-boundary/ramsey-r46/d12_fixed_ab_sat.py extract-g6 \
+            --input /tmp/r46/r36_12.g6.gz --n 12 --edges 29 --out /tmp/r46/a29.g6
+          python science-boundary/ramsey-r46/d12_fixed_ab_sat.py extract-tar \
+            --archive /tmp/r46/r45extreme.tar.gz --n 23 --edges 101 --out /tmp/r46/b101.g6
+          test "$(wc -l < /tmp/r46/a29.g6)" -eq 1
+          test "$(wc -l < /tmp/r46/b101.g6)" -eq 1
+          sha256sum /tmp/r46/a29.g6 /tmp/r46/b101.g6 | tee /tmp/r46/out/fixed-pair-sha256.txt
+      - name: Solve unique fixed pair
+        id: solve
+        shell: bash
+        run: |
+          set -uo pipefail
+          set +e
+          timeout --signal=TERM --kill-after=15s 1200 \
+            python science-boundary/ramsey-r46/d12_fixed_ab_sat.py solve \
+              --a-catalog /tmp/r46/a29.g6 --b-catalog /tmp/r46/b101.g6 \
+              --a-ordinal 0 --b-ordinal 0 --a-edges 29 --b-edges 101 \
+              --solver cadical195 --summary /tmp/r46/out/result.json \
+              --output /tmp/r46/out/candidate.json \
+              > /tmp/r46/out/solver.log 2>&1
+          rc=$?
+          set -e
+          case "$rc" in
+            0) status=SAT ;;
+            20) status=UNSAT ;;
+            124|137|143) status=TIMEOUT ;;
+            *) status=ERROR ;;
+          esac
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          echo "status=$status rc=$rc"
+          cat /tmp/r46/out/solver.log
+          [[ "$status" != ERROR ]]
+      - name: Verify SAT with authoritative Few Shots verifier
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate
+          cp /tmp/r46/out/candidate.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/out/few-shots-verify.json
+          python3 - /tmp/r46/out/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          assert d.get('valid') is True and str(d.get('score')) == '36', d
+          PY
+      - name: Persist exact decision
+        if: steps.solve.outputs.status == 'SAT' || steps.solve.outputs.status == 'UNSAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          status='${{ steps.solve.outputs.status }}'
+          mkdir -p science-boundary/ramsey-r46/results
+          cp /tmp/r46/out/result.json science-boundary/ramsey-r46/results/d12-lucky-pair.json
+          cp /tmp/r46/out/fixed-pair-sha256.txt science-boundary/ramsey-r46/results/d12-lucky-pair-sha256.txt
+          if [[ "$status" == SAT ]]; then
+            cp /tmp/r46/out/candidate.json science-boundary/ramsey-r46/results/d12-lucky-pair-candidate.json
+            cp /tmp/r46/out/few-shots-verify.json science-boundary/ramsey-r46/results/d12-lucky-pair-few-shots-verify.json
+          fi
+          git rm .github/workflows/temp-ramsey-r46-d12-lucky-pair.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/results/d12-lucky-pair*
+          git commit -m "ramsey-r46: record D12 lucky-pair $status"
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
+      - name: Upload full evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-d12-lucky-pair
+          path: /tmp/r46/out
+          if-no-files-found: warn
+          retention-days: 7
