@@ -1,0 +1,41 @@
+name: temp-aes-core6-rank5-cpp
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-core6-rank5-cpp.yml'
+      - 'science-boundary/aes-sbox-circuit/screen_core6_rank5_exact.cpp'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-core6-rank5-cpp
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    strategy:
+      fail-fast: false
+      max-parallel: 35
+      matrix:
+        first: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile exact screen
+        run: |
+          g++ -O3 -std=c++17 science-boundary/aes-sbox-circuit/screen_core6_rank5_exact.cpp -o /tmp/screen-core6-rank5
+      - name: Exhaust one first-AND envelope
+        run: |
+          mkdir -p /tmp/aes-core6-rank5-cpp-${{ matrix.first }}
+          /tmp/screen-core6-rank5 ${{ matrix.first }} | tee /tmp/aes-core6-rank5-cpp-${{ matrix.first }}/run.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-core6-rank5-cpp-${{ matrix.first }}
+          path: /tmp/aes-core6-rank5-cpp-${{ matrix.first }}
