@@ -1,0 +1,56 @@
+name: temp labs-100 exact O74 layer
+
+on:
+  push:
+    paths:
+      - 'science-boundary/labs-100/code/cpsat_oddlayer.py'
+      - '.github/workflows/temp-labs-100-odd74.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check -q 'ortools==9.15.6755'
+      - name: Validate generic odd-layer model on known O74 witness
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/cpsat_oddlayer.py \
+            --D 3 --asum 2 --bsum 2 --target 39766 --product + \
+            --seconds 90 --workers 4 --seed 1 --smoke74 | tee /tmp/smoke.txt
+          grep -F 'SMOKE E=39766 O=74 a=2 b=2 product=1' /tmp/smoke.txt
+          grep -F 'FOUND E=39766 O=74 a=2 b=2 product=1' /tmp/smoke.txt
+
+  target:
+    needs: smoke
+    strategy:
+      fail-fast: false
+      matrix:
+        halves: ['2,2', '2,6']
+        product: ['+', '-']
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check -q 'ortools==9.15.6755'
+      - name: Exact O74 target search
+        shell: bash
+        run: |
+          set -euo pipefail
+          IFS=',' read -r a b <<< '${{ matrix.halves }}'
+          python3 science-boundary/labs-100/code/cpsat_oddlayer.py \
+            --D 3 --asum "$a" --bsum "$b" --target 574 \
+            --product '${{ matrix.product }}' --seconds 720 --workers 4 --seed 1 \
+            | tee /tmp/out.txt
+          grep -E '^(STATUS|PROVED_INFEASIBLE|UNRESOLVED|FOUND)' /tmp/out.txt
