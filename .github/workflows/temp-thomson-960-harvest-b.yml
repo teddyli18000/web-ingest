@@ -1,0 +1,39 @@
+name: temp Thomson 960 harvest basin B
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-harvest-b.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  harvest:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Reproduce basin B
+        run: |
+          python3 science-boundary/thomson-960/code/harvest_basin_b.py \
+            science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --mode 2 --sign -1 --amp 0.012 \
+            --out science-boundary/thomson-960/data/basin-b-010566.json
+      - name: Persist basin B on main
+        run: |
+          git config user.name "science-boundary bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add science-boundary/thomson-960/data/basin-b-010566.json
+          git commit -m "science: persist Thomson low basin B" || exit 0
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((i*2))
+          done
+          exit 1
