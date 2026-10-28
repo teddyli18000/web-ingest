@@ -2,13 +2,13 @@
 //
 // Each ambient vertex carries either the sorted distinct owner labels in its
 // current partial strong-product neighborhood (when there are <=6), or an
-// overflow marker.  Expanding one coordinate replaces a support by the union
-// of the three cyclic neighboring supports.  Support size is monotone under
+// overflow marker. Expanding one coordinate replaces a support by the union
+// of the three cyclic neighboring supports. Support size is monotone under
 // coordinate expansion, so any final vertex with coverage <=6 can never have
-// overflowed at an intermediate stage.  Consequently this single-array
+// overflowed at an intermediate stage. Consequently this single-array
 // in-place transform recovers every final blocker support of sizes 1..6 exactly.
 //
-// Memory: 7^10 * 6 * 4 bytes ~= 6.78 GiB.  No full-size double buffer is used:
+// Memory: 7^10 * 6 * 4 bytes ~= 6.78 GB. No full-size double buffer is used:
 // for each disjoint 7-cycle group we first copy all seven old support records to
 // stack storage, then write the seven new records back in place.
 #include <algorithm>
@@ -49,17 +49,30 @@ inline unsigned size_of(const Rec& r) {
     unsigned n=0; while(n<K && r.x[n]) ++n; return n;
 }
 
-Rec unite3(const Rec& a, const Rec& b, const Rec& c) {
+// Merge three already-sorted, zero-terminated support lists.  This is on the
+// hot path (~2.8e9 calls across ten dimensions), so avoid a per-call sort.
+inline Rec unite3(const Rec& a, const Rec& b, const Rec& c) {
     if(overflow(a) || overflow(b) || overflow(c)) { Rec r{}; r.x[0]=OVER; return r; }
-    std::uint32_t tmp[3*K]; unsigned n=0;
-    for(const Rec* r : {&a,&b,&c}) for(unsigned i=0;i<K && r->x[i];++i) tmp[n++]=r->x[i];
-    std::sort(tmp,tmp+n);
-    unsigned m=0;
-    for(unsigned i=0;i<n;++i) if(!i || tmp[i]!=tmp[i-1]) {
+    unsigned ia=0, ib=0, ic=0, m=0;
+    std::uint32_t last=0;
+    Rec out{};
+    for(;;) {
+        const std::uint32_t va = ia<K ? a.x[ia] : 0;
+        const std::uint32_t vb = ib<K ? b.x[ib] : 0;
+        const std::uint32_t vc = ic<K ? c.x[ic] : 0;
+        std::uint32_t v=0;
+        if(va) v=va;
+        if(vb && (!v || vb<v)) v=vb;
+        if(vc && (!v || vc<v)) v=vc;
+        if(!v) break;
+        if(va==v) ++ia;
+        if(vb==v) ++ib;
+        if(vc==v) ++ic;
+        if(v==last) continue;
         if(m==K) { Rec r{}; r.x[0]=OVER; return r; }
-        tmp[m++]=tmp[i];
+        out.x[m++]=v; last=v;
     }
-    Rec r{}; for(unsigned i=0;i<m;++i) r.x[i]=tmp[i]; return r;
+    return out;
 }
 
 struct SixKey {
@@ -98,14 +111,11 @@ int main(int argc,char**argv) try {
 
     std::array<std::uint64_t,K+2> hist{}; // 0..6 plus overflow index 7
     std::unordered_set<SixKey,SixHash> g6; g6.reserve(5000000);
-    std::uint64_t c6=0;
     for(std::uint32_t v=0;v<N;++v){
         unsigned n=size_of(a[v]);
         if(n>K){ ++hist[K+1]; continue; }
         ++hist[n];
-        if(n==K){
-            ++c6; SixKey q{}; for(unsigned j=0;j<K;++j) q.a[j]=a[v].x[j]-1; g6.insert(q);
-        }
+        if(n==K){ SixKey q{}; for(unsigned j=0;j<K;++j) q.a[j]=a[v].x[j]-1; g6.insert(q); }
     }
     std::cout << "{\"kind\":\"census\",\"method\":\"exact-inplace-support-list-up-to6\",\"baseline_size\":" << base.size()
               << ",\"coverage0\":" << hist[0] << ",\"coverage1\":" << hist[1] << ",\"coverage2\":" << hist[2]
