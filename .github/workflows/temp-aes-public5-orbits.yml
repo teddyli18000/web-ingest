@@ -1,0 +1,22 @@
+name: temp-aes-public5-orbits
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-public5-orbits.yml'
+permissions:
+  contents: read
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Analyze released five-AND cores
+        run: |
+          mkdir -p /tmp/aes-public5-orbits
+          python3 science-boundary/aes-sbox-circuit/analyze_public5_cores.py | tee /tmp/aes-public5-orbits/results.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-public5-orbits
+          path: /tmp/aes-public5-orbits
