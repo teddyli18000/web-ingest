@@ -1,0 +1,46 @@
+name: temp-aes-core5-odc-affine
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-core5-odc-affine.yml'
+      - 'science-boundary/aes-sbox-circuit/search_core5_odc_affine.py'
+      - 'science-boundary/aes-sbox-circuit/search_core5_cost.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-core5-odc-affine
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        completion: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Search ODC-affine five-AND witnesses
+        run: |
+          out=/tmp/aes-core5-odc-${{ matrix.completion }}
+          mkdir -p "$out"
+          python science-boundary/aes-sbox-circuit/search_core5_odc_affine.py \
+            --completion ${{ matrix.completion }} \
+            --beam 8 \
+            --bucket-factor 4 \
+            --seed ${{ matrix.completion }} \
+            --out "$out" | tee "$out/run.log"
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-core5-odc-affine-${{ matrix.completion }}
+          path: /tmp/aes-core5-odc-${{ matrix.completion }}
