@@ -1,0 +1,54 @@
+name: Temp Science Boundary C7 r4 productive-pair census
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-r4-pair-census.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_t9_funsearch_deleted_seed.py
+      - science-boundary/shannon-capacity-c7/code/search_net2_r4_pair_census.cpp
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned public source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+      - name: Materialize 134752 case0 seed
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check numpy
+          mkdir -p "$RUNNER_TEMP/base" "$RUNNER_TEMP/result"
+          python3 science-boundary/shannon-capacity-c7/code/bpz_t9_funsearch_deleted_seed.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/base/ids.txt" "$RUNNER_TEMP/result/base-status.json" --case 0
+      - name: Exact productive-pair census
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp science-boundary/shannon-capacity-c7/code/search_net2_r4_pair_census.cpp -o "$RUNNER_TEMP/census"
+          export OMP_NUM_THREADS="$(nproc)"
+          /usr/bin/time -v "$RUNNER_TEMP/census" "$RUNNER_TEMP/base/ids.txt" > "$RUNNER_TEMP/result/census.json" 2> "$RUNNER_TEMP/result/census.stderr"
+          cat "$RUNNER_TEMP/result/census.json"
+          tail -n 80 "$RUNNER_TEMP/result/census.stderr"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-r4-productive-pair-census
+          path: ${{ runner.temp }}/result
+          retention-days: 14
