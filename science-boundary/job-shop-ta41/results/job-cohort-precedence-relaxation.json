@@ -1,0 +1,246 @@
+{
+  "instance": "ta41",
+  "baseline": 2006,
+  "deadline": 2005,
+  "method": "job cohort machine-arc relaxed longest path",
+  "levels": [
+    {
+      "job_ejection_cardinality": 1,
+      "examined": 30,
+      "min_relaxed_longest_path": 2001,
+      "cohorts_with_lower_bound_le_2005": 10,
+      "max_relaxed_longest_path": 2006,
+      "best_ten_cohorts": [
+        {
+          "jobs": [
+            9
+          ],
+          "lower_bound": 2001
+        },
+        {
+          "jobs": [
+            26
+          ],
+          "lower_bound": 2001
+        },
+        {
+          "jobs": [
+            5
+          ],
+          "lower_bound": 2002
+        },
+        {
+          "jobs": [
+            14
+          ],
+          "lower_bound": 2002
+        },
+        {
+          "jobs": [
+            19
+          ],
+          "lower_bound": 2002
+        },
+        {
+          "jobs": [
+            23
+          ],
+          "lower_bound": 2002
+        },
+        {
+          "jobs": [
+            27
+          ],
+          "lower_bound": 2002
+        },
+        {
+          "jobs": [
+            24
+          ],
+          "lower_bound": 2004
+        },
+        {
+          "jobs": [
+            15
+          ],
+          "lower_bound": 2005
+        },
+        {
+          "jobs": [
+            18
+          ],
+          "lower_bound": 2005
+        }
+      ]
+    },
+    {
+      "job_ejection_cardinality": 2,
+      "examined": 435,
+      "min_relaxed_longest_path": 1991,
+      "cohorts_with_lower_bound_le_2005": 299,
+      "max_relaxed_longest_path": 2006,
+      "best_ten_cohorts": [
+        {
+          "jobs": [
+            9,
+            24
+          ],
+          "lower_bound": 1991
+        },
+        {
+          "jobs": [
+            24,
+            28
+          ],
+          "lower_bound": 1991
+        },
+        {
+          "jobs": [
+            8,
+            14
+          ],
+          "lower_bound": 1992
+        },
+        {
+          "jobs": [
+            13,
+            14
+          ],
+          "lower_bound": 1992
+        },
+        {
+          "jobs": [
+            0,
+            9
+          ],
+          "lower_bound": 1993
+        },
+        {
+          "jobs": [
+            1,
+            14
+          ],
+          "lower_bound": 1993
+        },
+        {
+          "jobs": [
+            4,
+            9
+          ],
+          "lower_bound": 1993
+        },
+        {
+          "jobs": [
+            9,
+            14
+          ],
+          "lower_bound": 1993
+        },
+        {
+          "jobs": [
+            9,
+            26
+          ],
+          "lower_bound": 1993
+        },
+        {
+          "jobs": [
+            9,
+            23
+          ],
+          "lower_bound": 1994
+        }
+      ]
+    },
+    {
+      "job_ejection_cardinality": 3,
+      "examined": 4060,
+      "min_relaxed_longest_path": 1968,
+      "cohorts_with_lower_bound_le_2005": 3563,
+      "max_relaxed_longest_path": 2006,
+      "best_ten_cohorts": [
+        {
+          "jobs": [
+            0,
+            4,
+            15
+          ],
+          "lower_bound": 1968
+        },
+        {
+          "jobs": [
+            4,
+            11,
+            15
+          ],
+          "lower_bound": 1969
+        },
+        {
+          "jobs": [
+            0,
+            5,
+            13
+          ],
+          "lower_bound": 1972
+        },
+        {
+          "jobs": [
+            0,
+            1,
+            15
+          ],
+          "lower_bound": 1973
+        },
+        {
+          "jobs": [
+            1,
+            4,
+            15
+          ],
+          "lower_bound": 1973
+        },
+        {
+          "jobs": [
+            4,
+            9,
+            13
+          ],
+          "lower_bound": 1973
+        },
+        {
+          "jobs": [
+            4,
+            9,
+            15
+          ],
+          "lower_bound": 1973
+        },
+        {
+          "jobs": [
+            4,
+            15,
+            29
+          ],
+          "lower_bound": 1974
+        },
+        {
+          "jobs": [
+            3,
+            4,
+            15
+          ],
+          "lower_bound": 1975
+        },
+        {
+          "jobs": [
+            4,
+            7,
+            15
+          ],
+          "lower_bound": 1975
+        }
+      ]
+    }
+  ],
+  "semantics": "LB is a necessary condition only, because ejected jobs must still compete for machines in actual schedules."
+}
