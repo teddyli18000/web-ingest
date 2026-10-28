@@ -1,0 +1,47 @@
+name: temp Thomson 960 A-B hybrid saddle
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-saddle-ab-hybrid.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  refine:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Optimize A-B string without unstable climbing
+        run: |
+          python3 science-boundary/thomson-960/code/string_between_seeds.py \
+            science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            science-boundary/thomson-960/data/basin-b-010566.json \
+            --images 7 --iterations 220 --climb-iterations 0 \
+            --eta 0.00025 --max-step 0.0007 \
+            --out "$RUNNER_TEMP/string-ab-max.json"
+      - name: Hybrid-refine A-B string maximum
+        run: |
+          python3 science-boundary/thomson-960/code/refine_saddle_hybrid.py \
+            "$RUNNER_TEMP/string-ab-max.json" \
+            --outer 6 --penalty 200000 --perp-maxiter 600 \
+            --newton-damping 0.8 --max-reaction-rms 0.0006 \
+            --out "$RUNNER_TEMP/hybrid-ab.json"
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'hybrid-ab.json')
+          d=json.load(open(p)); d.pop('saddle_points',None); d.pop('eigenvectors_physical',None)
+          print(json.dumps(d,indent=2))
+          PY
+      - name: Upload A-B hybrid saddle
+        uses: actions/upload-artifact@v4
+        with:
+          name: thomson-saddle-ab-hybrid
+          path: ${{ runner.temp }}/hybrid-ab.json
+          retention-days: 7
