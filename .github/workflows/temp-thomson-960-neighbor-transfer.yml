@@ -1,0 +1,54 @@
+name: temp Thomson 960 neighboring-N transfer
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-neighbor-transfer.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-thomson-960-neighbor-transfer
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        source_n: [958, 959, 961, 962]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Transfer neighboring CCD structure to N=960 and relax
+        run: |
+          python3 science-boundary/thomson-960/code/search_neighbor_transfer.py \
+            --source-n ${{ matrix.source_n }} --out "$RUNNER_TEMP/result-${{ matrix.source_n }}.json"
+          cat "$RUNNER_TEMP/result-${{ matrix.source_n }}.json"
+
+  cleanup:
+    if: always()
+    needs: search
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Remove disposable workflow
+        run: |
+          git pull --rebase origin main
+          rm -f .github/workflows/temp-thomson-960-neighbor-transfer.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/temp-thomson-960-neighbor-transfer.yml
+          if ! git diff --cached --quiet; then
+            git commit -m "ci: remove completed Thomson neighbor workflow"
+            git push origin HEAD:main
+          fi
