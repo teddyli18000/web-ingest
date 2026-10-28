@@ -1,0 +1,41 @@
+name: temp-aes-core5-cpp
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-core5-cpp.yml'
+      - 'science-boundary/aes-sbox-circuit/screen_core5_exact.cpp'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-core5-cpp
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        case: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile exact screen
+        run: |
+          g++ -O3 -std=c++17 science-boundary/aes-sbox-circuit/screen_core5_exact.cpp -o /tmp/screen-core5
+      - name: Exhaust one rank-four completion
+        run: |
+          mkdir -p /tmp/aes-core5-cpp-${{ matrix.case }}
+          /tmp/screen-core5 ${{ matrix.case }} | tee /tmp/aes-core5-cpp-${{ matrix.case }}/run.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-core5-cpp-${{ matrix.case }}
+          path: /tmp/aes-core5-cpp-${{ matrix.case }}
