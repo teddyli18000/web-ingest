@@ -1,0 +1,44 @@
+name: temp-aes-plane-middle5
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-plane-middle5.yml'
+      - 'science-boundary/aes-sbox-circuit/search_plane_prelinear17.py'
+      - 'science-boundary/aes-sbox-circuit/search_plane_middle5.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-plane-middle5
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        prefix: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install solver
+        run: python -m pip install --disable-pip-version-check z3-solver==4.13.4.0
+      - name: Search prelinear17 plus middle15
+        run: |
+          mkdir -p /tmp/aes-plane-middle5-${{ matrix.prefix }}
+          python science-boundary/aes-sbox-circuit/search_plane_middle5.py \
+            --prefix ${{ matrix.prefix }} \
+            --timeout-ms 2000 \
+            --out /tmp/aes-plane-middle5-${{ matrix.prefix }}
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-plane-middle5-${{ matrix.prefix }}
+          path: /tmp/aes-plane-middle5-${{ matrix.prefix }}
