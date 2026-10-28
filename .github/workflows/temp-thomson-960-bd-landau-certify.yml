@@ -1,0 +1,55 @@
+name: temp Thomson 960 B-D Landau saddle certify
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-bd-landau-certify.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-c-landau-p75
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ github.token }}
+          run-id: 40738176193
+      - name: Tight hybrid polish from index-1 candidate
+        run: |
+          python3 science-boundary/thomson-960/code/refine_saddle_hybrid.py \
+            "$RUNNER_TEMP/seed/c-landau-p75.json" \
+            --outer 6 --penalty 1000000 --perp-maxiter 800 \
+            --newton-damping 0.45 --max-reaction-rms 0.00001 \
+            --out "$RUNNER_TEMP/bd-landau-polished.json"
+      - name: Validate both reaction sides
+        run: |
+          python3 science-boundary/thomson-960/code/search_saddle_transverse.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/bd-landau-polished.json" \
+            --transverse-mode 1 --sign 1 --transverse-amps 0 \
+            --reaction-amps=-0.0001,0.0001,-0.0003,0.0003 \
+            --out "$RUNNER_TEMP/bd-landau-reaction.json"
+          python3 - <<'PY'
+          import json,os
+          s=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'bd-landau-polished.json')))
+          r=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'bd-landau-reaction.json')))
+          print('POLISHED',s['final_energy'],s['final_gradient_rms'],s['negative_internal_modes_below_-1e-3'],[m['eigenvalue'] for m in s['final_modes'][:4]])
+          print('REACTION',[(x['reaction_amp'],x['energy'],x['delta_vs_live']) for x in r['rows']])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-bd-landau-certified
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/bd-landau-polished.json
+            ${{ runner.temp }}/bd-landau-reaction.json
