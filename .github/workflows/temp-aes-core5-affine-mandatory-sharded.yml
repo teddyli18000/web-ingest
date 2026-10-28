@@ -1,0 +1,43 @@
+name: temp-aes-core5-affine-mandatory-sharded
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-core5-affine-mandatory-sharded.yml'
+      - 'science-boundary/aes-sbox-circuit/run_core5_affine_mandatory_firstshard.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-core5-affine-mandatory-sharded
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        case: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+        first: [0,1,2,3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Exact affine mandatory search, first-AND shard
+        run: |
+          out=/tmp/aes-core5-affine-${{ matrix.case }}-${{ matrix.first }}
+          mkdir -p "$out"
+          python science-boundary/aes-sbox-circuit/run_core5_affine_mandatory_firstshard.py \
+            --case ${{ matrix.case }} \
+            --first-shard ${{ matrix.first }} --first-shards 4 \
+            --out "$out" | tee "$out/run.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-core5-affine-mand-${{ matrix.case }}-${{ matrix.first }}
+          path: /tmp/aes-core5-affine-${{ matrix.case }}-${{ matrix.first }}
