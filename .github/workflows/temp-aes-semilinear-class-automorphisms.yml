@@ -1,0 +1,33 @@
+name: temp-aes-semilinear-class-automorphisms
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-semilinear-class-automorphisms.yml'
+      - 'science-boundary/aes-sbox-circuit/prove_semilinear_class_automorphisms.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-semilinear-class-automorphisms
+  cancel-in-progress: false
+
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prove class equivalence
+        run: |
+          mkdir -p /tmp/aes-semilinear-class-proof
+          python science-boundary/aes-sbox-circuit/prove_semilinear_class_automorphisms.py \
+            | tee /tmp/aes-semilinear-class-proof/run.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-semilinear-class-automorphisms
+          path: /tmp/aes-semilinear-class-proof
