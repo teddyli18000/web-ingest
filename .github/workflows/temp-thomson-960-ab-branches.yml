@@ -1,0 +1,90 @@
+name: temp Thomson 960 A-B saddle certification and branches
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "science-boundary/thomson-960/launch-ab-branches.flag"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  reaction:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Download A-B hybrid saddle
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-saddle-ab-hybrid
+          path: ${{ runner.temp }}/saddle
+          github-token: ${{ github.token }}
+          run-id: 40634347073
+      - name: Descend both reaction-mode sides
+        run: |
+          python3 science-boundary/thomson-960/code/search_saddle_transverse.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/saddle/hybrid-ab.json" \
+            --transverse-mode 1 --sign 1 --transverse-amps 0 \
+            --reaction-amps=-0.003,-0.0015,0.0015,0.003 \
+            --out "$RUNNER_TEMP/reaction-ab.json"
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'reaction-ab.json')
+          d=json.load(open(p)); d.pop('best_points',None)
+          print(json.dumps(d,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-ab-reaction
+          path: ${{ runner.temp }}/reaction-ab.json
+          retention-days: 7
+
+  transverse:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        mode: [1, 2, 3]
+        sign: [-1, 1]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Download A-B hybrid saddle
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-saddle-ab-hybrid
+          path: ${{ runner.temp }}/saddle
+          github-token: ${{ github.token }}
+          run-id: 40634347073
+      - name: Search A-B transverse exits
+        run: |
+          python3 science-boundary/thomson-960/code/search_saddle_transverse.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/saddle/hybrid-ab.json" \
+            --transverse-mode ${{ matrix.mode }} --sign ${{ matrix.sign }} \
+            --transverse-amps 0.003,0.006,0.012,0.020 \
+            --reaction-amps=-0.0006,0,0.0006 \
+            --out "$RUNNER_TEMP/result-m${{ matrix.mode }}-s${{ matrix.sign }}.json"
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'result-m${{ matrix.mode }}-s${{ matrix.sign }}.json')
+          d=json.load(open(p)); d.pop('best_points',None)
+          print(json.dumps(d,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-ab-branch-m${{ matrix.mode }}-s${{ matrix.sign }}
+          path: ${{ runner.temp }}/result-m${{ matrix.mode }}-s${{ matrix.sign }}.json
+          retention-days: 7
