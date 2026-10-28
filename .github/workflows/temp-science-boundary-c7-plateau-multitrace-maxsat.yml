@@ -1,0 +1,112 @@
+name: Temp Science Boundary C7 plateau multitrace MaxSAT
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-plateau-multitrace-maxsat.yml
+      - science-boundary/shannon-capacity-c7/code/c7_10d_private_guided_walk.cpp
+      - science-boundary/shannon-capacity-c7/code/patch_private_guided_trace.py
+      - science-boundary/shannon-capacity-c7/code/optimize_plateau_trace_maxsat.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch and verify Few Shots baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          mkdir -p "$RUNNER_TEMP/base" "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+          cp "$RUNNER_TEMP/few-shots/problems/p004-shannon-capacity-c7/baseline/certificate.json" "$RUNNER_TEMP/base/certificate.json"
+          python3 - "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/base/ids.txt" <<'PY'
+          import json,sys
+          pts=json.load(open(sys.argv[1],encoding='utf-8'))['points']
+          if len(pts)!=134753 or len(set(pts))!=134753: raise SystemExit('baseline drift')
+          open(sys.argv[2],'w').write(''.join(f'{int(p,7)}\n' for p in pts))
+          PY
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/base" | tee "$RUNNER_TEMP/result/base-verify.json"
+          python3 - "$RUNNER_TEMP/result/base-verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1))!=134753: raise SystemExit(r)
+          PY
+      - name: Build traced walker and install exact MaxSAT
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check python-sat
+          python3 science-boundary/shannon-capacity-c7/code/patch_private_guided_trace.py \
+            science-boundary/shannon-capacity-c7/code/c7_10d_private_guided_walk.cpp "$RUNNER_TEMP/walk-trace.cpp"
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp "$RUNNER_TEMP/walk-trace.cpp" -o "$RUNNER_TEMP/walk"
+      - name: Run four deterministic 10k plateau traces
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          : > "$RUNNER_TEMP/result/accepted-trace-all.txt"
+          for seed in 48101 48102 48103 48104; do
+            /usr/bin/time -v "$RUNNER_TEMP/walk" \
+              "$RUNNER_TEMP/base/ids.txt" "$RUNNER_TEMP/result/direct-winner-$seed.ids" \
+              10000 "$seed" 64 "$RUNNER_TEMP/result/accepted-trace-$seed.txt" \
+              > "$RUNNER_TEMP/result/walk-$seed.json" 2> "$RUNNER_TEMP/result/walk-$seed.stderr"
+            test ! -f "$RUNNER_TEMP/result/direct-winner-$seed.ids"
+            lines=$(wc -l < "$RUNNER_TEMP/result/accepted-trace-$seed.txt")
+            python3 - "$RUNNER_TEMP/result/walk-$seed.json" "$lines" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'));lines=int(sys.argv[2])
+          if r.get('kind')!='none' or int(r.get('accepted',-1))!=lines: raise SystemExit((r,lines))
+          PY
+            cat "$RUNNER_TEMP/result/accepted-trace-$seed.txt" >> "$RUNNER_TEMP/result/accepted-trace-all.txt"
+          done
+      - name: Exact net-gain MaxSAT over union of all four traces
+        id: solve
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/optimize_plateau_trace_maxsat.py \
+            "$RUNNER_TEMP/base/ids.txt" "$RUNNER_TEMP/result/accepted-trace-all.txt" \
+            "$RUNNER_TEMP/shot/ids.txt" "$RUNNER_TEMP/result/multitrace-maxsat.json" --target 134754
+          cat "$RUNNER_TEMP/result/multitrace-maxsat.json"
+          if [[ -f "$RUNNER_TEMP/shot/ids.txt" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+      - name: Materialize and verify breakthrough
+        if: steps.solve.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/shot/ids.txt" "$RUNNER_TEMP/shot/certificate.json" <<'PY'
+          import json,sys
+          ids=[int(x) for x in open(sys.argv[1]) if x.strip()]
+          def enc(z):
+              d=[]
+              for _ in range(10): d.append(str(z%7));z//=7
+              return ''.join(reversed(d))
+          json.dump({'points':[enc(z) for z in ids]},open(sys.argv[2],'w',encoding='utf-8'),separators=(',',':'));open(sys.argv[2],'a').write('\n')
+          PY
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1))<=134753: raise SystemExit(r)
+          print('VERIFIED BREAKTHROUGH',r)
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-plateau-multitrace-maxsat
+          path: ${{ runner.temp }}/result
+          retention-days: 14
