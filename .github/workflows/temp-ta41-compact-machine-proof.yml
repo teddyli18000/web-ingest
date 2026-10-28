@@ -19,7 +19,7 @@ jobs:
       - name: Pin CP-SAT for independent hard constraint verification
         run: python -m pip install 'ortools==9.14.6206'
       - name: Find compact cover of every <=7-machine change and independently prove each core infeasible
-        run: python3 science-boundary/job-shop-ta41/compact_machine_proof.py --seconds 12
+        run: python3 science-boundary/job-shop-ta41/compact_machine_proof.py --seconds 35
       - name: Persist audit-ready finite proof
         if: always()
         run: |
