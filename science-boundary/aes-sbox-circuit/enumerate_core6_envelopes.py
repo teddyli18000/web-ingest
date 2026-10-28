@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
-"""Enumerate the first two nonlinear quotient steps for a six-AND p008 core.
+"""Enumerate the complete nonlinear-envelope frontier for a six-AND p008 core.
 
 This is a cheap exact decomposition for the remaining fixed-interface
 `6 AND + 11 linear` route.  Work modulo affine functions of the four core inputs.
-The live nine-factor target space has quotient rank four.  Any six-AND circuit
-whose six ANDs all add independent nonlinear classes has a six-dimensional final
-nonlinear envelope E containing that target space.  Once two independent AND
-classes make `span(current,target)` rank six, all later independent classes must
-remain inside the same E.
+The live nine-factor target space T has quotient rank four.  In the rank-six case
+all six ANDs add independent nonlinear classes, so the final raw-AND span is a
+six-dimensional envelope E containing T.
 
-We enumerate every quotient class realizable by the first AND and every independent
-class realizable by the second AND, retaining only partial spans that can still fit
-inside some rank-six envelope containing the target space.  The resulting unique E
-spaces are natural exact-search shards; this script does not claim that every E
-can be completed to a six-AND circuit with eleven linear gates.
+Before `span(current,T)` first reaches rank six it has rank five.  At the first
+rank-five -> rank-six transition the final envelope E is fixed: every later
+independent raw-AND class must remain inside E.  Therefore we can enumerate every
+reachable rank-five frontier state, collect the envelope at each first rank-six
+transition, and stop following that branch.  This avoids enumerating the much
+larger full six-AND span DAG while still giving a complete envelope set.
+
+The result is a set of exact-search shards, not a 101 construction and not a proof
+that every envelope admits a physical six-AND / eleven-linear realization.
 """
 from __future__ import annotations
 
@@ -110,64 +112,101 @@ LINEAR_BASIS = canonical_basis(INPUTS)
 TARGET_BASIS = canonical_basis(tuple(STRIP[x] for x in live_targets()))
 
 
-def next_spans(basis):
-    joined = canonical_basis(basis + TARGET_BASIS)
-    if len(joined) > 6:
-        return set()
-    # Once target+current already fills a six-dimensional envelope, every later
-    # independent nonlinear class must lie in that envelope.
-    allowed = set(span_values(joined)) if len(joined) == 6 else None
+def candidate_residues(basis):
+    """All independent next nonlinear classes reachable from the current span."""
     function_space = span_values(canonical_basis(LINEAR_BASIS + basis))
-    out = set()
+    residues = set()
     for i in range(1, len(function_space)):
         u = function_space[i]
         for j in range(1, i):
-            v = function_space[j]
-            residue = STRIP[u & v]
-            if not residue or not reduce_by_basis(residue, basis):
-                continue
-            if allowed is not None and residue not in allowed:
-                continue
-            nxt = canonical_basis(basis + (residue,))
-            if len(canonical_basis(nxt + TARGET_BASIS)) <= 6:
-                out.add(nxt)
-    return out
+            residue = STRIP[u & function_space[j]]
+            if residue and reduce_by_basis(residue, basis):
+                residues.add(residue)
+    return residues
+
+
+def first_step_spans():
+    return {canonical_basis((r,)) for r in candidate_residues(())}
+
+
+def transition_rank5(frontier):
+    """Advance every reachable join-rank-five span by one independent AND.
+
+    Returns `(next_rank5_frontier, exposed_rank6_envelopes)`.  If the next residue
+    lies in J=span(current,T), the join rank stays five.  Otherwise J plus that
+    residue is the first rank-six envelope for that branch.
+    """
+    stay = set()
+    envelopes = set()
+    for basis in frontier:
+        joined = canonical_basis(basis + TARGET_BASIS)
+        assert len(joined) == 5
+        for residue in candidate_residues(basis):
+            if not reduce_by_basis(residue, joined):
+                stay.add(canonical_basis(basis + (residue,)))
+            else:
+                envelopes.add(canonical_basis(joined + (residue,)))
+    return stay, envelopes
 
 
 def main():
     assert len(TARGET_BASIS) == 4
-    level1 = next_spans(())
-    level2 = set()
-    for basis in level1:
-        level2.update(next_spans(basis))
 
+    level1 = first_step_spans()
     join1 = collections.Counter(len(canonical_basis(b + TARGET_BASIS)) for b in level1)
-    join2 = collections.Counter(len(canonical_basis(b + TARGET_BASIS)) for b in level2)
-    envelopes = {
-        canonical_basis(b + TARGET_BASIS)
-        for b in level2
-        if len(canonical_basis(b + TARGET_BASIS)) == 6
-    }
+    assert join1 == collections.Counter({5: 35})
+
+    # First possible exposure is at the second AND.  Keep only branches whose join
+    # rank remains five; rank-six branches have already fixed their final envelope.
+    frontier2, exposed2 = transition_rank5(level1)
+    all_envelopes = set(exposed2)
+    rows = [{
+        "and_depth": 2,
+        "rank5_frontier": len(frontier2),
+        "rank6_envelopes_exposed": len(exposed2),
+        "new_rank6_envelopes": len(exposed2),
+        "rank6_envelopes_total": len(all_envelopes),
+    }]
+
+    frontier = frontier2
+    for depth in range(3, 7):
+        frontier, exposed = transition_rank5(frontier)
+        new = exposed - all_envelopes
+        all_envelopes.update(exposed)
+        rows.append({
+            "and_depth": depth,
+            "rank5_frontier": len(frontier),
+            "rank6_envelopes_exposed": len(exposed),
+            "new_rank6_envelopes": len(new),
+            "rank6_envelopes_total": len(all_envelopes),
+        })
 
     summary = {
         "target_quotient_rank": len(TARGET_BASIS),
         "first_and_spans": len(level1),
         "first_join_rank_distribution": dict(sorted(join1.items())),
-        "second_and_spans": len(level2),
-        "second_join_rank_distribution": dict(sorted(join2.items())),
-        "unique_rank6_envelopes": len(envelopes),
+        "frontier_log": rows,
+        "unique_reachable_rank6_envelopes": len(all_envelopes),
     }
     print(json.dumps(summary, sort_keys=True))
 
-    # Regression values from the exact enumeration.  These make accidental model
-    # changes visible and are small enough to reproduce directly.
     assert summary == {
         "target_quotient_rank": 4,
         "first_and_spans": 35,
         "first_join_rank_distribution": {5: 35},
-        "second_and_spans": 2485,
-        "second_join_rank_distribution": {5: 60, 6: 2425},
-        "unique_rank6_envelopes": 585,
+        "frontier_log": [
+            {"and_depth": 2, "rank5_frontier": 60, "rank6_envelopes_exposed": 585,
+             "new_rank6_envelopes": 585, "rank6_envelopes_total": 585},
+            {"and_depth": 3, "rank5_frontier": 210, "rank6_envelopes_exposed": 1515,
+             "new_rank6_envelopes": 960, "rank6_envelopes_total": 1545},
+            {"and_depth": 4, "rank5_frontier": 270, "rank6_envelopes_exposed": 1515,
+             "new_rank6_envelopes": 0, "rank6_envelopes_total": 1545},
+            {"and_depth": 5, "rank5_frontier": 30, "rank6_envelopes_exposed": 1515,
+             "new_rank6_envelopes": 0, "rank6_envelopes_total": 1545},
+            {"and_depth": 6, "rank5_frontier": 0, "rank6_envelopes_exposed": 1515,
+             "new_rank6_envelopes": 0, "rank6_envelopes_total": 1545},
+        ],
+        "unique_reachable_rank6_envelopes": 1545,
     }
 
 
