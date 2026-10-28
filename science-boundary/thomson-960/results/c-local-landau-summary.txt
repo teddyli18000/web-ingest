@@ -1,0 +1,77 @@
+Thomson N=960 — local C3 Landau model and C index-2 unstable manifold
+Date: 2026-10-28/29
+Live merged record R = 444368.3924061973
+
+Stationary state C
+- E(C) = 444368.4114178831 = R + 0.0190116858.
+- C3 symmetric, coordination 36/900/24.
+- Full-space Hessian: lambda0 = -0.9318267771, lambda1 = -0.9317472273, lambda2 = +1.5633382670, later low modes positive.
+- C is index-2, not a minimum.
+- The negative pair carries the real nontrivial C3 representation; canonical +120-degree matrix is numerically the 2-D rotation by +120 degrees to ~1e-5 subspace error.
+
+Important scale audit
+- Hessian negativity is genuinely local. Along a C negative mode, actual geodesic energy agrees with the quadratic prediction for RMS amplitudes 1e-5 through a few 1e-4.
+- Typical negative-mode energy continues decreasing through roughly 6e-4 RMS, then nonlinear terms reverse the trend around 7e-4 to 1e-3.
+- Therefore earlier 0.0015+ kicks are finite-amplitude basin probes, NOT local unstable-manifold samples.
+- Generic audit tool: code/audit_mode_curvature.py.
+
+True local unstable-manifold map, run 40737316432
+- Full C3 phase domain 0..115 degrees, step 5 degrees.
+- RMS amplitudes 0.0001, 0.0002, 0.0004, 0.0006.
+- 96 full unconstrained stable relaxations.
+- No endpoint below R and no basin beyond B or D.
+- Counts: B = 33/96, D = 63/96.
+- Exact phase pattern:
+  * phases 0,5,10,15,20,25,30 degrees: all four amplitudes -> B.
+  * phases 35 through 105 degrees: all four amplitudes -> D.
+  * phase 110: 0.0001 -> B; 0.0002/0.0004/0.0006 -> D.
+  * phase 115: all four amplitudes -> B.
+- Thus C is a local organizing index-2 state whose two-dimensional unstable manifold partitions into B and D downhill sectors. No hidden lower basin was found anywhere in the local 120-degree fundamental domain.
+
+Finite-amplitude basin map, half-domain run 40732986870
+- phases 0..55 degrees, amplitudes 0.0015,0.003,0.006,0.012.
+- 48 relaxations: B 43, D 3, A 2; no new basin.
+- This map is useful for far-field capture only; it should not be interpreted as the local Morse unstable manifold because all sampled amplitudes lie outside the quadratic negative-curvature region.
+
+Local C3 Landau fit, run 40738262382
+Use total physical tangent radius rho = sqrt(960) * RMS and the canonical pair phase theta.
+A compact local fit is
+  Delta E ~= -0.5 * 0.9318 * rho^2
+             + 7.27 * rho^3 cos[3(theta - 14.88 deg)]
+             + 1085.5 * rho^4
+with much smaller 6th-harmonic angular residual over the fitted radii.
+
+Independent fit values:
+- RMS 0.0002: cubic/rho^3 = 7.27759, quartic = 1085.05, ridge = 14.8862 deg, valley = 74.8862 deg.
+- RMS 0.0003: cubic/rho^3 = 7.26808, quartic = 1085.70, ridge = 14.8795 deg, valley = 74.8795 deg.
+- RMS 0.0004: cubic/rho^3 = 7.26137, quartic = 1085.63, ridge = 14.8775 deg, valley = 74.8775 deg.
+- Coefficients and phase are essentially radius-independent across this range, strongly supporting a genuine low-dimensional normal form rather than a fit artifact.
+
+Quartic-model stationary predictions
+- ridge phase ~=14.8795 deg: rho ~=0.01235135, RMS ~=0.000398638, Delta E ~= -3.21136e-5 from C.
+- valley phase ~=74.8795 deg: rho ~=0.01737247, RMS ~=0.000560694, Delta E ~= -7.98307e-5 from C.
+
+Independent full-space checks
+- Ridge near RMS 0.000399: low Hessian ~[-1.1503,-0.2141,+2.1611,...]; still index-2 but second unstable direction is strongly softened.
+- Ridge RMS 0.000500: low Hessian ~[-1.09575,-0.04704,+2.37837,...]; extremely close to the index-2 -> index-1 crossing.
+- Valley near RMS 0.000561: low Hessian begins about [+0.206,+0.275,+2.317,...]; already in an index-0 curvature region, though not stationary.
+- Local relaxation sector centers align with the model: ridge ~15 deg lies in the B sector; valley ~75 deg lies in the D sector.
+
+Interpretation
+- The cubic C3 anisotropy explains why the C unstable doublet is not rotationally equivalent phase-by-phase and why 60-degree reduction was invalid without reflection symmetry.
+- The ridge is the principled place to search for the B<->D index-1 descendant: radial stabilization occurs while one angular direction remains unstable.
+- The valley is the principled downhill direction toward D.
+- This gives a compact, symmetry-derived 2-D normal form for a 1920-D Thomson neighborhood.
+
+B<->D MEP relation
+- Corrected perpendicular-force string run 40735463455 reduced the B-D maximum to 444368.4113403088, below C, while max perpendicular gradient RMS fell from ~0.0914 to 5.89499e-4 after 2500 iterations.
+- It was not yet converged to the 2e-5 target; continuation run 40737602102 is active from the saved 15-image path rather than restarting.
+- The MEP maximum being near but below C is consistent with an index-1 descendant in the C neighborhood rather than C itself.
+
+Active saddle searches
+- Landau ridge direct refinement run 40739789368 uses phase 15 deg, RMS 0.00050/0.00055/0.00060, diagnoses each seed Morse index and then hybrid-refines it.
+- Landau-targeted C downward run 40738176193 uses phase 15 deg (ridge) and 75 deg (valley control).
+- Generic C->index1 downward search has been corrected to HiSD target sign +g/|lambda| and local escape RMS 0.0003; prior milliradian/ordinary-Newton outcomes are algorithm diagnostics only.
+
+Scientific conclusion so far
+C's complete local unstable manifold is mapped and closes only on known B and D. There is no record candidate. The important gain is structural: C is a compact high-symmetry index-2 organizer, and its local C3 Landau normal form gives a first-principles target for the missing B-D index-1 saddle.
