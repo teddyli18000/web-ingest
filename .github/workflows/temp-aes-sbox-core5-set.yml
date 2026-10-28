@@ -1,0 +1,32 @@
+name: temp-aes-sbox-core5-set
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-sbox-core5-set.yml'
+permissions:
+  contents: read
+jobs:
+  setcore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [2026102861, 2026102862, 2026102863, 2026102864]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install solver
+        run: python3 -m pip install --disable-pip-version-check z3-solver
+      - name: Solve Jain-schedule five-AND core as target set
+        run: |
+          out="/tmp/aes-core5-set-${{ matrix.seed }}"
+          mkdir -p "$out"
+          python3 science-boundary/aes-sbox-circuit/synth_core5_set_z3.py \
+            --basis '1,2,4,8' --gates 17 --ands 5 --pattern jain5 \
+            --timeout 600 --seed "${{ matrix.seed }}" --out "$out" | tee "$out/run.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-core5-set-${{ matrix.seed }}
+          path: /tmp/aes-core5-set-${{ matrix.seed }}
