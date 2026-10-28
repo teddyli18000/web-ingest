@@ -14,16 +14,24 @@ from scipy.sparse.linalg import eigsh
 
 import diagnose_soft_modes as sm
 import search_soft_pair as sp
-from search_from_seed_modes import load_seed, stable_relax_q
+from search_from_seed_modes import stable_relax_q
 
 N=960
+
+
+def load_any_seed(path):
+    d=json.loads(pathlib.Path(path).read_text())
+    p=d.get('points') if isinstance(d,dict) else None
+    if p is None and isinstance(d,dict): p=d.get('saddle_points')
+    if p is None or len(p)!=N: raise ValueError('seed must contain 960 points or saddle_points')
+    x=np.asarray(p,float); return d,x/np.linalg.norm(x,axis=1)[:,None]
 
 
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument('few_shots'); ap.add_argument('seed_json')
     ap.add_argument('--amps',default='0.00005,0.0001,0.0002,0.0003'); ap.add_argument('--k',type=int,default=10)
     ap.add_argument('--fd-step',type=float,default=3e-6); ap.add_argument('--out',required=True); args=ap.parse_args()
-    root=pathlib.Path(args.few_shots); live_score,live_shot=sm.find_live(root); meta,x=load_seed(pathlib.Path(args.seed_json)); q=sm.xyz_to_vars(x)
+    root=pathlib.Path(args.few_shots); live_score,live_shot=sm.find_live(root); meta,x=load_any_seed(args.seed_json); q=sm.xyz_to_vars(x)
     E0,gq=sm.fg(q); gp=gq/sm.physical_scale(q); grms=float(np.linalg.norm(gp)/math.sqrt(2*N))
     H,raw,Q,calls=sm.build_hessian(q,args.fd_step,1e6)
     rng=np.random.default_rng(9601001); v0=rng.normal(size=len(q)); v0-=Q@(Q.T@v0); v0/=np.linalg.norm(v0)
