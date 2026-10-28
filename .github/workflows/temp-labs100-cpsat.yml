@@ -1,0 +1,57 @@
+name: temp labs-100 CP-SAT
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-cpsat.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-labs100-cpsat
+  cancel-in-progress: false
+
+jobs:
+  cpsat:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check 'ortools==9.15.6755'
+      - name: Calibrate and probe
+        shell: bash
+        run: |
+          set -uo pipefail
+          script='science-boundary/labs-100/code/cpsat.py'
+          python3 "$script" --bound 578 --seconds 20 --workers 4 --hint --log 2>&1 | tee /tmp/cpsat-hint578.log
+          h=${PIPESTATUS[0]}
+          if [[ $h -ne 0 ]]; then
+            echo 'HINT_MODEL_CHECK_FAILED'
+            exit 1
+          fi
+
+          set +e
+          python3 "$script" --bound 578 --seconds 120 --workers 4 --log 2>&1 | tee /tmp/cpsat-nohint578.log
+          c=${PIPESTATUS[0]}
+          set -e
+          if [[ $c -eq 0 ]]; then
+            echo 'CALIBRATION_FEASIBLE'
+            set +e
+            python3 "$script" --bound 574 --seconds 900 --workers 4 --log 2>&1 | tee /tmp/cpsat-574.log
+            echo "TARGET_EXIT=${PIPESTATUS[0]}"
+            set -e
+          else
+            echo 'CALIBRATION_NOT_FEASIBLE_WITHIN_BUDGET' | tee /tmp/cpsat-574.log
+          fi
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: labs100-cpsat-probe
+          path: /tmp/cpsat-*.log
+          if-no-files-found: error
