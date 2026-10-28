@@ -1,0 +1,66 @@
+name: temp labs-100 global near-skew E574
+
+on:
+  push:
+    paths:
+      - 'science-boundary/labs-100/code/cpsat_nearskew_e574.py'
+      - '.github/workflows/temp-labs-100-nearskew-e574.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check -q 'ortools==9.15.6755'
+      - name: Check near-skew mapping and model
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from science_boundary_placeholder import nope
+          PY
+        continue-on-error: true
+      - name: Real structural smoke
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import importlib.util
+          p='science-boundary/labs-100/code/cpsat_nearskew_e574.py'
+          spec=importlib.util.spec_from_file_location('m',p); m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+          inc='++++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-'
+          e,o,_,a,b=m.exact(inc)
+          assert (e,o,a,b)==(578,50,10,0)
+          assert m.is_nearskew(inc)
+          model,_=m.build(0)
+          assert not model.Validate()
+          print('SMOKE near-skew incumbent=578 odd=50 asum=10 bsum=0 model=valid')
+          PY
+
+  target:
+    needs: smoke
+    strategy:
+      fail-fast: false
+      matrix:
+        asum: [-20, -16, -12, -8, -4, 0, 4, 8, 12, 16, 20]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check -q 'ortools==9.15.6755'
+      - name: Exact global near-skew E574 search
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/cpsat_nearskew_e574.py \
+            --asum '${{ matrix.asum }}' --seconds 240 --workers 4 --seed 1 \
+            | tee /tmp/out.txt
+          grep -E '^(STATUS|PROVED_INFEASIBLE|UNRESOLVED|FOUND)' /tmp/out.txt
