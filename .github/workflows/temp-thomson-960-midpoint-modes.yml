@@ -1,0 +1,55 @@
+name: temp Thomson 960 midpoint low-mode exits
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-midpoint-modes.yml"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  search:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        mode: [0, 1, 2, 3]
+        sign: [-1, 1]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Download 25-dislocation topology-transition basin
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-topology-midpoint
+          path: ${{ runner.temp }}/midpoint
+          github-token: ${{ github.token }}
+          run-id: 40627218698
+      - name: Follow transition-basin Hessian mode and relax
+        run: |
+          python3 science-boundary/thomson-960/code/search_from_seed_modes.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/midpoint/midpoint.json" \
+            --mode ${{ matrix.mode }} --sign ${{ matrix.sign }} --k 8 \
+            --amps 0.004,0.008,0.014,0.022,0.034,0.050 \
+            --out "$RUNNER_TEMP/result-m${{ matrix.mode }}-s${{ matrix.sign }}.json"
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'result-m${{ matrix.mode }}-s${{ matrix.sign }}.json')
+          d=json.load(open(p)); d.pop('best_points',None)
+          print(json.dumps(d,indent=2))
+          PY
+      - name: Upload result
+        uses: actions/upload-artifact@v4
+        with:
+          name: thomson-midpoint-m${{ matrix.mode }}-s${{ matrix.sign }}
+          path: ${{ runner.temp }}/result-m${{ matrix.mode }}-s${{ matrix.sign }}.json
+          retention-days: 7
