@@ -1,0 +1,26 @@
+name: temp labs-100 d13 skew-core exact search
+
+on:
+  push:
+    paths:
+      - 'science-boundary/labs-100/code/skewcore_d13_bnb.cpp'
+      - '.github/workflows/temp-labs-100-d13-skewcore.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  d13-target:
+    timeout-minutes: 30
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exact E<=574 feasibility in the dominant normalized d=13 skew87 branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/skewcore_d13_bnb.cpp -o /tmp/d13
+          /tmp/d13 --bits '--++--++--+' --cap 524 \
+            --threads "$(nproc)" --split 13 --seconds 1500
