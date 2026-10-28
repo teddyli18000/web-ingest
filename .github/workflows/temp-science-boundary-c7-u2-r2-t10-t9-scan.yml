@@ -79,6 +79,7 @@ jobs:
         run: |
           {
             echo '## C7 U2 radius<=2 orientable t10/t9 scan'
+            echo 'retrigger=1'
             for f in status.json verify.json; do if [[ -f "$RUNNER_TEMP/result/$f" ]]; then echo '```json'; cat "$RUNNER_TEMP/result/$f"; echo '```'; fi; done
             if [[ -f "$RUNNER_TEMP/result/stderr.txt" ]]; then echo '```text'; tail -n 100 "$RUNNER_TEMP/result/stderr.txt"; echo '```'; fi
           } >> "$GITHUB_STEP_SUMMARY"
