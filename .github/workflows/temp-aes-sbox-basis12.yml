@@ -1,0 +1,41 @@
+name: temp-aes-sbox-basis12
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-sbox-basis12.yml'
+permissions:
+  contents: read
+jobs:
+  basis12:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {targets: 'w53,w49,w58,w56', seed: 2026102851, tag: jain-a}
+          - {targets: 'w57,w53,w49,w56', seed: 2026102852, tag: jain-b}
+          - {targets: 'w57,w53,w49,w58', seed: 2026102853, tag: jain-c}
+          - {targets: 'w52,w53,w58,w56', seed: 2026102854, tag: jain-d}
+          - {targets: 'w52,w57,w53,w56', seed: 2026102855, tag: jain-e}
+          - {targets: 'w52,w57,w53,w58', seed: 2026102856, tag: jain-f}
+          - {targets: 'w45,w59,w52,w57', seed: 2026102857, tag: canonical}
+          - {targets: 'w52,w49,w58,w56', seed: 2026102858, tag: near-pair}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install solver
+        run: python3 -m pip install --disable-pip-version-check z3-solver
+      - name: Search 12-gate basis prefix plus five-XOR closure
+        run: |
+          out="/tmp/aes-basis12-${{ matrix.tag }}"
+          mkdir -p "$out"
+          python3 science-boundary/aes-sbox-circuit/synth_core_basis12_z3.py \
+            --targets "${{ matrix.targets }}" --basis '1,2,4,8' \
+            --gates 12 --max-ands 5 --timeout 600 \
+            --seed "${{ matrix.seed }}" --out "$out" | tee "$out/run.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-basis12-${{ matrix.tag }}
+          path: /tmp/aes-basis12-${{ matrix.tag }}
