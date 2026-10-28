@@ -2,7 +2,7 @@
 
 ## Goal
 
-The merged 102-gate circuit would fall to 101 if its 18-gate core were replaced by a 17-gate circuit exposing the same nine tail factors on the complete care set.  The only gate-count splits still relevant are
+The merged 102-gate circuit would fall to 101 if its 18-gate core were replaced by a 17-gate circuit exposing the same nine tail factors on the complete care set. The only gate-count splits relevant to that fixed interface are
 
 ```text
 5 AND + 12 linear
@@ -10,55 +10,80 @@ or
 6 AND + 11 linear.
 ```
 
-This note decomposes the second case by nonlinear quotient rank.
+The five-AND case is now completely excluded; see `AFFINE-CORE5.md`. This note records what remains of the six-AND case.
 
 ## Quotient model
 
-Work modulo affine functions of the four fixed core inputs.  The nine required factors span a four-dimensional nonlinear quotient space `T`.  The complete fixed-tail ODC only frees the value at core state `0000`; it does not change the requirement on the other 15 states.
+Work modulo affine functions of the four fixed core inputs. The complete fixed-tail ODC frees only the nine factor values at core state `0000`.
 
-Each AND can increase the dimension of the span of raw-AND quotient classes by at most one.  The previously established ODC multiplicative-complexity lower bound says at least five ANDs are necessary, so a six-AND candidate can have final raw-AND quotient rank only five or six.
+Across all `2^9=512` zero-state completions:
 
-## Rank five: one dependent AND
+- 16 completions have target quotient rank four;
+- the other 496 completions all share one common target quotient space `U` of rank five.
 
-If six AND gates have quotient rank five, exactly one AND is quotient-dependent on earlier raw ANDs.  Its actual Boolean output is therefore an affine form of the four inputs and the earlier independent raw-AND outputs (including its phase/constant term in the affine form).
+Each AND can increase the span of raw-AND quotient classes by at most one. A six-AND candidate can therefore finish with raw-AND quotient rank five or six.
 
-Delete that dependent AND and substitute the corresponding affine form at every use.  What remains is a five-independent-AND decomposition of the same nine partial target functions.  In the five-AND mandatory-form model, every non-free affine form needed as an AND operand or exposed target must be materialized by a linear gate.  Re-introducing the deleted dependent AND can make at most **one distinct affine function** free: the function computed by that gate.  It cannot make two distinct truth functions into primitive sources.
+## Quotient rank five is excluded
 
-Therefore, if a zero-state completion has five-AND mandatory-form minimum `m`, every six-AND realization of quotient rank five for that completion needs at least
+If six AND gates have quotient rank five, one AND is quotient-dependent on the other five. Its Boolean function is an affine form of the inputs and five independent raw-AND outputs.
 
-```text
-6 AND + (m - 1) linear gates.
-```
+For the 496 rank-five target completions, deleting that dependent AND would leave a five-AND circuit computing a rank-five target space. `prove_core5_rank5_completions.py` proves that impossible: every such completion needs at least six independent AND classes.
 
-In particular, once the ongoing affine/XNOR exact campaign establishes `m >= 13` for all 16 rank-four zero-state completions, **every quotient-rank-five six-AND direct core will need at least 18 gates**.  This implication is conditional until all 16 completion cases finish.
+For the 16 rank-four completions, deleting the dependent AND and replacing its value by its affine expression turns any hypothetical `6 AND + 11 linear` witness into a five-independent-AND mandatory-form witness using at most one additional distinct affine form. It would therefore give a `5 AND + <=12 mandatory forms` witness. `screen_core5_exact.cpp`, independently verified by all 16 jobs of Action run `40739207093`, proves that no such witness exists.
 
-## Rank six: all six ANDs independent
+Hence **all quotient-rank-five `6 AND + 11 linear` fixed-interface cores are excluded**.
 
-If the raw-AND quotient rank is six, every AND adds a new nonlinear class.  Let `E` be the final six-dimensional nonlinear span.  Necessarily
+## Quotient rank six for the 496 rank-five completions is excluded
 
-```text
-T subset E,  dim(T)=4,  dim(E)=6.
-```
-
-The exact quotient-level census in `enumerate_core6_envelopes.py` follows only branches for which `span(T,current)` is still rank five.  At the first transition to rank six, the final envelope `E` is fixed; all later independent AND classes must lie inside it.  This gives the complete first-exposure frontier:
+For a rank-five completion, let `U` be the common five-dimensional target quotient space. The first AND class must lie outside `U`; exactly 35 nonzero first-AND classes are possible from affine input operands. In a six-independent-AND circuit the first class therefore fixes the final six-dimensional envelope
 
 ```text
-depth 2: rank-5 frontier  60, exposed  585 envelopes,  585 new, total  585
-depth 3: rank-5 frontier 210, exposed 1515 envelopes,  960 new, total 1545
-depth 4: rank-5 frontier 270, exposed 1515 envelopes,    0 new, total 1545
-depth 5: rank-5 frontier  30, exposed 1515 envelopes,    0 new, total 1545
-depth 6: rank-5 frontier   0, exposed 1515 envelopes,    0 new, total 1545
+E = span(U, r0).
 ```
 
-The first AND has 35 reachable nonlinear classes, all of which put `span(T,current)` at rank five.  The rank-five frontier is exhausted after the sixth AND, so every independent six-AND circuit whose final span contains `T` must first expose one of exactly **1,545 reachable six-dimensional envelopes**.  There are no new envelope classes after depth three even though some rank-five partial spans persist longer.
+`screen_core6_rank5_exact.cpp` exhausts all 35 such envelopes on exact 16-state truth tables. It models arbitrary XOR/XNOR phases, exact AND operands, every distinct non-free affine form, and all 496 rank-five zero-state completions simultaneously. It prunes only when an optimistic lower bound already exceeds the eleven-linear budget.
 
-This is only a search-space decomposition, not a 101 construction or an impossibility proof.  The remaining task is to test whether any of the 1,545 envelopes admits a physical six-AND witness whose AND operands plus nine target forms can be scheduled with at most eleven XOR/XNOR gates.
+A local unrestricted run completed **35/35 envelopes with zero hits**. The heaviest envelope visited only 22,752 DFS suffix nodes after the optimized incremental coordinate-map reduction. An independent 35-job GitHub Actions run (`40738521634`) was launched to reproduce the result; record its final matrix status before treating the Action as a second implementation check.
 
-## Current implication
+Thus the current exact local result excludes quotient-rank-six `6 AND + 11 linear` cores for all 496 rank-five completions.
 
-The direct fixed-interface route is now split cleanly:
+## What remains: rank-four completion + quotient rank six
 
-1. finish the 16-case affine five-AND exact mandatory-form campaign;
-2. if every case has minimum at least 13, discard both `5+12` and quotient-rank-five `6+11`;
-3. search only quotient-rank-six `6+11`, sharded by the 1,545 reachable nonlinear envelopes;
-4. if that also fails, the remaining credible 101 routes require changing the middle/core interface or reducing the retained-core outer linear cost.
+The only unresolved fixed-interface 17-gate core family is now
+
+```text
+rank-four zero-state completion
++ six independent ANDs
++ final raw-AND quotient rank six
++ at most eleven XOR/XNOR gates.
+```
+
+An exact quotient-level census is in `enumerate_core6_odc_envelopes.cpp` and `CORE6-ODC-ENVELOPES.md`.
+
+For the 16 rank-four completions:
+
+```text
+completion 000000000: 1545 reachable rank-six envelopes
+each other completion: 1525 reachable rank-six envelopes
+```
+
+The union has exactly **23,970** distinct envelopes:
+
+```text
+23,940 belong to exactly one completion;
+    30 belong to all 16 completions.
+```
+
+There are no intermediate multiplicities. The common 30 envelopes are exactly 30 of the 35 spaces `span(U,r0)` from the rank-five-completion analysis; five of those 35 are rank-five-only.
+
+This is a search-space theorem, not an impossibility proof. Physical mandatory-form screening has already closed many representative common-envelope pairs, but some combinations remain computationally heavy. The next direct-core work should improve the physical necessary lower bound or exploit the hyperplane structure of the 16 rank-four completions rather than brute-force all 23,970 envelopes independently.
+
+## Parallel 101 route
+
+The direct-core frontier is now narrow but difficult. In parallel, the retained-18-core outer family remains credible: a 101 circuit needs
+
+```text
+prelinear + middle_support + output_transpose <= 36.
+```
+
+All 2040 semilinear transforms have been cheaply screened; 1506 are excluded by a rigorous lower bound and 534 remain. Exact Class A/B/C searches and the rank-three support-five completion campaign are the current complementary route. See `SEMILINEAR-CLASSES.md`, `EXACT-SCREENS-2026-10-28.md`, and `RANK3-SUPPORT5.md`.
