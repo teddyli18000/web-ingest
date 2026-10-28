@@ -1,6 +1,6 @@
 name: temp Thomson 960 C unstable manifold
 
-# retry 2: tolerate harmless ~3e-7 C3 reconstruction drift after validating a bijection
+# full C3 phase domain: C3 identifies theta modulo 120 degrees, not 60 degrees
 on:
   push:
     branches: [main]
@@ -28,7 +28,7 @@ jobs:
         run: |
           python3 science-boundary/thomson-960/code/search_seed_c3_negative_pair.py \
             "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/basin-c.json" \
-            --phases 0,5,10,15,20,25,30,35,40,45,50,55 \
+            --phases 0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115 \
             --amps 0.0015,0.003,0.006,0.012 \
             --out "$RUNNER_TEMP/c-negative-pair.json"
       - uses: actions/upload-artifact@v4
