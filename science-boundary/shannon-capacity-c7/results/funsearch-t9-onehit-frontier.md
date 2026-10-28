@@ -31,6 +31,19 @@ Therefore all automorphism-invariant repair/existence questions need only be sol
 
 Reusable verifier: `code/bpz_t9_funsearch_basin_isomorphism.py`.
 
+### Exact C5 case-orbit compression inside one basin
+
+The representative image-330 367-set has a cyclic coordinate stabilizer of order 5. Exact replay of that stabilizer on all 20 one-hit obstruction states partitions them into four orbits, each of size 5:
+
+- `[0,5,8,13,17]`;
+- `[1,4,9,12,16]`;
+- `[2,7,10,15,19]`;
+- `[3,6,11,14,18]`.
+
+Thus the exact representatives are cases `[0,1,2,3]`. Any automorphism-invariant radius search, unrestricted local modification search, or neutral-component calculation need only be run on these four cases. Together with the inter-basin isomorphism, this compresses the original 40 one-hit states to four exact representatives.
+
+Reusable verifier: `code/bpz_t9_funsearch_case_orbits.py`.
+
 ## Exact fixed-radius repair boundary
 
 For every one-hit state, pre-delete its unique obstruction hit. A `k`-for-`k` repair searches for `k` pairwise-compatible additions whose blocker union against the retained 366-set has size at most `k-1`; padding the removal set restores 367 auxiliary points. The solver is the pinned `molind/c7-five/search/exchange_dfs.cpp` at commit `ae81e0d24b356aef3d388238f6fb4d02c4aa32a5` with budget-bitset pruning.
@@ -48,11 +61,15 @@ Candidate pools are about 7801-7802 vertices. Individual searches complete after
 
 The full 16-shard radius-7 campaign completed under an explicit `complete` guard. Every shard finished without a repair witness; the Few Shots verification step was skipped in every job. In particular both one-hit-bearing shards 5 and 10 were completely exhausted with zero cutoff states. Therefore all 40 one-hit states are exactly negative through 7-for-7.
 
-### Radius 8 and beyond
+### 8-for-8
 
-Exact 8-for-8 searches on the two one-hit-bearing shards are currently long-running. No mathematical conclusion should be recorded unless a job either produces a verifier-replayed witness or passes its completion guard with zero cutoff states.
+The two one-hit-bearing basin jobs both completed under the same explicit completion guard with no witness and no Few Shots verification step. Therefore all 40 one-hit states are exactly negative through 8-for-8. This is an exact statement for the fixed-radius blocker-budget repair family.
+
+### Radius 9 and beyond
 
 A first whole-case 9-for-9 attempt on representative case 3 timed out after about 300 seconds and roughly 151 million DFS nodes, reaching only `next_root=27` of 15086 candidate roots. This is not a negative result. `code/bpz_t9_funsearch_representative_continue.py` provides lossless first-root interval continuation for exact radius-9+ sharding.
+
+The C5 orbit result means only cases `[0,1,2,3]` need exact radius-9+ treatment; all other one-hit cases are automorphic copies.
 
 ## Exact neutral-reconfiguration components
 
@@ -67,7 +84,11 @@ Representative case 10 is completely exhausted:
 - frontier remaining: 0;
 - no zero-hit exit.
 
-Thus case 10 has an exact two-state neutral component and no arbitrary-length neutral one-swap escape. Other obstruction cases are being evaluated separately; their queued or incomplete runs are not evidence.
+By the C5 case-orbit compression, future exact neutral-component runs should target cases `[0,1,2,3]`; case 10 is automorphic to case 2. Other queued or incomplete runs are not evidence.
+
+## Seeded global CHILS search
+
+A genuinely nonlocal seeded MIS search was run with CHILS commit `515952724cd3dcc6c4365a340ecf0f1da782119a`. For each sampled obstruction case, the graph was the full obstruction-free `C7^5` induced graph and the known 366-point core was supplied as the initial solution. Four 300-second jobs completed without finding 367; for example case 0 remained at best WIS 366 for the full run. This is useful heuristic evidence only, not a proof.
 
 ## Unrestricted 10D escape route from the 134752 deletion seed
 
@@ -85,12 +106,15 @@ Reusable exact solvers now include:
 
 `code/bpz_t9_bad_fiber_salvage.py` also checks the small natural candidate set `PH×bad`, `PV×bad`, `bad×PH`, `bad×PV` before the full-space transforms. Any candidate from these routes is materialized as an arbitrary 10D certificate and must pass the Few Shots p004 verifier.
 
+The first unrestricted Action attempts exposed a materializer bug: the shared BPZ builder asserted the 134770 target and therefore rejected a correct 134752 deletion seed before any full-space search ran. This was an implementation failure, not negative mathematical evidence. `code/bpz_t9_funsearch_deleted_seed.py` now has a dedicated deletion-seed replay that accepts and independently verifies the intended 134752 score. Subsequent unrestricted runs must use the exact four C5 representatives `[0,1,2,3]`.
+
 ## Reusable code
 
 - `code/bpz_t9_funsearch_fft.py`
 - `code/bpz_t9_funsearch_signed_orbit.py`
 - `code/bpz_t9_funsearch_exchange_repair.py`
 - `code/bpz_t9_funsearch_basin_isomorphism.py`
+- `code/bpz_t9_funsearch_case_orbits.py`
 - `code/bpz_t9_funsearch_representative_case.py`
 - `code/bpz_t9_funsearch_representative_continue.py`
 - `code/bpz_t9_funsearch_neutral_component.py`
