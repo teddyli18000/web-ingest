@@ -1,0 +1,56 @@
+name: temp-aes-sbox-window-z3
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-sbox-window-z3.yml'
+permissions:
+  contents: read
+jobs:
+  synth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {linear: 15, core: 18, seed: 2026102721}
+          - {linear: 15, core: 18, seed: 2026102722}
+          - {linear: 15, core: 18, seed: 2026102723}
+          - {linear: 15, core: 18, seed: 2026102724}
+          - {linear: 16, core: 17, seed: 2026102731}
+          - {linear: 16, core: 17, seed: 2026102732}
+          - {linear: 14, core: 19, seed: 2026102741}
+          - {linear: 14, core: 19, seed: 2026102742}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install solver
+        run: |
+          python3 -m pip install --disable-pip-version-check z3-solver
+          python3 - <<'PY'
+          import z3
+          print('z3', z3.get_version_string())
+          PY
+      - name: Synthesize 33-gate movable-interface window
+        run: |
+          out="/tmp/aes-z3-${{ matrix.linear }}-${{ matrix.core }}-${{ matrix.seed }}"
+          mkdir -p "$out"
+          python3 science-boundary/aes-sbox-circuit/synth_window_z3.py \
+            --linear "${{ matrix.linear }}" \
+            --core "${{ matrix.core }}" \
+            --ands 6 \
+            --timeout 1200 \
+            --seed "${{ matrix.seed }}" \
+            --out "$out" | tee "$out/run.log"
+          if [ -f "$out/certificate.json" ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/aes-candidate
+            cp "$out/certificate.json" /tmp/aes-candidate/certificate.json
+            python3 /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/aes-candidate | tee "$out/official-verifier.txt"
+          fi
+      - name: Upload synthesis evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-sbox-z3-${{ matrix.linear }}-${{ matrix.core }}-${{ matrix.seed }}
+          path: /tmp/aes-z3-${{ matrix.linear }}-${{ matrix.core }}-${{ matrix.seed }}
