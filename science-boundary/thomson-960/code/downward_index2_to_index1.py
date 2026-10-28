@@ -1,22 +1,17 @@
 #!/usr/bin/env python3
 """CHiSD-inspired downward search from an index-2 Thomson stationary state.
 
-Given an index-2 parent (notably C), choose an escape phase in its two-dimensional
-negative eigenspace, perturb along that direction, and retain the orthogonal
-negative direction as the index-1 reaction mode.  At every outer iteration the
-reaction mode is re-identified among the low Hessian eigenvectors by maximum
-overlap with the previously tracked mode rather than by eigenvalue ordering.
-This avoids the mode-switching failure seen on shallow interfaces.
+Given an index-2 parent, choose an escape phase in its two-dimensional negative
+eigenspace, perturb along that direction, and retain the orthogonal negative
+direction as the desired index-1 reaction mode. The reaction mode is tracked by
+maximum eigenvector overlap, not eigenvalue ordering.
 
-The numerical core alternates:
-  * all-dimensional L-BFGS relaxation perpendicular to the tracked reaction mode;
-  * a damped Newton correction along that mode;
-  * recomputation / overlap tracking of the low eigenspace.
-
-This is a quasi-Newton realization of the downward-search principle in
-constrained high-index saddle dynamics: index-2 parent -> connected index-1
-stationary states.  It uses the product-of-spheres physical tangent metric and
-removes global rotations through the existing Hessian infrastructure.
+The target mode follows the HiSD sign rule: its gradient component is always
+reversed relative to minimization. Numerically the reaction step is
+`+ damping * g_target / |lambda_target|` (with a curvature floor). Therefore a
+positive-curvature tracked mode is pushed uphill back toward a basin boundary,
+while once its curvature is negative the same rule is stable toward the saddle.
+All orthogonal directions are minimized by constrained all-dimensional L-BFGS.
 """
 from __future__ import annotations
 import argparse, json, math, pathlib
@@ -36,7 +31,6 @@ def low_modes(q,k,fd):
     H,raw,Q,calls=sm.build_hessian(q,fd,1e6)
     vals,V=eigsh(H,k=k,which='SA',tol=1e-5,maxiter=900,ncv=max(40,4*k))
     o=np.argsort(vals); vals=vals[o]; V=V[:,o]
-    # remove tiny rotation leakage and normalize in physical tangent coordinates
     for j in range(V.shape[1]):
         V[:,j]-=Q@(Q.T@V[:,j]); V[:,j]/=np.linalg.norm(V[:,j])
     return vals,V,Q,raw,calls['n']
@@ -58,11 +52,11 @@ def main():
     ap=argparse.ArgumentParser(); ap.add_argument('seed_json')
     ap.add_argument('--escape-phase-deg',type=float,required=True)
     ap.add_argument('--escape-amp',type=float,default=0.002)
-    ap.add_argument('--outer',type=int,default=8); ap.add_argument('--k',type=int,default=8)
+    ap.add_argument('--outer',type=int,default=10); ap.add_argument('--k',type=int,default=8)
     ap.add_argument('--fd-step',type=float,default=3e-6); ap.add_argument('--penalty',type=float,default=3e5)
-    ap.add_argument('--perp-maxiter',type=int,default=650); ap.add_argument('--newton-damping',type=float,default=0.35)
-    ap.add_argument('--max-reaction-rms',type=float,default=8e-5); ap.add_argument('--out',required=True)
-    args=ap.parse_args()
+    ap.add_argument('--perp-maxiter',type=int,default=650); ap.add_argument('--reaction-damping',type=float,default=0.35)
+    ap.add_argument('--curv-floor',type=float,default=0.15); ap.add_argument('--max-reaction-rms',type=float,default=8e-5)
+    ap.add_argument('--out',required=True); args=ap.parse_args()
 
     meta,x0=load_seed(pathlib.Path(args.seed_json)); q0=sm.xyz_to_vars(x0)
     vals0,V0,Q0,raw0,hcalls=low_modes(q0,max(args.k,6),args.fd_step)
@@ -85,7 +79,11 @@ def main():
         vals2,V2,Q2,raw2,c2=low_modes(q,args.k,args.fd_step); total_hcalls+=c2
         j2,lam2,mode2,ov2=track_mode(target,vals2,V2); target=mode2
         g2=physical_grad(q,Q2); gt2=float(g2@mode2)
-        coeff=-args.newton_damping*gt2/lam2 if abs(lam2)>0.05 else 0.0
+        # HiSD sign: target component climbs when lambda>0 and contracts toward
+        # the saddle when lambda<0. This is +g/|lambda|, NOT Newton -g/lambda
+        # on the positive-curvature side.
+        den=max(abs(lam2),args.curv_floor)
+        coeff=args.reaction_damping*gt2/den
         lim=args.max_reaction_rms*math.sqrt(N); coeff=float(np.clip(coeff,-lim,lim))
         if coeff!=0: q=sp.exp_perturb(q,mode2*np.sign(coeff),abs(coeff)/math.sqrt(N))
         E,_=sm.fg(q); gnew=physical_grad(q); grms=float(np.linalg.norm(gnew)/math.sqrt(2*N))
@@ -93,7 +91,7 @@ def main():
              'gradient_rms_before':before,'tracked_gradient_before':gt,'perp_energy':Eperp,
              'constraint_displacement':cval,'perp_nit':nit,'perp_success':ok,'perp_message':msg,
              'tracked_index_after':j2,'tracked_lambda_after':lam2,'overlap_after':ov2,
-             'tracked_gradient_after':gt2,'reaction_newton_rms':abs(coeff)/math.sqrt(N),
+             'tracked_gradient_after':gt2,'reaction_step_rms':abs(coeff)/math.sqrt(N),
              'energy_after':E,'gradient_rms_after':grms}
         hist.append(row)
         print(f'outer={outer} mode={j}->{j2} lambda={lam:+.6g}->{lam2:+.6g} ov={ov:.4f}/{ov2:.4f} '
