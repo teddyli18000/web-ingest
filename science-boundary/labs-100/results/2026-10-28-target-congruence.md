@@ -1,10 +1,16 @@
-# 2026-10-28 target congruence class for E=574
+# 2026-10-28 congruence structure for the exact E=574 level
 
-## Purpose
+## Scope correction
 
-The public N=100 record has energy 578, while the first possible breakthrough is 574. Because the gap is only four, modular information about the energy can separate the target from the known record basin before doing any search.
+This note concerns the **exact first improvement level `E=574`**, not every Few Shots certificate with `E<=574`.
 
-This note derives two exact congruence constraints and records a first search restricted to the resulting target class.
+For N=100 all energies are `2 (mod 4)`, so the levels below the public `578` record are
+
+```text
+574, 570, 566, 562, ...
+```
+
+The mod-8 class alternates between these levels. In particular, the global-product constraint derived below proves that an **exact `E=574`** sequence has product `+1`, but a hypothetical `E=570` sequence would have product `-1` and could lie in the same product class as the incumbent. Therefore the searches in this note are a target-specific attack on the first improvement level; they are not a global exclusion of all `E<=574` sequences.
 
 ## 1. Total energy mod 8 is determined by the global sign product
 
@@ -28,7 +34,7 @@ Modulo two, `C_k` has the parity of `N-k`, hence the parity of `k`. For odd `k`,
 floor(b/2) - floor(a/2).
 ```
 
-For `N=4m`, using `a+b=4m-1`, this number is always odd (whether `a` is even or odd). Therefore every single-bit flip changes the energy by
+For `N=4m`, using `a+b=4m-1`, this number is always odd. Therefore every single-bit flip changes the energy by
 
 ```text
 E' - E = 4 (mod 8).
@@ -47,13 +53,14 @@ global product +1  =>  E = 6 (mod 8),
 global product -1  =>  E = 2 (mod 8).
 ```
 
-Consequences:
+Consequences for the first two improvement levels:
 
-- `574 = 6 (mod 8)`, so **every E=574 sequence has global product +1**.
-- The public E=578 incumbent has global product `-1`.
-- Thus every 574 candidate is at odd Hamming distance from every standard symmetry image of the incumbent (the N=100 LABS symmetries preserve the global product).
+```text
+E=574 -> global product +1,
+E=570 -> global product -1.
+```
 
-This is stronger than the generic `E = 2 (mod 4)` fact used in the problem statement.
+The public E=578 incumbent has global product `-1`. Thus an exact E=574 candidate is at odd Hamming distance from every standard symmetry image of the incumbent, while this statement does **not** apply to a hypothetical E=570 candidate.
 
 ## 2. Odd-lag energy mod 16 is determined by the parity-half products
 
@@ -95,7 +102,7 @@ O = 10 (mod 16)  iff both half-products are +1,
 O =  2 (mod 16)  otherwise.
 ```
 
-## 3. Exact target classes inside the odd-perfect layer
+## 3. Exact E=574 classes inside the odd-perfect layer
 
 An odd-perfect sequence has every odd `|C_k|=1`, so `O=50`. The pair congruence then forces every opposite odd pair to be `(1,-1)` or `(-1,1)`, hence
 
@@ -103,7 +110,7 @@ An odd-perfect sequence has every odd `|C_k|=1`, so `O=50`. The pair congruence 
 ab = 0.
 ```
 
-A 574 target has global product `+1`, so its two half-products are equal. But `O=50 = 2 (mod 16)`, so they cannot both be `+1`. Therefore an odd-perfect 574 target must satisfy
+For **exact E=574**, the global product must be `+1`, so the two half-products are equal. Since `O=50 = 2 (mod 16)`, they cannot both be `+1`. Therefore an odd-perfect exact-574 sequence must satisfy
 
 ```text
 half-product(A) = half-product(B) = -1,
@@ -111,23 +118,21 @@ a = b = 0 (mod 4),
 ab = 0.
 ```
 
-After reversal/sign normalization one half sum is zero and the other is nonnegative. Cauchy applied to the 49 even correlations and the exact identity
+After reversal/sign normalization one half sum is zero and the other is nonnegative. Cauchy applied to the 49 even correlations and
 
 ```text
 sum even C = (a^2+b^2-100)/2
 ```
 
-shows the nonzero half sum is at most 20 for even energy `<=524`. Thus the entire odd-perfect target is contained in only six canonical half-sum classes:
+bounds the nonzero half sum by 20 when total energy is 574. Thus the exact-574 odd-perfect level is contained in six canonical half-sum classes:
 
 ```text
 (0,0), (4,0), (8,0), (12,0), (16,0), (20,0).
 ```
 
-The older generic CP-SAT split included eleven classes `(0,0),(2,0),...,(20,0)`; the odd classes modulo four are now rigorously irrelevant to E=574.
+This reduction must **not** be used to discard a possible E=570 odd-perfect sequence, whose global product class is different.
 
-The incumbent has half sums `(10,0)` and half products `(+1,-1)`, so it lies in the wrong congruence class for a breakthrough.
-
-## 4. A natural barrier state and target-class search
+## 4. Natural E=574-class barrier and strict walk
 
 Flipping position 0 of the incumbent gives
 
@@ -137,27 +142,9 @@ odd energy = 50
 half products = (-1,-1)
 ```
 
-so this is a simple entry point into the correct O=50 target class. Flipping position 50 similarly gives E=806.
+and therefore enters the exact-574 odd-perfect congruence class. `code/oddperfect_targetclass.cpp` performs a strict tabu walk there using same-parity double flips that preserve both half-products and require all odd correlations to remain `+/-1`.
 
-`code/oddperfect_targetclass.cpp` performs a strict tabu walk in this class:
-
-- random phase-1 starts are driven to odd energy 50 and retained only when both half products are `-1`;
-- phase 2 considers same-parity double flips only, so each half product stays fixed;
-- a move is legal only if every odd correlation remains `+/-1`;
-- correlations and energies are updated exactly; debug builds independently rescore every 1024 steps.
-
-Small local calibration from the E=774 barrier:
-
-- 16 runs x 30,000 steps: best `E=702`;
-- a later 16-run x 100,000-step batch reached **E=678** before the local execution cap.
-
-The E=678 sequence is
-
-```text
----------+--+-+--+--+-++-++++---+----++---++-+++-++---+---++-++--+-+++-++-+---++++---+++++---+-+-+-+
-```
-
-Independent exact rescoring gives
+Small calibration from this barrier reached first `E=702` and then
 
 ```text
 E = 678
@@ -167,18 +154,59 @@ half sums = (-8,0)
 half products = (-1,-1)
 ```
 
-Random target-class starts were weaker in the first small batch (best 822), so the E=774 boundary transition is currently the better seed.
+with sequence
 
-Direct opposite-parity two-bit flips from the E=774 state and from an independently found E=702 target-class state produced no O=58 state. That is only a local observation, but it agrees with the broader evidence that the first defect layer is separated by a substantial move barrier.
+```text
+---------+--+-+--+--+-++-++++---+----++---++-+++-++---+---++-++--+-+++-++-+---++++---+++++---+-+-+-+
+```
+
+Independent exact rescoring confirmed these values.
+
+A structural audit then showed that this E=678 sequence is itself in the canonical `1 + skew99` near-skew manifold. The strict walk therefore found a different congruence sector **inside the same 50-variable near-skew geometry**, not a genuinely unrelated basin.
+
+## 5. Exact ordinary shells around E=678
+
+The local isolation of the E=678 state was checked without assuming near-skew structure.
+
+- exact distance 2: all `C(100,2)=4,950` candidates; shell minimum `830`; no odd-energy-58 state;
+- exact distance 4: all `C(100,4)=3,921,225` candidates; shell minimum `902`; `1,225` odd-perfect states and no odd-energy-58 state;
+- exact distance 6: GitHub Actions run `40731781096`; all `C(100,6)=1,192,052,400` candidates; shell minimum **974** in `184.854 s`.
+
+Radius-6 evidence:
+
+```text
+BASE energy=678
+RADIUS radius=6 tested=1192052400 best=974 seconds=184.854
+BESTSEQ -+----------+-+--+--+-++-++++--++----++---++-+++-++---++--+++++--+-+++-++-+---++-+---+++++---+-+-+-+
+```
+
+Because E=678 has global product `+1`, even Hamming distances remain in that product class while odd distances switch to product `-1`. The completed even shells 2,4,6 therefore show that this particular exact-574-class basin has no improving sequence through distance 6. They do not exclude more distant exact-574 states and do not say anything decisive about the E=570 product class.
+
+## 6. Additional exact near-skew consequence
+
+In the canonical near-skew representation `s=(+1,skew99)`, the 25 odd-position reflection pairs each have product `-1`, so the product of the odd-position half is always `-1`. The 24 noncentral even-position pairs have product `+1`, leaving
+
+```text
+product(even-position half) = s_50.
+```
+
+Therefore an exact E=574 near-skew candidate, whose global product is `+1`, must have
+
+```text
+s_50 = -1.
+```
+
+Equivalently, in a fixed even-half sign-sum class `a`, the near-skew center sign is already determined by the parity of `(50-a)/2`. Existing exact BnB code had been branching on this center coordinate late; fixing it at the root is a sound propagation improvement for fixed-class searches.
 
 ## Interpretation
 
-This does not improve the public record. The useful result is a representation change:
+The useful result is a target-level decomposition, not a record improvement:
 
-- the known E=578 basin is in a congruence class that **cannot contain E=574**;
-- odd-perfect target search should therefore avoid spending most of its effort rediscovering 578;
-- the correct O=50 target class is sharply reduced to six half-sum classes and supports a distinct low-energy basin (currently E=678 in the local strict walk).
+- exact E=574 lies in a global-product class different from the E=578 incumbent;
+- within odd-perfect sequences, exact E=574 is further restricted to half-product `(-1,-1)` and six canonical half-sum classes;
+- the best strict walk found E=678, but that state is still near-skew and is exactly isolated from improvement through ordinary Hamming distance 6;
+- exact searches for E=574 can safely exploit the forced near-skew center bit when working inside that manifold.
 
-The strict same-parity double-flip walk is not yet calibrated close enough to 574 to justify a large blind Actions campaign. The next useful algorithmic step is a controlled macro/repair move that remains in global product `+1` but can cross between the O=50,58,66,... target-compatible layers without falling back into the 578 product class.
+A complete Few Shots search must still retain the alternating lower energy levels `570,566,...`; the congruence restrictions for E=574 are not a proof about those levels.
 
-No E<=574 certificate was found in this experiment.
+No `E<=574` certificate was found in this experiment.
