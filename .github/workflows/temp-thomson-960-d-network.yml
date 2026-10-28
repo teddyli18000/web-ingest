@@ -1,0 +1,81 @@
+name: temp Thomson 960 D-node transition network
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-d-network.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  map:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Download A-B hybrid saddle
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-saddle-ab-hybrid
+          path: ${{ runner.temp }}/ab
+          github-token: ${{ github.token }}
+          run-id: 40634347073
+      - name: Harvest D and reproduce C
+        run: |
+          python3 science-boundary/thomson-960/code/harvest_saddle_branch.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/ab/hybrid-ab.json" \
+            --mode 2 --sign -1 --transverse-amp 0.012 --reaction-amp 0 \
+            --out "$RUNNER_TEMP/basin-d.json"
+          python3 science-boundary/thomson-960/code/harvest_basin_c.py \
+            "$RUNNER_TEMP/few-shots" \
+            --neighbor-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --scale 0.95 --out "$RUNNER_TEMP/basin-c.json"
+      - name: Optimize B-D, D-C, and B-C strings
+        run: |
+          python3 science-boundary/thomson-960/code/string_between_seeds.py \
+            science-boundary/thomson-960/data/basin-b-010566.json "$RUNNER_TEMP/basin-d.json" \
+            --images 9 --iterations 240 --climb-iterations 0 --eta 0.00025 --max-step 0.0007 \
+            --out "$RUNNER_TEMP/string-bd.json"
+          python3 science-boundary/thomson-960/code/string_between_seeds.py \
+            "$RUNNER_TEMP/basin-d.json" "$RUNNER_TEMP/basin-c.json" \
+            --images 9 --iterations 240 --climb-iterations 0 --eta 0.00025 --max-step 0.0007 \
+            --out "$RUNNER_TEMP/string-dc.json"
+          python3 science-boundary/thomson-960/code/string_between_seeds.py \
+            science-boundary/thomson-960/data/basin-b-010566.json "$RUNNER_TEMP/basin-c.json" \
+            --images 11 --iterations 320 --climb-iterations 0 --eta 0.00020 --max-step 0.00055 \
+            --out "$RUNNER_TEMP/string-bc-fine.json"
+      - name: Conservative hybrid refinement on all three interfaces
+        run: |
+          for edge in bd dc bc-fine; do
+            python3 science-boundary/thomson-960/code/refine_saddle_hybrid.py \
+              "$RUNNER_TEMP/string-$edge.json" --outer 6 --penalty 300000 --perp-maxiter 600 \
+              --newton-damping 0.2 --max-reaction-rms 0.00005 \
+              --out "$RUNNER_TEMP/hybrid-$edge.json"
+          done
+          python3 - <<'PY'
+          import json, os
+          for edge in ('bd','dc','bc-fine'):
+              p=os.path.join(os.environ['RUNNER_TEMP'],f'hybrid-{edge}.json')
+              d=json.load(open(p)); print(edge, d['final_energy'], d['final_gradient_rms'], d['negative_internal_modes_below_-1e-3'], [m['eigenvalue'] for m in d['final_modes'][:4]])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-d-network
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/basin-d.json
+            ${{ runner.temp }}/basin-c.json
+            ${{ runner.temp }}/string-bd.json
+            ${{ runner.temp }}/string-dc.json
+            ${{ runner.temp }}/string-bc-fine.json
+            ${{ runner.temp }}/hybrid-bd.json
+            ${{ runner.temp }}/hybrid-dc.json
+            ${{ runner.temp }}/hybrid-bc-fine.json
