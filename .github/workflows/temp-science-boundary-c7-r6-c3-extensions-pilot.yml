@@ -49,8 +49,15 @@ jobs:
           OMP_PLACES: cores
         run: |
           set -euo pipefail
-          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp \
-            science-boundary/shannon-capacity-c7/code/search_net2_r6_c3_extensions.cpp -o "$RUNNER_TEMP/r6-c3x"
+          python3 - science-boundary/shannon-capacity-c7/code/search_net2_r6_c3_extensions.cpp "$RUNNER_TEMP/r6-c3x.cpp" <<'PY'
+          import sys
+          from pathlib import Path
+          src=Path(sys.argv[1]).read_text()
+          old='auto k=lo[i].k,n=ksize(k);'
+          if src.count(old)!=1: raise SystemExit(f'compile-fix assertion failed: {src.count(old)}')
+          Path(sys.argv[2]).write_text(src.replace(old,'auto k=lo[i].k;auto n=ksize(k);'))
+          PY
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp "$RUNNER_TEMP/r6-c3x.cpp" -o "$RUNNER_TEMP/r6-c3x"
           export OMP_NUM_THREADS="$(nproc)"
           /usr/bin/time -v "$RUNNER_TEMP/r6-c3x" "$RUNNER_TEMP/base/ids.txt" 0 4096 \
             > "$RUNNER_TEMP/result/search.json" 2> "$RUNNER_TEMP/result/search.stderr"
