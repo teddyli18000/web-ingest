@@ -1,0 +1,55 @@
+name: temp-aes-sbox-tay5-shared
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-sbox-tay5-shared.yml'
+permissions:
+  contents: read
+jobs:
+  tay5:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {start: 0,  xnor: false, tag: x0}
+          - {start: 10, xnor: false, tag: x1}
+          - {start: 20, xnor: false, tag: x2}
+          - {start: 30, xnor: false, tag: x3}
+          - {start: 40, xnor: false, tag: x4}
+          - {start: 50, xnor: false, tag: x5}
+          - {start: 0,  xnor: true,  tag: n0}
+          - {start: 10, xnor: true,  tag: n1}
+          - {start: 20, xnor: true,  tag: n2}
+          - {start: 30, xnor: true,  tag: n3}
+          - {start: 40, xnor: true,  tag: n4}
+          - {start: 50, xnor: true,  tag: n5}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install solver
+        run: python3 -m pip install --disable-pip-version-check z3-solver
+      - name: Exact Tay5 shared-linear synthesis
+        run: |
+          out="/tmp/aes-tay5-${{ matrix.tag }}"
+          mkdir -p "$out"
+          extra=""
+          if [ "${{ matrix.xnor }}" = "true" ]; then extra="--allow-xnor"; fi
+          python3 science-boundary/aes-sbox-circuit/synth_tay5_shared_z3.py \
+            --start "${{ matrix.start }}" --count 10 --timeout-per-map 25 \
+            --seed 2026102901 $extra --out "$out" | tee "$out/run.log"
+          if [ -f "$out/core.json" ]; then
+            python3 science-boundary/aes-sbox-circuit/splice_core_into_102.py \
+              "$out/core.json" --out "$out/certificate.json" | tee "$out/splice-check.txt"
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/aes-tay5-candidate
+            cp "$out/certificate.json" /tmp/aes-tay5-candidate/certificate.json
+            python3 /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py \
+              /tmp/aes-tay5-candidate | tee "$out/official-verifier.txt"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-tay5-${{ matrix.tag }}
+          path: /tmp/aes-tay5-${{ matrix.tag }}
