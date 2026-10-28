@@ -1,0 +1,42 @@
+name: temp labs-100 exact low skew-defect layers
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-oddperfect-defect-cpsat.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  defect:
+    strategy:
+      fail-fast: false
+      matrix:
+        asum: [0, 10, 20]
+        defect: [0, 1, 2, 3]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check ortools==9.15.6755
+      - name: Search fixed endpoint-defect layer
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/cpsat_oddperfect_outside_nss.py \
+            --asum '${{ matrix.asum }}' --defect '${{ matrix.defect }}' \
+            --target 574 --seconds 90 --workers 4 \
+            --seed "$((4100 + 17*${{ matrix.defect }} + ${{ matrix.asum }}))" \
+            | tee /tmp/out.txt
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-defect-${{ matrix.defect }}-a${{ matrix.asum }}
+          path: /tmp/out.txt
+          if-no-files-found: warn
