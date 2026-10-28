@@ -1,0 +1,59 @@
+name: temp labs-100 exact E574 O50 O58
+
+on:
+  push:
+    paths:
+      - 'science-boundary/labs-100/code/cpsat_e574_lowodd.py'
+      - '.github/workflows/temp-labs-100-e574-lowodd.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check -q 'ortools==9.15.6755'
+      - name: Validate exact-E574 low-odd model
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/cpsat_e574_lowodd.py \
+            --odd 50 --bsum 0 --seconds 1 --workers 2 --seed 1 \
+            | tee /tmp/smoke.txt
+          grep -E '^STATUS odd=50 bsum=0 ' /tmp/smoke.txt
+
+  target:
+    needs: smoke
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {odd: 50, bsum: 0}
+          - {odd: 50, bsum: 4}
+          - {odd: 50, bsum: 8}
+          - {odd: 50, bsum: 12}
+          - {odd: 50, bsum: 16}
+          - {odd: 50, bsum: 20}
+          - {odd: 58, bsum: 2}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check -q 'ortools==9.15.6755'
+      - name: Exact E574 low-odd search
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/cpsat_e574_lowodd.py \
+            --odd '${{ matrix.odd }}' --bsum '${{ matrix.bsum }}' \
+            --seconds 360 --workers 4 --seed 1 \
+            | tee /tmp/out.txt
+          grep -E '^(STATUS|PROVED_INFEASIBLE|UNRESOLVED|FOUND)' /tmp/out.txt
