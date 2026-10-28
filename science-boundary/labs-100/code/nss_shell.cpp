@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #ifdef _OPENMP
@@ -15,18 +16,21 @@
 using S=std::array<int8_t,100>;
 using C=std::array<int,100>;
 
-static long long energy(const S&s,C*out=nullptr){
- C c{}; long long e=0;
- for(int k=1;k<100;k++){int x=0;for(int i=0;i<100-k;i++)x+=int(s[i])*int(s[i+k]);c[k]=x;e+=1LL*x*x;}
- if(out)*out=c; return e;
+static long long energy(const S&s,C*out=nullptr,long long*odd_out=nullptr){
+ C c{}; long long e=0,odd=0;
+ for(int k=1;k<100;k++){int x=0;for(int i=0;i<100-k;i++)x+=int(s[i])*int(s[i+k]);c[k]=x;const long long q=1LL*x*x;e+=q;if(k&1)odd+=q;}
+ if(out)*out=c;if(odd_out)*odd_out=odd;return e;
 }
 
 static void flip_free(S&s,C&c,long long&e,int v){
- const int p=1+v, q=(v==49?-1:100-v); const int sp=s[p], sq=q>=0?s[q]:0;
+ // The length-99 tail occupies full-sequence indices 1..99.  Its skew pair
+ // for tail index v is 98-v, hence full-sequence index 99-v.  v=49 is the
+ // center tail bit and is flipped alone.
+ const int p=1+v, q=(v==49?-1:99-v); const int sp=s[p], sq=q>=0?s[q]:0;
  for(int k=1;k<100;k++){
   int t=0;
   if(p+k<100)t+=sp*int(s[p+k]); if(p-k>=0)t+=int(s[p-k])*sp;
-  if(q>=0){if(q+k<100)t+=sq*int(s[q+k]);if(q-k>=0)t+=int(s[q-k])*sq;if(k==q-p)t-=2*sp*sq;}
+  if(q>=0){if(q+k<100)t+=sq*int(s[q+k]);if(q-k>=0)t+=int(s[q-k])*sq;if(k==std::abs(q-p))t-=2*sp*sq;}
   if(t){const int d=-2*t;e+=2LL*c[k]*d+1LL*d*d;c[k]+=d;}
  }
  s[p]=-s[p]; if(q>=0)s[q]=-s[q];
@@ -49,7 +53,11 @@ int main(int argc,char**argv){
  if(argc<2||argc>3){std::cerr<<"usage: nss_shell <radius> [threads]\n";return 2;}
  const int r=std::stoi(argv[1]); const int threads=argc==3?std::stoi(argv[2]):0;
  if(r<1||r>50)return 2;
- S base=incumbent();C bc{};long long be=energy(base,&bc);if(be!=578)return 2;
+ S base=incumbent();C bc{};long long odd=0;long long be=energy(base,&bc,&odd);if(be!=578||odd!=50)return 2;
+ // Sanity-check the coordinate map: each single free-variable flip must keep
+ // every odd-lag correlation at parity-minimal total energy 50, and the
+ // incremental scorer must match an independent full recomputation.
+ for(int v=0;v<50;v++){S s=base;C c=bc;long long e=be;flip_free(s,c,e,v);long long o2=0;long long e2=energy(s,nullptr,&o2);if(e!=e2||o2!=50){std::cerr<<"near-skew coordinate check failed at free variable "<<v<<"\n";return 2;}}
  std::array<Best,50> part{};auto t0=std::chrono::steady_clock::now();
 #ifdef _OPENMP
  if(threads>0)omp_set_num_threads(threads);
