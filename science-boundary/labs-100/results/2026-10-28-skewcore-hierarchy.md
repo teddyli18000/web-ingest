@@ -121,7 +121,7 @@ Inside a boundary+skew-core class, one parity-half sum is fixed entirely by the 
 
 ### d=3 target proof
 
-The normalized `d=3 + skew97` O=58 automaton has `419,430,400` structural completions. `code/skewcore_d3_o58_bnb.cpp` searches them implicitly with the exact parity-sum/defect constraint and the even-correlation lower bound. A local 4-thread run visited 946,025 BnB nodes and proved `E<=574` infeasible in about 0.25 s. The independent GitHub Actions reproduction in run `40642312008` also passed.
+The normalized `d=3 + skew97` O=58 automaton has `419,430,400` structural completions. `code/skewcore_d3_o58_bnb.cpp` searches them implicitly with the exact parity-sum/defect constraint and the even-correlation lower bound. A local 4-thread run visited 946,025 BnB nodes and proved `E<=574` infeasible in about 0.25 s. The independent GitHub Actions reproductions in runs `40642312008` and `40642634309` both passed.
 
 ### Exact minima for d=5..25
 
@@ -143,7 +143,7 @@ For these classes the O=58 automata are small enough to enumerate every completi
 
 Every reported minimum is rescored inside the enumerator; every winner has exact odd energy 58. The best member of these enumerated classes is `E=2022` at `d=25`, still far above the target 574.
 
-The first independent Actions pass, run `40642312008`, reproduced d=5..17 and the d=3 target proof. It deliberately failed its grep assertions at d=19/21/23/25 because the workflow still contained superseded local expectations; the actual runner outputs above were lower (`2294,2446,2294,2022`) and each passed the program's internal exact `odd=58` rescore. The workflow expectations were corrected in commit `c615afd648d5f5dc47ecd684a89f434a5987dec6` and a clean rerun was triggered. Treat the corrected runner values, not the superseded local table, as authoritative.
+The first independent Actions pass, run `40642312008`, reproduced d=5..17 and the d=3 target proof but exposed stale local expectations for d=19/21/23/25. The runner's internally rescored outputs were lower (`2294,2446,2294,2022`). After correcting the expected counts/minima, clean rerun `40642634309` passed **all 12 jobs**: the d=3 infeasibility proof and every exact d=5..25 count/minimum above. These corrected runner values are the authoritative table.
 
 ## Interpretation
 
