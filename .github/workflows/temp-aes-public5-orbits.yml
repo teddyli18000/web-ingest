@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Analyze released five-AND cores
+      - name: Analyze released five-AND cores and factor costs
         run: |
           mkdir -p /tmp/aes-public5-orbits
           python3 science-boundary/aes-sbox-circuit/analyze_public5_cores.py | tee /tmp/aes-public5-orbits/results.json
