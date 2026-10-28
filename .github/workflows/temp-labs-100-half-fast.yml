@@ -1,0 +1,26 @@
+name: temp labs-100 reduced half CP-SAT
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-half-fast.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  half:
+    strategy:
+      fail-fast: false
+      matrix:
+        fix: [even, odd]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - run: python3 -m pip install --disable-pip-version-check -q ortools
+      - name: Search incumbent with fixed ${{ matrix.fix }} half
+        shell: bash
+        run: |
+          set -euo pipefail
+          seed='++++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-'
+          python3 science-boundary/labs-100/code/cpsat_half_fast.py --seed "$seed" --fix '${{ matrix.fix }}' --target 574 --seconds 600 --workers 4 | tee /tmp/out.txt
+          grep -E '^(STATUS|FOUND|NO_CERTIFICATE)' /tmp/out.txt
