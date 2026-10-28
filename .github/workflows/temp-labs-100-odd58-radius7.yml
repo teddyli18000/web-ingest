@@ -1,0 +1,39 @@
+name: temp labs-100 targeted O=58 radius 7
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-odd58-radius7.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build targeted scanner
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/sphere_odd58.cpp -o /tmp/sphere-odd58
+      - name: Validate radius 5 and scan radius 7
+        shell: bash
+        run: |
+          set -euo pipefail
+          incumbent='++++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-'
+          /tmp/sphere-odd58 "$incumbent" 5 4 | tee /tmp/r5.txt
+          grep -F 'SUMMARY radius=5 patterns=2 tested=1370250 expected=1370250 odd58=0 best=-1 ' /tmp/r5.txt
+          /tmp/sphere-odd58 "$incumbent" 7 4 | tee /tmp/r7.txt
+          grep -F 'SUMMARY radius=7 patterns=6 tested=583269750 expected=583269750 ' /tmp/r7.txt
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: labs100-odd58-radius7
+          path: |
+            /tmp/r5.txt
+            /tmp/r7.txt
+          if-no-files-found: warn
