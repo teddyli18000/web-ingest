@@ -1,6 +1,6 @@
 # FunSearch one-hit deletion seed: unrestricted 10D exact search
 
-Status: 2026-10-27 (America/Los_Angeles).
+Status: 2026-10-28 (America/Los_Angeles).
 
 These results concern the four exact C5 orbit representatives `[0,1,2,3]` of the 40 FunSearch t=9 one-hit states. The two 20-state basins are also exactly isomorphic, so automorphism-invariant conclusions below apply to all 40 states.
 
@@ -95,16 +95,16 @@ Thus arbitrary ten-dimensional net-+2 exchanges are exactly ruled out through re
 
 ## Stronger low-owner census for radius 6
 
-A dedicated exact census first replays the radius-4 precondition and then enumerates every three-owner support pattern capable of containing four independent additions. For case 0 it finds
+A dedicated exact census first replays the radius-4 precondition and then enumerates every three-owner support pattern capable of containing four independent additions. It has completed on all four C5 representatives:
 
-- `triples_checked=1296968`;
-- `eligible_triples_ge4raw=39056`;
-- `productive_alpha4_triples=0`;
-- `independent_quadruples_total=0`.
+- case 0: `triples_checked=1296968`, `eligible_triples_ge4raw=39056`, `productive_alpha4_triples=0`, `independent_quadruples_total=0`;
+- case 1: `triples_checked=1297139`, `eligible_triples_ge4raw=39232`, `productive_alpha4_triples=0`, `independent_quadruples_total=0`;
+- case 2: `triples_checked=1296603`, `eligible_triples_ge4raw=38847`, `productive_alpha4_triples=0`, `independent_quadruples_total=0`;
+- case 3: `triples_checked=1296783`, `eligible_triples_ge4raw=38931`, `productive_alpha4_triples=0`, `independent_quadruples_total=0`.
 
-So case 0 actually satisfies `alpha(P(U)) <= 3` for every three-owner set `U`, stronger than the generic radius-3 bound of four. The same census is being replayed on representatives 1/2/3 before using this stronger fact globally.
+Therefore every three-owner pool satisfies `alpha(P(U)) <= 3` on every representative. Together with the exact one-, two-, four-, and five-owner bounds, every disconnected six-owner support hypergraph supports at most seven additions; in particular the former `3+3` exception is bounded by `3+3=6`. Hence any radius-6 remove-6/add-8 witness must have a **connected** support hypergraph.
 
-With the one-owner, two-owner, three-owner, and radius-5 bounds, the radius-6 problem admits Hall-type support-incidence constraints; details are in `notes/support-hypergraph-exchange.md`.
+Hall-type consequences for eight additions on six owners are recorded in `notes/support-hypergraph-exchange.md`: every owner must occur in at least two selected supports, every owner pair must be met by at least three additions, and every owner triple by at least five.
 
 ## Exact support recovery through coverage 6
 
@@ -120,24 +120,34 @@ For case 0, the transform reproduces the known exact coverage-two/three/four cou
 - `coverage6=3173875`;
 - distinct exact coverage-six owner sets: `2972218`.
 
-The optimized transform uses about 6.8 GB RSS and completes the ten coordinate expansions in seconds on a hosted runner. The first workflow was marked failed only because its consistency check compared the inclusive coverage-one count to the older outside-only count; that check has been corrected and the transform itself agreed exactly on coverage 2--4.
+The optimized transform uses about 6.8 GB RSS and completes the ten coordinate expansions in seconds on a hosted runner.
+
+## Exact radius 6: remove 6 / add 8
+
+The radius-6 search is split by the largest selected blocker support while preserving complete reconstruction of `P(U)` for every generated six-owner set.
+
+1. **Selected support size 6.** `code/search_net2_r6_direct.cpp` exactly checks all owner-six sets occurring as exact coverage-six supports. All four representatives completed with no witness.
+2. **Selected support size 5.** `code/search_net2_r6_c5_connected.cpp` / `code/search_net2_r6_c5_anchor.cpp` generate all connected six-owner sets containing a selected size-five support by attaching the sixth owner through a real crossing support. Exact sharded runs are active.
+3. **Selected support size 4.** `code/search_net2_r6_c4_anchor.cpp` uses connected two-step co-owner expansions from exact size-four anchors, canonicalizes the resulting owner-six set, reconstructs the complete support-1..4 pool, and searches for eight additions exactly. Pilot sharding is active.
+4. **Selected supports of size at most 2.** `code/search_net2_r6_c2_connected.cpp` enumerates connected six-owner sets in the sparse exact support-two owner graph and solves the full support-1/2 pool exactly. Pilot sharding is active.
+5. **Remaining selected support size 3 stratum.** A complete connected size-three-anchor generator is the remaining exact formulation after the pilots above establish the useful cost profile.
+
+No radius-6 stratum has produced a verifier candidate so far. A queued/timeout/failed job is not promoted to negative evidence unless its exact completion condition is satisfied.
 
 ## Bounded-hit private-swap components
 
 A separate exact nonlocal search keeps 367 auxiliary points but permits legal private one-for-one swaps while allowing the BPZ obstruction hit count to temporarily rise. Zero hits would immediately yield a 134770 construction.
 
-All four C5 representatives have been completely exhausted with hit caps 3, 4, 5, and 6, with no zero-hit state. These are true queue-exhaustion results, not random walks or state caps. For case 0:
+All four C5 representatives have been completely exhausted with hit caps through 7, with no zero-hit state. The cap-7 runs are true queue-exhaustion results (`complete=true`, `capped=false`, `frontier_remaining=0`) on every representative. In fact the cap-7 state graph is already identical to the cap-6 graph: each representative has exactly 243 states and no state with seven obstruction hits. For case 0 the histogram is `{1:2,2:17,3:56,4:88,5:64,6:16}`, maximum frontier 97, maximum depth 5, and 1620 transitions examined.
 
-- hit cap 3: 75 states;
-- hit cap 5: 227 states;
-- hit cap 6: 243 states, with hit-count histogram `{1:2,2:17,3:56,4:88,5:64,6:16}`, maximum frontier 97, and empty final frontier.
+Thus increasing the hit cap further cannot open a new state in this private one-swap component; that nonlocal route is exhausted for this family.
 
 Reusable solver: `code/bpz_t9_funsearch_hitcount_component.py`.
 
 ## Current frontier
 
-No Few Shots-verified score above 134753 has been found. Around the entire 40-state FunSearch one-hit family, the unrestricted ten-dimensional local frontier is now exactly negative through remove-5/add-7. The next exact layer is remove-6/add-8, decomposed into disconnected support cases (being eliminated by low-owner alpha censuses) and genuinely connected six-owner support sets with Hall-type incidence constraints.
+No Few Shots-verified score above 134753 has been found. Around the entire 40-state FunSearch one-hit family, the unrestricted ten-dimensional local frontier is exactly negative through remove-5/add-7; radius 6 is being closed by connected support strata under exact lower-owner bounds.
 
-In parallel, a genuinely different family is now being tested: the 20 public BPZ/Family-F t=9 one-hit states are being converted to verifier-valid 134752 deletion seeds and searched with the same unrestricted ten-dimensional machinery. This avoids overfitting the search to the FunSearch basin.
+In parallel, a genuinely different family is being tested: the 20 public BPZ/Family-F t=9 one-hit states are verifier-valid 134752 deletion seeds and are being searched with the same unrestricted ten-dimensional machinery. This avoids overfitting to the FunSearch basin.
 
 No result here proves global optimality of 134753.
