@@ -1,0 +1,209 @@
+name: Temp Ramsey R46 D12 high-A catalogue lazy SAT
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - science-boundary/ramsey-r46/d12_catalog_lazy.py
+      - .github/workflows/temp-ramsey-r46-d12-highA.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-d12-highA
+  cancel-in-progress: false
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9]
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned exact solver
+        run: python -m pip install --disable-pip-version-check 'python-sat==1.9.dev17'
+      - name: Authenticate complete R(3,6,12) catalogue and self-test
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          curl --fail --location --retry 3 --silent --show-error \
+            https://users.cecs.anu.edu.au/~bdm/data/r36_12.g6.gz \
+            -o /tmp/r46/r36_12.g6.gz
+          echo '17e176a0f7e7397dbca7c9cb6295034dd74cf529ca62e7e717226dc1b0b7b96d  /tmp/r46/r36_12.g6.gz' | sha256sum -c -
+          python science-boundary/ramsey-r46/d12_catalog_lazy.py self-test
+
+      - name: Solve five high-edge A types
+        id: solve
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p /tmp/r46/logs /tmp/r46/rows /tmp/r46/candidates
+          : > /tmp/r46/rows.jsonl
+          found=false
+          had_error=false
+          shard='${{ matrix.shard }}'
+          for global in $(seq "$shard" 10 49); do
+            if (( global <= 40 )); then
+              aedges=27; ordinal=$global
+            elif (( global <= 48 )); then
+              aedges=28; ordinal=$((global-41))
+            else
+              aedges=29; ordinal=0
+            fi
+            tag="a${aedges}-o${ordinal}"
+            summary="/tmp/r46/rows/${tag}.json"
+            candidate="/tmp/r46/candidates/${tag}.json"
+            log="/tmp/r46/logs/${tag}.log"
+            rm -f "$summary" "$candidate"
+            started=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+            set +e
+            timeout --signal=TERM --kill-after=20s 300 \
+              python science-boundary/ramsey-r46/d12_catalog_lazy.py solve \
+                --catalog /tmp/r46/r36_12.g6.gz \
+                --edge-count "$aedges" --ordinal "$ordinal" \
+                --solver cadical195 --seed "$((20261028+global))" \
+                --separator-cap 20000 --max-iterations 100000 \
+                --summary "$summary" --output "$candidate" \
+              >"$log" 2>&1
+            rc=$?
+            set -e
+            finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+            case "$rc" in
+              0) status=SAT ;;
+              20) status=UNSAT ;;
+              30) status=ITERATION_LIMIT ;;
+              124|137|143) status=TIMEOUT ;;
+              *) status=ERROR; had_error=true ;;
+            esac
+            python3 - "$summary" "$aedges" "$ordinal" "$global" "$status" "$rc" "$started" "$finished" <<'PY' >> /tmp/r46/rows.jsonl
+          import json, pathlib, sys
+          p,a,o,g,status,rc,started,finished=sys.argv[1:]
+          path=pathlib.Path(p)
+          d=json.loads(path.read_text()) if path.exists() else {}
+          d.update(a_edges=int(a),a_ordinal=int(o),global_index=int(g),workflow_status=status,
+                   solver_exit=int(rc),started=started,finished=finished)
+          print(json.dumps(d,sort_keys=True))
+          PY
+            echo "$tag $status"
+            tail -n 8 "$log" || true
+            if [[ "$status" == SAT ]]; then
+              cp "$candidate" /tmp/r46/candidate.json
+              echo "$tag" > /tmp/r46/hit.txt
+              found=true
+              break
+            fi
+          done
+          python3 - /tmp/r46/rows.jsonl /tmp/r46/shard-summary.json "$shard" <<'PY'
+          import json,os,pathlib,sys
+          inp,out,shard=sys.argv[1:]
+          rows=[json.loads(x) for x in pathlib.Path(inp).read_text().splitlines() if x.strip()]
+          d={'campaign':'d12-highA-catalog-lazy','run_id':os.environ['GITHUB_RUN_ID'],
+             'shard':int(shard),'rows':rows,'found':any(r['workflow_status']=='SAT' for r in rows)}
+          pathlib.Path(out).write_text(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          echo "found=$found" >> "$GITHUB_OUTPUT"
+          [[ "$had_error" == false ]]
+
+      - name: Authoritative Few Shots verification on SAT
+        if: steps.solve.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse \
+            https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate
+          cp /tmp/r46/candidate.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/few-shots-verify.json
+          python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          assert d.get('valid') is True and d.get('score') == '36', d
+          PY
+
+      - name: Upload shard evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-d12-highA-${{ matrix.shard }}
+          path: /tmp/r46
+          if-no-files-found: warn
+          retention-days: 7
+
+  collect:
+    if: always()
+    needs: solve
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ramsey-r46-d12-highA-*
+          path: /tmp/shards
+      - name: Aggregate exact D12 high-A campaign
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 - /tmp/shards /tmp/r46/result.json <<'PY'
+          import json,os,pathlib,shutil,sys
+          root,out=map(pathlib.Path,sys.argv[1:]); rows=[]; hit=None; verify=None
+          for p in root.rglob('shard-summary.json'):
+              d=json.load(open(p)); rows.extend(d['rows'])
+              q=p.parent/'candidate.json'
+              if q.exists(): hit=q
+              v=p.parent/'few-shots-verify.json'
+              if v.exists(): verify=v
+          rows.sort(key=lambda r:r['global_index'])
+          counts={}
+          for r in rows: counts[r['workflow_status']]=counts.get(r['workflow_status'],0)+1
+          result={'campaign':'d12-highA-catalog-lazy','run_id':os.environ['GITHUB_RUN_ID'],
+                  'target_types':50,'types_completed':len(rows),'status_counts':counts,
+                  'all_unsat':len(rows)==50 and counts.get('UNSAT',0)==50,
+                  'found':counts.get('SAT',0)>0,'rows':rows}
+          if hit:
+              shutil.copyfile(hit,'/tmp/r46/candidate.json')
+              result['hit_global_index']=next(r['global_index'] for r in rows if r['workflow_status']=='SAT')
+          if verify: shutil.copyfile(verify,'/tmp/r46/few-shots-verify.json')
+          out.write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({k:v for k,v in result.items() if k!='rows'},sort_keys=True))
+          PY
+      - name: Persist campaign
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest=science-boundary/ramsey-r46/results
+          cp /tmp/r46/result.json "$dest/d12-highA-lazy.json"
+          [[ ! -f /tmp/r46/candidate.json ]] || cp /tmp/r46/candidate.json "$dest/d12-highA-hit.json"
+          [[ ! -f /tmp/r46/few-shots-verify.json ]] || cp /tmp/r46/few-shots-verify.json "$dest/d12-highA-hit-verify.json"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "$dest"
+          git commit -m 'ramsey-r46: record exact D12 high-A catalogue sweep' || exit 0
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
+      - name: Upload aggregate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-d12-highA-aggregate
+          path: /tmp/r46
+          if-no-files-found: warn
+          retention-days: 7
