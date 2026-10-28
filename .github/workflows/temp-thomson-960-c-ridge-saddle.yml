@@ -1,0 +1,57 @@
+name: temp Thomson 960 C ridge saddle
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-c-ridge-saddle.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ridge:
+    strategy:
+      fail-fast: false
+      matrix:
+        amp: [0.00050, 0.00055, 0.00060]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Rebuild C and construct ridge seed
+        run: |
+          python3 science-boundary/thomson-960/code/harvest_basin_c.py \
+            "$RUNNER_TEMP/few-shots" --neighbor-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --scale 0.95 --out "$RUNNER_TEMP/c.json"
+          python3 science-boundary/thomson-960/code/make_negative_pair_seed.py \
+            "$RUNNER_TEMP/c.json" --phase-deg 15 --rms-amp ${{ matrix.amp }} \
+            --out "$RUNNER_TEMP/ridge.json"
+      - name: Diagnose ridge Morse index
+        run: |
+          python3 science-boundary/thomson-960/code/diagnose_seed_modes.py \
+            "$RUNNER_TEMP/ridge.json" --k 10 --out "$RUNNER_TEMP/ridge-hessian.json"
+      - name: Refine nearby index-1 state
+        run: |
+          python3 science-boundary/thomson-960/code/refine_saddle_hybrid.py \
+            "$RUNNER_TEMP/ridge.json" --outer 8 --penalty 400000 --perp-maxiter 700 \
+            --newton-damping 0.45 --max-reaction-rms 0.00003 \
+            --out "$RUNNER_TEMP/ridge-saddle.json"
+          python3 - <<'PY'
+          import json, os
+          h=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'ridge-hessian.json')))
+          s=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'ridge-saddle.json')))
+          print('seed neg',h['negative_internal_modes_below_-1e-3'],'seed eigs',[m['eigenvalue'] for m in h['modes'][:4]])
+          print('final',s['final_energy'],s['final_gradient_rms'],s['negative_internal_modes_below_-1e-3'],[m['eigenvalue'] for m in s['final_modes'][:4]])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-c-ridge-${{ matrix.amp }}
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/ridge.json
+            ${{ runner.temp }}/ridge-hessian.json
+            ${{ runner.temp }}/ridge-saddle.json
