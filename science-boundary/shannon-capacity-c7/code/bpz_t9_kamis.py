@@ -5,10 +5,6 @@
 format (unit weights). `materialize` reads KaMIS struction's 0/1 solution
 vector, independently replays it in C7^5, and if it has at least 367 vertices
 builds the nominal 134770-point C7^10 certificate.
-
-KaMIS is only an external solver here; all graph construction, solution replay,
-and final certificate construction are performed by this repository's pinned
-BPZ model and the Few Shots verifier remains authoritative for any breakthrough.
 """
 
 import argparse
@@ -55,7 +51,15 @@ def cmd_export(args):
     adj = [[] for _ in allowed]
     degree_sum = 0
     for i, v in enumerate(allowed):
-        row = sorted({idx[u] + 1 for u in ring.NB[v] if u != v and u in idx})
+        row = []
+        for u in ring.NB[v]:
+            if u == v or u not in idx:
+                continue
+            # Independent symmetry check against the public Ring neighborhood.
+            if v not in ring.NB[u]:
+                raise RuntimeError("asymmetric Ring neighborhood")
+            row.append(idx[u] + 1)
+        row = sorted(set(row))
         if i + 1 in row:
             raise RuntimeError("self edge in METIS row")
         adj[i] = row
@@ -63,12 +67,6 @@ def cmd_export(args):
     if degree_sum % 2:
         raise RuntimeError("odd degree sum")
     edges = degree_sum // 2
-    # Symmetry replay before emitting a large graph.
-    for i, row in enumerate(adj):
-        vi = i + 1
-        for vj in row:
-            if vi not in adj[vj - 1]:
-                raise RuntimeError("asymmetric adjacency")
 
     args.graph.parent.mkdir(parents=True, exist_ok=True)
     with args.graph.open("w", encoding="ascii") as f:
@@ -111,13 +109,11 @@ def parse_timeout(log: Path):
         else:
             continue
         rows.append((weight, timeout, line))
-    if not rows:
-        return None, None, None
-    return rows[-1]
+    return rows[-1] if rows else (None, None, None)
 
 
 def cmd_materialize(args):
-    I, _, pairs, PH, PV, _, digits, obstruction, lower = reconstruct(args.tan_root)
+    I, _, pairs, PH, PV, ring, digits, obstruction, lower = reconstruct(args.tan_root)
     allowed = list(map(int, json.loads(args.mapping.read_text())["allowed"]))
     bits = [int(x.strip()) for x in args.solution.read_text().splitlines() if x.strip()]
     if len(bits) != len(allowed) or any(x not in (0, 1) for x in bits):
@@ -154,7 +150,7 @@ def cmd_materialize(args):
     X = X[: mis.N]
     if not mis.independent(X, digits):
         raise RuntimeError("truncated 367-set replay failed")
-    points, xp = mis.build(I, X, pairs, PH, PV, reconstruct(args.tan_root)[5])
+    points, xp = mis.build(I, X, pairs, PH, PV, ring)
     if len(points) != mis.TARGET:
         raise RuntimeError(f"10D target drift {len(points)}")
     status.update({
