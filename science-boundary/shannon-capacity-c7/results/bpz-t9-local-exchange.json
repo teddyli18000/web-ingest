@@ -11,14 +11,21 @@
     "2": 178,
     "3": 1372,
     "4": 2769,
-    "5": 3480
+    "5": 3480,
+    "6": 3697,
+    "7": 2705,
+    "8": 883,
+    "9": 197,
+    "10": 58,
+    "11": 2
   },
   "support_group_counts": {
     "1": 2,
     "2": 168,
     "3": 1346,
     "4": 2750,
-    "5": 3443
+    "5": 3443,
+    "6": 3545
   },
   "exact_search": {
     "direct_add": {"found": false},
@@ -51,8 +58,20 @@
       "additional_three_support_union_eligible_quints": 3944,
       "additional_minimal_four_support_cover_eligible_quints": 12,
       "max_candidate_pool": 9
+    },
+    "remove_6_add_7": {
+      "found": false,
+      "one_or_two_support_union_owner_sexts": 1467704,
+      "eligible_one_or_two_support_pools_at_least_7": 6861,
+      "additional_three_support_union_owner_sexts": 2433188,
+      "eligible_additional_three_support_pools_at_least_7": 8346,
+      "additional_minimal_four_support_cover_owner_sexts": 283660,
+      "eligible_additional_minimal_four_support_pools_at_least_7": 4251,
+      "additional_minimal_five_support_cover_owner_sexts": 0,
+      "max_candidate_pool": 13,
+      "completeness_note": "If a 6-owner set needs at least four support groups in a minimal cover, each group has a private owner. For four groups the remaining two owners are shared, so every group is its private owner plus a subset of the two shared owners; these cases were enumerated by shared-owner pairs. For five groups there is one shared owner, so supports are singleton/private-center edges; these add no new sexts. Six minimal groups would require six singleton supports, but the instance has only two singleton-support groups."
     }
   },
-  "conclusion": "The canonical obstruction-free 366-set obtained by deleting 10665 from the published BPZ auxiliary X has no improving local exchange through remove-5/add-6. Any 367-set reached from this seed requires a deeper rearrangement or a different component.",
+  "conclusion": "The canonical obstruction-free 366-set obtained by deleting 10665 from the published BPZ auxiliary X has no improving local exchange through remove-6/add-7. Any 367-set reached from this seed requires removing at least seven old points, or using a different component.",
   "scope": "This is an exact local statement about this 366-set, not an upper bound on alpha(C7^5 minus D)."
 }
