@@ -1,0 +1,182 @@
+name: Temp Ramsey R46 all-37 exact old-core radius 2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-all37-shell-r2.yml
+      - science-boundary/ramsey-r46/lazy_shell_search.py
+      - science-boundary/ramsey-r46/results/extension-all-37.json
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-all37-shell-r2
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned exact solver
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'python-sat==1.9.dev17'
+          python - <<'PY'
+          from pysat.solvers import Solver
+          with Solver(name='cadical195') as s:
+              s.add_clause([1]); assert s.solve()
+          print('cadical195 ok')
+          PY
+      - name: Exhaust all published cores at old-edge radius 2
+        id: sweep
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46/cores /tmp/r46/logs /tmp/r46/candidates science-boundary/ramsey-r46/results
+          python3 - <<'PY'
+          import json, pathlib
+          d=json.load(open('science-boundary/ramsey-r46/results/extension-all-37.json',encoding='utf-8'))
+          assert d['graphs']==37 and d['all_solver_agreement'] is True
+          pathlib.Path('/tmp/r46/expected.json').write_text(json.dumps({r['name']:r['sha256'] for r in d['results']},sort_keys=True)+'\n')
+          PY
+          : > /tmp/r46/rows.jsonl
+          found=0
+          for core in $(seq 1 37); do
+            printf -v tag 'h%04d' "$core"
+            raw="/tmp/r46/cores/${tag}.txt"
+            base="/tmp/r46/cores/${tag}.json"
+            log="/tmp/r46/logs/${tag}.log"
+            cand="/tmp/r46/candidates/${tag}.json"
+            curl --fail --location --retry 3 --silent --show-error \
+              "https://cs.indstate.edu/ge/RAMSEY/R46/${tag}" -o "$raw"
+            python3 - "$tag" "$raw" "$base" /tmp/r46/expected.json <<'PY'
+          import hashlib,itertools,json,pathlib,sys
+          tag,raw,out,expected=sys.argv[1:]
+          b=pathlib.Path(raw).read_bytes()
+          got=hashlib.sha256(b).hexdigest()
+          want=json.load(open(expected,encoding='utf-8'))[tag]
+          assert got==want,(tag,got,want)
+          lines=[]
+          for line in b.decode('ascii').splitlines():
+              s=''.join(line.split())
+              if len(s)==35 and set(s)<=set('01'):
+                  lines.append(s)
+          assert len(lines)==35,(tag,len(lines))
+          for i in range(35):
+              assert lines[i][i]=='0'
+              for j in range(35): assert lines[i][j]==lines[j][i]
+          # Exoo files use the opposite colour orientation from p003.
+          rows=[''.join('0' if i==j else ('1' if lines[i][j]=='0' else '0') for j in range(35)) for i in range(35)]
+          def bad(k,want_edge):
+              return sum(all((rows[a][c]=='1')==want_edge for a,c in itertools.combinations(vs,2))
+                         for vs in itertools.combinations(range(35),k))
+          assert bad(4,True)==0 and bad(6,False)==0, tag
+          pathlib.Path(out).write_text(json.dumps({'adjacency':rows})+'\n',encoding='utf-8')
+          print(tag,got)
+          PY
+            started=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+            set +e
+            timeout --signal=TERM --kill-after=15s 1200 \
+              python3 science-boundary/ramsey-r46/lazy_shell_search.py \
+                --radius 2 --solver cadical195 --seed "$((20261028+core))" \
+                --new-degree 14 --baseline "$base" --max-iterations 1000000 \
+                --output "$cand" >"$log" 2>&1
+            rc=$?
+            set -e
+            case "$rc" in
+              0) status=SAT ; found=1 ;;
+              20) status=UNSAT ;;
+              30) status=ITERATION_LIMIT ;;
+              124|137|143) status=TIMEOUT ;;
+              *) status=ERROR ;;
+            esac
+            finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+            result_line=$(grep '^RESULT ' "$log" | tail -n 1 || true)
+            python3 - "$tag" "$status" "$rc" "$started" "$finished" "$result_line" "$raw" <<'PY' >> /tmp/r46/rows.jsonl
+          import hashlib,json,pathlib,sys
+          tag,status,rc,started,finished,result_line,raw=sys.argv[1:]
+          print(json.dumps({'core':tag,'radius':2,'status':status,'exit_code':int(rc),
+                            'started':started,'finished':finished,'result_line':result_line,
+                            'source_sha256':hashlib.sha256(pathlib.Path(raw).read_bytes()).hexdigest()},sort_keys=True))
+          PY
+            echo "$tag $status $result_line"
+            if [[ "$status" == SAT ]]; then
+              cp "$cand" /tmp/r46/candidate.json
+              echo "$tag" > /tmp/r46/hit-core.txt
+              break
+            fi
+            if [[ "$status" == ERROR ]]; then
+              tail -n 80 "$log"
+              exit 2
+            fi
+          done
+          python3 - /tmp/r46/rows.jsonl /tmp/r46/result.json <<'PY'
+          import json,os,pathlib,sys
+          inp,out=map(pathlib.Path,sys.argv[1:])
+          rows=[json.loads(x) for x in inp.read_text().splitlines() if x.strip()]
+          d={'campaign':'all-37-exoo-old-edge-radius-2','radius':2,'run_id':os.environ['GITHUB_RUN_ID'],
+             'cores_completed':len(rows),'all_unsat':len(rows)==37 and all(r['status']=='UNSAT' for r in rows),
+             'found':any(r['status']=='SAT' for r in rows),'rows':rows}
+          if pathlib.Path('/tmp/r46/hit-core.txt').exists(): d['hit_core']=pathlib.Path('/tmp/r46/hit-core.txt').read_text().strip()
+          out.write_text(json.dumps(d,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          print(json.dumps({k:v for k,v in d.items() if k!='rows'},sort_keys=True))
+          PY
+          echo "found=$found" >> "$GITHUB_OUTPUT"
+      - name: Authoritative Few Shots verification on a hit
+        if: steps.sweep.outputs.found == '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate
+          cp /tmp/r46/candidate.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/few-shots-verify.json
+          python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert d.get('valid') is True and d.get('score')=='36',d
+          PY
+      - name: Persist exact sweep
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f /tmp/r46/result.json || exit 0
+          dest=science-boundary/ramsey-r46/results
+          cp /tmp/r46/result.json "$dest/all37-shell-radius2.json"
+          [[ ! -f /tmp/r46/candidate.json ]] || cp /tmp/r46/candidate.json "$dest/all37-shell-radius2-hit.json"
+          [[ ! -f /tmp/r46/few-shots-verify.json ]] || cp /tmp/r46/few-shots-verify.json "$dest/all37-shell-radius2-hit-verify.json"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "$dest"
+          git commit -m 'ramsey-r46: record all-37 exact radius-2 shell sweep' || exit 0
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
+      - name: Upload sweep evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-all37-shell-r2
+          path: |
+            /tmp/r46/result.json
+            /tmp/r46/logs
+            /tmp/r46/candidate.json
+            /tmp/r46/few-shots-verify.json
+          if-no-files-found: ignore
+          retention-days: 7
