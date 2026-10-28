@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-27** | **685** | **685** | **685** | **685** | **684** |
+| **2024-11-28** | **2026-10-28** | **686** | **686** | **686** | **686** | **685** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 176 |
+| `google_trending_now` | 180 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-27
+### Latest SG snapshot — 2026-10-28
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | apartment | 5000+ |
-| 2 | 姆巴佩 | 5000+ |
-| 3 | ocbc strongest bank asia pacific | 1000+ |
-| 4 | ai bubble | 5000+ |
-| 5 | alan tam | 2000+ |
-| 6 | wrongful dismissal | 5000+ |
-| 7 | sembcorp | 2000+ |
-| 8 | marina bay police car chase | 500+ |
-| 9 | 姆巴佩辱华 | 1000+ |
-| 10 | preschool | 1000+ |
+| 1 | sfa deli hub catering suspension | 5000+ |
+| 2 | smuggling | 5000+ |
+| 3 | efl cup | 20000+ |
+| 4 | zermatt neo restaurant | 2000+ |
+| 5 | muse | 2000+ |
+| 6 | bangladesh vs west indies | 5000+ |
+| 7 | israel elections 2026 | 5000+ |
+| 8 | singapore malaysia rts link fire drill | 1000+ |
+| 9 | chris hemsworth | 1000+ |
+| 10 | mark zuckerberg | 500+ |
 
-### Latest US snapshot — 2026-10-27
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | eagles | 1000000+ |
-| 2 | texas roadhouse steak complaint kenneth card | 200000+ |
-| 3 | warriors vs nuggets | 100000+ |
-| 4 | alan dysert | 100000+ |
-| 5 | walter koenig | 200000+ |
-| 6 | timberwolves vs cavaliers | 200000+ |
-| 7 | at&t 2024 data breach settlement | 50000+ |
-| 8 | harry kane | 1000000+ |
-| 9 | bulls vs celtics | 100000+ |
-| 10 | 姆巴佩 | 50000+ |
-
-### Latest GB snapshot — 2026-10-27
+### Latest US snapshot — 2026-10-28
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | harry kane | 1000000+ |
-| 2 | toilet | 100000+ |
-| 3 | alexia putellas | 20000+ |
-| 4 | walter koenig | 20000+ |
-| 5 | psg vs ol | 20000+ |
-| 6 | sir tom jones us tour flu | 10000+ |
-| 7 | nz vs ind | 20000+ |
-| 8 | sir jim ratcliffe lausanne sport sale | 10000+ |
-| 9 | pakistan vs sri lanka | 20000+ |
-| 10 | meghan | 10000+ |
+| 1 | susan saint james | 200000+ |
+| 2 | jason galanis | 200000+ |
+| 3 | trail blazers vs lakers | 200000+ |
+| 4 | pistons vs knicks | 200000+ |
+| 5 | brewers | 1000000+ |
+| 6 | butter | 100000+ |
+| 7 | mcdonalds new holiday menu items | 100000+ |
+| 8 | fleetwood vs arsenal | 200000+ |
+| 9 | kings vs spurs | 100000+ |
+| 10 | israeli elections exit polls | 100000+ |
 
-### Latest HK snapshot — 2026-10-27
+### Latest GB snapshot — 2026-10-28
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 姆巴佩 | 20000+ |
-| 2 | 朱咪咪 | 5000+ |
-| 3 | 單立文 | 5000+ |
-| 4 | 姆巴佩不當言論 | 1000+ |
-| 5 | harry kane | 5000+ |
-| 6 | 筲箕灣爆水管 | 1000+ |
-| 7 | father | 1000+ |
-| 8 | mbappe | 2000+ |
-| 9 | 施駿興 | 500+ |
-| 10 | 中華航空 | 500+ |
+| 1 | donnie iris | 200000+ |
+| 2 | fleetwood vs arsenal | 500000+ |
+| 3 | snow | 100000+ |
+| 4 | what time is the budget | 20000+ |
+| 5 | spanish train | 20000+ |
+| 6 | royal navy vanguard-class submarines | 50000+ |
+| 7 | civil service pension scheme recovery plan | 20000+ |
+| 8 | portreath | 5000+ |
+| 9 | product recall | 10000+ |
+| 10 | leweston school | 10000+ |
 
-[Open full snapshot →](data/2026/10/27/trending.json)
+### Latest HK snapshot — 2026-10-28
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | cityline 陳奕迅 | 20000+ |
+| 2 | 陳婉珍 | 2000+ |
+| 3 | 退休金 | 2000+ |
+| 4 | 一粥麵 | 2000+ |
+| 5 | 公職人員行為失當罪 | 2000+ |
+| 6 | 應采兒 | 500+ |
+| 7 | samsung | 2000+ |
+| 8 | 刘延东 | 500+ |
+| 9 | 劉延東 | 500+ |
+| 10 | 許秋怡 | 500+ |
+
+[Open full snapshot →](data/2026/10/28/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 287 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 288 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
