@@ -1,0 +1,41 @@
+name: temp Thomson 960 diagnostic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-diagnostic.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-thomson-960-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Clone live Few Shots main
+        shell: bash
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Diagnose current merged p007 record
+        shell: bash
+        run: |
+          mkdir -p science-boundary/thomson-960/results
+          python3 science-boundary/thomson-960/code/diagnose_live_record.py "$RUNNER_TEMP/few-shots" | tee science-boundary/thomson-960/results/diagnostic-live-record.txt
+      - name: Preserve result and remove disposable workflow
+        shell: bash
+        run: |
+          rm .github/workflows/temp-thomson-960-diagnostic.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add science-boundary/thomson-960/results/diagnostic-live-record.txt .github/workflows/temp-thomson-960-diagnostic.yml
+          git commit -m "science: record Thomson 960 live-record diagnostic"
+          git push origin HEAD:main
