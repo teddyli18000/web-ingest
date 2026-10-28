@@ -1,0 +1,134 @@
+name: Temp Science Boundary C7 plateau-pool recombination
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-plateau-pool-recombine.yml
+      - science-boundary/shannon-capacity-c7/code/c7_10d_private_guided_walk.cpp
+      - science-boundary/shannon-capacity-c7/code/patch_private_guided_snapshot.py
+      - science-boundary/shannon-capacity-c7/code/recombine_two_independent_sets.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch and verify Few Shots baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          mkdir -p "$RUNNER_TEMP/baseline" "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+          cp "$RUNNER_TEMP/few-shots/problems/p004-shannon-capacity-c7/baseline/certificate.json" "$RUNNER_TEMP/baseline/certificate.json"
+          python3 - "$RUNNER_TEMP/baseline/certificate.json" "$RUNNER_TEMP/baseline/ids.txt" <<'PY'
+          import json,sys
+          pts=json.load(open(sys.argv[1],encoding='utf-8'))['points']
+          if len(pts)!=134753 or len(set(pts))!=134753: raise SystemExit('baseline drift')
+          open(sys.argv[2],'w').write(''.join(f'{int(p,7)}\n' for p in pts))
+          PY
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/baseline" | tee "$RUNNER_TEMP/result/baseline-verify.json"
+          python3 - "$RUNNER_TEMP/result/baseline-verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1))!=134753: raise SystemExit(r)
+          PY
+      - name: Build snapshot-capable guided walker
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/patch_private_guided_snapshot.py \
+            science-boundary/shannon-capacity-c7/code/c7_10d_private_guided_walk.cpp "$RUNNER_TEMP/walk-snapshot.cpp"
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp "$RUNNER_TEMP/walk-snapshot.cpp" -o "$RUNNER_TEMP/walk"
+      - name: Generate four distant verifier-valid tie states
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          for seed in 48101 48102 48103 48104; do
+            mkdir -p "$RUNNER_TEMP/tie-$seed"
+            /usr/bin/time -v "$RUNNER_TEMP/walk" \
+              "$RUNNER_TEMP/baseline/ids.txt" "$RUNNER_TEMP/result/winner-$seed.ids" \
+              10000 "$seed" 64 "$RUNNER_TEMP/tie-$seed/ids.txt" \
+              > "$RUNNER_TEMP/result/walk-$seed.json" 2> "$RUNNER_TEMP/result/walk-$seed.stderr"
+            test ! -f "$RUNNER_TEMP/result/winner-$seed.ids"
+            python3 - "$RUNNER_TEMP/tie-$seed/ids.txt" "$RUNNER_TEMP/tie-$seed/certificate.json" <<'PY'
+          import json,sys
+          ids=[int(x) for x in open(sys.argv[1]) if x.strip()]
+          if len(ids)!=134753 or len(set(ids))!=134753: raise SystemExit(('tie-size',len(ids),len(set(ids))))
+          def enc(z):
+              d=[]
+              for _ in range(10): d.append(str(z%7)); z//=7
+              return ''.join(reversed(d))
+          json.dump({'points':[enc(z) for z in sorted(ids)]},open(sys.argv[2],'w',encoding='utf-8'),separators=(',',':'));open(sys.argv[2],'a').write('\n')
+          PY
+            cd "$RUNNER_TEMP/few-shots"
+            python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/tie-$seed" | tee "$RUNNER_TEMP/result/tie-$seed-verify.json"
+            python3 - "$RUNNER_TEMP/result/tie-$seed-verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1))!=134753: raise SystemExit(r)
+          PY
+            cd "$GITHUB_WORKSPACE"
+          done
+      - name: Exact pairwise union matching across baseline and four ties
+        id: recombine
+        shell: bash
+        run: |
+          set -euo pipefail
+          names=(baseline 48101 48102 48103 48104)
+          paths=("$RUNNER_TEMP/baseline/certificate.json" "$RUNNER_TEMP/tie-48101/certificate.json" "$RUNNER_TEMP/tie-48102/certificate.json" "$RUNNER_TEMP/tie-48103/certificate.json" "$RUNNER_TEMP/tie-48104/certificate.json")
+          for ((i=0;i<${#names[@]};++i)); do
+            for ((j=i+1;j<${#names[@]};++j)); do
+              stem="${names[i]}-${names[j]}"
+              python3 science-boundary/shannon-capacity-c7/code/recombine_two_independent_sets.py \
+                "${paths[i]}" "${paths[j]}" \
+                "$RUNNER_TEMP/result/candidate-$stem.json" "$RUNNER_TEMP/result/recombine-$stem.json"
+            done
+          done
+          python3 - "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot/certificate.json" <<'PY'
+          import json,sys
+          from pathlib import Path
+          root=Path(sys.argv[1]);out=Path(sys.argv[2]);best=None
+          for p in root.glob('candidate-*.json'):
+              obj=json.loads(p.read_text()); n=len(obj['points'])
+              if best is None or n>best[0]: best=(n,p,obj)
+          summary=[]
+          for p in sorted(root.glob('recombine-*.json')):
+              s=json.loads(p.read_text()); summary.append({'file':p.name,'score':s['recombined_score'],'gain':s['gain_over_best_input'],'common':s['common'],'left':s['left_only'],'matching':s['matching_size'],'edges':s['cross_conflict_edges']})
+          (root/'pool-summary.json').write_text(json.dumps({'pairs':summary,'best_candidate':None if best is None else {'score':best[0],'file':best[1].name}},indent=2,sort_keys=True)+'\n')
+          if best is not None:
+              out.parent.mkdir(parents=True,exist_ok=True);out.write_text(json.dumps(best[2],separators=(',',':'))+'\n')
+          PY
+          cat "$RUNNER_TEMP/result/pool-summary.json"
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.recombine.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1))<=134753: raise SystemExit(r)
+          print('VERIFIED BREAKTHROUGH',r)
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-plateau-pool-recombine
+          path: ${{ runner.temp }}/result
+          retention-days: 14
