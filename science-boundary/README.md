@@ -14,6 +14,7 @@ This workspace is permanent. It is **not** part of `temp-work/` and is not subje
 | [`labs-100/`](labs-100/) | Can the length-100 LABS energy be improved below the public best-known value 578? | Active — incumbent Hamming radius 5 exhausted with no improvement; unrestricted tabu/memetic search underway. |
 | [`ramsey-r46/`](ramsey-r46/) | Can a `(4,6)`-graph on at least 36 vertices improve the lower bound for `R(4,6)`? | Active — all 37 direct extensions, all 36-point circulants, and a 14-defect seed's Hamming ball through radius 12 are ruled out; degree-17 catalogue SAT and independent Algorithm-22 basins are running. |
 | [`thomson-960/`](thomson-960/) | Can the N=960 Coulomb energy be improved below the live Few Shots record? | Active — synced to `444368.3924061973`; live-record diagnostics and next-generation basin search starting. |
+| [`aes-sbox-circuit/`](aes-sbox-circuit/) | Can the AES S-box be implemented in at most 102 AND/XOR/XNOR gates? | Active — live Few Shots record is 103; ODC neutral-walk search from the new 103 construction launched. |
 
 Keep this table short and human-readable. Add one row when a genuinely new direction is opened. Detailed state belongs inside that direction.
 
