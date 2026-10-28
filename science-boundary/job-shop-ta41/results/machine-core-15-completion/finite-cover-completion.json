@@ -1,0 +1,68 @@
+{
+  "instance": "ta41",
+  "target": 2005,
+  "baseline": 2006,
+  "source_core_counts": [
+    2212,
+    2560
+  ],
+  "unique_source_group_core_count": 2577,
+  "nondominated_source_group_core_masks": 2543,
+  "all_machine_change_masks_enumerated": 1048576,
+  "original_machine_group_core_cover_minimum": 14,
+  "original_14_group_cover_count": 1,
+  "sole_remaining_14_machine_change_mask": 351229,
+  "witness_free_machines": [
+    0,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    11,
+    12,
+    14,
+    16,
+    18
+  ],
+  "missing_fixed_machine_core": [
+    1,
+    10,
+    13,
+    15,
+    17,
+    19
+  ],
+  "hard_no_overlap_verification": {
+    "free_machines": [
+      0,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      11,
+      12,
+      14,
+      16,
+      18
+    ],
+    "fixed_machines": 6,
+    "status": "INFEASIBLE",
+    "elapsed": 12.531,
+    "conflicts": 1558,
+    "branches": 16369,
+    "proof_scope": "All schedules with these machines free and all other machine orders fixed are excluded at target"
+  },
+  "extended_machine_group_core_cover_minimum": 15,
+  "extended_cover_count_at_14": 0,
+  "new_minimum_cover_count": 304,
+  "status": "finite_15_machine_certificate_complete",
+  "proof_note": "All earlier clauses originate from exact solver UNSAT assumption cores; final six-machine clause is independently hard checked. The finite 20-bit proof itself is exhaustive but earlier clauses are not all independently rechecked."
+}
