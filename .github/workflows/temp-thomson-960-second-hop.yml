@@ -1,0 +1,54 @@
+name: temp Thomson 960 second-hop basin search
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-second-hop.yml"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  search:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        mode: [0, 1, 2, 3, 4, 5, 6, 7]
+        sign: [-1, 1]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Download frozen low-neighbor seed
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-960-soft-neighbor
+          path: ${{ runner.temp }}/neighbor
+          github-token: ${{ github.token }}
+          run-id: 40624209787
+      - name: Follow neighbor Hessian mode and fully relax
+        run: |
+          python3 science-boundary/thomson-960/code/search_from_seed_modes.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/neighbor/neighbor.json" \
+            --mode ${{ matrix.mode }} --sign ${{ matrix.sign }} \
+            --out "$RUNNER_TEMP/result-m${{ matrix.mode }}-s${{ matrix.sign }}.json"
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'], 'result-m${{ matrix.mode }}-s${{ matrix.sign }}.json')
+          d=json.load(open(p)); d.pop('best_points',None)
+          print(json.dumps(d,indent=2))
+          PY
+      - name: Upload second-hop result
+        uses: actions/upload-artifact@v4
+        with:
+          name: thomson-second-hop-m${{ matrix.mode }}-s${{ matrix.sign }}
+          path: ${{ runner.temp }}/result-m${{ matrix.mode }}-s${{ matrix.sign }}.json
+          retention-days: 7
