@@ -54,6 +54,12 @@ jobs:
             --case '${{ matrix.case }}' --budget 5 --cutoff 540 \
             > "$RUNNER_TEMP/result/stdout.txt" 2> "$RUNNER_TEMP/result/stderr.txt"
           cat "$RUNNER_TEMP/result/status.json"
+          python3 - "$RUNNER_TEMP/result/status.json" <<'PY'
+          import json,sys
+          s=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not s.get('complete'):
+              raise SystemExit(f"search incomplete: {s.get('search')}")
+          PY
           if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
       - name: Verify breakthrough with Few Shots verifier
         if: steps.search.outputs.found == 'true'
