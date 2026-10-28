@@ -43,6 +43,7 @@ def main():
     for name in ('baseline','graph','moves','proof','report','candidate'):
         p.add_argument('--'+name,required=True)
     p.add_argument('--samples',type=int,default=80)
+    p.add_argument('--positive-file',default=None)
     args=p.parse_args()
     begin=time.monotonic()
     base_t=json.loads(Path(args.baseline).read_text())['tour']
@@ -103,6 +104,7 @@ def main():
     print(json.dumps({'stage':'loaded','switches':len(moves),'changed_vertices':sum(x>=0 for x in owner),
           'tour_samples':len(sample),'graph_edges':len(W)}),flush=True)
     pair_count=0;positive_local=0;positive_seen=0;best=None
+    positive_motifs={}
     gain_hist=defaultdict(int)
     for (a,b),chord_cost in W.items():
         if a==b:continue
@@ -122,6 +124,15 @@ def main():
                     if gain<=0:continue
                     positive_local+=1
                     gain_hist[gain]+=1
+                    old=tuple(sorted((edge(a,aa),edge(b,bb))))
+                    new=tuple(sorted((edge(a,b),second)))
+                    mkey=(old,new)
+                    if mkey not in positive_motifs:
+                        positive_motifs[mkey]={'gain':gain,'old':[list(z) for z in old],
+                             'added':[list(z) for z in new],
+                             'local_state_example':{str(i):st for i,st in states.items()}}
+                    else:
+                        assert positive_motifs[mkey]['gain']==gain
                     for mask,succ in sample:
                         if any(((mask>>i)&1)!=state for i,state in states.items()):
                             continue
@@ -134,8 +145,16 @@ def main():
                                   'old2':edge(b,bb),'new1':edge(a,b),'new2':second,
                                   'local_switch_states':states}
                         break
+    if args.positive_file:
+        target_motifs=Path(args.positive_file)
+        target_motifs.parent.mkdir(parents=True,exist_ok=True)
+        target_motifs.write_text(json.dumps({'source':'symbolic_hypercube_2opt.py',
+           'baseline_score':5757191,'switches':len(moves),
+           'positive_repair_motifs':sorted(positive_motifs.values(),key=lambda x:-x['gain'])},
+           separators=(',',':'))+'\n')
     result={'baseline_score':5757191,'switches':len(moves),
             'sampled_global_states':len(sample),
+            'unique_positive_repair_motifs':len(positive_motifs),
             'local_pairings_checked':pair_count,
             'positive_gain_pairings_ignoring_global_connectivity':positive_local,
             'positive_gain_pairings_with_connectivity_in_sample':positive_seen,
