@@ -1,0 +1,58 @@
+name: temp labs-100 scaled odd-perfect search
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-oddperfect-scale.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {shard: 0, seed: 81000017, lo: 3, hi: 10}
+          - {shard: 1, seed: 82000031, lo: 5, hi: 15}
+          - {shard: 2, seed: 83000047, lo: 7, hi: 21}
+          - {shard: 3, seed: 84000061, lo: 10, hi: 30}
+          - {shard: 4, seed: 85000079, lo: 3, hi: 10}
+          - {shard: 5, seed: 86000101, lo: 5, hi: 15}
+          - {shard: 6, seed: 87000121, lo: 7, hi: 21}
+          - {shard: 7, seed: 88000139, lo: 10, hi: 30}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build odd-perfect search
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/oddperfect_walk.cpp \
+            -o /tmp/labs100-oddperfect
+      - name: Search shard ${{ matrix.shard }}
+        shell: bash
+        run: |
+          set -uo pipefail
+          log=/tmp/search.txt
+          set +e
+          /tmp/labs100-oddperfect \
+            --runs 256 \
+            --steps 250000 \
+            --odd-steps 40000 \
+            --threads 4 \
+            --seed '${{ matrix.seed }}' \
+            --tenure-lo '${{ matrix.lo }}' \
+            --tenure-hi '${{ matrix.hi }}' \
+            --mode random \
+            --target 574 | tee "$log"
+          rc=${PIPESTATUS[0]}
+          set -e
+          if [ "$rc" -gt 1 ]; then exit "$rc"; fi
+          seq=$(sed -n 's/^SUMMARY .* seq=//p' "$log" | tail -n 1)
+          claimed=$(sed -n 's/^SUMMARY .* best=\([0-9][0-9]*\) .*$/\1/p' "$log" | tail -n 1)
+          test ${#seq} -eq 100
+          score=$(python3 science-boundary/labs-100/code/verify.py -- "$seq")
+          printf 'claimed=%s\nverified=%s\nsequence=%s\n' "$claimed" "$score" "$seq" | tee /tmp/verify.txt
+          test "$score" = "$claimed"
