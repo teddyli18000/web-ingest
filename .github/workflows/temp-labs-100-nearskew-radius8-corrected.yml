@@ -1,0 +1,35 @@
+name: temp labs-100 corrected near-skew radius 8
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-100-nearskew-radius8-corrected.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-labs-100-nearskew-radius8-corrected-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  exact-radius8:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exhaust corrected near-skew free-variable radius 8
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/nss_shell.cpp \
+            -o /tmp/labs100-nss-shell
+          /tmp/labs100-nss-shell 8 | tee /tmp/radius8-corrected.txt
+          grep -F 'RADIUS free_radius=8 tested=536878650 expected=536878650 ' /tmp/radius8-corrected.txt
+      - name: Upload corrected-shell evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-nearskew-radius8-corrected
+          path: /tmp/radius8-corrected.txt
