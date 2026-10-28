@@ -2,9 +2,14 @@
 """Escape the live Thomson N=960 minimum along a low Hessian doublet.
 
 Recomputes the lowest full-space physical tangent modes, selects an indicated
-near-degenerate pair, forms a phase direction in that 2-D subspace, applies
-geodesic perturbations with increasing RMS angular amplitude, and fully relaxes
-without any symmetry constraint.
+near-degenerate pair, CANONICALIZES the basis inside that 2-D eigenspace using
+the C3 group action plus a deterministic point-local anchor, forms a phase
+direction, applies geodesic perturbations with increasing RMS angular amplitude,
+and fully relaxes without any symmetry constraint.
+
+Canonicalization matters because ARPACK may arbitrarily rotate the basis of a
+near-degenerate pair. After canonicalization, phase angles from separate jobs
+are comparable; C3 plus direction sign identifies phases modulo 60 degrees.
 """
 from __future__ import annotations
 
@@ -46,14 +51,23 @@ def tangent_bases(q):
     return x,dth,eph
 
 
-def transform_c3(y,q):
-    """Apply +120 degree z rotation to a physical tangent vector field."""
-    x,eth,eph=tangent_bases(q)
+def c3_mapping(q):
+    x,_,_=tangent_bases(q)
     xr,R=rz(x,2*PI/3)
     tree=cKDTree(x)
     dist,dest=tree.query(xr,k=1)
     if float(np.max(dist))>2e-7 or len(np.unique(dest))!=len(x):
         raise RuntimeError(f"C3 point mapping failed maxdist={np.max(dist)}")
+    return dest,R,float(np.max(dist))
+
+
+def transform_c3(y,q,mapping=None):
+    """Apply +120 degree z rotation to a physical tangent vector field."""
+    x,eth,eph=tangent_bases(q)
+    if mapping is None:
+        dest,R,_=c3_mapping(q)
+    else:
+        dest,R,_=mapping
     a=y.reshape(-1,2)
     dx=a[:,0,None]*eth + a[:,1,None]*eph
     dxr=dx@R.T
@@ -61,6 +75,49 @@ def transform_c3(y,q):
     out[dest,0]=np.sum(dxr*eth[dest],axis=1)
     out[dest,1]=np.sum(dxr*eph[dest],axis=1)
     return out.ravel()
+
+
+def canonicalize_pair(V,q):
+    """Fix a reproducible orientation of a two-dimensional C3 irrep subspace.
+
+    We choose, among deterministic single-coordinate tangent anchors attached to
+    the lexicographically sorted first 64 points, the one with largest projection
+    into the eigenspace. Its normalized projection is v0. The C3 image of v0
+    then determines v1 via T v0 = -1/2 v0 +/- sqrt(3)/2 v1. This removes the
+    arbitrary O(2) rotation/sign returned by a degenerate eigensolver.
+    """
+    x,_,_=tangent_bases(q)
+    order=np.lexsort((x[:,2],x[:,1],x[:,0]))
+    best=None
+    for idx in order[:64]:
+        for comp in (0,1):
+            r=np.zeros(V.shape[0]); r[2*idx+comp]=1.0
+            p=V@(V.T@r)
+            n=float(np.linalg.norm(p))
+            key=(n,-int(idx),-comp)
+            if best is None or key>best[0]:
+                best=(key,p,r,int(idx),comp)
+    _,p,r,anchor_idx,anchor_comp=best
+    if np.linalg.norm(p)<1e-8:
+        raise RuntimeError("deterministic anchor has negligible pair projection")
+    v0=p/np.linalg.norm(p)
+    if float(v0@r)<0:
+        v0=-v0
+    mapping=c3_mapping(q)
+    Tv0=transform_c3(v0,q,mapping)
+    # For a nontrivial real C3 doublet, cos(120)=-1/2.
+    v1=Tv0+0.5*v0
+    v1-=v0*float(v0@v1)
+    v1/=np.linalg.norm(v1)
+    # Re-orthogonalize against numerical leakage and choose the sign so T v0
+    # has positive v1 coefficient.
+    if float(Tv0@v1)<0:
+        v1=-v1
+    W=np.column_stack([v0,v1])
+    TW=np.column_stack([transform_c3(W[:,j],q,mapping) for j in range(2)])
+    M=W.T@TW
+    resid=float(np.linalg.norm(TW-W@M))
+    return W,M,resid,anchor_idx,anchor_comp,mapping[2]
 
 
 def exp_perturb(q,y_dir,rms_amp):
@@ -97,19 +154,22 @@ def main():
     e0,_=sm.fg(q0)
     H,raw_hy,Qrot,calls=sm.build_hessian(q0,args.fd_step,1e6)
     k=max(6,args.pair_start+2)
-    vals,vecs=eigsh(H,k=k,which="SA",tol=2e-5,maxiter=500,ncv=max(40,3*k))
+    # Deterministic v0 stabilizes which invariant subspaces ARPACK returns; the
+    # subsequent canonicalization fixes the arbitrary basis within the pair.
+    rng=np.random.default_rng(20261027+args.pair_start)
+    arpack_v0=rng.normal(size=len(q0)); arpack_v0-=Qrot@(Qrot.T@arpack_v0)
+    vals,vecs=eigsh(H,k=k,which="SA",tol=2e-5,maxiter=500,ncv=max(40,3*k),v0=arpack_v0)
     order=np.argsort(vals); vals=vals[order]; vecs=vecs[:,order]
     i=args.pair_start
     V=vecs[:,i:i+2].copy()
     V-=Qrot@(Qrot.T@V)
     V,_=np.linalg.qr(V)
+    V,M,subspace_res,anchor_idx,anchor_comp,maperr=canonicalize_pair(V,q0)
 
-    TV=np.column_stack([transform_c3(V[:,j],q0) for j in range(2)])
-    M=V.T@TV
-    subspace_res=float(np.linalg.norm(TV-V@M))
     print(f"live={shot.relative_to(root)} score={live_score:.10f} E0={e0:.12f}",flush=True)
     print(f"pair={i}/{i+1} lambdas={vals[i]:.12g},{vals[i+1]:.12g}",flush=True)
-    print("c3_pair_matrix="+np.array2string(M,precision=8)+f" subspace_res={subspace_res:.3e}",flush=True)
+    print("c3_pair_matrix="+np.array2string(M,precision=8)+f" subspace_res={subspace_res:.3e} maperr={maperr:.3e}",flush=True)
+    print(f"canonical_anchor_point={anchor_idx} comp={anchor_comp}",flush=True)
 
     phase=math.radians(args.phase_deg)
     direction=math.cos(phase)*V[:,0] + math.sin(phase)*V[:,1]
@@ -132,6 +192,7 @@ def main():
         "live_shot":str(shot.relative_to(root)),"live_score":live_score,
         "base_double_energy":e0,"pair_start":i,"eigenvalues":[float(vals[i]),float(vals[i+1])],
         "phase_deg":args.phase_deg,"c3_pair_matrix":M.tolist(),"c3_subspace_residual":subspace_res,
+        "c3_mapping_max_error":maperr,"canonical_anchor_point":anchor_idx,"canonical_anchor_component":anchor_comp,
         "rows":rows,"best_float_energy":best_e,"best_improvement":e0-best_e,
         "gradient_calls_for_modes":calls["n"],
         "best_points":best_x.tolist() if best_x is not None and e0-best_e>2e-7 else None,
