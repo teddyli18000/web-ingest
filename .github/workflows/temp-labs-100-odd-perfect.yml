@@ -1,27 +1,25 @@
-name: temp labs-100 structured calibration
+name: temp labs-100 exact target search
 on:
   push:
     paths:
-      - 'science-boundary/labs-100/code/odd_perfect.cpp'
-      - 'science-boundary/labs-100/code/lag_homotopy.cpp'
+      - 'science-boundary/labs-100/code/cpsat_target.py'
       - '.github/workflows/temp-labs-100-odd-perfect.yml'
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  calibrate:
+  cpsat:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - name: Build and run homotopy search
+      - name: Install OR-Tools
+        run: |
+          python3 -m pip install --disable-pip-version-check ortools
+          python3 -c 'import ortools; print("ortools", ortools.__version__)'
+      - name: Search odd-perfect target 574
         shell: bash
         run: |
           set -euo pipefail
-          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG science-boundary/labs-100/code/lag_homotopy.cpp -o /tmp/lag-homotopy
-          set +e
-          /tmp/lag-homotopy --runs 24 --threads 4 --steps 15000 --seed 1 | tee /tmp/lag-homotopy.txt
-          rc=${PIPESTATUS[0]}
-          set -e
-          grep -F 'FINAL energy=' /tmp/lag-homotopy.txt
-          exit 0
+          python3 science-boundary/labs-100/code/cpsat_target.py --target 574 --seconds 600 --workers 4 --seed 1 | tee /tmp/cpsat.txt
+          grep -E '^(STATUS|FOUND|NO_CERTIFICATE)' /tmp/cpsat.txt
