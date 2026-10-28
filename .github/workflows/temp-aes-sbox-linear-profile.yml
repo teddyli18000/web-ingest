@@ -1,0 +1,20 @@
+name: temp-aes-sbox-linear-profile
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-sbox-linear-profile.yml'
+permissions:
+  contents: read
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enumerate linear interface representations
+        run: python3 science-boundary/aes-sbox-circuit/linear_interface_profile.py | tee /tmp/aes-linear-profile.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-sbox-linear-profile
+          path: /tmp/aes-linear-profile.txt
