@@ -1,0 +1,54 @@
+name: Temp Science Boundary C7 t9 fractional cover LP
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-t9-cover-lp.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_t9_obstruction_cover_lp.py
+      - science-boundary/shannon-capacity-c7/code/verify_bpz_t9_obstruction_cover.py
+      - science-boundary/shannon-capacity-c7/code/bpz_t9_obstruction_mis.py
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned Tan source read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+      - name: Install LP solver
+        run: python3 -m pip install --disable-pip-version-check numpy scipy
+      - name: Solve sparse cube-cover LP and integerize
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/result"
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_t9_obstruction_cover_lp.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/cover.json" \
+            | tee "$RUNNER_TEMP/result/solve.log"
+      - name: Independently replay integer cover
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/verify_bpz_t9_obstruction_cover.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/cover.json" \
+            | tee "$RUNNER_TEMP/result/verify.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-t9-fractional-cover
+          path: ${{ runner.temp }}/result
+          retention-days: 14
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          { echo '## C7 t9 fractional cube cover'; for f in solve.log verify.json; do if [[ -f "$RUNNER_TEMP/result/$f" ]]; then echo '```text'; cat "$RUNNER_TEMP/result/$f"; echo '```'; fi; done; } >> "$GITHUB_STEP_SUMMARY"
