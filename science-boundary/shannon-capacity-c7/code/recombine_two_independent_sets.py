@@ -2,25 +2,26 @@
 """Exact recombination of two verifier-valid C7^10 independent sets.
 
 If A and B are independent, every conflict inside A union B is between
-L=A\B and R=B\A.  Thus the conflict graph on the difference sets is bipartite.
+L=A\B and R=B\A. Thus the conflict graph on the difference sets is bipartite.
 By Konig's theorem a maximum independent subset of A union B is obtained from
-an exact maximum matching / minimum vertex cover.  Any score above the input
-score is a genuine unrestricted recombination, not a bounded-radius exchange.
+an exact maximum matching / minimum vertex cover.
+
+Cross edges are recovered exactly with a base-7 trie over R.  For a left word
+x, trie traversal follows only the three allowed digits x_i-1,x_i,x_i+1 at
+each coordinate, but prunes nonexistent R prefixes.  This avoids O(|L||R|)
+when two boundary states differ substantially.
 """
 import argparse
 import collections
 import json
+import sys
 from pathlib import Path
 
 
 def conflict(a: str, b: str) -> bool:
     if len(a) != 10 or len(b) != 10:
         raise ValueError("expected 10-digit base-7 words")
-    for x, y in zip(a, b):
-        d = (int(x) - int(y)) % 7
-        if d not in (0, 1, 6):
-            return False
-    return True
+    return all((int(x) - int(y)) % 7 in (0, 1, 6) for x, y in zip(a, b))
 
 
 def load(path: Path) -> set[str]:
@@ -36,8 +37,60 @@ def load(path: Path) -> set[str]:
     return s
 
 
+def build_conflict_adjacency(L: list[str], R: list[str]):
+    # Compact trie: children[node] is digit->node, terminal[node] is R index.
+    children: list[dict[int, int]] = [{}]
+    terminal = [-1]
+    for j, word in enumerate(R):
+        node = 0
+        for ch in word:
+            d = ord(ch) - 48
+            nxt = children[node].get(d)
+            if nxt is None:
+                nxt = len(children)
+                children[node][d] = nxt
+                children.append({})
+                terminal.append(-1)
+            node = nxt
+        if terminal[node] != -1:
+            raise RuntimeError("duplicate trie terminal")
+        terminal[node] = j
+
+    allowed = [[(d - 1) % 7, d, (d + 1) % 7] for d in range(7)]
+    adj: list[list[int]] = [[] for _ in L]
+    trie_visits = 0
+    for i, word in enumerate(L):
+        frontier = [0]
+        for ch in word:
+            digs = allowed[ord(ch) - 48]
+            nxt_frontier = []
+            for node in frontier:
+                c = children[node]
+                for d in digs:
+                    z = c.get(d)
+                    if z is not None:
+                        nxt_frontier.append(z)
+            trie_visits += len(nxt_frontier)
+            frontier = nxt_frontier
+            if not frontier:
+                break
+        if frontier:
+            out = []
+            for node in frontier:
+                j = terminal[node]
+                if j != -1:
+                    out.append(j)
+            out.sort()
+            # Defensive replay of every reported edge.
+            if any(not conflict(word, R[j]) for j in out):
+                raise RuntimeError("trie emitted a non-conflict edge")
+            adj[i] = out
+    return adj, len(children), trie_visits
+
+
 def hopcroft_karp(adj: list[list[int]], nr: int):
     nl = len(adj)
+    sys.setrecursionlimit(max(10000, 2 * (nl + nr) + 100))
     ml = [-1] * nl
     mr = [-1] * nr
     dist = [0] * nl
@@ -93,19 +146,13 @@ def main():
     common = A & B
     L = sorted(A - B)
     R = sorted(B - A)
-    ridx = {p: i for i, p in enumerate(R)}
-    adj = [[] for _ in L]
-    edges = []
-    for i, x in enumerate(L):
-        for j, y in enumerate(R):
-            if conflict(x, y):
-                adj[i].append(j)
-                edges.append((i, j))
+    adj, trie_nodes, trie_visits = build_conflict_adjacency(L, R)
+    edges = sum(map(len, adj))
 
     matching, ml, mr = hopcroft_karp(adj, len(R))
 
     # Alternating reachability from unmatched left vertices: unmatched L->R,
-    # matched R->L.  Konig cover = (L\ZL) union (R intersect ZR).
+    # matched R->L. Konig cover = (L\ZL) union (R intersect ZR).
     zl = [False] * len(L)
     zr = [False] * len(R)
     q = collections.deque()
@@ -116,7 +163,7 @@ def main():
     while q:
         u = q.popleft()
         for v in adj[u]:
-            if ml[u] == v:  # only unmatched edges L->R
+            if ml[u] == v:
                 continue
             if zr[v]:
                 continue
@@ -138,32 +185,44 @@ def main():
     if len(out) != expected:
         raise RuntimeError("recombined score mismatch")
 
-    # Difference-set replay: cover must hit every cross-conflict edge.
-    kept_l_idx = {i for i in range(len(L)) if zl[i]}
-    kept_r_idx = {j for j in range(len(R)) if not zr[j]}
-    bad = [(i, j) for i, j in edges if i in kept_l_idx and j in kept_r_idx]
-    if bad:
-        raise RuntimeError(f"uncovered conflict edges: {bad[:8]}")
+    # Exact edge-cover replay without materializing a separate edge list.
+    for i, nbrs in enumerate(adj):
+        if not zl[i]:
+            continue
+        for j in nbrs:
+            if not zr[j]:
+                raise RuntimeError(f"uncovered conflict edge {(i,j)}")
 
     baseline = max(len(A), len(B))
     st = {
-        "method": "exact-bipartite-union-konig",
+        "method": "exact-bipartite-union-konig-trie",
         "size_a": len(A),
         "size_b": len(B),
         "common": len(common),
         "left_only": len(L),
         "right_only": len(R),
-        "cross_conflict_edges": len(edges),
+        "cross_conflict_edges": edges,
         "matching_size": matching,
         "min_vertex_cover_size": len(cover_l) + len(cover_r),
         "union_size": len(A | B),
         "recombined_score": len(out),
         "gain_over_best_input": len(out) - baseline,
-        "left_degrees": [len(x) for x in adj],
-        "matching_pairs": [[L[i], R[v]] for i, v in enumerate(ml) if v != -1],
-        "cover_left": [L[i] for i in cover_l],
-        "cover_right": [R[j] for j in cover_r],
+        "trie_nodes": trie_nodes,
+        "trie_visits": trie_visits,
+        "left_degree_min": min(map(len, adj), default=0),
+        "left_degree_max": max(map(len, adj), default=0),
+        "left_degree_sum": edges,
+        "unmatched_left": sum(v == -1 for v in ml),
+        "unmatched_right": sum(v == -1 for v in mr),
     }
+    # For small difference sets, retain exact matching/cover details as evidence.
+    if len(L) <= 256 and len(R) <= 256:
+        st.update(
+            left_degrees=[len(x) for x in adj],
+            matching_pairs=[[L[i], R[v]] for i, v in enumerate(ml) if v != -1],
+            cover_left=[L[i] for i in cover_l],
+            cover_right=[R[j] for j in cover_r],
+        )
     args.status.parent.mkdir(parents=True, exist_ok=True)
     args.status.write_text(json.dumps(st, indent=2, sort_keys=True) + "\n")
     if len(out) > baseline:
