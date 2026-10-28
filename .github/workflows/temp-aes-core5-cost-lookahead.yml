@@ -1,0 +1,43 @@
+name: temp-aes-core5-cost-lookahead
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-core5-cost-lookahead.yml'
+      - 'science-boundary/aes-sbox-circuit/search_core5_cost.py'
+      - 'science-boundary/aes-sbox-circuit/search_core5_cost_lookahead.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-core5-cost-lookahead
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [2026102711, 2026102712, 2026102713, 2026102714]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Search target-aware five-AND witnesses
+        run: |
+          mkdir -p /tmp/aes-core5-look-${{ matrix.seed }}
+          python science-boundary/aes-sbox-circuit/search_core5_cost_lookahead.py \
+            --beam 64 \
+            --bucket-factor 4 \
+            --seed ${{ matrix.seed }} \
+            --out /tmp/aes-core5-look-${{ matrix.seed }}
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-core5-look-${{ matrix.seed }}
+          path: /tmp/aes-core5-look-${{ matrix.seed }}
