@@ -7,9 +7,8 @@ refined R<->A saddle along low *positive* Hessian modes, optionally with a small
 push along the negative reaction mode, then fully relaxes without symmetry using
 the stable termwise energy-difference objective.
 
-If a transverse branch only falls into R/A, the corresponding local saddle
-neighborhood is two-basin.  A distinct low minimum would add a new node/edge to
-the transition network and becomes a candidate for recursive search.
+Amplitude arguments are physical RMS angular displacements in radians, matching
+the minimum-mode scans used elsewhere in this topic.
 """
 from __future__ import annotations
 
@@ -22,6 +21,8 @@ import diagnose_soft_modes as sm
 import search_soft_pair as sp
 from search_from_seed_modes import stable_relax_q
 
+N=960
+
 
 def load_refined(path):
     d=json.loads(pathlib.Path(path).read_text())
@@ -29,8 +30,8 @@ def load_refined(path):
     x/=np.linalg.norm(x,axis=1)[:,None]
     vecs=np.asarray(d['eigenvectors_physical'],dtype=float).T
     modes=d['final_modes']
-    if vecs.shape[0] != 1920:
-        raise ValueError(f'expected 1920 physical tangent rows, got {vecs.shape}')
+    if vecs.shape[0] != 2*N:
+        raise ValueError(f'expected {2*N} physical tangent rows, got {vecs.shape}')
     return d,x,vecs,modes
 
 
@@ -61,7 +62,6 @@ def main():
     reaction=vecs[:,0].copy(); transverse=vecs[:,args.transverse_mode].copy()
     reaction-=Qrot@(Qrot.T@reaction); transverse-=Qrot@(Qrot.T@transverse)
     reaction/=np.linalg.norm(reaction); transverse/=np.linalg.norm(transverse)
-    # Orthogonalize transverse against reaction after finite-difference/ARPACK noise.
     transverse-=reaction*float(reaction@transverse); transverse/=np.linalg.norm(transverse)
     transverse*=args.sign
 
@@ -73,21 +73,17 @@ def main():
           f'tmode={args.transverse_mode} lambda={modes[args.transverse_mode]["eigenvalue"]:.9g} sign={args.sign}',flush=True)
     for ta in tamps:
         for ra in ramps:
-            # exp_perturb expects a physical tangent direction normalized in Euclidean
-            # tangent coordinates.  Build the requested RMS displacement vector then
-            # call it once with its norm-equivalent amplitude.
-            y=ta*transverse + ra*reaction
+            # Unit Hessian eigenvectors have Euclidean physical-tangent norm 1.
+            # Multiply by sqrt(N) so ta/ra themselves denote RMS radians.
+            y=np.sqrt(float(N))*(ta*transverse + ra*reaction)
             yn=float(np.linalg.norm(y))
             if yn==0: continue
             direction=y/yn
-            # sp.exp_perturb's amplitude is RMS physical angular displacement, while
-            # direction has Euclidean norm 1; scale by sqrt(N) to make y coefficients
-            # directly comparable to the familiar RMS-radian amplitudes.
-            rms_amp=yn/np.sqrt(960.0)
+            rms_amp=yn/np.sqrt(float(N))
             qs=sp.exp_perturb(q0,direction,rms_amp)
             es,_=sm.fg(qs)
             e,raw,x,nit,ok,msg=stable_relax_q(qs,2200)
-            row={'transverse_amp_coeff':ta,'reaction_amp_coeff':ra,'rms_amp':rms_amp,
+            row={'transverse_amp':ta,'reaction_amp':ra,'combined_rms_amp':rms_amp,
                  'start_energy':es,'energy':e,'raw_absolute_energy':raw,
                  'delta_vs_live':e-live_score,'nit':nit,'success':ok,'message':msg}
             rows.append(row)
