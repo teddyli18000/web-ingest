@@ -2,7 +2,10 @@
 """Map the unstable manifold of a C3-symmetric index-2 Thomson stationary point.
 
 The lowest Hessian pair is canonicalized under the +120 degree C3 action, then
-an oriented phase fundamental sector is sampled. Each perturbed point is fully
+a full 120-degree oriented phase fundamental domain is sampled.  Do not reduce
+to 60 degrees unless an independent reflection symmetry has been established:
+C3 alone identifies theta modulo 120 degrees, while theta and theta+180 degrees
+can differ already through cubic invariants. Each perturbed point is fully
 relaxed without symmetry using the stable termwise pair-energy-difference
 objective. Endpoints are clustered by energy and one representative geometry per
 energy class is retained.
@@ -64,7 +67,7 @@ def canonicalize_pair_near(V,q):
 
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument('few_shots'); ap.add_argument('seed_json')
-    ap.add_argument('--phases',default='0,5,10,15,20,25,30,35,40,45,50,55')
+    ap.add_argument('--phases',default=','.join(str(v) for v in range(0,120,5)))
     ap.add_argument('--amps',default='0.0015,0.003,0.006,0.012')
     ap.add_argument('--fd-step',type=float,default=3e-6); ap.add_argument('--out',required=True); args=ap.parse_args()
     root=pathlib.Path(args.few_shots); live_score,live_shot=sm.find_live(root); seed_meta,x0=load_seed(pathlib.Path(args.seed_json))
@@ -97,8 +100,8 @@ def main():
     best=min(b['energy'] for b in basins)
     print('BASINS',[(b['energy_rank'],b['energy'],b['delta_vs_live'],len(b['hits']),b['coord_counts']) for b in basins],flush=True)
     out={'seed_json':str(args.seed_json),'seed_energy':E0,'seed_gradient_rms':float(np.sqrt(np.mean((g0/sm.physical_scale(q0))**2))),
-         'live_score':live_score,'live_shot':str(live_shot.relative_to(root)),'eigenvalues':[float(v) for v in vals],
-         'c3_pair_matrix':M.tolist(),'c3_subspace_residual':resid,'c3_mapping_max_error':maperr,
+         'live_score':live_score,'live_shot':str(live_shot.relative_to(root)),'phase_domain_degrees':[min(phases),max(phases)],
+         'eigenvalues':[float(v) for v in vals],'c3_pair_matrix':M.tolist(),'c3_subspace_residual':resid,'c3_mapping_max_error':maperr,
          'canonical_anchor_point':anchor_i,'canonical_anchor_component':anchor_c,'rows':rows,'basins':basins,
          'best_float_energy':best,'best_delta_vs_live':best-live_score,'gradient_calls_for_modes':calls['n']}
     pathlib.Path(args.out).write_text(json.dumps(out,separators=(',',':'))+'\n')
