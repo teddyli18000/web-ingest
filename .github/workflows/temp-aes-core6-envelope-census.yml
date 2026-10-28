@@ -1,0 +1,25 @@
+name: temp-aes-core6-envelope-census
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-core6-envelope-census.yml'
+      - 'science-boundary/aes-sbox-circuit/enumerate_core6_envelopes.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-core6-envelope-census
+  cancel-in-progress: false
+
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: python science-boundary/aes-sbox-circuit/enumerate_core6_envelopes.py
