@@ -4,13 +4,13 @@
 
 This note studies a 17-gate replacement for the merged-102 circuit's fixed four-input / nine-factor core interface using exactly five AND gates and at most twelve XOR/XNOR gates. The fixed tail observes the nine factor values exactly on all 15 nonzero core states and is completely insensitive to their values at core state `0000`.
 
-The unrestricted zero-state relation therefore has `2^9 = 512` possible factor completions. Earlier affine beam code searched only 16 coherent completions. The results below now justify that restriction for **five-AND** circuits and reduce the exact physical search further.
+The unrestricted zero-state relation therefore has `2^9 = 512` possible factor completions.
 
-## Verified complete result: 496 of 512 completions need at least six ANDs
+## Complete result 1: 496 of 512 completions need at least six ANDs
 
 `prove_core5_rank5_completions.py` exhausts all 512 zero-state completion patterns modulo affine functions.
 
-Action run `40640514891`, job `rank5-proof`, completed successfully and independently reproduced:
+Action run `40640514891`, job `rank5-proof`, independently reproduced:
 
 ```text
 completion patterns:                 512
@@ -23,7 +23,7 @@ intersection(first-AND classes, U):    0
 
 Here `U` is the common five-dimensional nonlinear quotient space of all 496 rank-5 completions.
 
-Why this is a proof: a five-AND circuit computing a rank-5 target space has only five AND-output nonlinear classes available, so those five classes must be independent and span `U` exactly. In particular the first AND class must lie in `U`. Before the first AND, both operands are arbitrary affine functions of the four core inputs. Exhausting all products of such affine functions gives exactly 35 possible nonzero first-AND classes, none in `U`. Hence every one of the 496 rank-5 completions needs at least six ANDs.
+A five-AND circuit computing a rank-5 target space has only five AND-output nonlinear classes available, so those five classes must be independent and span `U`. In particular the first AND class must lie in `U`. Before the first AND, both operands are arbitrary affine functions of the four core inputs. Exhausting all products of such affine functions gives exactly 35 possible nonzero first-AND classes, none in `U`. Hence every one of the 496 rank-5 completions needs at least six ANDs.
 
 The only possible five-AND completions are therefore the following 16 rank-4 patterns:
 
@@ -46,9 +46,7 @@ The only possible five-AND completions are therefore the following 16 rank-4 pat
 111010101
 ```
 
-This closes the logical gap in `search_core5_odc_affine.py`: for five-AND circuits, searching only its 16 coherent completions is complete with respect to the fixed tail's full `0000` don't-care.
-
-## Verified exact nonlinear-span reduction on the remaining 16
+## Complete result 2: exact nonlinear-span reduction on the remaining 16
 
 For a rank-4 target space `T`, any five-AND circuit has five independent AND nonlinear classes. The first class `r0` is one of the 35 affine-input product classes and lies outside `T`, defining a candidate five-dimensional space
 
@@ -58,7 +56,7 @@ N = span(T, r0).
 
 `screen_core5_affine_spans.py` exactly checks whether a five-step chain of independent AND classes can remain inside each candidate `N`, with each new AND allowed arbitrary affine operands from the four inputs and previously generated classes.
 
-The 16 jobs in Action run `40640514891` all completed successfully. The exact pattern is:
+The 16 jobs in Action run `40640514891` all completed successfully:
 
 ```text
 completion 000000000: 30 / 35 candidate 5D spaces reachable
@@ -71,33 +69,39 @@ Thus 560 nominal `(completion, first-class)` spaces reduce to exactly
 30 + 15*22 = 360
 ```
 
-nonlinear spaces that can still contain a five-AND circuit. This is a complete multiplicative-span reduction, not a beam search. It does not yet account for the twelve-linear-gate budget.
+nonlinear spaces that can still contain a five-AND circuit.
 
-## Heuristic affine beam evidence
+## Complete result 3: all 16 rank-four completions require more than twelve mandatory linear forms
 
-The pre-existing `search_core5_odc_affine.py` is a beam heuristic, not an exclusion proof. Its original Action run `40633465765` was partially cancelled under runner pressure; several completions did finish. For example completion 9 (`100111000` in the script's completion index convention) completed at beam 8 with best observed full mandatory count 14 and no `<=12` candidate or complete closure. Treat these results only as search evidence.
+The original Python exact mandatory-form search was correct but expensive. `screen_core5_exact.cpp` implements the same necessary-condition search on exact 16-state truth tables using an optimized BFS-prefix / DFS-suffix traversal and an incremental target-form lower bound.
 
-## Exact affine mandatory-form search now running
+For one fixed rank-four completion it:
 
-`search_core5_affine_mandatory.py` removes the beam truncation and models internal XNOR/complement phases exactly.
+- allows arbitrary affine operands and exact XOR/XNOR phase choices;
+- keeps five independent AND nonlinear classes inside a five-dimensional span containing the target space;
+- records every distinct non-free affine source form required as an AND operand;
+- optimistically credits future AND outputs that could directly expose target functions;
+- prunes only when even that optimistic mandatory-form count exceeds twelve.
 
-Every wire is normalized as
+A local exhaustive run completed all 16 rank-four completions with zero `<=12` witness. Independent GitHub Actions run **`40739207093`** then completed **16/16 jobs successfully**. The program exits nonzero if any `<=12` witness exists, so the all-green matrix independently confirms zero hits.
+
+Representative exact state counts from the independent implementation include:
 
 ```text
-f' = f XOR f(0000)
+000000000 : 121,064 depth-3 physical prefixes; 136,760 suffix nodes; 0 hits
+000010111 :  21,624 depth-3 physical prefixes;  22,968 suffix nodes; 0 hits
+111010101 :  21,048 depth-3 physical prefixes;  21,288 suffix nodes; 0 hits
 ```
 
-and its actual phase `f(0000)` is tracked separately. XOR and XNOR have the same normalized XOR source mask but different phase; AND is evaluated on the actual affine operands and its normalized output and phase are propagated exactly.
+No case reaches a valid fifth-AND leaf under the optimistic twelve-linear budget; every branch is already ruled out by a safe necessary lower bound.
 
-A physical state records the normalized raw AND outputs, their phases, and every distinct affine source form `(source-XOR mask, phase)` that must be materialized as an AND operand. An affine form is free only when it is exactly an already existing source wire with its actual phase. At the fifth AND, the selected completion's nine target forms are added to the mandatory set.
+## Consequence
 
-Therefore:
+Together, Results 1 and 3 cover **all 512 zero-state completions** permitted by the complete fixed-tail don't-care relation:
 
-- exact minimum mandatory count `>=13` rules out `5 AND + 12 linear = 17` for that completion;
-- a count `<=12` is only a necessary-count witness and still requires gate scheduling/closure before it becomes a circuit.
+- the 496 rank-five completions need at least six ANDs;
+- none of the 16 rank-four completions admits a five-AND decomposition with at most twelve mandatory linear forms.
 
-Smoke Action run `40640637350` is currently evaluating rank-4 cases 0 and 1 without beam truncation. If healthy, the search should be sharded/scaled over all 16 rank-4 completions rather than adding runtime to SAT encodings that previously returned `unknown`.
+Therefore the merged-102 fixed interface has **no `5 AND + 12 XOR/XNOR = 17` direct core**, even allowing arbitrary internal XNOR phases and arbitrary values of all nine factors at core state `0000`.
 
-## Consequence if all 16 exact minima are at least 13
-
-Together with the verified 496-completion rank-5 exclusion, this would completely rule out a fixed-interface 17-gate core with five AND gates, even allowing arbitrary XOR/XNOR constants and the full zero-state don't-care. The remaining direct-core route would then require a genuinely different six-AND / eleven-linear decomposition or a changed middle/core interface.
+This is a complete exclusion for the five-AND fixed-interface family. It is not a global lower bound for AES circuits: a 101-gate construction may still use six ANDs in the 17-gate core, change the middle/core interface, or save a gate in the retained-core outer linear construction.
