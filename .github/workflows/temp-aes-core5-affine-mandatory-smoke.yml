@@ -1,0 +1,39 @@
+name: temp-aes-core5-affine-mandatory-smoke
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-core5-affine-mandatory-smoke.yml'
+      - 'science-boundary/aes-sbox-circuit/search_core5_affine_mandatory.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-core5-affine-mandatory-smoke
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        case: [0, 1]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Exact affine mandatory-form search
+        run: |
+          out=/tmp/aes-core5-affine-mand-${{ matrix.case }}
+          mkdir -p "$out"
+          python science-boundary/aes-sbox-circuit/search_core5_affine_mandatory.py \
+            --case ${{ matrix.case }} --out "$out" | tee "$out/run.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-core5-affine-mand-${{ matrix.case }}
+          path: /tmp/aes-core5-affine-mand-${{ matrix.case }}
