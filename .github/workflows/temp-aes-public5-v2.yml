@@ -1,0 +1,23 @@
+name: temp-aes-public5-v2
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-public5-v2.yml'
+permissions:
+  contents: read
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run corrected public core cost analysis
+        run: |
+          mkdir -p /tmp/aes-public5-v2
+          python3 science-boundary/aes-sbox-circuit/analyze_public5_costs_v2.py | tee /tmp/aes-public5-v2/results.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-public5-v2
+          path: /tmp/aes-public5-v2
