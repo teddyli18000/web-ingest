@@ -1,0 +1,48 @@
+name: temp Thomson 960 C-D Hessian diagnostic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-cd-hessian.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-saddle-ab-hybrid
+          path: ${{ runner.temp }}/ab
+          github-token: ${{ github.token }}
+          run-id: 40634347073
+      - name: Rebuild C and D
+        run: |
+          python3 science-boundary/thomson-960/code/harvest_saddle_branch.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/ab/hybrid-ab.json" \
+            --mode 2 --sign -1 --transverse-amp 0.012 --reaction-amp 0 --out "$RUNNER_TEMP/basin-d.json"
+          python3 science-boundary/thomson-960/code/harvest_basin_c.py \
+            "$RUNNER_TEMP/few-shots" --neighbor-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --scale 0.95 --out "$RUNNER_TEMP/basin-c.json"
+      - name: Diagnose C and D
+        run: |
+          python3 science-boundary/thomson-960/code/diagnose_seed_modes.py "$RUNNER_TEMP/basin-c.json" --k 14 --out "$RUNNER_TEMP/hessian-c.json"
+          python3 science-boundary/thomson-960/code/diagnose_seed_modes.py "$RUNNER_TEMP/basin-d.json" --k 14 --out "$RUNNER_TEMP/hessian-d.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-cd-hessian
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/basin-c.json
+            ${{ runner.temp }}/basin-d.json
+            ${{ runner.temp }}/hessian-c.json
+            ${{ runner.temp }}/hessian-d.json
