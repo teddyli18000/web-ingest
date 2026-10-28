@@ -1,0 +1,23 @@
+{
+  "claim": "No undirected Cayley graph on any abelian group of order 36 is a (4,6)-graph.",
+  "date": "2026-10-28",
+  "group_classification": [
+    "C36",
+    "C4 x C3 x C3",
+    "C2 x C2 x C9",
+    "C2 x C2 x C3 x C3"
+  ],
+  "total_group_specific_connection_sets": 1572864,
+  "implementations": [
+    "abelian_cayley36.cpp: Gray-code connection-set enumeration plus recursive bitset clique search",
+    "abelian_cayley36_check.py: independent Python enumeration, edgewise K4 detection, recursive complement K6 search"
+  ],
+  "results": [
+    {"group": "C36", "inverse_orbits": 18, "connection_sets": 262144, "k4_free": 17859, "valid_4_6": 0},
+    {"group": "C4 x C3 x C3", "inverse_orbits": 18, "connection_sets": 262144, "k4_free": 25614, "valid_4_6": 0},
+    {"group": "C2 x C2 x C9", "inverse_orbits": 19, "connection_sets": 524288, "k4_free": 25529, "valid_4_6": 0},
+    {"group": "C2 x C2 x C3 x C3", "inverse_orbits": 19, "connection_sets": 524288, "k4_free": 34340, "valid_4_6": 0}
+  ],
+  "cross_check": "The two implementations agree exactly on every per-group total, inverse-orbit count, K4-free count, and zero valid count. The C36 row also reproduces the earlier exhaustive circulant result (17859 K4-free, zero valid).",
+  "scope": "Exact restricted-family exclusion. Group-specific connection sets may yield isomorphic graphs across group types; duplicates do not affect completeness of the exclusion."
+}
