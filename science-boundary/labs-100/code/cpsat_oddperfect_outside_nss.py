@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Exact LABS-100 feasibility for E<=574, odd energy 50, outside near-skew.
 
-Use parity halves A_i=s_{2i}, B_i=s_{2i+1}.  Odd-perfect implies a*b=0,
-where a=sum A and b=sum B.  Reversal swaps the halves and global/alternating
+Use parity halves A_i=s_{2i}, B_i=s_{2i+1}. Odd-perfect implies a*b=0,
+where a=sum A and b=sum B. Reversal swaps the halves and global/alternating
 sign changes normalize every solution to
 
     A_0=B_0=+1, b=0, a in {0,2,...,20}.
@@ -11,10 +11,20 @@ The bound |a|<=20 follows from Cauchy and even energy <=524.
 
 The model directly enforces all 50 odd correlations to be +/-1, the 49 scaled
 even correlations D_r=C_{2r}/2 with sum D_r^2<=131, exact correlation-sum
-and z=i Fourier identities, and excludes both skew-99 endpoint orientations:
-positions 1..99 skew and positions 0..98 skew.  The near-skew exclusion is
-sound because the entire near-skew manifold is independently proved to have
-minimum N=100 energy 578.
+and z=i Fourier identities, and excludes both skew-99 endpoint orientations.
+
+Optional --defect d partitions the odd-perfect space by a cheap endpoint
+coordinate. If L is the length-99 sequence obtained by deleting s_0, then for
+odd k<=97
+
+    C_k(L)=C_k(s)-s_0*s_k in {0,+/-2}.
+
+Let d_L count its nonzero odd correlations, and define d_R analogously after
+deleting s_99. The option fixes min(d_L,d_R)=d exactly. The defect booleans
+are derived directly from the already-modeled signs of C_k(s), so this adds no
+new autocorrelation sums. Pseudo-/near-skew endpoints occur at defect zero;
+the explicit near-skew exclusions remain in force, so d=0 is also a useful
+exact test for any nonstandard zero-odd-correlation endpoint.
 """
 from __future__ import annotations
 
@@ -33,6 +43,21 @@ def exact(seq: str):
     odd = sum(cs[k-1]*cs[k-1] for k in range(1, FULL_N, 2))
     a = sum(x[0::2]); b = sum(x[1::2])
     return e, odd, cs, a, b
+
+
+def endpoint_defects(seq: str, cs=None):
+    s = [1 if c == "+" else -1 for c in seq]
+    if cs is None:
+        _, _, cs, _, _ = exact(seq)
+    dl = dr = 0
+    for k in range(1, 99, 2):
+        left = cs[k-1] - s[0]*s[k]
+        right = cs[k-1] - s[99-k]*s[99]
+        if left not in (0, -2, 2) or right not in (0, -2, 2):
+            raise ValueError("endpoint defect identity requires odd-perfect sequence")
+        dl += left != 0
+        dr += right != 0
+    return dl, dr
 
 
 def suffix_nearskew(seq: str) -> bool:
@@ -66,7 +91,6 @@ def add_not_nearskew(model: cp_model.CpModel, A, B):
     suffix_viol = []
     for p in range(1, 50):
         z = xor_var(model, bit_at(A,B,p), bit_at(A,B,100-p), f"ns_s_{p}")
-        # required xor is 1 for odd p, 0 for even p; literal below means violation.
         suffix_viol.append(z.Not() if p & 1 else z)
     model.AddBoolOr(suffix_viol)
 
@@ -80,11 +104,13 @@ def add_not_nearskew(model: cp_model.CpModel, A, B):
     model.AddBoolOr(prefix_viol)
 
 
-def build(asum: int, target: int):
+def build(asum: int, target: int, defect: int | None = None):
     if asum not in range(0, 21, 2):
         raise ValueError("canonical asum must be one of 0,2,...,20")
     if target > 574:
         raise ValueError("this target model is calibrated for E<=574")
+    if defect is not None and not 0 <= defect <= 49:
+        raise ValueError("defect must be in 0..49")
 
     model = cp_model.CpModel()
     A = [model.NewBoolVar(f"A{i}") for i in range(N)] # 0 => +1, 1 => -1
@@ -94,25 +120,40 @@ def build(asum: int, target: int):
     model.Add(50 - 2*sum(A) == asum)
     model.Add(50 - 2*sum(B) == 0)
 
-    # Odd correlations C_{2r+1}, r=0..49.  Each is +/-1.
+    # Odd correlations C_{2r+1}, r=0..49. Each is +/-1.
     odd_pos = []
     for r in range(50):
         terms = []
-        # A_t B_{t+r}, t=0..49-r.
         for t in range(0, 50-r):
             terms.append(xor_var(model, A[t], B[t+r], f"oA_{r}_{t}"))
-        # B_t A_{t+r+1}, t=0..48-r.
         for t in range(0, 49-r):
             terms.append(xor_var(model, B[t], A[t+r+1], f"oB_{r}_{t}"))
         L = 99 - 2*r
         pos = model.NewBoolVar(f"odd_pos_{r}")  # 1 => +1
-        # correlation L-2*m = +1 for pos=1, -1 for pos=0.
         model.Add(sum(terms) == (L+1)//2 - pos)
         odd_pos.append(pos)
 
-    # Explicit opposite-lag consequence C_k+C_{100-k}=0 for odd-perfect.
+    # Opposite odd lags cancel in every odd-perfect N=100 sequence.
     for r in range(25):
         model.Add(odd_pos[r] + odd_pos[49-r] == 1)
+
+    # Endpoint-deletion skew defects. For k=2r+1<=97, s_k=B_r because s0=+.
+    # A defect after deleting s0 occurs iff sign(C_k) differs from B_r.
+    dl_bits = []
+    dr_bits = []
+    for r in range(49):
+        dl_bits.append(xor_var(model, odd_pos[r].Not(), B[r], f"defL_{r}"))
+        # Removed right endpoint product is s_{98-2r}*s_99=A_{49-r}*B_49.
+        right_product_neg = xor_var(model, A[49-r], B[49], f"defRprod_{r}")
+        dr_bits.append(xor_var(model, odd_pos[r].Not(), right_product_neg, f"defR_{r}"))
+    DL = model.NewIntVar(0, 49, "defect_left")
+    DR = model.NewIntVar(0, 49, "defect_right")
+    model.Add(DL == sum(dl_bits))
+    model.Add(DR == sum(dr_bits))
+    if defect is not None:
+        DM = model.NewIntVar(0, 49, "defect_min")
+        model.AddMinEquality(DM, [DL, DR])
+        model.Add(DM == defect)
 
     # Even correlations scaled by two: D_r=C_{2r}/2.
     qcap = (target - 50)//4
@@ -126,11 +167,9 @@ def build(asum: int, target: int):
         q = square_table(model, d, -(50-r), 50-r, qcap, f"q_{r}")
         dvars.append(d); qvars.append(q)
     model.Add(sum(qvars) <= qcap)
-
-    # Exact sum of even correlations / 2.
     model.Add(sum(dvars) == (asum*asum - 100)//4)
 
-    # z=i identity.  q_j are sums of signs in residue classes mod 4.
+    # z=i identity via residue-class sums mod 4.
     qsum = []
     for j in range(4):
         bits = [bit_at(A,B,i) for i in range(j,100,4)]
@@ -147,7 +186,7 @@ def build(asum: int, target: int):
     model.Add(u2 + v2 == 100 + 4*altD)
 
     add_not_nearskew(model,A,B)
-    return model,A,B
+    return model,A,B,DL,DR
 
 
 def reconstruct(solver, A, B):
@@ -162,11 +201,12 @@ def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--asum",type=int,required=True)
     ap.add_argument("--target",type=int,default=574)
+    ap.add_argument("--defect",type=int)
     ap.add_argument("--seconds",type=float,default=120)
     ap.add_argument("--workers",type=int,default=4)
     ap.add_argument("--seed",type=int,default=1)
     args=ap.parse_args()
-    model,A,B=build(args.asum,args.target)
+    model,A,B,DL,DR=build(args.asum,args.target,args.defect)
     solver=cp_model.CpSolver()
     solver.parameters.max_time_in_seconds=args.seconds
     solver.parameters.num_search_workers=args.workers
@@ -175,15 +215,18 @@ def main():
     solver.parameters.cp_model_presolve=True
     solver.parameters.symmetry_level=2
     t0=time.time(); status=solver.Solve(model); wall=time.time()-t0
-    print("STATUS",f"asum={args.asum}",solver.StatusName(status),f"wall={wall:.3f}",f"branches={solver.NumBranches()}",f"conflicts={solver.NumConflicts()}")
+    print("STATUS",f"asum={args.asum}",f"defect={args.defect}",solver.StatusName(status),f"wall={wall:.3f}",f"branches={solver.NumBranches()}",f"conflicts={solver.NumConflicts()}")
     if status not in (cp_model.FEASIBLE,cp_model.OPTIMAL):
         print("NO_CERTIFICATE")
         return
     seq=reconstruct(solver,A,B)
     e,o,cs,a,b=exact(seq)
-    print("FOUND",f"energy={e}",f"odd={o}",f"even={e-o}",f"asum={a}",f"bsum={b}",f"suffix_nss={suffix_nearskew(seq)}",f"prefix_nss={prefix_nearskew(seq)}",f"seq={seq}")
+    dl,dr=endpoint_defects(seq,cs)
+    print("FOUND",f"energy={e}",f"odd={o}",f"even={e-o}",f"asum={a}",f"bsum={b}",f"defL={dl}",f"defR={dr}",f"suffix_nss={suffix_nearskew(seq)}",f"prefix_nss={prefix_nearskew(seq)}",f"seq={seq}")
     if e>args.target or o!=50 or a!=args.asum or b!=0 or suffix_nearskew(seq) or prefix_nearskew(seq):
         raise SystemExit("independent validation failed")
+    if args.defect is not None and min(dl,dr)!=args.defect:
+        raise SystemExit("defect-layer validation failed")
 
 if __name__=="__main__":
     main()
