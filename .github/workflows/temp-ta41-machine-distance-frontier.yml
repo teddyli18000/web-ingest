@@ -1,0 +1,59 @@
+name: temp-ta41-machine-distance-frontier
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-machine-distance-frontier.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-machine-distance-frontier
+  cancel-in-progress: false
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - k: 15
+            seed: 1415
+          - k: 16
+            seed: 1416
+          - k: 17
+            seed: 1417
+          - k: 18
+            seed: 1418
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned solver
+        run: python -m pip install 'ortools==9.14.6206'
+      - name: Decide next machine-distance frontier at original target 2005
+        run: |
+          python3 science-boundary/job-shop-ta41/independent_cardinality_decision.py --k '${{ matrix.k }}' --seed '${{ matrix.seed }}' --seconds 540 --workers 4 --out 'science-boundary/job-shop-ta41/results/machine-budget${{ matrix.k }}'
+      - name: Official independent verification on found schedule
+        run: |
+          set -euo pipefail
+          dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/machine-budget${{ matrix.k }}"
+          if test -f "$dir/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$dir" | tee "$dir/upstream-verdict.json"
+            python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+          fi
+      - name: Persist certified exclusion or honest uncertainty
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add 'science-boundary/job-shop-ta41/results/machine-budget${{ matrix.k }}/'
+          if ! git diff --cached --quiet; then
+            git commit -m 'research(ta41): classify machine-distance k=${{ matrix.k }}'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
