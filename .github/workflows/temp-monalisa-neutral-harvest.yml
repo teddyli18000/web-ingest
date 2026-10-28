@@ -1,0 +1,55 @@
+name: temp-monalisa-neutral-harvest
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/harvest_neutral_moves.py
+      - .github/workflows/temp-monalisa-neutral-harvest.yml
+permissions:
+  contents: write
+jobs:
+  harvest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Clone exact public verifier and candidate graph
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          git clone --depth 1 https://github.com/bicobico2/ElimTSP.git elimtsp
+          python -m pip install networkx
+          python upstream/problems/p010-mona-lisa-tsp/verify/verify.py upstream/problems/p010-mona-lisa-tsp/baseline
+      - name: Enumerate and independently verify all exact-neutral graph repairs
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          mkdir -p science-boundary/mona-lisa-tsp/data science-boundary/mona-lisa-tsp/results
+          python science-boundary/mona-lisa-tsp/harvest_neutral_moves.py \
+            --edges elimtsp/results/mona.248972.edg.gz \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --report science-boundary/mona-lisa-tsp/data/neutral-harvest.json \
+            --candidate science-boundary/mona-lisa-tsp/results/certificate.json
+          if test -f science-boundary/mona-lisa-tsp/results/certificate.json; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py science-boundary/mona-lisa-tsp/results
+          fi
+      - name: Commit validated compact research evidence
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/mona-lisa-tsp/data/neutral-harvest.json
+          git commit -m 'science(p010): freeze complete validated neutral repair harvest'
+          git pull --rebase origin main
+          git push origin main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-neutral-harvest
+          path: |
+            science-boundary/mona-lisa-tsp/data/neutral-harvest.json
+            science-boundary/mona-lisa-tsp/results/certificate.json
+          if-no-files-found: ignore
