@@ -36,6 +36,7 @@ jobs:
             --moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
             --proof science-boundary/mona-lisa-tsp/data/universal-family-check.json \
             --report science-boundary/mona-lisa-tsp/results/symbolic-${{ matrix.samples }}/report.json \
+            --positive-file science-boundary/mona-lisa-tsp/results/symbolic-${{ matrix.samples }}/positive-motifs.json \
             --candidate science-boundary/mona-lisa-tsp/results/symbolic-${{ matrix.samples }}/certificate.json \
             --samples ${{ matrix.samples }}
           if test -f science-boundary/mona-lisa-tsp/results/symbolic-${{ matrix.samples }}/certificate.json; then
