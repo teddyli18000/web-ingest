@@ -1,0 +1,62 @@
+name: temp Thomson 960 saddle eigenfollow refinement
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-saddle-refine.yml"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  refine:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: conservative
+            eta: 0.00018
+            max_step: 0.0000045
+            cycles: 8
+            steps: 70
+          - label: standard
+            eta: 0.00028
+            max_step: 0.0000070
+            cycles: 8
+            steps: 70
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Download R-A string artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-string-ra
+          path: ${{ runner.temp }}/string
+          github-token: ${{ github.token }}
+          run-id: 40628689846
+      - name: Refine saddle by minimum-mode following
+        run: |
+          python3 science-boundary/thomson-960/code/refine_saddle_eigenfollow.py \
+            "$RUNNER_TEMP/string/string-ra.json" \
+            --eta ${{ matrix.eta }} --max-rms-step ${{ matrix.max_step }} \
+            --cycles ${{ matrix.cycles }} --steps-per-cycle ${{ matrix.steps }} \
+            --out "$RUNNER_TEMP/refined-${{ matrix.label }}.json"
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'refined-${{ matrix.label }}.json')
+          d=json.load(open(p)); d.pop('saddle_points',None); d.pop('eigenvectors_physical',None)
+          d['history']=d['history'][-2:]
+          print(json.dumps(d,indent=2))
+          PY
+      - name: Upload refined saddle
+        uses: actions/upload-artifact@v4
+        with:
+          name: thomson-saddle-refined-${{ matrix.label }}
+          path: ${{ runner.temp }}/refined-${{ matrix.label }}.json
+          retention-days: 7
