@@ -54,7 +54,7 @@ jobs:
             /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_t9_exchange_repair.py \
               "$RUNNER_TEMP/tan" "$RUNNER_TEMP/c7-five" "$RUNNER_TEMP/exchange-dfs" \
               "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/status-budget${budget}.json" \
-              --case '${{ matrix.case }}' --budget "$budget" --cutoff 900 \
+              --case '${{ matrix.case }}' --budget "$budget" --cutoff 600 \
               > "$RUNNER_TEMP/result/stdout-budget${budget}.txt" 2> "$RUNNER_TEMP/result/stderr-budget${budget}.txt"
             cat "$RUNNER_TEMP/result/status-budget${budget}.json"
             python3 - "$RUNNER_TEMP/result/status-budget${budget}.json" <<'PY'
