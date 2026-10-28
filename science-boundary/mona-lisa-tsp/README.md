@@ -33,6 +33,26 @@ Let `G` be the connected plane graph of allowed edges, and `T0` its known Hamilt
 
 This is not merely a heuristic move generator: **every** alternative Hamiltonian tour in the reduced planar graph can be represented in these variables. The difficult conditions are (i) exactly two selected edges per city, and (ii) exactly one connected cycle. A local subset of face variables gives a sharply defined, finite, *exact* search restriction. Next: select overlapping face patches around the +16 disconnected move, optimize with CP-SAT or MIP under degree-two parity constraints, and iteratively add connectivity cuts. For a fixed patch, solver infeasibility would rule out *all* improving tours expressible by that patch (if the model and solve are independently verified), rather than only particular k-opt sequences.
 
+## October 2026 deeper prior-art audit and exact formulation
+
+**Do not claim novelty for "TSP as a surface boundary."** Yılmaz Arslanoğlu's 2026 preprint [*A Surface-Based Formulation of the Traveling Salesman Problem*](https://optimization-online.org/wp-content/uploads/2026/02/arslanoglu-surface-based-tsp-formulation.pdf) explicitly uses this viewpoint with triangle-incidence complexes, connectivity / tree constraints and an Euler-characteristic filter. It demonstrates advantages on small and medium instances but does not provide a new Mona Lisa tour. A substantive distinction worth testing, not asserted to be novel, is **relative face-spin optimization on Cook et al.'s published, provably reduced planar Mona Lisa graph**. Our graph has nontriangular faces; the existing 100,000-edge tour gives a feasible reference spin assignment and a **zero-cost reference state**, so model cost differences are signed integers without rebuilding a full 100,000-city MILP.
+
+For each sparse edge e=(u,v), fix baseline membership b_e in {0,1} and faces f,g. With Boolean relative face labels y_f, set t_e=y_f XOR y_g and x_e=b_e XOR t_e. The length change is exactly
+\`\`\`
+Delta = sum_e [ (1 - 2*b_e) * w_e * t_e ]
+\`\`\`
+and baseline degree-two makes each vertex constraint
+\`\`\`
+sum_{e incident v} (1 - 2*b_e)*t_e = 0.
+\`\`\`
+The model adds \`Delta <= -1\` and minimizes Delta; when a returned 2-factor has multiple cycles, its subtours yield **valid global cuts** \`sum_{e crossing S} x_e >= 2\`. All costs and cuts are integral. Critically, infeasibility with a fully solved patch only rules out improvements whose face labels are zero **outside that patch**; this is a conditional exact *patch* result, not a global optimality claim.
+
+**Topological cross-check:** in a connected planar embedded graph, with selected boundary degree two at every vertex, the selected edges form one Jordan cycle iff the regions of each of the two face colors are both connected through unselected-edge dual adjacencies. Disconnected selected 2-factors generate multiple alternating nested boundaries, disconnecting at least one color. This gives an alternative way to separate invalid solutions by **dual connectedness**, and an independent checking invariant to investigate after the primal-cut solver.
+
+**Current experiment:** \`dual_patch_search.py\` builds the complete reduced graph embedding, chooses the highest-positive 4-faces from Experiment 02, grows dual radius-3/4/5 patches, then runs OR-Tools CP-SAT with exact XOR/degree constraints and iterative subtour separation. All candidate tours are recomputed with the original upstream verifier. A four-job one-shot [Action](https://github.com/teddyli18000/web-ingest/actions/runs/40690007833) tests eight seeds, with independent per-patch time limits. This is the first attempt here that actually searches entire face-variable patches, rather than enumerating isolated swaps. Solver timeouts remain inconclusive; infeasibility is meaningful only when reported by CP-SAT after cuts.
+
+**Complementary lines to explore after measuring the exact patches:** connectivity cuts in the **dual face-color domains**; separator-based dynamic programming with boundary pairings and winding information; and exact region exchange along the existing tour's two sides. Stop brute-force neighborhood growth if topology/cut formulation dominates the difficulty.
+
 ## Hypotheses
 1. Exhaustively inspect the baseline for 2-opt improving edges among spatial nearest-neighbor candidate edges. A zero result proves only absence for the searched candidate pairs.
 2. Primary next direction: optimize overlapping face patches under degree-two and single-cycle constraints using local exact solvers; explore separator-interface optimization after validating patches. Larger k-opt is a baseline, not the research agenda.
@@ -69,6 +89,7 @@ The scripts produce no new tour unless a candidate passes exact integer scoring.
 - [Published baseline certificate](https://github.com/few-shots/few-shots/blob/main/problems/p010-mona-lisa-tsp/baseline/certificate.json)
 
 ## Work log
+- 2026-10-28: audited 2026 Arslanoğlu surface-based MILP preprint, which independently establishes surface formulation as prior art. Derived exact integer face-spin patch model with degree-two and iteratively separated subtour connectivity; launched four-job matrix CP-SAT evaluation.
 - 2026-10-28: planar-dual pair probe negative: 298,104 positive-gain 4-face pairs tested, zero produce a valid one-component tour. Next search should jointly optimize face spins under degree-two constraints and cut connectivity, rather than enumerate more independent face pairs.
 - 2026-10-28: first planar-graph experiment succeeded; 248,972 edges, all 100,000 baseline edges present, planar. Identified +16 cost-lowering 2-factor flip that splits into two cycles; recorded full face-gain distribution in Action artifact, and launched paired-face connectivity-repair test.
 - 2026-10-28: rechecked primary research; identified 2024 Cook–Helsgaun–Hougardy–Schroeder certified planar reduction and public 248,972-edge/1,635-fixed-edge data. Redirected from scaling k-neighbor probes to planar-dual face-region optimization, conditional on graph/baseline validation. Verified negative k=160 action result.
