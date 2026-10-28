@@ -1,0 +1,58 @@
+name: temp Thomson 960 B-D saddle certification
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-bd-saddle.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-cd-hessian
+          path: ${{ runner.temp }}/cd
+          github-token: ${{ github.token }}
+          run-id: 40732118945
+      - name: Optimize B-D string
+        run: |
+          python3 science-boundary/thomson-960/code/string_between_seeds.py \
+            science-boundary/thomson-960/data/basin-b-010566.json "$RUNNER_TEMP/cd/basin-d.json" \
+            --images 11 --iterations 360 --climb-iterations 0 --eta 0.00022 --max-step 0.0006 \
+            --out "$RUNNER_TEMP/string-bd.json"
+      - name: Fixed-tangent refinement
+        run: |
+          python3 science-boundary/thomson-960/code/refine_saddle_path_tangent.py \
+            "$RUNNER_TEMP/string-bd.json" --outer 8 --penalty 300000 --perp-maxiter 650 \
+            --newton-damping 0.30 --max-reaction-rms 0.00008 \
+            --out "$RUNNER_TEMP/path-bd.json"
+      - name: Independent hybrid refinement
+        run: |
+          python3 science-boundary/thomson-960/code/refine_saddle_hybrid.py \
+            "$RUNNER_TEMP/string-bd.json" --outer 6 --penalty 300000 --perp-maxiter 600 \
+            --newton-damping 0.25 --max-reaction-rms 0.00008 \
+            --out "$RUNNER_TEMP/hybrid-bd.json"
+          python3 - <<'PY'
+          import json, os
+          for f in ('path-bd.json','hybrid-bd.json'):
+            d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],f)))
+            print(f,d['final_energy'],d['final_gradient_rms'],d['negative_internal_modes_below_-1e-3'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-bd-saddle
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/string-bd.json
+            ${{ runner.temp }}/path-bd.json
+            ${{ runner.temp }}/hybrid-bd.json
