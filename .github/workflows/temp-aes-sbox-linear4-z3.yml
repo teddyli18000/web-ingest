@@ -1,0 +1,44 @@
+name: temp-aes-sbox-linear4-z3
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-sbox-linear4-z3.yml'
+permissions:
+  contents: read
+jobs:
+  linear:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {basis: '1,2,4,8', gates: 16, seed: 2026102780, tag: current16-control}
+          - {basis: '1,2,4,8', gates: 15, seed: 2026102781, tag: current15a}
+          - {basis: '1,2,4,8', gates: 15, seed: 2026102782, tag: current15b}
+          - {basis: '1,2,7,11', gates: 15, seed: 2026102791, tag: cheapA15}
+          - {basis: '2,7,8,11', gates: 15, seed: 2026102792, tag: cheapB15}
+          - {basis: '2,7,10,11', gates: 15, seed: 2026102793, tag: cheapC15}
+          - {basis: '3,2,13,8', gates: 16, seed: 2026102794, tag: mixed16}
+          - {basis: '1,2,7,11', gates: 16, seed: 2026102795, tag: cheapA16}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install solver
+        run: python3 -m pip install --disable-pip-version-check z3-solver
+      - name: Exact linear-interface synthesis
+        run: |
+          out="/tmp/aes-linear-${{ matrix.tag }}"
+          mkdir -p "$out"
+          python3 science-boundary/aes-sbox-circuit/synth_linear4_z3.py \
+            --basis "${{ matrix.basis }}" \
+            --gates "${{ matrix.gates }}" \
+            --timeout 900 \
+            --seed "${{ matrix.seed }}" \
+            --out "$out" | tee "$out/run.log"
+      - name: Upload linear evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-linear-${{ matrix.tag }}
+          path: /tmp/aes-linear-${{ matrix.tag }}
