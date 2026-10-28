@@ -1,0 +1,26 @@
+name: temp labs-100 periodic-pair continuation
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-periodic-pair.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  continue:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build homotopy search
+        run: g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG science-boundary/labs-100/code/lag_homotopy.cpp -o /tmp/hom
+      - name: Continue periodic pair seed
+        shell: bash
+        run: |
+          set -euo pipefail
+          seed='+++++++--+-+--+++-+-----+--+++-++---++--++-+++-+-++++--+-+++++--++++-+-----+-+-+--++++--+++---+-+--+'
+          set +e
+          /tmp/hom --runs 24 --threads 4 --steps 12000 --seed 9001 --start "$seed" --perturb 0 | tee /tmp/direct.txt
+          /tmp/hom --runs 24 --threads 4 --steps 12000 --seed 9101 --start "$seed" --perturb 4 | tee /tmp/perturb.txt
+          set -e
+          grep -E '^(BEST|SUMMARY|FINAL)' /tmp/direct.txt /tmp/perturb.txt || true
