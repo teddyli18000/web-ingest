@@ -1,0 +1,33 @@
+name: temp-aes-semilinear-support6-proof
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-semilinear-support6-proof.yml'
+      - 'science-boundary/aes-sbox-circuit/prove_semilinear_support6_impossible.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-semilinear-support6-proof
+  cancel-in-progress: false
+
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prove support >=6 cannot fit 101 budget
+        run: |
+          mkdir -p /tmp/aes-support6-proof
+          python science-boundary/aes-sbox-circuit/prove_semilinear_support6_impossible.py \
+            | tee /tmp/aes-support6-proof/run.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-semilinear-support6-proof
+          path: /tmp/aes-support6-proof
