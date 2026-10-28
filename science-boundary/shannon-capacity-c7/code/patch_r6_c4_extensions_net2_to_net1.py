@@ -2,10 +2,10 @@
 """Retarget the exact connected max-support-4 radius-6 engine to net+1.
 
 Prerequisite: the same 134753 baseline has a complete unrestricted negative
-result through radius 5.  Hence any seven-addition/six-owner improving witness
-has connected selected-support hypergraph.  The source generator enumerates all
+result through radius 5. Hence any seven-addition/six-owner improving witness
+has connected selected-support hypergraph. The source generator enumerates all
 connected owner-six unions anchored by a selected exact support-4 hyperedge and
-uses no net+2-only Hall pruning.  We therefore change only baseline size, the
+uses no net+2-only Hall pruning. We therefore change only baseline size, the
 independent-set target 8->7, a known mixed-auto compile typo, and output labels.
 """
 from pathlib import Path
@@ -28,8 +28,8 @@ rep("if(n<8)return false", "if(n<7)return false")
 rep("std::array<unsigned,8>ch{}", "std::array<unsigned,7>ch{}")
 rep("if(d==8)", "if(d==7)")
 rep("for(unsigned t=0;t<8;++t)", "for(unsigned t=0;t<7;++t)")
-rep("std::popcount(m)<8-d", "std::popcount(m)<7-d")
-rep("std::popcount(m)<7-d", "std::popcount(m)<6-d")
+rep("if(std::popcount(m)<8-d)return false;", "if(std::popcount(m)<7-d)return false;")
+rep("if(std::popcount(m)<7-d)break;", "if(std::popcount(m)<6-d)break;")
 rep("ch.size()==8", "ch.size()==7")
 rep("ch.size()+p.size()-s<8", "ch.size()+p.size()-s<7")
 rep("if(ps<8)return false", "if(ps<7)return false")
