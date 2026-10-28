@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-28",
+  "problem": "BPZ t=9 obstruction-free auxiliary reconfiguration in C7^5",
+  "source_state": {
+    "published_auxiliary": "BPZ X",
+    "published_size": 367,
+    "obstruction_size": 1098,
+    "unique_obstruction_hit": 10665,
+    "starting_independent_size_after_deletion": 366,
+    "allowed_vertices": 15709
+  },
+  "exact_reconfiguration": {
+    "move_definition": "neutral k-for-k exchange inside C7^5\\D, preserving an independent set of size 366",
+    "radius_1_2_component": {
+      "states": 6,
+      "directed_radius_1_edges": 14,
+      "directed_radius_2_edges": 12,
+      "max_radius_1_2_outdegree": 5,
+      "free_367th_vertex_found": false
+    },
+    "radius_3_closure": {
+      "neutral_moves_over_all_6_states": 4,
+      "moves_leaving_the_6_state_component": 0,
+      "owner_triples_by_state": [1867, 2030, 1835, 1845, 1996, 1821]
+    },
+    "radius_4_closure": {
+      "neutral_moves_over_all_6_states": 0,
+      "moves_leaving_the_6_state_component": 0,
+      "owner_quads_by_state": [25042, 26691, 24304, 24316, 26103, 23927]
+    }
+  },
+  "completeness_notes": [
+    "The radius-1/2 component was enumerated with exact sorted 366-vertex state keys, not a hash-only equality test.",
+    "For radius 3, every owner triple that can be the union of candidate blocker supports of size at most 3 was generated from support-3 keys, support-2 plus support-1 unions, and pairs of support-2 keys.",
+    "For radius 4, every relevant owner quad was generated from support-4 keys, pair unions of support<=3 keys, and triple unions of support<=2 keys. The starting-state count 25042 independently matches the relevant-owner-quad count from the separate exact improving-exchange implementation.",
+    "For each owner set, the candidate pool consists of every allowed outside vertex whose blocker support is a nonempty subset of that owner set; all pairwise-compatible k-tuples were tested exactly.",
+    "No statement here is an upper bound on alpha(C7^5 minus D); it only proves that this particular obstruction-free 366-set sits in a six-state neutral reconfiguration island for exchange radius at most 4."
+  ],
+  "related_result": "results/bpz-t9-local-exchange.json",
+  "conclusion": "Direct improving exchanges are already excluded through remove-5/add-6, and neutral exchanges of radius at most 4 cannot leave the six-state island around BPZ X minus 10665. A successful auxiliary 367-set must use a deeper neutral rearrangement or a different basin/component."
+}
