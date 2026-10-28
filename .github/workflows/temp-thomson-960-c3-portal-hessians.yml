@@ -1,0 +1,60 @@
+name: temp Thomson 960 C3 portal Hessians
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-c3-portal-hessians.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  classify:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tag: p172
+            artifact: thomson-c3-portals-303
+            target: 444368.56453920424
+          - tag: p410
+            artifact: thomson-c3-portals-404
+            target: 444368.8023036475
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ runner.temp }}/portal
+          github-token: ${{ github.token }}
+          run-id: 40736785683
+      - name: Extract constrained stationary geometry
+        run: |
+          python3 - <<'PY'
+          import json, glob, os, pathlib
+          files=glob.glob(os.path.join(os.environ['RUNNER_TEMP'],'portal','*.json'))
+          assert len(files)==1, files
+          d=json.load(open(files[0])); target=float('${{ matrix.target }}')
+          p=min(d['portals'],key=lambda x:abs(float(x['energy'])-target))
+          assert abs(float(p['energy'])-target)<2e-7,(p['energy'],target)
+          out={'energy':float(p['energy']),'delta_vs_live':float(p['delta_vs_live']),'points':p['points']}
+          pathlib.Path(os.path.join(os.environ['RUNNER_TEMP'],'seed.json')).write_text(json.dumps(out,separators=(',',':'))+'\n')
+          print('extracted',out['energy'],out['delta_vs_live'])
+          PY
+      - name: Full-space Hessian classification
+        run: |
+          python3 science-boundary/thomson-960/code/diagnose_seed_modes.py \
+            "$RUNNER_TEMP/seed.json" --k 20 --out "$RUNNER_TEMP/hessian-${{ matrix.tag }}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-c3-portal-hessian-${{ matrix.tag }}
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/seed.json
+            ${{ runner.temp }}/hessian-${{ matrix.tag }}.json
