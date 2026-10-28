@@ -1,0 +1,48 @@
+name: temp labs-100 odd-perfect outside near-skew
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-oddperfect-outside-nss.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {shard: 0, seed: 93000017, lo: 3, hi: 10}
+          - {shard: 1, seed: 93000031, lo: 5, hi: 15}
+          - {shard: 2, seed: 93000047, lo: 7, hi: 21}
+          - {shard: 3, seed: 93000061, lo: 10, hi: 30}
+          - {shard: 4, seed: 94000079, lo: 3, hi: 10}
+          - {shard: 5, seed: 94000101, lo: 5, hi: 15}
+          - {shard: 6, seed: 94000121, lo: 7, hi: 21}
+          - {shard: 7, seed: 94000139, lo: 10, hi: 30}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build instrumented search
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/oddperfect_outside_nss.cpp \
+            -o /tmp/odd-outside
+      - name: Search and independently verify reported states
+        shell: bash
+        run: |
+          set -euo pipefail
+          /tmp/odd-outside --runs 128 --steps 100000 --odd-steps 40000 --threads 4 \
+            --seed '${{ matrix.seed }}' --tenure-lo '${{ matrix.lo }}' --tenure-hi '${{ matrix.hi }}' \
+            | tee /tmp/search.txt
+          for tag in BESTSEQ OUTSEQ; do
+            seq=$(sed -n "s/^${tag} //p" /tmp/search.txt | tail -n1)
+            if [ -n "$seq" ]; then
+              printf '%s verified=' "$tag"
+              python3 science-boundary/labs-100/code/verify.py -- "$seq"
+            fi
+          done
