@@ -1,0 +1,67 @@
+name: Temp Ramsey R46 exact 216-218 edge exclusion
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - science-boundary/ramsey-r46/m216_218_exclusion.py
+      - .github/workflows/temp-ramsey-r46-m216-218-exclusion.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-m216-218-exclusion
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Recompute exact exclusion
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 -m py_compile science-boundary/ramsey-r46/m216_218_exclusion.py
+          python3 science-boundary/ramsey-r46/m216_218_exclusion.py --output /tmp/r46/result.json
+          python3 - /tmp/r46/result.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert d['minimum_edges_remaining']==219, d
+          assert d['lucky_d12_evidence']['all_lucky_d12_unsat'] is True
+          assert d['m217']['all_unsat'] is True
+          assert d['m218']['excluded'] is True
+          assert len(d['m218']['killed_by_sum_S_after_no_lucky_d12'])==12
+          assert d['m218']['final_cross_edge_contradiction']['cross_edges_upper_from_S12']==32
+          assert d['m218']['final_cross_edge_contradiction']['cross_edges_lower_from_degree13']==40
+          print(json.dumps({'minimum_edges_remaining':219,'m218_excluded':True},sort_keys=True))
+          PY
+      - name: Persist evidence and retire one-shot workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/r46/result.json science-boundary/ramsey-r46/results/m216-218-exclusion.json
+          git rm .github/workflows/temp-ramsey-r46-m216-218-exclusion.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/results/m216-218-exclusion.json
+          git commit -m 'ramsey-r46: record exact 216-218 edge exclusion'
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-m216-218-exclusion
+          path: /tmp/r46
+          if-no-files-found: warn
+          retention-days: 7
