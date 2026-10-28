@@ -1,0 +1,32 @@
+name: temp-monalisa-neutral-metric-audit
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/neutral_metric_audit.py
+      - .github/workflows/temp-monalisa-neutral-metric-audit.yml
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+      - name: Compare exact integer and real-valued edge costs
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          python science-boundary/mona-lisa-tsp/neutral_metric_audit.py \
+            --moves science-boundary/mona-lisa-tsp/data/neutral-moves.json \
+            --report science-boundary/mona-lisa-tsp/results/neutral-metric.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-neutral-metric
+          path: science-boundary/mona-lisa-tsp/results/neutral-metric.json
