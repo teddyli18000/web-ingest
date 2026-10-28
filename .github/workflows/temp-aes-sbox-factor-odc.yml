@@ -1,0 +1,20 @@
+name: temp-aes-sbox-factor-odc
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-sbox-factor-odc.yml'
+permissions:
+  contents: read
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exact core-factor observability
+        run: python3 science-boundary/aes-sbox-circuit/analyze_102_factor_odc.py | tee /tmp/aes-factor-odc.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-factor-odc
+          path: /tmp/aes-factor-odc.json
