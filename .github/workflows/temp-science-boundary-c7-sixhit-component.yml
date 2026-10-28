@@ -1,0 +1,67 @@
+name: Temp Science Boundary C7 hit-count <=6 component
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-sixhit-component.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_t9_funsearch_hitcount_component.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  traverse:
+    strategy:
+      fail-fast: false
+      matrix:
+        case: [0, 1, 2, 3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned public sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+      - name: Install dependency
+        run: python3 -m pip install --disable-pip-version-check numpy
+      - name: Traverse hit-count <=6 component
+        id: traverse
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/shot" "$RUNNER_TEMP/result"
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_t9_funsearch_hitcount_component.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/status.json" \
+            --case '${{ matrix.case }}' --max-hits 6 --max-states 5000000 \
+            > "$RUNNER_TEMP/result/stdout.txt" 2> "$RUNNER_TEMP/result/stderr.txt"
+          cat "$RUNNER_TEMP/result/status.json"
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.traverse.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1)) <= 134753: raise SystemExit(r)
+          print(f"VERIFIED BREAKTHROUGH score={r['score']}")
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-hitcount-le6-case-${{ matrix.case }}
+          path: ${{ runner.temp }}/result
+          retention-days: 14
