@@ -1,0 +1,44 @@
+name: temp-monalisa-neutral-hypercube
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/neutral_hypercube.py
+      - .github/workflows/temp-monalisa-neutral-hypercube.yml
+permissions:
+  contents: read
+jobs:
+  hypercube:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch authoritative verifier
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+      - name: Check all six neutral move combinations
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          mkdir -p science-boundary/mona-lisa-tsp/results/hypercube
+          python science-boundary/mona-lisa-tsp/neutral_hypercube.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --moves science-boundary/mona-lisa-tsp/data/neutral-moves.json \
+            --report science-boundary/mona-lisa-tsp/results/hypercube/report.json \
+            --output-dir science-boundary/mona-lisa-tsp/results/hypercube
+      - name: Independently verify extreme combination
+        run: |
+          if test -f science-boundary/mona-lisa-tsp/results/hypercube/mask-63.json; then
+            mkdir -p /tmp/p010-check
+            cp science-boundary/mona-lisa-tsp/results/hypercube/mask-63.json /tmp/p010-check/certificate.json
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py /tmp/p010-check
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-neutral-hypercube
+          path: science-boundary/mona-lisa-tsp/results/hypercube/
+          if-no-files-found: ignore
