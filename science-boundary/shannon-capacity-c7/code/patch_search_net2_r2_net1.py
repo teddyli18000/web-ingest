@@ -7,7 +7,7 @@ The resulting C++ program searches, in order, for:
   * remove 2 / add 3 independent vertices from the complete two-owner pool.
 
 The owner/support recovery and complete owner-pair enumeration are inherited
-unchanged from search_net2_r2.cpp.  This is useful for moving a 134752 seed to
+unchanged from search_net2_r2.cpp. This is useful for moving a 134752 seed to
 a different 134753 plateau point before asking for a second +1 improvement.
 """
 import sys
@@ -30,7 +30,7 @@ s=s[:a]+helper+s[b:]
 
 anchor=' // Direct +2 settles support-union size zero.\n'
 if s.count(anchor)!=1: raise SystemExit('direct anchor drift')
-s=s.replace(anchor,''' // Direct +1 settles support-union size zero.\n if(!freev.empty()){std::cout<<"{\\"kind\\":\\"add1\\",\\"method\\":\\"exact-unrestricted-r2-net1\\",\\"baseline_size\\":"<<base.size()<<",\\"coverage0\\":"<<freev.size()<<",\\"add\\":["<<freev[0]<<"]}\\n";return 0;}\n // The old direct +2 check is now unreachable but retained as an independent replay.\n''',1)
+s=s.replace(anchor,''' // Direct +1 settles support-union size zero.\n if(!freev.empty()){std::cout<<"{\\"kind\\":\\"add1\\",\\"method\\":\\"exact-unrestricted-r2-net1\\",\\"baseline_size\\":"<<base.size()<<",\\"coverage0\\":"<<freev.size()<<",\\"add\\":["<<freev[0]<<"]}\\n";return 0;}\n // The old direct +2 loop is now unreachable after this exact add1 check.\n''',1)
 
 # Replace the radius-one net+2 check with the exact net+1 condition.
 ra=s.index(' // Before radius two, settle support-union size one exactly.')
@@ -45,6 +45,7 @@ old='if(find4(supp,freev,add)){std::cout<<"{\\"kind\\":\\"replace2add4\\",\\"met
 new='if(find3(supp,add)){std::cout<<"{\\"kind\\":\\"replace2add3\\",\\"method\\":\\"exact-unrestricted-r2-net1\\",\\"baseline_size\\":"<<base.size()<<",\\"coverage0\\":"<<freev.size()<<",\\"coverage1\\":"<<c1ids.size()<<",\\"coverage2\\":"<<c2ids.size()<<",\\"remove\\":["<<base[x]<<\',\'<<base[y]<<"],\\"add\\":["<<add[0]<<\',\'<<add[1]<<\',\'<<add[2]<<"]}\\n";return true;}'
 if old not in s: raise SystemExit('check_pair witness anchor drift')
 s=s.replace(old,new,1)
-s=s.replace('"exact-unrestricted-r2-net2"','"exact-unrestricted-r2-net1"')
+# The final no-witness diagnostic is C++-escaped, so replace the raw token.
+s=s.replace('exact-unrestricted-r2-net2','exact-unrestricted-r2-net1')
 Path(sys.argv[2]).write_text(s)
 print('patched exact net+1 through radius2')
