@@ -1,0 +1,37 @@
+name: temp-monalisa-universal-neutral-sat
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/universal_neutral_connectivity.py
+      - .github/workflows/temp-monalisa-universal-neutral-sat.yml
+permissions:
+  contents: read
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch upstream baseline and independent SAT solvers
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install ortools z3-solver
+          python upstream/problems/p010-mona-lisa-tsp/verify/verify.py upstream/problems/p010-mona-lisa-tsp/baseline
+      - name: Prove universal connectivity or return explicit counterexample
+        run: |
+          mkdir -p science-boundary/mona-lisa-tsp/results/universal-neutral
+          python science-boundary/mona-lisa-tsp/universal_neutral_connectivity.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --catalogue science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --report science-boundary/mona-lisa-tsp/results/universal-neutral/report.json \
+            --seconds 90
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-universal-neutral-sat-proof
+          path: science-boundary/mona-lisa-tsp/results/universal-neutral/
+          if-no-files-found: ignore
