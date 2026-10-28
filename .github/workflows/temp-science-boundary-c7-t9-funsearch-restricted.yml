@@ -79,6 +79,7 @@ jobs:
         run: |
           {
             echo '## C7 t9 obstruction-aware FunSearch restricted greedy'
+            echo 'retrigger=1'
             for f in status.json verify.json; do
               if [[ -f "$RUNNER_TEMP/result/$f" ]]; then echo '```json'; cat "$RUNNER_TEMP/result/$f"; echo '```'; fi
             done
