@@ -1,0 +1,59 @@
+name: temp labs-100 strengthened near-skew bnb
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-nearskew-bnb-v2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  positive-control:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build strengthened exact search
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/nearskew_bnb.cpp -o /tmp/nearskew-bnb
+      - name: Recover the known 578 incumbent under cap 528
+        shell: bash
+        run: |
+          set -euo pipefail
+          /tmp/nearskew-bnb --threads 4 --prefix 6 --seconds 30 --asum 10 --cap 528 | tee /tmp/control.txt
+          grep -F 'found=1 ' /tmp/control.txt
+          grep -F 'FOUND energy=578 odd=50 even=528 ' /tmp/control.txt
+
+  target:
+    needs: positive-control
+    strategy:
+      fail-fast: false
+      matrix:
+        asum: [0, 4, 10, 20]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build strengthened exact search
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/nearskew_bnb.cpp -o /tmp/nearskew-bnb
+      - name: Search cap 524
+        shell: bash
+        run: |
+          set +e
+          /tmp/nearskew-bnb --threads 4 --prefix 10 --seconds 120 --asum '${{ matrix.asum }}' --cap 524 | tee /tmp/bnb.txt
+          rc=${PIPESTATUS[0]}
+          set -e
+          if [ "$rc" -gt 1 ]; then exit "$rc"; fi
+          grep -F 'SUMMARY asum=${{ matrix.asum }} cap=524 ' /tmp/bnb.txt
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: labs100-nearskew-bnb-v2-${{ matrix.asum }}
+          path: /tmp/bnb.txt
+          if-no-files-found: warn
