@@ -1,0 +1,42 @@
+name: temp Thomson 960 C downward index1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-c-downward-index1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  downward:
+    strategy:
+      fail-fast: false
+      matrix:
+        phase: [0, 20, 40, 60, 80, 100]
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Rebuild index-2 C
+        run: |
+          python3 science-boundary/thomson-960/code/harvest_basin_c.py \
+            "$RUNNER_TEMP/few-shots" \
+            --neighbor-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --scale 0.95 --out "$RUNNER_TEMP/c.json"
+      - name: Downward search to index-1
+        run: |
+          python3 science-boundary/thomson-960/code/downward_index2_to_index1.py \
+            "$RUNNER_TEMP/c.json" --escape-phase-deg ${{ matrix.phase }} --escape-amp 0.002 \
+            --outer 8 --k 8 --penalty 300000 --perp-maxiter 650 \
+            --newton-damping 0.35 --max-reaction-rms 0.00008 \
+            --out "$RUNNER_TEMP/c-i1-p${{ matrix.phase }}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-c-i1-p${{ matrix.phase }}
+          retention-days: 7
+          path: ${{ runner.temp }}/c-i1-p${{ matrix.phase }}.json
