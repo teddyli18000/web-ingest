@@ -1,0 +1,65 @@
+name: Temp Ramsey R46 R45 catalog metadata
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-r45-catalog-metadata.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-r45-catalog-metadata
+  cancel-in-progress: false
+
+jobs:
+  authenticate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch complete McKay R(4,5,24) catalogue
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://users.cecs.anu.edu.au/~bdm/data/r45_24.g6'
+          curl --fail --location --retry 3 --retry-delay 2 --output /tmp/r45_24.g6 "$url"
+          lines=$(wc -l < /tmp/r45_24.g6)
+          bytes=$(wc -c < /tmp/r45_24.g6)
+          sha=$(sha256sum /tmp/r45_24.g6 | awk '{print $1}')
+          test "$lines" -eq 352366
+          test "$bytes" -eq 16913568
+          python3 - "$url" "$lines" "$bytes" "$sha" > /tmp/r45-source.json <<'PY'
+          import datetime,json,os,sys
+          url,lines,size,sha=sys.argv[1:]
+          print(json.dumps({
+              'source_url':url,
+              'retrieved_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              'graphs':int(lines),
+              'bytes':int(size),
+              'sha256':sha,
+              'format':'graph6, one 24-vertex graph per line',
+              'source_claim':'complete Ramsey(4,5,24) catalogue',
+              'github_run_id':os.environ['GITHUB_RUN_ID'],
+          },indent=2,sort_keys=True))
+          PY
+          cat /tmp/r45-source.json
+      - name: Persist source metadata only
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest=science-boundary/ramsey-r46/results/r45-24-catalog-source.json
+          cp /tmp/r45-source.json "$dest"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "$dest"
+          git commit -m 'ramsey-r46: record R45 catalog source hash' || exit 0
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
