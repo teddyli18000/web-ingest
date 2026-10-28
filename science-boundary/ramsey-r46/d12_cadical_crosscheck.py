@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import multiprocessing as mp
+import queue
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -52,13 +53,16 @@ def solve_with_timeout(cnf_path: Path, solver_name: str, timeout_s: float) -> di
             p.kill()
             p.join()
         return {"status": "TIMEOUT", "seconds": round(elapsed, 6)}
-    if q.empty():
+    try:
+        # Queue.empty() is explicitly unreliable across processes; after the
+        # child exits, give the feeder thread a bounded chance to deliver.
+        result = q.get(timeout=2)
+    except queue.Empty:
         return {
             "status": "ERROR",
             "seconds": round(elapsed, 6),
             "error": f"solver child exited {p.exitcode} without a result",
         }
-    result = q.get()
     result["seconds"] = round(elapsed, 6)
     result["exitcode"] = p.exitcode
     return result
