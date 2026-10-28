@@ -1,0 +1,86 @@
+name: Temp Ramsey R46 degree-11 catalog statistics
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-degree11-stats.yml
+      - science-boundary/ramsey-r46/degree11_catalog_stats.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-degree11-stats
+  cancel-in-progress: false
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch and authenticate complete endpoint catalogues
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          curl --fail --location --retry 3 --retry-delay 2 \
+            --output /tmp/r46/r36_11.g6.gz \
+            'https://users.cecs.anu.edu.au/~bdm/data/r36_11.g6.gz'
+          gzip -dc /tmp/r46/r36_11.g6.gz > /tmp/r46/r36_11.g6
+          curl --fail --location --retry 3 --retry-delay 2 \
+            --output /tmp/r46/r45_24.g6 \
+            'https://users.cecs.anu.edu.au/~bdm/data/r45_24.g6'
+          test "$(wc -l < /tmp/r46/r36_11.g6)" -eq 30395
+          test "$(wc -l < /tmp/r46/r45_24.g6)" -eq 352366
+          echo '83ca4028f206b2fa4315ef219b8c2c57c7835209673dd8183d8fb4353bd4fdd0  /tmp/r46/r45_24.g6' | sha256sum -c -
+          sha256sum /tmp/r46/r36_11.g6.gz /tmp/r46/r36_11.g6 /tmp/r46/r45_24.g6
+      - name: Compute necessary cross-degree interval filter
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/ramsey-r46/degree11_catalog_stats.py \
+            --a /tmp/r46/r36_11.g6 \
+            --b /tmp/r46/r45_24.g6 \
+            --output /tmp/r46/degree11-catalog-stats.json \
+            | tee /tmp/r46/summary.txt
+          python3 - /tmp/r46/degree11-catalog-stats.json <<'PY'
+          import json,os,sys
+          p=sys.argv[1]
+          d=json.load(open(p,encoding='utf-8'))
+          d['github_run_id']=os.environ['GITHUB_RUN_ID']
+          d['sources']={
+            'A_url':'https://users.cecs.anu.edu.au/~bdm/data/r36_11.g6.gz',
+            'B_url':'https://users.cecs.anu.edu.au/~bdm/data/r45_24.g6',
+          }
+          open(p,'w',encoding='utf-8').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+      - name: Persist compact statistics
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest=science-boundary/ramsey-r46/results/degree11-catalog-stats.json
+          cp /tmp/r46/degree11-catalog-stats.json "$dest"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "$dest"
+          git commit -m 'ramsey-r46: record degree-11 catalog statistics' || exit 0
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
+      - name: Upload diagnostic summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-degree11-catalog-stats
+          path: |
+            /tmp/r46/degree11-catalog-stats.json
+            /tmp/r46/summary.txt
+          if-no-files-found: ignore
+          retention-days: 7
