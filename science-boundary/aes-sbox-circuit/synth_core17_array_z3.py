@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Focused exact search for a 17-gate replacement of the merged 102 core.
+"""Focused exact/ODC search for a 17-gate replacement of the merged 102 core.
 
-Uses exact 16-state truth tables. The only free interface is the merged-102
-basis (q34,q36,q39,q41). All nine distinct factors consumed by the tail must
-literally occur among the 17 gate outputs, leaving at most eight non-target
-intermediate wires in any solution.
+The only free interface is q34,q36,q39,q41.  Exact tail analysis shows that
+all nine boundary factors are observable on core states 1..15 and unobservable
+on state 0.  With --odc-zero the target constraints therefore compare only
+bits 1..15 (care mask 0xfffe); any SAT model is still validated after splicing
+by an independent full 256-byte AES check.
 """
 import argparse
 import json
@@ -56,6 +57,7 @@ def main():
     ap.add_argument("--timeout", type=int, default=600)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--allow-xnor", action="store_true")
+    ap.add_argument("--odc-zero", action="store_true", help="allow each target factor to differ on core state 0000")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
     assert 1 <= args.ands <= 17
@@ -64,6 +66,8 @@ def main():
     names_t, targets = target_truths()
     inputs = [var(i) for i in range(4)]
     assert not (set(inputs) & set(targets))
+    care_mask = 0xFFFE if args.odc_zero else 0xFFFF
+    assert len({t & care_mask for t in targets}) == 9
     BV = lambda x: z3.BitVecVal(x, 16)
 
     s = z3.Solver()
@@ -104,22 +108,22 @@ def main():
 
     s.add(z3.Sum(and_terms) == args.ands)
 
-    # A minimal 17-gate solution can be chosen without duplicate functions.
+    # A minimal 17-gate solution can be chosen without duplicate full truth tables.
     s.add(z3.Distinct(*(list(map(BV, inputs)) + vals)))
 
-    # Explicitly assign each of the nine distinct target factors to a distinct
-    # gate output. This is equivalent to target-membership disjunctions but
-    # gives the solver stronger finite-domain structure.
+    # Each of the nine distinct care-restricted target factors must be exposed by
+    # a distinct gate output.  State 0 is deliberately masked only in ODC mode.
     target_idx = []
+    care_bv = BV(care_mask)
     for j, t in enumerate(targets):
         q = z3.Int(f"target_idx{j}")
         s.add(q >= 4, q < 4 + G)
-        s.add(z3.Select(arr, q) == BV(t))
+        s.add((z3.Select(arr, q) & care_bv) == BV(t & care_mask))
         target_idx.append(q)
     s.add(z3.Distinct(*target_idx))
 
-    # No dead gate. Since the last gate cannot feed a later gate, this also
-    # forces the last gate to be one of the nine requested factors.
+    # No dead gate. Since the last gate cannot feed later computation, it must
+    # realize one of the nine requested care-restricted factors.
     for i in range(G):
         idx = 4 + i
         uses = [q == idx for q in target_idx]
@@ -135,6 +139,8 @@ def main():
         "ands": args.ands,
         "basis": ["q34", "q36", "q39", "q41"],
         "allow_xnor": args.allow_xnor,
+        "odc_zero": args.odc_zero,
+        "care_mask_hex": f"0x{care_mask:04x}",
         "seed": args.seed,
         "solver": str(r),
         "seconds": round(elapsed, 3),
@@ -163,7 +169,9 @@ def main():
         selectors = [m.eval(q).as_long() for q in target_idx]
         target_wire = {name: wire_names[idx] for name, idx in zip(names_t, selectors)}
 
-        # Independent 16-state reconstruction check.
+        # Independent 16-state care-restricted reconstruction check. Full AES
+        # correctness (including the don't-care state through the real tail) is
+        # checked by splice_core_into_102.py before any candidate is accepted.
         for x in range(16):
             vv = {
                 "q34": (x >> 0) & 1,
@@ -172,17 +180,19 @@ def main():
                 "q41": (x >> 3) & 1,
             }
             for g in gates:
-                p, q = vv[g["a"]], vv[g["b"]]
+                p, qv = vv[g["a"]], vv[g["b"]]
                 if g["op"] == "AND":
-                    vv[g["out"]] = p & q
+                    vv[g["out"]] = p & qv
                 elif g["op"] == "XOR":
-                    vv[g["out"]] = p ^ q
+                    vv[g["out"]] = p ^ qv
                 else:
-                    vv[g["out"]] = 1 ^ p ^ q
+                    vv[g["out"]] = 1 ^ p ^ qv
+            if x == 0 and args.odc_zero:
+                continue
             for name, t in zip(names_t, targets):
                 assert vv[target_wire[name]] == ((t >> x) & 1)
 
-        model = {"gates": gates, "target_wire": target_wire}
+        model = {"gates": gates, "target_wire": target_wire, "odc_zero": args.odc_zero}
         json.dump(model, open(outdir / "core.json", "w"), indent=2)
         summary["target_wire"] = target_wire
         summary["target_selectors"] = selectors
