@@ -1,0 +1,40 @@
+name: temp labs-100 odd-perfect outside near-skew CP-SAT
+
+on:
+  push:
+    paths:
+      - 'science-boundary/labs-100/code/cpsat_oddperfect_outside_nss.py'
+      - '.github/workflows/temp-labs-100-oddperfect-outside-nss-cpsat.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  calibrate:
+    strategy:
+      fail-fast: false
+      matrix:
+        asum: [0, 10, 20]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check ortools==9.15.6755
+      - name: Search odd-perfect target outside near-skew
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/cpsat_oddperfect_outside_nss.py \
+            --asum '${{ matrix.asum }}' --target 574 --seconds 120 --workers 4 \
+            --seed "$((3100 + ${{ matrix.asum }}))" | tee /tmp/out.txt
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-oddperfect-outside-nss-${{ matrix.asum }}
+          path: /tmp/out.txt
+          if-no-files-found: warn
