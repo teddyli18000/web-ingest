@@ -1,0 +1,32 @@
+name: temp-monalisa-two-tree-audit
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/two_tree_stats.py
+      - .github/workflows/temp-monalisa-two-tree-audit.yml
+permissions:
+  contents: read
+jobs:
+  structure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          git clone --depth 1 https://github.com/bicobico2/ElimTSP.git elimtsp
+          python -m pip install networkx
+          python science-boundary/mona-lisa-tsp/two_tree_stats.py \
+            --edges elimtsp/results/mona.248972.edg.gz \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --report science-boundary/mona-lisa-tsp/results/two-tree-stats.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-two-tree-audit
+          path: science-boundary/mona-lisa-tsp/results/two-tree-stats.json
+          if-no-files-found: ignore
