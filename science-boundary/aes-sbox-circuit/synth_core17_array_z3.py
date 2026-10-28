@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Focused exact search for a 17-gate replacement of the merged 102 core.
 
-Uses a Z3 Array from wire index to exact 16-state truth table. The only free
-core interface is the merged 102 basis (q34,q36,q39,q41); all nine factors
-consumed by the tail must occur among the 17 produced gate wires. A SAT result
-therefore gives a direct 101 route.
+Uses exact 16-state truth tables. The only free interface is the merged-102
+basis (q34,q36,q39,q41). All nine distinct factors consumed by the tail must
+literally occur among the 17 gate outputs, leaving at most eight non-target
+intermediate wires in any solution.
 """
 import argparse
 import json
@@ -44,6 +44,7 @@ def target_truths():
     q59 = q55 ^ q45
     names = ["q45", "q59", "q52", "q57", "q53", "q49", "q58", "q55", "q56"]
     vals = [q45, q59, q52, q57, q53, q49, q58, q55, q56]
+    assert len(set(vals)) == 9
     return names, vals
 
 
@@ -62,6 +63,7 @@ def main():
     G = 17
     names_t, targets = target_truths()
     inputs = [var(i) for i in range(4)]
+    assert not (set(inputs) & set(targets))
     BV = lambda x: z3.BitVecVal(x, 16)
 
     s = z3.Solver()
@@ -102,18 +104,25 @@ def main():
 
     s.add(z3.Sum(and_terms) == args.ands)
 
-    # A minimal 17-gate solution can be chosen without duplicated functions.
+    # A minimal 17-gate solution can be chosen without duplicate functions.
     s.add(z3.Distinct(*(list(map(BV, inputs)) + vals)))
 
-    # All nine required factors must literally be exposed as gate wires.
-    for t in targets:
-        s.add(z3.Or(*[v == BV(t) for v in vals]))
+    # Explicitly assign each of the nine distinct target factors to a distinct
+    # gate output. This is equivalent to target-membership disjunctions but
+    # gives the solver stronger finite-domain structure.
+    target_idx = []
+    for j, t in enumerate(targets):
+        q = z3.Int(f"target_idx{j}")
+        s.add(q >= 4, q < 4 + G)
+        s.add(z3.Select(arr, q) == BV(t))
+        target_idx.append(q)
+    s.add(z3.Distinct(*target_idx))
 
-    # No dead gate: every gate either is a requested factor or feeds a later gate.
-    target_bvs = [BV(t) for t in targets]
-    for i, v in enumerate(vals):
+    # No dead gate. Since the last gate cannot feed a later gate, this also
+    # forces the last gate to be one of the nine requested factors.
+    for i in range(G):
         idx = 4 + i
-        uses = [v == t for t in target_bvs]
+        uses = [q == idx for q in target_idx]
         for j in range(i + 1, G):
             uses.extend([A[j] == idx, B[j] == idx])
         s.add(z3.Or(*uses))
@@ -151,12 +160,8 @@ def main():
             gates.append({"op": op, "a": wire_names[ai], "b": wire_names[bi], "out": out})
             wire_names.append(out)
 
-        target_wire = {}
-        model_vals = [m.eval(v).as_long() & MASK16 for v in vals]
-        for name, t in zip(names_t, targets):
-            hits = [i for i, v in enumerate(model_vals) if v == t]
-            assert len(hits) == 1, (name, hits)
-            target_wire[name] = f"r{hits[0]}"
+        selectors = [m.eval(q).as_long() for q in target_idx]
+        target_wire = {name: wire_names[idx] for name, idx in zip(names_t, selectors)}
 
         # Independent 16-state reconstruction check.
         for x in range(16):
@@ -180,6 +185,7 @@ def main():
         model = {"gates": gates, "target_wire": target_wire}
         json.dump(model, open(outdir / "core.json", "w"), indent=2)
         summary["target_wire"] = target_wire
+        summary["target_selectors"] = selectors
 
     json.dump(summary, open(outdir / "summary.json", "w"), indent=2)
     print(json.dumps(summary, sort_keys=True))
