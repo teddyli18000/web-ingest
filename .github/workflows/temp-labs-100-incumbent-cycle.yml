@@ -19,7 +19,7 @@ jobs:
           set -euo pipefail
           g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG science-boundary/labs-100/code/incumbent_cycle.cpp -o /tmp/inc-cycle
           set +e
-          /tmp/inc-cycle --runs 24 --threads 4 --cycles 8 --steps 3000 --seed 1 | tee /tmp/inc-cycle.txt
+          /tmp/inc-cycle --runs 72 --threads 4 --cycles 12 --steps 2500 --seed 7001 | tee /tmp/inc-cycle.txt
           rc=${PIPESTATUS[0]}
           set -e
           grep -E '^(BREAK|FAR|FINAL)' /tmp/inc-cycle.txt
