@@ -1,0 +1,43 @@
+name: temp-monalisa-large-neutral-cube
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/neutral_large_hypercube.py
+      - .github/workflows/temp-monalisa-large-neutral-cube.yml
+permissions:
+  contents: read
+jobs:
+  cube:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch authoritative verifier
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+      - name: Contract 100k-city tour and verify all candidate superpositions
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          mkdir -p science-boundary/mona-lisa-tsp/results/large-cube
+          python science-boundary/mona-lisa-tsp/neutral_large_hypercube.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --harvest science-boundary/mona-lisa-tsp/data/neutral-harvest.json \
+            --report science-boundary/mona-lisa-tsp/results/large-cube/report.json \
+            --output-dir science-boundary/mona-lisa-tsp/results/large-cube
+          for f in science-boundary/mona-lisa-tsp/results/large-cube/mask-*.json; do
+            test -f "$f" || continue
+            mkdir -p /tmp/p010-check
+            cp "$f" /tmp/p010-check/certificate.json
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py /tmp/p010-check
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-large-neutral-cube
+          path: science-boundary/mona-lisa-tsp/results/large-cube/
+          if-no-files-found: ignore
