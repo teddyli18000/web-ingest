@@ -36,7 +36,7 @@ def zselect(z3,idx,vals):
     for k in range(1,len(vals)):e=z3.If(idx==k,vals[k],e)
     return e
 
-def synth(basis_masks,G,and_count,timeout_ms,seed,fixed_pattern):
+def synth(basis_masks,G,and_count,timeout_ms,seed,pattern_kind):
     import z3
     c=fetch(); prim,targets=primary_truths(c)
     assert rank_masks(basis_masks)==4
@@ -48,11 +48,13 @@ def synth(basis_masks,G,and_count,timeout_ms,seed,fixed_pattern):
         inp.append(z3.BitVecVal(v,16))
     s=z3.Solver(); s.set(timeout=timeout_ms,random_seed=seed)
     vals=list(inp); A=[];B=[];O=[];ands=[]
-    pattern=[2,0,2,0,2,0,2,0,0,2,0,0,2,0,0,0,0,0]
+    primary_pattern=[2,0,2,0,2,0,2,0,0,2,0,0,2,0,0,0,0,0]
+    jain5_pattern=[0,2,0,2,0,0,0,2,0,0,2,0,2,0,0,0,0]
+    pattern={'primary':primary_pattern,'jain5':jain5_pattern}.get(pattern_kind)
     for i in range(G):
         n=len(vals); a=z3.Int(f'a{i}');b=z3.Int(f'b{i}');o=z3.Int(f'o{i}')
         s.add(a>=0,b>=0,a<n,b<n,a<b)
-        if fixed_pattern and i<len(pattern):
+        if pattern is not None and i<len(pattern):
             if pattern[i]==2:s.add(o==2)
             else:s.add(o>=0,o<=1)
         else:s.add(o>=0,o<=2)
@@ -64,7 +66,7 @@ def synth(basis_masks,G,and_count,timeout_ms,seed,fixed_pattern):
     for j,t in enumerate(targets):
         q=z3.Int(f'out{j}');s.add(q>=0,q<len(vals));s.add(zselect(z3,q,vals)==z3.BitVecVal(t,16));outs.append(q)
     t0=time.time();res=s.check();elapsed=time.time()-t0
-    summary={'basis_masks':basis_masks,'gates':G,'and_count':and_count,'fixed_pattern':fixed_pattern,'seed':seed,'solver':str(res),'seconds':round(elapsed,3),'reason':s.reason_unknown() if res==z3.unknown else None}
+    summary={'basis_masks':basis_masks,'gates':G,'and_count':and_count,'pattern_kind':pattern_kind,'seed':seed,'solver':str(res),'seconds':round(elapsed,3),'reason':s.reason_unknown() if res==z3.unknown else None}
     if res!=z3.sat:return summary,None
     m=s.model();names=[f'b{i}' for i in range(4)];gates=[];ops=['XOR','XNOR','AND']
     for i in range(G):
@@ -85,10 +87,12 @@ def synth(basis_masks,G,and_count,timeout_ms,seed,fixed_pattern):
     return summary,{'basis_masks':basis_masks,'gates':gates,'outputs':[names[q] for q in outsel]}
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--basis',required=True,help='comma-separated masks 1..15');ap.add_argument('--gates',type=int,required=True);ap.add_argument('--ands',type=int,default=6);ap.add_argument('--timeout',type=int,default=900);ap.add_argument('--seed',type=int,default=1);ap.add_argument('--fixed-pattern',action='store_true');ap.add_argument('--out',required=True);args=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('--basis',required=True,help='comma-separated masks 1..15');ap.add_argument('--gates',type=int,required=True);ap.add_argument('--ands',type=int,default=6);ap.add_argument('--timeout',type=int,default=900);ap.add_argument('--seed',type=int,default=1);ap.add_argument('--fixed-pattern',action='store_true');ap.add_argument('--d34-pattern',action='store_true');ap.add_argument('--out',required=True);args=ap.parse_args()
+    assert not (args.fixed_pattern and args.d34_pattern)
     basis=[int(x,0) for x in args.basis.split(',')];assert len(basis)==4 and rank_masks(basis)==4
+    pattern_kind='primary' if args.fixed_pattern else ('jain5' if args.d34_pattern else 'none')
     out=pathlib.Path(args.out);out.mkdir(parents=True,exist_ok=True)
-    summary,model=synth(basis,args.gates,args.ands,args.timeout*1000,args.seed,args.fixed_pattern)
+    summary,model=synth(basis,args.gates,args.ands,args.timeout*1000,args.seed,pattern_kind)
     json.dump(summary,open(out/'summary.json','w'),indent=2)
     if model:json.dump(model,open(out/'core.json','w'),indent=2)
     print(json.dumps(summary,sort_keys=True))
