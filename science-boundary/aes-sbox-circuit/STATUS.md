@@ -1,95 +1,115 @@
 # p008 current status
 
-Last synchronized: 2026-10-27 PDT / 2026-10-28 UTC.
+Last synchronized: 2026-10-28 UTC.
 
 ## Live upstream baseline
 
-- Few Shots `data/board.json` is at **102 gates** for p008: `huangxin-design/aes102-field-plane-offsets`, PR #25, verified 2026-10-28T03:00:31Z and merged into `main`.
-- Current record chain: 106 baseline -> 105 `csbo98/aes105-nonlinear-resub` -> 104 `HeiGeAi/aes104-odc-resub` -> 103 `fancify/aes103-joint-plane-orientations` -> 102 `huangxin-design/aes102-field-plane-offsets`.
-- A fresh p008 PR search found **no open p008 PR** after the 102 merge.
-- Therefore any new claim must be **101 gates or fewer**, after re-checking live upstream again.
+- Few Shots `data/board.json` was rechecked at update time: **102 gates** remains the p008 record, `huangxin-design/aes102-field-plane-offsets`, PR #25.
+- Record chain: 106 baseline -> 105 -> 104 -> 103 -> 102.
+- No 101 result is known from the live board. Any new claim must therefore be **101 gates or fewer**, after another immediate upstream recheck.
+- The 102 circuit is
 
-## What the 102 shot changed
+```text
+18 prelinear + 9 norm AND + 15 middle + 18 core + 18 final AND + 24 output = 102.
+```
 
-The 102 certificate keeps the same abstract 18-gate / six-AND inversion core as the 103 primary circuit. Its layer accounting is
+The retained core has six ANDs and consumes four independent middle signals; the fixed tail consumes nine core factors.
 
-`18 prelinear + 9 norm AND + 15 middle + 18 core + 18 final AND + 24 output = 102`.
+## Direct fixed-interface route: now almost completely classified
 
-The new savings are in the surrounding linear representation: semilinear input coordinates `P(x)=0x1b*x^16`, product-plane orientations `[1,2,0,0,2,2,2,1,1]`, a five-offset middle construction, and a 24-gate output layer.
+Replacing the 18-gate core by 17 gates would give a 101-gate full circuit without changing the outer construction.
 
-## Upstream-overlap rule
+Complete fixed-tail observability analysis shows:
 
-Before starting a new route, re-check the live board, open/merged p008 PRs, all merged p008 SHOTs, and any upstream code/artifacts relevant to that route. Do not spend compute reproducing a recorded dead end.
+- the nine factors are exact on all 15 nonzero four-bit core states;
+- all nine factor values are arbitrary at core state `0000`;
+- therefore there are exactly `2^9 = 512` zero-state completions.
 
-For the current five-AND-core route, the overlap check is complete:
+Their nonlinear quotient ranks split as:
 
-- The 102 shot already tried 1,171,086 local root rewrites on the two 103 circuits, including equal-size substitutions, temporary increases, and up to three-gate replacements. It did not reduce the circuit.
-- The 102 shot also reports a generic 17-gate core synthesis with **exactly six ANDs** timing out after 300 seconds.
-- The 105 shot enumerated all 20,160 four-bit linear maps for splicing a published five-AND alternative into the **old 106 outer family**, finding compatible 106-gate circuits but no improvement.
-- None of those searches covers the present route: a five-AND core aligned to the later 102/103 four-dimensional inversion interface and required to produce the current nine final-product factors.
+```text
+16 completions: rank 4
+496 completions: rank 5, all sharing one common 5D space U
+```
 
-## Reusable structure from Jain's public 32-AND circuit
+At least five AND gates are necessary.
 
-Jain's public `sbox106_d34` has AND structure `9 + 5 + 18`. Its five-AND inversion region can be represented as a 17-gate network from four independent inputs spanning exactly the same four-dimensional function space as the 102/103 core inputs.
+### Five-AND 17-gate core: completely excluded
 
-Relative to canonical current core inputs `(a,b,c,d)`, four independent Jain-side functions are
+`prove_core5_rank5_completions.py` proves all 496 rank-five completions need at least six ANDs.
 
-- `J51 = b XOR c` (mask 6)
-- `J49 = a XOR d` (mask 9)
-- `J41 = a XOR b XOR d` (mask 11)
-- `J48 = c XOR d` (mask 12)
+For the remaining 16 rank-four completions, `screen_core5_exact.cpp` exhausts exact 16-state physical states with arbitrary XOR/XNOR phases and a safe optimistic mandatory-linear-form lower bound. Independent GitHub Actions run **40739207093 completed 16/16 jobs successfully with zero <=12 witness**.
 
-with the fifth nominal function `J50 = a XOR b XOR c` (mask 7) dependent.
+Therefore there is **no fixed-interface `5 AND + 12 linear = 17` core** under the complete zero-state don't-care.
 
-Inside the Jain five-AND core, several current tail factors appear directly, but this does **not** give a 17-gate splice by input relabeling alone; see the exact GL screening below.
+### Six-AND final quotient rank 5: completely excluded
 
-## Nine tail factors have rank four
+If six ANDs have final quotient rank five, one AND is quotient-dependent. Deleting it yields a five-independent-AND representation and can increase the mandatory affine-form count by at most one.
 
-For the unchanged abstract inversion core, the nine factors consumed by the final 18 AND gates are
+The rank-five completions are impossible with five independent ANDs, and the 16 rank-four completions have no five-AND witness with <=12 mandatory forms. Hence **no quotient-rank-five `6 AND + 11 linear` core exists**.
 
-`[w45,w59,w52,w57,w53,w49,w58,w55,w56]`.
+### Six-AND final quotient rank 6 for the 496 rank-five completions: completely excluded
 
-They span only four dimensions. Using `[w45,w59,w52,w57]` as a basis, their masks are
+For the common rank-five target space `U`, the first AND class must lie outside `U` and fixes the final six-dimensional envelope `E=span(U,r0)`. There are exactly 35 such first-class envelopes.
 
-`[1,2,4,8,9,13,6,3,14]`.
+`screen_core6_rank5_exact.cpp` exhausts all 35 on exact truth tables, phases and physical affine operand forms. Local unrestricted runs found zero <=11 witness. Independent GitHub Actions run **40738521634 completed 35/35 jobs successfully**, independently confirming the exclusion.
 
-Thus any four independent factors form a basis of all nine. Once four such factor wires exist, the remaining five factors can be materialized with exactly five XORs; five is also a trivial lower bound because five distinct required factor wires are missing.
+### Only unresolved fixed-interface family
 
-This yields a reduced sufficient route to a 17-gate core: synthesize **four independent required factors in at most 12 gates with at most five ANDs**, then append the five-XOR closure. This is a smaller exact problem than the upstream six-AND generic core timeout and than our earlier nine-output 17-gate encoding.
+The sole remaining 17-gate direct-core family is
 
-## Exact GL(4,2) screening of Jain `sbox106_d34`
+```text
+one of the 16 rank-four zero-state completions
++ six independent ANDs
++ final quotient rank six
++ at most 11 XOR/XNOR gates.
+```
 
-A complete 20,160-map input-GL enumeration was run on exact 16-state truth tables.
+`enumerate_core6_odc_envelopes.cpp` gives the complete quotient frontier:
 
-- If the three post-core factor XORs are included, the Jain nine-factor set is in the same GL(4,2) orbit as the current nine-factor set for exactly **six** input maps. One map is just the permutation `(J41,J48,J49,J51)=(a,c,d,b)`.
-- However, three of Jain's nine final factors are *outside* its 17-gate / five-AND core: `j86=j59 XOR j66`, `j87=j86 XOR j64`, `j88=j87 XOR j67`. Therefore the complete nine-factor exposure is 20 gates, not 17.
-- Enumerating **all 17 wires of the original Jain core** under all 20,160 input GL maps proves the unchanged core can directly contain at most **6 of the 9** current factors. The hit distribution is: 0→19,812 maps; 1→294; 2→6; 3→18; 4→12; 5→12; 6→6.
-- Consequently, `input basis change + unchanged Jain 17-gate core` is exhaustively ruled out as a 101 route. A successful five-AND 17-gate core must change the five-AND decomposition and/or its operand linear forms, not merely relabel Jain's inputs or linear tail.
+```text
+000000000 completion: 1545 reachable rank-6 envelopes
+other 15 completions: 1525 each
+union: 23,970 envelopes
+```
 
-This result corrects an initially tempting but invalid direct-splice interpretation: the nine-factor set equivalence is real, but the last three factor XORs were not inside the 17-gate core.
+Exactly 23,940 envelopes belong to one completion only; 30 belong to all 16. The 16 rank-four completion spaces are distinct hyperplanes `T_z` inside the common 5D space `U`, and any two distinct `T_z` span `U`. This explains why every pairwise envelope intersection is the same 30-space common core.
 
-## Public five-AND cores being exhausted before original synthesis
+Representative exact physical screens in the 30 common envelopes are negative, but a complete 23,970-envelope exclusion has **not** been proved. High-parallel batch timeouts were treated only as implementation evidence, never as exclusions. Loose quotient-mask lower bounds were tested and were too weak.
 
-The released `ahrazzle/gf2m-circuits` forward S-box pack has two verified **32-AND** points found so far: `sbox106_d34` and `sbox110_d38`; the other released forward points checked (`sbox106_d24`, 111/112/113/116/121 depth points) use 34 ANDs.
+## Parallel route: retained 18-gate core, cheaper outer linear construction
 
-Both released inverse-S-box 109-gate points, `invsbox109_d30` and `invsbox109_d31`, also use **32 ANDs**. Because AES S-box and inverse S-box share inversion up to affine layers, these are legitimate sources of alternate five-AND decompositions.
+With the nonlinear core retained, a 101 circuit requires
 
-`analyze_public5_cores.py` was added to identify `9 + 5 + 18` by AND ancestry, extract each four-dimensional core boundary and nine final factors, and screen all 20,160 GL(4,2) input changes against the live-102 factor set. This upstream-reuse screen is prioritized before inventing a new five-AND decomposition.
+```text
+prelinear + middle_support + output_transpose <= 36.
+```
 
-## Fixed-output-layer exclusion
+A complete cheap lower-bound scan covers all `255*8 = 2040` semilinear transforms and all `3^9` plane orientations per transform. Exactly **1506 / 2040 transforms are rigorously excluded** by this lower bound; **534 transforms remain**.
 
-For the 102 certificate's fixed output matrix, the transposed `8 -> 18` problem has 18 required targets, five already equal to inputs. A hypothetical 13-XOR implementation would therefore have no room for helper gates: every one of the 13 remaining targets would have to be produced directly, one per gate. Closure over the required-target set cannot generate all 13 under that constraint, so 13 XORs is impossible for that fixed matrix. The known 14-XOR transpose, hence the 24-gate original output network, is optimal for the fixed matrix. Any output-layer saving must change the surrounding representation rather than resynthesize that same matrix.
+The global lower-bound minimum is 31, attained by 18 transforms in three six-member classes. Current exact campaigns prioritize representatives:
 
-## Running exact searches
+- Class A: identity / live transform;
+- Class B: `(c,k)=(0x9d,3)`;
+- Class C: `(0x5b,3)`.
 
-1. `temp-aes-sbox-core5-template`: four Jain-topology rewiring instances; completed as solver `unknown`/timeouts, not UNSAT.
-2. `temp-aes-sbox-core5-min` (run 40626122929): symmetry-broken 17-gate / five-AND searches over several input bases.
-3. `temp-aes-sbox-basis12` (run 40626627456): eight reduced 12-gate four-factor searches on the **current identity input basis**, followed by a deterministic five-XOR closure if SAT.
-4. `temp-aes-sbox-core5-set`: a smaller target-set encoding of the 17-gate / five-AND problem using Jain's five-AND time positions and no nine separate output selectors.
-5. `temp-aes-public5-orbits`: exact GL(4,2) orbit screening of all four released 32-AND forward/inverse constructions before any new nonlinear decomposition is invented.
+Complementary exact searches cover:
 
-Older exact linear-interface runs aimed at the 103 outer representation are retained as evidence but are not treated as searches over the new 102 outer representation.
+1. full-column-rank middle correction supports of size <=4;
+2. all 117 rank-four support-5 position sets;
+3. the remaining nine rank-three support-5 position sets using a complete event reduction over the two free correction bytes.
 
-## Validation requirement
+The rank-three support-5 campaign had one historical cancellation at Class-C prefix 3; that shard is being rerun. The older Class-C main campaign also had cancellations at exact-correction prefixes 0/3/6 and rank-four support-5 prefix 3. A dedicated temporary workflow now reruns the remaining unclean gaps rather than repeating completed shards.
 
-Any SAT core is only an intermediate candidate. A 101 claim requires: splice into the live 102 certificate; independently evaluate all 256 AES inputs using arithmetic GF(2^8) inversion plus the AES affine map; run the unchanged official p008 verifier; re-sync live board/open PRs; and run Few Shots `tools/check.py` before submission.
+No 101 component candidate has been established from these exact campaigns so far.
+
+## Current next steps
+
+1. Finish and aggregate the missing Class-C semilinear shards; if all summaries have `candidates_101=0`, close the Class-C support<=5 representative search cleanly.
+2. Aggregate Class A/B/C exact campaign summaries rather than infer results from workflow success alone.
+3. On the direct-core side, seek a stronger physical linear-network lower bound for the remaining rank-four / six-independent-AND frontier; do not brute-force all 23,970 envelopes independently without a better representation.
+4. Recheck Few Shots live board and open p008 PRs before any 101 claim.
+
+## Validation requirement for any positive candidate
+
+A candidate is not a record until it is materialized as a complete <=101-gate certificate, independently checked on all 256 AES bytes by arithmetic inversion plus the AES affine map, accepted by the unchanged Few Shots verifier, and rechecked against the live upstream record immediately before submission.
