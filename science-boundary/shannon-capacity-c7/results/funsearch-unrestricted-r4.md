@@ -6,11 +6,11 @@ This continues the exact unrestricted ten-dimensional search from the verifier-a
 
 ## Preconditions
 
-On representative case 0, the same Action job independently replays and Few Shots-verifies the 134752 seed, then reruns `search_net2_r3.cpp` on the same encoded point list and requires the exact radius-3 result to be `kind=none` before radius 4 is allowed to run.
+Each radius-4 Action job independently replays and Few Shots-verifies its 134752 seed, then reruns `search_net2_r3.cpp` on the same encoded point list and requires the exact radius-3 result to be `kind=none` before radius 4 is allowed to run.
 
 The radius-3 certificate gives `alpha(P(U)) <= 4` for every owner set `|U| <= 3`, where `P(U)` is the set of outside vertices whose blocker support lies inside `U`.
 
-A separate exact two-owner census on case 0 additionally found:
+A separate exact two-owner census on representative case 0 additionally found:
 
 - `coverage1=6308`;
 - `coverage2=143680`;
@@ -19,7 +19,7 @@ A separate exact two-owner census on case 0 additionally found:
 - `independent_triples_total=0`;
 - maximum raw two-owner pool size 6.
 
-Thus every two-owner candidate pool has independence number at most 2.
+Thus every two-owner candidate pool in case 0 has independence number at most 2. The executed radius-4 solver also checks its one-owner/two-owner structural preconditions on each seed and fails loudly if they drift.
 
 ## Complete four-owner support decomposition
 
@@ -31,33 +31,47 @@ For a six-addition witness supported on four old owners:
 
 For every generated owner quadruple, `search_net2_r4.cpp` forms the complete pool of all coverage-one, -two, -three, and -four candidates whose supports are contained in that quadruple and searches it exactly for an independent six-set.
 
-The executed workflow applies `patch_search_net2_r4.py` to a temporary copy of the first prototype, fixing one pre-execution c4 moment-recovery typo with an exact byte-for-byte assertion. The repository prototype itself was never used unpatched for a mathematical result.
+The executed workflows apply `patch_search_net2_r4.py` to a temporary copy of the first prototype, fixing one pre-execution c4 moment-recovery typo with an exact byte-for-byte assertion. The repository prototype itself was never used unpatched for a mathematical result.
 
-## Exact case-0 result
+## Exact results on all C5 representatives
 
-Action run `40630487018`, job `122625451993` completed successfully. The Few Shots breakthrough verifier step was skipped because no candidate was produced.
+The exact C5 orbit representatives are cases `[0,1,2,3]`; the second 20-state basin is exactly isomorphic to the first. All four representatives completed with `kind=none`. Their Few Shots breakthrough verification steps were skipped because no candidate was produced.
 
-Exact result:
+Case 0 — Action run `40630487018`, job `122625451993`:
 
 ```json
-{
-  "kind": "none",
-  "method": "exact-unrestricted-r4-net2",
-  "baseline_size": 134752,
-  "coverage0": 0,
-  "coverage1": 6308,
-  "coverage2": 143680,
-  "coverage3": 999531,
-  "coverage4": 2123481,
-  "coverage2_groups": 135344,
-  "coverage3_groups": 961338,
-  "coverage4_groups": 2065189,
-  "quadruples_checked": 10295587,
-  "eligible_quadruples": 270426,
-  "max_supported_pool": 15
-}
+{"coverage1":6308,"coverage2":143680,"coverage3":999531,"coverage4":2123481,"coverage2_groups":135344,"coverage3_groups":961338,"coverage4_groups":2065189,"quadruples_checked":10295587,"eligible_quadruples":270426,"max_supported_pool":15}
 ```
 
-The radius-4 computation itself took about 27.6 seconds wall-clock and peaked at about 4.49 GiB RSS on the hosted runner.
+Case 1 — Action run `40630767228`, job `122626368028`:
 
-This is an exact negative only for representative case 0. Cases 1, 2, and 3 are being run separately; the C5 orbit and inter-basin isomorphisms may only be used to lift the radius-4 conclusion to all 40 one-hit states after all four representatives have completed.
+```json
+{"coverage1":6290,"coverage2":143706,"coverage3":999380,"coverage4":2123604,"coverage2_groups":135370,"coverage3_groups":961199,"coverage4_groups":2065332,"quadruples_checked":10297435,"eligible_quadruples":271817,"max_supported_pool":15}
+```
+
+Case 2 — Action run `40630767228`, job `122626368075`:
+
+```json
+{"coverage1":6287,"coverage2":143950,"coverage3":997826,"coverage4":2127005,"coverage2_groups":135339,"coverage3_groups":960303,"coverage4_groups":2067709,"quadruples_checked":10294954,"eligible_quadruples":268828,"max_supported_pool":17}
+```
+
+Case 3 — Action run `40630767228`, job `122626367768`:
+
+```json
+{"coverage1":6269,"coverage2":143976,"coverage3":997664,"coverage4":2127176,"coverage2_groups":135365,"coverage3_groups":960168,"coverage4_groups":2067895,"quadruples_checked":10296843,"eligible_quadruples":268796,"max_supported_pool":17}
+```
+
+The radius-4 computations took about 28–38 seconds wall-clock each and peaked near 4.49 GiB RSS on hosted runners.
+
+Therefore, via the exact C5 case orbits and inter-basin automorphism, **all 40 FunSearch t=9 one-hit deletion seeds are exactly negative for arbitrary ten-dimensional remove-4/add-6 net-+2 exchanges**. This is strictly broader than the five-dimensional BPZ-template repair searches.
+
+## Next formulation
+
+After radius 4, do not blindly enumerate all owner 5-tuples. The exact lower-radius results impose support-hypergraph connectivity. For a hypothetical independent seven-set supported on five owners, every disconnected owner partition is too small:
+
+- `4+1`: at most `5+1=6`;
+- `3+2`: at most `4+2=6`;
+- `3+1+1`: at most `4+1+1=6`;
+- `2+2+1`: at most `2+2+1=5`.
+
+Thus the selected multi-owner supports in any remove-5/add-7 witness must connect all five owners. The durable formulation is in `notes/support-hypergraph-exchange.md`. The next search should exploit this connectivity, beginning with direct coverage-5 support groups before enumerating the remaining connected lower-support hypergraphs.
