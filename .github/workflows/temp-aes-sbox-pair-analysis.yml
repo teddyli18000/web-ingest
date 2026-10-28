@@ -1,0 +1,21 @@
+name: temp-aes-sbox-pair-analysis
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-sbox-pair-analysis.yml'
+permissions:
+  contents: read
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare primary and mixed 103-gate interfaces
+        run: python3 science-boundary/aes-sbox-circuit/analyze_103_pair.py | tee /tmp/aes-pair-analysis.txt
+      - name: Upload analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-sbox-pair-analysis
+          path: /tmp/aes-pair-analysis.txt
