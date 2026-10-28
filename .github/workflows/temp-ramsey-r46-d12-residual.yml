@@ -51,11 +51,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install pinned encoder dependency and authenticate inputs
+      - name: Install pinned encoder dependencies and authenticate inputs
         shell: bash
         run: |
           set -euo pipefail
-          python -m pip install --disable-pip-version-check 'python-sat==1.9.dev17'
+          python -m pip install --disable-pip-version-check 'python-sat==1.9.dev17' 'networkx==3.5'
           echo '3598adba0f769168ae666fb1d0e4ddc653b646a48d12e6b4d5ddfa70ed2c4ce9  science-boundary/ramsey-r46/data/r36_12_e29.g6' | sha256sum -c -
           echo 'bf403d6b148c60a26d2536ade61d74d552972f701f3fdbb143478d97652c20ec  science-boundary/ramsey-r46/data/r45_23_e101.g6' | sha256sum -c -
           python science-boundary/ramsey-r46/d12_anchor_orbit_dimacs.py self-test
