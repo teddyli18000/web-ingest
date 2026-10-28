@@ -28,6 +28,8 @@ jobs:
           git -C "$RUNNER_TEMP/c7-five" remote add origin https://github.com/molind/c7-five.git
           git -C "$RUNNER_TEMP/c7-five" fetch --depth 1 origin ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
           git -C "$RUNNER_TEMP/c7-five" checkout FETCH_HEAD
+      - name: Install dependency
+        run: python3 -m pip install --disable-pip-version-check numpy
       - name: Traverse private-swap components
         shell: bash
         run: |
