@@ -1,0 +1,48 @@
+name: temp-aes-sbox-core4-z3
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-sbox-core4-z3.yml'
+permissions:
+  contents: read
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {basis: '1,2,4,8', gates: 18, seed: 2026102750, pattern: true, tag: control18}
+          - {basis: '1,2,4,8', gates: 17, seed: 2026102751, pattern: false, tag: current17a}
+          - {basis: '1,2,4,8', gates: 17, seed: 2026102752, pattern: false, tag: current17b}
+          - {basis: '1,2,7,11', gates: 17, seed: 2026102761, pattern: false, tag: cheapA17}
+          - {basis: '2,7,8,11', gates: 17, seed: 2026102762, pattern: false, tag: cheapB17}
+          - {basis: '2,7,10,11', gates: 17, seed: 2026102763, pattern: false, tag: cheapC17}
+          - {basis: '3,2,13,8', gates: 17, seed: 2026102764, pattern: false, tag: mixed17}
+          - {basis: '1,2,7,11', gates: 18, seed: 2026102771, pattern: true, tag: cheapA18pat}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install solver
+        run: python3 -m pip install --disable-pip-version-check z3-solver
+      - name: Exact four-input core synthesis
+        run: |
+          out="/tmp/aes-core-${{ matrix.tag }}"
+          mkdir -p "$out"
+          extra=""
+          if [ "${{ matrix.pattern }}" = "true" ]; then extra="--fixed-pattern"; fi
+          python3 science-boundary/aes-sbox-circuit/synth_core4_z3.py \
+            --basis "${{ matrix.basis }}" \
+            --gates "${{ matrix.gates }}" \
+            --ands 6 \
+            --timeout 900 \
+            --seed "${{ matrix.seed }}" \
+            $extra \
+            --out "$out" | tee "$out/run.log"
+      - name: Upload core evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-core-${{ matrix.tag }}
+          path: /tmp/aes-core-${{ matrix.tag }}
