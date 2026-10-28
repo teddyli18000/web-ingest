@@ -1,0 +1,68 @@
+Thomson N=960 cross-topology experiments — 20-dislocation D2 vs 24-dislocation record family
+Date: 2026-10-27/28
+Live Few Shots record R: 444368.3924061973 (36 five / 900 six / 24 seven)
+Merged D2 parent D: 444368.4040805305 (32 five / 908 six / 20 seven)
+
+1. Screened spherical cut-and-splice after multi-start ICP/Kabsch alignment
+Actions run: 40626019263
+Code: code/search_cross_topology.py
+
+Goal: recombine the global scar patterns of the 24-dislocation record/A family with the 20-dislocation D2 family, rather than repeating same-topology R/A/B crossovers.
+
+Observed geometry:
+- Record vs D2 best ICP nearest-neighbor RMS ~0.04305.
+- Symmetry-broken A neighbor vs D2 ICP RMS ~0.04192.
+- This mismatch is much larger than within a single low-energy basin family, so naive half-space children frequently contain seam collisions.
+
+Four independent matrix jobs (record/A × two random seeds) all produced only tiny result artifacts and no saved record-beating coordinates.
+Representative outcomes:
+- record, seed 4202: 72 random cut/split children, only 1 passed min-pair >0.055. It had raw E=444428.3608859, min pair chord 0.06737, and after full stable relaxation reached 444369.8907875437 = R + 1.498381346.
+- A-neighbor, seed 4101: 72 children, 0 collision-safe children.
+- The other two jobs also emitted result-only artifacts (no candidate coordinates).
+
+Conclusion: direct spherical spatial splice is the wrong cross-topology operator at this alignment scale. The 20- and 24-dislocation point correspondences differ enough that a cut seam almost always produces close pairs; the rare safe child is far above the low-energy landscape. Do not scale this exact operator by simply adding more random cuts.
+
+2. Continuous D2 -> C3 topology morph with one-to-one correspondence
+Actions run: 40626089044
+Code: code/search_topology_morph.py
+
+Method:
+- Multi-start ICP/Kabsch align D2 to current record.
+- Solve exact 960x960 Hungarian point correspondence using squared chord cost.
+- Interpolate each matched pair along the sphere geodesic at t = 0.12,0.20,0.30,0.40,0.50,0.60,0.70,0.80,0.88.
+- Fully relax every t with a stable termwise pair-energy-difference objective.
+- Two independent ICP random seeds (5011, 5027).
+
+Seed 5011:
+- ICP NN RMS 0.04099782; Hungarian RMS 0.04387948.
+- t=0.12,0.20,0.30,0.40 -> current record R to ordinary floating precision (~1e-10), coordination 36/900/24.
+- t=0.60,0.70,0.80,0.88 -> merged D2 minimum ~444368.4040805307, coordination 32/908/20.
+- t=0.50 -> independent high basin 444370.5305536334 = R + 2.138147436, 922 iterations.
+
+Seed 5027:
+- ICP NN RMS 0.04089062; Hungarian RMS 0.04386113.
+- Same sharp basin partition: t<=0.40 -> R, t>=0.60 -> D2.
+- t=0.50 -> another high basin 444371.0261344606 = R + 2.633728263, 1288 iterations.
+
+The tiny negative numbers (~-5.8e-11) printed for some endpoint returns are floating accumulation noise, not improvements; the Few Shots threshold is 1e-6.
+
+Conclusion: along two independent continuous point correspondences, there is no stable low-energy 22-dislocation intermediate. Relaxation behaves like a sharp first-order basin switch between the 24-dislocation and 20-dislocation minima, with only much higher transition-region minima near t=0.5.
+
+3. Targeted local Delaunay topology deletion (local project experiment)
+
+The current record Delaunay triangulation contains nine combinatorial edge flips where the hypothetical flip lowers total |6-z| by 2 (removes one neutral dislocation in the degree-count sense), arranged in three C3-related triples. We explicitly forced selected quadrilaterals across their Delaunay flip thresholds and then fully relaxed with the stable objective.
+
+Results:
+- one forced defect-reducing flip -> heals completely to R, restoring 36/900/24;
+- two simultaneous flips, both same-orbit and different-orbit pairs -> heal to R;
+- C3 triple flip -> heals to R;
+- a stronger double-flip start was genuinely 34 five / 904 six / 22 seven (22 dislocations) before relaxation, but full relaxation regenerated two dislocations and returned to R.
+
+Conclusion: simply deleting one/two local dislocations is not a stable route to a lower 22-dislocation minimum near R. This independently matches the upstream observation that local scar surgery/dislocation-glide moves heal back unless accompanied by global shear/reorganization.
+
+Current implication
+- Same-topology R/A/B local exploration is saturated enough to deprioritize.
+- Simple spatial 20x24 crossover is seam-dominated and should not be repeated unchanged.
+- Simple continuous D2<->C3 interpolation gives a sharp endpoint basin switch, not a low 22-dislocation branch.
+- The next informative object is the t=0.5 transition-region basin itself: harvest coordinates/topology, inspect whether it contains mixed/complex defect structure, and if structurally meaningful use its low modes or transition-state geometry to design a topology-changing move.
+- If that midpoint is merely a generic high minimum, pivot to explicit transition-state/dimer/eigenvector-following network search rather than more local kicks.
