@@ -16,6 +16,8 @@ This workspace is permanent. It is **not** part of `temp-work/` and is not subje
 | [`thomson-960/`](thomson-960/) | Can the N=960 Coulomb energy be improved below the live Few Shots record? | Active — synced to `444368.3924061973`; live-record diagnostics and next-generation basin search starting. |
 | [`aes-sbox-circuit/`](aes-sbox-circuit/) | Can the AES S-box be implemented in at most 102 AND/XOR/XNOR gates? | Active — live Few Shots record is 103; ODC neutral-walk search from the new 103 construction launched. |
 
+| [`job-shop-ta41/`](job-shop-ta41/) | Can the Taillard ta41 30×20 makespan be reduced below the verified 2006 record? | Active — reproducible critical-path tabu search and independent upstream verifier workflow initialized; first run pending. |
+
 Keep this table short and human-readable. Add one row when a genuinely new direction is opened. Detailed state belongs inside that direction.
 
 ## Layout
