@@ -1,0 +1,41 @@
+name: temp Thomson 960 C Landau-targeted index1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-c-landau-index1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  targeted:
+    strategy:
+      fail-fast: false
+      matrix:
+        phase: [15, 75]
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Rebuild C
+        run: |
+          python3 science-boundary/thomson-960/code/harvest_basin_c.py \
+            "$RUNNER_TEMP/few-shots" --neighbor-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --scale 0.95 --out "$RUNNER_TEMP/c.json"
+      - name: HiSD downward from Landau direction
+        run: |
+          python3 science-boundary/thomson-960/code/downward_index2_to_index1.py \
+            "$RUNNER_TEMP/c.json" --escape-phase-deg ${{ matrix.phase }} --escape-amp 0.0003 \
+            --outer 12 --k 8 --penalty 300000 --perp-maxiter 700 \
+            --reaction-damping 0.35 --curv-floor 0.15 --max-reaction-rms 0.00008 \
+            --out "$RUNNER_TEMP/c-landau-p${{ matrix.phase }}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-c-landau-p${{ matrix.phase }}
+          retention-days: 7
+          path: ${{ runner.temp }}/c-landau-p${{ matrix.phase }}.json
