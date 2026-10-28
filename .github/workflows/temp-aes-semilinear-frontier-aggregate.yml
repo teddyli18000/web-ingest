@@ -1,0 +1,75 @@
+name: temp-aes-semilinear-frontier-aggregate
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-semilinear-frontier-aggregate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: temp-aes-semilinear-frontier-aggregate
+  cancel-in-progress: false
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Download all frontier shard artifacts
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: 40638593824
+          pattern: aes-semilinear-frontier-*
+          path: /tmp/frontier
+      - name: Aggregate exact lower-bound frontier
+        run: |
+          mkdir -p /tmp/frontier-summary
+          python - <<'PY' | tee /tmp/frontier-summary/run.log
+          import collections, glob, json, pathlib
+          rows=[]
+          for path in glob.glob('/tmp/frontier/**/transforms.json', recursive=True):
+              rows.extend(json.load(open(path)))
+          assert len(rows)==2040, len(rows)
+          rows.sort(key=lambda r:(r['best_variable_cost_lb'],-r['orientations_lb_le_36'],r['transform_index']))
+          dist=collections.Counter(r['best_variable_cost_lb'] for r in rows)
+          minlb=rows[0]['best_variable_cost_lb']
+          best=[r for r in rows if r['best_variable_cost_lb']==minlb]
+          eligible=[r for r in rows if r['orientations_lb_le_36']>0]
+          top=[]
+          for r in rows[:100]:
+              top.append({
+                  'index':r['transform_index'],'c':r['c_hex'],'k':r['k'],
+                  'best_lb':r['best_variable_cost_lb'],
+                  'orientations_lb_le_36':r['orientations_lb_le_36'],
+                  'best_witnesses':r['best_witnesses'][:3],
+              })
+          summary={
+              'transforms':len(rows),
+              'global_best_variable_cost_lb':minlb,
+              'global_best_total_gate_lb':65+minlb,
+              'transforms_at_global_best':len(best),
+              'transforms_with_some_orientation_lb_le_36':len(eligible),
+              'best_lb_distribution':dict(sorted(dist.items())),
+              'global_best_transforms':[
+                  {'index':r['transform_index'],'c':r['c_hex'],'k':r['k'],
+                   'orientations_lb_le_36':r['orientations_lb_le_36'],
+                   'best_witnesses':r['best_witnesses'][:3]}
+                  for r in best
+              ],
+          }
+          pathlib.Path('/tmp/frontier-summary/summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+          pathlib.Path('/tmp/frontier-summary/top100.json').write_text(json.dumps(top,indent=2)+'\n')
+          print(json.dumps(summary,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-semilinear-frontier-global-summary
+          path: /tmp/frontier-summary
