@@ -2,23 +2,23 @@
 """Retarget the complete r5 owner-set solvers from net+2 to net+1.
 
 The durable r5 direct/lower solvers were written for a 134752 seed and search
-remove-5/add-7.  Their owner-support enumeration is independent of target set
-size.  After a separate complete net+1 r4 proof on a 134753 baseline, every
+remove-5/add-7. Their owner-support enumeration is independent of target set
+size. After a separate complete net+1 r4 proof on a 134753 baseline, every
 remove-5/add-6 witness has connected support hypergraph, so the same two r5
 strata are complete after changing only the independent-set target 7->6 and the
 result label.
 
-This patch is intentionally tiny and byte-asserted.  It changes no support
+This patch is intentionally tiny and byte-asserted. It changes no support
 recovery, owner-set generation, conflict test, or exact DFS logic.
 """
 import argparse
 from pathlib import Path
 
 
-def one(s: str, old: str, new: str, name: str) -> str:
+def exact(s: str, old: str, new: str, name: str, want: int = 1) -> str:
     n = s.count(old)
-    if n != 1:
-        raise SystemExit(f"{name}: expected exactly one {old!r}, found {n}")
+    if n != want:
+        raise SystemExit(f"{name}: expected exactly {want} occurrences of {old!r}, found {n}")
     return s.replace(old, new)
 
 
@@ -30,15 +30,15 @@ def main():
     args = ap.parse_args()
     s = args.source.read_text()
     if args.mode == "direct":
-        s = one(s, "p.size()>=7", "p.size()>=6", "direct pool threshold")
-        s = one(s, "find_k(p,7,chosen)", "find_k(p,6,chosen)", "direct target")
-        s = one(s, 'replace5add7', 'replace5add6', "direct result kind")
-        s = one(s, 'exact-unrestricted-r5-direct-c5', 'exact-unrestricted-net1-r5-direct-c5', "direct method")
+        s = exact(s, "p.size()>=7", "p.size()>=6", "direct pool threshold")
+        s = exact(s, "find_k(p,7,chosen)", "find_k(p,6,chosen)", "direct target")
+        s = exact(s, 'replace5add7', 'replace5add6', "direct result kind")
+        s = exact(s, 'exact-unrestricted-r5-direct-c5', 'exact-unrestricted-net1-r5-direct-c5', "direct method", 2)
     else:
-        s = one(s, "p.size()<7", "p.size()<6", "lower pool threshold")
-        s = one(s, "find_k(p,7,chosen)", "find_k(p,6,chosen)", "lower target")
-        s = one(s, 'replace5add7', 'replace5add6', "lower result kind")
-        s = one(s, 'exact-unrestricted-r5-connected-lower-support', 'exact-unrestricted-net1-r5-connected-lower-support', "lower method")
+        s = exact(s, "p.size()<7", "p.size()<6", "lower pool threshold")
+        s = exact(s, "find_k(p,7,chosen)", "find_k(p,6,chosen)", "lower target")
+        s = exact(s, 'replace5add7', 'replace5add6', "lower result kind")
+        s = exact(s, 'exact-unrestricted-r5-connected-lower-support', 'exact-unrestricted-net1-r5-connected-lower-support', "lower method", 2)
     args.output.write_text(s)
 
 
