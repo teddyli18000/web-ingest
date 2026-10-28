@@ -1,0 +1,50 @@
+name: temp-monalisa-all-neutral-archive
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/archive_all_face_neutrals.py
+      - .github/workflows/temp-monalisa-all-neutral-archive.yml
+permissions:
+  contents: write
+  actions: read
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch experiment artifacts and original verifier
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          gh run download 40696640556 --repo teddyli18000/web-ingest --pattern 'monalisa-all-faces-*' --dir /tmp/p010-all-quads
+          python -m pip install ortools
+      - name: Reconstruct and verify all unique neutral tours, optimize disjoint family
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          python science-boundary/mona-lisa-tsp/archive_all_face_neutrals.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --input-dir /tmp/p010-all-quads \
+            --output science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json
+      - name: Publish verified compact evidence on main
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json
+          git commit -m 'science(p010): archive independently verified complete face-repair neutral moves'
+          git pull --rebase origin main
+          git push origin main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-all-neutral-verified
+          path: science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json
+          if-no-files-found: ignore
