@@ -30,6 +30,7 @@
 #endif
 
 constexpr int N=100;
+static const std::string INC="++++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-";
 using S=std::array<int8_t,N>;
 using A=std::array<uint8_t,N>;
 using I=std::array<int,N>;
@@ -38,6 +39,8 @@ struct State{
  S s{}; A used{}; I fixed{}, count{};
  int even_sum=0, even_count=0;
 };
+
+static int template_coord(int v){return INC[1+v]=='+'?1:-1;}
 
 static void assign_pos(State&st,int p,int val){
  for(int j=0;j<N;j++)if(st.used[j]){
@@ -70,7 +73,7 @@ static long long product_lower_bound(const State&st,int cap){
  for(int k=2;k<N;k+=2){
   int L=N-k,u=L-st.count[k];
   int m=std::max(0,std::abs(st.fixed[k])-u);
-  if(m&1)++m; // final even-lag correlations have even parity
+  if(m&1)++m;
   lb+=1LL*m*m;
   if(lb>cap)return lb;
  }
@@ -96,45 +99,29 @@ static long long coupled_lower_bound(const State&st,int asum,int cap){
   lo[n]=l;hi[n]=h;
   int q=0;
   if(q<l)q=l;else if(q>h)q=h;
-  y[n]=q;
-  sum_lo+=l;sum_hi+=h;cur+=q;sq+=1LL*q*q;
-  ++n;
+  y[n]=q;sum_lo+=l;sum_hi+=h;cur+=q;sq+=1LL*q*q;++n;
  }
  if(target_y_sum<sum_lo||target_y_sum>sum_hi)return 1LL<<50;
  while(cur<target_y_sum){
   int best=-1,best_cost=std::numeric_limits<int>::max();
-  for(int i=0;i<n;i++)if(y[i]<hi[i]){
-   int cost=2*y[i]+1;
-   if(cost<best_cost){best_cost=cost;best=i;}
-  }
+  for(int i=0;i<n;i++)if(y[i]<hi[i]){int cost=2*y[i]+1;if(cost<best_cost){best_cost=cost;best=i;}}
   if(best<0)return 1LL<<50;
-  sq+=best_cost;++y[best];++cur;
-  if(4*sq>cap)return 4*sq;
+  sq+=best_cost;++y[best];++cur;if(4*sq>cap)return 4*sq;
  }
  while(cur>target_y_sum){
   int best=-1,best_cost=std::numeric_limits<int>::max();
-  for(int i=0;i<n;i++)if(y[i]>lo[i]){
-   int cost=-2*y[i]+1;
-   if(cost<best_cost){best_cost=cost;best=i;}
-  }
+  for(int i=0;i<n;i++)if(y[i]>lo[i]){int cost=-2*y[i]+1;if(cost<best_cost){best_cost=cost;best=i;}}
   if(best<0)return 1LL<<50;
-  sq+=best_cost;--y[best];--cur;
-  if(4*sq>cap)return 4*sq;
+  sq+=best_cost;--y[best];--cur;if(4*sq>cap)return 4*sq;
  }
  return 4*sq;
 }
 
-static long long even_energy(const State&st){
- long long e=0;for(int k=2;k<N;k+=2)e+=1LL*st.fixed[k]*st.fixed[k];return e;
-}
-static std::string fmt(const State&st){
- std::string z;z.reserve(N);for(int i=0;i<N;i++)z+=st.s[i]>0?'+':'-';return z;
-}
+static long long even_energy(const State&st){long long e=0;for(int k=2;k<N;k+=2)e+=1LL*st.fixed[k]*st.fixed[k];return e;}
+static std::string fmt(const State&st){std::string z;z.reserve(N);for(int i=0;i<N;i++)z+=st.s[i]>0?'+':'-';return z;}
 static long long exact(const std::string&z,long long&odd){
  std::array<int,N>s{};for(int i=0;i<N;i++)s[i]=z[i]=='+'?1:-1;
- long long e=0;odd=0;
- for(int k=1;k<N;k++){int c=0;for(int i=0;i<N-k;i++)c+=s[i]*s[i+k];long long q=1LL*c*c;e+=q;if(k&1)odd+=q;}
- return e;
+ long long e=0;odd=0;for(int k=1;k<N;k++){int c=0;for(int i=0;i<N-k;i++)c+=s[i]*s[i+k];long long q=1LL*c*c;e+=q;if(k&1)odd+=q;}return e;
 }
 
 struct Shared{
@@ -163,9 +150,10 @@ static void dfs(State&st,int v,Shared&sh){
   }
   return;
  }
- assign_coord(st,v,1);dfs(st,v+1,sh);unassign_coord(st,v);
+ const int first=template_coord(v);
+ assign_coord(st,v,first);dfs(st,v+1,sh);unassign_coord(st,v);
  if(sh.found.load(std::memory_order_relaxed)||sh.timeout.load(std::memory_order_relaxed))return;
- assign_coord(st,v,-1);dfs(st,v+1,sh);unassign_coord(st,v);
+ assign_coord(st,v,-first);dfs(st,v+1,sh);unassign_coord(st,v);
 }
 
 int main(int argc,char**argv){
@@ -184,6 +172,7 @@ int main(int argc,char**argv){
 #ifdef _OPENMP
  omp_set_num_threads(threads);
 #endif
+ if(template_coord(0)!=1){std::cerr<<"template normalization mismatch\n";return 2;}
  State base;assign_pos(base,0,1);assign_coord(base,0,1);
  Shared sh;sh.start=std::chrono::steady_clock::now();sh.seconds=seconds;sh.asum=asum;sh.cap=cap;
  const unsigned long long tasks=1ULL<<prefix;std::atomic<unsigned long long>done{0};
@@ -192,7 +181,8 @@ int main(int argc,char**argv){
   if(sh.found.load()||sh.timeout.load())continue;
   State st=base;bool ok=true;
   for(int j=0;j<prefix;j++){
-   int v=1+j,val=((mask>>j)&1)?-1:1;assign_coord(st,v,val);
+   int v=1+j,t=template_coord(v),val=((mask>>j)&1)?-t:t;
+   assign_coord(st,v,val);
    if(!sum_feasible(st,asum)||product_lower_bound(st,cap)>cap||(asum!=999&&coupled_lower_bound(st,asum,cap)>cap)){ok=false;break;}
   }
   if(ok)dfs(st,1+prefix,sh);
