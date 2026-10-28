@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <climits>
 #include <cstdint>
 #include <iostream>
 #include <limits>
@@ -24,10 +25,10 @@ static std::array<Seq,8> orbit(const Seq&s){std::array<Seq,8>o{};int j=0;for(Seq
 static int mindist(const Seq&s,const std::array<Seq,8>&o){int best=100;for(auto&t:o){int d=0;for(int i=0;i<100;i++)d+=s[i]!=t[i];best=std::min(best,d);}return best;}
 struct R{long long best=578,far=(1LL<<60);Parts bp{50,528},fp{};Seq bs{},fs{};int far_d=0;};
 static R one(std::mt19937_64&rng,int cycles,long long steps,int kick_every,int kick_size){Seq inc=parse(INCSTR),s=inc;Corr c{};Parts p=parts(s,&c);auto orb=orbit(inc);R r;r.bs=s;std::array<long long,100>tabu{};std::uniform_int_distribution<int>ten(6,18);std::array<int,100>ord{};for(int i=0;i<100;i++)ord[i]=i;long long g=0;const std::array<int,15>sched={16,8,4,2,1,0,1,2,4,8,16,32,64,32,16};
- for(int cyc=0;cyc<cycles;cyc++)for(int lam:sched){long long sbest=W(p,lam),last=g;for(long long st=0;st<steps;st++,g++){long long bw=LLONG_MAX;int bb=-1;Parts bq{};std::shuffle(ord.begin(),ord.end(),rng);for(int b:ord){Parts q=eval_flip(s,c,p,b);long long w=W(q,lam);bool tb=g<tabu[b];if(tb && q.odd+q.even>=r.best)continue;if(w<bw){bw=w;bb=b;bq=q;}}if(bb<0){tabu.fill(0);continue;}flip(s,c,p,bb);tabu[bb]=g+ten(rng);long long e=p.odd+p.even;if(e<r.best){r.best=e;r.bp=p;r.bs=s;}int d=mindist(s,orb);if(d>=8 && e<r.far){r.far=e;r.fp=p;r.fs=s;r.far_d=d;}if(bw<sbest){sbest=bw;last=g;}if(kick_every>0&&g-last>=kick_every){std::array<int,100>idx{};for(int i=0;i<100;i++)idx[i]=i;std::shuffle(idx.begin(),idx.end(),rng);for(int j=0;j<kick_size;j++)flip(s,c,p,idx[j]);tabu.fill(0);last=g;}}
+ for(int cyc=0;cyc<cycles;cyc++)for(int lam:sched){long long sbest=W(p,lam),last=g;for(long long st=0;st<steps;st++,g++){long long bw=LLONG_MAX;int bb=-1;std::shuffle(ord.begin(),ord.end(),rng);for(int b:ord){Parts q=eval_flip(s,c,p,b);long long w=W(q,lam);bool tb=g<tabu[b];if(tb && q.odd+q.even>=r.best)continue;if(w<bw){bw=w;bb=b;}}if(bb<0){tabu.fill(0);continue;}flip(s,c,p,bb);tabu[bb]=g+ten(rng);long long e=p.odd+p.even;if(e<r.best){r.best=e;r.bp=p;r.bs=s;}int d=mindist(s,orb);if(d>=8 && e<r.far){r.far=e;r.fp=p;r.fs=s;r.far_d=d;}if(bw<sbest){sbest=bw;last=g;}if(kick_every>0&&g-last>=kick_every){std::array<int,100>idx{};for(int i=0;i<100;i++)idx[i]=i;std::shuffle(idx.begin(),idx.end(),rng);for(int j=0;j<kick_size;j++)flip(s,c,p,idx[j]);tabu.fill(0);last=g;}}
  }
  return r;}
-int main(int argc,char**argv){int runs=16,threads=0,cycles=6,kick_every=2500,kick_size=10;long long steps=3000;uint64_t seed=1;for(int i=1;i<argc;i++){std::string a=argv[i];auto n=[&](){return std::string(argv[++i]);};if(a=="--runs")runs=std::stoi(n());else if(a=="--threads")threads=std::stoi(n());else if(a=="--cycles")cycles=std::stoi(n());else if(a=="--steps")steps=std::stoll(n());else if(a=="--seed")seed=std::stoull(n());}
+int main(int argc,char**argv){int runs=16,threads=0,cycles=6,kick_every=2500,kick_size=10;long long steps=3000;uint64_t seed=1;for(int i=1;i<argc;i++){std::string a=argv[i];auto n=[&](){if(i+1>=argc)throw std::runtime_error("missing value");return std::string(argv[++i]);};if(a=="--runs")runs=std::stoi(n());else if(a=="--threads")threads=std::stoi(n());else if(a=="--cycles")cycles=std::stoi(n());else if(a=="--steps")steps=std::stoll(n());else if(a=="--seed")seed=std::stoull(n());else throw std::runtime_error("unknown arg");}
 #ifdef _OPENMP
  if(threads<=0)threads=omp_get_max_threads();omp_set_num_threads(threads);
 #else
