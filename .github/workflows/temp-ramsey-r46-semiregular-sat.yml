@@ -1,0 +1,184 @@
+name: Temp Ramsey R46 semiregular automorphism SAT
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-semiregular-sat.yml
+      - science-boundary/ramsey-r46/semiregular_sat.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-semiregular-sat
+  cancel-in-progress: false
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        order: [6, 9, 12, 18]
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    steps:
+      - uses: actions/checkout@v4
+      - name: Self-test orbit encoder
+        run: python3 science-boundary/ramsey-r46/semiregular_sat.py self-test
+      - name: Build pinned Kissat 4.0.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone https://github.com/arminbiere/kissat.git "$RUNNER_TEMP/kissat"
+          git -C "$RUNNER_TEMP/kissat" checkout 8af8e56f174b778aef3aa45af9f739b2a5f492c2
+          cd "$RUNNER_TEMP/kissat"
+          ./configure
+          make -j2
+      - name: Generate exact symmetry CNF
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 science-boundary/ramsey-r46/semiregular_sat.py generate \
+            --order '${{ matrix.order }}' --output /tmp/r46/branch.cnf \
+            | tee /tmp/r46/generate.json
+          head -n 1 /tmp/r46/branch.cnf
+          du -h /tmp/r46/branch.cnf
+      - name: Solve
+        id: solve
+        shell: bash
+        run: |
+          set -uo pipefail
+          started=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          set +e
+          /usr/bin/time -v timeout --signal=TERM --kill-after=30s 3600 \
+            "$RUNNER_TEMP/kissat/build/kissat" /tmp/r46/branch.cnf \
+            > /tmp/r46/solver.log 2>&1
+          rc=$?
+          set -e
+          finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          case "$rc" in
+            10) status=SAT ;;
+            20) status=UNSAT ;;
+            124|137|143) status=TIMEOUT ;;
+            *) status=ERROR ;;
+          esac
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          python3 - /tmp/r46/generate.json /tmp/r46/summary.json "$status" "$rc" "$started" "$finished" <<'PY'
+          import json,os,sys
+          gen,out,status,rc,started,finished=sys.argv[1:]
+          d=json.load(open(gen,encoding='utf-8'))
+          d.update(status=status,solver_exit=int(rc),started=started,finished=finished,
+                   kissat_commit='8af8e56f174b778aef3aa45af9f739b2a5f492c2',
+                   github_run_id=os.environ['GITHUB_RUN_ID'])
+          open(out,'w',encoding='utf-8').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          cat /tmp/r46/summary.json
+          tail -n 80 /tmp/r46/solver.log || true
+          [[ "$status" != ERROR ]]
+      - name: Decode SAT model
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/ramsey-r46/semiregular_sat.py decode \
+            --order '${{ matrix.order }}' --model /tmp/r46/solver.log \
+            --output /tmp/r46/candidate.json
+      - name: Authoritative Few Shots verification on SAT
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate
+          cp /tmp/r46/candidate.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/few-shots-verify.json
+          python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert d.get('valid') is True and d.get('score') == '36', d
+          PY
+      - name: Upload branch
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-semiregular-${{ matrix.order }}
+          path: |
+            /tmp/r46/generate.json
+            /tmp/r46/summary.json
+            /tmp/r46/solver.log
+            /tmp/r46/candidate.json
+            /tmp/r46/few-shots-verify.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+  collect:
+    if: always()
+    needs: solve
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ramsey-r46-semiregular-*
+          path: /tmp/branches
+      - name: Aggregate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 - /tmp/branches /tmp/r46/result.json <<'PY'
+          import json,os,pathlib,shutil,sys
+          root,out=map(pathlib.Path,sys.argv[1:]); rows=[]; hit=None
+          for p in root.rglob('summary.json'):
+              d=json.load(open(p,encoding='utf-8')); d['_dir']=str(p.parent); rows.append(d)
+              if d.get('status')=='SAT': hit=d
+          rows.sort(key=lambda d:d['order'])
+          result={'campaign':'semiregular-cyclic-automorphism-sat',
+                  'run_id':os.environ['GITHUB_RUN_ID'],
+                  'orders':[6,9,12,18],
+                  'branches_completed':len(rows),
+                  'all_unsat':len(rows)==4 and all(d.get('status')=='UNSAT' for d in rows),
+                  'found':hit is not None,
+                  'branches':[{k:v for k,v in d.items() if k!='_dir'} for d in rows]}
+          if hit:
+              src=pathlib.Path(hit['_dir'])
+              shutil.copyfile(src/'candidate.json','/tmp/r46/candidate.json')
+              q=src/'few-shots-verify.json'
+              if q.exists(): shutil.copyfile(q,'/tmp/r46/few-shots-verify.json')
+              result['hit_order']=hit['order']
+          out.write_text(json.dumps(result,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          print(json.dumps({k:v for k,v in result.items() if k!='branches'},sort_keys=True))
+          PY
+      - name: Persist aggregate
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest=science-boundary/ramsey-r46/results
+          cp /tmp/r46/result.json "$dest/semiregular-sat-6-9-12-18.json"
+          [[ ! -f /tmp/r46/candidate.json ]] || cp /tmp/r46/candidate.json "$dest/semiregular-sat-hit.json"
+          [[ ! -f /tmp/r46/few-shots-verify.json ]] || cp /tmp/r46/few-shots-verify.json "$dest/semiregular-sat-hit-verify.json"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "$dest"
+          git commit -m 'ramsey-r46: record semiregular symmetry SAT sweep' || exit 0
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
+      - name: Upload aggregate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-semiregular-aggregate
+          path: /tmp/r46
+          retention-days: 7
