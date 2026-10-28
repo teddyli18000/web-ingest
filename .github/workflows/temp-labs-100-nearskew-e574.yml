@@ -20,14 +20,7 @@ jobs:
           persist-credentials: false
       - name: Install pinned OR-Tools
         run: python3 -m pip install --disable-pip-version-check -q 'ortools==9.15.6755'
-      - name: Check near-skew mapping and model
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from science_boundary_placeholder import nope
-          PY
-        continue-on-error: true
-      - name: Real structural smoke
+      - name: Structural smoke
         run: |
           set -euo pipefail
           python3 - <<'PY'
