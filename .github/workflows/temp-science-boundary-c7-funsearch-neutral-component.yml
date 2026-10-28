@@ -31,6 +31,8 @@ jobs:
           git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
           git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
           git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+      - name: Install dependency
+        run: python3 -m pip install --disable-pip-version-check numpy
       - name: Exact neutral-component traversal
         id: traverse
         shell: bash
