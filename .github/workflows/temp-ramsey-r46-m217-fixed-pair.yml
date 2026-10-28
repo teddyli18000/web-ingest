@@ -1,0 +1,208 @@
+name: Temp Ramsey R46 exact 217-edge A29-B101 cover
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - science-boundary/ramsey-r46/m217_fixed_pair_sat.py
+      - .github/workflows/temp-ramsey-r46-m217-fixed-pair.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-m217-fixed-pair
+  cancel-in-progress: false
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      max-parallel: 13
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned exact solver stack
+        run: python -m pip install --disable-pip-version-check 'python-sat==1.9.dev17' 'networkx==3.5'
+      - name: Authenticate fixed pair and orbit cover
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '3598adba0f769168ae666fb1d0e4ddc653b646a48d12e6b4d5ddfa70ed2c4ce9  science-boundary/ramsey-r46/data/r36_12_e29.g6' | sha256sum -c -
+          echo 'bf403d6b148c60a26d2536ade61d74d552972f701f3fdbb143478d97652c20ec  science-boundary/ramsey-r46/data/r45_23_e101.g6' | sha256sum -c -
+          python science-boundary/ramsey-r46/m217_fixed_pair_sat.py self-test
+          python science-boundary/ramsey-r46/m217_fixed_pair_sat.py manifest \
+            --a-catalog science-boundary/ramsey-r46/data/r36_12_e29.g6 \
+            --b-catalog science-boundary/ramsey-r46/data/r45_23_e101.g6 \
+            --output /tmp/manifest.json
+          python3 - /tmp/manifest.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert len(d['A_vertex_orbits'])==3
+          assert len(d['B_vertex_orbits'])==13
+          assert len(d['representative_pairs'])==39
+          PY
+      - name: Solve three representative branches
+        id: solve
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p /tmp/r46/rows /tmp/r46/logs /tmp/r46/candidates
+          : > /tmp/r46/rows.jsonl
+          found=false
+          had_error=false
+          shard='${{ matrix.shard }}'
+          for ordinal in "$shard" "$((shard+13))" "$((shard+26))"; do
+            summary="/tmp/r46/rows/o${ordinal}.json"
+            candidate="/tmp/r46/candidates/o${ordinal}.json"
+            log="/tmp/r46/logs/o${ordinal}.log"
+            started=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+            set +e
+            timeout --signal=TERM --kill-after=10s 180 \
+              python science-boundary/ramsey-r46/m217_fixed_pair_sat.py solve \
+                --a-catalog science-boundary/ramsey-r46/data/r36_12_e29.g6 \
+                --b-catalog science-boundary/ramsey-r46/data/r45_23_e101.g6 \
+                --ordinal "$ordinal" --solver cadical195 \
+                --summary "$summary" --output "$candidate" \
+              >"$log" 2>&1
+            rc=$?
+            set -e
+            finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+            case "$rc" in
+              0) status=SAT ;;
+              20) status=UNSAT ;;
+              124|137|143) status=TIMEOUT ;;
+              *) status=ERROR; had_error=true ;;
+            esac
+            python3 - "$summary" "$ordinal" "$status" "$rc" "$started" "$finished" <<'PY' >> /tmp/r46/rows.jsonl
+          import json,pathlib,sys
+          p,o,status,rc,started,finished=sys.argv[1:]
+          q=pathlib.Path(p)
+          d=json.loads(q.read_text()) if q.exists() else {}
+          d.update(branch_ordinal=int(o),workflow_status=status,solver_exit=int(rc),started=started,finished=finished)
+          print(json.dumps(d,sort_keys=True))
+          PY
+            echo "ordinal=$ordinal status=$status"
+            tail -n 8 "$log" || true
+            if [[ "$status" == SAT ]]; then
+              cp "$candidate" /tmp/r46/candidate.json
+              echo "$ordinal" > /tmp/r46/hit.txt
+              found=true
+              break
+            fi
+          done
+          python3 - /tmp/r46/rows.jsonl /tmp/r46/shard-summary.json "$shard" <<'PY'
+          import json,os,pathlib,sys
+          inp,out,shard=sys.argv[1:]
+          rows=[json.loads(x) for x in pathlib.Path(inp).read_text().splitlines() if x.strip()]
+          pathlib.Path(out).write_text(json.dumps({
+              'campaign':'m217-fixed-A29-B101-orbit-pair',
+              'run_id':os.environ['GITHUB_RUN_ID'],'shard':int(shard),'rows':rows,
+              'found':any(r['workflow_status']=='SAT' for r in rows),
+          },indent=2,sort_keys=True)+'\n')
+          PY
+          echo "found=$found" >> "$GITHUB_OUTPUT"
+          [[ "$had_error" == false ]]
+      - name: Authoritative Few Shots verification on SAT
+        if: steps.solve.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate
+          cp /tmp/r46/candidate.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/few-shots-verify.json
+          python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert d.get('valid') is True and str(d.get('score'))=='36', d
+          PY
+      - name: Upload shard evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-m217-fixed-pair-${{ matrix.shard }}
+          path: /tmp/r46
+          if-no-files-found: warn
+          retention-days: 7
+
+  collect:
+    if: always()
+    needs: solve
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ramsey-r46-m217-fixed-pair-*
+          path: /tmp/parts
+      - name: Aggregate exact 39-branch cover
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 - /tmp/parts /tmp/r46/result.json <<'PY'
+          import json,os,pathlib,shutil,sys
+          root=pathlib.Path(sys.argv[1]); out=pathlib.Path(sys.argv[2])
+          rows=[]; hit=None; verify=None
+          for p in root.rglob('shard-summary.json'):
+              d=json.load(open(p,encoding='utf-8')); rows.extend(d['rows'])
+              q=p.parent/'candidate.json'
+              if q.exists(): hit=q
+              v=p.parent/'few-shots-verify.json'
+              if v.exists(): verify=v
+          rows.sort(key=lambda r:r['branch_ordinal'])
+          counts={}
+          for r in rows: counts[r['workflow_status']]=counts.get(r['workflow_status'],0)+1
+          result={
+              'campaign':'m217-fixed-A29-B101-orbit-pair',
+              'run_id':os.environ['GITHUB_RUN_ID'],
+              'proof_cover':'3 Aut(A29) vertex orbits x 13 Aut(B101) vertex orbits = 39 placements of the two degree-13 vertices',
+              'target_branches':39,'branches_attempted':len(rows),'status_counts':counts,
+              'all_unsat':len(rows)==39 and counts.get('UNSAT',0)==39,
+              'found':counts.get('SAT',0)>0,'rows':rows,
+          }
+          if hit:
+              shutil.copyfile(hit,'/tmp/r46/candidate.json')
+          if verify:
+              shutil.copyfile(verify,'/tmp/r46/few-shots-verify.json')
+          out.write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({k:v for k,v in result.items() if k!='rows'},sort_keys=True))
+          PY
+      - name: Persist campaign and retire workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/r46/result.json science-boundary/ramsey-r46/results/m217-fixed-pair-39.json
+          [[ ! -f /tmp/r46/candidate.json ]] || cp /tmp/r46/candidate.json science-boundary/ramsey-r46/results/m217-hit.json
+          [[ ! -f /tmp/r46/few-shots-verify.json ]] || cp /tmp/r46/few-shots-verify.json science-boundary/ramsey-r46/results/m217-hit-verify.json
+          git rm .github/workflows/temp-ramsey-r46-m217-fixed-pair.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/results/m217-*
+          git commit -m 'ramsey-r46: record exact 217-edge orbit-pair SAT cover' || exit 0
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
+      - name: Upload aggregate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-m217-fixed-pair-aggregate
+          path: /tmp/r46
+          if-no-files-found: warn
+          retention-days: 7
