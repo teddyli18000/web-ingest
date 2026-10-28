@@ -12,6 +12,11 @@ reversed relative to minimization. Numerically the reaction step is
 positive-curvature tracked mode is pushed uphill back toward a basin boundary,
 while once its curvature is negative the same rule is stable toward the saddle.
 All orthogonal directions are minimized by constrained all-dimensional L-BFGS.
+
+For C, direct energy-curvature audits show the quadratic negative-curvature
+region extends only to roughly 6e-4 RMS before nonlinear terms reverse the
+energy trend. The default escape is therefore 3e-4 RMS; milliradian-scale kicks
+are finite-amplitude basin probes, not local downward-search initializations.
 """
 from __future__ import annotations
 import argparse, json, math, pathlib
@@ -51,7 +56,7 @@ def track_mode(prev,vals,V):
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument('seed_json')
     ap.add_argument('--escape-phase-deg',type=float,required=True)
-    ap.add_argument('--escape-amp',type=float,default=0.002)
+    ap.add_argument('--escape-amp',type=float,default=0.0003)
     ap.add_argument('--outer',type=int,default=10); ap.add_argument('--k',type=int,default=8)
     ap.add_argument('--fd-step',type=float,default=3e-6); ap.add_argument('--penalty',type=float,default=3e5)
     ap.add_argument('--perp-maxiter',type=int,default=650); ap.add_argument('--reaction-damping',type=float,default=0.35)
@@ -79,9 +84,6 @@ def main():
         vals2,V2,Q2,raw2,c2=low_modes(q,args.k,args.fd_step); total_hcalls+=c2
         j2,lam2,mode2,ov2=track_mode(target,vals2,V2); target=mode2
         g2=physical_grad(q,Q2); gt2=float(g2@mode2)
-        # HiSD sign: target component climbs when lambda>0 and contracts toward
-        # the saddle when lambda<0. This is +g/|lambda|, NOT Newton -g/lambda
-        # on the positive-curvature side.
         den=max(abs(lam2),args.curv_floor)
         coeff=args.reaction_damping*gt2/den
         lim=args.max_reaction_rms*math.sqrt(N); coeff=float(np.clip(coeff,-lim,lim))
