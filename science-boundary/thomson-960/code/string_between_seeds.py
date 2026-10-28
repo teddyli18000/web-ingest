@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Spherical string / climbing-image search between two frozen N=960 minima.
 
-This is the generic form of string_record_neighbor.py.  Endpoints are JSON files
+This is the generic form of string_record_neighbor.py. Endpoints are JSON files
 containing a 960x3 `points` array and must have a meaningful pointwise
-correspondence (as A and B do, since both descend from the same record labeling).
+correspondence. The final local path geometry around the maximum is persisted so
+shallow saddles can be refined using the string tangent instead of blindly
+reselecting the lowest Hessian mode.
 """
 from __future__ import annotations
 import argparse, json, pathlib
@@ -60,13 +62,17 @@ def main():
             climb.append({'iteration':it,'energy':E,'grad_rms':grms,'step':s})
 
     Es,gs=sr.energy_grad(saddle); grms=float(np.sqrt(np.mean(np.sum(gs*gs,axis=1))))
+    tmp=images.copy(); tmp[imax]=saddle; tau=sr.path_tangent(tmp,imax)
     out={'left_json':str(args.left_json),'right_json':str(args.right_json),
          'left_energy':sr.energy_grad(L)[0],'right_energy':sr.energy_grad(R)[0],
          'images':args.images,'iterations':args.iterations,
          'path_energies':[sr.energy_grad(x)[0] for x in images],
          'max_image_index':imax,'history':hist,'climbing_energy':Es,
          'climbing_gradient_rms':grms,'climb_history':climb,
-         'saddle_points':saddle.tolist()}
+         'saddle_points':saddle.tolist(),
+         'left_neighbor_points':images[imax-1].tolist(),
+         'right_neighbor_points':images[imax+1].tolist(),
+         'path_tangent_cartesian':tau.tolist()}
     pathlib.Path(args.out).write_text(json.dumps(out,separators=(',',':'))+'\n')
 
 if __name__=='__main__': main()
