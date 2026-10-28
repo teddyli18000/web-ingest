@@ -61,7 +61,7 @@ def main():
             if gain>0:faces.append((gain,tuple(x for x,m in zip(edges,marks) if m),
                                     tuple(x for x,m in zip(edges,marks) if not m)))
     faces.sort(reverse=True)
-    assert len(faces)==279
+    assert len(faces)>0, 'No positive alternating faces on this starting tour'
     adj=[[] for _ in range(n)]
     for a,b in base:adj[a].append(b);adj[b].append(a)
     items=list(w.items());best=None;records=[]
