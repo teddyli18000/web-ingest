@@ -1,0 +1,48 @@
+name: temp Thomson 960 C local unstable manifold
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-c-local-manifold.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  local:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tag: p00-25
+            phases: "0,5,10,15,20,25"
+          - tag: p30-55
+            phases: "30,35,40,45,50,55"
+          - tag: p60-85
+            phases: "60,65,70,75,80,85"
+          - tag: p90-115
+            phases: "90,95,100,105,110,115"
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Rebuild C
+        run: |
+          python3 science-boundary/thomson-960/code/harvest_basin_c.py \
+            "$RUNNER_TEMP/few-shots" --neighbor-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --scale 0.95 --out "$RUNNER_TEMP/c.json"
+      - name: Map local negative-curvature branch
+        run: |
+          python3 science-boundary/thomson-960/code/search_seed_c3_negative_pair.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/c.json" \
+            --phases "${{ matrix.phases }}" --amps 0.0001,0.0002,0.0004,0.0006 \
+            --out "$RUNNER_TEMP/c-local-${{ matrix.tag }}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-c-local-${{ matrix.tag }}
+          retention-days: 7
+          path: ${{ runner.temp }}/c-local-${{ matrix.tag }}.json
