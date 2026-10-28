@@ -1,0 +1,33 @@
+name: temp Thomson 960 C Landau fit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-c-landau-fit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Rebuild C and fit local C3 Landau model
+        run: |
+          python3 science-boundary/thomson-960/code/harvest_basin_c.py \
+            "$RUNNER_TEMP/few-shots" --neighbor-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --scale 0.95 --out "$RUNNER_TEMP/c.json"
+          python3 science-boundary/thomson-960/code/fit_c3_landau.py \
+            "$RUNNER_TEMP/c.json" --rms-amps 0.0002,0.0003,0.0004 --phase-step-deg 5 \
+            --out "$RUNNER_TEMP/c-landau.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-c-landau-fit
+          retention-days: 7
+          path: ${{ runner.temp }}/c-landau.json
