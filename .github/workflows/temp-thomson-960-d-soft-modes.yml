@@ -1,0 +1,44 @@
+name: temp Thomson 960 D low-mode exits
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-d-soft-modes.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  scan:
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [0, 1, 2, 3]
+        sign: [-1, 1]
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-cd-hessian
+          path: ${{ runner.temp }}/cd
+          github-token: ${{ github.token }}
+          run-id: 40732118945
+      - name: Scan one D Hessian exit
+        run: |
+          python3 science-boundary/thomson-960/code/search_from_seed_modes.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/cd/basin-d.json" \
+            --mode ${{ matrix.mode }} --sign ${{ matrix.sign }} --k 12 \
+            --amps 0.0015,0.003,0.006,0.012,0.020,0.032,0.045 \
+            --out "$RUNNER_TEMP/d-m${{ matrix.mode }}-s${{ matrix.sign }}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-d-m${{ matrix.mode }}-s${{ matrix.sign }}
+          retention-days: 7
+          path: ${{ runner.temp }}/d-m${{ matrix.mode }}-s${{ matrix.sign }}.json
