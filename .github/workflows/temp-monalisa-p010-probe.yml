@@ -30,7 +30,7 @@ jobs:
             --input upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
             --output science-boundary/mona-lisa-tsp/results/certificate.json \
             --report science-boundary/mona-lisa-tsp/results/report.json \
-            --k 32 --max-passes 4
+            --k 160 --max-passes 4
           python upstream/problems/p010-mona-lisa-tsp/verify/verify.py science-boundary/mona-lisa-tsp/results
       - uses: actions/upload-artifact@v4
         if: always()
