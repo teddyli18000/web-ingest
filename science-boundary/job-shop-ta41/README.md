@@ -4,6 +4,7 @@
 - **Goal:** Find feasible machine orders with makespan <=2005, against the verified Few Shots baseline of **2006**. Benchmark is 30 jobs x 20 machines.
 - Official [problem and verifier](https://github.com/few-shots/few-shots/tree/main/problems/p009-job-shop-ta41), [baseline certificate](https://github.com/few-shots/few-shots/blob/main/problems/p009-job-shop-ta41/baseline/certificate.json).
 - Published lower bound **1915** (Coupvent des Graviers et al. 2025, arXiv:2504.16106). Do not confuse it with a feasible upper bound.
+- **Important historical-record conflict:** Weise's 2020 JSSP literature aggregation and older scheduling references claim **ta41 UB=2005**, attributed to Vilím, Laborie & Shaw (2015) or earlier literature; the raw 2005 schedule is not available in these tables. Conversely the published certificate-based 2025/2026 tables use **2006**. A reproduced 2005 certificate would beat the Few Shots verifiable baseline but **must not be presented as an unambiguous first-ever mathematical record**. Primary references: https://github.com/thomasWeise/jsspInstancesAndResults, https://zerothesis.com/challenges/jobshop-taillard-open?tab=brief, https://link.springer.com/article/10.1007/s10472-026-10007-3, https://doi.org/10.2139/ssrn.4938242.
 - [Few Shots record chain](https://github.com/few-shots/few-shots/blob/main/problems/p009-job-shop-ta41/FEWSHOT.md) had no merged improvements at initial read.
 - No new result is claimed until verified using the upstream verifier and `tools/check.py`.
 
@@ -18,8 +19,21 @@ python3 problems/p009-job-shop-ta41/verify/verify.py /path/to/web-ingest/science
 
 The one-shot GitHub Action `temp-ta41-search.yml` runs fixed-seed experiments and uses the upstream verifier independently before publishing output. Its successful run is not itself a new record. On any breakthrough, also run Few Shots `tools/check.py` on the correctly packaged shot with the live record.
 
+## First-principles reformulation (2026-10-28)
+Rather than only vary local-swap parameters, ask the **binary feasibility** question: Does any schedule exist with makespan <= 2005? The incumbent's 580 adjacent machine precedences are individually optional clauses. We impose 600 true intervals, 20 global `NoOverlap` constraints, and job precedence unconditionally. The incumbent machine arcs become reified assumptions (keep or relax). Every UNSAT core produced under a subset of those assumptions is a **sufficient obstruction**: any better schedule must violate at least one retained machine-arc assumption in the core. The problem of minimally relaxing the incumbent therefore becomes a **hitting-set problem over learned cores**, followed by an exact CP-SAT feasibility check with the remaining 580 - |relaxed| arcs pinned. This is a falsifiable approach, not a claim of a novel general algorithm or a proof of infeasibility.
+
+`core_guided_lns.py` implements that mechanism with deterministic seed, exact processing times, independent DAG rescore, and persisted evidence. An UNSAT response with assumptions only proves infeasibility **within that fixed-arc subspace**; UNKNOWN proves nothing. When a candidate is found, the Few Shots verifier is invoked on the result before it is trusted. See the one-shot `temp-ta41-core-guided.yml` action. This program requires OR-Tools CP-SAT 9.14.6206 (installed and pinned by the Action).
+
+The hypothesis being tested is **coupled structural rigidity**: many incumbent arcs form mutually protecting sets, so moving one critical block alone cannot reduce makespan. If learned cores remain dense and the derived hitting set grows without producing improvements, change decomposition (partition jobs/machines by cut structure, or search start-time freedom directly), rather than extending the same search blindly.
+
+## Results / negative evidence
+- Two 720-second independent random-seed runs of critical-path tabu moves yielded 2006 (63,288 / 63,312 iterations). Their validated status applies only to the explored local neighborhood, not all schedules.
+- Core-guided CP-SAT run: submitted to the workflow; results/status must be read from `results/core-seed4107/core-analysis.json` after it is actually committed. Do not assume success from code being committed.
+
 ## Evidence / literature
 - Taillard (1993), *Benchmarks for basic scheduling problems*, EJOR.
+- Reijnen et al. (2026), *Job shop scheduling benchmark: environments and instances for learning and non-learning methods*, Ann. Math. Artif. Intell., table lists 2006.
+- Fernandez-Viagas, Talens & Prata (2025), *A speed-up procedure and new heuristics for the classical job shop scheduling problem*, EJOR, showing critical-path local search remains an active baseline; not itself the novelty here.
 - Shylo & Pardalos (2008), published upper bound 2006, machine order reproduced in Few Shots baseline.
 - Coupvent des Graviers et al. (2025), arXiv:2504.16106, improved LB 1915.
 - [Optimizizer benchmark record](https://optimizizer.com/TA.php).
@@ -31,3 +45,5 @@ Critical-path N1 adjacent moves can stall in local optima; a lack of improvement
 
 ## Work log
 - 2026-10-28: Read all repository and Few Shots instructions; inspected source instance, verifier and baseline. Implemented first reproducible critical-path tabu exploration. Outcome pending Action execution and official independent verification.
+
+- 2026-10-28 (second pass): Cross-checked 2005 historical literature claim against later verifiable-2006 record; shifted from tabu-only heuristics to CP-SAT deadline feasibility and UNSAT-core-guided hitting-set relaxation. Code and Action committed. Await independent runtime evidence before claiming any result.
