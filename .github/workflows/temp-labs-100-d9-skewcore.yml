@@ -1,0 +1,30 @@
+name: temp labs-100 d9 skew-core exact search
+
+on:
+  push:
+    paths:
+      - 'science-boundary/labs-100/code/skewcore_d9_bnb.cpp'
+      - '.github/workflows/temp-labs-100-d9-skewcore.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  d9-target:
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        bits: ['---+--+', '+--++-+', '++--+-+', '-++---+', '-+----+', '+-+++-+', '+++-+-+', '--++--+']
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exact E<=574 feasibility in large normalized d=9 skew91 branches
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/skewcore_d9_bnb.cpp -o /tmp/d9
+          /tmp/d9 --bits '${{ matrix.bits }}' --cap 524 \
+            --threads "$(nproc)" --split 11 --seconds 1500
