@@ -51,7 +51,7 @@ jobs:
           /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_t10_signed_exchange_repair.py \
             "$RUNNER_TEMP/tan" "$RUNNER_TEMP/c7-five" "$RUNNER_TEMP/exchange-dfs" \
             "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/status.json" \
-            --budget 7 --per-case-cutoff 900 \
+            --budget 7 --per-case-cutoff 300 \
             > "$RUNNER_TEMP/result/stdout.txt" 2> "$RUNNER_TEMP/result/stderr.txt"
           cat "$RUNNER_TEMP/result/status.json"
           if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
