@@ -1,0 +1,51 @@
+name: temp labs-100 target-center near-skew BnB calibration
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-nearskew-targetcenter-calibrate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  calibrate:
+    strategy:
+      fail-fast: false
+      matrix:
+        asum: [-16, -12, -8, -4, 0, 4, 8, 12, 16]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Patch exact BnB with root-fixed near-skew center
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('science-boundary/labs-100/code/nearskew_bnb.cpp')
+          s=p.read_text()
+          a=' int first=template_coord(v);assign_coord(st,v,first);dfs(st,v+1,sh);unassign_coord(st,v);'
+          b=' if(v==49&&st.used[50]){dfs(st,50,sh);return;}\n int first=template_coord(v);assign_coord(st,v,first);dfs(st,v+1,sh);unassign_coord(st,v);'
+          if a not in s: raise SystemExit('dfs patch anchor missing')
+          s=s.replace(a,b,1)
+          a=' State base;assign_pos(base,0,1);assign_coord(base,0,1);'
+          b=' State base;assign_pos(base,0,1);assign_coord(base,0,1);if(asum!=999){int m=(50-asum)/2;assign_coord(base,49,(m&1)?-1:1);}'
+          if a not in s: raise SystemExit('base patch anchor missing')
+          s=s.replace(a,b,1)
+          Path('/tmp/nearskew_targetcenter.cpp').write_text(s)
+          PY
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG /tmp/nearskew_targetcenter.cpp -o /tmp/nearskew-targetcenter
+      - name: Calibrate target-compatible class
+        shell: bash
+        run: |
+          set +e
+          /tmp/nearskew-targetcenter --threads 4 --prefix 10 --seconds 120 --asum '${{ matrix.asum }}' --cap 524 | tee /tmp/out.txt
+          rc=${PIPESTATUS[0]}
+          set -e
+          if [ "$rc" -gt 1 ]; then exit "$rc"; fi
+          grep -F 'SUMMARY asum=${{ matrix.asum }} ' /tmp/out.txt
