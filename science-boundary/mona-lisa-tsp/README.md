@@ -4,15 +4,28 @@
 - **Goal:** construct a valid 100,000-city tour of integer TSPLIB EUC_2D length **at most 5,757,190**, beating Nagata's published 5,757,191 tour by one or more units.
 - **Independently documented lower bound:** 5,757,084 (Cook's Mona Lisa TSP Challenge, July 2012), leaving a gap of 107 to the baseline.
 - **Few Shots accepted p010 shots:** none at initial read (FEWSHOT.md record chain contains baseline only).
-- **Result status:** restricted 2-opt search completed; **no new tour claimed**. First GitHub Actions experiment completed and independently verifier-checked; no 2-opt improvement.
+- **Result status:** restricted 2-opt probes (k=32 and k=160) completed; **no new tour claimed**. Research pivots to a certified reduced planar graph and face-region formulation. First GitHub Actions experiment completed and independently verifier-checked; no 2-opt improvement.
 - **Important:** scoring uses exact integer rounded EUC_2D, NOT ordinary Euclidean float length. Always check a candidate with the authoritative p010 verifier.
 
 ## Verified experiment outcomes
 - **Run [40683876889](https://github.com/teddyli18000/web-ingest/actions/runs/40683876889)** (2026-10-28): baseline verifier returned `valid=true`, score `5757191`, canonical hash `3947948945204e939df8f8555ff8f926027a55af3f29f54b29eb442fb278ebfa`. k=32 nearest-neighbor probe examined 1,499,636 oriented pairs, found no positive exact 2-opt gain, and finished in 5.57 seconds. Final verifier score remained `5757191`, same hash. Workflow artifact `monalisa-p010-neighbor-probe`, ID 12813817913, contains report and unchanged tour. This proves no improvement **only among the enumerated candidate exchanges**.
 
+## Strategic pivot: planar-dual formulation (2026-10-28)
+**Evidence-backed prior art, not a claimed discovery.** Cook, Helsgaun, Hougardy and Schroeder (2024), *Local elimination in the traveling salesman problem*, [DOI](https://doi.org/10.1007/s12532-024-00262-y), reduce Mona Lisa's complete edge set to fewer than 2.5n edges and report that its reduced graph is planar. Their open-source [ElimTSP](https://github.com/bicobico2/ElimTSP) repository distributes the concrete `results/mona.248972.edg.gz` (248,972 candidate edges) and `results/mona.1635.fix.gz` (1,635 fixed edges). The sparse set was obtained by certified elimination, **not** by arbitrary k-nearest neighbors. Do not infer the public upper bound has changed from their experiments. A CPLEX bound of 5,757,132 is explicitly described as *potential*, pending numerically safe verification; it is not an established certified improvement to 5,757,084.
+
+**New research hypothesis (not yet shown novel):** Convert the reduced primal planar graph into its dual. Any Hamiltonian cycle in the primal is a cut separating dual faces into inside/outside. A different inside/outside labeling induces a new boundary edge set, giving a new representation of TSP moves as **face-region flips** rather than sequences of k-opt swaps. Force degree exactly 2 at every primal vertex and a *single* cycle, and measure energy by exact integer edge weights. This is a constrained Ising/cut problem, not an unconstrained MaxCut. Prior work on planar Hamiltonicity and face structures (e.g. Bagheri Gh. et al., [Journal of Graph Theory 2021](https://doi.org/10.1002/jgt.22612)) makes it essential not to claim this idea's novelty without broader comparison.
+
+**Minimal falsifiable experiment:**
+1. Independently inspect the published 248,972-edge file: numbering, edge weights, planarity, and whether the known 5,757,191 tour lies entirely within it. Preserve any counterexample to the assumption that the baseline is contained; an elimination set need only contain optimal tours, not necessarily the best *known* tour.
+2. If yes, enumerate facial alternating cycles in a planar embedding. Toggling boundary edges of an alternating face preserves degree 2. Classify objective change and resulting component count. Only a one-component 2-factor is an admissible new tour.
+3. If single-face moves are exhausted, search **coupled face-region flips**, by exact small-boundary dynamic programming, as a fundamentally different space from bounded k-opt. Use sparse graph's certified fixings; keep global cycle connectivity explicit.
+4. Use the upstream p010 verifier for any candidate; validate the sparse-graph assumption before exploiting it in any proof. Test the approach on smaller planar TSP instances with known optimum before claims of generalized benefit.
+
+**Negative evidence from prior runs:** [k=160 probe](https://github.com/teddyli18000/web-ingest/actions/runs/40683993086) examined 7,912,269 near-neighbor oriented 2-opt candidates and again found *zero* improving exchanges; upstream verifier independently confirmed 5,757,191 (same canonical hash). This is not proof of local optimality in the full 2-opt space, much less global optimality. The k-nearest-neighbor path is now **closed as the primary research direction**; do not keep incrementing k absent a specific new hypothesis.
+
 ## Hypotheses
 1. Exhaustively inspect the baseline for 2-opt improving edges among spatial nearest-neighbor candidate edges. A zero result proves only absence for the searched candidate pairs.
-2. If 2-opt is saturated, investigate complementary representations: alternating-cycle exchanges on a near-optimal base tour; constrained 3/4/5-opt; exact small-region dynamic programming / MIP with boundary interfaces; and crossover between structurally different near-optimal tours.
+2. Primary next direction: independently inspect ElimTSP's planar sparse candidate graph, then test exact-cost dual face-region moves and separator-interface optimization. Larger k-opt is a baseline, not the research agenda.
 3. Discrete rounding may create plateaus: preserve equal-score moves, use lexicographic secondary structural cost, and evaluate exact integer gains before publishing.
 
 ## Experiment 01: nearest-neighbor 2-opt diagnostic
@@ -33,4 +46,5 @@ The one-shot workflow `.github/workflows/temp-monalisa-p010-probe.yml` clones th
 - [Published baseline certificate](https://github.com/few-shots/few-shots/blob/main/problems/p010-mona-lisa-tsp/baseline/certificate.json)
 
 ## Work log
+- 2026-10-28: rechecked primary research; identified 2024 Cook–Helsgaun–Hougardy–Schroeder certified planar reduction and public 248,972-edge/1,635-fixed-edge data. Redirected from scaling k-neighbor probes to planar-dual face-region optimization, conditional on graph/baseline validation. Verified negative k=160 action result.
 - 2026-10-28: checked p010 metadata, verifier, baseline provenance, accepted shot chain, Cook challenge page and repository instructions. Baseline 5,757,191; minimum accepted improvement one unit. Established reproducible nearest-neighbor 2-opt probe, k=32 verified, negative.
