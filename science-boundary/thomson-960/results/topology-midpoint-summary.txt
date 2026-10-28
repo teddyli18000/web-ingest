@@ -1,0 +1,23 @@
+Thomson N=960 D2<->C3 topology-morph midpoint basin
+Actions run: 40627218698
+Artifact: thomson-topology-midpoint (artifact id 12790441060)
+Reproduction: code/harvest_morph_midpoint.py, seed 5011, t=0.5
+
+Live record R: 444368.3924061973
+Midpoint basin energy: 444370.530553633405
+Delta vs R: +2.138147436082
+Relaxation: 922 stable L-BFGS iterations, success=True
+D2-to-record alignment: ICP nearest-neighbor RMS 0.0409978202; Hungarian one-to-one RMS 0.0438794792
+Raw t=0.5 morph start energy: 444411.29674806085
+
+Delaunay/convex-hull coordination counts of the relaxed midpoint:
+- degree 5: 37
+- degree 6: 898
+- degree 7: 25
+- no other degrees
+- Euler/topological charge: 37 - 25 = 12
+
+Interpretation:
+With only 5/6/7 coordination present, the 25 sevenfold vertices correspond to 25 neutral dislocations on top of the required twelve +1 disclination charges. This is neither the 24-dislocation live-record family (36/900/24) nor the 20-dislocation D2 family (32/908/20). The simple continuous 24->20 topology morph therefore does not monotonically remove dislocations: near the basin boundary it first reaches a higher 25-dislocation minimum, while t<=0.4 relaxes to the 24-dislocation record and t>=0.6 relaxes to D2.
+
+This makes the midpoint scientifically useful as a topology-transition node, but not competitive by energy. Only a bounded low-mode downhill scan is justified: test whether its lowest modes annihilate defects into alternative 24/23/22/20-dislocation basins. If they merely return the known record/D2/high families, retire this route and move to explicit saddle/dimer transition-state search.
