@@ -63,19 +63,7 @@ jobs:
           cp /tmp/r46/a29.g6 science-boundary/ramsey-r46/data/r36_12_e29.g6
           cp /tmp/r46/aut.json science-boundary/ramsey-r46/results/r36-12-e29-automorphisms.json
           sha=$(cut -d' ' -f1 /tmp/r46/a29.sha256)
-          cat >> science-boundary/ramsey-r46/data/README.md <<EOF
-
-## \`r36_12_e29.g6\`
-
-Pinned unique 12-vertex Ramsey \`(3,6)\` graph with 29 edges, the unique
-neighbourhood side in the lucky degree-12 reduction.
-
-- Authoritative source: Brendan McKay complete \`r36_12.g6.gz\` catalogue.
-- Source SHA-256: \`17e176a0f7e7397dbca7c9cb6295034dd74cf529ca62e7e717226dc1b0b7b96d\`.
-- Complete catalogue edge histogram has exactly one 29-edge record.
-- Pinned one-line file SHA-256: \`$sha\`.
-- Its exact automorphism enumeration is in \`../results/r36-12-e29-automorphisms.json\`.
-EOF
+          printf '\n## `r36_12_e29.g6`\n\nPinned unique 12-vertex Ramsey `(3,6)` graph with 29 edges, the unique neighbourhood side in the lucky degree-12 reduction.\n\n- Authoritative source: Brendan McKay complete `r36_12.g6.gz` catalogue.\n- Source SHA-256: `17e176a0f7e7397dbca7c9cb6295034dd74cf529ca62e7e717226dc1b0b7b96d`.\n- Complete catalogue edge histogram has exactly one 29-edge record.\n- Pinned one-line file SHA-256: `%s`.\n- Its exact automorphism enumeration is in `../results/r36-12-e29-automorphisms.json`.\n' "$sha" >> science-boundary/ramsey-r46/data/README.md
           git rm .github/workflows/temp-ramsey-r46-pin-a29.yml
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
