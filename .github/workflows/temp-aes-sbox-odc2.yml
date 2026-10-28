@@ -1,0 +1,38 @@
+name: temp-aes-sbox-odc2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/temp-aes-sbox-odc2.yml'
+      - 'science-boundary/aes-sbox-circuit/search_odc2.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  odc2:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [2026102711, 2026102712, 2026102713, 2026102714]
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run two-gate ODC boundary walk from live 103-gate record
+        run: |
+          mkdir -p /tmp/aes-odc2-${{ matrix.seed }}
+          python3 science-boundary/aes-sbox-circuit/search_odc2.py \
+            --seed ${{ matrix.seed }} \
+            --seconds 900 \
+            --trials 2400 \
+            --out /tmp/aes-odc2-${{ matrix.seed }}
+      - name: Upload search evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-sbox-odc2-${{ matrix.seed }}
+          path: /tmp/aes-odc2-${{ matrix.seed }}
+          if-no-files-found: warn
