@@ -1,0 +1,38 @@
+name: temp Thomson 960 p75 reaction sides
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-p75-reaction.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-c-landau-p75
+          path: ${{ runner.temp }}/p75
+          github-token: ${{ github.token }}
+          run-id: 40738176193
+      - name: Classify and relax both true reaction sides
+        run: |
+          python3 science-boundary/thomson-960/code/validate_index1_seed.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/p75/c-landau-p75.json" \
+            --amps 0.00005,0.0001,0.0002,0.0003 \
+            --out "$RUNNER_TEMP/p75-reaction.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-p75-reaction
+          retention-days: 7
+          path: ${{ runner.temp }}/p75-reaction.json
