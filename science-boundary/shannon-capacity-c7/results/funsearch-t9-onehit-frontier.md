@@ -17,7 +17,19 @@ The 40 one-hit cases are concentrated in exactly two image basins:
 - image 330, `perm=[0,2,4,1,3]`, `negmask=10`, translation `[6,3,6,3,6]`: 20 one-hit states;
 - image 341, `perm=[0,2,4,1,3]`, `negmask=21`, translation `[5,4,5,4,5]`: 20 one-hit states.
 
-Under 16-way image-index sharding these are precisely shard 10 and shard 5. This is useful operationally: deeper exact exchange searches need only these two shards, not all 16.
+Under 16-way image-index sharding these are precisely shard 10 and shard 5.
+
+### Exact basin isomorphism
+
+The two 20-state basins are not independent search targets.  The explicit `C7^5` graph automorphism
+
+`T(x) = -x + (4,0,4,0,4) mod 7`
+
+maps the complete image-330 one-hit state collection bijectively onto the complete image-341 collection.  An exact replay checked all 20 states: both the translated 367-set and its obstruction set are mapped to a unique state in the other basin, and the unique obstruction hit maps to the partner state's unique hit.  The verification completed with `matched=20`, `unmatched=[]`, `bijection=true`.
+
+Therefore all automorphism-invariant repair/existence questions need only be solved on one of the two basins.  From radius 9 onward, search only one representative basin unless a deliberately symmetry-breaking constraint is introduced.
+
+Reusable verifier: `code/bpz_t9_funsearch_basin_isomorphism.py`.
 
 ## Exact 6-for-6 repair boundary
 
@@ -34,11 +46,16 @@ Thus all 40 FunSearch signed-orbit one-hit states are exactly negative through 6
 
 ## Active deeper searches
 
-The same exact driver is being pushed to 7-for-7 and then 8-for-8. These runs must only be promoted to negative evidence when their completion guards pass with zero cutoff states. A timeout, cancellation, or failed job is not a mathematical negative result.
+The same exact driver is being pushed to 7-for-7 and 8-for-8. These runs must only be promoted to negative evidence when their completion guards pass with zero cutoff states. A timeout, cancellation, or failed job is not a mathematical negative result.
+
+A separate incremental neutral-reconfiguration walk keeps the unique bad point fixed while traversing long sequences of legal one-for-one swaps among the other 366 points.  This can escape fixed-radius Hamming balls before attempting the final bad-point replacement and is therefore a genuinely different search family.
 
 Reusable code:
 
 - `code/bpz_t9_funsearch_fft.py`
 - `code/bpz_t9_funsearch_signed_orbit.py`
 - `code/bpz_t9_funsearch_exchange_repair.py`
+- `code/bpz_t9_funsearch_basin_isomorphism.py`
+- `code/bpz_t9_funsearch_neutral_walk.py`
+- `code/c7_fiber_neutral_walk.cpp`
 - `code/bpz_t9_exchange_repair.py`
