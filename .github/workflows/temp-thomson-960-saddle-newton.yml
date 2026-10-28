@@ -1,0 +1,60 @@
+name: temp Thomson 960 truncated-Newton saddle refinement
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-saddle-newton.yml"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  refine:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: damp05
+            damping: 0.5
+            high_eta: 0.00010
+            max_step: 0.00030
+          - label: damp08
+            damping: 0.8
+            high_eta: 0.00012
+            max_step: 0.00040
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Download conservative refined saddle
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-saddle-refined-conservative
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ github.token }}
+          run-id: 40632990227
+      - name: Truncated-Newton saddle refinement
+        run: |
+          python3 science-boundary/thomson-960/code/refine_saddle_truncated_newton.py \
+            "$RUNNER_TEMP/seed/refined-conservative.json" \
+            --cycles 8 --k 10 --newton-damping ${{ matrix.damping }} \
+            --high-eta ${{ matrix.high_eta }} --max-rms-step ${{ matrix.max_step }} \
+            --out "$RUNNER_TEMP/newton-${{ matrix.label }}.json"
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'newton-${{ matrix.label }}.json')
+          d=json.load(open(p)); d.pop('saddle_points',None); d.pop('eigenvectors_physical',None)
+          d['history']=d['history'][-2:]
+          print(json.dumps(d,indent=2))
+          PY
+      - name: Upload refined saddle
+        uses: actions/upload-artifact@v4
+        with:
+          name: thomson-saddle-newton-${{ matrix.label }}
+          path: ${{ runner.temp }}/newton-${{ matrix.label }}.json
+          retention-days: 7
