@@ -1,0 +1,192 @@
+name: Temp Ramsey R46 m219 n11eq5 extreme cover
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-m219-n11eq5.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-m219-n11eq5
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check 'python-sat==1.9.dev17' 'networkx==3.5'
+      - name: Compile and validate 96-branch manifest
+        run: |
+          set -euo pipefail
+          python -m py_compile science-boundary/ramsey-r46/m219_n11eq5_fixed_pair_sat.py
+          python science-boundary/ramsey-r46/m219_n11eq5_fixed_pair_sat.py self-test
+          python science-boundary/ramsey-r46/m219_n11eq5_fixed_pair_sat.py manifest --output /tmp/m219-manifest.json
+          python3 - /tmp/m219-manifest.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          assert d['branch_count']==96
+          assert [len(x['p3_orbits']) for x in d['A']]==[11,5]
+          assert [x['b_index'] for x in d['B'] if x['degree8_vertices']]==[1,4]
+          PY
+
+  shard:
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check 'python-sat==1.9.dev17' 'networkx==3.5'
+      - name: Solve shard
+        shell: bash
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          set -euo pipefail
+          out="/tmp/r46/shard-${SHARD}"
+          mkdir -p "$out/candidates"
+          for ordinal in $(seq "$SHARD" 12 95); do
+            summary="$out/branch-${ordinal}.json"
+            candidate="$out/candidates/branch-${ordinal}.json"
+            set +e
+            timeout --signal=TERM --kill-after=10s 180s \
+              python science-boundary/ramsey-r46/m219_n11eq5_fixed_pair_sat.py solve \
+                --ordinal "$ordinal" --solver cadical195 \
+                --summary "$summary" --output "$candidate"
+            rc=$?
+            set -e
+            case "$rc" in
+              0) echo "branch $ordinal SAT" ;;
+              20) echo "branch $ordinal UNSAT" ;;
+              124|137|143)
+                python3 - "$ordinal" "$summary" <<'PY'
+          import json,sys
+          ordinal=int(sys.argv[1]); path=sys.argv[2]
+          json.dump({'campaign':'m219-n11eq5-A26-B116-fixed-pair','branch_ordinal':ordinal,'status':'TIMEOUT','timeout_s':180},open(path,'w'),indent=2,sort_keys=True)
+          open(path,'a').write('\n')
+          PY
+                echo "branch $ordinal TIMEOUT" ;;
+              *) echo "branch $ordinal unexpected rc=$rc"; exit 1 ;;
+            esac
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m219-n11eq5-shard-${{ matrix.shard }}
+          path: /tmp/r46/shard-${{ matrix.shard }}
+          if-no-files-found: error
+          retention-days: 7
+
+  merge:
+    needs: shard
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: m219-n11eq5-shard-*
+          path: /tmp/r46/merged
+          merge-multiple: true
+      - name: Merge branch evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path('/tmp/r46/merged')
+          rows=[]
+          for i in range(96):
+              hits=list(root.rglob(f'branch-{i}.json'))
+              hits=[p for p in hits if 'candidates' not in p.parts]
+              assert len(hits)==1,(i,hits)
+              rows.append(json.loads(hits[0].read_text()))
+          assert [int(r['branch_ordinal']) for r in rows]==list(range(96))
+          counts={s:sum(r['status']==s for r in rows) for s in ('UNSAT','SAT','TIMEOUT')}
+          if counts['SAT']:
+              decision='SAT'
+          elif counts['UNSAT']==96:
+              decision='UNSAT'
+          else:
+              decision='UNKNOWN'
+          result={
+              'campaign':'m219-n11eq5-A26-B116-fixed-pair',
+              'branch_count':96,
+              'solver':'cadical195',
+              'timeout_s':180,
+              'counts':counts,
+              'exact_decision':decision,
+              'degree_sequences':[{'11':5,'12':20,'13':11},{'11':5,'12':21,'13':9,'14':1},{'11':5,'12':22,'13':7,'14':2}],
+              'coverage':'3 degree sequences x 16 Aut(A26) P3 orbits x 2 surviving B116 degree-8 orbits',
+              'rows':rows,
+          }
+          Path('/tmp/r46/m219-n11eq5-fixed-pair.json').write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({'counts':counts,'exact_decision':decision},sort_keys=True))
+          PY
+      - name: Verify any SAT candidates with Few Shots
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob globstar
+          candidates=(/tmp/r46/merged/**/candidates/branch-*.json)
+          if (( ${#candidates[@]} == 0 )); then
+            echo 'No SAT candidates.'
+            exit 0
+          fi
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          for cand in "${candidates[@]}"; do
+            name="$(basename "$cand" .json)"
+            work="/tmp/verify-${name}"
+            mkdir -p "$work"
+            cp "$cand" "$work/certificate.json"
+            python3 /tmp/few-shots/problems/p003-ramsey-r46/verify/verify.py "$work" \
+              | tee "/tmp/r46/${name}-few-shots.json"
+            python3 - "/tmp/r46/${name}-few-shots.json" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1]))
+          assert d.get('valid') is True and str(d.get('score'))=='36',d
+          PY
+          done
+      - name: Persist result and retire one-shot workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/r46/m219-n11eq5-fixed-pair.json science-boundary/ramsey-r46/results/m219-n11eq5-fixed-pair.json
+          shopt -s nullglob
+          for f in /tmp/r46/*-few-shots.json; do cp "$f" science-boundary/ramsey-r46/results/; done
+          git rm .github/workflows/temp-ramsey-r46-m219-n11eq5.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/results/m219-n11eq5-fixed-pair.json science-boundary/ramsey-r46/results/*-few-shots.json || true
+          git commit -m 'ramsey-r46: record exact m219 n11=5 extreme cover'
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: m219-n11eq5-merged
+          path: /tmp/r46
+          if-no-files-found: warn
+          retention-days: 7
