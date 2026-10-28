@@ -37,8 +37,8 @@ jobs:
           git -C "$RUNNER_TEMP/c7-five" checkout FETCH_HEAD
           git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
           git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
-      - name: Install dependency
-        run: python3 -m pip install --disable-pip-version-check numpy
+      - name: Install dependencies
+        run: python3 -m pip install --disable-pip-version-check numpy python-sat
       - name: Solve exact radius5 state ${{ matrix.near_index }} by support-union closure
         id: solve
         shell: bash
