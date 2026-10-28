@@ -18,6 +18,8 @@ This workspace is permanent. It is **not** part of `temp-work/` and is not subje
 
 | [`job-shop-ta41/`](job-shop-ta41/) | Can the Taillard ta41 30×20 makespan be reduced below the verified 2006 record? | Active — reproducible critical-path tabu search and independent upstream verifier workflow initialized; first run pending. |
 
+| [`mona-lisa-tsp/`](mona-lisa-tsp/) | Can Nagata's 5,757,191-city-tour score on Mona Lisa 100K be improved? | Active — exact nearest-neighbor 2-opt probe prepared; no verified improvement yet. |
+
 Keep this table short and human-readable. Add one row when a genuinely new direction is opened. Detailed state belongs inside that direction.
 
 ## Layout
