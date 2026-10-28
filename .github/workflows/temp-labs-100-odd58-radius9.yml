@@ -1,0 +1,70 @@
+name: temp labs-100 split O=58 radius 9
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-odd58-radius9.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build split scanner
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/sphere_odd58_pattern.cpp \
+            -o /tmp/sphere-odd58-pattern
+      - name: Validate known radius-5 empty class
+        shell: bash
+        run: |
+          set -euo pipefail
+          incumbent='++++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-'
+          /tmp/sphere-odd58-pattern "$incumbent" 4 0 0 1 4 | tee /tmp/smoke.txt
+          grep -F 'PAT 4,0,0,1 half=2,2 tested=685125 expected=685125 odd58=0 best=-1 ' /tmp/smoke.txt
+
+  scan:
+    needs: smoke
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {id: p0, ap: 4, am: 0, bp: 2, bm: 3}
+          - {id: p1, ap: 4, am: 0, bp: 3, bm: 2}
+          - {id: p2, ap: 5, am: 1, bp: 1, bm: 2}
+          - {id: p3, ap: 5, am: 1, bp: 2, bm: 1}
+          - {id: p4, ap: 6, am: 0, bp: 1, bm: 2}
+          - {id: p5, ap: 6, am: 0, bp: 2, bm: 1}
+          - {id: p6, ap: 6, am: 2, bp: 0, bm: 1}
+          - {id: p7, ap: 6, am: 2, bp: 1, bm: 0}
+          - {id: p8, ap: 7, am: 1, bp: 0, bm: 1}
+          - {id: p9, ap: 7, am: 1, bp: 1, bm: 0}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build split scanner
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/sphere_odd58_pattern.cpp \
+            -o /tmp/sphere-odd58-pattern
+      - name: Scan exact pattern
+        shell: bash
+        run: |
+          set -euo pipefail
+          incumbent='++++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-'
+          /tmp/sphere-odd58-pattern "$incumbent" \
+            '${{ matrix.ap }}' '${{ matrix.am }}' '${{ matrix.bp }}' '${{ matrix.bm }}' 4 \
+            | tee /tmp/pattern.txt
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: labs100-odd58-radius9-${{ matrix.id }}
+          path: /tmp/pattern.txt
+          if-no-files-found: warn
