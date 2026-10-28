@@ -1,0 +1,39 @@
+name: temp Thomson 960 C unstable manifold
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-c-unstable-manifold.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  portrait:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Rebuild C
+        run: |
+          python3 science-boundary/thomson-960/code/harvest_basin_c.py \
+            "$RUNNER_TEMP/few-shots" --neighbor-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --scale 0.95 --out "$RUNNER_TEMP/basin-c.json"
+      - name: Map C negative-pair phase portrait
+        run: |
+          python3 science-boundary/thomson-960/code/search_seed_c3_negative_pair.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/basin-c.json" \
+            --phases 0,5,10,15,20,25,30,35,40,45,50,55 \
+            --amps 0.0015,0.003,0.006,0.012 \
+            --out "$RUNNER_TEMP/c-negative-pair.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-c-negative-pair
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/basin-c.json
+            ${{ runner.temp }}/c-negative-pair.json
