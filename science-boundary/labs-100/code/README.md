@@ -70,6 +70,31 @@ g++ -O3 -march=native -fopenmp -DNDEBUG \
 
 Always validate the reported `tested=` count against `C(100,radius)` before treating a shell as exhausted.
 
+## Exact near-skew crossover cubes — `nearskew_cube.cpp`
+
+For two canonical `(+1,skew99)` N=100 endpoints, enumerate the complete hypercube obtained by independently choosing each differing near-skew free coordinate from either parent. The scanner uses Gray-code incremental correlation updates and periodically recomputes the full energy and structural constraints from scratch.
+
+```bash
+g++ -O3 -march=native -std=c++20 -DNDEBUG \
+  science-boundary/labs-100/code/nearskew_cube.cpp -o /tmp/nearskew-cube
+/tmp/nearskew-cube '<parent-a>' '<parent-b>' 25
+```
+
+The optional final argument is the maximum allowed cube dimension; the default is 25. This turns low-dimensional genetic recombination between strong near-skew basins into an exact finite search rather than a heuristic crossover sample.
+
+## Exact near-skew parity-block scans — `nearskew_block.cpp`
+
+After the standard global-sign and alternating-sign normalization `s0=s1=+1`, the canonical near-skew manifold splits into two parity blocks. The `A` block has 25 free coordinates and the `B` block has 24 free coordinates modulo alternating symmetry. This scanner freezes one block and exhausts every assignment of the other.
+
+```bash
+g++ -O3 -march=native -std=c++20 -DNDEBUG \
+  science-boundary/labs-100/code/nearskew_block.cpp -o /tmp/nearskew-block
+/tmp/nearskew-block '<canonical-near-skew-sequence>' A
+/tmp/nearskew-block '<canonical-near-skew-sequence>' B
+```
+
+It periodically recomputes the exact full energy. A seed whose own energy remains the minimum in both scans is a blockwise global minimum: escaping it inside the near-skew manifold requires changing coordinates in both parity blocks simultaneously.
+
 ## Neighboring-length transfer — `cross_length.py` and `delete_to_100.cpp`
 
 `cross_length.py` reproduces targeted insertion/deletion experiments from strong public N=98, N=99, and N=102 sequences. `delete_to_100.cpp` is a fast exact scanner for deleting one through four elements from source lengths 101 through 104, using a packed 128-bit candidate and popcount autocorrelation scoring.
