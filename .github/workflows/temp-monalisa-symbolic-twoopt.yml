@@ -1,0 +1,49 @@
+name: temp-monalisa-symbolic-twoopt
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/symbolic_hypercube_2opt.py
+      - .github/workflows/temp-monalisa-symbolic-twoopt.yml
+permissions:
+  contents: read
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        samples: [80, 300]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch exact scoring code and sparse candidate graph
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          git clone --depth 1 https://github.com/bicobico2/ElimTSP.git elimtsp
+          python upstream/problems/p010-mona-lisa-tsp/verify/verify.py upstream/problems/p010-mona-lisa-tsp/baseline
+      - name: Symbolic local-state exhaustive and global-configuration sampled two-opt
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          mkdir -p science-boundary/mona-lisa-tsp/results/symbolic-${{ matrix.samples }}
+          python science-boundary/mona-lisa-tsp/symbolic_hypercube_2opt.py \
+            --graph elimtsp/results/mona.248972.edg.gz \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --proof science-boundary/mona-lisa-tsp/data/universal-family-check.json \
+            --report science-boundary/mona-lisa-tsp/results/symbolic-${{ matrix.samples }}/report.json \
+            --candidate science-boundary/mona-lisa-tsp/results/symbolic-${{ matrix.samples }}/certificate.json \
+            --samples ${{ matrix.samples }}
+          if test -f science-boundary/mona-lisa-tsp/results/symbolic-${{ matrix.samples }}/certificate.json; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py science-boundary/mona-lisa-tsp/results/symbolic-${{ matrix.samples }}
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-symbolic-twoopt-${{ matrix.samples }}
+          path: science-boundary/mona-lisa-tsp/results/symbolic-${{ matrix.samples }}/
+          if-no-files-found: ignore
