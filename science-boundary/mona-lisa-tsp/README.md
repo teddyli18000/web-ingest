@@ -35,19 +35,32 @@ This is not merely a heuristic move generator: **every** alternative Hamiltonian
 
 ## Hypotheses
 1. Exhaustively inspect the baseline for 2-opt improving edges among spatial nearest-neighbor candidate edges. A zero result proves only absence for the searched candidate pairs.
-2. Primary next direction: independently inspect ElimTSP's planar sparse candidate graph, then test exact-cost dual face-region moves and separator-interface optimization. Larger k-opt is a baseline, not the research agenda.
+2. Primary next direction: optimize overlapping face patches under degree-two and single-cycle constraints using local exact solvers; explore separator-interface optimization after validating patches. Larger k-opt is a baseline, not the research agenda.
 3. Discrete rounding may create plateaus: preserve equal-score moves, use lexicographic secondary structural cost, and evaluate exact integer gains before publishing.
 
 ## Experiment 01: nearest-neighbor 2-opt diagnostic
-Run `python science-boundary/mona-lisa-tsp/nn_two_opt.py --input <baseline-certificate.json> --output <candidate.json> --report <report.json> --k 32` from a checkout of few-shots with `PYTHONPATH` pointing at that checkout. Requires numpy and scipy. It imports the upstream verifier for exact coordinates and exact integer distances.
+Run `python science-boundary/mona-lisa-tsp/nn_two_opt.py --input <baseline-certificate.json> --output <candidate.json> --report <report.json> --k 32` with `FEWSHOTS_ROOT` set to the local Few Shots checkout. Requires numpy and scipy. It imports the upstream verifier for exact coordinates and exact integer distances.
 - Uses scipy cKDTree to generate spatial nearest-neighbor candidate pairs, then examines the standard 2-opt reversal.
-- Scores candidate moves with exact integer metric via cached `math.isqrt` only when the vectorized Euclidean proxy is sufficiently close to improving (margin 3 units).
+- Scores each enumerated candidate with the exact integer TSPLIB distance function imported from the upstream verifier; no floating-point gain decisions.
 - Iteratively applies a best sampled improving move until the candidate set is exhausted or the move budget is reached.
 - A 2-opt move changes only two edges; the script tracks the exact local gain and rechecks the final tour with the upstream verifier.
 - This is a **restricted 2-opt neighborhood**, not a complete search over O(n²) edge pairs.
 
 ## How to reproduce
-The one-shot workflow `.github/workflows/temp-monalisa-p010-probe.yml` clones the public upstream repo, verifies baseline, runs the diagnostic, invokes the upstream verifier again, and uploads the machine-readable report/candidate artifacts. It does not submit a shot automatically.
+All one-shot workflows were removed after completion; their validated run logs and artifacts remain linked above. For reproduction, check out both `few-shots/few-shots` and `bicobico2/ElimTSP` separately, install `numpy scipy networkx`, set `FEWSHOTS_ROOT` to the Few Shots checkout, and use the three retained scripts under this topic directory. The structural commands are:
+
+```bash
+python science-boundary/mona-lisa-tsp/planar_face_probe.py \
+  --edges <ElimTSP>/results/mona.248972.edg.gz \
+  --baseline <FewShots>/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+  --report planar-report.json
+python science-boundary/mona-lisa-tsp/pair_face_search.py \
+  --edges <ElimTSP>/results/mona.248972.edg.gz \
+  --baseline <FewShots>/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+  --report pair-face-report.json --output certificate.json
+```
+
+The scripts produce no new tour unless a candidate passes exact integer scoring. A candidate must be placed in a directory as `certificate.json` and validated with the **upstream** p010 verifier before any claim or shot.
 
 ## Sources
 - [Challenge and current tour/bound](https://www.math.uwaterloo.ca/tsp/data/ml/monalisa.html)
