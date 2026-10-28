@@ -1,0 +1,76 @@
+name: temp labs-100 odd-perfect skew-defect frontier
+
+on:
+  push:
+    paths:
+      - 'science-boundary/labs-100/code/oddperfect_defect_walk.cpp'
+      - '.github/workflows/temp-labs-100-oddperfect-defect-frontier.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  defect:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: 0
+            seed: 810001
+            lo: 3
+            hi: 10
+          - shard: 1
+            seed: 810019
+            lo: 5
+            hi: 15
+          - shard: 2
+            seed: 810037
+            lo: 7
+            hi: 21
+          - shard: 3
+            seed: 810061
+            lo: 10
+            hi: 30
+          - shard: 4
+            seed: 820001
+            lo: 3
+            hi: 10
+          - shard: 5
+            seed: 820021
+            lo: 5
+            hi: 15
+          - shard: 6
+            seed: 820039
+            lo: 7
+            hi: 21
+          - shard: 7
+            seed: 820067
+            lo: 10
+            hi: 30
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build instrumented exact odd-perfect walk
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/oddperfect_defect_walk.cpp \
+            -o /tmp/defect-walk
+      - name: Map skew-defect energy frontier
+        shell: bash
+        run: |
+          set -euo pipefail
+          /tmp/defect-walk --runs 64 --steps 60000 --odd-steps 40000 --threads 4 \
+            --seed '${{ matrix.seed }}' --tenure-lo '${{ matrix.lo }}' --tenure-hi '${{ matrix.hi }}' \
+            | tee /tmp/frontier.txt
+          grep -F 'SUMMARY runs=64 ' /tmp/frontier.txt
+      - name: Upload frontier evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-defect-frontier-${{ matrix.shard }}
+          path: /tmp/frontier.txt
