@@ -1,0 +1,37 @@
+name: temp Thomson 960 C ridge profile
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-c-ridge-profile.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  profile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Rebuild C
+        run: |
+          python3 science-boundary/thomson-960/code/harvest_basin_c.py \
+            "$RUNNER_TEMP/few-shots" --neighbor-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --scale 0.95 --out "$RUNNER_TEMP/c.json"
+      - name: Minimize complement and solve ridge radial stationarity
+        run: |
+          python3 science-boundary/thomson-960/code/profile_c3_pair_ridge.py \
+            "$RUNNER_TEMP/c.json" --phase-deg 14.8795 \
+            --amps 0.00035,0.00040,0.00045,0.00050,0.00055,0.00060,0.00065 \
+            --penalty 20000000 --maxiter 700 --bisect 4 \
+            --out "$RUNNER_TEMP/c-ridge-profile.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-c-ridge-profile
+          retention-days: 7
+          path: ${{ runner.temp }}/c-ridge-profile.json
