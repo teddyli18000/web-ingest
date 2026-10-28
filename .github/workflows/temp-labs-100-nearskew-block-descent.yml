@@ -1,0 +1,44 @@
+name: temp labs-100 exact-block near-skew descent
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-nearskew-block-descent.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  descent:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [101, 211, 307, 401, 503, 601, 701, 809]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build exact-block descent
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -march=native -std=c++20 -DNDEBUG science-boundary/labs-100/code/nearskew_block_descent.cpp -o /tmp/block-descent
+      - name: Run calibrated descent and independently verify final state
+        shell: bash
+        run: |
+          set +e
+          /tmp/block-descent --cycles 6 --seed '${{ matrix.seed }}' --target 574 | tee /tmp/out.txt
+          rc=${PIPESTATUS[0]}
+          set -e
+          if [ "$rc" -gt 1 ]; then exit "$rc"; fi
+          seq=$(sed -n 's/^FINAL .* seq=//p' /tmp/out.txt | tail -n1)
+          test -n "$seq"
+          python3 science-boundary/labs-100/code/verify.py -- "$seq"
+      - name: Upload calibration trace
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-block-descent-${{ matrix.seed }}
+          path: /tmp/out.txt
