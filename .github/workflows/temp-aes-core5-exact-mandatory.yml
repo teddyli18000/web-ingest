@@ -1,0 +1,42 @@
+name: temp-aes-core5-exact-mandatory
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-core5-exact-mandatory.yml'
+      - 'science-boundary/aes-sbox-circuit/search_core5_cost.py'
+      - 'science-boundary/aes-sbox-circuit/search_core5_exact_mandatory.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-core5-exact-mandatory
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Exhaust exact mandatory-form lower bound
+        run: |
+          mkdir -p /tmp/aes-core5-exact-${{ matrix.shard }}
+          python science-boundary/aes-sbox-circuit/search_core5_exact_mandatory.py \
+            --shard ${{ matrix.shard }} \
+            --shards 8 \
+            --out /tmp/aes-core5-exact-${{ matrix.shard }}
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-core5-exact-${{ matrix.shard }}
+          path: /tmp/aes-core5-exact-${{ matrix.shard }}
