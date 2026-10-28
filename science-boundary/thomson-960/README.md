@@ -12,8 +12,9 @@ Can we find a 960-point configuration on the unit sphere with Coulomb energy low
 - No open p007 pull request was visible at the latest check.
 - The current record is a C3-symmetric arrangement with 12 `5-7-5-7-5` scars (24 dislocations). It was found by symmetry-reduced basin hopping followed by six-replica exchange in C3 orbit space, then unconstrained relaxation and Newton polishing.
 - The previous record `444368.4040805305` is D2-symmetric with 20 dislocations and was found by symmetry-preserving cut-and-splice genetic search plus basin hopping.
-- Live-certificate diagnostics show the C3 axis is the coordinate z axis: a +120 degree z rotation matches the rationalized point set with nearest-neighbor RMS `1.98e-9` and maximum `4.63e-9`. This makes exact 320-orbit reconstruction straightforward.
-- Two compute campaigns are active: four independent C3 smooth global-deformation searches (Actions run `40619792492`) and four neighboring-N transfer searches from CCD N=958,959,961,962 (run `40619870207`).
+- Live-certificate diagnostics show the C3 axis is the coordinate z axis: a +120 degree z rotation matches the rationalized point set with nearest-neighbor RMS `1.98e-9` and maximum `4.63e-9`.
+- A 40-start exact-C3 smooth-deformation campaign found no lower basin; the best floating energy was the reconstructed incumbent `444368.392406197148`. Durable summary: `results/c3-smooth-summary.txt`.
+- The active route is a one-cycle oscillating-size search directly from the live record (`960→959→960` and `960→961→960`) using high-contribution removals and spherical-Voronoi insertions, Actions run `40620255734`.
 
 ## Why this may be a frontier
 
@@ -26,7 +27,7 @@ The public p007 record already improves the 2026 Amore-Wales Cambridge Cluster D
 1. Reduce dimension with exact low-order symmetry (especially D2 and C3), search there, then release the symmetry.
 2. Cross barriers with population or replica-exchange methods rather than ordinary local kicks.
 3. Treat the global scar arrangement as the meaningful slow degree of freedom; purely local scar surgery tends to heal back.
-4. Propagate good structures between neighboring N values; Amore-Wales (2026) report this as an effective large-N search strategy.
+4. Propagate good structures between neighboring N values; Amore-Wales (2026) report this as an effective large-N search strategy, ranking insertions at spherical Voronoi vertices and removals by individual energy contribution.
 5. Always finish in the full unconstrained space and independently verify after rationalization.
 
 ### Public dead ends worth not repeating
@@ -38,14 +39,20 @@ The public p007 record already improves the 2026 Amore-Wales Cambridge Cluster D
 
 ## Current route
 
-The live record certificate is the seed and comparator, never the original baseline. Two deliberately different search families are now running:
+The live record certificate is the seed and comparator, never the original baseline.
 
-- **Exact-C3 global smooth deformations.** Regroup the rationalized record into 320 exact z-axis C3 orbits, polish it, then apply random low-order `m=0,3,6` tangent fields with amplitudes spanning roughly 0.008-0.20 rad and re-minimize each start in C3 orbit space. This targets coherent global shear/scar rearrangements rather than the local kicks already reported as dead ends.
-- **Neighboring-N transfer.** Pull current CCD structures at N=958,959,961,962, greedily add/remove points to N=960, then perform full unconstrained angular L-BFGS relaxation. This directly tests the newest Amore-Wales neighboring-size propagation idea against the newer Few Shots record.
+The first project-specific search tested coherent exact-C3 deformations: 40 low-order `m=0,3,6` tangent-field starts over a broad amplitude range. Small and moderate moves returned to the incumbent, while larger moves reached higher minima. This move family is now deprioritized.
 
-If neither route reaches a competitive basin, the next justified route is symmetry-breaking excursions targeted along the lowest tangent Hessian modes of the polished current record, with basin deduplication.
+The current search implements one cycle of the Amore-Wales oscillating-size idea from the *new Few Shots C3 record itself*, rather than from the older CCD N=960 configuration:
 
-The search code pulls Few Shots `main` at runtime and discovers the lowest merged p007 shot so stale seeds cannot silently become the baseline.
+- **down route:** rank five N=960 deletions by largest individual Coulomb contribution, relax each N=959 state, retain the two best parents, then rank five spherical-Voronoi insertion sites for each parent and relax back to N=960;
+- **up route:** rank five spherical-Voronoi insertions from N=960 by added potential, relax N=961 states, retain the two best parents, then rank five removals and relax back to N=960.
+
+This creates topology-changing, globally relaxed excursions without relying on unavailable guessed neighboring-N CCD files. The earlier direct CCD-neighbor probe failed at input retrieval (HTTP 404 for guessed `s_1/dat/points_N_1.dat` paths), so it produced no scientific search result and is not counted as a dead end.
+
+If size oscillation does not reach a competitive basin, the next justified route is targeted symmetry breaking along low tangent Hessian modes, not generic random kicks.
+
+All current search code clones Few Shots `main` at runtime and discovers the lowest merged p007 shot so stale seeds cannot silently become the baseline.
 
 ## Evidence and experiments
 
@@ -55,25 +62,32 @@ Durable result: `results/diagnostic-live-record.txt`.
 
 - Merged shot discovered dynamically: `Ronnie2025/c3-replica-exchange-scars`.
 - Claimed verifier score: `444368.3924061973`.
-- Direct double-precision energy of the rational certificate: `444368.392406201164704` (ordinary summation is a few `1e-9` above the rigorous verifier score, as expected from floating summation differences).
-- Tangent-gradient RMS on the rationalized coordinates: `5.14e-6`; maximum `1.18e-5`. This is consistent with tiny stereographic rationalization perturbations, not evidence that the published floating minimum was unpolished.
+- Direct double-precision energy of the rational certificate: `444368.392406201164704`.
+- Tangent-gradient RMS on the rationalized coordinates: `5.14e-6`; maximum `1.18e-5`, consistent with tiny rationalization perturbations.
 - Second-moment eigenvalues: `319.997418654053`, `319.997418737504`, `320.005162608441`; the unique eigenvector is essentially z.
-- +120 degree rotation about z gives nearest-neighbor RMS `1.98e-9`, maximum `4.63e-9`; x/y axes fail by about `4.6e-2`. Thus the exact C3 group action is unambiguous.
+- +120 degree rotation about z gives nearest-neighbor RMS `1.98e-9`, maximum `4.63e-9`; thus the exact C3 group action is unambiguous.
 
-### Active compute
+### Exact-C3 smooth global deformations
 
-- GitHub Actions run `40619792492`: seeds 101/202/303/404, 10 C3 smooth-field basin starts each.
-- GitHub Actions run `40619870207`: independent transfer/relaxation from CCD N=958,959,961,962.
+Durable result: `results/c3-smooth-summary.txt`. GitHub Actions run `40619792492`.
+
+Four independent seeds, ten starts each. All 40 starts failed to improve the incumbent. Small/moderate deformations returned to `444368.39240620...`; larger moves found higher distinct minima from roughly `444368.4114` upward. This is evidence that the present C3 basin is robust under coherent low-order smooth fields, not an exhaustion result for C3 space.
+
+### Active oscillating-size search
+
+GitHub Actions run `40620255734`, two independent routes (`down`, `up`). It starts dynamically from the live Few Shots record and uses full unconstrained L-BFGS relaxation at every intermediate size and return state.
 
 ## Dead ends
 
-None from this project yet; the first two campaigns are still running. See the upstream dead ends above.
+- **Project-specific:** 40 exact-C3 low-order smooth global deformations (roughly 0.007--0.30 rad) produced no lower basin. Do not repeat this move family without a materially different crossover/tempering mechanism.
+- **Infrastructure-only failure, not scientific evidence:** guessed neighboring CCD `s_1/dat/points_N_1.dat` URLs for N=958,959,961,962 returned HTTP 404. Replaced by direct size oscillation from the current record.
+- See also the upstream dead ends above.
 
 ## Next steps
 
-1. Collect both active campaigns and preserve the best energies / distinct basins.
-2. If a competitive floating candidate appears, release symmetry, polish in all 1920 tangent degrees of freedom, rationalize with denominator limits matching p007, and run the Few Shots verifier independently.
-3. If current routes fail, compute low tangent Hessian modes and launch mode-following symmetry-breaking basin escapes rather than generic random kicks.
+1. Collect the active `960↔959/961` bounce campaign and preserve its best returned minima.
+2. If a floating candidate improves by comfortably more than `1e-6`, polish in all 1920 tangent degrees of freedom, rationalize under p007 denominator limits, and run the Few Shots verifier independently.
+3. If size oscillation fails, compute low tangent Hessian modes and launch mode-following symmetry-breaking basin escapes with basin deduplication.
 4. Before any claim or submission, re-check Few Shots main plus open p007 PRs and compare against the then-live threshold.
 
 ## Sources
@@ -93,4 +107,4 @@ None from this project yet; the first two campaigns are still running. See the u
 
 Opened this durable direction after reading repository rules, the Few Shots skill/problem, the full merged p007 record chain, and both merged p007 shot descriptions. Confirmed live merged record `444368.3924061973` and no open p007 PR at that check. Literature/current-web review found the Amore-Wales large-N propagation method and the new deterministic small-N global-optimization paper; neither supplies a lower public N=960 configuration than Few Shots.
 
-Ran and preserved a live-record diagnostic. It dynamically selected the current merged shot, confirmed the z-axis C3 action to nanometric-coordinate precision (`~2e-9` RMS in unit-sphere chord distance after 120-degree rotation), and measured only the expected small rationalization residual gradient. Added reproducible C3 smooth-field and neighboring-N transfer search code, then launched the two independent GitHub Actions campaigns listed above.
+Ran and preserved a live-record diagnostic, confirming the z-axis C3 action to about `2e-9` RMS after 120-degree rotation. A 40-start exact-C3 smooth-field campaign then found no improvement and was recorded as a negative result. An initial attempt to pull guessed adjacent-N files from the CCD `s_1/dat` tree failed with HTTP 404 before any optimization occurred. Replaced that probe with a direct one-cycle oscillating-size search from the current C3 record, following the insertion/removal ranking logic described by Amore-Wales.
