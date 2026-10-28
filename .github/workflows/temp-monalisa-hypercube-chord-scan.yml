@@ -1,0 +1,50 @@
+name: temp-monalisa-hypercube-chord-scan
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/hypercube_chord_scan.py
+      - .github/workflows/temp-monalisa-hypercube-chord-scan.yml
+permissions:
+  contents: read
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    strategy:
+      fail-fast: false
+      matrix:
+        mask_start: [0, 16, 32, 48]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Obtain public graph and official verifier
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          git clone --depth 1 https://github.com/bicobico2/ElimTSP.git elimtsp
+      - name: Scan exact chord improvements from all neutral states
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          mkdir -p science-boundary/mona-lisa-tsp/results/chords-${{ matrix.mask_start }}
+          python science-boundary/mona-lisa-tsp/hypercube_chord_scan.py \
+            --edges elimtsp/results/mona.248972.edg.gz \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --moves science-boundary/mona-lisa-tsp/data/neutral-moves.json \
+            --report science-boundary/mona-lisa-tsp/results/chords-${{ matrix.mask_start }}/report.json \
+            --output-dir science-boundary/mona-lisa-tsp/results/chords-${{ matrix.mask_start }} \
+            --mask-start ${{ matrix.mask_start }} --mask-count 16
+          for f in science-boundary/mona-lisa-tsp/results/chords-${{ matrix.mask_start }}/candidate-mask-*.json; do
+            test -f "$f" || continue
+            mkdir -p /tmp/p010-check
+            cp "$f" /tmp/p010-check/certificate.json
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py /tmp/p010-check
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-hypercube-chords-${{ matrix.mask_start }}
+          path: science-boundary/mona-lisa-tsp/results/chords-${{ matrix.mask_start }}/
+          if-no-files-found: ignore
