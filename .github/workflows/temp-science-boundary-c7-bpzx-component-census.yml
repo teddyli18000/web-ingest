@@ -1,0 +1,53 @@
+name: Temp Science Boundary C7 BPZ-X private component census
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-bpzx-component-census.yml
+      - science-boundary/shannon-capacity-c7/code/bpzx_private_component_census.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned BPZ source read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+      - name: Census full neutral component
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/science-boundary/shannon-capacity-c7/code
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/result"
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpzx_private_component_census.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/status.json" \
+            > "$RUNNER_TEMP/result/stdout.txt" 2> "$RUNNER_TEMP/result/stderr.txt"
+          cat "$RUNNER_TEMP/result/status.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-bpzx-private-component-census
+          path: ${{ runner.temp }}/result
+          retention-days: 14
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## C7 BPZ-X private-neighbour component census'
+            if [[ -f "$RUNNER_TEMP/result/status.json" ]]; then echo '```json'; cat "$RUNNER_TEMP/result/status.json"; echo '```'; fi
+            if [[ -f "$RUNNER_TEMP/result/stderr.txt" ]]; then echo '```text'; tail -n 60 "$RUNNER_TEMP/result/stderr.txt"; echo '```'; fi
+          } >> "$GITHUB_STEP_SUMMARY"
