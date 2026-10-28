@@ -1,0 +1,26 @@
+name: temp labs-100 d5 O58 exact exclusion
+
+on:
+  push:
+    paths:
+      - 'science-boundary/labs-100/code/skewcore_d5_o58_bnb.cpp'
+      - '.github/workflows/temp-labs-100-d5-o58.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-d5-o58:
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Compile and prove E<=574 infeasible
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/skewcore_d5_o58_bnb.cpp -o /tmp/d5-o58
+          /tmp/d5-o58 --threads "$(nproc)" --split 10 | tee /tmp/result.txt
+          grep -F 'RESULT status=INFEASIBLE target=574 odd=58 even_cap=516' /tmp/result.txt
