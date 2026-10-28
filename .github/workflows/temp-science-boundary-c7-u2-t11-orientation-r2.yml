@@ -1,0 +1,102 @@
+name: Temp Science Boundary C7 U2 t11 orientation-valid r2
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-u2-t11-orientation-r2.yml
+      - science-boundary/shannon-capacity-c7/code/u2_t11_orientation_neighborhood.py
+      - science-boundary/shannon-capacity-c7/code/u2_t11_translation_scan.py
+      - science-boundary/shannon-capacity-c7/results/u2-t11-parent.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-u2-t11-orientation-r2
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned public sources read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          git init "$RUNNER_TEMP/c7-five"
+          git -C "$RUNNER_TEMP/c7-five" remote add origin https://github.com/molind/c7-five.git
+          git -C "$RUNNER_TEMP/c7-five" fetch --depth 1 origin ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+          git -C "$RUNNER_TEMP/c7-five" checkout FETCH_HEAD
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+      - name: Install dependency
+        run: python3 -m pip install --disable-pip-version-check numpy
+      - name: Exact radius<=2 orientation-valid parent search
+        id: parent
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/science-boundary/shannon-capacity-c7/code
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/u2_t11_orientation_neighborhood.py \
+            "$RUNNER_TEMP/tan" \
+            science-boundary/shannon-capacity-c7/results/u2-t11-parent.json \
+            "$RUNNER_TEMP/result/orientation-parent.json" \
+            "$RUNNER_TEMP/result/parent-status.json" \
+            > "$RUNNER_TEMP/result/parent.stdout" 2> "$RUNNER_TEMP/result/parent.stderr"
+          cat "$RUNNER_TEMP/result/parent-status.json"
+          if [[ -f "$RUNNER_TEMP/result/orientation-parent.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+      - name: Scan t11 obstructions and public auxiliary basins
+        if: steps.parent.outputs.found == 'true'
+        id: scan
+        shell: bash
+        env:
+          PYTHONPATH: ${{ github.workspace }}/science-boundary/shannon-capacity-c7/code
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/u2_t11_translation_scan.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/c7-five" \
+            "$RUNNER_TEMP/result/orientation-parent.json" \
+            "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/scan-status.json" \
+            > "$RUNNER_TEMP/result/scan.stdout" 2> "$RUNNER_TEMP/result/scan.stderr"
+          cat "$RUNNER_TEMP/result/scan-status.json"
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.scan.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1)) <= 134753:
+              raise SystemExit(f'candidate not a verified breakthrough: {r}')
+          print(f"VERIFIED BREAKTHROUGH score={r['score']}")
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-u2-t11-orientation-r2
+          path: ${{ runner.temp }}/result
+          retention-days: 14
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## C7 U2 orientation-valid t11 radius<=2 search'
+            for f in parent-status.json scan-status.json verify.json; do if [[ -f "$RUNNER_TEMP/result/$f" ]]; then echo '```json'; cat "$RUNNER_TEMP/result/$f"; echo '```'; fi; done
+            for f in parent.stderr scan.stderr; do if [[ -f "$RUNNER_TEMP/result/$f" ]]; then echo '```text'; tail -n 80 "$RUNNER_TEMP/result/$f"; echo '```'; fi; done
+          } >> "$GITHUB_STEP_SUMMARY"
