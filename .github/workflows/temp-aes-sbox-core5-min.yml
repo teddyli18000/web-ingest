@@ -1,0 +1,41 @@
+name: temp-aes-sbox-core5-min
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-sbox-core5-min.yml'
+permissions:
+  contents: read
+jobs:
+  mincore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {basis: '1,2,4,8', pattern: free, seed: 2026102841, tag: current-free}
+          - {basis: '1,2,4,8', pattern: jain5, seed: 2026102842, tag: current-jainpat}
+          - {basis: '7,11,10,2', pattern: jain5, seed: 2026102843, tag: compat-best}
+          - {basis: '2,10,7,12', pattern: jain5, seed: 2026102844, tag: compat-2}
+          - {basis: '1,5,8,2', pattern: jain5, seed: 2026102845, tag: compat-3}
+          - {basis: '4,1,2,10', pattern: jain5, seed: 2026102846, tag: compat-4}
+          - {basis: '7,11,10,2', pattern: free, seed: 2026102847, tag: compat-free}
+          - {basis: '6,9,11,12', pattern: jain5, seed: 2026102848, tag: published-basis}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install solver
+        run: python3 -m pip install --disable-pip-version-check z3-solver
+      - name: Solve minimal five-AND core
+        run: |
+          out="/tmp/aes-core5-min-${{ matrix.tag }}"
+          mkdir -p "$out"
+          python3 science-boundary/aes-sbox-circuit/synth_core4_z3_min.py \
+            --basis "${{ matrix.basis }}" --gates 17 --ands 5 \
+            --pattern "${{ matrix.pattern }}" --timeout 600 \
+            --seed "${{ matrix.seed }}" --out "$out" | tee "$out/run.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-core5-min-${{ matrix.tag }}
+          path: /tmp/aes-core5-min-${{ matrix.tag }}
