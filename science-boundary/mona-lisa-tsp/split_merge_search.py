@@ -78,6 +78,8 @@ def main():
                 for bb in adj[b]:
                     edge2=e(aa,bb)
                     if edge2 not in w:continue
+                    # Reject the automatic zero-gain reconnection that simply undoes this face flip.
+                    if {e(a,aa),e(b,bb)}==set(new) and {e(a,b),edge2}==set(old):continue
                     net=gain+ w[e(a,aa)]+w[e(b,bb)]-length-w[edge2]
                     if local is None or net>local[0]:
                         local=(net,(a,aa),(b,bb),(a,b),(aa,bb))
