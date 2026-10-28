@@ -1,0 +1,46 @@
+name: temp-aes-sbox-core5-z3
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-sbox-core5-z3.yml'
+      - 'science-boundary/aes-sbox-circuit/synth_core4_z3.py'
+permissions:
+  contents: read
+jobs:
+  core5:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {basis: '1,2,4,8', seed: 2026102801, tag: current5a}
+          - {basis: '1,2,4,8', seed: 2026102802, tag: current5b}
+          - {basis: '1,2,4,8', seed: 2026102803, tag: current5c}
+          - {basis: '1,2,4,8', seed: 2026102804, tag: current5d}
+          - {basis: '6,9,11,12', seed: 2026102811, tag: jain5a}
+          - {basis: '6,9,11,12', seed: 2026102812, tag: jain5b}
+          - {basis: '1,2,7,11', seed: 2026102821, tag: cheapA5a}
+          - {basis: '2,7,8,11', seed: 2026102822, tag: cheapB5a}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install solver
+        run: python3 -m pip install --disable-pip-version-check z3-solver
+      - name: Search 17-gate five-AND core
+        run: |
+          out="/tmp/aes-core5-${{ matrix.tag }}"
+          mkdir -p "$out"
+          python3 science-boundary/aes-sbox-circuit/synth_core4_z3.py \
+            --basis "${{ matrix.basis }}" \
+            --gates 17 \
+            --ands 5 \
+            --timeout 900 \
+            --seed "${{ matrix.seed }}" \
+            --out "$out" | tee "$out/run.log"
+      - name: Upload five-AND evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-core5-${{ matrix.tag }}
+          path: /tmp/aes-core5-${{ matrix.tag }}
