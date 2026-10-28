@@ -1,0 +1,86 @@
+name: Temp Ramsey R46 endpoint catalog extremes
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-catalog-extremes.yml
+      - science-boundary/ramsey-r46/ramsey_catalog_extremes.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-catalog-extremes
+  cancel-in-progress: false
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Self-test parser
+        run: python3 science-boundary/ramsey-r46/ramsey_catalog_extremes.py self-test
+      - name: Download public Ramsey catalogues as data only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          base=https://users.cecs.anu.edu.au/~bdm/data
+          curl --fail --location --retry 3 --silent --show-error "$base/r45extreme.tar.gz" -o /tmp/r46/r45extreme.tar.gz
+          for n in 12 13 14 15 16; do
+            curl --fail --location --retry 3 --silent --show-error "$base/r36_${n}.g6.gz" -o "/tmp/r46/r36_${n}.g6.gz"
+          done
+          curl --fail --location --retry 3 --silent --show-error "$base/r36_17.g6" -o /tmp/r46/r36_17.g6
+          sha256sum /tmp/r46/r45extreme.tar.gz /tmp/r46/r36_* > /tmp/r46/sources.sha256
+          cat /tmp/r46/sources.sha256
+      - name: Compute exact observed extreme supports
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/ramsey-r46/ramsey_catalog_extremes.py tar45 \
+            /tmp/r46/r45extreme.tar.gz --output /tmp/r46/r45.json
+          python3 science-boundary/ramsey-r46/ramsey_catalog_extremes.py r36 \
+            /tmp/r46/r36_12.g6.gz /tmp/r46/r36_13.g6.gz /tmp/r46/r36_14.g6.gz \
+            /tmp/r46/r36_15.g6.gz /tmp/r46/r36_16.g6.gz /tmp/r46/r36_17.g6 \
+            --output /tmp/r46/r36.json
+          python3 - /tmp/r46/r45.json /tmp/r46/r36.json /tmp/r46/sources.sha256 /tmp/r46/result.json <<'PY'
+          import json,pathlib,sys
+          p45,p36,psha,out=map(pathlib.Path,sys.argv[1:])
+          d={'source_page':'https://users.cecs.anu.edu.au/~bdm/data/ramsey.html',
+             'source_claim':'r36 catalogues are complete for n=12..17; r45extreme supplies complete sets at the smallest and largest few edge counts for each n=4..23',
+             'sha256_lines':psha.read_text().splitlines(),
+             'r45_extremes':json.load(open(p45,encoding='utf-8')),
+             'r36_complete':json.load(open(p36,encoding='utf-8'))}
+          out.write_text(json.dumps(d,indent=2,sort_keys=True)+'\n',encoding='utf-8')
+          for n,x in d['r36_complete']['by_n'].items(): print('r36',n,x['graphs_read'],x['min_edges'],x['max_edges'])
+          for n in map(str,range(18,24)):
+              x=d['r45_extremes']['by_n'].get(n); print('r45',n,x and (x['graphs_read'],x['min_edges'],x['max_edges']))
+          PY
+      - name: Persist statistics
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/r46/result.json science-boundary/ramsey-r46/results/endpoint-catalog-edge-extremes.json
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/results/endpoint-catalog-edge-extremes.json
+          git commit -m 'ramsey-r46: record endpoint catalog edge extremes' || exit 0
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-catalog-extremes
+          path: |
+            /tmp/r46/result.json
+            /tmp/r46/sources.sha256
+          retention-days: 7
