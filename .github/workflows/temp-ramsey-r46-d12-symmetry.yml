@@ -1,0 +1,146 @@
+name: Temp Ramsey R46 symmetry-reduced lucky d12 pair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - science-boundary/ramsey-r46/d12_fixed_ab_sym_sat.py
+      - .github/workflows/temp-ramsey-r46-d12-symmetry.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-d12-symmetry
+  cancel-in-progress: false
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        symmetry: [generators, all-a, all-ab]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Authenticate fixed pair and self-test symmetry encoding
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'python-sat==1.9.dev17' 'networkx==3.5'
+          echo '3598adba0f769168ae666fb1d0e4ddc653b646a48d12e6b4d5ddfa70ed2c4ce9  science-boundary/ramsey-r46/data/r36_12_e29.g6' | sha256sum -c -
+          echo 'bf403d6b148c60a26d2536ade61d74d552972f701f3fdbb143478d97652c20ec  science-boundary/ramsey-r46/data/r45_23_e101.g6' | sha256sum -c -
+          python science-boundary/ramsey-r46/d12_fixed_ab_sym_sat.py self-test
+      - name: Solve exact fixed pair modulo automorphisms
+        id: solve
+        shell: bash
+        run: |
+          set -uo pipefail
+          mode='${{ matrix.symmetry }}'
+          mkdir -p /tmp/r46
+          set +e
+          timeout --signal=TERM --kill-after=15s 1800 \
+            python science-boundary/ramsey-r46/d12_fixed_ab_sym_sat.py solve \
+              --a-catalog science-boundary/ramsey-r46/data/r36_12_e29.g6 \
+              --b-catalog science-boundary/ramsey-r46/data/r45_23_e101.g6 \
+              --min-degree 11 --max-degree 17 --solver cadical195 --symmetry "$mode" \
+              --summary /tmp/r46/result.json --output /tmp/r46/candidate.json \
+              > /tmp/r46/solver.log 2>&1
+          rc=$?
+          set -e
+          case "$rc" in
+            0) status=SAT ;;
+            20) status=UNSAT ;;
+            124|137|143) status=TIMEOUT ;;
+            *) status=ERROR ;;
+          esac
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          echo "mode=$mode status=$status rc=$rc"
+          tail -n 40 /tmp/r46/solver.log || true
+          [[ "$status" != ERROR ]]
+      - name: Verify SAT with authoritative Few Shots verifier
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate
+          cp /tmp/r46/candidate.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/few-shots-verify.json
+          python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1])); assert d.get('valid') is True and str(d.get('score')) == '36', d
+          PY
+      - name: Upload branch evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-d12-symmetry-${{ matrix.symmetry }}
+          path: /tmp/r46
+          if-no-files-found: warn
+          retention-days: 7
+
+  collect:
+    if: always()
+    needs: solve
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ramsey-r46-d12-symmetry-*
+          path: /tmp/parts
+      - name: Aggregate symmetry variants
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 - /tmp/parts /tmp/r46/result.json <<'PY'
+          import json,pathlib,sys
+          root=pathlib.Path(sys.argv[1]); out=pathlib.Path(sys.argv[2]); rows=[]; verified=[]
+          for d in sorted(root.iterdir()):
+              p=d/'result.json'; v=d/'few-shots-verify.json'
+              if p.exists(): rows.append(json.load(open(p)))
+              if v.exists(): verified.append(json.load(open(v)))
+          result={'campaign':'lucky-d12-fixed-pair-symmetry','rows':rows,
+                  'unsat_count':sum(r.get('status')=='UNSAT' for r in rows),
+                  'sat_count':sum(r.get('status')=='SAT' for r in rows),
+                  'verified_sat_count':sum(v.get('valid') is True and str(v.get('score'))=='36' for v in verified),
+                  'exact_decision':('SAT' if any(r.get('status')=='SAT' for r in rows) else
+                                    'UNSAT' if any(r.get('status')=='UNSAT' for r in rows) else 'UNKNOWN')}
+          out.write_text(json.dumps(result,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({k:v for k,v in result.items() if k!='rows'},sort_keys=True))
+          PY
+      - name: Persist campaign and retire one-shot workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/r46/result.json science-boundary/ramsey-r46/results/d12-fixed-pair-symmetry.json
+          for cand in /tmp/parts/*/candidate.json; do
+            [[ -f "$cand" ]] || continue
+            mode=$(basename "$(dirname "$cand")" | sed 's/ramsey-r46-d12-symmetry-//')
+            cp "$cand" "science-boundary/ramsey-r46/results/d12-fixed-pair-${mode}-candidate.json"
+            ver="$(dirname "$cand")/few-shots-verify.json"
+            [[ ! -f "$ver" ]] || cp "$ver" "science-boundary/ramsey-r46/results/d12-fixed-pair-${mode}-verify.json"
+          done
+          git rm .github/workflows/temp-ramsey-r46-d12-symmetry.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/results/d12-fixed-pair-*
+          git commit -m 'ramsey-r46: record symmetry-reduced lucky d12 campaign'
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
