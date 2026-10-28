@@ -1,0 +1,53 @@
+name: Temp Science Boundary C7 binary terminal profile sweep
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-binary-terminal-profiles.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_binary_terminal_profile_sweep.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned Tandon/BPZ source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+      - name: Exact binary terminal-code sweep
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check numpy
+          mkdir -p "$RUNNER_TEMP/result"
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_binary_terminal_profile_sweep.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/status.json" \
+            > "$RUNNER_TEMP/result/stdout.txt" 2> "$RUNNER_TEMP/result/stderr.txt"
+          cat "$RUNNER_TEMP/result/status.json"
+          tail -n 60 "$RUNNER_TEMP/result/stderr.txt"
+      - name: Fail loudly only on impossible score drift
+        shell: bash
+        run: |
+          python3 - "$RUNNER_TEMP/result/status.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if r['best']['score'] < 134752: raise SystemExit(r['best'])
+          print('BEST',r['best'])
+          PY
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-binary-terminal-profile-sweep
+          path: ${{ runner.temp }}/result
+          retention-days: 14
