@@ -1,0 +1,42 @@
+name: temp-aes-semilinear-frontier
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-semilinear-frontier.yml'
+      - 'science-boundary/aes-sbox-circuit/scan_semilinear_frontier.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-semilinear-frontier
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    strategy:
+      fail-fast: false
+      max-parallel: 32
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Scan semilinear lower-bound frontier
+        run: |
+          out=/tmp/aes-semilinear-frontier-${{ matrix.shard }}
+          mkdir -p "$out"
+          python3 science-boundary/aes-sbox-circuit/scan_semilinear_frontier.py \
+            --shard ${{ matrix.shard }} --shards 32 --out "$out" \
+            | tee "$out/run.log"
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-semilinear-frontier-${{ matrix.shard }}
+          path: /tmp/aes-semilinear-frontier-${{ matrix.shard }}
