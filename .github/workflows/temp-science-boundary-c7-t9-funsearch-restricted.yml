@@ -32,6 +32,9 @@ jobs:
           git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
           git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
 
+      - name: Install dependency
+        run: python3 -m pip install --disable-pip-version-check numpy
+
       - name: Grow FunSearch-priority sets inside all obstruction complements
         id: search
         shell: bash
@@ -79,7 +82,6 @@ jobs:
         run: |
           {
             echo '## C7 t9 obstruction-aware FunSearch restricted greedy'
-            echo 'retrigger=1'
             for f in status.json verify.json; do
               if [[ -f "$RUNNER_TEMP/result/$f" ]]; then echo '```json'; cat "$RUNNER_TEMP/result/$f"; echo '```'; fi
             done
