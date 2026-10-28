@@ -1,0 +1,100 @@
+name: Temp Science Boundary C7 t9 exact 7-for-8 CP-SAT
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-t9-radius7-cpsat.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_t9_radius7_cpsat.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-t9-radius7-cpsat
+  cancel-in-progress: false
+
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch public sources read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+
+      - name: Install CP-SAT
+        run: python3 -m pip install --disable-pip-version-check ortools python-sat
+
+      - name: Decide exact radius-7 repair independently
+        id: solve
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/shot" "$RUNNER_TEMP/result"
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_t9_radius7_cpsat.py \
+            "$RUNNER_TEMP/tan" \
+            "$RUNNER_TEMP/shot/certificate.json" \
+            "$RUNNER_TEMP/result/status.json" \
+            > "$RUNNER_TEMP/result/solver.stdout" \
+            2> "$RUNNER_TEMP/result/solver.stderr"
+          cat "$RUNNER_TEMP/result/status.json"
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then
+            echo 'found=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'found=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.solve.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" \
+            | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json, sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1)) <= 134753:
+              raise SystemExit(f'candidate not a verified breakthrough: {r}')
+          print(f"VERIFIED BREAKTHROUGH score={r['score']}")
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-t9-radius7-cpsat
+          path: ${{ runner.temp }}/result
+          retention-days: 14
+
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## C7 t9 exact 7-for-8 CP-SAT'
+            for f in status.json verify.json; do
+              if [[ -f "$RUNNER_TEMP/result/$f" ]]; then
+                echo '```json'; cat "$RUNNER_TEMP/result/$f"; echo '```'
+              fi
+            done
+            if [[ -f "$RUNNER_TEMP/result/solver.stdout" ]]; then
+              echo '### stdout'; echo '```text'; tail -n 160 "$RUNNER_TEMP/result/solver.stdout"; echo '```'
+            fi
+            if [[ -f "$RUNNER_TEMP/result/solver.stderr" ]]; then
+              echo '### stderr'; echo '```text'; tail -n 160 "$RUNNER_TEMP/result/solver.stderr"; echo '```'
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
