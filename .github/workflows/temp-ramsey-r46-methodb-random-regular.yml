@@ -48,12 +48,13 @@ jobs:
         shell: bash
         run: |
           set -uo pipefail
+          search_seed=$((900000 + ${{ matrix.seed }}))
           set +e
           /usr/bin/time -v /tmp/methodb36 \
             --seed-graph /tmp/r46/seed.json \
             --mode '${{ matrix.mode }}' \
             --tradeoff 96 \
-            --seed '$((900000 + ${{ matrix.seed }}))' \
+            --seed "$search_seed" \
             --steps 8000000 \
             --restarts 24 \
             --slack 1 \
