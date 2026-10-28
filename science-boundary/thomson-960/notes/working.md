@@ -1,24 +1,39 @@
 # Working notes — Thomson N=960
 
-Current live merged Few Shots record: `444368.3924061973` (`Ronnie2025/c3-replica-exchange-scars`), epsilon `1e-6`; next valid score <= `444368.3924051973`. Upstream re-check on 2026-10-28: record unchanged and zero open Few Shots PRs. Re-check again before any claim.
+Current live merged Few Shots record: `444368.3924061973` (`Ronnie2025/c3-replica-exchange-scars`), epsilon `1e-6`; next valid score <= `444368.3924051973`. Latest upstream re-check still shows this record and zero open Few Shots PRs. Re-check before any claim.
 
 ## Decisions
 
 - Work from the live C3 record, never the older T baseline.
-- Minimum-centered exploration is substantially saturated: exact-C3 smooth moves, neighboring-N propagation through depth 3, full-space soft modes and combinations, multi-hop basin exploration, defect-reducing flips, same-/cross-topology crossover, topology morphs, and composed shear all failed to improve R.
-- The active formulation is a **transition-state network**. Search new interfaces between low minima rather than extending the same local perturbation family.
+- Minimum-centered exploration is substantially saturated: exact-C3 smooth moves, neighboring-N propagation through depth 3, record/A/B low modes and combinations, multi-hop basin exploration, defect-reducing flips, same-/cross-topology crossover, topology morphs, and composed shear all failed to improve R.
+- The active formulation is a **stationary-state / transition network**, not another random perturb-and-relax campaign.
+- Distinguish minima from symmetry-constrained stationary states by the full-space Hessian. This matters critically: the formerly named `C` configuration is index-2, not a minimum.
 - Stable local minimization uses termwise pair-energy differences accumulated in long double; raw ~`4.4e5` objective values lose scientifically relevant changes under ordinary L-BFGS stopping tests.
 
-## Low-energy basin graph
+## Confirmed low-energy minima
 
 Let R be the live record.
 
 - `R`: `444368.3924061973`; C3; coordination 36/900/24 (24 dislocations).
-- `A`: `~444368.395686226 = R+0.003280029`; symmetry-broken, same 36/900/24 topology. Durable `data/neighbor-soft-003280.json`.
-- `B`: `444368.402972861484 = R+0.010566664`; symmetry-broken, same topology. Durable `data/basin-b-010566.json`.
-- `C`: `444368.4114178827 = R+0.0190116854`; C3, same topology. It is the robust endpoint of sequentially composing all three C3-equivalent nonlinear R→A shear events. `code/harvest_basin_c.py` now reproduces it; run `40647978833` is intended to freeze the coordinates and continue B↔C.
+- `A`: `~444368.395686226 = R+0.003280029`; symmetry-broken, 36/900/24. Durable `data/neighbor-soft-003280.json`.
+- `B`: `444368.402972861484 = R+0.010566664`; symmetry-broken, 36/900/24. Durable `data/basin-b-010566.json`.
+- `D`: `444368.41099308443 = R+0.0185868871`; symmetry-broken, 36/900/24. Deterministically harvested from the A↔B saddle positive-mode-2 negative branch at transverse RMS 0.012. Full-space Hessian lowest mode `+0.423627576`; zero negative modes among 14 computed, so D is a genuine minimum.
 
-Independent mechanisms repeatedly show `R <-> A <-> B`; composed global-shear events connect toward C.
+## Higher-index stationary state C
+
+`C = 444368.41141788312 = R+0.0190116858`, coordination 36/900/24, exact/high C3 symmetry. It is robustly reconstructed by composing all three C3-equivalent nonlinear R→A shear events. Symmetric relaxation converges to it because the symmetric subspace suppresses its unstable directions.
+
+Full-space Hessian run `40732118945`:
+
+- physical gradient RMS `7.57e-6`;
+- `lambda0 = -0.931826777147`;
+- `lambda1 = -0.931747227271`;
+- `lambda2 = +1.56333826701`;
+- all later computed low modes positive.
+
+Therefore C is an **index-2 stationary point**, not a basin. The nearly degenerate negative pair is consistent with a nontrivial real C3 doublet and defines a two-dimensional symmetry-breaking unstable manifold.
+
+This explains the earlier D↔C string: its maximum collapsed onto the C endpoint because D is downhill from C; an intervening index-1 saddle is not required.
 
 ## Saturated minimum-centered routes
 
@@ -29,74 +44,60 @@ Independent mechanisms repeatedly show `R <-> A <-> B`; composed global-shear ev
 - D2(20-dislocation) × R/A(24) crossover: seam-incompatible or high.
 - D2→C3 morph: midpoint creates a 25-dislocation state near `R+2.138`; its low-mode exits remain high.
 - Defect-reducing Delaunay flips regenerate defects and return R.
-- Nonlinear composed shear robustly finds C but not a record.
-- C3 symmetry-preserving crossover: no candidate.
+- C3 symmetry-preserving crossover: no record candidate.
+- MOTO-like R-centered saddle search found only known/higher transition branches.
 
-## Transition network
+## Certified transition edges
 
-### R↔A — certified and locally saturated
+### R↔A
 
-Spherical string run `40628689846` reduced the bare corresponding-point barrier from ~`R+0.03670` to ~`R+0.0125`. Minimum-mode and truncated-Newton refinement identified a consistent index-1 branch.
+Clean hybrid saddle, run `40633736125`:
+- `E = 444368.403948984458`;
+- gradient RMS `6.310208e-6`;
+- exactly one negative internal mode, `lambda0=-5.86557968936`;
+- reaction sides descend to R and A.
 
-Hybrid refinement run `40633736125` produced the clean saddle:
+R↔A fixed-eigenmode transverse exploration through positive mode 7 is retired: low endpoints are only R/A/B; large excursions reach much higher basins. Apparent ~`1e-10` improvements are summation noise.
 
-- `E = 444368.403948984458`
-- physical tangent gradient RMS `6.3102083e-6`
-- exactly one negative internal mode
-- reaction eigenvalue `lambda0 = -5.86557968936`.
+### A↔B
 
-Reaction-only descent verifies the two signs go to R and A.
+Clean hybrid saddle, run `40634347073` / certification `40647777986`:
+- `E = 444368.4117741097`;
+- gradient RMS `8.93599e-6`;
+- exactly one negative internal mode, `lambda0=-9.58883287`;
+- negative reaction side -> B; positive reaction side -> A for both tested amplitudes.
 
-Transverse search is now retired:
+A↔B transverse modes 1..3 × both signs found no record candidate but did reveal D reproducibly. Thus the transition-state representation found a new minimum that minimum-centered searches had missed.
 
-- standard saddle modes 1..4 × ±, run `40633502573`: low endpoints only R/A/B.
-- high-accuracy hybrid saddle modes 5..7 × ±, run `40634209722`, amplitudes through 0.022 rad: again low endpoints only R/A/B; large mode-7 excursions enter high basins `R+0.20..0.38`.
-- apparent values `~1e-10` below R are summation noise, not candidates.
+### B↔D
 
-Conclusion: fixed-eigenmode transverse exploration of the R↔A saddle through mode 7 is locally saturated. Do not extend mode numbers mechanically.
+A 9-image string in run `40731597265` lowered its maximum from `444368.4344175272` to `444368.4125963093` after 240 iterations, barrier `~0.00962345` relative B. This is an interior maximum and a plausible index-1 interface, but it has not yet been stationary-point certified.
 
-### MOTO-like R-centered saddle exploration — negative
+## C unstable-manifold frontier
 
-Run `40634914233`, seeds 8101/8102, used diverse combinations of R's low modes with feasibility and `lambda2-lambda1` spectral-gap ranking. It found only known/higher transition structure (a higher A↔A branch and a higher R↔A branch); other starts did not converge to clean index-1 saddles. This formulation remains too R-centric.
+The correct next task is not another D↔C barrier search. C has a complete two-dimensional negative eigenspace. `code/search_seed_c3_negative_pair.py`:
 
-### A↔B — clean index-1 saddle found
+1. computes the lowest full-space Hessian pair;
+2. canonicalizes that pair under +120° C3 action with a deterministic anchor;
+3. samples an oriented phase fundamental sector;
+4. fully relaxes each direction without symmetry using the stable difference objective;
+5. clusters endpoints by energy and preserves one representative geometry per basin.
 
-A first spherical string showed a path maximum near `444368.42214`; naive climbing was unstable and is not treated as a saddle. Re-running without climbing and applying hybrid eigenvector-following in run `40634347073` produced a clean first-order saddle:
+Active run `40732550803` samples phases `0,5,...,55°` and amplitudes `0.0015,0.003,0.006,0.012` (48 relaxations). This is an exhaustive symmetry-reduced downward search of the known negative subspace, not a random kick campaign.
 
-- `E ≈ 444368.4117741096`
-- physical tangent gradient RMS `≈8.94e-6`
-- exactly one negative internal mode
-- reaction eigenvalue `≈-9.5888`.
+## Recent method corrections
 
-Active follow-up run `40647777986` downloads this saddle and performs:
+- `harvest_saddle_branch.py`: deterministic minimum harvest from a selected transverse branch of a saved saddle.
+- `diagnose_seed_modes.py`: arbitrary-seed full-space Hessian/Morse-index diagnostic.
+- `string_between_seeds.py`: now retains local path geometry and treats endpoint collapse as data rather than an exception.
+- `refine_saddle_path_tangent.py`: preserves a string reaction coordinate for genuinely shallow index-1 interfaces instead of reselecting a potentially wrong lowest eigenmode every cycle.
+- `search_seed_c3_negative_pair.py`: symmetry-reduced downward search from C's negative doublet.
+- Detailed D/C evidence: `results/d-node-transition-summary.txt`.
 
-- reaction-mode descent at ±0.0015/0.003 RMS to certify A↔B connectivity;
-- transverse modes 1..3 × ± at amplitudes 0.003/0.006/0.012/0.020 with reaction offsets ±0.0006/0.
+## Immediate next
 
-Any genuinely new low endpoint is to be frozen and recursively mapped. Any endpoint below `live_score-2e-7` triggers stable repolish immediately.
-
-### B↔C — active interface change
-
-C previously had no permanent coordinates despite being reproducible. `code/harvest_basin_c.py` now reconstructs C from the three C3-equivalent R→A shear events.
-
-Run `40647978833` will:
-
-1. reproduce and validate C;
-2. optimize a 7-image B↔C spherical string with climbing disabled;
-3. feed the string maximum directly to hybrid eigenvector-following;
-4. preserve C/string/saddle artifacts.
-
-If C is reproduced at the expected `~444368.411417883` with 36/900/24 and the hybrid state is index-1, freeze C durably and certify/branch the B↔C saddle next.
-
-## Current frontier
-
-- `40647777986`: A↔B reaction certification + low transverse branches. Currently queued at the last check.
-- `40647978833`: reproduce C + B↔C string + hybrid saddle. Currently queued at the last check.
-- No record candidate exists at present.
-
-## Next decisions
-
-1. Collect A↔B. If reaction signs map to A/B and modes 1..3 reveal no new low node, mark this local interface mapped.
-2. Collect B↔C. If clean, persist C and map B↔C reaction/transverse exits rather than returning to R-centered kicks.
-3. If A↔B and B↔C both close on known nodes, next interface should be R↔B or a B/C-centered diversity/spectral-gap saddle search; do not return to ordinary random kicks, local flips, shallow neighboring-N moves, or more R↔A fixed modes.
-4. Before any claim/submission: re-check Few Shots main/open p007 PRs, rationalize, run official verifier and `tools/check.py`, and submit only a verified improvement of at least `1e-6`.
+1. Collect `40732550803` and identify all distinct minima reached from C's negative doublet. Any new low basin is frozen and Hessian-classified.
+2. If the C unstable manifold closes only on known/symmetry-equivalent D variants, mark C downward connectivity mapped and move to D itself: its `lambda0≈0.424` is substantially softer than R/A/B, making D-centered low-mode and saddle searches the next justified formulation.
+3. Certify the B↔D interior string maximum with hybrid or retained-path-tangent refinement; branch its positive modes only after a genuine index-1 state is obtained.
+4. Never treat C as a basin again unless a later independent full-space Hessian contradicts the index-2 result.
+5. Any relaxed endpoint below `live_score-2e-7` triggers: live upstream re-check -> stable repolish -> rationalization -> official p007 verifier and `tools/check.py`; submit only a verified >=`1e-6` improvement.
