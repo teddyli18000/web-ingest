@@ -1,0 +1,46 @@
+name: temp-aes-semilinear-exactcorr
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-semilinear-exactcorr.yml'
+      - 'science-boundary/aes-sbox-circuit/search_semilinear_exactcorr.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-semilinear-exactcorr
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      max-parallel: 18
+      matrix:
+        transform:
+          - {name: id, c: '0x01', k: 0}
+          - {name: 9d, c: '0x9d', k: 3}
+        prefix: [0,1,2,3,4,5,6,7,8]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Exact correction / prelinear / output search
+        run: |
+          out=/tmp/aes-exactcorr-${{ matrix.transform.name }}-${{ matrix.prefix }}
+          mkdir -p "$out"
+          python science-boundary/aes-sbox-circuit/search_semilinear_exactcorr.py \
+            --c ${{ matrix.transform.c }} --k ${{ matrix.transform.k }} \
+            --prefix ${{ matrix.prefix }} --max-support 4 \
+            --max-pre 19 --max-out 17 --out "$out" | tee "$out/run.log"
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-exactcorr-${{ matrix.transform.name }}-${{ matrix.prefix }}
+          path: /tmp/aes-exactcorr-${{ matrix.transform.name }}-${{ matrix.prefix }}
