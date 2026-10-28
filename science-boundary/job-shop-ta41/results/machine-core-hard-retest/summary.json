@@ -1,0 +1,86 @@
+{
+  "instance": "ta41",
+  "baseline": 2006,
+  "target": 2005,
+  "original_core_count": 114,
+  "independently_verified_machine_core_count": 114,
+  "still_unknown_core_indices": [],
+  "independently_reverified_changed_machine_lower_bound": 8,
+  "exact_machine_change_masks_checked": 1048576,
+  "cover_counts_by_size": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    30,
+    427,
+    2398,
+    7397,
+    14239,
+    18168,
+    15802,
+    9449,
+    3862,
+    1059,
+    188,
+    20,
+    1
+  ],
+  "smallest_witness_release_machines": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8
+  ],
+  "retest_outcomes": [
+    {
+      "source_core_index": 2,
+      "pinned_machine_core": [
+        3,
+        11,
+        15
+      ],
+      "status": "INFEASIBLE",
+      "wall_seconds": 3.356
+    },
+    {
+      "source_core_index": 17,
+      "pinned_machine_core": [
+        5,
+        8,
+        11
+      ],
+      "status": "INFEASIBLE",
+      "wall_seconds": 6.065
+    },
+    {
+      "source_core_index": 34,
+      "pinned_machine_core": [
+        3,
+        4,
+        8
+      ],
+      "status": "INFEASIBLE",
+      "wall_seconds": 15.424
+    },
+    {
+      "source_core_index": 55,
+      "pinned_machine_core": [
+        1,
+        4,
+        8
+      ],
+      "status": "INFEASIBLE",
+      "wall_seconds": 2.57
+    }
+  ],
+  "proof_scope": "Every <=2005 schedule must change at least bound machine orders relative to the given 2006 baseline, based only on independently rebuilt hard-NoOverlap unsat cores and complete machine-mask enumeration."
+}
