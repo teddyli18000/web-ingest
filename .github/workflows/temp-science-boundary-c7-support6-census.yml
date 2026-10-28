@@ -1,0 +1,70 @@
+name: Temp Science Boundary C7 support6 census
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-support6-census.yml
+      - science-boundary/shannon-capacity-c7/code/census_support6_lists.cpp
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned public sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+      - name: Materialize and verify representative 134752 seed
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check numpy
+          mkdir -p "$RUNNER_TEMP/base" "$RUNNER_TEMP/result"
+          python3 science-boundary/shannon-capacity-c7/code/bpz_t9_funsearch_deleted_seed.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/base/ids.txt" "$RUNNER_TEMP/result/base-status.json" --case 0
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/base" | tee "$RUNNER_TEMP/result/base-verify.json"
+          python3 - "$RUNNER_TEMP/result/base-verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1)) != 134752: raise SystemExit(r)
+          PY
+      - name: Exact in-place support-list census through coverage6
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp science-boundary/shannon-capacity-c7/code/census_support6_lists.cpp -o "$RUNNER_TEMP/support6"
+          export OMP_NUM_THREADS="$(nproc)"
+          /usr/bin/time -v "$RUNNER_TEMP/support6" "$RUNNER_TEMP/base/ids.txt" > "$RUNNER_TEMP/result/support6.json" 2> "$RUNNER_TEMP/result/support6.stderr"
+          cat "$RUNNER_TEMP/result/support6.json"
+          tail -n 100 "$RUNNER_TEMP/result/support6.stderr"
+          python3 - "$RUNNER_TEMP/result/support6.json" <<'PY'
+          import json,sys
+          s=json.load(open(sys.argv[1],encoding='utf-8'))
+          expected={0:0,1:6308,2:143680,3:999531,4:2123481}
+          for k,v in expected.items():
+              if int(s.get(f'coverage{k}',-1)) != v: raise SystemExit((k,v,s.get(f'coverage{k}')))
+          print('support-list replay matches known exact coverage0..4 counts')
+          PY
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-support6-census-case0
+          path: ${{ runner.temp }}/result
+          retention-days: 14
