@@ -1,0 +1,65 @@
+name: temp labs-100 Prestwich-Wiggenbrock near-skew bnb
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-nearskew-bnb-combined.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Debug build with full incremental-state recomputation
+        run: |
+          g++ -O1 -std=c++20 -fopenmp \
+            science-boundary/labs-100/code/nearskew_bnb.cpp -o /tmp/bnb-debug
+      - name: Debug positive control
+        shell: bash
+        run: |
+          set -euo pipefail
+          /tmp/bnb-debug --threads 1 --prefix 0 --seconds 20 --asum 10 --cap 528 | tee /tmp/debug.txt
+          grep -F 'found=1 ' /tmp/debug.txt
+          grep -F 'FOUND energy=578 odd=50 even=528 ' /tmp/debug.txt
+      - name: Release positive control
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/nearskew_bnb.cpp -o /tmp/bnb
+          /tmp/bnb --threads 1 --prefix 0 --seconds 10 --asum 10 --cap 528 | tee /tmp/control.txt
+          grep -F 'FOUND energy=578 odd=50 even=528 ' /tmp/control.txt
+
+  calibrate:
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        asum: [-18, -16, 14, 16, 18, 20]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Build release search
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/nearskew_bnb.cpp -o /tmp/bnb
+      - name: Search target class for 120 seconds
+        shell: bash
+        run: |
+          set +e
+          /tmp/bnb --threads 4 --prefix 10 --seconds 120 --asum '${{ matrix.asum }}' --cap 524 | tee /tmp/result.txt
+          rc=${PIPESTATUS[0]}
+          set -e
+          if [ "$rc" -gt 1 ]; then exit "$rc"; fi
+          grep -F 'SUMMARY asum=${{ matrix.asum }} ' /tmp/result.txt
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: labs100-nearskew-combined-${{ matrix.asum }}
+          path: /tmp/result.txt
+          if-no-files-found: warn
