@@ -13,10 +13,11 @@ structures occurs:
    * double-mixed: one positive and one negative defect, forcing half product 0.
 
 The zero-product cases are normalized by reversal/sign symmetry to A_sum=0,
-0<=B_sum<=20. The upper bound 20 is rigorous from the target even-energy
-budget 508 and Cauchy applied to the 49 even correlations.
+0<=B_sum<=20. The upper bound 20 is rigorous for target <=574 from the even
+energy budget 508 and Cauchy applied to the 49 even correlations.
 
-Any feasible solution is independently rescored before being printed.
+Any feasible solution is independently rescored before being printed. UNKNOWN
+is reported separately from an exact INFEASIBLE proof.
 """
 
 from __future__ import annotations
@@ -81,17 +82,13 @@ def build(case: str, target: int, hint: str | None):
     model.Add(bsum == 50 - 2 * sum(x[1::2]))
 
     if case == "double-same":
-        # ab=+8 after alternation; global sign makes both positive; reversal
-        # orders the magnitudes as 2,4.
         model.Add(asum == 2)
         model.Add(bsum == 4)
     else:
-        # ab=0. Reversal puts the zero half in A; global sign makes B>=0.
         model.Add(asum == 0)
         model.Add(bsum >= 0)
-        # If B>=22 then S_even=(B^2-100)/2 >=192, so by Cauchy
-        # Q_even >= S_even^2/49 > 508, incompatible with E<=574,O=66.
-        model.Add(bsum <= 20)
+        if target <= 574:
+            model.Add(bsum <= 20)
 
     corr: dict[int, cp_model.IntVar] = {}
     even_q = []
@@ -167,14 +164,12 @@ def build(case: str, target: int, hint: str | None):
 
     model.Add(sum(even_q) <= target - 66)
 
-    # Exact sum of even correlations from the parity-half sums.
     if case == "double-same":
-        model.Add(sum(even_corr) == -40)  # (2^2+4^2-100)/2
+        model.Add(sum(even_corr) == -40)
     else:
-        b2 = add_square_table(model, bsum, "bsum_sq", 0, 20)
+        b2 = add_square_table(model, bsum, "bsum_sq", 0, 20 if target <= 574 else 50)
         model.Add(2 * sum(even_corr) == b2 - 100)
 
-    # Redundant z=i Fourier identity, useful propagation for the even lags.
     a_alt = model.NewIntVar(-50, 50, "a_alt")
     b_alt = model.NewIntVar(-50, 50, "b_alt")
     a_terms = []
@@ -220,6 +215,10 @@ def main() -> None:
 
     hint = SMOKE_SINGLE18 if args.case == "single18" and args.target >= 33562 else None
     model, x = build(args.case, args.target, hint)
+    validation = model.Validate()
+    if validation:
+        raise SystemExit(f"MODEL_INVALID {validation}")
+
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = args.seconds
     solver.parameters.num_search_workers = args.workers
@@ -238,8 +237,11 @@ def main() -> None:
         f"branches={solver.NumBranches()}",
         f"conflicts={solver.NumConflicts()}",
     )
+    if status == cp_model.INFEASIBLE:
+        print(f"PROVED_INFEASIBLE case={args.case}")
+        return
     if status not in (cp_model.FEASIBLE, cp_model.OPTIMAL):
-        print(f"NO_CERTIFICATE case={args.case}")
+        print(f"UNRESOLVED case={args.case}")
         return
 
     seq = "".join("-" if solver.Value(v) else "+" for v in x)
@@ -253,11 +255,15 @@ def main() -> None:
         raise SystemExit("independent exact score check failed")
     e18, pos10, neg10 = cls
     if args.case == "single18":
-        ok = len(e18) == 1 and not pos10 and not neg10 and a == 0 and 0 <= b <= 20
+        ok = len(e18) == 1 and not pos10 and not neg10 and a == 0 and b >= 0
+        if args.target <= 574:
+            ok = ok and b <= 20
     elif args.case == "double-same":
         ok = not e18 and len(pos10) == 2 and not neg10 and (a, b) == (2, 4)
     else:
-        ok = not e18 and len(pos10) == 1 and len(neg10) == 1 and a == 0 and 0 <= b <= 20
+        ok = not e18 and len(pos10) == 1 and len(neg10) == 1 and a == 0 and b >= 0
+        if args.target <= 574:
+            ok = ok and b <= 20
     if not ok:
         raise SystemExit("independent structural check failed")
 
