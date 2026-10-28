@@ -1,0 +1,46 @@
+name: temp-aes-semilinear-support5
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-semilinear-support5.yml'
+      - 'science-boundary/aes-sbox-circuit/search_semilinear_support5.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-semilinear-support5
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      max-parallel: 18
+      matrix:
+        transform:
+          - {name: id, c: '0x01', k: 0}
+          - {name: 9d, c: '0x9d', k: 3}
+        prefix: [0,1,2,3,4,5,6,7,8]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Rank-4 support-5 outer search
+        run: |
+          out=/tmp/aes-support5-${{ matrix.transform.name }}-${{ matrix.prefix }}
+          mkdir -p "$out"
+          python science-boundary/aes-sbox-circuit/search_semilinear_support5.py \
+            --c ${{ matrix.transform.c }} --k ${{ matrix.transform.k }} \
+            --prefix ${{ matrix.prefix }} --max-pre 19 --max-out 17 \
+            --out "$out" | tee "$out/run.log"
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-support5-${{ matrix.transform.name }}-${{ matrix.prefix }}
+          path: /tmp/aes-support5-${{ matrix.transform.name }}-${{ matrix.prefix }}
