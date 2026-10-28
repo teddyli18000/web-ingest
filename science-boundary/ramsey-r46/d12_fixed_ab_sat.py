@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-"""Exact cross-edge SAT for the maximum-degree-12 R(4,6,36) branch.
+"""Exact cross-edge SAT for a fixed degree-12 neighborhood/antineighborhood pair.
 
-Fix v of degree 12, A=N(v) (12 vertices), and B (23 non-neighbours).
-A is supplied from the complete R(3,6,12) catalogue and B from a complete
-edge stratum of McKay's public R(4,5,23) extreme archive.  Once A and B are
-fixed, the only unknowns are the 12*23=276 A--B cross edges.
+Fix a distinguished vertex v of degree 12, A=N(v) (12 vertices), and B
+(the 23 non-neighbours). A and B are supplied as graph6 records. Once A and
+B are fixed, the only unknowns are the 12*23=276 A--B cross edges.
 
-The encoding is complete: degree 11/12 constraints plus every mixed K4 and
-mixed independent-6 obstruction are encoded statically.  A SAT model is thus
-a full 36-vertex Ramsey(4,6) graph; UNSAT rules out that exact (A,B) pair.
+The encoding is complete: configurable full-graph degree bounds plus every
+mixed K4 and mixed independent-6 obstruction are encoded statically. A SAT
+model is therefore a complete 36-vertex Ramsey(4,6) certificate. For the
+maximum-degree-12 branch use --min-degree 11 --max-degree 12; for the general
+R(4,6,36) structural range use 11..17.
 """
 from __future__ import annotations
 
@@ -160,7 +161,19 @@ def add_cnf(solver: Solver, cnf) -> int:
     return len(cnf.clauses)
 
 
+def cross_bounds(base_degree: int, cross_slots: int, min_degree: int, max_degree: int) -> tuple[int, int] | None:
+    if base_degree > max_degree or base_degree + cross_slots < min_degree:
+        return None
+    lo = max(0, min_degree - base_degree)
+    hi = min(cross_slots, max_degree - base_degree)
+    if lo > hi:
+        return None
+    return lo, hi
+
+
 def solve_pair(args) -> int:
+    if not 0 <= args.min_degree <= args.max_degree <= 35:
+        raise ValueError((args.min_degree, args.max_degree))
     ag6, A, ae = select_record(args.a_catalog, args.a_ordinal, NA)
     bg6, B, be = select_record(args.b_catalog, args.b_ordinal, NB)
     validate_A(A)
@@ -171,17 +184,14 @@ def solve_pair(args) -> int:
         raise ValueError((be, args.b_edges))
 
     da, db = degrees(A), degrees(B)
-    # Cross degree ranges implied by total full degree 11 or 12.
-    alo = [10 - d for d in da]
-    ahi = [11 - d for d in da]
-    blo = [11 - d for d in db]
-    bhi = [12 - d for d in db]
-    if any(lo < 0 or hi > NB or lo > hi for lo, hi in zip(alo, ahi)):
+    # v contributes one fixed edge to each A vertex and zero to each B vertex.
+    abounds = [cross_bounds(1 + d, NB, args.min_degree, args.max_degree) for d in da]
+    bbounds = [cross_bounds(d, NA, args.min_degree, args.max_degree) for d in db]
+    if any(z is None for z in abounds):
         return write_unsat(args, ag6, bg6, ae, be, "A degree range impossible", 0, {})
-    if any(lo < 0 or hi > NA or lo > hi for lo, hi in zip(blo, bhi)):
+    if any(z is None for z in bbounds):
         return write_unsat(args, ag6, bg6, ae, be, "B degree range impossible", 0, {})
 
-    # x[a][b] is the A--B cross edge.
     x = [[a * NB + b + 1 for b in range(NB)] for a in range(NA)]
     pool = IDPool(start_from=NA * NB + 1)
     counts = {
@@ -196,13 +206,19 @@ def solve_pair(args) -> int:
     start = time.monotonic()
     with Solver(name=args.solver) as s:
         for a in range(NA):
+            lo, hi = abounds[a]
             row = x[a]
-            counts["degree"] += add_cnf(s, CardEnc.atleast(row, alo[a], vpool=pool, encoding=EncType.seqcounter))
-            counts["degree"] += add_cnf(s, CardEnc.atmost(row, ahi[a], vpool=pool, encoding=EncType.seqcounter))
+            if lo:
+                counts["degree"] += add_cnf(s, CardEnc.atleast(row, lo, vpool=pool, encoding=EncType.seqcounter))
+            if hi < len(row):
+                counts["degree"] += add_cnf(s, CardEnc.atmost(row, hi, vpool=pool, encoding=EncType.seqcounter))
         for b in range(NB):
+            lo, hi = bbounds[b]
             col = [x[a][b] for a in range(NA)]
-            counts["degree"] += add_cnf(s, CardEnc.atleast(col, blo[b], vpool=pool, encoding=EncType.seqcounter))
-            counts["degree"] += add_cnf(s, CardEnc.atmost(col, bhi[b], vpool=pool, encoding=EncType.seqcounter))
+            if lo:
+                counts["degree"] += add_cnf(s, CardEnc.atleast(col, lo, vpool=pool, encoding=EncType.seqcounter))
+            if hi < len(col):
+                counts["degree"] += add_cnf(s, CardEnc.atmost(col, hi, vpool=pool, encoding=EncType.seqcounter))
 
         b_tri = subsets(B, 3, True)
         a_edges = subsets(A, 2, True)
@@ -263,7 +279,7 @@ def solve_pair(args) -> int:
             if x[a][b] in model:
                 rows[1 + a][13 + b] = rows[13 + b][1 + a] = "1"
     srows = ["".join(r) for r in rows]
-    verify_full(srows)
+    verify_full(srows, args.min_degree, args.max_degree)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps({"adjacency": srows}, indent=2) + "\n")
     result = base_result(args, ag6, bg6, ae, be, elapsed, counts)
@@ -274,7 +290,7 @@ def solve_pair(args) -> int:
     return 0
 
 
-def verify_full(rows: list[str]) -> None:
+def verify_full(rows: list[str], min_degree: int = 11, max_degree: int = 12) -> None:
     if len(rows) != 36 or any(len(r) != 36 for r in rows):
         raise AssertionError("bad adjacency dimensions")
     for i in range(36):
@@ -290,7 +306,7 @@ def verify_full(rows: list[str]) -> None:
         if all(rows[u][v] == "0" for u, v in itertools.combinations(vs, 2)):
             raise AssertionError(f"I6 {vs}")
     ds = [r.count("1") for r in rows]
-    if min(ds) < 11 or max(ds) > 12:
+    if min(ds) < min_degree or max(ds) > max_degree:
         raise AssertionError(ds)
 
 
@@ -302,6 +318,8 @@ def base_result(args, ag6, bg6, ae, be, elapsed, counts):
         "b_graph6": bg6,
         "a_edges": ae,
         "b_edges": be,
+        "min_degree": args.min_degree,
+        "max_degree": args.max_degree,
         "solver": args.solver,
         "elapsed_seconds": round(elapsed, 6),
         "clause_counts": counts,
@@ -318,16 +336,16 @@ def write_unsat(args, ag6, bg6, ae, be, reason, elapsed, counts) -> int:
 
 
 def self_test() -> None:
-    # graph6 decode sanity: empty and complete K5 generated manually.
     empty5, e0 = decode_graph6("D??")
     assert len(empty5) == 5 and e0 == 0
-    # Independent subset/clique predicates on a path P4.
     adj = [0] * 4
     for u, v in ((0, 1), (1, 2), (2, 3)):
         adj[u] |= 1 << v
         adj[v] |= 1 << u
     assert subsets(adj, 2, True) == [(0, 1), (1, 2), (2, 3)]
     assert (0, 2) in subsets(adj, 2, False)
+    assert cross_bounds(5, 12, 11, 17) == (6, 12)
+    assert cross_bounds(18, 12, 11, 17) is None
     print("d12 fixed-A/B SAT self-test ok")
 
 
@@ -352,6 +370,8 @@ def main() -> int:
     p.add_argument("--b-ordinal", type=int, required=True)
     p.add_argument("--a-edges", type=int)
     p.add_argument("--b-edges", type=int)
+    p.add_argument("--min-degree", type=int, default=11)
+    p.add_argument("--max-degree", type=int, default=12)
     p.add_argument("--solver", default="cadical195")
     p.add_argument("--summary", type=Path, required=True)
     p.add_argument("--output", type=Path, required=True)
