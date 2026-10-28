@@ -3,7 +3,7 @@
 
 The prototype was committed before execution so its derivation could be reviewed.
 This helper is intentionally strict: it replaces exactly one known byte-for-byte
-fragment and refuses to run if the source has drifted.  Workflows compile the
+fragment and refuses to run if the source has drifted. Workflows compile the
 patched temporary copy, never silently editing repository state.
 """
 import sys
