@@ -1,0 +1,45 @@
+name: temp-aes-plane-joint101
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-plane-joint101.yml'
+      - 'science-boundary/aes-sbox-circuit/search_plane_prelinear17.py'
+      - 'science-boundary/aes-sbox-circuit/search_plane_middle5.py'
+      - 'science-boundary/aes-sbox-circuit/search_plane_joint101.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-plane-joint101
+  cancel-in-progress: false
+
+jobs:
+  screen:
+    strategy:
+      fail-fast: false
+      matrix:
+        prefix: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install solver
+        run: python -m pip install --disable-pip-version-check z3-solver==4.13.4.0
+      - name: Exact joint 101 screen
+        run: |
+          mkdir -p /tmp/aes-plane-joint101-${{ matrix.prefix }}
+          python science-boundary/aes-sbox-circuit/search_plane_joint101.py \
+            --prefix ${{ matrix.prefix }} \
+            --timeout-ms 1500 \
+            --out /tmp/aes-plane-joint101-${{ matrix.prefix }}
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aes-plane-joint101-${{ matrix.prefix }}
+          path: /tmp/aes-plane-joint101-${{ matrix.prefix }}
