@@ -1,0 +1,47 @@
+name: temp-ta41-core-hard-retest
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/retest_hard_machine_cores.py'
+      - '.github/workflows/temp-ta41-core-hard-retest.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-core-hard-retest
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 11
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin OR-Tools CP-SAT
+        run: python -m pip install 'ortools==9.14.6206'
+      - name: Recheck four hard machine cores and exact finite group cover
+        run: python3 science-boundary/job-shop-ta41/retest_hard_machine_cores.py --seconds 105
+      - name: Official verifier if an apparent contradiction yields a <=2005 schedule
+        run: |
+          set -euo pipefail
+          dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/machine-core-hard-retest"
+          if test -f "$dir/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$dir" | tee "$dir/upstream-verdict.json"
+            python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+          fi
+      - name: Persist verified/unknown audit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/job-shop-ta41/results/machine-core-hard-retest/
+          if ! git diff --cached --quiet; then
+            git commit -m 'research(ta41): independently recheck four difficult machine-order cores'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
