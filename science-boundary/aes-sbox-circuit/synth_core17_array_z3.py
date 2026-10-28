@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Focused exact search for a 17-gate replacement of the merged 102 core.
 
-Unlike earlier generic selector encodings, this uses a Z3 Array from wire index
-to exact 16-state truth table.  The only free core interface is the merged 102
-basis (q34,q36,q39,q41); all nine factors consumed by the tail must occur among
-the 17 produced gate wires.  A SAT result therefore gives a direct 101 route.
+Uses a Z3 Array from wire index to exact 16-state truth table. The only free
+core interface is the merged 102 basis (q34,q36,q39,q41); all nine factors
+consumed by the tail must occur among the 17 produced gate wires. A SAT result
+therefore gives a direct 101 route.
 """
 import argparse
 import json
@@ -51,11 +51,13 @@ def main():
     import z3
 
     ap = argparse.ArgumentParser()
+    ap.add_argument("--ands", type=int, default=5)
     ap.add_argument("--timeout", type=int, default=600)
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--allow-xnor", action="store_true")
     ap.add_argument("--out", required=True)
     args = ap.parse_args()
+    assert 1 <= args.ands <= 17
 
     G = 17
     names_t, targets = target_truths()
@@ -72,7 +74,6 @@ def main():
     vals = []
     A, B, OP = [], [], []
     and_terms = []
-    arrays = []
 
     for i in range(G):
         n = 4 + i
@@ -94,13 +95,12 @@ def main():
 
         idx = 4 + i
         arr = z3.Store(arr, idx, v)
-        arrays.append(arr)
         vals.append(v)
         A.append(a)
         B.append(b)
         OP.append(op)
 
-    s.add(z3.Sum(and_terms) == 5)
+    s.add(z3.Sum(and_terms) == args.ands)
 
     # A minimal 17-gate solution can be chosen without duplicated functions.
     s.add(z3.Distinct(*(list(map(BV, inputs)) + vals)))
@@ -123,7 +123,7 @@ def main():
     elapsed = time.time() - t0
     summary = {
         "gates": G,
-        "ands": 5,
+        "ands": args.ands,
         "basis": ["q34", "q36", "q39", "q41"],
         "allow_xnor": args.allow_xnor,
         "seed": args.seed,
@@ -151,7 +151,6 @@ def main():
             gates.append({"op": op, "a": wire_names[ai], "b": wire_names[bi], "out": out})
             wire_names.append(out)
 
-        # Identify which produced wire realizes each target and independently re-evaluate.
         target_wire = {}
         model_vals = [m.eval(v).as_long() & MASK16 for v in vals]
         for name, t in zip(names_t, targets):
@@ -159,6 +158,7 @@ def main():
             assert len(hits) == 1, (name, hits)
             target_wire[name] = f"r{hits[0]}"
 
+        # Independent 16-state reconstruction check.
         for x in range(16):
             vv = {
                 "q34": (x >> 0) & 1,
