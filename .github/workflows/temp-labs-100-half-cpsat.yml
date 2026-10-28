@@ -1,0 +1,31 @@
+name: temp labs-100 conditional half CP-SAT
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-half-cpsat.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  half:
+    strategy:
+      fail-fast: false
+      matrix:
+        case:
+          - {name: incumbent-even, fix: even, seq: '++++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-'}
+          - {name: incumbent-odd, fix: odd, seq: '++++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-'}
+          - {name: far722-even, fix: even, seq: '---+++++---++---+-+++------+++-+-+--+-+-+--+-++--++----++--+-+---+---+---+-++--+----+--+--+++++++++-'}
+          - {name: far722-odd, fix: odd, seq: '---+++++---++---+-+++------+++-+-+--+-+-+--+-++--++----++--+-+---+---+---+-++--+----+--+--+++++++++-'}
+          - {name: periodic-even, fix: even, seq: '+++++++--+-+--+++-+-----+--+++-++---++--++-+++-+-++++--+-+++++--++++-+-----+-+-+--++++--+++---+-+--+'}
+          - {name: periodic-odd, fix: odd, seq: '+++++++--+-+--+++-+-----+--+++-++---++--++-+++-+-++++--+-+++++--++++-+-----+-+-+--++++--+++---+-+--+'}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - run: python3 -m pip install --disable-pip-version-check -q ortools
+      - name: Optimize ${{ matrix.case.name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/cpsat_half.py --seed '${{ matrix.case.seq }}' --fix '${{ matrix.case.fix }}' --optimize --seconds 300 --workers 4 | tee /tmp/out.txt
+          grep -E '^(STATUS|FOUND|NO_CERTIFICATE)' /tmp/out.txt
