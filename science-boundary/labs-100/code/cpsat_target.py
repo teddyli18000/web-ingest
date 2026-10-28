@@ -16,37 +16,46 @@ def build(target:int, odd_perfect:bool, asum=None, bsum=None):
     model=cp_model.CpModel()
     x=[model.NewBoolVar(f'x{i}') for i in range(N)] # 0 => +1, 1 => -1
     if asum is None:
-        # Safe two-bit symmetry breaking for the unsplit model.
         model.Add(x[0]==0)
         model.Add(x[1]==0)
     else:
-        # A = even positions, B = odd positions. In a fixed canonical sum class
-        # we spend the sign/reversal symmetries on a>=b>=0 instead of x0/x1.
         model.Add(50-2*sum(x[0::2]) == asum)
         model.Add(50-2*sum(x[1::2]) == bsum)
+
     qvars=[]
+    odd_pos=[]
+    even_corr=[]
     for k in range(1,N):
         L=N-k
         zs=[]
         for i in range(L):
             z=model.NewBoolVar(f'z_{i}_{k}')
-            # z = x_i XOR x_{i+k}: XOR(x_i,x_j,not z) must be odd.
             model.AddBoolXOr([x[i],x[i+k],z.Not()])
             zs.append(z)
         m=model.NewIntVar(0,L,f'm{k}')
         model.Add(m==sum(zs))
+        c=model.NewIntVar(-L,L,f'c{k}')
+        model.Add(c==L-2*m)
         if odd_perfect and (k&1):
-            # C=L-2m must be +/-1.
-            model.AddAllowedAssignments([m],[((L-1)//2,),((L+1)//2,)])
+            pos=model.NewBoolVar(f'odd_pos{k}')
+            model.AddAllowedAssignments([m,pos],[((L-1)//2,1),((L+1)//2,0)])
+            odd_pos.append(pos)
         else:
             q=model.NewIntVar(0,target,f'q{k}')
             rows=[]
-            for mm in range(L+1):
-                c=L-2*mm; qq=c*c
-                if qq<=target: rows.append((mm,qq))
-            model.AddAllowedAssignments([m,q],rows)
+            for cc in range(-L,L+1,2):
+                qq=cc*cc
+                if qq<=target: rows.append((cc,qq))
+            model.AddAllowedAssignments([c,q],rows)
             qvars.append(q)
+            if not (k&1): even_corr.append(c)
+
     model.Add(sum(qvars) <= (target-50 if odd_perfect else target))
+    if odd_perfect and asum is not None:
+        # Sum of all odd-lag correlations equals (sum A)(sum B).
+        model.Add(sum(odd_pos) == (50 + asum*bsum)//2)
+        # Sum of all even-lag correlations equals (a^2+b^2-N)/2.
+        model.Add(sum(even_corr) == (asum*asum + bsum*bsum - N)//2)
     return model,x
 
 def main():
