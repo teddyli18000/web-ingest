@@ -1,0 +1,30 @@
+name: temp-ta41-job-ejection-dag
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/job_ejection_dag.py'
+      - '.github/workflows/temp-ta41-job-ejection-dag.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-job-ejection-dag
+  cancel-in-progress: false
+jobs:
+  graph:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exhaustively inspect 4525 job ejection DAG relaxations
+        run: python3 science-boundary/job-shop-ta41/job_ejection_dag.py
+      - name: Preserve evidence
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/job-shop-ta41/results/job-cohort-precedence-relaxation.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'research(ta41): enumerate global 1-3-job release DAG bound'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
