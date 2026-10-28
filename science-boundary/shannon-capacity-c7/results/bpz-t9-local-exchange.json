@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-28",
+  "problem": "BPZ t=9 obstruction auxiliary set in C7^5",
+  "obstruction_size": 1098,
+  "published_auxiliary_size": 367,
+  "published_obstruction_hits": [10665],
+  "starting_independent_set_size": 366,
+  "allowed_vertices": 15709,
+  "outside_support_histogram": {
+    "1": 2,
+    "2": 178,
+    "3": 1372,
+    "4": 2769,
+    "5": 3480
+  },
+  "support_group_counts": {
+    "1": 2,
+    "2": 168,
+    "3": 1346,
+    "4": 2750,
+    "5": 3443
+  },
+  "exact_search": {
+    "direct_add": {"found": false},
+    "remove_1_add_2": {
+      "found": false,
+      "coverage_1_candidates": [[10666, 289], [16046, 349]],
+      "note": "the only two coverage-1 candidates have different owners"
+    },
+    "remove_2_add_3": {
+      "found": false,
+      "relevant_owner_pairs": 169,
+      "max_candidate_pool": 2
+    },
+    "remove_3_add_4": {
+      "found": false,
+      "relevant_owner_triples": 1867,
+      "eligible_pools_at_least_4": 9,
+      "max_candidate_pool": 4
+    },
+    "remove_4_add_5": {
+      "found": false,
+      "relevant_owner_quads": 25042,
+      "eligible_pools_at_least_5": 118,
+      "max_candidate_pool": 7
+    },
+    "remove_5_add_6": {
+      "found": false,
+      "pair_union_owner_quints": 262639,
+      "pair_union_eligible_pools_at_least_6": 942,
+      "additional_three_support_union_eligible_quints": 3944,
+      "additional_minimal_four_support_cover_eligible_quints": 12,
+      "max_candidate_pool": 9
+    }
+  },
+  "conclusion": "The canonical obstruction-free 366-set obtained by deleting 10665 from the published BPZ auxiliary X has no improving local exchange through remove-5/add-6. Any 367-set reached from this seed requires a deeper rearrangement or a different component.",
+  "scope": "This is an exact local statement about this 366-set, not an upper bound on alpha(C7^5 minus D)."
+}
