@@ -1,0 +1,39 @@
+name: temp Thomson 960 B-D MEP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-bd-mep.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Converge perpendicular-force string
+        run: |
+          python3 science-boundary/thomson-960/code/string_between_seeds.py \
+            science-boundary/thomson-960/data/basin-b-010566.json \
+            science-boundary/thomson-960/data/basin-d-018586.json \
+            --images 15 --iterations 2500 --eta 0.00028 --max-step 0.00035 \
+            --perp-tol 0.00002 --climb-iterations 0 \
+            --out "$RUNNER_TEMP/bd-mep.json"
+          python3 - <<'PY'
+          import json, os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'bd-mep.json')))
+          print('converged',d['string_converged'],'iters',d['performed_iterations'])
+          print('max_perp',d['max_path_perpendicular_gradient_rms'])
+          print('max_image',d['max_image_index'],'E',max(d['path_energies']))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-bd-mep
+          retention-days: 7
+          path: ${{ runner.temp }}/bd-mep.json
