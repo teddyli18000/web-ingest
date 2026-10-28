@@ -1,0 +1,28 @@
+name: temp labs-100 CP-SAT distance 8
+on:
+  push:
+    paths:
+      - 'science-boundary/labs-100/code/cpsat_distance.py'
+      - '.github/workflows/temp-labs-100-cpsat-distance8.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [odd-perfect, general]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - run: python3 -m pip install --disable-pip-version-check -q ortools
+      - name: Search target 574 at distance 8
+        shell: bash
+        run: |
+          set -euo pipefail
+          extra=''
+          if [[ '${{ matrix.mode }}' == 'odd-perfect' ]]; then extra='--odd-perfect'; fi
+          python3 science-boundary/labs-100/code/cpsat_distance.py --distance 8 --target 574 --seconds 600 --workers 4 $extra | tee /tmp/out.txt
+          grep -E '^(STATUS|FOUND|NO_CERTIFICATE)' /tmp/out.txt
