@@ -16,6 +16,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
           name: thomson-cd-hessian
@@ -40,4 +42,5 @@ jobs:
           git config user.email "science-boundary-bot@users.noreply.github.com"
           git add science-boundary/thomson-960/data/basin-d-018586.json .github/workflows/temp-thomson-960-freeze-d.yml
           git commit -m "science: freeze Thomson D minimum coordinates"
+          git pull --rebase origin main
           git push origin HEAD:main
