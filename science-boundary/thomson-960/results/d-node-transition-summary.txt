@@ -1,6 +1,7 @@
-Thomson N=960 — D-node / shallow-C transition evidence
+Thomson N=960 — D minimum and C index-2 stationary state
 Date: 2026-10-28/29
-Live merged record: 444368.3924061973
+Live merged Few Shots record: 444368.3924061973
+Next valid score <= 444368.3924051973
 
 A<->B saddle certification (run 40647777986)
 - Clean hybrid saddle: E = 444368.4117741097, grad RMS = 8.93599e-6.
@@ -19,40 +20,67 @@ A<->B transverse exits (same run)
   It is reached by mode 2 / negative sign at transverse 0.012 (reaction -0.0006 or 0) and independently by mode 3 / positive sign at transverse 0.020.
 - Larger mode-2 exits reach much higher minima (+0.1577,+0.1782,+0.9264,+0.9705).
 
-Deterministic D harvest (failed mapping run 40731597265, harvest stage succeeded)
+Deterministic D harvest (run 40731597265, harvest stage succeeded)
 - Replayed from the clean A<->B saddle with mode 2, sign -1, transverse RMS 0.012, reaction 0.
 - E = 444368.410993084486 = R + 0.0185868871631.
 - L-BFGS iterations = 732, success=True.
-- Delaunay coordination = 36 five / 900 six / 24 seven: same 24-dislocation composition as R/A/B/C.
+- Delaunay coordination = 36 five / 900 six / 24 seven: same 24-dislocation composition as R/A/B and stationary state C.
 - z-axis C3 nearest-neighbor RMS mismatch = 0.00379058, so D is symmetry-broken rather than exact C3.
 
-C reproduction in the same run
+C reproduction
 - E = 444368.411417883064 = R + 0.0190116857411.
 - coordination = 36/900/24.
-- C comes from composing the three C3-equivalent R->A global-shear events and relaxing from an exactly/highly C3-symmetric start.
+- C is obtained by composing all three C3-equivalent nonlinear R->A global-shear events and relaxing from an exactly/highly C3-symmetric start.
+- IMPORTANT: C is NOT a full-space minimum. Symmetry preserves the trajectory and can make an unstable stationary state look like a converged symmetric endpoint.
+
+Full-space Hessian classification (run 40732118945)
+C:
+- E = 444368.411417883122, physical gradient RMS = 7.56568e-6.
+- lambda0 = -0.931826777147
+- lambda1 = -0.931747227271
+- lambda2 = +1.56333826701
+- lambda3/4 = +3.93738263542 / +3.93738716638
+- exactly two internal negative modes among the computed low spectrum.
+- The near-degenerate negative pair strongly suggests a C3 nontrivial two-dimensional irrep / symmetry-breaking unstable manifold.
+- Classification: C is an index-2 stationary point, not a basin.
+
+D:
+- E = 444368.410993084428, physical gradient RMS = 6.36204e-6.
+- lambda0 = +0.423627576366
+- lambda1 = +1.39682111321
+- lambda2 = +3.03400938639
+- lambda3 = +4.08218186195
+- all 14 computed low modes positive; zero negative modes.
+- Classification: D is a genuine local minimum. Its very soft lambda0 makes D-centered transition searches scientifically attractive.
 
 B<->D string (run 40731597265)
 - 9 images, 240 descent/reparameterization iterations, no climbing.
 - Initial max E = 444368.4344175272.
 - Final observed max E = 444368.4125963093 at interior image 4.
 - Final barrier relative to B = 0.00962344767.
-- This part completed successfully before the next D<->C string raised.
+- This part completed successfully before the subsequent D<->C string terminated under the old endpoint-collapse behavior.
 
-D<->C string anomaly (same run)
+D<->C string and its reinterpretation (same run)
 - Initial max was only 444368.4114221905, about 4.31e-6 above C.
 - By iteration 10 the maximum became the C endpoint itself: 444368.4114178833 at image 8 of 9.
 - It stayed at the endpoint through iteration 239 while interior descent steps shrank to 1.67e-7.
-- The generic string code then intentionally raised `maximum collapsed to endpoint`, so later refinements/artifact upload were skipped.
-- This is inconsistent with treating C as an ordinary well-resolved full-space local minimum. Leading hypothesis: C is a C3-symmetric stationary point that is unstable to symmetry-breaking full-space directions, with D on a downhill branch. An alternative is an extremely shallow barrier below the current string resolution.
-- Full-space Hessian diagnostic of C and D launched as run 40732118945 to decide between these interpretations.
+- Old code raised `maximum collapsed to endpoint` and aborted the batch.
+- The Hessian result explains this cleanly: there need not be a D<->C first-order barrier because C itself is an index-2 saddle and D lies on one of its symmetry-breaking downhill branches.
+- Therefore do NOT spend compute trying to certify a D<->C index-1 saddle unless later evidence contradicts the Morse-index classification.
 
 Earlier B<->C attempt (run 40647978833)
 - C reproduced at 444368.411417882890.
 - 7-image string max after 180 iterations: 444368.411787349673, only ~3.69e-4 above C.
-- Hybrid eigenmode refinement initially saw lambda0 ~ -0.788 but then crossed into B; final E = 444368.402972861426 with zero negative modes. This was not a saddle certification.
-- Failure mechanism: reselecting the lowest Hessian mode can switch from the shallow reaction direction to a positive basin mode after one oversized reaction correction.
+- Hybrid eigenmode refinement initially saw lambda0 ~ -0.788 but then crossed into B; final E = 444368.402972861426 with zero negative modes.
+- This is not a certified B<->C saddle. In hindsight the failure is consistent with mixing an index-2 C endpoint into an algorithm designed to refine a single reaction coordinate.
 
-Method correction
-- `string_between_seeds.py` now persists the two neighboring string images and local Cartesian path tangent.
-- `refine_saddle_path_tangent.py` was added: transverse all-dimensional minimization plus damped 1-D Newton along the retained string tangent, with final Hessian classification independent of that tangent.
-- This is the preferred refiner for shallow interfaces such as D<->C/B<->C if C is confirmed stable.
+Method corrections
+- `string_between_seeds.py` now records endpoint collapse rather than throwing away the batch; it preserves the nearest interior probe, two neighboring images and local path tangent.
+- `refine_saddle_path_tangent.py` performs all-dimensional transverse relaxation while retaining the string tangent as the reaction coordinate; useful for genuinely shallow index-1 interfaces.
+- `diagnose_seed_modes.py` provides full-space Hessian classification for arbitrary saved seeds.
+- `search_seed_c3_negative_pair.py` canonicalizes C's negative doublet under C3 and maps its full unstable manifold by phase in a symmetry-reduced fundamental sector.
+
+Current frontier
+- Run 40732550803 maps C's complete two-dimensional negative eigenspace: phases 0..55 degrees in 5-degree increments, amplitudes 0.0015/0.003/0.006/0.012, with full unconstrained stable relaxation.
+- This is the correct next experiment: enumerate all inequivalent downhill basins of the known index-2 state instead of random full-space kicks.
+- Any endpoint below live_score - 2e-7 immediately triggers stable repolish, live-record re-check, rationalization and official verifier.
