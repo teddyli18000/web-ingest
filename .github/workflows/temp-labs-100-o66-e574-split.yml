@@ -1,0 +1,53 @@
+name: temp labs-100 exact E574 O66 split
+
+on:
+  push:
+    paths:
+      - 'science-boundary/labs-100/code/cpsat_odd66_e574.py'
+      - '.github/workflows/temp-labs-100-o66-e574-split.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check -q 'ortools==9.15.6755'
+      - name: Validate exact-E574 model
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/cpsat_odd66_e574.py \
+            --case single18 --bsum 0 --seconds 1 --workers 2 --seed 1 \
+            | tee /tmp/smoke.txt
+          grep -E '^STATUS case=single18 bsum=0 ' /tmp/smoke.txt
+
+  target:
+    needs: smoke
+    strategy:
+      fail-fast: false
+      matrix:
+        case: [single18, double-mixed]
+        bsum: [0, 4, 8, 12, 16, 20]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install pinned OR-Tools
+        run: python3 -m pip install --disable-pip-version-check -q 'ortools==9.15.6755'
+      - name: Exact E574 O66 search
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/cpsat_odd66_e574.py \
+            --case '${{ matrix.case }}' --bsum '${{ matrix.bsum }}' \
+            --seconds 360 --workers 4 --seed 1 \
+            | tee /tmp/out.txt
+          grep -E '^(STATUS|PROVED_INFEASIBLE|UNRESOLVED|FOUND)' /tmp/out.txt
