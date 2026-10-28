@@ -1,0 +1,32 @@
+name: temp labs-100 upstream lMAts
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-upstream-lmats.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  lmats:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [101, 202, 303, 404]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Fetch and build public upstream solver
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/borkob/git_labs.git /tmp/git_labs
+          cd /tmp/git_labs/solvers/lMAts-lRRts/src
+          make -j2
+      - name: Run upstream lMAts on N=100
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd /tmp/git_labs/solvers/lMAts-lRRts/src
+          ./lMAts 100 '${{ matrix.seed }}' 600 2 574 | tee /tmp/lmats.txt
+          grep -E 'valueBest|coordBest|targetReached|runtime|cntProbe' /tmp/lmats.txt || true
