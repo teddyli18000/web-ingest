@@ -1,0 +1,34 @@
+name: temp Thomson 960 C3 stationary portals
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-c3-portals.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  harvest:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [101, 202, 303, 404]
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Reproduce and retain constrained C3 portals
+        run: |
+          python3 science-boundary/thomson-960/code/harvest_c3_portals.py \
+            "$RUNNER_TEMP/few-shots" --seed ${{ matrix.seed }} --trials 10 \
+            --cutoff-delta 0.5 --out "$RUNNER_TEMP/c3-portals-${{ matrix.seed }}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-c3-portals-${{ matrix.seed }}
+          retention-days: 7
+          path: ${{ runner.temp }}/c3-portals-${{ matrix.seed }}.json
