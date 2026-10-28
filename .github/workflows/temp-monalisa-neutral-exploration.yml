@@ -1,0 +1,92 @@
+name: temp-monalisa-neutral-exploration
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/archive_neutral.py
+      - .github/workflows/temp-monalisa-neutral-exploration.yml
+permissions:
+  contents: write
+  actions: read
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Read six public verified neutral tours
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          gh run download 40690889447 --repo teddyli18000/web-ingest --pattern 'monalisa-global-split-*' --dir /tmp/p010-neutral
+          find /tmp/p010-neutral -maxdepth 2 -type f -name 'certificate.json' | wc -l
+      - name: Independent tour reconstruction and persistent compression
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          python science-boundary/mona-lisa-tsp/archive_neutral.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --artifacts-root /tmp/p010-neutral \
+            --output science-boundary/mona-lisa-tsp/data/neutral-moves.json
+      - name: Commit validated compact evidence to main
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/mona-lisa-tsp/data/neutral-moves.json
+          git commit -m 'science(p010): freeze six independently verified equal-score tours'
+          git pull --rebase origin main
+          git push origin main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-neutral-moves-frozen
+          path: science-boundary/mona-lisa-tsp/data/neutral-moves.json
+          if-no-files-found: ignore
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        artifact_seed: [0, 50, 100, 150, 200, 250]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch external data and verified neutral source tour
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          git clone --depth 1 https://github.com/bicobico2/ElimTSP.git elimtsp
+          python -m pip install networkx
+          mkdir -p /tmp/neutral-seed
+          gh run download 40690889447 --repo teddyli18000/web-ingest --name monalisa-global-split-${{ matrix.artifact_seed }} --dir /tmp/neutral-seed
+          python upstream/problems/p010-mona-lisa-tsp/verify/verify.py /tmp/neutral-seed
+      - name: Search nonlocal face-split repairs from this neutral tour
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          mkdir -p science-boundary/mona-lisa-tsp/results/walk-${{ matrix.artifact_seed }}
+          python science-boundary/mona-lisa-tsp/split_merge_search.py \
+            --edges elimtsp/results/mona.248972.edg.gz \
+            --baseline /tmp/neutral-seed/certificate.json \
+            --report science-boundary/mona-lisa-tsp/results/walk-${{ matrix.artifact_seed }}/report.json \
+            --output science-boundary/mona-lisa-tsp/results/walk-${{ matrix.artifact_seed }}/certificate.json \
+            --face-start 0 --max-faces 60
+          if test -f science-boundary/mona-lisa-tsp/results/walk-${{ matrix.artifact_seed }}/certificate.json; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py science-boundary/mona-lisa-tsp/results/walk-${{ matrix.artifact_seed }}
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-neutral-walk-${{ matrix.artifact_seed }}
+          path: science-boundary/mona-lisa-tsp/results/walk-${{ matrix.artifact_seed }}/
+          if-no-files-found: ignore
