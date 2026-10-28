@@ -1,0 +1,35 @@
+name: temp-aes-all-public5
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-all-public5.yml'
+permissions:
+  contents: read
+jobs:
+  orbit-cost:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Analyze every known public 32-AND core
+        run: |
+          mkdir -p /tmp/aes-all-public5
+          python3 science-boundary/aes-sbox-circuit/analyze_all_public5_cores.py | tee /tmp/aes-all-public5/results.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-all-public5
+          path: /tmp/aes-all-public5
+  live-splice:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Screen every public 32-AND core against live 102 prefix
+        run: python3 science-boundary/aes-sbox-circuit/screen_all_public5_splices.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-all-public5-splice
+          path: /tmp/aes-public5-splice
