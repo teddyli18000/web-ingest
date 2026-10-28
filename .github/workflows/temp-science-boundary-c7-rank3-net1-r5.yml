@@ -1,0 +1,144 @@
+name: Temp Science Boundary C7 neutral2 rank3 net1 r5
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-rank3-net1-r5.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          git init "$RUNNER_TEMP/shannon-source"
+          git -C "$RUNNER_TEMP/shannon-source" remote add origin https://github.com/nathanielitty/lower-bounds-for-shannon-capacity.git
+          git -C "$RUNNER_TEMP/shannon-source" fetch --depth 1 origin fe8966079013abaac21d1c08441500100f8e3b86
+          git -C "$RUNNER_TEMP/shannon-source" checkout FETCH_HEAD
+      - name: Materialize and verify rank3 134753 tie
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --disable-pip-version-check python-sat
+          mkdir -p "$RUNNER_TEMP/base" "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+          python3 science-boundary/shannon-capacity-c7/code/neutral2_rank3_tie_seed.py \
+            "$RUNNER_TEMP/shannon-source/c7/R367.txt" "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/result/base-status.json"
+          python3 - "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/base/ids.txt" <<'PY'
+          import json,sys
+          pts=json.load(open(sys.argv[1],encoding='utf-8'))['points']
+          if len(pts)!=134753 or len(set(pts))!=134753: raise SystemExit(('rank3 drift',len(pts),len(set(pts))))
+          open(sys.argv[2],'w').write(''.join(f'{x}\n' for x in sorted(int(p,7) for p in pts)))
+          PY
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/base" | tee "$RUNNER_TEMP/result/base-verify.json"
+          python3 - "$RUNNER_TEMP/result/base-verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1))!=134753: raise SystemExit(r)
+          PY
+      - name: Re-prove complete unrestricted net1 through radius4
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/patch_search_net1_r4_compile.py \
+            science-boundary/shannon-capacity-c7/code/search_net1_r4_complete.cpp "$RUNNER_TEMP/net1-r4.cpp"
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp "$RUNNER_TEMP/net1-r4.cpp" -o "$RUNNER_TEMP/net1-r4"
+          export OMP_NUM_THREADS="$(nproc)"
+          /usr/bin/time -v "$RUNNER_TEMP/net1-r4" "$RUNNER_TEMP/base/ids.txt" > "$RUNNER_TEMP/result/r4.json" 2> "$RUNNER_TEMP/result/r4.stderr"
+          cat "$RUNNER_TEMP/result/r4.json"
+          python3 - "$RUNNER_TEMP/result/r4.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if r.get('kind')!='none': raise SystemExit(('unexpected <=r4 breakthrough',r))
+          PY
+      - name: Build exact net1 radius5 solvers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/patch_r5_net2_to_net1.py direct \
+            science-boundary/shannon-capacity-c7/code/search_net2_r5_direct.cpp "$RUNNER_TEMP/net1-r5-direct.cpp"
+          python3 science-boundary/shannon-capacity-c7/code/patch_r5_net2_to_net1.py lower \
+            science-boundary/shannon-capacity-c7/code/search_net2_r5_lower.cpp "$RUNNER_TEMP/net1-r5-lower.cpp"
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp "$RUNNER_TEMP/net1-r5-direct.cpp" -o "$RUNNER_TEMP/net1-r5-direct"
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp "$RUNNER_TEMP/net1-r5-lower.cpp" -o "$RUNNER_TEMP/net1-r5-lower"
+      - name: Exact net1 radius5 direct coverage5-owner sets
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          /usr/bin/time -v "$RUNNER_TEMP/net1-r5-direct" "$RUNNER_TEMP/base/ids.txt" > "$RUNNER_TEMP/result/r5-direct.json" 2> "$RUNNER_TEMP/result/r5-direct.stderr"
+          cat "$RUNNER_TEMP/result/r5-direct.json"
+      - name: Exact net1 radius5 connected lower-support owner sets
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          /usr/bin/time -v "$RUNNER_TEMP/net1-r5-lower" "$RUNNER_TEMP/base/ids.txt" > "$RUNNER_TEMP/result/r5-lower.json" 2> "$RUNNER_TEMP/result/r5-lower.stderr"
+          cat "$RUNNER_TEMP/result/r5-lower.json"
+      - name: Materialize any radius5 breakthrough
+        id: materialize
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/result/r5-direct.json" "$RUNNER_TEMP/result/r5-lower.json" "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/status.json" <<'PY'
+          import json,sys
+          bp,dp,lp,outp,stp=sys.argv[1:]
+          pts=set(json.load(open(bp,encoding='utf-8'))['points']); ds=json.load(open(dp)); ls=json.load(open(lp))
+          def dec(z):
+              d=[]
+              for _ in range(10): d.append(str(z%7)); z//=7
+              return ''.join(reversed(d))
+          hit=next((s for s in (ds,ls) if s.get('kind')=='replace5add6'),None)
+          st={'candidate':False,'score':len(pts),'direct':ds,'lower':ls}
+          if hit:
+              rem=[dec(int(z)) for z in hit['remove']]; add=[dec(int(z)) for z in hit['add']]
+              if len(rem)!=5 or len(set(rem))!=5 or any(p not in pts for p in rem): raise SystemExit(('bad removals',rem))
+              for p in rem: pts.remove(p)
+              if len(add)!=6 or len(set(add))!=6 or any(p in pts for p in add): raise SystemExit(('bad additions',add))
+              pts.update(add)
+              if len(pts)!=134754: raise SystemExit(('score',len(pts)))
+              json.dump({'points':sorted(pts)},open(outp,'w',encoding='utf-8'),separators=(',',':'));open(outp,'a').write('\n')
+              st.update(candidate=True,score=134754,search=hit)
+          json.dump(st,open(stp,'w',encoding='utf-8'),indent=2,sort_keys=True);open(stp,'a').write('\n')
+          PY
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.materialize.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1))<=134753: raise SystemExit(r)
+          print('VERIFIED BREAKTHROUGH',r)
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-rank3-net1-r5
+          path: ${{ runner.temp }}/result
+          retention-days: 14
