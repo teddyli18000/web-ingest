@@ -1,0 +1,118 @@
+name: Temp Ramsey R46 Exoo core37 V4 symmetry SAT
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-core37-v4-sat.yml
+      - science-boundary/ramsey-r46/core37_v4_sat.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temp-ramsey-r46-core37-v4-sat
+  cancel-in-progress: false
+
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Self-test group action
+        run: python3 science-boundary/ramsey-r46/core37_v4_sat.py self-test
+      - name: Build pinned Kissat 4.0.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone https://github.com/arminbiere/kissat.git "$RUNNER_TEMP/kissat"
+          git -C "$RUNNER_TEMP/kissat" checkout 8af8e56f174b778aef3aa45af9f739b2a5f492c2
+          cd "$RUNNER_TEMP/kissat"
+          ./configure
+          make -j2
+          build/kissat --version
+      - name: Generate exact V4 CNF
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 science-boundary/ramsey-r46/core37_v4_sat.py generate --output /tmp/r46/branch.cnf | tee /tmp/r46/generate.json
+          head -n 1 /tmp/r46/branch.cnf
+          du -h /tmp/r46/branch.cnf
+      - name: Solve
+        id: solve
+        shell: bash
+        run: |
+          set -uo pipefail
+          started=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          set +e
+          /usr/bin/time -v timeout --signal=TERM --kill-after=30s 4800 \
+            "$RUNNER_TEMP/kissat/build/kissat" /tmp/r46/branch.cnf > /tmp/r46/solver.log 2>&1
+          rc=$?
+          set -e
+          finished=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          case "$rc" in
+            10) status=SAT ;;
+            20) status=UNSAT ;;
+            124|137|143) status=TIMEOUT ;;
+            *) status=ERROR ;;
+          esac
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          python3 - /tmp/r46/generate.json /tmp/r46/summary.json "$status" "$rc" "$started" "$finished" <<'PY'
+          import json,os,sys
+          gen,out,status,rc,started,finished=sys.argv[1:]
+          d=json.load(open(gen,encoding='utf-8'))
+          d.update(status=status,solver_exit=int(rc),started=started,finished=finished,
+                   kissat_commit='8af8e56f174b778aef3aa45af9f739b2a5f492c2',github_run_id=os.environ['GITHUB_RUN_ID'])
+          open(out,'w',encoding='utf-8').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          PY
+          cat /tmp/r46/summary.json
+          tail -n 100 /tmp/r46/solver.log || true
+          [[ "$status" != ERROR ]]
+      - name: Decode SAT model
+        if: steps.solve.outputs.status == 'SAT'
+        run: python3 science-boundary/ramsey-r46/core37_v4_sat.py decode --model /tmp/r46/solver.log --output /tmp/r46/candidate.json
+      - name: Authoritative Few Shots verification on SAT
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate
+          cp /tmp/r46/candidate.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/few-shots-verify.json
+          python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1],encoding='utf-8'))
+          assert d.get('valid') is True and d.get('score') == '36', d
+          PY
+      - name: Persist result
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f /tmp/r46/summary.json || exit 0
+          dest=science-boundary/ramsey-r46/results
+          cp /tmp/r46/summary.json "$dest/core37-v4-sat.json"
+          [[ ! -f /tmp/r46/candidate.json ]] || cp /tmp/r46/candidate.json "$dest/core37-v4-sat-hit.json"
+          [[ ! -f /tmp/r46/few-shots-verify.json ]] || cp /tmp/r46/few-shots-verify.json "$dest/core37-v4-sat-hit-verify.json"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add "$dest"
+          git commit -m 'ramsey-r46: record Exoo core37 V4 SAT' || exit 0
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt*4))
+          done
+          exit 1
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-core37-v4-sat
+          path: /tmp/r46
+          retention-days: 7
