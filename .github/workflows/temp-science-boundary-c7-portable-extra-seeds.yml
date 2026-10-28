@@ -30,16 +30,43 @@ jobs:
           git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
       - name: Install dependency
         run: python3 -m pip install --disable-pip-version-check numpy
+      - name: Diagnose portable witness bundle
+        shell: bash
+        run: |
+          python3 - "$RUNNER_TEMP/c7-five" <<'PY'
+          import gzip,json,runpy,sys,traceback
+          from pathlib import Path
+          root=Path(sys.argv[1])
+          p=root/'data'/'core-overlap.json.gz'
+          try:
+              with gzip.open(p,'rt') as h: z=json.load(h)
+              print('CORE_OVERLAP_KEYS', sorted(z))
+              for k,v in z.items():
+                  try: print('CORE_FIELD',k,type(v).__name__,len(v) if hasattr(v,'__len__') else None)
+                  except Exception: pass
+          except BaseException:
+              print('CORE_OVERLAP_ERROR'); traceback.print_exc()
+          for name in ('u1.py','u2.py'):
+              try:
+                  ns=runpy.run_path(str(root/'verify'/name),run_name='__portable_witness_probe__')
+                  print('CHECKER_OK',name,'keys',sorted(ns)[:30])
+              except BaseException as e:
+                  print('CHECKER_ERROR',name,type(e).__name__,repr(e)); traceback.print_exc()
+          PY
       - name: Replay portable witnesses and scan all translations
         id: scan
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/shot" "$RUNNER_TEMP/result"
-          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_t9_portable_extra_seeds.py \
+          set +e
+          python3 -X faulthandler science-boundary/shannon-capacity-c7/code/bpz_t9_portable_extra_seeds.py \
             "$RUNNER_TEMP/tan" "$RUNNER_TEMP/c7-five" \
             "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/status.json" \
-            > "$RUNNER_TEMP/result/stdout.txt" 2> "$RUNNER_TEMP/result/stderr.txt"
+            2>&1 | tee "$RUNNER_TEMP/result/combined.txt"
+          rc=${PIPESTATUS[0]}
+          set -e
+          if [[ $rc -ne 0 ]]; then echo "portable seed scan rc=$rc"; exit $rc; fi
           cat "$RUNNER_TEMP/result/status.json"
           if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
       - name: Verify breakthrough with Few Shots verifier
@@ -67,4 +94,4 @@ jobs:
         if: always()
         shell: bash
         run: |
-          { echo '## C7 portable extra t9 seed scan'; for f in status.json verify.json; do if [[ -f "$RUNNER_TEMP/result/$f" ]]; then echo '```json'; cat "$RUNNER_TEMP/result/$f"; echo '```'; fi; done; echo '### stderr'; echo '```text'; tail -n 80 "$RUNNER_TEMP/result/stderr.txt" 2>/dev/null || true; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          { echo '## C7 portable extra t9 seed scan'; for f in status.json verify.json; do if [[ -f "$RUNNER_TEMP/result/$f" ]]; then echo '```json'; cat "$RUNNER_TEMP/result/$f"; echo '```'; fi; done; echo '### combined'; echo '```text'; tail -n 120 "$RUNNER_TEMP/result/combined.txt" 2>/dev/null || true; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
