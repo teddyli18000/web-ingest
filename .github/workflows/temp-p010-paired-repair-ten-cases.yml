@@ -1,0 +1,56 @@
+name: temp-p010-paired-repair-ten-cases
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/tsplib_paired_subtour_repair.py
+      - .github/workflows/temp-p010-paired-repair-ten-cases.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  paired:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {instance: eil51, run: 40869449446, artifact: p010-blind-5case-public}
+          - {instance: berlin52, run: 40869449446, artifact: p010-blind-5case-public}
+          - {instance: st70, run: 40869449446, artifact: p010-blind-5case-public}
+          - {instance: eil76, run: 40869449446, artifact: p010-blind-5case-public}
+          - {instance: kroA100, run: 40869449446, artifact: p010-blind-5case-public}
+          - {instance: rat99, run: 40870679131, artifact: p010-unseen-v2-public}
+          - {instance: ch130, run: 40870679131, artifact: p010-unseen-v2-public}
+          - {instance: eil101, run: 40870679131, artifact: p010-unseen-v2-public}
+          - {instance: pr76, run: 40870679131, artifact: p010-unseen-v2-public}
+          - {instance: kroB100, run: 40870679131, artifact: p010-unseen-v2-public}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch only public instance and old parents
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/public
+          gh run download "${{ matrix.run }}" --repo teddyli18000/web-ingest \
+            --name "${{ matrix.artifact }}" --dir /tmp/public
+          python -m pip install numpy scipy ortools
+      - name: Derive exact two-factor counterexample, propose pairs, verify Hamiltonian
+        run: |
+          pub=$(find /tmp/public -name public.json -path '*/${{ matrix.instance }}/*' -print -quit)
+          test -s "$pub"
+          test ! -e /tmp/public/${{ matrix.instance }}/private.json
+          out="science-boundary/mona-lisa-tsp/results/paired-repair-${{ matrix.instance }}/result.json"
+          python science-boundary/mona-lisa-tsp/tsplib_paired_subtour_repair.py \
+            --public "$pub" --budget 12 --seconds 18 --output "$out"
+          test -s "$out"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-paired-subtour-${{ matrix.instance }}
+          path: science-boundary/mona-lisa-tsp/results/paired-repair-*/result.json
+          if-no-files-found: ignore
