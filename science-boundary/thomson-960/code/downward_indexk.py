@@ -8,11 +8,17 @@ During the search this subspace is tracked by maximum projection and orthogonal
 Procrustes alignment, which is robust to nearly degenerate symmetry multiplets.
 
 Each outer iteration alternates:
-  1. stable full-dimensional L-BFGS minimization with a quadratic restraint that
-     fixes displacement along the retained unstable subspace;
+  1. stable full-dimensional L-BFGS minimization with quadratic restraints that
+     fix displacement along the retained unstable subspace and the three rigid
+     rotation fields;
   2. a HiSD/Newton step inside the tracked subspace, using +g/|lambda| so the
      dynamics is uphill while a tracked curvature is positive and saddle-Newton
      when it is negative.
+
+The explicit rigid-rotation restraint is the Thomson-specific nullspace-
+preserving ingredient: the Hessian eigensolver already projects/lifts these
+three exact zero modes, and the constrained minimizer should not be allowed to
+spend iterations drifting along them.
 
 This generalizes downward_index2_to_index1.py to arbitrary modest Morse index.
 """
@@ -57,19 +63,19 @@ def align_subspace(prev,vals,V,r):
     W=V[:,ids].copy(); M=W.T@prev
     U,s,VT=np.linalg.svd(M,full_matrices=False)
     R=U@VT; A=W@R
-    # Re-orthonormalize against accumulated numerical noise.
     A,_=np.linalg.qr(A)
     overlap=float(np.sum(s*s)/r)
     return ids,A,overlap
 
 
-def stable_constrained_relax(qref,modes,penalty,maxiter):
+def stable_constrained_relax(qref,modes,penalty,rot_penalty,maxiter):
     n=len(qref)//2; tri=np.triu_indices(n,1)
     x0,_,_=sm.vars_to_xyz(qref); dots=np.clip(x0@x0.T,-1,1)
     r2=np.maximum(2-2*dots,1e-300); np.fill_diagonal(r2,np.inf)
     inv0=1/np.sqrt(r2); ref=np.asarray(inv0[tri],dtype=np.longdouble); ref_abs=float(np.sum(inv0[tri],dtype=np.float64))
     a0=qref.reshape(-1,2); sin0=np.maximum(np.sin(a0[:,0]),1e-6)
     M=modes
+    R=sm.rotation_basis(qref)
     def displacement(q):
         a=q.reshape(-1,2); dth=a[:,0]-a0[:,0]; dph=wrap_phi(a[:,1]-a0[:,1])
         return np.column_stack([dth,sin0*dph]).ravel()
@@ -79,9 +85,11 @@ def stable_constrained_relax(qref,modes,penalty,maxiter):
         inv=1/np.sqrt(r2); delta=float(np.sum(np.asarray(inv[tri],dtype=np.longdouble)-ref,dtype=np.longdouble))
         w=inv/r2; np.fill_diagonal(w,0); gc=w@x-np.sum(w,axis=1)[:,None]*x
         gq=np.column_stack([np.sum(gc*dth,axis=1),np.sum(gc*dph,axis=1)]).ravel()
-        y=displacement(q); c=M.T@y; py=penalty*(M@c)
+        y=displacement(q); c=M.T@y; cr=R.T@y
+        py=penalty*(M@c) + rot_penalty*(R@cr)
         pq=py.reshape(-1,2).copy(); pq[:,1]*=sin0
-        return delta+0.5*penalty*float(c@c),gq+pq.ravel()
+        f=delta+0.5*penalty*float(c@c)+0.5*rot_penalty*float(cr@cr)
+        return f,gq+pq.ravel()
     bounds=[(1e-8,PI-1e-8),(None,None)]*n
     res=minimize(obj,qref,jac=True,method='L-BFGS-B',bounds=bounds,
                  options={'maxiter':maxiter,'gtol':2e-9,'ftol':1e-15,'maxls':60,'maxcor':35})
@@ -96,7 +104,8 @@ def main():
     ap.add_argument('--escape-mode',type=int,default=0); ap.add_argument('--sign',type=int,choices=[-1,1],default=1)
     ap.add_argument('--escape-amp',type=float,default=0.0003); ap.add_argument('--outer',type=int,default=14)
     ap.add_argument('--k-search',type=int,default=20); ap.add_argument('--fd-step',type=float,default=3e-6)
-    ap.add_argument('--penalty',type=float,default=4e5); ap.add_argument('--perp-maxiter',type=int,default=750)
+    ap.add_argument('--penalty',type=float,default=4e5); ap.add_argument('--rot-penalty',type=float,default=2e5)
+    ap.add_argument('--perp-maxiter',type=int,default=750)
     ap.add_argument('--reaction-damping',type=float,default=0.35); ap.add_argument('--curv-floor',type=float,default=0.1)
     ap.add_argument('--max-reaction-rms',type=float,default=5e-5); ap.add_argument('--grad-tol',type=float,default=3e-5)
     ap.add_argument('--out',required=True); args=ap.parse_args()
@@ -114,11 +123,10 @@ def main():
         vals,V,Q,raw,c=low_modes(q,args.k_search,args.fd_step,v0=tracked[:,0]); hcalls+=c
         ids,tracked,ov=align_subspace(tracked,vals,V,r)
         g=pgrad(q,Q); before=float(np.linalg.norm(g)/math.sqrt(2*N)); gp=tracked.T@g
-        q,Eperp,nit,ok,msg=stable_constrained_relax(q,tracked,args.penalty,args.perp_maxiter)
+        q,Eperp,nit,ok,msg=stable_constrained_relax(q,tracked,args.penalty,args.rot_penalty,args.perp_maxiter)
         vals2,V2,Q2,raw2,c2=low_modes(q,args.k_search,args.fd_step,v0=tracked[:,0]); hcalls+=c2
         ids2,tracked,ov2=align_subspace(tracked,vals2,V2,r)
         g2=pgrad(q,Q2); gp2=tracked.T@g2
-        # Curvature matrix in the tracked basis. raw2 acts in physical tangent coordinates.
         K=np.column_stack([raw2(tracked[:,j]) for j in range(r)]); hcalls+=2*r
         K=tracked.T@K; K=0.5*(K+K.T)
         klam,U=np.linalg.eigh(K); coeff=U@((args.reaction_damping/np.maximum(np.abs(klam),args.curv_floor))*(U.T@gp2))
@@ -143,7 +151,7 @@ def main():
          'escape_mode':args.escape_mode,'sign':args.sign,'escape_amp':args.escape_amp,'target_index':parent_index-1,
          'status':status,'final_energy':float(Ef),'final_gradient_rms':grmsf,'negative_internal_modes_below_-1e-3':negf,
          'final_eigenvalues':[float(v) for v in valsf],'history':hist,'hessian_gradient_calls':hcalls,
-         'saddle_points':sm.vars_to_xyz(q)[0].tolist()}
+         'rot_penalty':args.rot_penalty,'saddle_points':sm.vars_to_xyz(q)[0].tolist()}
     pathlib.Path(args.out).write_text(json.dumps(out,separators=(',',':'))+'\n')
 
 if __name__=='__main__': main()
