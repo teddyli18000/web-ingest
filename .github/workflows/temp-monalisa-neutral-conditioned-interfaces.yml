@@ -1,0 +1,60 @@
+name: temp-monalisa-neutral-conditioned-interfaces
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/neutral_conditioned_interfaces.py
+      - .github/workflows/temp-monalisa-neutral-conditioned-interfaces.yml
+permissions:
+  contents: read
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {state: euclidean, k: 16, start: 0}
+          - {state: euclidean, k: 24, start: 40}
+          - {state: all, k: 16, start: 0}
+          - {state: all, k: 24, start: 40}
+          - {state: random, k: 20, start: 0}
+          - {state: random, k: 28, start: 40}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Official score data, exact optimizer and symbolic motifs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install scipy ortools
+          mkdir -p /tmp/p010-motifs
+          gh run download 40830451326 --repo teddyli18000/web-ingest --name monalisa-symbolic-exact-exit-1 --dir /tmp/p010-motifs
+          test -s /tmp/p010-motifs/positive-motifs.json
+      - name: Reoptimize nonlocal complete-metric path interfaces across distinct neutral-tour vertices
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          path="science-boundary/mona-lisa-tsp/results/neutral-interface-${{ matrix.state }}-${{ matrix.k }}-${{ matrix.start }}"
+          mkdir -p "$path"
+          python science-boundary/mona-lisa-tsp/neutral_conditioned_interfaces.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --neutral-moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --neutral-state ${{ matrix.state }} \
+            --motifs /tmp/p010-motifs/positive-motifs.json \
+            --report "$path/report.json" --certificate "$path/certificate.json" \
+            --k ${{ matrix.k }} --start-seed ${{ matrix.start }} --seeds 40 \
+            --trials 3 --time-per-model 2.0 --workers 2 --random-seed 20261028
+          if test -f "$path/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$path"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-neutral-interface-${{ matrix.state }}-${{ matrix.k }}-${{ matrix.start }}
+          path: science-boundary/mona-lisa-tsp/results/neutral-interface-*/
+          if-no-files-found: ignore
