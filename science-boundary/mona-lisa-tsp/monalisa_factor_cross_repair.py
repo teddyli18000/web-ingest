@@ -41,16 +41,17 @@ def main():
     a=p.parse_args();start=time.monotonic()
     spec=importlib.util.spec_from_file_location('verifier',Path(os.environ['FEWSHOTS_ROOT'])/
         'problems/p010-mona-lisa-tsp/verify/verify.py')
-    v=importlib.util.module_from_spec(spec);spec.loader.exec_module(v)
-    xs,ys=v.coordinates()
+    verifier=importlib.util.module_from_spec(spec);spec.loader.exec_module(verifier)
+    xs,ys=verifier.coordinates()
     xy=np.column_stack((xs,ys))
-    def dist(u,w):return v.euc_2d(xs[u]-xs[w],ys[u]-ys[w])
+    def dist(u,w):return verifier.euc_2d(xs[u]-xs[w],ys[u]-ys[w])
     baseline=json.loads(Path(a.baseline).read_text())['tour']
-    assert len(baseline)==N and v.tour_length(baseline)==5757191
+    assert len(baseline)==N and verifier.tour_length(baseline)==5757191
     tour=[x-1 for x in baseline]
     base={ek(tour[i],tour[(i+1)%N]) for i in range(N)}
     data=json.loads(Path(a.factor).read_text())
     cycles=int(data['cycles']);labels=list(map(int,data['component_labels']))
+    print(json.dumps({'stage':'loaded_factor','cycle_count':cycles,'sizes':data['cycle_sizes']}),flush=True)
     if cycles>15:raise RuntimeError(f'{cycles} factor cycles: needs different global repair formulation')
     old={tuple(x) for x in data['removed_baseline_edges']}
     new={tuple(x) for x in data['added_nonbaseline_edges']}
@@ -154,7 +155,7 @@ def main():
             # Any formally composed complete cycle must pass complete N-city
             # Hamiltonian reconstruction rather than relying only on the DSU.
             route=make_tour(edges)
-            objective=v.tour_length(route)
+            objective=verifier.tour_length(route)
             assert objective==original_score+delta
             winners.append((objective,route,history))
         winners.sort(key=lambda z:z[0])
@@ -167,7 +168,7 @@ def main():
                         'component_pair':list(h[3])} for h in history],
            'record_improved':best<5757191})
         blob=json.dumps({'tour':route},separators=(',',':')).encode()
-        verdict=v.verify_bytes(blob,v.load_config())
+        verdict=verifier.verify_bytes(blob,verifier.load_config())
         assert verdict['valid'] and int(verdict['score'])==best
         report['official_hash']=verdict['canonical_hash']
         if best<5757191:
