@@ -1,0 +1,50 @@
+name: temp-aes-decoupled-final-planes
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-decoupled-final-planes.yml'
+      - 'science-boundary/aes-sbox-circuit/search_decoupled_final_planes.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-decoupled-final-planes
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        prefix: [0,1,2,3,4,5,6,7,8]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Exact decoupled final-plane search
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=/tmp/aes-decoupled-final-${{ matrix.prefix }}
+          mkdir -p "$out"
+          python science-boundary/aes-sbox-circuit/search_decoupled_final_planes.py \
+            --prefix ${{ matrix.prefix }} --out "$out" | tee "$out/run.log"
+          python - <<'PY'
+          import json, glob
+          p=glob.glob('/tmp/aes-decoupled-final-*/summary.json')[0]
+          d=json.load(open(p))
+          assert d['live_regression'] == {'prelinear':18,'output_transpose':14,'total':102}
+          assert d['counts']['orientations'] == 3**7
+          print(json.dumps({'validated_summary': d}, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-decoupled-final-${{ matrix.prefix }}
+          path: /tmp/aes-decoupled-final-${{ matrix.prefix }}
