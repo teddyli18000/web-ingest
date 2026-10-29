@@ -1,0 +1,348 @@
+{
+  "instance": "ta41",
+  "objective": "Cmax",
+  "certified_score": 2006,
+  "official_fewshots_verdict": {
+    "valid": true,
+    "score": "2006",
+    "canonical_hash": "da4c71749fc5d2ba1d0b49eec2eb2801f02239699966582dfe8957298a771302",
+    "message": "ok"
+  },
+  "from_original_baseline": {
+    "kendall_pair_distance": 36,
+    "changed_machine_orders": 15,
+    "reversed_original_adjacent_pairs": 21
+  },
+  "from_gateway_124": {
+    "kendall_pair_distance": 6,
+    "changed_machine_orders": 5,
+    "reversed_original_adjacent_pairs": 5
+  },
+  "from_neutral_15_swaps": {
+    "kendall_pair_distance": 49,
+    "changed_machine_orders": 20,
+    "reversed_original_adjacent_pairs": 33
+  },
+  "core_reversals": {
+    "baseline-dynamic": 5,
+    "baseline-static": 5,
+    "baseline-core": 2,
+    "baseline-random": 4,
+    "124-dynamic": 1,
+    "124-static": 1,
+    "124-core": 1,
+    "124-random": 1,
+    "consensus-21": 1
+  },
+  "all_nine_independently_verified_core_cuts_violated_at_least_once": true,
+  "critical_edge_counts": {
+    "baseline": 53,
+    "gateway-124": 60,
+    "neutral-swap15": 53,
+    "ninecore-neutral": 60
+  },
+  "new_critical_edges_vs_baseline": [
+    [
+      1,
+      2,
+      8
+    ],
+    [
+      1,
+      8,
+      24
+    ],
+    [
+      1,
+      11,
+      2
+    ],
+    [
+      3,
+      16,
+      26
+    ],
+    [
+      3,
+      24,
+      10
+    ],
+    [
+      3,
+      25,
+      16
+    ],
+    [
+      7,
+      0,
+      29
+    ],
+    [
+      7,
+      29,
+      7
+    ],
+    [
+      8,
+      5,
+      11
+    ],
+    [
+      8,
+      6,
+      7
+    ],
+    [
+      8,
+      7,
+      26
+    ],
+    [
+      8,
+      26,
+      0
+    ],
+    [
+      9,
+      8,
+      2
+    ],
+    [
+      15,
+      2,
+      18
+    ],
+    [
+      15,
+      3,
+      24
+    ],
+    [
+      15,
+      7,
+      19
+    ],
+    [
+      15,
+      11,
+      8
+    ],
+    [
+      15,
+      18,
+      3
+    ],
+    [
+      15,
+      19,
+      28
+    ],
+    [
+      15,
+      24,
+      11
+    ],
+    [
+      15,
+      28,
+      29
+    ],
+    [
+      15,
+      29,
+      2
+    ],
+    [
+      19,
+      11,
+      27
+    ],
+    [
+      19,
+      27,
+      6
+    ]
+  ],
+  "disappeared_critical_edges_vs_baseline": [
+    [
+      1,
+      2,
+      24
+    ],
+    [
+      1,
+      8,
+      2
+    ],
+    [
+      1,
+      11,
+      8
+    ],
+    [
+      3,
+      16,
+      10
+    ],
+    [
+      3,
+      24,
+      16
+    ],
+    [
+      3,
+      25,
+      26
+    ],
+    [
+      6,
+      2,
+      28
+    ],
+    [
+      6,
+      25,
+      7
+    ],
+    [
+      6,
+      28,
+      25
+    ],
+    [
+      16,
+      8,
+      11
+    ],
+    [
+      16,
+      10,
+      2
+    ],
+    [
+      16,
+      11,
+      28
+    ],
+    [
+      16,
+      14,
+      16
+    ],
+    [
+      16,
+      16,
+      19
+    ],
+    [
+      16,
+      19,
+      27
+    ],
+    [
+      16,
+      27,
+      8
+    ],
+    [
+      16,
+      28,
+      10
+    ]
+  ],
+  "new_critical_edges_vs_gateway_124": [
+    [
+      1,
+      2,
+      8
+    ],
+    [
+      1,
+      8,
+      24
+    ],
+    [
+      1,
+      11,
+      2
+    ],
+    [
+      3,
+      16,
+      26
+    ],
+    [
+      3,
+      25,
+      16
+    ],
+    [
+      3,
+      26,
+      24
+    ],
+    [
+      15,
+      2,
+      18
+    ],
+    [
+      15,
+      3,
+      24
+    ],
+    [
+      15,
+      18,
+      3
+    ]
+  ],
+  "lost_critical_edges_vs_gateway_124": [
+    [
+      1,
+      2,
+      24
+    ],
+    [
+      1,
+      8,
+      2
+    ],
+    [
+      1,
+      11,
+      8
+    ],
+    [
+      3,
+      16,
+      24
+    ],
+    [
+      3,
+      25,
+      26
+    ],
+    [
+      3,
+      26,
+      16
+    ],
+    [
+      15,
+      2,
+      3
+    ],
+    [
+      15,
+      3,
+      18
+    ],
+    [
+      15,
+      18,
+      24
+    ]
+  ],
+  "scope": "Existing 2006 record is unchanged. This independently reconstructs quantitative novelty of a verified multi-core-crossing 2006 schedule, not evidence that target 2005 is reachable nearby."
+}
