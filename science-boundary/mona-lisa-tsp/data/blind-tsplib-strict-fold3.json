@@ -1,0 +1,646 @@
+{
+  "source_run": 40871715238,
+  "evaluator_status": "success",
+  "protocol": "post-unsealing independent evaluator; search sees public.json only",
+  "confounders": [],
+  "cases": [
+    {
+      "instance": "kroC100",
+      "certified_optimum": 20749,
+      "blind_incumbent": 21218,
+      "hidden_generator_best": 21052,
+      "missing_hidden_edges": 21,
+      "methods": [
+        {
+          "method": "uncertainty",
+          "score": 21067,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.03,
+          "hidden_structure_recall": 0.09524,
+          "hidden_target_edges_in_new_chords": 2,
+          "LP_meta": {
+            "novel_lp_supported": 12,
+            "fractional_lp_supported": 10
+          },
+          "optimal": false
+        },
+        {
+          "method": "conflict_v2",
+          "score": 20972,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.04,
+          "hidden_structure_recall": 0.38095,
+          "hidden_target_edges_in_new_chords": 3,
+          "LP_meta": {
+            "consensus_edges_rejected_by_LP": 4,
+            "selected_positive_LP": 5,
+            "selected_integer_one_LP": 5,
+            "selected_touch_rejected_consensus": 12
+          },
+          "optimal": false
+        },
+        {
+          "method": "paired_subtour_repair",
+          "score": 21031,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.043,
+          "hidden_structure_recall": 0.04762,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "two_factor": {
+              "status": "OPTIMAL",
+              "degree2_score": 20878,
+              "component_count": 3,
+              "component_sizes": [
+                5,
+                24,
+                71
+              ]
+            },
+            "pair_proposals": 4356,
+            "coherent_patches_selected": 9,
+            "novel_chords_from_pairs": 12,
+            "fallback_nearest_chords": 0
+          },
+          "optimal": false
+        },
+        {
+          "method": "nearest",
+          "score": 20972,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.03,
+          "hidden_structure_recall": 0.38095,
+          "hidden_target_edges_in_new_chords": 2,
+          "LP_meta": {
+            "uses_LP": false,
+            "uses_hidden": false
+          },
+          "optimal": false
+        },
+        {
+          "method": "random_8nn",
+          "score": 21075,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.048,
+          "hidden_structure_recall": 0.09524,
+          "hidden_target_edges_in_new_chords": 1,
+          "LP_meta": {
+            "uses_LP": false,
+            "uses_hidden": false
+          },
+          "optimal": false
+        },
+        {
+          "method": "repair",
+          "score": 21031,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.067,
+          "hidden_structure_recall": 0.04762,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "oracle_status": "OPTIMAL",
+            "oracle_components": 3,
+            "oracle_score": 20878
+          },
+          "optimal": false
+        },
+        {
+          "method": "control",
+          "score": 21075,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.02,
+          "hidden_structure_recall": 0.09524,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "baseline_only_parent_union": true
+          },
+          "optimal": false
+        },
+        {
+          "method": "local_delta",
+          "score": 20972,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.036,
+          "hidden_structure_recall": 0.38095,
+          "hidden_target_edges_in_new_chords": 3,
+          "LP_meta": {
+            "uses_LP": false,
+            "uses_hidden": false
+          },
+          "optimal": false
+        }
+      ]
+    },
+    {
+      "instance": "kroD100",
+      "certified_optimum": 21294,
+      "blind_incumbent": 21993,
+      "hidden_generator_best": 21844,
+      "missing_hidden_edges": 10,
+      "methods": [
+        {
+          "method": "uncertainty",
+          "score": 21411,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.413,
+          "hidden_structure_recall": 0.3,
+          "hidden_target_edges_in_new_chords": 2,
+          "LP_meta": {
+            "novel_lp_supported": 6,
+            "fractional_lp_supported": 2
+          },
+          "optimal": false
+        },
+        {
+          "method": "conflict_v2",
+          "score": 21411,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.619,
+          "hidden_structure_recall": 0.3,
+          "hidden_target_edges_in_new_chords": 3,
+          "LP_meta": {
+            "consensus_edges_rejected_by_LP": 0,
+            "selected_positive_LP": 4,
+            "selected_integer_one_LP": 4,
+            "selected_touch_rejected_consensus": 0
+          },
+          "optimal": false
+        },
+        {
+          "method": "paired_subtour_repair",
+          "score": 21411,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.474,
+          "hidden_structure_recall": 0.3,
+          "hidden_target_edges_in_new_chords": 1,
+          "LP_meta": {
+            "two_factor": {
+              "status": "OPTIMAL",
+              "degree2_score": 20742,
+              "component_count": 6,
+              "component_sizes": [
+                3,
+                3,
+                3,
+                3,
+                10,
+                78
+              ]
+            },
+            "pair_proposals": 3773,
+            "coherent_patches_selected": 9,
+            "novel_chords_from_pairs": 12,
+            "fallback_nearest_chords": 0
+          },
+          "optimal": false
+        },
+        {
+          "method": "nearest",
+          "score": 21491,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.972,
+          "hidden_structure_recall": 0.3,
+          "hidden_target_edges_in_new_chords": 3,
+          "LP_meta": {
+            "uses_LP": false,
+            "uses_hidden": false
+          },
+          "optimal": false
+        },
+        {
+          "method": "random_8nn",
+          "score": 21491,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.444,
+          "hidden_structure_recall": 0.3,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "uses_LP": false,
+            "uses_hidden": false
+          },
+          "optimal": false
+        },
+        {
+          "method": "repair",
+          "score": 21491,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.449,
+          "hidden_structure_recall": 0.3,
+          "hidden_target_edges_in_new_chords": 1,
+          "LP_meta": {
+            "oracle_status": "OPTIMAL",
+            "oracle_components": 6,
+            "oracle_score": 20742
+          },
+          "optimal": false
+        },
+        {
+          "method": "control",
+          "score": 21491,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.173,
+          "hidden_structure_recall": 0.3,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "baseline_only_parent_union": true
+          },
+          "optimal": false
+        },
+        {
+          "method": "local_delta",
+          "score": 21491,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.38,
+          "hidden_structure_recall": 0.3,
+          "hidden_target_edges_in_new_chords": 2,
+          "LP_meta": {
+            "uses_LP": false,
+            "uses_hidden": false
+          },
+          "optimal": false
+        }
+      ]
+    },
+    {
+      "instance": "kroE100",
+      "certified_optimum": 22068,
+      "blind_incumbent": 22628,
+      "hidden_generator_best": 22597,
+      "missing_hidden_edges": 3,
+      "methods": [
+        {
+          "method": "uncertainty",
+          "score": 22276,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.108,
+          "hidden_structure_recall": 1,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "novel_lp_supported": 12,
+            "fractional_lp_supported": 5
+          },
+          "optimal": false
+        },
+        {
+          "method": "conflict_v2",
+          "score": 22276,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.256,
+          "hidden_structure_recall": 1,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "consensus_edges_rejected_by_LP": 5,
+            "selected_positive_LP": 10,
+            "selected_integer_one_LP": 10,
+            "selected_touch_rejected_consensus": 9
+          },
+          "optimal": false
+        },
+        {
+          "method": "paired_subtour_repair",
+          "score": 22348,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.191,
+          "hidden_structure_recall": 1,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "two_factor": {
+              "status": "OPTIMAL",
+              "degree2_score": 22012,
+              "component_count": 4,
+              "component_sizes": [
+                4,
+                4,
+                7,
+                85
+              ]
+            },
+            "pair_proposals": 2687,
+            "coherent_patches_selected": 11,
+            "novel_chords_from_pairs": 12,
+            "fallback_nearest_chords": 0
+          },
+          "optimal": false
+        },
+        {
+          "method": "nearest",
+          "score": 22330,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.124,
+          "hidden_structure_recall": 1,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "uses_LP": false,
+            "uses_hidden": false
+          },
+          "optimal": false
+        },
+        {
+          "method": "random_8nn",
+          "score": 22333,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.132,
+          "hidden_structure_recall": 1,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "uses_LP": false,
+            "uses_hidden": false
+          },
+          "optimal": false
+        },
+        {
+          "method": "repair",
+          "score": 22348,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.207,
+          "hidden_structure_recall": 1,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "oracle_status": "OPTIMAL",
+            "oracle_components": 4,
+            "oracle_score": 22012
+          },
+          "optimal": false
+        },
+        {
+          "method": "control",
+          "score": 22348,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.092,
+          "hidden_structure_recall": 1,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "baseline_only_parent_union": true
+          },
+          "optimal": false
+        },
+        {
+          "method": "local_delta",
+          "score": 22330,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.141,
+          "hidden_structure_recall": 1,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "uses_LP": false,
+            "uses_hidden": false
+          },
+          "optimal": false
+        }
+      ]
+    },
+    {
+      "instance": "rd100",
+      "certified_optimum": 7910,
+      "blind_incumbent": 8201,
+      "hidden_generator_best": 8146,
+      "missing_hidden_edges": 6,
+      "methods": [
+        {
+          "method": "uncertainty",
+          "score": 8042,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.034,
+          "hidden_structure_recall": 0.5,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "novel_lp_supported": 12,
+            "fractional_lp_supported": 12
+          },
+          "optimal": false
+        },
+        {
+          "method": "conflict_v2",
+          "score": 8048,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.06,
+          "hidden_structure_recall": 0.5,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "consensus_edges_rejected_by_LP": 2,
+            "selected_positive_LP": 5,
+            "selected_integer_one_LP": 3,
+            "selected_touch_rejected_consensus": 11
+          },
+          "optimal": false
+        },
+        {
+          "method": "paired_subtour_repair",
+          "score": 8048,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.044,
+          "hidden_structure_recall": 0.5,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "two_factor": {
+              "status": "OPTIMAL",
+              "degree2_score": 7998,
+              "component_count": 2,
+              "component_sizes": [
+                25,
+                75
+              ]
+            },
+            "pair_proposals": 3747,
+            "coherent_patches_selected": 7,
+            "novel_chords_from_pairs": 12,
+            "fallback_nearest_chords": 0
+          },
+          "optimal": false
+        },
+        {
+          "method": "nearest",
+          "score": 8048,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.047,
+          "hidden_structure_recall": 0.5,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "uses_LP": false,
+            "uses_hidden": false
+          },
+          "optimal": false
+        },
+        {
+          "method": "random_8nn",
+          "score": 8048,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.061,
+          "hidden_structure_recall": 0.5,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "uses_LP": false,
+            "uses_hidden": false
+          },
+          "optimal": false
+        },
+        {
+          "method": "repair",
+          "score": 8048,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.062,
+          "hidden_structure_recall": 0.5,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "oracle_status": "OPTIMAL",
+            "oracle_components": 2,
+            "oracle_score": 7998
+          },
+          "optimal": false
+        },
+        {
+          "method": "control",
+          "score": 8048,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.025,
+          "hidden_structure_recall": 0.5,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "baseline_only_parent_union": true
+          },
+          "optimal": false
+        },
+        {
+          "method": "local_delta",
+          "score": 8048,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.044,
+          "hidden_structure_recall": 0.5,
+          "hidden_target_edges_in_new_chords": 2,
+          "LP_meta": {
+            "uses_LP": false,
+            "uses_hidden": false
+          },
+          "optimal": false
+        }
+      ]
+    },
+    {
+      "instance": "lin105",
+      "certified_optimum": 14379,
+      "blind_incumbent": 14722,
+      "hidden_generator_best": 14682,
+      "missing_hidden_edges": 16,
+      "methods": [
+        {
+          "method": "uncertainty",
+          "score": 14459,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.031,
+          "hidden_structure_recall": 0.1875,
+          "hidden_target_edges_in_new_chords": 2,
+          "LP_meta": {
+            "novel_lp_supported": 12,
+            "fractional_lp_supported": 5
+          },
+          "optimal": false
+        },
+        {
+          "method": "conflict_v2",
+          "score": 14459,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.042,
+          "hidden_structure_recall": 0.1875,
+          "hidden_target_edges_in_new_chords": 2,
+          "LP_meta": {
+            "consensus_edges_rejected_by_LP": 3,
+            "selected_positive_LP": 7,
+            "selected_integer_one_LP": 7,
+            "selected_touch_rejected_consensus": 8
+          },
+          "optimal": false
+        },
+        {
+          "method": "paired_subtour_repair",
+          "score": 14481,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.037,
+          "hidden_structure_recall": 0.0625,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "two_factor": {
+              "status": "OPTIMAL",
+              "degree2_score": 14414,
+              "component_count": 3,
+              "component_sizes": [
+                7,
+                12,
+                86
+              ]
+            },
+            "pair_proposals": 3435,
+            "coherent_patches_selected": 9,
+            "novel_chords_from_pairs": 12,
+            "fallback_nearest_chords": 0
+          },
+          "optimal": false
+        },
+        {
+          "method": "nearest",
+          "score": 14481,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.025,
+          "hidden_structure_recall": 0.0625,
+          "hidden_target_edges_in_new_chords": 1,
+          "LP_meta": {
+            "uses_LP": false,
+            "uses_hidden": false
+          },
+          "optimal": false
+        },
+        {
+          "method": "random_8nn",
+          "score": 14481,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.049,
+          "hidden_structure_recall": 0.0625,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "uses_LP": false,
+            "uses_hidden": false
+          },
+          "optimal": false
+        },
+        {
+          "method": "repair",
+          "score": 14481,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.054,
+          "hidden_structure_recall": 0.0625,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "oracle_status": "OPTIMAL",
+            "oracle_components": 3,
+            "oracle_score": 14414
+          },
+          "optimal": false
+        },
+        {
+          "method": "control",
+          "score": 14481,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.021,
+          "hidden_structure_recall": 0.0625,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "baseline_only_parent_union": true
+          },
+          "optimal": false
+        },
+        {
+          "method": "local_delta",
+          "score": 14481,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.039,
+          "hidden_structure_recall": 0.0625,
+          "hidden_target_edges_in_new_chords": 1,
+          "LP_meta": {
+            "uses_LP": false,
+            "uses_hidden": false
+          },
+          "optimal": false
+        }
+      ]
+    }
+  ]
+}
