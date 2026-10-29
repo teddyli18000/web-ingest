@@ -1,0 +1,67 @@
+name: temp-monalisa-island-boundary
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/island_boundary_search.py
+      - .github/workflows/temp-monalisa-island-boundary.yml
+permissions:
+  contents: read
+jobs:
+  boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {mode: single, radius: 3, neutral: false, allow_equal: true}
+          - {mode: single, radius: 3, neutral: true, allow_equal: false}
+          - {mode: single, radius: 4, neutral: true, allow_equal: false}
+          - {mode: single, radius: 5, neutral: true, allow_equal: false}
+          - {mode: double, radius: 3, neutral: true, allow_equal: false}
+          - {mode: double, radius: 4, neutral: true, allow_equal: false}
+          - {mode: double, radius: 5, neutral: true, allow_equal: false}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Get exact graph and authoritative verifier
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          git clone --depth 1 https://github.com/bicobico2/ElimTSP.git elimtsp
+          python -m pip install networkx ortools
+          mkdir -p /tmp/symbolic
+          gh run download 40830451326 --repo teddyli18000/web-ingest --name monalisa-symbolic-exact-exit-1 --dir /tmp/symbolic
+          test -s /tmp/symbolic/positive-motifs.json
+      - name: Exact island-seeded joint edge rerouting
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+          DO_NEUTRAL: ${{ matrix.neutral }}
+          DO_EQUAL: ${{ matrix.allow_equal }}
+        run: |
+          path=science-boundary/mona-lisa-tsp/results/island-${{ matrix.mode }}-${{ matrix.radius }}-${{ matrix.neutral }}-${{ matrix.allow_equal }}
+          mkdir -p "$path"
+          opts=()
+          if test "$DO_NEUTRAL" = true; then opts+=(--include-neutral); fi
+          if test "$DO_EQUAL" = true; then opts+=(--allow-equal); fi
+          python science-boundary/mona-lisa-tsp/island_boundary_search.py \
+            --graph elimtsp/results/mona.248972.edg.gz \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --neutral-moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --motifs /tmp/symbolic/positive-motifs.json \
+            --report "$path/report.json" --output "$path/certificate.json" \
+            --mode ${{ matrix.mode }} --radius ${{ matrix.radius }} \
+            --max-vertices 4500 --seconds 130 --workers 4 "${opts[@]}"
+          if test -f "$path/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$path"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-island-${{ matrix.mode }}-${{ matrix.radius }}-${{ matrix.neutral }}-${{ matrix.allow_equal }}
+          path: science-boundary/mona-lisa-tsp/results/island-*/
+          if-no-files-found: ignore
