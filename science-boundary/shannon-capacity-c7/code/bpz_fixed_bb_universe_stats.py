@@ -15,10 +15,21 @@ This script computes Z exhaustively from the pinned Tandon/BPZ data, compares it
 with the 16 private-pair endpoints Q=PH union PV, audits the graph on Q, and
 checks that the union of all 18 score-134753 terminal peripheries is exactly
 X x Q union Q x X.
+
+It also computes the exact singleton-support layer
+
+    W_b = {z : N[z] intersect B = {b}}
+
+for every b in B.  Deleting one core point (b,c) from BB unlocks exactly
+W_b x W_c at the core-compatibility level; after excluding the deleted point
+itself this contributes |W_b||W_c|-1 genuinely new non-core candidates.  These
+statistics size the next one-core-hole + global-periphery optimization without
+making any assumption about alpha(C7^5).
 """
 
 import argparse
 import json
+from collections import Counter, defaultdict
 from pathlib import Path
 import sys
 
@@ -72,7 +83,37 @@ def main():
     if owners|alts!=Q or owners&alts:
         raise RuntimeError(("private endpoint partition drift",owners,alts,Q))
 
-    Z={z for z in range(ring.n) if not (ring.NB[z]&B)}
+    support_hist=Counter()
+    singleton=defaultdict(list)
+    Z=set()
+    for z in range(ring.n):
+        S=ring.NB[z]&B
+        k=len(S); support_hist[k]+=1
+        if k==0:
+            Z.add(z)
+        elif k==1:
+            b=next(iter(S)); singleton[b].append(z)
+    if set(singleton)!=B:
+        raise RuntimeError(("some B owner lacks singleton-support points",len(singleton),len(B)))
+    for b in B:
+        if b not in singleton[b]:
+            raise RuntimeError(("B self missing from singleton class",b))
+        if set(singleton[b])&B!={b}:
+            raise RuntimeError(("singleton class contains wrong B point",b,set(singleton[b])&B))
+
+    singleton_sizes={b:len(singleton[b]) for b in B}
+    singleton_size_hist=Counter(singleton_sizes.values())
+    max_single=max(singleton_sizes.values())
+    top_single=sorted(singleton_sizes.items(),key=lambda kv:(-kv[1],kv[0]))[:40]
+    core_hole_sizes=[]
+    for b in sorted(B):
+        sb=singleton_sizes[b]
+        for c in sorted(B):
+            sc=singleton_sizes[c]
+            # W_b x W_c contains exactly one BB point, namely the deleted (b,c).
+            core_hole_sizes.append((sb*sc-1,b,c,sb,sc))
+    core_hole_sizes.sort(reverse=True)
+
     q_edges=[]; qv=sorted(Q)
     for i,a in enumerate(qv):
         for j in range(i+1,len(qv)):
@@ -102,11 +143,23 @@ def main():
     expected_xq={(x,q) for x in X for q in Q}|{(q,x) for q in Q for x in X}
 
     status={
-        "method":"exact-pinned-bpz-fixed-BB-universe-audit",
+        "method":"exact-pinned-bpz-fixed-BB-universe-and-singleton-support-audit",
         "I0_size":len(I),"B_size":len(B),"X_size":len(X),
         "private_pairs":[list(p) for p in pairs],
         "PH":sorted(PH),"PV":sorted(PV),"Q":qv,
+        "support_size_histogram":{str(k):v for k,v in sorted(support_hist.items())},
         "Z_size":len(Z),"Z":sorted(Z),"Z_equals_Q":Z==Q,
+        "singleton_support_total":sum(singleton_sizes.values()),
+        "singleton_support_owner_count":len(singleton_sizes),
+        "singleton_class_size_histogram":{str(k):v for k,v in sorted(singleton_size_hist.items())},
+        "singleton_class_max_size":max_single,
+        "top_singleton_classes":[{"owner":b,"size":s} for b,s in top_single],
+        "one_core_hole_count":len(core_hole_sizes),
+        "one_core_hole_max_new_candidates":core_hole_sizes[0][0],
+        "top_one_core_holes":[
+            {"core":[b,c],"new_candidates":n,"left_singleton":sb,"right_singleton":sc}
+            for n,b,c,sb,sc in core_hole_sizes[:60]
+        ],
         "Q_conflict_edges":len(q_edges),
         "Q_edge_pairs":[[qv[i],qv[j]] for i,j in q_edges],
         "private_pairs_all_conflict":all(pair_conflicts),
