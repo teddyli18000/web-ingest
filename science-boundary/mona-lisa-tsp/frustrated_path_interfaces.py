@@ -46,6 +46,10 @@ def main():
  pos={city:i for i,city in enumerate(original)}
  oldpos={key(original[i],original[(i+1)%n]):i for i in range(n)}
  motifs=json.loads(Path(a.motifs).read_text())['positive_repair_motifs']
+ usable=[(j,m) for j,m in enumerate(motifs)
+         if all(key(*q) in oldpos for q in m['old'])
+         and all(key(*q) not in oldpos for q in m['added'])]
+ assert usable
  rng=random.Random(a.random_seed)
  def enough(q,choices):
     return all(min((q-p)%n,(p-q)%n)>1 for p in choices)
@@ -156,27 +160,28 @@ def main():
  stats={'OPTIMAL':0,'INFEASIBLE':0,'UNKNOWN':0,'FEASIBLE':0,'MODEL_INVALID':0}
  best=5757191;records=[]
  target=Path(a.certificate)
- for i in range(a.start_seed,min(a.start_seed+a.seeds,len(motifs))):
-    seed=motifs[i]
+ for i in range(a.start_seed,min(a.start_seed+a.seeds,len(usable))):
+    original_motif_index,seed=usable[i]
     for trial in range(a.trials):
         cuts=choose_cuts(seed,trial)
         if cuts is None:continue
         result,route=exact(cuts,a.time_per_model)
         stats[result['status']]=stats.get(result['status'],0)+1
-        rec={'seed':i,'trial':trial,'cut_positions':cuts,**result}
+        rec={'seed_rank':i,'source_motif':original_motif_index,'trial':trial,'cut_positions':cuts,**result}
         records.append(rec)
         if route and result['score']<best:
             best=result['score']
             target.parent.mkdir(parents=True,exist_ok=True)
             target.write_text(json.dumps({'tour':route},separators=(',',':')))
             print(json.dumps({'stage':'breakthrough_candidate','score':best,
-                'seed':i,'trial':trial}),flush=True)
+                'seed_rank':i,'source_motif':original_motif_index,'trial':trial}),flush=True)
         if len(records)%40==0:
             print(json.dumps({'stage':'progress','models':len(records),
                 'best_score':best,'statuses':stats}),flush=True)
  report={'source':'Few Shots p010 baseline and symbolic positive motifs',
          'metric':'complete TSPLIB integer EUC_2D (not just planar sparse graph)',
-         'k':a.k,'seed_range':[a.start_seed,a.start_seed+a.seeds],
+         'k':a.k,'usable_seed_motifs':len(usable),
+         'seed_range':[a.start_seed,a.start_seed+a.seeds],
          'trials_per_seed':a.trials,'models':len(records),'statuses':stats,
          'best_verified_score':best,'wall_seconds':round(time.monotonic()-started,2),
          'records':records}
