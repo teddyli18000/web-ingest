@@ -1,0 +1,59 @@
+{
+  "S0_A28_B101": {
+    "all_unsat": true,
+    "branches": 8,
+    "nodes_total": 3518690,
+    "orbits_by_A": [720,816,1200,1152,864,528,1488,528]
+  },
+  "S0_A29_B102": {
+    "all_unsat": true,
+    "branches": 76,
+    "max_nodes": [355019,75],
+    "nodes_total": 1219397,
+    "orbits_total": 56358
+  },
+  "S1_A28_B101": {
+    "P": "no valid B101 typed label placement",
+    "Q_all_unsat": true,
+    "Q_branches": 8,
+    "Q_nodes_total": 158699,
+    "Q_orbits_by_A": [192,192,336,336,240,144,384,96]
+  },
+  "S1_A29_B102": {
+    "P_nonempty_pairs": [47],
+    "P_orbits_total": 9,
+    "Q_orbits_total": 18786,
+    "all_unsat": true,
+    "branches": 76,
+    "nodes_total": 83606
+  },
+  "all_unsat": true,
+  "campaign": "m219-n11-0-typed-column-csp-exact-cover-v1",
+  "catalog_counts": {"A28":8,"A29":1,"B101":1,"B102":76},
+  "catalog_sha256": {
+    "A28": "9b4b7e270b6da22c52385dbc21c41ac506b1d4a07837caffb54aa7e3c6f9e6a7",
+    "A29": "3598adba0f769168ae666fb1d0e4ddc653b646a48d12e6b4d5ddfa70ed2c4ce9",
+    "B101": "bf403d6b148c60a26d2536ade61d74d552972f701f3fdbb143478d97652c20ec",
+    "B102": "d32b5206d6782b9d9b51ba57fe962ff6d352716b6234c46dc6702443282e4be2"
+  },
+  "conclusion": "Both m=219 n11=0 degree sequences are excluded; any m=219 Ramsey(4,6,36) graph must contain a degree-11 vertex.",
+  "degree_sequences": {"S0":"12^30 13^6","S1":"12^31 13^4 14"},
+  "orbit_counts": {
+    "S0_A28_B101": 7296,
+    "S0_A29_B102": 56358,
+    "S1_A28_B101_P": 0,
+    "S1_A28_B101_Q": 1920,
+    "S1_A29_B102_P": 9,
+    "S1_A29_B102_Q": 18786,
+    "total": 84369
+  },
+  "orbit_generator": "m219_n11_0_orbit_cover.py",
+  "proof_reduction": [
+    "complete lucky-d12 exclusion implies each degree-12 vertex has high-degree excess weight at most 2 at m=219",
+    "S0 has a weight-2 degree-12 anchor because six degree-13 vertices send at least 54 edges to 30 low vertices",
+    "S1 has a weight-2 degree-12 anchor because total high-to-low excess weight is at least 56 across 31 low vertices",
+    "for a weight-2 anchor S(v)=146, so e(B)-e(A)=73; e(B)>=101 and e(A)<=29 force (eA,eB)=(28,101) or (29,102)"
+  ],
+  "solver": "m219_n11_0_typed_csp.cpp",
+  "timeouts": 0
+}
