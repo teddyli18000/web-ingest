@@ -1,0 +1,67 @@
+name: temp-ta41-critical-path-replacement-macro
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/replacement_macro_pilot.py'
+      - '.github/workflows/temp-ta41-critical-path-replacement-macro.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-critical-path-replacement-macro
+  cancel-in-progress: false
+jobs:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [dynamic, static, core, random]
+        parent: [baseline, '124']
+        seed: [4107, 4113]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python syntax and no external dependency needed
+        run: python3 -m py_compile science-boundary/job-shop-ta41/replacement_macro_pilot.py
+      - name: Matched atomic two-move replacement versus three static controls
+        run: |
+          python3 science-boundary/job-shop-ta41/replacement_macro_pilot.py \
+            --policy '${{ matrix.policy }}' --parent '${{ matrix.parent }}' \
+            --seed '${{ matrix.seed }}' --evaluations 22000 --first 8 \
+            --second 14 --first-uphill 180 --accept-uphill 24 \
+            --out 'science-boundary/job-shop-ta41/results/macro-${{ matrix.parent }}-${{ matrix.policy }}-${{ matrix.seed }}'
+      - name: Independently judge any strictly improved certificate against official Few Shots
+        if: always()
+        run: |
+          set -euo pipefail
+          out="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/macro-${{ matrix.parent }}-${{ matrix.policy }}-${{ matrix.seed }}"
+          if test -f "$out/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$out" | tee "$out/upstream-verdict.json"
+            python3 - "$out" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+          fi
+      - name: Commit reproducible matched outcome to main with concurrency retries
+        if: always()
+        run: |
+          set -euo pipefail
+          out='science-boundary/job-shop-ta41/results/macro-${{ matrix.parent }}-${{ matrix.policy }}-${{ matrix.seed }}'
+          if ! test -d "$out"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$out"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): coordinated path-replacement macro ${{ matrix.parent }} ${{ matrix.policy }} ${{ matrix.seed }}'
+          for i in $(seq 1 70); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 1
+          done
+          exit 1
