@@ -204,6 +204,28 @@ def search(inp,strategy,budget,out,seconds=12):
         meta={'baseline_only_parent_union':True}
     elif strategy=='repair':
         selected,meta=select_repair(ref,D,parents,budget,20261029)
+    elif strategy=='conflict_v2':
+        # Truly distinct method: inspect edges all historical parents agree on
+        # but LP assigns zero weight, then propose COMPLETE-GRAPH near-port
+        # alternatives. LP x~1 alternatives take priority when present.
+        agreed=set(base)
+        for parenttour in parents:agreed.intersection_update(edge_set(parenttour))
+        rejected=[e for e in agreed if lp.get(e,0)<1e-5]
+        conflict_vertices=np.zeros(n,dtype=np.int16)
+        for u,v in rejected:
+            conflict_vertices[u]+=1;conflict_vertices[v]+=1
+        universe=(E(u,v) for u in range(n) for v in range(u+1,n))
+        def conflict_rank(e):
+            u,v=e;x=lp.get(e,0)
+            return (-int(x>=1-1e-5),
+                    -(int(conflict_vertices[u])+int(conflict_vertices[v])),
+                    int(D[u,v]),-x,e)
+        selected=sorted((e for e in universe if e not in parent),
+                        key=conflict_rank)[:budget]
+        meta={'consensus_edges_rejected_by_LP':len(rejected),
+              'selected_positive_LP':sum(lp.get(e,0)>1e-5 for e in selected),
+              'selected_integer_one_LP':sum(lp.get(e,0)>=1-1e-5 for e in selected),
+              'selected_touch_rejected_consensus':sum(conflict_vertices[u]>0 or conflict_vertices[v]>0 for u,v in selected)}
     else:
         def keyscore(pair):
             (u,v),x=pair
