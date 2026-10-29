@@ -1,6 +1,9 @@
 name: temp-p010-factor-Pareto-patch-bounds
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/temp-p010-factor-pareto-patch-bounds.yml
   workflow_run:
     workflows: ["temp-p010-monalisa-factor-pareto-frontier"]
     types: [completed]
@@ -9,7 +12,7 @@ permissions:
   actions: read
 jobs:
   bounds:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 18
     steps:
