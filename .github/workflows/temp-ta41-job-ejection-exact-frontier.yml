@@ -1,0 +1,75 @@
+name: temp-ta41-job-ejection-exact-frontier
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/job_ejection_frontier.py'
+      - '.github/workflows/temp-ta41-job-ejection-exact-frontier.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-job-ejection-exact-frontier
+  cancel-in-progress: false
+jobs:
+  investigate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {k: 3, shard: 0, shards: 8, count: 4060}
+          - {k: 3, shard: 1, shards: 8, count: 4060}
+          - {k: 3, shard: 2, shards: 8, count: 4060}
+          - {k: 3, shard: 3, shards: 8, count: 4060}
+          - {k: 3, shard: 4, shards: 8, count: 4060}
+          - {k: 3, shard: 5, shards: 8, count: 4060}
+          - {k: 3, shard: 6, shards: 8, count: 4060}
+          - {k: 3, shard: 7, shards: 8, count: 4060}
+          - {k: 4, shard: 0, shards: 5, count: 500}
+          - {k: 4, shard: 1, shards: 5, count: 500}
+          - {k: 4, shard: 2, shards: 5, count: 500}
+          - {k: 4, shard: 3, shards: 5, count: 500}
+          - {k: 4, shard: 4, shards: 5, count: 500}
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned CP-SAT
+        run: python -m pip install 'ortools==9.14.6206'
+      - name: Test end-to-end all-machine job cohort reinsertions
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/job_ejection_frontier.py science-boundary/job-shop-ta41/job_ejection_search.py
+          python3 science-boundary/job-shop-ta41/job_ejection_frontier.py --k '${{ matrix.k }}' --sample-size '${{ matrix.count }}' --shard '${{ matrix.shard }}' --shards '${{ matrix.shards }}' --per-case-seconds 3 --total-seconds 530 --out 'science-boundary/job-shop-ta41/results/job-frontier-k${{ matrix.k }}-s${{ matrix.shard }}'
+      - name: Officially verify any improved certificate
+        run: |
+          set -euo pipefail
+          dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/job-frontier-k${{ matrix.k }}-s${{ matrix.shard }}"
+          if test -f "$dir/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$dir" | tee "$dir/upstream-verdict.json"
+            python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+          fi
+      - name: Persist research results despite concurrent main updates
+        if: always()
+        run: |
+          set -euo pipefail
+          dir="science-boundary/job-shop-ta41/results/job-frontier-k${{ matrix.k }}-s${{ matrix.shard }}"
+          if ! test -f "$dir/analysis.json"; then exit 1; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): record exact k${{ matrix.k }} globally reinserted jobs shard ${{ matrix.shard }}'
+          for attempt in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          echo 'Failed to persist completed research after 40 attempts' >&2
+          exit 1
