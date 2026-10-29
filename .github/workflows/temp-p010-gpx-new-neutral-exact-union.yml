@@ -1,0 +1,70 @@
+name: temp-p010-gpx-new-neutral-exact-union
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/gpx_neutral_novelty_merge.py
+      - .github/workflows/temp-p010-gpx-new-neutral-exact-union.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {mode: "neutral-only", include3: false}
+          - {mode: "plus-nearrecord", include3: true}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Source independent new GPX neutral and the earlier 58-edge-move catalogue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install ortools
+          python -m py_compile science-boundary/mona-lisa-tsp/gpx_neutral_novelty_merge.py
+          mkdir -p /tmp/neutral/offspring /tmp/neutral/factor /tmp/neutral/patch
+          gh run download 40883374235 --repo teddyli18000/web-ingest --name p010-gpx2-nearrecord-vs-nagata --dir /tmp/neutral/offspring
+          test "$(find /tmp/neutral/offspring -name offspring.json | wc -l)" -eq 1
+          if test "${{ matrix.include3 }}" = true; then
+            gh run download 40881188571 --repo teddyli18000/web-ingest --name p010-best-two-cycle-repair-evidence --dir /tmp/neutral/factor
+            gh run download 40881757984 --repo teddyli18000/web-ingest --name p010-two-cycle-three-opt-best-256 --dir /tmp/neutral/patch
+          fi
+      - name: Run strict exact union-graph test including novel GPX equal-score edges
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          extra=""
+          if test "${{ matrix.include3 }}" = true; then
+            f=$(find /tmp/neutral/factor -name best-twofactor.json -print -quit)
+            p=$(find /tmp/neutral/patch -name report.json -print -quit)
+            python science-boundary/mona-lisa-tsp/reconstruct_3opt_nearrecord.py \
+              --factor "$f" --patch "$p" --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+              --out /tmp/neutral/nearrecord.json
+            extra="--include-3opt --three-opt /tmp/neutral/nearrecord.json"
+          fi
+          child=$(find /tmp/neutral/offspring -name offspring.json -print -quit)
+          out="science-boundary/mona-lisa-tsp/results/gpx-new-neutral-${{ matrix.mode }}"
+          mkdir -p "$out"
+          python -u science-boundary/mona-lisa-tsp/gpx_neutral_novelty_merge.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --neutrals science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --offspring "$child" $extra --seconds 125 --workers 4 \
+            --report "$out/report.json" --candidate "$out/certificate.json"
+          test -s "$out/report.json"
+          if test -s "$out/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$out"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-gpx-novel-neutral-union-${{ matrix.mode }}
+          path: science-boundary/mona-lisa-tsp/results/gpx-new-neutral-*/
+          if-no-files-found: ignore
