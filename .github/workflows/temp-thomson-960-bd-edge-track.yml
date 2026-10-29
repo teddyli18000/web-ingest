@@ -1,0 +1,59 @@
+name: temp Thomson 960 B-D edge tracking from C index2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-bd-edge-track.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  edge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Download durable C reconstruction artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-cd-hessian
+          path: ${{ runner.temp }}/cd
+          github-token: ${{ github.token }}
+          run-id: 40732118945
+      - name: Edge-track B-D boundary inside C unstable manifold
+        run: |
+          python3 science-boundary/thomson-960/code/edge_track_index2_boundary.py \
+            "$RUNNER_TEMP/cd/basin-c.json" \
+            --b-json science-boundary/thomson-960/data/basin-b-010566.json \
+            --d-json science-boundary/thomson-960/data/basin-d-018586.json \
+            --phase-lo 40 --phase-hi 45 --amp 0.0015 --bisect 18 \
+            --flow-steps 5000 --eta 0.00035 --max-step 0.00010 \
+            --out "$RUNNER_TEMP/bd-edge.json"
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'bd-edge.json')))
+          print('EDGE',d['phase_bracket'],d['boundary_phase_deg'],d['best'])
+          PY
+      - name: Refine closest edge-state approach
+        run: |
+          python3 science-boundary/thomson-960/code/refine_saddle_hybrid.py \
+            "$RUNNER_TEMP/bd-edge.json" --outer 8 --penalty 350000 --perp-maxiter 650 \
+            --newton-damping 0.6 --max-reaction-rms 0.0003 \
+            --out "$RUNNER_TEMP/bd-edge-refined.json"
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'bd-edge-refined.json')))
+          print('REFINED',d['final_energy'],d['final_gradient_rms'],d['negative_internal_modes_below_-1e-3'],[m['eigenvalue'] for m in d['final_modes'][:5]])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-bd-edge-track
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/bd-edge.json
+            ${{ runner.temp }}/bd-edge-refined.json
