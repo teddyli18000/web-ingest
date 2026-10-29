@@ -1,0 +1,57 @@
+name: temp-monalisa-two-exchange-exit
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/symbolic_global_circuit.py
+      - .github/workflows/temp-monalisa-two-exchange-exit.yml
+permissions:
+  contents: read
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {mode: two-factor, max_motifs: 400}
+          - {mode: improve, max_motifs: 400}
+          - {mode: improve, max_motifs: 1400}
+          - {mode: improve, max_motifs: 2949}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Public baseline and exact motif archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install ortools
+          mkdir -p /tmp/symbolic
+          gh run download 40830451326 --repo teddyli18000/web-ingest --name monalisa-symbolic-exact-exit-1 --dir /tmp/symbolic
+          test -s /tmp/symbolic/positive-motifs.json
+      - name: Two simultaneous nonlocal exchanges and whole-tour connectivity
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          mkdir -p science-boundary/mona-lisa-tsp/results/two-exchange-${{ matrix.mode }}-${{ matrix.max_motifs }}
+          python science-boundary/mona-lisa-tsp/symbolic_global_circuit.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --motifs /tmp/symbolic/positive-motifs.json \
+            --report science-boundary/mona-lisa-tsp/results/two-exchange-${{ matrix.mode }}-${{ matrix.max_motifs }}/report.json \
+            --certificate science-boundary/mona-lisa-tsp/results/two-exchange-${{ matrix.mode }}-${{ matrix.max_motifs }}/certificate.json \
+            --minimum-gain 1 --repairs 2 --mode ${{ matrix.mode }} \
+            --max-motifs ${{ matrix.max_motifs }} --seconds 180 --workers 4
+          if test -f science-boundary/mona-lisa-tsp/results/two-exchange-${{ matrix.mode }}-${{ matrix.max_motifs }}/certificate.json; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py science-boundary/mona-lisa-tsp/results/two-exchange-${{ matrix.mode }}-${{ matrix.max_motifs }}
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-two-exchange-${{ matrix.mode }}-${{ matrix.max_motifs }}
+          path: science-boundary/mona-lisa-tsp/results/two-exchange-${{ matrix.mode }}-${{ matrix.max_motifs }}/
+          if-no-files-found: ignore
