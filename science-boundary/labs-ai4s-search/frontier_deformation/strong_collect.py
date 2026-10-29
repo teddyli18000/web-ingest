@@ -16,7 +16,7 @@ def energy(s):
 def canonical(s):
     def negate(t):return t.translate(str.maketrans('+-','-+'))
     def alternate(t):return ''.join(c if i%2==0 else ('+' if c=='-' else '-') for i,c in enumerate(t))
-    return min(z for base in (s,s[::-1]) for z in (base,negate(base),alternate(base),negate(alternate(base))))
+    return min(z.replace('+','1').replace('-','0') for base in (s,s[::-1]) for z in (base,negate(base),alternate(base),negate(alternate(base))))
 def skew(s):
     n=len(s);m=n//2
     return n%2==1 and all(s[m+j]==(s[m-j] if j%2==0 else ('+' if s[m-j]=='-' else '-')) for j in range(1,m+1))
