@@ -1,0 +1,59 @@
+name: temp-p010-two-cycle-best-factor-bridge
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/monalisa_dynamic_cycle_best_factor.py
+      - .github/workflows/temp-p010-two-cycle-best-factor-bridge.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  best:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Restore 100K two-cycle feedback counterexample and Few Shots official verifier
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install numpy scipy ortools
+          python -m py_compile science-boundary/mona-lisa-tsp/monalisa_dynamic_cycle_best_factor.py
+          mkdir -p /tmp/two
+          gh run download 40880661415 --repo teddyli18000/web-ingest --name p010-dynamic-four-cycle-feedback --dir /tmp/two
+          test "$(find /tmp/two -path '*/round-2/new-factor.json' | wc -l)" -eq 1
+      - name: Pin best two-cycle factor by lowest objective; then recompute direct geometric repair cost
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          input=$(find /tmp/two -path '*/round-2/new-factor.json' -print -quit)
+          dir=science-boundary/mona-lisa-tsp/results/two-cycle-best
+          mkdir -p "$dir"
+          python -u science-boundary/mona-lisa-tsp/monalisa_dynamic_cycle_best_factor.py \
+            --factor "$input" --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --budget 200 --within-budget 300 --neighbors 64 --within-neighbors 48 \
+            --limit 90 --workers 4 --threshold 5757190 \
+            --factor-snapshot "$dir/best-twofactor.json" \
+            --report "$dir/feedback-report.json" --certificate "$dir/feedback-certificate.json"
+          test -s "$dir/best-twofactor.json"
+          for nn in 64 128 256 512; do
+            python -u science-boundary/mona-lisa-tsp/monalisa_factor_cross_repair.py \
+              --factor "$dir/best-twofactor.json" \
+              --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+              --neighbors "$nn" --max-ports 30000 --top-per-component-pair 100 --beam 100 \
+              --report "$dir/patch-${nn}.json" --certificate "$dir/patch-${nn}-certificate.json"
+          done
+          if test -s "$dir/feedback-certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$dir"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-best-two-cycle-repair-evidence
+          path: science-boundary/mona-lisa-tsp/results/two-cycle-best/
+          if-no-files-found: ignore
