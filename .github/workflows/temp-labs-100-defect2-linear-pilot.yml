@@ -1,0 +1,69 @@
+name: temp labs-100 linearized odd-perfect defect2 pilot
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-defect2-linear-pilot.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pilot:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - support: '1,3'
+            A: 0
+            B: 0
+            cap: 524
+          - support: '1,49'
+            A: 0
+            B: 8
+            cap: 524
+          - support: '25,49'
+            A: 0
+            B: 20
+            cap: 524
+          - support: '47,49'
+            A: 0
+            B: 10
+            cap: 520
+          - support: '49,51'
+            A: 4
+            B: 0
+            cap: 524
+          - support: '95,97'
+            A: 0
+            B: 18
+            cap: 520
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Build support-linearized exact search
+        run: |
+          g++ -O3 -march=native -std=c++20 -DNDEBUG \
+            science-boundary/labs-100/code/oddperfect_support_linear_bnb.cpp \
+            -o /tmp/support-linear
+      - name: Search representative defect2 support/class
+        shell: bash
+        run: |
+          set +e
+          /tmp/support-linear --support '${{ matrix.support }}' \
+            --A '${{ matrix.A }}' --B '${{ matrix.B }}' --cap '${{ matrix.cap }}' \
+            --seconds 240 | tee /tmp/out.txt
+          rc=${PIPESTATUS[0]}
+          set -e
+          if grep -q '^FOUND ' /tmp/out.txt; then
+            seq=$(sed -n 's/^FOUND .* seq=//p' /tmp/out.txt | tail -n1)
+            python3 science-boundary/labs-100/code/verify.py -- "$seq"
+            exit 0
+          fi
+          if grep -q '^TIMEOUT ' /tmp/out.txt; then exit 1; fi
+          grep -F 'COMPLETE support=${{ matrix.support }} Aabs=${{ matrix.A }} Babs=${{ matrix.B }}' /tmp/out.txt
+          exit "$rc"
