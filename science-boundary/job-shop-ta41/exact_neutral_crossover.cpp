@@ -14,7 +14,7 @@ using namespace std;
 static constexpr int J=30, M=20, N=600;
 int p[J][M],dur[N],parents[2][M][J];
 int changed[M],d;
-long long checked,valid,cyclic,eq2006,better;
+uint64_t checked,valid,cyclic,eq2006,better;
 int best=100000000,first=100000000;
 uint64_t bestmask=0;
 int indeg[N],starttime[N],machine_succ[N],q[N];
