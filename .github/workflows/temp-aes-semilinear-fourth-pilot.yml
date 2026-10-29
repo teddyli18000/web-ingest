@@ -1,0 +1,50 @@
+name: temp-aes-semilinear-fourth-pilot
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-semilinear-fourth-pilot.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-semilinear-fourth-pilot
+  cancel-in-progress: false
+
+jobs:
+  exactcorr:
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        include:
+          - {tag: id, c: '0x01', k: 0, prefix: 0, third: 0, fourth: 0}
+          - {tag: id, c: '0x01', k: 0, prefix: 0, third: 0, fourth: 1}
+          - {tag: id, c: '0x01', k: 0, prefix: 0, third: 0, fourth: 2}
+          - {tag: 9d, c: '0x9d', k: 3, prefix: 0, third: 0, fourth: 0}
+          - {tag: 9d, c: '0x9d', k: 3, prefix: 0, third: 0, fourth: 1}
+          - {tag: 9d, c: '0x9d', k: 3, prefix: 0, third: 0, fourth: 2}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: {persist-credentials: false}
+      - name: Exact correction fourth shard
+        shell: bash
+        run: |
+          set -o pipefail
+          out=/tmp/aes-fourth-${{ matrix.tag }}-${{ matrix.prefix }}-${{ matrix.third }}-${{ matrix.fourth }}
+          mkdir -p "$out"
+          python science-boundary/aes-sbox-circuit/run_semilinear_fourth_shard.py \
+            --module search_semilinear_exactcorr \
+            --third ${{ matrix.third }} --fourth ${{ matrix.fourth }} -- \
+            --c ${{ matrix.c }} --k ${{ matrix.k }} --prefix ${{ matrix.prefix }} \
+            --max-support 4 --max-pre 19 --max-out 17 --out "$out" \
+            | tee "$out/run.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-fourth-${{ matrix.tag }}-${{ matrix.prefix }}-${{ matrix.third }}-${{ matrix.fourth }}
+          path: /tmp/aes-fourth-${{ matrix.tag }}-${{ matrix.prefix }}-${{ matrix.third }}-${{ matrix.fourth }}
