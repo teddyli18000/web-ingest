@@ -1,0 +1,45 @@
+name: temp-aes-gf16-right8
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-gf16-right8.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-gf16-right8
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [1, 2]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify solver-free right-support floor
+        run: python3 science-boundary/aes-sbox-circuit/prove_gf16_multiplier_right_support.py
+      - name: Install Z3
+        run: python3 -m pip install --disable-pip-version-check z3-solver==4.13.4.0
+      - name: Decide rank9 with at most eight right forms
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=/tmp/aes-gf16-right8-${{ matrix.seed }}
+          python3 science-boundary/aes-sbox-circuit/search_gf16_rank9_right8_z3.py \
+            --timeout 1800 --seed '${{ matrix.seed }}' --out "$out" | tee "$out.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-gf16-right8-${{ matrix.seed }}
+          path: |
+            /tmp/aes-gf16-right8-${{ matrix.seed }}
+            /tmp/aes-gf16-right8-${{ matrix.seed }}.log
