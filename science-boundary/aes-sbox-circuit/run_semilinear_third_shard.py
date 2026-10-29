@@ -61,6 +61,14 @@ def main():
     if known.module not in allowed:
         raise SystemExit(f"unsupported module: {known.module}")
 
+    # Workflows use a conventional bare `--` to visually separate wrapper
+    # arguments from the wrapped program's arguments.  argparse leaves that
+    # separator in parse_known_args()'s remainder.  Passing it onward would make
+    # the wrapped argparse stop option parsing and report all required options as
+    # missing.  Strip exactly one leading separator before delegation.
+    if rest and rest[0] == "--":
+        rest = rest[1:]
+
     module = importlib.import_module(known.module)
     module.itertools = ItertoolsProxy(known.third)
 
