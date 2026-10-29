@@ -1,0 +1,60 @@
+name: temp-p010-four-cycle-frontier-reoptimization
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/temp-p010-four-cycle-frontier-reoptimization.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {cycle: 4, cross: 200, within: 300}
+          - {cycle: 4, cross: 500, within: 800}
+          - {cycle: 4, cross: 800, within: 1600}
+          - {cycle: 4, cross: 1200, within: 2000}
+          - {cycle: 11, cross: 500, within: 800}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Load 4-cycle and 11-cycle factors from exact pareto SEC frontier
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install numpy scipy ortools
+          python -m py_compile science-boundary/mona-lisa-tsp/monalisa_joint_baseline_restoration.py
+          mkdir -p /tmp/factor-frontier
+          gh run download 40879009756 --repo teddyli18000/web-ingest --name p010-100k-factor-cost-subtour-frontier --dir /tmp/factor-frontier
+          test "$(find /tmp/factor-frontier -name 'factor-10-4cycles.json' | wc -l)" -eq 1
+      - name: Optimize direct tour connectivity and internal rewires from four-cycle low-repair factor
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          source=$(find /tmp/factor-frontier -name '*-${{ matrix.cycle }}cycles.json' -print -quit)
+          test -s "$source"
+          out="science-boundary/mona-lisa-tsp/results/frontier-four-cycle-${{ matrix.cycle }}-${{ matrix.cross }}-${{ matrix.within }}"
+          mkdir -p "$out"
+          python -u science-boundary/mona-lisa-tsp/monalisa_joint_baseline_restoration.py \
+            --factor "$source" --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --budget ${{ matrix.cross }} --within-budget ${{ matrix.within }} \
+            --neighbors 64 --within-neighbors 48 --workers 4 --limit 210 \
+            --threshold 5757190 --report "$out/report.json" --certificate "$out/certificate.json"
+          test -s "$out/report.json"
+          if test -s "$out/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$out"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-4cycle-joint-${{ matrix.cycle }}-${{ matrix.cross }}-${{ matrix.within }}
+          path: science-boundary/mona-lisa-tsp/results/frontier-four-cycle-*/
+          if-no-files-found: ignore
