@@ -87,6 +87,48 @@ def main(a):
         at=prev
     seq.reverse()
     assert len(seq)==15
+    # Exact monotone 2006-level reachability through all 32768 states.
+    reachable=[False]*size
+    reach_parent=[-1]*size
+    reachable[0]=True
+    for mask in range(1,size):
+        if scores[mask] is None or scores[mask]>2006:continue
+        cur=mask
+        while cur:
+            bit=cur&-cur
+            pred=mask^bit
+            if reachable[pred]:
+                reachable[mask]=True
+                reach_parent[mask]=pred
+                break
+            cur-=bit
+    assert reachable[-1] == (dp[-1]<=2006)
+    minimal_prerequisites=[]
+    for i,(m,k) in enumerate(flips):
+        bit=1<<i
+        possibilities=[mask for mask in range(size)
+                       if not (mask&bit) and reachable[mask]
+                       and scores[mask|bit] is not None
+                       and scores[mask|bit]<=2006]
+        assert possibilities
+        prereq=min(possibilities,key=lambda mask:(mask.bit_count(),mask))
+        history=[];cur=prereq
+        while cur:
+            old=reach_parent[cur]
+            assert old>=0
+            move=(cur^old).bit_length()-1
+            history.append(move)
+            cur=old
+        history.reverse()
+        assert len(history)==prereq.bit_count()
+        minimal_prerequisites.append({
+          'machine':m,'position':k,
+          'individual_makespan':scores[bit],
+          'minimal_other_swaps_before_this_can_be_applied_without_exceeding_2006':prereq.bit_count(),
+          'one_valid_preparation_sequence':[list(flips[j]) for j in history],
+          'makespan_after_preparation':scores[prereq],
+          'makespan_after_applying_move':scores[prereq|bit],
+        })
     exact=dict(
         instance='ta41',baseline_score=2006,other_endpoint_score=2006,
         both_endpoints_independently_verified=True,
@@ -97,6 +139,8 @@ def main(a):
         minimum_peak_makespan_on_any_monotone_ordering=dp[-1],
         minimum_required_monotone_uphill_degradation=dp[-1]-2006,
         individual_one_swap_makespans=[scores[1<<i] for i in range(15)],
+        exact_neutral_reachable_state_count=sum(reachable),
+        minimal_coordination_prerequisites=minimal_prerequisites,
         scores_by_size={str(k):dict(Counter(scores[mask] for mask in range(size) if mask.bit_count()==k))
                         for k in range(16)},
         optimal_minimax_move_sequence=seq,
@@ -104,7 +148,7 @@ def main(a):
         scope='EXACT for the 2^15 subsets of these specific 15 swaps only; not a bound on 2005 distance or arbitrary temporary moves.')
     a.out.parent.mkdir(parents=True,exist_ok=True)
     a.out.write_text(json.dumps(exact,indent=2)+'\n')
-    print('RESULT',json.dumps({k:v for k,v in exact.items() if k not in ('scores_by_size','optimal_minimax_move_sequence')},default=str),flush=True)
+    print('RESULT',json.dumps({k:v for k,v in exact.items() if k not in ('scores_by_size','optimal_minimax_move_sequence','minimal_coordination_prerequisites')},default=str),flush=True)
 
 if __name__=='__main__':
     p=argparse.ArgumentParser()
