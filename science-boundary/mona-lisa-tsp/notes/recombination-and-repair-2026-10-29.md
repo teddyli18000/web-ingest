@@ -1,0 +1,65 @@
+# p010: From local descent to exact recombination and priced connectivity defects
+Date: 2026-10-29
+
+## Question and falsifiable hypothesis
+
+The baseline Mona Lisa 100K tour costs 5,757,191 TSPLIB EUC_2D units. Our 51 commuting zero-cost switches create 2^51 valid equal-score tours; 58 verified one-step neutral tours are available. Earlier search repeatedly generated cheaper *disconnected 2-factors* and failed to repair them.
+
+**Hypothesis A:** rather than treating neutral moves as separate switches, allow all known alternative tour edges to recombine freely in a single exact Hamiltonian circuit solver. If the union contains a better tour, the difference is a genuinely new exchange of tour components not captured by the 51-switch hypercube.  
+**Hypothesis B:** make connectivity-repair cost (rather than local 2-factor gain) predict which *new* edges should be introduced. Compare at equal numbers of new chords with a common exact optimizer.  
+**Crucial caveat:** estimated nearest-cross-cut repair prices are **heuristic**. They are not LP dual multipliers, lower bounds or certified edge eliminations.
+
+## Relevant research — established prior art, not a novelty claim
+
+- Cook and Seymour, **Tour Merging via Branch-Decomposition** (2003), https://doi.org/10.1287/ijoc.15.3.233.16078: optimize over edges drawn from an ensemble of parent tours; helps explain why the parents' edge union, rather than per-parent move ordering, is the correct object.
+- Tinós, Whitley and Ochoa, **GPX2: Tunneling between Local Optima** (2020), https://doi.org/10.1162/evco_a_00254: partition crossover processes up to 2^k offspring in O(n); has public implementation https://github.com/rtinos/gpx2. Our exact union solver is *slower* and only suitable for very sparse and highly overlapping parents, but can prove no better solution exists in that union.
+- Carvalho and Whitley, **GPX3: Dramatically Faster Partition Crossover for the TSP** (GECCO 2025), https://doi.org/10.1145/3712256.3726465: improves the number of recombining components and linear-time implementation.
+- Varadarajan and Whitley, **Fine-Grain GPU Parallelization of GPX** (2026 preprint), https://arxiv.org/abs/2608.21233: graph-parallel GPX partitioning; speedups reported on 10K–2M nodes, with no claim about beating Mona Lisa record.
+- Song, Qi, Qi and Shen, **DualCert: Constraint-Coupled Learning** (2026 preprint), https://arxiv.org/abs/2608.09042: uses degree and SEC constraints to define a learned primal-dual update; reports results on TSP1000, not Mona Lisa 100K. Supports testing joint cost-and-constraint guidance, **not** asserting that its weights transfer out of sample.
+- **Learning Lagrangian Multipliers for the TSP** (CP 2024), https://drops.dagstuhl.de/storage/00lipics/lipics-vol307-cp2024/LIPIcs.CP.2024.22/LIPIcs.CP.2024.22.pdf: learned 1-tree multiplier bounds; a more principled alternative to our current heuristic cross-cut repair price.
+- Cook, Helsgaun, Hougardy, Schroeder, **Local Elimination** (2024), https://doi.org/10.1007/s12532-024-00262-y: certified small candidate graph, planar for Mona Lisa and already informed by LP reduced costs. Their sparse graph is not a proof that all alternative near-optimal tours lie inside it.
+
+## Completed tests
+
+### Test 1: exact 58-tour union, against exact 51-switch control
+
+Run [40843092607](https://github.com/teddyli18000/web-ingest/actions/runs/40843092607) (four jobs, finished successfully).  
+Implementation: `exact_tour_merge.py`, CP-SAT `AddCircuit` on contracted mandatory incumbent paths. It chooses **any** compatible subset of the parent-union edges and does not constrain results to saved moves.
+
+- All 58 parents: 209 unique nonbaseline edges, 415 changed cities, 783 contracted vertices, 813 active edges.
+- 51 independent parents: 195 unique nonbaseline edges, 387 changed cities, 731 contracted vertices, 759 active edges.
+- For *both* unions, requiring a score improvement of ≥1 resulted in solver `INFEASIBLE`.
+- For *both*, equality controls were `OPTIMAL` with official-verifier-accepted tours of exactly 5,757,191.
+- Precise claim: **No connected tour shorter than 5,757,191 can be assembled solely from the union of these 58 tours' edges.** No claim of global TSP optimality.
+
+### Test 2: cheap split versus true repair price on the complete Euclidean graph
+
+Run [40843492262](https://github.com/teddyli18000/web-ingest/actions/runs/40843492262) completed. Implementation: `price_topological_defects.py`.
+
+- All 2,949 positive local two-edge motifs were considered.
+- 2,269 were not applicable directly to the original baseline (they belong to alternative neutral switch states); 26 other baseline-valid motifs detached larger islands than the configured 80-city cap.
+- 654 baseline-valid island splits had their cheapest reconnect through up to 64 nearby cross-cut candidates per island city scored with the official exact integer EUC_2D metric.
+- **Best observed net gain: 0**. Thus no strictly shorter tour was generated by the tested reconnect candidates. Negative evidence only for the tested k-nearest crossing candidates, not a universal no-go theorem.
+- The produced artifact retains a price-aware ranking of 654 motifs by net gain after reconnecting.
+
+### Test 3: matched-budget candidate selection — execution
+
+Run [40843690531](https://github.com/teddyli18000/web-ingest/actions/runs/40843690531), launched as six jobs: 3 selectors (top local gain, top priced repair margin, random) × 2 fixed *added chord* budgets (128, 320). Every selector uses exactly the same 58-parent union, contracted AddCircuit formulation, full integer EUC_2D metric, solver resources, and target ≥1. `augmented_tour_merge.py` records the precise introduced edge set.
+
+**Decision rule:** improve benchmark tour = actual progress. Secondary: comparator makes a feasible connected candidate where another cannot; CP-SAT bound/cost/solve time if no improvement. If price-guided choice is no better, reject that selector rather than relabel it innovation.
+
+## Implications / reformulation
+
+The all-parent union test excludes a meaningful 813-edge neighborhood, but it is structurally narrow: all 58 parent tours differ from one baseline by at most a handful of edges and collectively contribute only 209 new edges. Flatness of this union **does not exclude** a richer population-driven move space. More diverse, high-quality candidate tours (LKH-3 with different warm starts, EAX and GPX3 output) are needed before expecting crossover to alter topology at distances not represented by existing parents.
+
+The strongest cross-disciplinary lesson is **constraint-coupled candidate selection**, not generic "train a GAN". Combine:
+1. A connected incumbent manifold (51 zero-cost generators).
+2. A reservoir of attractive *but disconnected* residual edge structures.
+3. Explicit costs for their connectivity defects, ideally LP/SEC duals or exact conditional bridges.
+4. A tour-merging/exact Hamiltonian construction stage that is never permitted to report a disconnected factor as success.
+
+**Next high-value step after matched-budget result:** generate genuinely diverse parent tours with LKH/EAX rather than perturbing the same 58 local variants; evaluate resulting union width, number of changed cities and evidence of successful recombination. Separately implement stable LP/subtour dual prices on reduced instances; do not conflate kNN repair estimates with true Lagrangian/LP dual prices.
+
+## Verification and record gate
+
+At the current checkpoint, **no tour below 5,757,191** is known from this project. Only a full certificate accepted by the official Few Shots p010 verifier counts; then follow the repository's submission procedure.
