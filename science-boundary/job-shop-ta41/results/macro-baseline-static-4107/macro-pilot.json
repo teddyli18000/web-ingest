@@ -1,0 +1,820 @@
+{
+  "instance": "ta41",
+  "target": 2005,
+  "baseline_makespan": 2006,
+  "parent": "baseline",
+  "policy": "static",
+  "seed": 4107,
+  "operator": "two coupled bounded insertions with new critical path recomputed after first tentative move",
+  "acceptance": "evaluate macro endpoints only; intermediate may be strictly worse",
+  "exact_score_evaluations": 22000,
+  "score_evaluation_budget": 22000,
+  "first_options": 8,
+  "second_options": 14,
+  "first_uphill": 180,
+  "accepted_final_uphill": 24,
+  "initial_critical_edges": 53,
+  "verified_best_score": 2006,
+  "distinct_accepted_schedule_count": 18,
+  "statistics": {
+    "tentative_new_path_count": 1369,
+    "final_acyclic": 17289,
+    "second_cyclic": 1864,
+    "first_over_threshold": 1166,
+    "macros_accepted": 46,
+    "macros_neutral": 2,
+    "macros_uphill": 44,
+    "accepted_with_harmful_first": 31,
+    "accepted_first_step_above_2006": 45,
+    "first_cyclic": 312,
+    "macros_without_candidate": 310,
+    "restarts": 2
+  },
+  "improvement_events": [],
+  "last_80_accepted_macros": [
+    {
+      "attempt": 1,
+      "evaluations": 92,
+      "first_intermediate_makespan": 2006,
+      "final_makespan": 2018,
+      "new_bottleneck_edges_after_first": 3,
+      "first": [
+        16,
+        18,
+        19
+      ],
+      "second": [
+        16,
+        15,
+        14
+      ]
+    },
+    {
+      "attempt": 16,
+      "evaluations": 1136,
+      "first_intermediate_makespan": 2092,
+      "final_makespan": 2018,
+      "new_bottleneck_edges_after_first": 14,
+      "first": [
+        1,
+        23,
+        22
+      ],
+      "second": [
+        1,
+        22,
+        23
+      ]
+    },
+    {
+      "attempt": 18,
+      "evaluations": 1278,
+      "first_intermediate_makespan": 2086,
+      "final_makespan": 2018,
+      "new_bottleneck_edges_after_first": 4,
+      "first": [
+        1,
+        23,
+        24
+      ],
+      "second": [
+        1,
+        23,
+        24
+      ]
+    },
+    {
+      "attempt": 27,
+      "evaluations": 1812,
+      "first_intermediate_makespan": 2081,
+      "final_makespan": 2018,
+      "new_bottleneck_edges_after_first": 14,
+      "first": [
+        16,
+        7,
+        8
+      ],
+      "second": [
+        16,
+        8,
+        7
+      ]
+    },
+    {
+      "attempt": 29,
+      "evaluations": 1940,
+      "first_intermediate_makespan": 2041,
+      "final_makespan": 2024,
+      "new_bottleneck_edges_after_first": 21,
+      "first": [
+        1,
+        20,
+        21
+      ],
+      "second": [
+        1,
+        20,
+        22
+      ]
+    },
+    {
+      "attempt": 37,
+      "evaluations": 2480,
+      "first_intermediate_makespan": 2018,
+      "final_makespan": 2029,
+      "new_bottleneck_edges_after_first": 17,
+      "first": [
+        5,
+        25,
+        26
+      ],
+      "second": [
+        1,
+        23,
+        22
+      ]
+    },
+    {
+      "attempt": 45,
+      "evaluations": 3020,
+      "first_intermediate_makespan": 2070,
+      "final_makespan": 2029,
+      "new_bottleneck_edges_after_first": 6,
+      "first": [
+        16,
+        9,
+        8
+      ],
+      "second": [
+        16,
+        9,
+        8
+      ]
+    },
+    {
+      "attempt": 46,
+      "evaluations": 3084,
+      "first_intermediate_makespan": 2147,
+      "final_makespan": 2029,
+      "new_bottleneck_edges_after_first": 21,
+      "first": [
+        11,
+        5,
+        3
+      ],
+      "second": [
+        11,
+        3,
+        5
+      ]
+    },
+    {
+      "attempt": 49,
+      "evaluations": 3332,
+      "first_intermediate_makespan": 2022,
+      "final_makespan": 2022,
+      "new_bottleneck_edges_after_first": 6,
+      "first": [
+        7,
+        26,
+        27
+      ],
+      "second": [
+        3,
+        25,
+        26
+      ]
+    },
+    {
+      "attempt": 53,
+      "evaluations": 3616,
+      "first_intermediate_makespan": 2040,
+      "final_makespan": 2022,
+      "new_bottleneck_edges_after_first": 4,
+      "first": [
+        11,
+        3,
+        4
+      ],
+      "second": [
+        11,
+        3,
+        4
+      ]
+    },
+    {
+      "attempt": 76,
+      "evaluations": 5032,
+      "first_intermediate_makespan": 2081,
+      "final_makespan": 2022,
+      "new_bottleneck_edges_after_first": 5,
+      "first": [
+        16,
+        5,
+        6
+      ],
+      "second": [
+        16,
+        5,
+        6
+      ]
+    },
+    {
+      "attempt": 95,
+      "evaluations": 6178,
+      "first_intermediate_makespan": 2130,
+      "final_makespan": 2022,
+      "new_bottleneck_edges_after_first": 7,
+      "first": [
+        1,
+        19,
+        17
+      ],
+      "second": [
+        1,
+        17,
+        19
+      ]
+    },
+    {
+      "attempt": 96,
+      "evaluations": 6242,
+      "first_intermediate_makespan": 2127,
+      "final_makespan": 2022,
+      "new_bottleneck_edges_after_first": 3,
+      "first": [
+        2,
+        4,
+        1
+      ],
+      "second": [
+        2,
+        1,
+        4
+      ]
+    },
+    {
+      "attempt": 100,
+      "evaluations": 6526,
+      "first_intermediate_makespan": 2046,
+      "final_makespan": 2022,
+      "new_bottleneck_edges_after_first": 25,
+      "first": [
+        11,
+        4,
+        5
+      ],
+      "second": [
+        11,
+        4,
+        5
+      ]
+    },
+    {
+      "attempt": 101,
+      "evaluations": 6590,
+      "first_intermediate_makespan": 2120,
+      "final_makespan": 2022,
+      "new_bottleneck_edges_after_first": 21,
+      "first": [
+        16,
+        11,
+        12
+      ],
+      "second": [
+        16,
+        12,
+        11
+      ]
+    },
+    {
+      "attempt": 104,
+      "evaluations": 6824,
+      "first_intermediate_makespan": 2184,
+      "final_makespan": 2022,
+      "new_bottleneck_edges_after_first": 22,
+      "first": [
+        16,
+        14,
+        12
+      ],
+      "second": [
+        16,
+        12,
+        14
+      ]
+    },
+    {
+      "attempt": 105,
+      "evaluations": 6888,
+      "first_intermediate_makespan": 2119,
+      "final_makespan": 2022,
+      "new_bottleneck_edges_after_first": 7,
+      "first": [
+        1,
+        18,
+        16
+      ],
+      "second": [
+        1,
+        16,
+        18
+      ]
+    },
+    {
+      "attempt": 118,
+      "evaluations": 7608,
+      "first_intermediate_makespan": 2168,
+      "final_makespan": 2022,
+      "new_bottleneck_edges_after_first": 20,
+      "first": [
+        15,
+        14,
+        16
+      ],
+      "second": [
+        15,
+        16,
+        14
+      ]
+    },
+    {
+      "attempt": 119,
+      "evaluations": 7658,
+      "first_intermediate_makespan": 2055,
+      "final_makespan": 2022,
+      "new_bottleneck_edges_after_first": 6,
+      "first": [
+        1,
+        17,
+        16
+      ],
+      "second": [
+        1,
+        16,
+        17
+      ]
+    },
+    {
+      "attempt": 120,
+      "evaluations": 7750,
+      "first_intermediate_makespan": 2184,
+      "final_makespan": 2022,
+      "new_bottleneck_edges_after_first": 22,
+      "first": [
+        16,
+        14,
+        12
+      ],
+      "second": [
+        16,
+        12,
+        14
+      ]
+    },
+    {
+      "attempt": 121,
+      "evaluations": 7800,
+      "first_intermediate_makespan": 2186,
+      "final_makespan": 2006,
+      "new_bottleneck_edges_after_first": 11,
+      "first": [
+        5,
+        12,
+        10
+      ],
+      "second": [
+        5,
+        10,
+        12
+      ]
+    },
+    {
+      "attempt": 127,
+      "evaluations": 8212,
+      "first_intermediate_makespan": 2076,
+      "final_makespan": 2006,
+      "new_bottleneck_edges_after_first": 22,
+      "first": [
+        5,
+        13,
+        11
+      ],
+      "second": [
+        5,
+        11,
+        13
+      ]
+    },
+    {
+      "attempt": 128,
+      "evaluations": 8304,
+      "first_intermediate_makespan": 2024,
+      "final_makespan": 2024,
+      "new_bottleneck_edges_after_first": 10,
+      "first": [
+        3,
+        21,
+        19
+      ],
+      "second": [
+        16,
+        14,
+        15
+      ]
+    },
+    {
+      "attempt": 149,
+      "evaluations": 9648,
+      "first_intermediate_makespan": 2020,
+      "final_makespan": 2020,
+      "new_bottleneck_edges_after_first": 4,
+      "first": [
+        19,
+        26,
+        27
+      ],
+      "second": [
+        3,
+        26,
+        25
+      ]
+    },
+    {
+      "attempt": 153,
+      "evaluations": 9876,
+      "first_intermediate_makespan": 2183,
+      "final_makespan": 2020,
+      "new_bottleneck_edges_after_first": 12,
+      "first": [
+        3,
+        19,
+        17
+      ],
+      "second": [
+        3,
+        17,
+        21
+      ]
+    },
+    {
+      "attempt": 155,
+      "evaluations": 10018,
+      "first_intermediate_makespan": 2099,
+      "final_makespan": 2020,
+      "new_bottleneck_edges_after_first": 27,
+      "first": [
+        3,
+        20,
+        19
+      ],
+      "second": [
+        3,
+        20,
+        19
+      ]
+    },
+    {
+      "attempt": 171,
+      "evaluations": 11042,
+      "first_intermediate_makespan": 2082,
+      "final_makespan": 2020,
+      "new_bottleneck_edges_after_first": 6,
+      "first": [
+        3,
+        26,
+        27
+      ],
+      "second": [
+        3,
+        27,
+        26
+      ]
+    },
+    {
+      "attempt": 172,
+      "evaluations": 11120,
+      "first_intermediate_makespan": 2155,
+      "final_makespan": 2020,
+      "new_bottleneck_edges_after_first": 25,
+      "first": [
+        16,
+        15,
+        12
+      ],
+      "second": [
+        16,
+        12,
+        15
+      ]
+    },
+    {
+      "attempt": 176,
+      "evaluations": 11334,
+      "first_intermediate_makespan": 2009,
+      "final_makespan": 2027,
+      "new_bottleneck_edges_after_first": 11,
+      "first": [
+        16,
+        15,
+        14
+      ],
+      "second": [
+        11,
+        4,
+        3
+      ]
+    },
+    {
+      "attempt": 202,
+      "evaluations": 12606,
+      "first_intermediate_makespan": 2009,
+      "final_makespan": 2020,
+      "new_bottleneck_edges_after_first": 11,
+      "first": [
+        11,
+        4,
+        3
+      ],
+      "second": [
+        3,
+        21,
+        19
+      ]
+    },
+    {
+      "attempt": 203,
+      "evaluations": 12684,
+      "first_intermediate_makespan": 2033,
+      "final_makespan": 2020,
+      "new_bottleneck_edges_after_first": 18,
+      "first": [
+        11,
+        5,
+        4
+      ],
+      "second": [
+        11,
+        4,
+        5
+      ]
+    },
+    {
+      "attempt": 217,
+      "evaluations": 13524,
+      "first_intermediate_makespan": 2009,
+      "final_makespan": 2024,
+      "new_bottleneck_edges_after_first": 5,
+      "first": [
+        3,
+        19,
+        21
+      ],
+      "second": [
+        1,
+        26,
+        25
+      ]
+    },
+    {
+      "attempt": 223,
+      "evaluations": 13908,
+      "first_intermediate_makespan": 2075,
+      "final_makespan": 2024,
+      "new_bottleneck_edges_after_first": 14,
+      "first": [
+        2,
+        1,
+        0
+      ],
+      "second": [
+        2,
+        0,
+        1
+      ]
+    },
+    {
+      "attempt": 227,
+      "evaluations": 14136,
+      "first_intermediate_makespan": 2109,
+      "final_makespan": 2024,
+      "new_bottleneck_edges_after_first": 7,
+      "first": [
+        1,
+        28,
+        24
+      ],
+      "second": [
+        1,
+        24,
+        28
+      ]
+    },
+    {
+      "attempt": 247,
+      "evaluations": 15430,
+      "first_intermediate_makespan": 2024,
+      "final_makespan": 2024,
+      "new_bottleneck_edges_after_first": 6,
+      "first": [
+        1,
+        26,
+        25
+      ],
+      "second": [
+        16,
+        15,
+        14
+      ]
+    },
+    {
+      "attempt": 265,
+      "evaluations": 16428,
+      "first_intermediate_makespan": 2117,
+      "final_makespan": 2024,
+      "new_bottleneck_edges_after_first": 15,
+      "first": [
+        16,
+        11,
+        12
+      ],
+      "second": [
+        16,
+        12,
+        11
+      ]
+    },
+    {
+      "attempt": 267,
+      "evaluations": 16542,
+      "first_intermediate_makespan": 2048,
+      "final_makespan": 2024,
+      "new_bottleneck_edges_after_first": 14,
+      "first": [
+        11,
+        5,
+        4
+      ],
+      "second": [
+        11,
+        4,
+        5
+      ]
+    },
+    {
+      "attempt": 288,
+      "evaluations": 17816,
+      "first_intermediate_makespan": 2018,
+      "final_makespan": 2030,
+      "new_bottleneck_edges_after_first": 27,
+      "first": [
+        1,
+        25,
+        26
+      ],
+      "second": [
+        1,
+        29,
+        28
+      ]
+    },
+    {
+      "attempt": 301,
+      "evaluations": 18676,
+      "first_intermediate_makespan": 2019,
+      "final_makespan": 2030,
+      "new_bottleneck_edges_after_first": 9,
+      "first": [
+        16,
+        15,
+        14
+      ],
+      "second": [
+        16,
+        14,
+        15
+      ]
+    },
+    {
+      "attempt": 302,
+      "evaluations": 18754,
+      "first_intermediate_makespan": 2029,
+      "final_makespan": 2022,
+      "new_bottleneck_edges_after_first": 18,
+      "first": [
+        18,
+        15,
+        14
+      ],
+      "second": [
+        1,
+        29,
+        28
+      ]
+    },
+    {
+      "attempt": 305,
+      "evaluations": 18946,
+      "first_intermediate_makespan": 2104,
+      "final_makespan": 2022,
+      "new_bottleneck_edges_after_first": 26,
+      "first": [
+        1,
+        28,
+        24
+      ],
+      "second": [
+        1,
+        24,
+        28
+      ]
+    },
+    {
+      "attempt": 311,
+      "evaluations": 19414,
+      "first_intermediate_makespan": 2026,
+      "final_makespan": 2026,
+      "new_bottleneck_edges_after_first": 21,
+      "first": [
+        1,
+        11,
+        13
+      ],
+      "second": [
+        3,
+        26,
+        25
+      ]
+    },
+    {
+      "attempt": 314,
+      "evaluations": 19634,
+      "first_intermediate_makespan": 2083,
+      "final_makespan": 2026,
+      "new_bottleneck_edges_after_first": 6,
+      "first": [
+        1,
+        18,
+        19
+      ],
+      "second": [
+        1,
+        18,
+        19
+      ]
+    },
+    {
+      "attempt": 318,
+      "evaluations": 19890,
+      "first_intermediate_makespan": 2022,
+      "final_makespan": 2024,
+      "new_bottleneck_edges_after_first": 18,
+      "first": [
+        1,
+        13,
+        10
+      ],
+      "second": [
+        3,
+        21,
+        19
+      ]
+    },
+    {
+      "attempt": 351,
+      "evaluations": 21694,
+      "first_intermediate_makespan": 2022,
+      "final_makespan": 2030,
+      "new_bottleneck_edges_after_first": 25,
+      "first": [
+        3,
+        19,
+        21
+      ],
+      "second": [
+        16,
+        18,
+        17
+      ]
+    },
+    {
+      "attempt": 356,
+      "evaluations": 22000,
+      "first_intermediate_makespan": 2022,
+      "final_makespan": 2029,
+      "new_bottleneck_edges_after_first": 10,
+      "first": [
+        16,
+        18,
+        17
+      ],
+      "second": [
+        1,
+        28,
+        29
+      ]
+    }
+  ],
+  "elapsed_seconds": 12.114,
+  "status": "NO_IMPROVEMENT"
+}
