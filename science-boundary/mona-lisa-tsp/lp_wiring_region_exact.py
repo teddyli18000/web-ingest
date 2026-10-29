@@ -25,6 +25,7 @@ def main():
     for name in ('baseline','tours','lps','components','report','candidate'):
         p.add_argument('--'+name,required=True)
     p.add_argument('--selector',choices=['persistent','ambiguous','random'],required=True)
+    p.add_argument('--attachment',choices=['interior','cross'],default='interior')
     p.add_argument('--nregions',type=int,default=3)
     p.add_argument('--lp-budget',type=int,default=256)
     p.add_argument('--seconds',type=float,default=110)
@@ -41,6 +42,10 @@ def main():
     regions=sorted(comps,key=lambda c:(-c['priority_score'],-c['joint_nodes']))[:args.nregions]
     vertices={int(q) for c in regions for q in c['members_0based']}
     assert vertices
+    comp_map=[-1]*N
+    for c in comps:
+        for u in c['members_0based']:comp_map[int(u)]=c['id']
+    top_ids={c['id'] for c in regions}
     paths=json.loads(Path(args.tours).read_text())
     alt=Counter()
     for path in paths.values():
@@ -58,7 +63,12 @@ def main():
             if not frac:continue
             en=int(e)
             u,w=unpack(en)
-            if u not in vertices or w not in vertices or en in base_edges or en in alt:continue
+            if args.attachment=='interior':
+                allowed=(u in vertices and w in vertices)
+            else:
+                allowed=(comp_map[u]!=comp_map[w] and
+                         (comp_map[u] in top_ids or comp_map[w] in top_ids))
+            if not allowed or en in base_edges or en in alt:continue
             values.setdefault(en,[]).append(float(x))
     pool=list(values)
     assert len(pool)>=args.lp_budget,(len(pool),args.lp_budget)
@@ -93,7 +103,7 @@ def main():
     solver.parameters.max_time_in_seconds=args.seconds
     solver.parameters.num_search_workers=args.workers
     solver.parameters.random_seed=20261029
-    report={'selector':args.selector,'regions':args.nregions,
+    report={'selector':args.selector,'attachment':args.attachment,'regions':args.nregions,
       'region_ids':[c['id'] for c in regions],
       'region_cities':len(vertices),'historical_edges_added':len(alt),
       'LP_fractional_candidate_pool':len(pool),
