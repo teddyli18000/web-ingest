@@ -27,7 +27,7 @@ jobs:
       - name: Fetch authoritative source and optimizer
         run: |
           git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
-          python -m pip install ortools
+          python -m pip install ortools networkx
           python upstream/problems/p010-mona-lisa-tsp/verify/verify.py upstream/problems/p010-mona-lisa-tsp/baseline
       - name: Solve exact connected tour over union of parents
         env:
