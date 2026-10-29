@@ -1,0 +1,59 @@
+name: temp-p010-joint-100k-port-internal-sec
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/monalisa_joint_port_internal_sec.py
+      - .github/workflows/temp-p010-joint-100k-port-internal-sec.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  joint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {cross: 300, within: 400, near: 24}
+          - {cross: 600, within: 1000, near: 32}
+          - {cross: 1200, within: 2000, near: 48}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch validated 100K counterexample factor and original Few Shots scorer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install numpy scipy ortools
+          python -m py_compile science-boundary/mona-lisa-tsp/monalisa_joint_port_internal_sec.py
+          mkdir -p /tmp/p010-factor
+          gh run download 40874145856 --repo teddyli18000/web-ingest --name p010-monalisa-sec-100k-defect-factor --dir /tmp/p010-factor
+          test "$(find /tmp/p010-factor -name disconnected-factor.json | wc -l)" -eq 1
+      - name: Exact joint variable interior and cross-cycle edge reoptimization
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          source=$(find /tmp/p010-factor -name disconnected-factor.json -print -quit)
+          dir="science-boundary/mona-lisa-tsp/results/joint-internal-${{ matrix.cross }}-${{ matrix.within }}"
+          mkdir -p "$dir"
+          python -u science-boundary/mona-lisa-tsp/monalisa_joint_port_internal_sec.py \
+            --factor "$source" --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --budget ${{ matrix.cross }} --within-budget ${{ matrix.within }} \
+            --within-neighbors ${{ matrix.near }} --neighbors 48 \
+            --limit 220 --workers 4 --threshold 5757190 \
+            --report "$dir/report.json" --certificate "$dir/certificate.json"
+          test -s "$dir/report.json"
+          if test -s "$dir/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$dir"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-joint-internal-${{ matrix.cross }}-${{ matrix.within }}
+          path: science-boundary/mona-lisa-tsp/results/joint-internal-*/
+          if-no-files-found: ignore
