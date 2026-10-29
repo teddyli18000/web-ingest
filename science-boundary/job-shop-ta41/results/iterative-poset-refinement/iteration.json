@@ -1,0 +1,114 @@
+{
+  "instance": "ta41",
+  "baseline": 2006,
+  "target": 2005,
+  "method": "counterexample-guided refinement of consensus posets with all-pair soft orientations",
+  "starting_verified_parent_names": [
+    "baseline",
+    "critical8",
+    "mixed12",
+    "mixed16",
+    "mixed20",
+    "gate120",
+    "gate124",
+    "gate127",
+    "rev5",
+    "rev6",
+    "rev7",
+    "ninecore"
+  ],
+  "initial_nine_prior_core_cuts": 9,
+  "initial_new_intersection_core_size": 46,
+  "first_cut_hard_2005_independently_verified": true,
+  "cycles": [
+    {
+      "round": 1,
+      "current_parents": 12,
+      "total_required_core_disjunctions": 10,
+      "globally_complete_oriented_CP": {
+        "status": "FEASIBLE",
+        "elapsed_seconds": 150.011,
+        "objective_bound": 187100000.0,
+        "conflicts": 16416,
+        "branches": 93189,
+        "exact_resource_constraints": true,
+        "number_of_necessary_cuts": 10,
+        "no_hard_survivor_order_freezing": true,
+        "independent_DAG_score": 2006,
+        "verified_all_necessary_cuts": true,
+        "changed_machines_vs_original": 16,
+        "new_machine_order_distance_from_reference_parent": 2
+      },
+      "new_valid_parent": true,
+      "new_parent_score": 2006,
+      "post_refinement_common_pairwise_orders": 8429,
+      "post_refinement_shared_cover_arcs": 732,
+      "next_consensus_2005_oracle": {
+        "status": "INFEASIBLE",
+        "elapsed_seconds": 0.648,
+        "conflicts": 22,
+        "branches": 1844,
+        "intervals": 600,
+        "full_no_overlap": true,
+        "hard_consensus_arcs": 732
+      },
+      "next_consensus_independent_core_check": {
+        "status": "INFEASIBLE",
+        "elapsed_seconds": 0.03,
+        "conflicts": 0,
+        "branches": 0,
+        "intervals": 600,
+        "full_no_overlap": true,
+        "hard_consensus_arcs": 48
+      },
+      "next_consensus_core_size": 48,
+      "new_independently_certified_necessary_cut": "new_intersection_1"
+    },
+    {
+      "round": 2,
+      "current_parents": 13,
+      "total_required_core_disjunctions": 11,
+      "globally_complete_oriented_CP": {
+        "status": "FEASIBLE",
+        "elapsed_seconds": 150.05,
+        "objective_bound": 187100000.0,
+        "conflicts": 56792,
+        "branches": 223135,
+        "exact_resource_constraints": true,
+        "number_of_necessary_cuts": 11,
+        "no_hard_survivor_order_freezing": true,
+        "independent_DAG_score": 2006,
+        "verified_all_necessary_cuts": true,
+        "changed_machines_vs_original": 16,
+        "new_machine_order_distance_from_reference_parent": 3
+      },
+      "new_valid_parent": true,
+      "new_parent_score": 2006,
+      "post_refinement_common_pairwise_orders": 8427,
+      "post_refinement_shared_cover_arcs": 732,
+      "next_consensus_2005_oracle": {
+        "status": "INFEASIBLE",
+        "elapsed_seconds": 0.478,
+        "conflicts": 14,
+        "branches": 1833,
+        "intervals": 600,
+        "full_no_overlap": true,
+        "hard_consensus_arcs": 732
+      },
+      "next_consensus_independent_core_check": {
+        "status": "INFEASIBLE",
+        "elapsed_seconds": 0.024,
+        "conflicts": 0,
+        "branches": 0,
+        "intervals": 600,
+        "full_no_overlap": true,
+        "hard_consensus_arcs": 41
+      },
+      "next_consensus_core_size": 41,
+      "new_independently_certified_necessary_cut": "new_intersection_2"
+    }
+  ],
+  "witness_count": 2,
+  "final_score": 2006,
+  "note": "NoOverlaps and job routes are hard. Only genuine solver-INFEASIBLE hard-verified poset cores become new necessary cuts. UNKNOWN never denotes exclusion."
+}
