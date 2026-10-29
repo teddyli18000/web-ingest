@@ -159,7 +159,7 @@ def main(a):
         'neutral_examples':{name:{k:v for k,v in x.items() if k!='per_machine'}
                             for name,x in families.items()},
         'paths':{name:{k:v for k,v in x.items() if k!='verified_path_swaps'}
-                 for name,x in result['monotone_adjacent_swap_path_analysis'].items()}},flush=True))
+                 for name,x in result['monotone_adjacent_swap_path_analysis'].items()}}),flush=True)
 
 if __name__=='__main__':
     p=argparse.ArgumentParser()
