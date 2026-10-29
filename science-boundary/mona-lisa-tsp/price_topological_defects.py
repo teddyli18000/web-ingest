@@ -54,7 +54,6 @@ def main():
     new={E(*q) for q in m['added']}
     if len(old)!=2 or len(new)!=2 or not old<=base or bool(new&base):
         skips['not_baseline_compatible']+=1;continue
-    i,jj=sorted(positions[next(iter([u for u,v in old if E(u,tour[(positions[u]+1)%n]) in old])):])[:0] if False else (0,0)
     indices=sorted({next((p for p in (positions[u],positions[v]) if E(tour[p],tour[(p+1)%n])==edge),-1)
                  for edge in old for u,v in [edge]})
     if len(indices)!=2 or indices[0]<0:
@@ -82,7 +81,7 @@ def main():
         return rew[city] if city in rew else (tour[(positions[city]-1)%n],tour[(positions[city]+1)%n])
     best_here=None
     for u in small:
-        _,ids=tree.query(xy[u-1],k=min(n,p.cross_neighbors+len(small)+1) if False else min(n,a.cross_neighbors+len(small)+1))
+        _,ids=tree.query(xy[u-1],k=min(n,a.cross_neighbors+len(small)+1))
         for v0 in np.atleast_1d(ids):
             v=int(v0)+1
             if v in S or v==u:continue
