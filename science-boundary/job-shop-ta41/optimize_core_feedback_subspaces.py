@@ -32,10 +32,17 @@ def run(a):
     assert evaluate(parent,pos,dur)==2006
     source=ROOT/'results'/f'core-feedback-{a.parent}-{a.method}'/'core-release.json'
     source_json=json.loads(source.read_text())
-    release=set()
+    # The core-feedback history records ONLY additional releases beyond
+    # the 240 operations from the original dynamic-path experiment.
+    seed_src=ROOT/'results'/f'dcprcp-{a.parent}-dynamic-4107'/'dynamic-repair.json'
+    seed_report=json.loads(seed_src.read_text())
+    assert seed_report['complete'] and seed_report['rounds_completed']==8
+    release={u for rec in seed_report['release_sets'] for u in rec['released_this_round']}
+    assert len(release)==240
     for rec in source_json['records']:
         release.update(rec.get('released_this_round',[]))
-    assert len(release)==source_json['records'][-1]['free_operations']
+    assert len(release)==source_json['records'][-1]['free_operations'],(
+        len(release),source_json['records'][-1]['free_operations'])
     constraints=fixed_precedence(parent,pos,release)
     model=cp_model.CpModel()
     s=[model.new_int_var(0,2006,f's{i}') for i in range(600)]
