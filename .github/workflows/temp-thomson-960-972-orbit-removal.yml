@@ -1,0 +1,41 @@
+name: temp Thomson 960 remove one T orbit from twinned N972
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-972-orbit-removal.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Fetch historical N972 twinned parent
+        run: |
+          curl --fail --location --retry 3 \
+            https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/xyz/972.xyz \
+            -o "$RUNNER_TEMP/972.xyz"
+      - name: Recover T group and remove candidate 12-point bulk orbits
+        run: |
+          python3 science-boundary/thomson-960/code/search_972_twin_orbit_removal.py \
+            "$RUNNER_TEMP/972.xyz" "$RUNNER_TEMP/few-shots" \
+            --core-distance 2 --screen 18 --relax 10 --seed 97212 \
+            --out "$RUNNER_TEMP/orbit-removal.json"
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'orbit-removal.json')))
+          print('RESULT',d['parent_e77'],d['orbit_size_hist'],len(d['eligible_orbits']),d['best_float_energy'],d['best_delta_vs_live'],d['best_row'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-972-t-orbit-removal
+          retention-days: 7
+          path: ${{ runner.temp }}/orbit-removal.json
