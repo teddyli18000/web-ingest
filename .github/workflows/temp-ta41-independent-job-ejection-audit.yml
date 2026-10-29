@@ -1,0 +1,42 @@
+name: temp-ta41-independent-job-ejection-audit
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/audit_job_ejection.py'
+      - '.github/workflows/temp-ta41-independent-job-ejection-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-independent-job-ejection-audit
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin independent solver and precheck syntax
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/audit_job_ejection.py
+          python3 -m pip install 'ortools==9.14.6206'
+      - name: Reconstruct full 4525-case coverage and independently rerun 60 hard CP tests
+        run: python3 science-boundary/job-shop-ta41/audit_job_ejection.py --samples 60
+      - name: Save reproducible independent audit
+        if: always()
+        run: |
+          set -euo pipefail
+          path='science-boundary/job-shop-ta41/results/job-ejection-independent-audit.json'
+          if ! test -f "$path"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$path"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): audit exhaustive k1-k3 job reinsertions independently'
+          for attempt in $(seq 1 30); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
