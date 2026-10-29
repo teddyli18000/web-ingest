@@ -1,0 +1,45 @@
+name: temp-p010-tsplib-parent-only-control
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/temp-p010-tsplib-parent-only-control.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  control:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        instance: [eil51, berlin52, eil76]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Obtain ONLY original public benchmark parents, never hidden answer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download 40868459085 --repo teddyli18000/web-ingest --name tsp-crossval-public --dir /tmp/benchmark
+          python -m pip install numpy scipy ortools
+      - name: Exact no-new-edge parent-only ablation
+        run: |
+          public=$(find /tmp/benchmark -name public.json -path '*/${{ matrix.instance }}/*' -print -quit)
+          test -s "$public"
+          test ! -e /tmp/benchmark/${{ matrix.instance }}/private.json
+          dir=science-boundary/mona-lisa-tsp/results/tsplib-control-${{ matrix.instance }}
+          mkdir -p "$dir"
+          python science-boundary/mona-lisa-tsp/tsplib_counterfactual_bench.py search \
+            --public "$public" --strategy control --budget 0 --seconds 14 \
+            --out "$dir/result.json"
+          test -s "$dir/result.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tsp-parent-only-control-${{ matrix.instance }}
+          path: science-boundary/mona-lisa-tsp/results/tsplib-control-*/result.json
+          if-no-files-found: ignore
