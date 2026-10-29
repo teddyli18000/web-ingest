@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]
+        shard: [0,1,2,3,4,5,6,7]
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -54,7 +54,7 @@ jobs:
         run: |
           set -euo pipefail
           export OMP_NUM_THREADS="$(nproc)"
-          /usr/bin/time -v "$RUNNER_TEMP/search" "$RUNNER_TEMP/base/ids.txt" '${{ matrix.shard }}' 32 > "$RUNNER_TEMP/result/search.json" 2> "$RUNNER_TEMP/result/search.stderr"
+          /usr/bin/time -v "$RUNNER_TEMP/search" "$RUNNER_TEMP/base/ids.txt" '${{ matrix.shard }}' 8 > "$RUNNER_TEMP/result/search.json" 2> "$RUNNER_TEMP/result/search.stderr"
           cat "$RUNNER_TEMP/result/search.json"
           tail -n 80 "$RUNNER_TEMP/result/search.stderr"
       - name: Materialize candidate
