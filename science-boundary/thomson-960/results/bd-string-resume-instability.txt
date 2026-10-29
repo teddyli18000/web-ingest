@@ -1,0 +1,41 @@
+Thomson N=960 — B<->D perpendicular-string resume instability
+Date: 2026-10-29
+
+Purpose
+-------
+Run 40795460837 resumed the corrected perpendicular-force B<->D string from
+run 40735463455.  The prior 15-image path had max path-perpendicular gradient
+RMS 5.89091693e-4 after 2500 iterations, above the required 2e-5 MEP tolerance.
+The resume tested whether a larger explicit string step could finish the slow
+relaxation rather than simply extending the original tiny-step run.
+
+Result
+------
+Resume parameters: 4500 iterations, eta=5.5e-4, max_step=3.5e-4.
+
+The larger step is unstable for this path:
+- iteration 0:   perp ~5.884e-4, max E ~444368.41134023
+- iteration 10:  perp ~1.600e-3
+- iteration 20:  perp ~1.5356, max E ~444368.58586889
+- thereafter the path remains in a large-amplitude oscillatory/high-force regime
+  rather than recovering the previous minimum-energy-path neighborhood.
+- iteration 4499: max E 444368.5155496466, max perpendicular gradient RMS
+  1.1951067560.
+- string_converged=False, so no stationary saddle refinement was attempted.
+
+Interpretation
+--------------
+This is evidence of an explicit-step stability limit, not evidence that a B-D
+transition path does not exist.  The earlier small-step corrected string was
+moving in the right direction but very slowly; simply increasing eta destabilizes
+the discretized string.  Do not spend more compute on identical long explicit
+string continuations.
+
+The better formulation is the C index-2 basin-boundary representation: at the
+smallest sampled C negative-doublet amplitude 0.0015, phase 40 deg relaxes to B
+and phase 45 deg relaxes to D.  Their basin boundary is therefore directly
+bracketed inside a 5-degree interval in the two-dimensional unstable manifold.
+`code/edge_track_index2_boundary.py` and run 40797148921 target the B-D edge
+state by bisection/edge tracking rather than by a long globally discretized MEP.
+
+No record candidate occurred.
