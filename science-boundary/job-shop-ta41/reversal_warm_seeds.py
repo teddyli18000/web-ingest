@@ -78,4 +78,4 @@ def main(out):
 if __name__=='__main__':
     p=argparse.ArgumentParser()
     p.add_argument('--out',type=Path,default=Path(__file__).parent/'results'/'reversal-warm-seeds')
-    main(p.parse_args())
+    main(p.parse_args().out)
