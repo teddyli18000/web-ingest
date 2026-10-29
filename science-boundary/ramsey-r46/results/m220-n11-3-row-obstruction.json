@@ -1,0 +1,20 @@
+{
+  "campaign": "m220-n11-3-row-obstruction",
+  "status": "UNSAT",
+  "scope": "all hypothetical R(4,6,36) graphs with exactly 220 edges and exactly three degree-11 vertices",
+  "A26_count": 2,
+  "B116_count": 9,
+  "actual_low_edge_B_pairs_checked": 468,
+  "B_triangle_free_8_counts": [0, 0, 0, 0, 9, 1, 1, 1, 1],
+  "B_triangle_free_9_counts": [0, 0, 0, 0, 0, 0, 0, 0, 0],
+  "proof_components": {
+    "A1_nonincident_low_edges": "degree-2 A vertex would be global degree 12 and require a triangle-free 9-vertex B-neighborhood; none exists",
+    "A1_incident_low_edges": "both low rows require hitting columns of size at least 3; only eight B vertices can host them, forcing at least five common B-neighbors for an A-edge, contradicting alpha(B)=4",
+    "A0_edge_01": "same common-neighbor obstruction, with cross needs 7 and 6",
+    "A0_edges_05_06": "all pair-supported 7-row starts die at independent-triple row support; only B1/B3/B8 have 6/4/2 pair-supported starts and all have zero triple-supported starts",
+    "A0_other_edges": "the degree-3 A vertex needs a triangle-free 8-row; B0..B3 have none and every 8-row in B4..B8 fails pair support with another required A row"
+  },
+  "reproducer": "science-boundary/ramsey-r46/m220_n11_3_row_obstruction.py",
+  "local_recompute_seconds": 24.21,
+  "conclusion": "No m=220 R(4,6,36) graph can have exactly three degree-11 vertices."
+}
