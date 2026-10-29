@@ -116,3 +116,24 @@ Independent N100 hybrid follow-up, 180 seeds (seed 271311), same 10ms budget: me
 - Only build neural graph-guided masks after an interpretable history-aware selector demonstrates an economically recoverable advantage at held-out lengths; otherwise the search representation likely needs a bigger change.
 
 All edits kept in science-boundary/labs-ai4s-search/. No change to science-boundary/labs-100/, no official p006 submission, no E<578.
+
+
+## Follow-up falsification: mask overlap is **not** the dominant explanation
+
+After the report above, we ran [mask_novelty.cpp](../mask_novelty.cpp) to measure the proposed mask-recycling mechanism rather than treating it as established. Sample: 350 independent N100 stage40 basins, 12 masks each (m10), three selectors. Within each fixed base, generate proposals, enumerate and evaluate both repairs/excursions with steepest and first descent, count actual distinct full endpoint sequences (including non-improving endpoints) and how often the lowest relaxed candidate equals the original base. Mask overlap is the average pairwise Jaccard index of the 66 unordered mask pairs.
+
+| selector | distinct positions across 12 masks | mean pairwise Jaccard | distinct relaxed endpoints | returns to original of 12 |
+|---|---:|---:|---:|---:|
+| uniform random | 71.96 | 0.055 | 2.083 | 10.720 |
+| soft one-spin barrier | 18.96 | 0.508 | 1.771 | 9.094 |
+| **negative epistasis** | **55.84** | **0.124** | **2.703** | **9.174** |
+
+Negative-pair minus random Jaccard +0.069 (350-base paired bootstrap 95% CI +0.066..+0.072), and distinct endpoint count +0.620. Unlike soft-delta, negative-pair masks retain substantial *variable diversity*. **This contradicts any strong claim that heavily overlapping masks alone explain long-run failure.** Instead the candidate-to-endpoint map seems **highly compressive** under both selectors: ~9 of 12 counterfactual searches return the original local minimum even when their masks are different. NOTE: this is a fixed-basin, selected-best-of-four exit statistic, **not** a full dynamical landscape transition probability and not evidence that all downhill rules map to the same basin. Prospective next test should record return and novelty as functions of trajectory age/score.
+
+Reproduce:
+\`\`\`sh
+g++ -O3 -std=c++17 mask_novelty.cpp -o /tmp/labs_mask_novelty
+/tmp/labs_mask_novelty mask_novelty_n100_allend.csv 100 40 350 771129 10 12
+\`\`\`
+
+Revised hypothesis: local no-improvement may arise from **endpoint compression and acceptance/exit rigidity** rather than mask redundancy. Test diversity-preserving exits, nonmonotone acceptance with controlled restart rules, and small paired ensembles of descent operators. Do **not** overcommit to merely penalizing recent mask overlap. No learned-policy benefit demonstrated.
