@@ -1,0 +1,58 @@
+name: temp-monalisa-frustrated-path-interfaces
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/frustrated_path_interfaces.py
+      - .github/workflows/temp-monalisa-frustrated-path-interfaces.yml
+permissions:
+  contents: read
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {k: 8, start: 0}
+          - {k: 8, start: 40}
+          - {k: 12, start: 0}
+          - {k: 12, start: 40}
+          - {k: 16, start: 0}
+          - {k: 16, start: 40}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Exact scoring data and symbolic seed archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install scipy ortools
+          mkdir -p /tmp/symbolic
+          gh run download 40830451326 --repo teddyli18000/web-ingest --name monalisa-symbolic-exact-exit-1 --dir /tmp/symbolic
+          test -s /tmp/symbolic/positive-motifs.json
+      - name: Reoptimize global path interfaces using complete-metric exact circuit
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          path=science-boundary/mona-lisa-tsp/results/frustrated-${{ matrix.k }}-${{ matrix.start }}
+          mkdir -p "$path"
+          python science-boundary/mona-lisa-tsp/frustrated_path_interfaces.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --motifs /tmp/symbolic/positive-motifs.json \
+            --report "$path/report.json" --certificate "$path/certificate.json" \
+            --k ${{ matrix.k }} --start-seed ${{ matrix.start }} --seeds 40 \
+            --trials 3 --time-per-model 1.5 --workers 2
+          if test -f "$path/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$path"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-frustrated-${{ matrix.k }}-${{ matrix.start }}
+          path: science-boundary/mona-lisa-tsp/results/frustrated-*/
+          if-no-files-found: ignore
