@@ -1,0 +1,42 @@
+name: temp-p010-blind-199-post-evaluation
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["temp-p010-blind-199-method-comparison"]
+    types: [completed]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  unseal:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download ONLY completed blind search artifacts, then unseal hidden target
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BLIND_RUN: ${{ github.event.workflow_run.id || '40867628330' }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          mkdir -p /tmp/p010blind/evidence
+          gh run download "$BLIND_RUN" --repo teddyli18000/web-ingest --pattern 'p010-masked-199-*' --dir /tmp/p010blind/evidence
+          curl -fsSL --retry 2 https://www.math.uwaterloo.ca/tsp/data/ml/tour/monalisa_5757199.tour -o /tmp/p010blind/reference.tour
+      - name: Independent official score and hidden-edge structure recovery audit
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          python science-boundary/mona-lisa-tsp/blind_counterfactual_eval.py \
+            --hidden upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --reference /tmp/p010blind/reference.tour --reports /tmp/p010blind/evidence \
+            --output science-boundary/mona-lisa-tsp/results/blind-199-evaluation.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-blind199-independent-unsealing-audit
+          path: science-boundary/mona-lisa-tsp/results/blind-199-evaluation.json
+          if-no-files-found: ignore
