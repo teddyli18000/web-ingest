@@ -1,0 +1,44 @@
+name: temp-aes-core6-rank4-raw4
+
+on:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/screen_core6_rank4_raw4.cpp'
+      - '.github/workflows/temp-aes-core6-rank4-raw4.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-core6-rank4-raw4
+  cancel-in-progress: false
+
+jobs:
+  raw4:
+    strategy:
+      fail-fast: false
+      max-parallel: 16
+      matrix:
+        case: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Compile exact raw4 screen
+        run: |
+          g++ -O3 -std=c++17 science-boundary/aes-sbox-circuit/screen_core6_rank4_raw4.cpp -o /tmp/screen-core6-rank4-raw4
+      - name: Run exact raw4 screen
+        shell: bash
+        run: |
+          set -o pipefail
+          out=/tmp/aes-core6-rank4-raw4-${{ matrix.case }}
+          mkdir -p "$out"
+          /tmp/screen-core6-rank4-raw4 "${{ matrix.case }}" | tee "$out/run.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-core6-rank4-raw4-${{ matrix.case }}
+          path: /tmp/aes-core6-rank4-raw4-${{ matrix.case }}
