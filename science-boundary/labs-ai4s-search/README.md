@@ -8,7 +8,7 @@ This is an independent **methodological research direction**, distinct from the 
 
 ## Current state
 
-**Opened 2026-10-29. No new experiments or verified breakthrough in this workspace yet.**
+**2026-10-29: first reproducible basin-selection diagnostic committed. No learned-method improvement or verified breakthrough yet.** See [pilot 01](notes/pilot-01.md) and [runnable Python source](pilot_basin.py). On 12 initial seeds and lengths 24/32, selecting two-bit disturbances by post-relaxation basin energy improved median best energy versus selecting by immediate perturbed energy (64 vs 70; 122 vs 128). The full lookahead oracle is expensive and not deployable as-is: this is evidence for a predictive target, **not** a superior end-to-end search method.
 
 Prior exploratory work, published separately in [CreoEnMi-p/few-shots — AI4S Boundary](https://github.com/CreoEnMi-p/few-shots/tree/main/research/ai4s-boundary), contains an early neural-perturbation pilot, classical reference code, reproducibility checks, and a conditional research charter. These materials are **prior evidence to inspect**, not instructions to obey and not a claim of state-of-the-art performance.
 
@@ -30,10 +30,12 @@ The original working hypothesis is that evaluating **post-relaxation basin outco
 
 ## Next steps
 
-The incoming research agent should review the prior pilot and the latest public literature, decide what evidence is still missing, then design and execute independently justified experiments. Keep code, datasets, negative results, reproducibility details, and the next handoff in this directory. Use `main` and the repository's scientific-workspace instructions. GitHub Actions are available for useful compute; minor work does not require them.
+Next test cheap predictors of post-relaxation basin quality on held-out lengths and seeds, including cost of training, prediction, and relaxation. Compare with hand-crafted immediate-energy ranking and strong classical tabu/self-avoiding search; use at least 20 seeds and wall-clock matched evaluation before any method-level claim. Keep code, datasets, negative results, reproducibility details, and the next handoff in this directory. Use `main` and the repository's scientific-workspace instructions. GitHub Actions are available for useful compute; minor work does not require them.
 
 Distinguish improvements to search methodology from verified record-breaking certificates. Do not claim a new LABS record without exact independent verification and current-prior-art review.
 
 ## Work log
+
+- **2026-10-29:** [Pilot 01](notes/pilot-01.md) evaluated random, immediate-energy and post-relaxation selection with a common fixed eight-candidate 2-flip pool per round at N=24/32. Full candidate relaxation charged to all policies, 12 seeds, 3 rounds. The post-relaxation oracle selects better basins; generalization and net benefit after prediction costs remain unknown. Sources and reproducible code committed under this topic.
 
 - **2026-10-29:** Opened this distinct AI4S methodology topic with links to the previous exploratory study. No new computational claim.
