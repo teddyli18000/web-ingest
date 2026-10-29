@@ -1,0 +1,106 @@
+name: Temp Science Boundary C7 baseline net1 r7 max-support6
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-baseline-net1-r7-c6.yml
+      - science-boundary/shannon-capacity-c7/code/search_net1_r7_c6_anchor.cpp
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch and verify Few Shots baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          mkdir -p "$RUNNER_TEMP/base" "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+          cp "$RUNNER_TEMP/few-shots/problems/p004-shannon-capacity-c7/baseline/certificate.json" "$RUNNER_TEMP/base/certificate.json"
+          python3 - "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/base/ids.txt" <<'PY'
+          import json,sys
+          pts=json.load(open(sys.argv[1],encoding='utf-8'))['points']
+          if len(pts)!=134753 or len(set(pts))!=134753: raise SystemExit(('baseline drift',len(pts),len(set(pts))))
+          open(sys.argv[2],'w').write(''.join(f'{int(p,7)}\n' for p in pts))
+          PY
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/base" | tee "$RUNNER_TEMP/result/base-verify.json"
+          python3 - "$RUNNER_TEMP/result/base-verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1))!=134753: raise SystemExit(r)
+          PY
+      - name: Compile exact r7 max-support6 solver
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp science-boundary/shannon-capacity-c7/code/search_net1_r7_c6_anchor.cpp -o "$RUNNER_TEMP/search"
+      - name: Exact r7 max-support6 shard
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          /usr/bin/time -v "$RUNNER_TEMP/search" "$RUNNER_TEMP/base/ids.txt" '${{ matrix.shard }}' 32 > "$RUNNER_TEMP/result/search.json" 2> "$RUNNER_TEMP/result/search.stderr"
+          cat "$RUNNER_TEMP/result/search.json"
+          tail -n 80 "$RUNNER_TEMP/result/search.stderr"
+      - name: Materialize candidate
+        id: materialize
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/result/search.json" "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/status.json" <<'PY'
+          import json,sys
+          bp,sp,outp,stp=sys.argv[1:]
+          pts=set(json.load(open(bp,encoding='utf-8'))['points']); s=json.load(open(sp,encoding='utf-8'))
+          def dec(z):
+              d=[]
+              for _ in range(10): d.append(str(z%7)); z//=7
+              return ''.join(reversed(d))
+          st={'candidate':False,'score':len(pts),'search':s}
+          if s.get('kind')=='replace7add8':
+              rem=[dec(int(z)) for z in s['remove']]; add=[dec(int(z)) for z in s['add']]
+              if len(rem)!=7 or len(set(rem))!=7 or any(p not in pts for p in rem): raise SystemExit(('bad removals',rem))
+              for p in rem: pts.remove(p)
+              if len(add)!=8 or len(set(add))!=8 or any(p in pts for p in add): raise SystemExit(('bad additions',add))
+              pts.update(add)
+              if len(pts)!=134754: raise SystemExit(('score',len(pts)))
+              json.dump({'points':sorted(pts)},open(outp,'w',encoding='utf-8'),separators=(',',':'));open(outp,'a').write('\n')
+              st.update(candidate=True,score=134754)
+          json.dump(st,open(stp,'w',encoding='utf-8'),indent=2,sort_keys=True);open(stp,'a').write('\n')
+          PY
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.materialize.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1))<=134753: raise SystemExit(r)
+          print('VERIFIED BREAKTHROUGH',r)
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-baseline-net1-r7-c6-${{ matrix.shard }}
+          path: ${{ runner.temp }}/result
+          retention-days: 14
