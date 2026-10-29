@@ -1,0 +1,52 @@
+name: temp-monalisa-exact-tour-merging
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/exact_tour_merge.py
+      - .github/workflows/temp-monalisa-exact-tour-merging.yml
+permissions:
+  contents: read
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 17
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {family: independent51, target: 0}
+          - {family: independent51, target: 1}
+          - {family: all58, target: 0}
+          - {family: all58, target: 1}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch authoritative source and optimizer
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install ortools
+          python upstream/problems/p010-mona-lisa-tsp/verify/verify.py upstream/problems/p010-mona-lisa-tsp/baseline
+      - name: Solve exact connected tour over union of parents
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          dir=science-boundary/mona-lisa-tsp/results/merge-${{ matrix.family }}-${{ matrix.target }}
+          mkdir -p "$dir"
+          python science-boundary/mona-lisa-tsp/exact_tour_merge.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --neutral-moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --family ${{ matrix.family }} --target-improvement ${{ matrix.target }} \
+            --report "$dir/report.json" --candidate "$dir/certificate.json" \
+            --seconds 210 --workers 4
+          if test -f "$dir/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$dir"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-exact-tour-merge-${{ matrix.family }}-${{ matrix.target }}
+          path: science-boundary/mona-lisa-tsp/results/merge-*/
+          if-no-files-found: ignore
