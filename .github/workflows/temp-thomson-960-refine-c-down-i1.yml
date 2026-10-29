@@ -1,0 +1,64 @@
+name: temp Thomson 960 refine C-down index1 branches
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-refine-c-down-i1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  refine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        phase: [0, 100]
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Download C-down branch
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-c-i1-p${{ matrix.phase }}
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ github.token }}
+          run-id: 40735119192
+      - name: Refine tracked index-1 branch
+        run: |
+          python3 science-boundary/thomson-960/code/refine_tracked_index1.py \
+            "$RUNNER_TEMP/seed/c-i1-p${{ matrix.phase }}.json" \
+            --outer 18 --penalty 400000 --perp-maxiter 800 \
+            --reaction-damping 0.45 --curv-floor 0.08 --max-reaction-rms 0.00003 \
+            --grad-tol 0.00002 --out "$RUNNER_TEMP/refined-p${{ matrix.phase }}.json"
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'refined-p${{ matrix.phase }}.json')
+          d=json.load(open(p)); print('REFINED',d['status'],d['final_energy'],d['final_gradient_rms'],d['negative_internal_modes_below_-1e-3'],d['final_eigenvalues'][:6])
+          PY
+      - name: Descend both reaction sides
+        run: |
+          python3 science-boundary/thomson-960/code/search_saddle_transverse.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/refined-p${{ matrix.phase }}.json" \
+            --transverse-mode 1 --sign 1 --transverse-amps 0 \
+            --reaction-amps=-0.003,-0.0015,0.0015,0.003 \
+            --out "$RUNNER_TEMP/reaction-p${{ matrix.phase }}.json"
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'reaction-p${{ matrix.phase }}.json')
+          d=json.load(open(p));
+          for r in d['rows']: print('SIDE',r['reaction_amp'],r['energy'],r['delta_vs_live'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-cdown-refined-p${{ matrix.phase }}
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/refined-p${{ matrix.phase }}.json
+            ${{ runner.temp }}/reaction-p${{ matrix.phase }}.json
