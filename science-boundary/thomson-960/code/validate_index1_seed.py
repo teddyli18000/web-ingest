@@ -23,7 +23,8 @@ def load_any_seed(path):
     d=json.loads(pathlib.Path(path).read_text())
     p=d.get('points') if isinstance(d,dict) else None
     if p is None and isinstance(d,dict): p=d.get('saddle_points')
-    if p is None or len(p)!=N: raise ValueError('seed must contain 960 points or saddle_points')
+    if p is None and isinstance(d,dict): p=d.get('stationary_points')
+    if p is None or len(p)!=N: raise ValueError('seed must contain 960 points, saddle_points, or stationary_points')
     x=np.asarray(p,float); return d,x/np.linalg.norm(x,axis=1)[:,None]
 
 
