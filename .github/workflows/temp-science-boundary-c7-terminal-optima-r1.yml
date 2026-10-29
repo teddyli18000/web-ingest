@@ -1,0 +1,129 @@
+name: Temp Science Boundary C7 terminal-optima exact r1
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-terminal-optima-r1.yml
+      - science-boundary/shannon-capacity-c7/code/search_net1_r1.cpp
+      - science-boundary/shannon-capacity-c7/code/bpz_terminal_optima_ids.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-terminal-optima-r1
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned public sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+      - name: Build all 18 terminal-optimal basins and exact r1 engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/bpz_terminal_optima_ids.py "$RUNNER_TEMP/tan" "$RUNNER_TEMP/basins"
+          g++ -O3 -std=c++20 -fopenmp science-boundary/shannon-capacity-c7/code/search_net1_r1.cpp -o "$RUNNER_TEMP/r1"
+      - name: Exact 0-to-1 and 1-to-2 sweep
+        id: search
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+          export OMP_NUM_THREADS="$(nproc)"
+          : > "$RUNNER_TEMP/result/summary.jsonl"
+          found=false
+          for i in $(seq -w 0 17); do
+            echo "=== basin $i ==="
+            /usr/bin/time -v "$RUNNER_TEMP/r1" "$RUNNER_TEMP/basins/basin-$i.ids" \
+              > "$RUNNER_TEMP/result/basin-$i.json" 2> "$RUNNER_TEMP/result/basin-$i.stderr"
+            cat "$RUNNER_TEMP/result/basin-$i.json"
+            python3 - "$i" "$RUNNER_TEMP/result/basin-$i.json" >> "$RUNNER_TEMP/result/summary.jsonl" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[2],encoding='utf-8'));r['basin']=int(sys.argv[1]);print(json.dumps(r,sort_keys=True))
+          PY
+            kind="$(python3 - "$RUNNER_TEMP/result/basin-$i.json" <<'PY'
+          import json,sys;print(json.load(open(sys.argv[1],encoding='utf-8')).get('kind',''))
+          PY
+          )"
+            if [[ "$kind" != none ]]; then
+              cp "$RUNNER_TEMP/result/basin-$i.json" "$RUNNER_TEMP/result/winner.json"
+              cp "$RUNNER_TEMP/basins/basin-$i.ids" "$RUNNER_TEMP/result/winner-baseline.ids"
+              echo "$i" > "$RUNNER_TEMP/result/winner-basin.txt"
+              found=true
+              break
+            fi
+          done
+          cp "$RUNNER_TEMP/basins/manifest.json" "$RUNNER_TEMP/result/manifest.json"
+          if [[ "$found" == true ]]; then
+            python3 - "$RUNNER_TEMP/result/winner-baseline.ids" "$RUNNER_TEMP/result/winner.json" "$RUNNER_TEMP/shot/certificate.json" <<'PY'
+          import json,sys
+          base={int(x) for x in open(sys.argv[1],encoding='utf-8') if x.strip()}
+          r=json.load(open(sys.argv[2],encoding='utf-8'))
+          if r['kind']=='direct':
+              base.add(int(r['add']))
+          elif r['kind']=='replace1':
+              base.remove(int(r['remove']))
+              base.update(map(int,r['add']))
+          else:
+              raise SystemExit(r)
+          if len(base)!=134754: raise SystemExit(f'candidate size {len(base)}')
+          def point(v):
+              ds=[]
+              for _ in range(10):
+                  v,d=divmod(v,7);ds.append(str(d))
+              if v: raise ValueError(v)
+              return ''.join(reversed(ds))
+          pts=sorted(point(v) for v in base)
+          open(sys.argv[3],'w',encoding='utf-8').write(json.dumps({'points':pts},separators=(',',':'))+'\n')
+          PY
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1))<=134753: raise SystemExit(r)
+          print('VERIFIED BREAKTHROUGH',r)
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-terminal-optima-r1
+          path: ${{ runner.temp }}/result
+          retention-days: 14
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## C7 exact r1 sweep across terminal-optimal 134753 basins'
+            for f in summary.jsonl winner.json verify.json; do
+              if [[ -f "$RUNNER_TEMP/result/$f" ]]; then
+                echo "### $f"; echo '```'; cat "$RUNNER_TEMP/result/$f"; echo '```'
+              fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
