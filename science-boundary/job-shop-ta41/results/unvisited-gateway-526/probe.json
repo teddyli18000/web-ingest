@@ -1,0 +1,24 @@
+{
+  "instance": "ta41",
+  "baseline": 2006,
+  "target": 2005,
+  "decision": "exists Cmax<=2006 schedule with a never-observed consensus core machine pair reversed?",
+  "arc_id": 526,
+  "arc": {
+    "machine": 15,
+    "from_job": 21,
+    "to_job": 23,
+    "index": 526
+  },
+  "number_of_verified_source_parents": 16,
+  "nearest_temporal_hint_parent": "baseline",
+  "nearest_reverse_gap": 130,
+  "status": "UNKNOWN",
+  "elapsed_seconds": 160.028,
+  "conflicts": 56869,
+  "branches": 824247,
+  "all_job_precedences_and_machine_no_overlap_hard": true,
+  "no_other_machine_order_is_frozen": true,
+  "theorem_if_unsat": "This exact precedence cannot reverse at Cmax<=2006, hence also cannot reverse at <=2005.",
+  "unknown_means_nothing": true
+}
