@@ -1,0 +1,75 @@
+name: Temp Ramsey R46 m220 r4 catalogue extraction
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-m220-r4-catalogs.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download authenticated public catalogues
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          curl --fail --location --retry 3 --silent --show-error \
+            https://users.cecs.anu.edu.au/~bdm/data/r36_11.g6.gz -o /tmp/r46/r36_11.g6.gz
+          curl --fail --location --retry 3 --silent --show-error \
+            https://users.cecs.anu.edu.au/~bdm/data/r45_24.g6 -o /tmp/r46/r45_24.g6
+          echo '628c53df90910b2aae9a9559a62605593ff6fcdac66e9f23f95a134a4a696f36  /tmp/r46/r36_11.g6.gz' | sha256sum -c -
+          echo '83ca4028f206b2fa4315ef219b8c2c57c7835209673dd8183d8fb4353bd4fdd0  /tmp/r46/r45_24.g6' | sha256sum -c -
+      - name: Extract exact r=4 local strata
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import sys
+          sys.path.insert(0,'science-boundary/ramsey-r46')
+          import d12_fixed_ab_sat as b
+          out=Path('science-boundary/ramsey-r46/data')
+          c24=b.extract_g6_stratum(Path('/tmp/r46/r36_11.g6.gz'),11,24,out/'r36_11_e24.g6')
+          c118=b.extract_g6_stratum(Path('/tmp/r46/r45_24.g6'),24,118,out/'r45_24_e118.g6')
+          d={'campaign':'m220-r4-catalog-extraction','source_sha256':{
+             'r36_11.g6.gz':'628c53df90910b2aae9a9559a62605593ff6fcdac66e9f23f95a134a4a696f36',
+             'r45_24.g6':'83ca4028f206b2fa4315ef219b8c2c57c7835209673dd8183d8fb4353bd4fdd0'},
+             'A24_count':c24,'B118_count':c118}
+          Path('science-boundary/ramsey-r46/results/m220-r4-catalogs.json').write_text(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          print(json.dumps(d,sort_keys=True))
+          assert c24>0 and c118>0
+          PY
+      - name: Persist small exact strata and retire workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/temp-ramsey-r46-m220-r4-catalogs.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/data/r36_11_e24.g6 \
+                  science-boundary/ramsey-r46/data/r45_24_e118.g6 \
+                  science-boundary/ramsey-r46/results/m220-r4-catalogs.json
+          git commit -m 'ramsey-r46: record m220 r4 local catalogues'
+          for i in 1 2 3 4 5; do git pull --rebase origin main && git push origin HEAD:main && exit 0; sleep $((i*4)); done
+          exit 1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ramsey-r46-m220-r4-catalogs
+          path: |
+            science-boundary/ramsey-r46/data/r36_11_e24.g6
+            science-boundary/ramsey-r46/data/r45_24_e118.g6
+            science-boundary/ramsey-r46/results/m220-r4-catalogs.json
+          if-no-files-found: warn
+          retention-days: 7
