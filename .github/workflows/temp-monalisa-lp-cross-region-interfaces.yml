@@ -1,0 +1,57 @@
+name: temp-monalisa-lp-cross-region-interfaces
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/lp_cross_region_edges.py
+      - .github/workflows/temp-monalisa-lp-cross-region-interfaces.yml
+permissions:
+  contents: write
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Original Concorde LP primal vectors and upstream baseline
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install numpy matplotlib
+          mkdir -p /tmp/p010-lp
+          for variant in 6nsub 5zsub 4zsub; do
+            curl -fsSL --retry 3 --max-time 120 "https://www.math.uwaterloo.ca/tsp/data/ml/x/mona.${variant}.x" -o "/tmp/p010-lp/mona.${variant}.x"
+          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/p010-lp')
+          Path('/tmp/p010-lp/inputs.json').write_text(json.dumps({'2012-04-18':str(p/'mona.6nsub.x'),'2012-01-21':str(p/'mona.5zsub.x'),'2011-07-15':str(p/'mona.4zsub.x')}))
+          PY
+      - name: Independently inventory cross-block fractional candidate edges
+        run: |
+          mkdir -p science-boundary/mona-lisa-tsp/data science-boundary/mona-lisa-tsp/results/lp-bridges
+          python science-boundary/mona-lisa-tsp/lp_cross_region_edges.py \
+            --regions science-boundary/mona-lisa-tsp/data/historical-wiring-components-all.json \
+            --lps /tmp/p010-lp/inputs.json \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --report science-boundary/mona-lisa-tsp/data/lp-cross-region-summary.json \
+            --edges science-boundary/mona-lisa-tsp/results/lp-bridges/edges.json
+      - name: Archive compact independent interface counts
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/mona-lisa-tsp/data/lp-cross-region-summary.json
+          git commit -m 'science(p010): record three-snapshot LP fractional cross-wiring interface inventory'
+          git pull --rebase origin main
+          git push origin main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-full-lp-cross-region-interface-edges
+          path: science-boundary/mona-lisa-tsp/results/lp-bridges/edges.json
+          if-no-files-found: ignore
