@@ -14,10 +14,13 @@ int directE(const vector<int>&s){int n=s.size(),e=0;for(int k=1;k<n;k++){int c=0
 string canonical(const Sol &s){string best,bs=s.bits();bool initial=true;for(int rev=0;rev<2;rev++)for(int neg=0;neg<2;neg++)for(int alt=0;alt<2;alt++){string q;for(int i=0;i<s.n;i++){int v=s.s[rev?s.n-1-i:i];if(neg)v=-v;if(alt&&i%2)v=-v;q+=(v==1?'1':'0');}if(initial||q<best)best=q,initial=false;}return best;}
 bool skew(const vector<int>&s,int begin,int len){if(len%2!=1)return false;int m=len/2;for(int j=1;j<=m;j++)if(s[begin+m+j]!=((j%2)?-1:1)*s[begin+m-j])return false;return true;}
 bool nearSkew(const Sol&x){if(x.n%2)return skew(x.s,0,x.n);return skew(x.s,0,x.n-1)||skew(x.s,1,x.n-1);}
+// Parity-correct continuous odd-lag excess above the unavoidable parity minimum.
+// C_k congruent to N-k (mod 2); a skew odd-N word has Dodd=0, not |C_odd|=1.
+int oddDefect(const Sol&x){int defect=0;for(int k=1;k<x.n;k+=2)defect+=x.c[k]*x.c[k]-((x.n-k)&1);return defect;}
 struct Ref {int n,e;string bits,id;};
 vector<Ref> anchors(const string&file){ifstream f(file);vector<Ref>x;Ref t;while(f>>t.n>>t.e>>t.bits>>t.id){Sol s(t.bits);if(s.E!=t.e||s.n!=t.n)throw runtime_error("anchor mismatch");x.push_back(t);}return x;}
 uint64_t mix(uint64_t x){x+=0x9e3779b97f4a7c15ull;x=(x^(x>>30))*0xbf58476d1ce4e5b9ull;x=(x^(x>>27))*0x94d049bb133111ebull;return x^(x>>31);}
-struct Result{Sol best,cur;int improvements=0,steps=0,final_E=0, best_step=0,best_non_skew=INT_MAX,best_odd_defect=INT_MAX, best_quenched_non_skew=INT_MAX,quench_steps=0,quench_unique=0;string quench_bits="-";};
+struct Result{Sol best,cur;int improvements=0,steps=0,final_E=0, best_step=0,best_non_skew=INT_MAX,best_odd_defect=INT_MAX,min_odd_defect=INT_MAX, best_quenched_non_skew=INT_MAX,quench_steps=0,quench_unique=0;string quench_bits="-";};
 vector<double> buildWeights(const Sol&x,const vector<double>&lagHistory,int arm,mt19937_64 &rng,double a){
  int n=x.n;vector<double>w(n,1),priority(n);
  if(arm>=4){vector<int> idx;for(int k=1;k<n;k++)idx.push_back(k);
@@ -40,7 +43,7 @@ vector<double> buildWeights(const Sol&x,const vector<double>&lagHistory,int arm,
 }
 Result tabu(Sol start,int arm,uint64_t seed,int steps,int period,int tenure,double tilt){
  mt19937_64 rng(seed);Result r;r.best=start;r.cur=start;
- auto record_structure=[&](){if(!nearSkew(r.cur))r.best_non_skew=min(r.best_non_skew,r.cur.E);bool oddperfect=true;for(int k=1;k<r.cur.n;k+=2)if(abs(r.cur.c[k])!=1)oddperfect=false;if(!oddperfect)r.best_odd_defect=min(r.best_odd_defect,r.cur.E);};
+ auto record_structure=[&](){if(!nearSkew(r.cur))r.best_non_skew=min(r.best_non_skew,r.cur.E);int D=oddDefect(r.cur);r.min_odd_defect=min(r.min_odd_defect,D);if(D>0)r.best_odd_defect=min(r.best_odd_defect,r.cur.E);};
  record_structure();
  vector<int>last(start.n,-100000);vector<double>hist(start.n,0),w(start.n,1);
  set<string>seen_quenches;
@@ -74,7 +77,7 @@ Result tabu(Sol start,int arm,uint64_t seed,int steps,int period,int tenure,doub
 }
 void selftest(){mt19937_64 rng(112233);int count=0;for(int n:{13,64,80,92,96,99,100})for(int i=0;i<50;i++){
  string v;for(int j=0;j<n;j++)v+=(rng()&1?'1':'0');Sol s(v);
- if(s.E!=directE(s.s))throw runtime_error("E bad");
+ if(s.E!=directE(s.s))throw runtime_error("E bad");int odd=0;for(int k=1;k<n;k+=2){if((abs(s.c[k])&1)!=((n-k)&1))throw runtime_error("parity violation");odd+=s.c[k]*s.c[k]-((n-k)&1);}if(oddDefect(s)!=odd||odd<0)throw runtime_error("odd defect mismatch");
  for(int j=0;j<n;j++){Sol t=s;t.flip(j);if(t.E!=directE(t.s)||s.delta(j)!=t.E-s.E)throw runtime_error("delta bad");count++;}
  }
  cerr<<"PASS independent delta "<<count<<" checks\n";
@@ -107,7 +110,7 @@ int main(int argc,char**argv){
   if(argc<9)return 2;int maxarm=argc>9?stoi(argv[9]):3;
   ifstream in(argv[2]);ofstream out(argv[3]);int reps=stoi(argv[4]),moves=stoi(argv[5]),period=stoi(argv[6]),tenure=stoi(argv[8]);double tilt=stod(argv[7]);
   string line;getline(in,line);
-  out<<"n\tstate_id\tprovenance\tparent\tstartE\tnear_skew\trep\tmethod\tbestE\tlastE\timprovements\tbest_step\tsteps\tbest_non_skew\tbest_odd_defect\tquench_non_skew\tquench_bits\tquench_unique\tquench_steps\n";
+  out<<"n\tstate_id\tprovenance\tparent\tstartE\tnear_skew\trep\tmethod\tbestE\tlastE\timprovements\tbest_step\tsteps\tbest_non_skew\tbest_odd_defect\tquench_non_skew\tquench_bits\tquench_unique\tquench_steps\tinitial_odd_defect\tminimum_odd_defect\n";
   int state_id=0;
   while(getline(in,line)){
    if(line.empty())continue;istringstream ss(line);int n,E,seed,near;string bits,origin,parent,can;ss>>n>>E>>bits>>origin>>parent>>seed>>near>>can;
@@ -115,7 +118,7 @@ int main(int argc,char**argv){
    for(int rep=0;rep<reps;rep++)for(int arm=0;arm<=maxarm;arm++){
     auto v=tabu(x,arm,mix((unsigned long long)state_id*100003+rep*521+1937),moves,period,tenure,tilt);
     if(directE(v.best.s)!=v.best.E)throw runtime_error("output failed independent direct scorer");
-    out<<n<<"\t"<<state_id<<"\t"<<origin<<"\t"<<parent<<"\t"<<E<<"\t"<<near<<"\t"<<rep<<"\t"<<arm<<"\t"<<v.best.E<<"\t"<<v.final_E<<"\t"<<v.improvements<<"\t"<<v.best_step<<"\t"<<moves<<"\t"<<(v.best_non_skew==INT_MAX?-1:v.best_non_skew)<<"\t"<<(v.best_odd_defect==INT_MAX?-1:v.best_odd_defect)<<"\t"<<(v.best_quenched_non_skew==INT_MAX?-1:v.best_quenched_non_skew)<<"\t"<<v.quench_bits<<"\t"<<v.quench_unique<<"\t"<<v.quench_steps<<"\n";
+    out<<n<<"\t"<<state_id<<"\t"<<origin<<"\t"<<parent<<"\t"<<E<<"\t"<<near<<"\t"<<rep<<"\t"<<arm<<"\t"<<v.best.E<<"\t"<<v.final_E<<"\t"<<v.improvements<<"\t"<<v.best_step<<"\t"<<moves<<"\t"<<(v.best_non_skew==INT_MAX?-1:v.best_non_skew)<<"\t"<<(v.best_odd_defect==INT_MAX?-1:v.best_odd_defect)<<"\t"<<(v.best_quenched_non_skew==INT_MAX?-1:v.best_quenched_non_skew)<<"\t"<<v.quench_bits<<"\t"<<v.quench_unique<<"\t"<<v.quench_steps<<"\t"<<oddDefect(x)<<"\t"<<v.min_odd_defect<<"\n";
    }
    state_id++;
   }
