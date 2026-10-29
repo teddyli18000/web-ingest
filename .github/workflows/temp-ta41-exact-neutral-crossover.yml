@@ -1,0 +1,105 @@
+name: temp-ta41-exact-neutral-crossover
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/exact_neutral_crossover.cpp'
+      - '.github/workflows/temp-ta41-exact-neutral-crossover.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-exact-neutral-crossover
+  cancel-in-progress: false
+jobs:
+  enumerate:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {left: baseline, right: critical8}
+          - {left: baseline, right: mixed12}
+          - {left: baseline, right: mixed16}
+          - {left: baseline, right: mixed20}
+          - {left: critical8, right: mixed12}
+          - {left: critical8, right: mixed16}
+          - {left: critical8, right: mixed20}
+          - {left: mixed12, right: mixed16}
+          - {left: mixed12, right: mixed20}
+          - {left: mixed16, right: mixed20}
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - name: Freeze two upstream-verifiable equal-score 2006 parents and original instance
+        run: |
+          python3 - <<'PY'
+          import json,sys
+          from pathlib import Path
+          sys.path.insert(0,'science-boundary/job-shop-ta41')
+          from search import obtain,setup,evaluate
+          routes, ds, baseline=obtain()
+          pos,dur=setup(routes,ds)
+          assert evaluate(baseline,pos,dur)==2006
+          root=Path('science-boundary/job-shop-ta41/results')
+          variants={'baseline':baseline}
+          for name in ('critical8','mixed12','mixed16','mixed20'):
+              v=json.loads((root/('neutral-'+name)/'neutral-certificate.json').read_text())['machines']
+              verdict=json.loads((root/('neutral-'+name)/'neutral-verdict.json').read_text())
+              assert verdict['valid'] and verdict['score']=='2006',verdict
+              assert evaluate(v,pos,dur)==2006
+              variants[name]=v
+          inp=Path('/tmp/ta41-two-neutral-parents.txt')
+          with inp.open('w') as f:
+              print(30,20,file=f)
+              for j in range(30):
+                  print(' '.join('%d %d'%(mach,ds[j][k]) for k,mach in enumerate(routes[j])),file=f)
+              for name in ('${{ matrix.left }}','${{ matrix.right }}'):
+                  for order in variants[name]: print(' '.join(map(str,order)),file=f)
+          print('Prepared independently checked 2006 parents')
+          PY
+      - name: Enumerate all 2^d parent-machine permutation combinations
+        run: |
+          set -euo pipefail
+          out="science-boundary/job-shop-ta41/results/crossover-${{ matrix.left }}-${{ matrix.right }}"
+          mkdir -p "$out"
+          g++ -O3 -std=c++17 -Wall -Wextra -Werror science-boundary/job-shop-ta41/exact_neutral_crossover.cpp -o /tmp/ta41-crossover
+          /tmp/ta41-crossover /tmp/ta41-two-neutral-parents.txt "$out" '${{ matrix.left }}' '${{ matrix.right }}'
+      - name: Validate best crossover certificate using Few Shots official independent verifier
+        run: |
+          set -euo pipefail
+          out="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/crossover-${{ matrix.left }}-${{ matrix.right }}"
+          git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+          mkdir -p /tmp/crossover-best
+          cp "$out/best-machine-order-certificate.json" /tmp/crossover-best/certificate.json
+          (cd /tmp/few-shots && python3 problems/p009-job-shop-ta41/verify/verify.py /tmp/crossover-best) | tee "$out/official-best-verdict.json"
+          python3 - "$out" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1])
+          data=json.loads((p/'crossover-analysis.json').read_text())
+          v=json.loads((p/'official-best-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])==data['best_makespan'],(v,data)
+          assert data['candidate_crossover_masks_exhaustively_evaluated']==(
+              1 << data['machine_groups_differing_between_parents'])
+          if data['best_makespan']<=2005:
+              assert (p/'certificate.json').is_file()
+          PY
+      - name: Persist exact finite crossover evidence even during concurrent repository work
+        if: always()
+        run: |
+          set -euo pipefail
+          dir="science-boundary/job-shop-ta41/results/crossover-${{ matrix.left }}-${{ matrix.right }}"
+          test -f "$dir/official-best-verdict.json"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): exact neutral crossover ${{ matrix.left }} x ${{ matrix.right }}'
+          for attempt in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          echo 'Failed to persist exact crossover results' >&2
+          exit 1
