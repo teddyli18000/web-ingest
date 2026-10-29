@@ -21,7 +21,7 @@ jobs:
           python -m pip install numpy scipy ortools
           mkdir -p /tmp/tsplib/inputs
           for name in eil51 berlin52 eil76; do
-            curl -fsSL --retry 3 --max-time 120               "https://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/tsp/${name}.tsp"               -o "/tmp/tsplib/inputs/${name}.tsp"
+            curl -fsSL --retry 3 --max-time 120               "https://raw.githubusercontent.com/mastqe/tsplib/master/${name}.tsp"               -o "/tmp/tsplib/inputs/${name}.tsp"
           done
       - name: Pre-register public parent tours and independent held-out local optimum
         run: |
