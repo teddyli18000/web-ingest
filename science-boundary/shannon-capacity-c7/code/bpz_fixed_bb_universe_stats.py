@@ -2,12 +2,12 @@
 """Exact structural audit of the complete 10D universe compatible with BPZ BB.
 
 Let I0 be the pinned 367-point five-dimensional parent, R the eight owners from
-its private pairs, and B=I0\R (|B|=359).  Define
+its private pairs, and B=I0\R (|B|=359). Define
 
     Z = {z in C7^5 : N[z] intersect B = empty}.
 
 A 10D vertex (u,v) is compatible with every point of BB=B x B iff u in Z or
-v in Z.  Hence the *complete* fixed-core candidate universe is
+v in Z. Hence the complete fixed-core candidate universe is
 
     U = (Z x V5) union (V5 x Z).
 
@@ -29,7 +29,6 @@ def alpha_bruteforce(vertices, edges):
     for i,j in edges:
         adj[i]|=1<<j; adj[j]|=1<<i
     best=0; best_mask=0
-    # n is expected to be 16. Branch-and-bound maximum independent set.
     def dfs(cand, chosen):
         nonlocal best,best_mask
         if chosen.bit_count()+cand.bit_count()<=best: return
@@ -37,7 +36,6 @@ def alpha_bruteforce(vertices, edges):
             k=chosen.bit_count()
             if k>best: best=k; best_mask=chosen
             return
-        # branch on a high-degree remaining vertex
         vs=[i for i in range(n) if (cand>>i)&1]
         v=max(vs,key=lambda x:(adj[x]&cand).bit_count())
         dfs(cand & ~(1<<v) & ~adj[v], chosen | (1<<v))
@@ -54,29 +52,34 @@ def main():
     root=args.tan_root.resolve(); sys.path.insert(0,str(root))
     from shannon.certificates import load_base  # type: ignore
 
-    base,_transform,_exchanges,axioms=load_base(root/"data"/"base_c7.json")
+    data_path=root/"data"/"base_c7.json"
+    raw=json.loads(data_path.read_text())
+    base,_transform,_exchanges,axioms=load_base(data_path)
     if not all(axioms.values()): raise RuntimeError({k:v for k,v in axioms.items() if not v})
     ring=base.ring
-    I=set(base.I0.elements); X=set(base.X.elements)
-    PH=set(base.PH.elements); PV=set(base.PV.elements); Q=PH|PV
-    pairs=[tuple(map(int,p)) for p in base.private_pairs]
-    owners={p[0] for p in pairs}
-    alts={p[1] for p in pairs}
+
+    I=set(map(int,raw["I0"])); X=set(map(int,raw["X"]))
+    pairs=[tuple(map(int,p)) for p in raw["private_pairs"]]
+    PH=set(map(int,raw["PH"])); PV=set(map(int,raw["PV"])); Q=PH|PV
+    owners={p[0] for p in pairs}; alts={p[1] for p in pairs}
     B=I-owners
+    if I!=set(base.I.elements) or X!=set(base.X.elements) or B!=set(base.B.elements):
+        raise RuntimeError("raw/load_base set mismatch")
+    if PH!=set(base.PH.elements) or PV!=set(base.PV.elements) or owners!=set(base.R.elements):
+        raise RuntimeError("raw/load_base private-set mismatch")
     if (len(I),len(X),len(B),len(PH),len(PV),len(Q),len(pairs))!=(367,367,359,8,8,16,8):
         raise RuntimeError(("base size drift",len(I),len(X),len(B),len(PH),len(PV),len(Q),len(pairs)))
     if owners|alts!=Q or owners&alts:
         raise RuntimeError(("private endpoint partition drift",owners,alts,Q))
 
     Z={z for z in range(ring.n) if not (ring.NB[z]&B)}
-    q_edges=[]; qv=sorted(Q); qi={z:i for i,z in enumerate(qv)}
+    q_edges=[]; qv=sorted(Q)
     for i,a in enumerate(qv):
         for j in range(i+1,len(qv)):
             b=qv[j]
             if b in ring.NB[a]: q_edges.append((i,j))
     pair_conflicts=[b in ring.NB[a] for a,b in pairs]
-    if not all(pair_conflicts):
-        raise RuntimeError(("private pair lost conflict",pair_conflicts))
+    if not all(pair_conflicts): raise RuntimeError(("private pair lost conflict",pair_conflicts))
     ph_ind=all(not ((ring.NB[x]&PH)-{x}) for x in PH)
     pv_ind=all(not ((ring.NB[x]&PV)-{x}) for x in PV)
     alpha_q,alpha_q_witness=alpha_bruteforce(qv,q_edges)
@@ -116,7 +119,7 @@ def main():
         "terminal_periphery_union_equals_XQ_union":code_periphery_union==expected_xq,
         "terminal_periphery_alpha_upper_from_split":2*len(X)*alpha_q,
         "terminal_periphery_known_record_size":5872,
-        "fixed_BB_breakthrough_implies_alpha_C7_5_at_least":368 if len(Z)==16 and all(pair_conflicts) else None,
+        "fixed_BB_breakthrough_implies_alpha_C7_5_at_least":368 if Z==Q and len(pairs)==8 and all(pair_conflicts) else None,
     }
     args.output.parent.mkdir(parents=True,exist_ok=True)
     args.output.write_text(json.dumps(status,indent=2,sort_keys=True)+"\n")
