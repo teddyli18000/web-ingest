@@ -1,0 +1,47 @@
+name: temp-monalisa-topological-defect-prices
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/price_topological_defects.py
+      - .github/workflows/temp-monalisa-topological-defect-prices.yml
+permissions:
+  contents: read
+jobs:
+  price:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Official integer scorer and complete metric geometric helper
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install scipy numpy
+          mkdir -p /tmp/p010-motifs
+          gh run download 40830451326 --repo teddyli18000/web-ingest --name monalisa-symbolic-exact-exit-1 --dir /tmp/p010-motifs
+          test -s /tmp/p010-motifs/positive-motifs.json
+      - name: Compute complete Euclidean approximate dual repair prices for split cuts
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          dir=science-boundary/mona-lisa-tsp/results/defect-prices
+          mkdir -p "$dir"
+          python science-boundary/mona-lisa-tsp/price_topological_defects.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --motifs /tmp/p010-motifs/positive-motifs.json \
+            --report "$dir/report.json" --candidate "$dir/certificate.json" \
+            --cross-neighbors 64 --maximum-island 80 --verify-positive
+          if test -s "$dir/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$dir"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-defect-prices
+          path: science-boundary/mona-lisa-tsp/results/defect-prices/
+          if-no-files-found: ignore
