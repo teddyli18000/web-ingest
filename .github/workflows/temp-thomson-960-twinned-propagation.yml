@@ -1,0 +1,52 @@
+name: temp Thomson 960 topology-preserving twinned-family propagation
+
+on:
+  workflow_dispatch:
+    inputs:
+      n:
+        description: historical source size (912, 932, 942, 972)
+        required: true
+        default: '972'
+      url:
+        description: authoritative CCD XYZ URL
+        required: true
+        default: 'https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/xyz/972.xyz'
+      branch:
+        description: children per beam state
+        required: true
+        default: '2'
+      beam:
+        description: beam width
+        required: true
+        default: '2'
+      core_hops:
+        description: graph hops excluded around defect core
+        required: true
+        default: '2'
+
+permissions:
+  contents: read
+
+jobs:
+  propagate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Fetch selected historical twinned parent
+        run: |
+          curl --fail --location --retry 3 '${{ inputs.url }}' -o "$RUNNER_TEMP/parent.xyz"
+      - name: Topology-preserving size propagation
+        run: |
+          python3 science-boundary/thomson-960/code/propagate_twinned_family.py \
+            "$RUNNER_TEMP/parent.xyz" "$RUNNER_TEMP/few-shots" \
+            --target 960 --branch '${{ inputs.branch }}' --beam '${{ inputs.beam }}' \
+            --core-hops '${{ inputs.core_hops }}' --min-e77 1 \
+            --out "$RUNNER_TEMP/twinned-${{ inputs.n }}-to-960.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-twinned-${{ inputs.n }}-to-960
+          retention-days: 7
+          path: ${{ runner.temp }}/twinned-${{ inputs.n }}-to-960.json
