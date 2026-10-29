@@ -1,0 +1,67 @@
+name: temp-ta41-consensus-poset-feasibility
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/consensus_poset_feasibility.py'
+      - '.github/workflows/temp-ta41-consensus-poset-feasibility.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-consensus-poset-feasibility
+  cancel-in-progress: false
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {id: base-vs-critical, parents: 'baseline critical8'}
+          - {id: base-vs-mixed20, parents: 'baseline mixed20'}
+          - {id: critical-vs-mixed20, parents: 'critical8 mixed20'}
+          - {id: mixed12-vs-mixed16, parents: 'mixed12 mixed16'}
+          - {id: four-neutrals, parents: 'critical8 mixed12 mixed16 mixed20'}
+          - {id: five-parents, parents: 'baseline critical8 mixed12 mixed16 mixed20'}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned CP engine
+        run: python -m pip install 'ortools==9.14.6206'
+      - name: Solve <=2005 with exact intersection of multiple strong 2006 machine precedence posets
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/consensus_poset_feasibility.py
+          python3 science-boundary/job-shop-ta41/consensus_poset_feasibility.py --parents ${{ matrix.parents }} --seconds 220 --seed 4107 --out 'science-boundary/job-shop-ta41/results/consensus-${{ matrix.id }}'
+      - name: Independent official verifier for any positive schedule
+        run: |
+          set -euo pipefail
+          dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/consensus-${{ matrix.id }}"
+          if test -f "$dir/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            (cd /tmp/few-shots && python3 problems/p009-job-shop-ta41/verify/verify.py "$dir") | tee "$dir/upstream-verdict.json"
+            python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          d=json.loads((Path(sys.argv[1])/'upstream-verdict.json').read_text())
+          assert d['valid'] and int(d['score'])<=2005,d
+          PY
+          fi
+      - name: Persist grounded structural findings despite concurrent main ref changes
+        if: always()
+        run: |
+          set -euo pipefail
+          dir="science-boundary/job-shop-ta41/results/consensus-${{ matrix.id }}"
+          test -f "$dir/consensus-analysis.json"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): test shared strong-schedule precedence backbone ${{ matrix.id }}'
+          for attempt in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          echo 'Could not persist completed consensus calculation' >&2
+          exit 1
