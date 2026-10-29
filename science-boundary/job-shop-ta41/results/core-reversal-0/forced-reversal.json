@@ -1,0 +1,160 @@
+{
+  "instance": "ta41",
+  "baseline": 2006,
+  "target": 2005,
+  "core_source": "consensus-five-parents/consensus-analysis.json",
+  "global_cover_branch_count": 21,
+  "branch_semantics": "At least one reversed shared pair is mandatory for any <=2005 schedule",
+  "shard": 0,
+  "shards": 7,
+  "assigned": 3,
+  "checked": 3,
+  "stage_c_global_infeasible": 0,
+  "stage_c_unknown": 3,
+  "feasible": 0,
+  "neutral_2006_seeds": 0,
+  "branches": [
+    {
+      "branch_index": 0,
+      "arc": {
+        "machine": 3,
+        "from_job": 5,
+        "to_job": 14,
+        "index": 106
+      },
+      "stage_a": {
+        "status": "UNKNOWN",
+        "seconds": 12.009,
+        "conflicts": 3698,
+        "branches": 9385,
+        "restricted_reinsert_cohort": [
+          4,
+          5,
+          9,
+          10,
+          14,
+          15,
+          16,
+          18,
+          19,
+          21,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28
+        ]
+      },
+      "stage_b": {
+        "status": "UNKNOWN",
+        "seconds": 16.016,
+        "conflicts": 13330,
+        "branches": 28883,
+        "restricted_reinsert_cohort": null
+      },
+      "stage_c": {
+        "status": "UNKNOWN",
+        "seconds": 60.033,
+        "conflicts": 16170,
+        "branches": 304526,
+        "restricted_reinsert_cohort": null
+      }
+    },
+    {
+      "branch_index": 7,
+      "arc": {
+        "machine": 3,
+        "from_job": 27,
+        "to_job": 5,
+        "index": 127
+      },
+      "stage_a": {
+        "status": "UNKNOWN",
+        "seconds": 12.008,
+        "conflicts": 1597,
+        "branches": 27589,
+        "restricted_reinsert_cohort": [
+          4,
+          5,
+          9,
+          10,
+          14,
+          15,
+          16,
+          18,
+          19,
+          21,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28
+        ]
+      },
+      "stage_b": {
+        "status": "UNKNOWN",
+        "seconds": 16.018,
+        "conflicts": 13314,
+        "branches": 22552,
+        "restricted_reinsert_cohort": null
+      },
+      "stage_c": {
+        "status": "UNKNOWN",
+        "seconds": 60.044,
+        "conflicts": 19953,
+        "branches": 201533,
+        "restricted_reinsert_cohort": null
+      }
+    },
+    {
+      "branch_index": 14,
+      "arc": {
+        "machine": 11,
+        "from_job": 28,
+        "to_job": 14,
+        "index": 401
+      },
+      "stage_a": {
+        "status": "UNKNOWN",
+        "seconds": 12.007,
+        "conflicts": 2537,
+        "branches": 20341,
+        "restricted_reinsert_cohort": [
+          4,
+          5,
+          9,
+          10,
+          14,
+          15,
+          16,
+          18,
+          19,
+          21,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28
+        ]
+      },
+      "stage_b": {
+        "status": "UNKNOWN",
+        "seconds": 16.007,
+        "conflicts": 3998,
+        "branches": 88667,
+        "restricted_reinsert_cohort": null
+      },
+      "stage_c": {
+        "status": "UNKNOWN",
+        "seconds": 60.011,
+        "conflicts": 16185,
+        "branches": 314875,
+        "restricted_reinsert_cohort": null
+      }
+    }
+  ],
+  "complete": true
+}
