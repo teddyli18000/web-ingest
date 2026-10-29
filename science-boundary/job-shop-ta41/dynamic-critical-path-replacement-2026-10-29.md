@@ -110,3 +110,15 @@ These are *distinct accepted schedules, including temporarily worse scores*, **n
 
 The next *representation* test is **fully soft predecessor reorientation**, not operation release. The new `soft_reorientation_feedback.py` model makes **all 340 previously fixed survivor arcs reversible Boolean disjunctions**; no survivor order is hard-frozen. It keeps full job chains and NoOverlap, enforces one independently certified necessary 2005 core reversal, and minimizes makespan first, then policy-weighted reorientation costs. Policies dynamic/static/core/random and both 2006 parents have equal 130-second CP caps. The model is globally complete despite different optimization guidance; a score-2006 FEASIBLE outcome is not a global lower bound. Results pending at `results/soft-orientation-{baseline,124}-{dynamic,static,core,random}/soft-orientation.json`.
 
+
+
+## Phase VI: full global model with soft rather than hard machine precedences
+
+`soft_reorientation_feedback.py` made **all 340 previously hard survivor machine-order relations** explicitly reversible Boolean disjunctions, while retaining every job arc and all 20 full NoOverlap constraints. Its weighted policy choices were *objective guidance only*; the 2005 target remained reachable in principle. The model also required one reversal of an independently certified 2005 obstruction core as a necessary cut, and lexicographically prioritized makespan (10000x) over weighted flip count.
+
+Eight 130-second CP-SAT runs (two verified 2006 starts x four policies) all returned **FEASIBLE at makespan 2006, never OPTIMAL**, and all found one core-reversing survivor-pair orientation. Reported best CP objective bounds were around 18710000–18750000, far too weak to prove anything about 2005. No exact score 2005 certificate exists. Source `results/soft-orientation-{baseline,124}-{dynamic,static,core,random}/soft-orientation.json`.
+
+**Mechanistic diagnosis:** Simply softening all pinned arcs removes the earlier structural exclusion (no more immediate presolve INFEASIBLE), but the one-core cut is too weak to require a coordinated 2005-like repair: the solver can select a one-pair neutral gateway and stop at 2006. The remaining necessary structure comes from *multiple* independent UNSAT cores and the proven >=15-machine change theorem.
+
+**Phase VII launched:** `all_core_orientation_repair.py` uses a fully unconstrained NoOverlap job-shop machine-order representation plus **nine separately verified necessary orientation cuts** (eight independently hard-checked cores + 21-arc consensus core) and the independently CP-SAT-proven >=15 changed machine orders condition. These conditions are necessary for any <=2005 schedule, not arbitrary heuristic hard freezes. The solver may still find 2006; FEASIBLE 2006 does not prove optimum. Four initial pilot arms (two parents x dynamic/core weighting) under equal 150-second limits. Only cite this as a *constructed test* until `results/allcores-*/all-cores-reorientation.json` exists and any strict improvement is officially validated.
+
