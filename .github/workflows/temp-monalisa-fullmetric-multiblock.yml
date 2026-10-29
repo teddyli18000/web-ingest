@@ -1,0 +1,55 @@
+name: temp-monalisa-fullmetric-multiblock
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/microcycle_multiblock_lowerbound.py
+      - .github/workflows/temp-monalisa-fullmetric-multiblock.yml
+permissions:
+  contents: read
+jobs:
+  bound:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {seeds: 52, neutral: false}
+          - {seeds: 52, neutral: true}
+          - {seeds: "52,105", neutral: false}
+          - {seeds: "52,105", neutral: true}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch authoritative verification data and public seed motifs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          mkdir -p /tmp/p010-motifs
+          gh run download 40830451326 --repo teddyli18000/web-ingest --name monalisa-symbolic-exact-exit-1 --dir /tmp/p010-motifs
+          test -s /tmp/p010-motifs/positive-motifs.json
+      - name: Exact complete-graph multiblock insertion lower bound
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+          DO_NEUTRAL: ${{ matrix.neutral }}
+        run: |
+          path="science-boundary/mona-lisa-tsp/results/multiblock-${{ matrix.seeds }}-${{ matrix.neutral }}"
+          mkdir -p "$path"
+          flags=()
+          if test "$DO_NEUTRAL" = true; then flags+=(--include-neutral); fi
+          python science-boundary/mona-lisa-tsp/microcycle_multiblock_lowerbound.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --motifs /tmp/p010-motifs/positive-motifs.json \
+            --report "$path/report.json" --seed-indices "${{ matrix.seeds }}" \
+            --max-blocks 4 "${flags[@]}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-fullmetric-multiblock-${{ matrix.seeds }}-${{ matrix.neutral }}
+          path: science-boundary/mona-lisa-tsp/results/multiblock-*/
+          if-no-files-found: ignore
