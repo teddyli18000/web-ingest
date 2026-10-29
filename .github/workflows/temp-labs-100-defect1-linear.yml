@@ -1,0 +1,56 @@
+name: temp labs-100 linearized odd-perfect defect1
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-defect1-linear.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-defect1:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Build support-linearized exact search
+        run: |
+          g++ -O3 -march=native -std=c++20 -DNDEBUG \
+            science-boundary/labs-100/code/oddperfect_support_linear_bnb.cpp \
+            -o /tmp/support-linear
+      - name: Regression - representation contains genuine defect1 states
+        shell: bash
+        run: |
+          set -euo pipefail
+          /tmp/support-linear --support 1 --A 2 --B 0 --cap 200000 --seconds 60 \
+            | tee /tmp/regression.txt
+          grep -F 'FOUND support=1 Aabs=2 Babs=0 ' /tmp/regression.txt
+          seq=$(sed -n 's/^FOUND support=1 Aabs=2 Babs=0 seq=//p' /tmp/regression.txt | tail -n1)
+          test "${#seq}" -eq 100
+          python3 science-boundary/labs-100/code/verify.py -- "$seq" | tee /tmp/regression-energy.txt
+      - name: Exhaust every defect1 lag at E <= 574
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > /tmp/defect1.txt
+          for h in $(seq 1 2 97); do
+            echo "=== lag=$h ===" | tee -a /tmp/defect1.txt
+            /tmp/support-linear --support "$h" --A 2 --B 0 --cap 524 --seconds 60 \
+              | tee -a /tmp/defect1.txt
+          done
+          test "$(grep -c '^COMPLETE support=' /tmp/defect1.txt)" -eq 49
+          ! grep -q '^FOUND ' /tmp/defect1.txt
+          ! grep -q '^TIMEOUT ' /tmp/defect1.txt
+      - name: Upload exact evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: labs100-defect1-linear
+          path: |
+            /tmp/regression.txt
+            /tmp/regression-energy.txt
+            /tmp/defect1.txt
