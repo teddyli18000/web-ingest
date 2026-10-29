@@ -1,0 +1,109 @@
+name: temp-p010-tsplib-strict-heldout-5cases
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/temp-p010-tsplib-strict-heldout-5cases.yml
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Retrieve five TSPLIB instance coordinates without optimal tours
+        run: |
+          python -m pip install numpy scipy ortools
+          mkdir -p /tmp/bench/instances
+          for name in eil51 berlin52 st70 eil76 kroA100; do
+            curl -fsSL --retry 3               "https://raw.githubusercontent.com/mastqe/tsplib/master/${name}.tsp"               -o "/tmp/bench/instances/${name}.tsp"
+          done
+      - name: Generate independent heuristic populations then hide better route
+        run: |
+          for name in eil51 berlin52 st70 eil76 kroA100; do
+            python science-boundary/mona-lisa-tsp/tsplib_counterfactual_bench.py prepare               --name "$name" --instance "/tmp/bench/instances/${name}.tsp"               --parents-count 3 --out "/tmp/bench/${name}"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p010-blind-5case-public
+          path: /tmp/bench/*/public.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p010-blind-5case-secret
+          path: /tmp/bench/*/private.json
+  search:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        instance: [eil51, berlin52, st70, eil76, kroA100]
+        method: [control, uncertainty, conflict, repair]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: p010-blind-5case-public
+          path: /tmp/bench-public
+      - name: Run masked same-budget candidate selection and exact single-tour optimization
+        run: |
+          python -m pip install numpy scipy ortools
+          public=$(find /tmp/bench-public -path "*/${{ matrix.instance }}/public.json" -print -quit)
+          test -s "$public"
+          test ! -e /tmp/bench-public/${{ matrix.instance }}/private.json
+          budget=12
+          if test "${{ matrix.method }}" = "control"; then budget=0; fi
+          out="science-boundary/mona-lisa-tsp/results/strict-holdout-${{ matrix.instance }}-${{ matrix.method }}"
+          mkdir -p "$out"
+          python science-boundary/mona-lisa-tsp/tsplib_counterfactual_bench.py search             --public "$public" --strategy "${{ matrix.method }}" --budget "$budget"             --seconds 18 --out "$out/result.json"
+          test -s "$out/result.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-blind5-${{ matrix.instance }}-${{ matrix.method }}
+          path: science-boundary/mona-lisa-tsp/results/strict-holdout-*/result.json
+          if-no-files-found: ignore
+  evaluate:
+    needs: [prepare, search]
+    if: ${{ always() && needs.prepare.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: p010-blind-5case-*
+          path: /tmp/strict-eval
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: p010-blind5-*
+          path: /tmp/strict-eval
+      - name: Unseal official certified optimal scores and independently held-out heuristic winners
+        run: |
+          python -m pip install numpy scipy ortools
+          for pair in eil51:426 berlin52:7542 st70:675 eil76:538 kroA100:21282; do
+            name=${pair%:*}
+            opt=${pair#*:}
+            public=$(find /tmp/strict-eval -name public.json -path "*/${name}/*" -print -quit)
+            hidden=$(find /tmp/strict-eval -name private.json -path "*/${name}/*" -print -quit)
+            test -s "$public"
+            test -s "$hidden"
+            python science-boundary/mona-lisa-tsp/tsplib_counterfactual_bench.py evaluate               --public "$public" --private "$hidden" --results /tmp/strict-eval               --optimum "$opt"               --out "science-boundary/mona-lisa-tsp/results/strict-holdout-eval-${name}.json"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-blind-5case-unsealed-results
+          path: science-boundary/mona-lisa-tsp/results/strict-holdout-eval-*.json
+          if-no-files-found: ignore
