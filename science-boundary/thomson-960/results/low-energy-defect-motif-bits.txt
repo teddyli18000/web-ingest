@@ -93,6 +93,36 @@ D->B retains all four D twin edges and creates four additional twin edges, with
 20 vertices changing coordination class.  B->A retains six of eight B twin
 edges, removes two and creates three, with 16 vertices changing coordination.
 
+Higher C3 minima: twin count alone is NOT an energy model
+----------------------------------------------------------
+Two independently recovered, full-space-stable C3 minima from run 40740132938
+provide a useful control against over-interpreting the A/B/D/C trend.
+
+1. E = 444368.56453920424 = R+0.1721330069
+   coordination 33/906/21; 9 internal 7-7 twin edges.
+   The defect graph has:
+     - 9 five-vertex components (3 pentagons + 2 heptagons), all twinned;
+     - 3 two-vertex neutral 5-7 components;
+     - 3 isolated pentagons.
+   Its topological charge is still 12, but it has only 21 heptagons / dislocations.
+   Despite the same raw twin count as A, it is much higher in energy.
+
+2. E = 444368.80230364751 = R+0.4098974502
+   coordination 36/900/24; 6 internal 7-7 twin edges.
+   Its defect graph contains several component types rather than twelve uniform
+   five-vertex units:
+     - 6 twinned five-vertex 3F+2S components;
+     - 3 conventional five-vertex 3F+2S components;
+     - 3 three-vertex 2F+1S charge-+1 components;
+     - 3 neutral two-vertex 1F+1S components.
+
+Therefore total twin count is not a monotone global predictor of energy.  The
+special structural property shared by A/B/D/C is stronger: **all twelve units
+are charge-+1 five-vertex 3F+2S components**.  Their low-energy differences then
+live primarily in the binary 7-7 adjacency, local 5<->7 rewrites, and global
+arrangement/shear coupling.  Searches should preserve or deliberately vary the
+full component decomposition, not optimize a scalar 'number of twins'.
+
 Scientific implication
 ----------------------
 The meaningful reduced coordinate is not 'scar family versus a separate twin
@@ -100,7 +130,8 @@ family'.  The actual low-energy landscape already mixes conventional and
 twinned charge-+1 defect units.  A better search representation is therefore a
 12-motif discrete/continuous hybrid:
 
-- binary motif adjacency (whether each defect unit contains a 7-7 edge),
+- the component decomposition itself (preferably twelve 3F+2S charge-+1 units),
+- binary motif adjacency within each unit (whether the two 7s share an edge),
 - motif identity / local 5<->7 rewrites when a unit changes type,
 - global placement/orientation/shear coupling between the twelve units,
 - C3 symmetry groups the twelve units into four 3-cycles at symmetric states.
@@ -110,7 +141,7 @@ file.  Do not infer its twin count from energy or symmetry.  Measure it directly
 from the live certificate / a workflow before using twin-count trends as a
 record-level conclusion.
 
-Queued N=972 and scar-to-twin workflows remain scientifically useful, but their
-interpretation must change.  They are searches over motif-count/pattern and
-cross-size defect organization, not introductions of a previously absent twin
-topology.
+Queued N=972 and direct flip workflows remain scientifically useful, but their
+interpretation must be component-pattern propagation / rewrite, not introduction
+of a previously absent twin topology.  Near-degenerate descendants must be
+deduplicated by component/motif pattern as well as energy.
