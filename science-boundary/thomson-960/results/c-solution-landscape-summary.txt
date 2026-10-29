@@ -47,9 +47,32 @@ phases 0,20,40,60,80,100 degrees. Unrefined endpoints include:
   phase 60:  E=444368.4109931071, index 0 -> D
   phase 80:  E=444368.4109930919, index 0 -> D
   phase 100: E=444368.4038881434, grad RMS=3.60e-4, index 1
-The phase-0/20/100 index-1 candidates require stationary refinement and
-reaction-side endpoint classification before being treated as certified edges.
-Certification run 40795427402 was active when this summary was written.
+
+Attempted hybrid certification (run 40795427402) exposed a numerical limitation
+rather than producing new certified saddles. The hybrid refiner suppresses the
+reaction Newton update when |lambda|<0.1; these candidates are precisely shallow
+reaction-coordinate states, with almost all residual gradient along that mode.
+Consequently a count of one negative Hessian mode is NOT sufficient evidence of
+a stationary saddle here.
+
+- phase 100: final E=444368.403888137720, grad RMS=3.60465e-4,
+  lambda0=-0.00669790, reaction-gradient magnitude ~0.01579. Reaction-side
+  relaxations go B on the negative side and A on the positive side. This is an
+  A/B separatrix point, not a certified saddle.
+- phase 20: final E=444368.405774724379, grad RMS=1.12061e-3,
+  lambda0=-0.09293074, reaction-gradient magnitude ~0.0491. Reaction-side
+  relaxations go A on the negative side and B on the positive side. Again this
+  is an A/B separatrix point, not a certified saddle.
+- phase 0: the first clipped reaction step crossed the soft eigenvalue through
+  zero; final E=444368.403903248603, grad RMS=3.61353e-4, lambda0=+0.08057595,
+  with reaction-gradient magnitude ~0.01583. It is nonstationary and has zero
+  negative modes after this attempt.
+
+The correct refinement for these shallow states is therefore reaction-coordinate
+continuation/root solving: minimize the perpendicular subspace, then solve the
+projected reaction gradient for zero without an artificial small-|lambda| cutoff.
+`code/refine_saddle_reaction_continuation.py` and run 40796939174 implement this
+follow-up. Until that succeeds, none of phase 0/20/100 is a certified new edge.
 
 Nearby constrained C3 states
 ----------------------------
@@ -66,6 +89,8 @@ search were recovered deterministically and classified in full space by run
    lambda0=lambda1~+4.324089. This is also a genuine full-space minimum.
 
 Therefore C is currently the special low-energy C3 constrained state that is
-actually a higher-index full-space portal. The next justified work is to
-complete C's index-1 descendant certification before expanding to substantially
-higher symmetric stationary states.
+actually a higher-index full-space portal. The direct C unstable manifold is
+already saturated onto A/B/D. The next search-space change is to recover other
+low-energy symmetry-constrained states from the old T parent (starting with C3
+orbit-space basin hopping) and classify their full-space Morse indices rather
+than assuming constrained minima are genuine minima.
