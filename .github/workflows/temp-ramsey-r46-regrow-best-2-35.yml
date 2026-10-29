@@ -1,0 +1,100 @@
+name: Temp Ramsey R46 regrow best vertices 2 35
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - science-boundary/ramsey-r46/regrow_vertices_sat.py
+      - .github/workflows/temp-ramsey-r46-regrow-best-2-35.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate exact two-vertex regrow CNF
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 science-boundary/ramsey-r46/regrow_vertices_sat.py generate \
+            science-boundary/ramsey-r46/results/methodb36-best.json \
+            /tmp/r46/regrow.cnf /tmp/r46/meta.json 2 35 | tee /tmp/r46/generate.json
+          python3 - /tmp/r46/meta.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1])); assert d['variables']==69 and d['clauses']==3690 and d['clauses_by_kind']=={'k4':961,'i6':2729},d
+          PY
+      - name: Build pinned Kissat 4.0.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/arminbiere/kissat.git "$RUNNER_TEMP/kissat"
+          git -C "$RUNNER_TEMP/kissat" checkout --quiet 8af8e56f174b778aef3aa45af9f739b2a5f492c2
+          cd "$RUNNER_TEMP/kissat" && ./configure >/dev/null && make -j2 >/dev/null
+          test "$(build/kissat --version)" = '4.0.4'
+      - name: Solve exact arbitrary regrow
+        id: solve
+        shell: bash
+        run: |
+          set -uo pipefail
+          set +e
+          timeout --signal=TERM --kill-after=15s 600 "$RUNNER_TEMP/kissat/build/kissat" /tmp/r46/regrow.cnf > /tmp/r46/solver.log 2>&1
+          rc=$?
+          set -e
+          case "$rc" in 10) status=SAT;; 20) status=UNSAT;; 124|137|143) status=TIMEOUT;; *) status=ERROR;; esac
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          printf '{"campaign":"methodb36-best-regrow-2-35","status":"%s","solver_exit":%s,"variables":69,"clauses":3690}\n' "$status" "$rc" > /tmp/r46/summary.json
+          cat /tmp/r46/summary.json
+          tail -n 30 /tmp/r46/solver.log || true
+          test "$status" != ERROR
+      - name: Decode and locally verify SAT
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/ramsey-r46/regrow_vertices_sat.py decode \
+            science-boundary/ramsey-r46/results/methodb36-best.json /tmp/r46/meta.json /tmp/r46/solver.log /tmp/r46/candidate.json
+          python3 science-boundary/ramsey-r46/regrow_vertices_sat.py verify /tmp/r46/candidate.json
+      - name: Authoritative Few Shots verification on SAT
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate
+          cp /tmp/r46/candidate.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/few-shots-verify.json
+          python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1])); assert d.get('valid') is True and str(d.get('score'))=='36',d
+          PY
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ramsey-r46-regrow-best-2-35
+          path: /tmp/r46
+          if-no-files-found: warn
+          retention-days: 7
+      - name: Persist result and retire one-shot workflow
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp /tmp/r46/summary.json science-boundary/ramsey-r46/results/methodb36-best-regrow-2-35.json
+          [[ ! -f /tmp/r46/candidate.json ]] || cp /tmp/r46/candidate.json science-boundary/ramsey-r46/results/methodb36-best-regrow-2-35-candidate.json
+          [[ ! -f /tmp/r46/few-shots-verify.json ]] || cp /tmp/r46/few-shots-verify.json science-boundary/ramsey-r46/results/methodb36-best-regrow-2-35-verify.json
+          git rm .github/workflows/temp-ramsey-r46-regrow-best-2-35.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/results/methodb36-best-regrow-2-35*
+          git commit -m 'ramsey-r46: record exact best-nearmiss two-vertex regrow' || exit 0
+          for attempt in 1 2 3 4 5; do git pull --rebase origin main && git push origin HEAD:main && exit 0; sleep $((attempt*4)); done
+          exit 1
