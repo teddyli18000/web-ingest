@@ -1,0 +1,78 @@
+name: temp-ta41-neutral-plateau-escape
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/neutral_plateau_escape.py'
+      - '.github/workflows/temp-ta41-neutral-plateau-escape.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-neutral-plateau-escape
+  cancel-in-progress: false
+jobs:
+  explore:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {variant: critical8, seed: 4107}
+          - {variant: mixed12, seed: 111}
+          - {variant: mixed16, seed: 720}
+          - {variant: mixed20, seed: 2006}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned solver
+        run: python -m pip install 'ortools==9.14.6206'
+      - name: Create distant neutral 2006 schedule then try exact job-cohort escape
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/neutral_plateau_escape.py
+          python3 science-boundary/job-shop-ta41/neutral_plateau_escape.py --variant '${{ matrix.variant }}' --seed '${{ matrix.seed }}' --seconds 125 --escape-seconds 150 --out 'science-boundary/job-shop-ta41/results/neutral-${{ matrix.variant }}'
+      - name: Check all saved schedule certificates against the authoritative verifier
+        run: |
+          set -euo pipefail
+          dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/neutral-${{ matrix.variant }}"
+          if test -f "$dir/neutral-certificate.json" || test -f "$dir/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+          fi
+          if test -f "$dir/neutral-certificate.json"; then
+            mkdir -p /tmp/neutral-cert
+            cp "$dir/neutral-certificate.json" /tmp/neutral-cert/certificate.json
+            ( cd /tmp/few-shots && python3 problems/p009-job-shop-ta41/verify/verify.py /tmp/neutral-cert ) | tee "$dir/neutral-verdict.json"
+            python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          x=json.loads((Path(sys.argv[1])/'neutral-verdict.json').read_text())
+          assert x['valid'] and x['score']<=2006,x
+          PY
+          fi
+          if test -f "$dir/certificate.json"; then
+            ( cd /tmp/few-shots && python3 problems/p009-job-shop-ta41/verify/verify.py "$dir" ) | tee "$dir/upstream-verdict.json"
+            python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          x=json.loads((Path(sys.argv[1])/'upstream-verdict.json').read_text())
+          assert x['valid'] and x['score']<=2005,x
+          PY
+          fi
+      - name: Preserve neutral seed or verified improvement despite parallel main updates
+        if: always()
+        run: |
+          set -euo pipefail
+          dir="science-boundary/job-shop-ta41/results/neutral-${{ matrix.variant }}"
+          test -f "$dir/analysis.json"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): create distant equal-makespan seed ${{ matrix.variant }}'
+          for attempt in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          echo 'Could not publish science artifacts after 40 attempts' >&2
+          exit 1
