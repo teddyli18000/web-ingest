@@ -136,3 +136,29 @@ This is a structural *existence* result: previously we knew a 15-inversion score
 
 Next decision: only if this nine-cut neutral certificate is officially valid, resume new-critical-path macro search *from that exact orientation class*, rather than simply rerun the original baseline. The real open question remains reaching **2005**, not just crossing a growing collection of necessary disjunctions at score 2006.
 
+
+
+## Phase VIII: official nine-core neutral certificate and new-bottleneck follow-up (complete)
+
+The single replay of nine simultaneous necessary cuts under the same pinned CP-SAT version produced a **valid Few Shots official 2006 machine-order certificate**:
+
+- `results/ninecore-neutral-baseline/neutral-certificate.json`
+- `results/ninecore-neutral-baseline/neutral-verdict.json` with `valid=true, score=2006`, hash `da4c71749fc5d2ba1d0b49eec2eb2801f02239699966582dfe8957298a771302`
+- Source objective model: `all_core_orientation_repair.py`, all eight independent hard-retested assumption UNSAT cores + certified consensus-21 core + independent >=15 changed machine orders.
+- Independently replayed structural analysis: `results/ninecore-neutral-analysis.json` from `analyze_ninecore_neutral.py`. Exactly **15 changed machine orders, Kendall distance 36** from baseline, **21 reversed baseline-adjacent machine pairs**. Importantly it is only **Kendall distance SIX from the verified 2006 gateway-124 schedule**, with changes on just five machines between those two. This connects apparently different core-hitting orientation classes by a tiny exact permutation distance at identical makespan.
+- The schedule actually reverses at least one pair in **ALL nine necessary core sets**. The initial earlier 15-swap 2006 neutral hits all eight independently extracted dynamic CP cores but zero consensus-21 core arcs; gateway124 hits four of the eight and one consensus arc. The new certified neutral jointly crosses those separately exhibited structural constraints.
+- **Critical path replacement occurs:** the exact score-2006 nine-core neutral has **60** critical machine arcs. Relative to the original baseline 53, **24 new machine critical arcs emerged and 17 old ones disappeared**. Relative to gateway-124 (also 60), **9 new emerged** and 9 old vanished. These are concrete newly generated bottlenecks as proposed by the user, not just hypothetical.
+
+**Causal follow-up on this new orientation basin:** eight additional matched two-move feedback runs (dynamic/static/core/random x 2 seeds, 22,000 full DAG candidate evaluations each = **176,000 exact candidate evaluations**) all remained at verified best score **2006**. Within those eight:
+- dynamic: 63 and 78 distinct accepted states, 24 and 38 accepted two-step macros ending exactly at 2006;
+- static: 28 and 48 distinct states, 3 and 2 neutral macros;
+- core: 23 and 14 distinct states, 4 and 4 neutral macros;
+- random: 63 and 64 distinct states, 3 and 3 neutral macros.
+These observations again favor dynamic critical replacement for discovering neutral alternatives under the exact experimental policy, not for strict Cmax improvement.
+
+**Total Phase V + VIII two-move experiments:** 24 runs x 22,000 = **528,000** exact candidate-score evaluations over three independent score-2006 starting basins; **no <=2005**. The paths are `results/macro-{baseline,124,ninecore}-{dynamic,static,core,random}-{4107,4113}/macro-pilot.json`.
+
+**Scientific conclusion to date:** The simplest version of Dynamic Critical-Path Replacement Repair **does** improve local exploration and can coordinate individually unfavorable modifications, and fully soft global orientation can combine nine separate necessary conditions into a nearby legal 2006 neutral schedule. But none of these are a makespan breakthrough. The bottleneck is no longer just freezing survivor order: merely satisfying the currently known nine necessary disjunctive cores does not suffice to reach 2005, and two-step local insertion feedback does not yet supply the extra causal constraints. Do **not** simply multiply seeds, released operation count or number of N7-like loops.
+
+**Next reformulation:** learn new *global* necessary precedence disjunctions from the intersection poset of old and newly escaped 2006 orientations, rather than reuse cores generated in the original basin. Specifically combine the original five 2006 parents, gateway124, ninecore-neutral and other core-reversed neutral certificates; run independent full-NoOverlap 2005 assumption-core tests for consensus pairwise precedences. If UNSAT, extract and audit a NEW sufficient core on relationships all diverse 2006 parents share, then perform multi-core coordination over those rather than revisiting previously crossed cores. UNKNOWN must remain unresolved.
+
