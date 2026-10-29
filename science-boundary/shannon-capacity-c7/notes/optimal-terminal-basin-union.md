@@ -1,6 +1,6 @@
 # Eighteen optimal BPZ terminal basins and their common periphery problem
 
-Status: active exact search. No verified score above 134,753 is claimed here.
+Status: the fixed-`BB` union of all 18 terminal-optimal basins is now **exactly closed analytically** at peripheral optimum 5,872. No verified score above 134,753 is claimed here. The active extension releases one or more `BB` points.
 
 ## Discovery
 
@@ -25,8 +25,7 @@ Thus
 
 The count is `3 x 3 x 2 = 18`.
 
-The reusable exact pair-union implementation is
-`code/bpz_optimal_terminal_union_hall.py`.
+Reusable pair-union code is in `code/bpz_optimal_terminal_union_hall.py`.
 
 ## Common-core reduction
 
@@ -38,23 +37,47 @@ The remaining score in every optimum is therefore
 
 `134,753 - 128,881 = 5,872`.
 
-Every peripheral vertex that appears in any one of the 18 optima is compatible with all of `BB`, because it occurs together with `BB` in a valid terminal code. Therefore `BB` may be fixed wholesale when optimizing over the union of the 18 basins.
+Let `Q=PH union PV` be the 16 private-pair endpoints and let `X` be the 367-point five-dimensional companion independent set. Exact materialization of all 18 record terminal codes gives
 
-Let `P` be the union of all peripheral vertices appearing in these 18 optima. Then a breakthrough inside this basin-union family is exactly an independent set of size at least
+`P = (X x Q) union (Q x X)`
 
-`5,873`
+for their total peripheral union.
 
-inside the induced real `C7^10` conflict graph on `P`.
+Every point of `P` is compatible with all of `BB`, so with the core fixed the ten-dimensional problem reduces to the induced conflict graph on `P`.
 
-Equivalently,
+## Exact analytic closure: alpha(P)=5,872
 
-`BB union S`, with `S subseteq P`, is a 134,754-point construction iff `S` is independent and `|S| >= 5,873`.
+The full peripheral SAT is no longer needed to establish the optimum of this union.
 
-This removes the 128,881 frozen vertices from the combinatorial search and turns the record-boundary question into a roughly ten-thousand-vertex peripheral MIS/SAT problem.
+`Q` consists of the endpoints of eight disjoint private pairs, and the two endpoints of each private pair conflict. Therefore any independent subset of `Q` contains at most one endpoint from each pair, so
 
-The exact implementation is
-`code/bpz_optimal_terminal_periphery_sat.py`.
-It builds the actual ten-dimensional conflict graph on `P` and asks MiniCard for at least 5,873 selected vertices. SAT materializes a Few Shots certificate; UNSAT exactly closes the entire 18-basin peripheral union.
+`alpha(Q) <= 8`.
+
+On the other hand `PH` and `PV` are each eight-point independent subsets of `Q`, so
+
+`alpha(Q) = 8`.
+
+`X` is an independent set of size 367. Hence in `X x Q`, different first coordinates in `X` are mutually nonconfusable, and for each fixed `x in X` the remaining conflict graph is exactly the graph induced on `Q`. Therefore
+
+`alpha(X x Q) = |X| alpha(Q) = 367 * 8 = 2,936`.
+
+By symmetry,
+
+`alpha(Q x X) = 2,936`.
+
+For any independent `S subseteq P`,
+
+`|S| <= |S intersect (X x Q)| + |S intersect (Q x X)| <= 2,936 + 2,936 = 5,872`.
+
+The known terminal-optimal constructions attain 5,872 peripheral points. Thus
+
+**`alpha(P) = 5,872` exactly.**
+
+Consequently the entire fixed-`BB` union of all 18 record terminal basins is closed at total score
+
+`128,881 + 5,872 = 134,753`.
+
+This is stronger than the earlier pairwise Hall checks and makes the queued full-periphery SAT only an independent computational cross-check, not a necessary proof step.
 
 ## Pairwise union Hall theorem
 
@@ -66,18 +89,43 @@ Since the sets have equal size, `|L|=|R|`. If `nu` is the maximum matching size 
 
 `alpha(G[J1 union J2]) = 134,753 + |L| - nu`.
 
-Thus one maximum matching exactly decides every possible recombination of that pair at all exchange radii. Positive Hall deficiency gives a breakthrough; saturation exactly closes that pair union.
+Thus one maximum matching exactly decides every recombination of that pair at all exchange radii. The analytic `alpha(P)=5872` closure above subsumes all pairwise checks simultaneously for the full 18-basin union.
 
-This pairwise search is weaker than the full peripheral SAT, because a winning set may combine vertices from three or more record basins even when every two-basin union is Hall-saturated.
+## Releasing the core: one-hole formulation
+
+Because the fixed-core union is exactly saturated, any improvement must leave `P` or release some of `BB`.
+
+For `z in C7^5`, define
+
+`S(z) = N[z] intersect B`.
+
+A ten-dimensional point `(u,v)` conflicts with exactly the core footprint
+
+`S(u) x S(v)`
+
+inside `BB`.
+
+If one core point `(b,c)` is deleted, the newly compatible points whose entire core footprint is that single hole are exactly
+
+`W_b x W_c`, where `W_b = {z : S(z)={b}}`.
+
+Since `alpha(P)=5,872`, a one-hole breakthrough must contain at least **two genuinely new unlocked peripheral points**: deleting one `BB` point lowers the retained core to 128,880, so at least 5,874 peripheral points are required.
+
+Two exact implementations are retained:
+
+- `code/bpz_one_core_hole_periphery_sat.py` — solves selected core holes one at a time;
+- `code/bpz_global_one_core_hole_sat.py` — global selector encoding over all holes, with optional exact sharding. A single selector is chosen and each unlocked point implies its unique core blocker selector.
+
+The global-selector version is the preferred representation under severe GitHub Actions queueing because one acquired runner can process many hole choices without rebuilding the same search from scratch.
 
 ## Relation to earlier search spaces
 
-This is not another radius-7/radius-8 local exchange. The 18-basin union permits coordinated changes of arbitrary radius while holding only the common `BB` core fixed.
+This is not another bounded-radius local exchange. The 18-basin union permits coordinated changes of arbitrary radius while holding only the common `BB` core fixed, and the one-hole model then releases a core point while optimizing the whole peripheral union directly.
 
-It also differs from the earlier strict ninth-port searches. Those attempted to enlarge one fixed Gao-style port gadget. Here the search recombines vertices from **all terminal-optimal eight-port orientations and `N`-port choices simultaneously**, with the final ten-dimensional independence objective enforced directly.
+It also differs from the earlier strict ninth-port searches. Those attempted to enlarge one fixed Gao-style port gadget. Here the final ten-dimensional independence objective is enforced directly over the union of all terminal-optimal orientations, plus exactly characterized newly unlocked core-hole points.
 
-If the full peripheral SAT is UNSAT, the next reformulation should release part of the common `BB` core rather than merely add more variants inside the same fixed-core union. In particular, allowing a small number of `BB` deletions while optimizing the peripheral union gives a direct net-score extension:
+If the complete one-hole family is negative, the next principled extension is two core deletions. For two holes `D`, a newly compatible point must satisfy
 
-`gain = selected_periphery - 5,872 - deleted_BB`.
+`S(u) x S(v) subseteq D`,
 
-That extension should be formulated on the same reduced conflict graph, with explicit blocker variables for `BB`, rather than returning to ambient `7^10` enumeration.
+so only footprint shapes `(1,1)`, `(1,2)`, and `(2,1)` can occur. This gives a finite exact two-hole selector model rather than a return to ambient `7^10` enumeration.
