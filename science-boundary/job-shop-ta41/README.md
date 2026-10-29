@@ -8,6 +8,26 @@
 - [Few Shots record chain](https://github.com/few-shots/few-shots/blob/main/problems/p009-job-shop-ta41/FEWSHOT.md) had no merged improvements at initial read.
 - No new result is claimed until verified using the upstream verifier and `tools/check.py`.
 
+## Verified progress — 2026-10-28 PDT / 2026-10-29 UTC
+
+**Still no <=2005 schedule certificate.** Official Few Shots p009 chain remains at 2006 as checked this research turn; the historical 2005 literature-only score is not a checked certificate.
+
+**Fixed the earlier global-job-reinsertion execution failure:** the first five-shard Actions run died immediately at a `surviv`/ `survivors` variable typo. After the corrected source and a resource-independent longest-path prescreen were committed, all five shards completed and saved. This earlier failure was a code bug, not evidence of scheduling infeasibility.
+
+**Complete k<=3 job-cohort local exclusion (specific 2006 baseline):**
+- One- and two-job global ejection/reinsertion: **465/465** subspaces examined, all excluded, zero UNKNOWN. Reinserted jobs could move across all 20 machine sequences; the non-ejected jobs' *relative* order was preserved on each machine.
+- Three-job full enumeration: **4060/4060** subspaces across eight separate complete shards, all excluded, zero UNKNOWN.
+- Consequently **4525 exactly defined subspaces** were fully excluded. Of those, **653** were ruled out by precedence-only DAG bounds and **3872** by CP-SAT hard job/NoOverlap INFEASIBLE results. `audit_job_ejection.py` independently checked all 4525 unique cohort identities and recalculated all 653 DAG obstructions with a separate topological implementation, and separately rebuilt **60/60** hard NoOverlap CP subproblems with INFEASIBLE verdict. See `results/job-ejection-independent-audit.json`. This is a *baseline-relative neighborhood exclusion*, not a universal statement about the minimum number of jobs that must change.
+- An exploratory **500/27,405** four-job cohort sample is also entirely INFEASIBLE (no UNKNOWN); the other four-job sets remain unexamined. Source: `results/job-frontier-k4-s*/analysis.json`.
+
+**Multi-parent, larger-cohort counterfactual:** to avoid a single baseline's topology, `multi_parent_cohort.py` independently verified 2006 neutral parents `critical8` and `mixed20`, then tried 15 cohorts each of sizes 6,8,10,12,15 against all three 2006 parents with both exact deadline and incumbent-hinted optimization models, retaining all NoOverlap and job precedences:
+- 45 strict makespan <=2005 feasibility trials: **30 INFEASIBLE, 15 UNKNOWN**, zero feasible.
+- 45 makespan-minimization-from-feasible-2006 trials: all returned an incumbent of **2006**, none improved (some were OPTIMAL only within their exact fixed-survivor subspace; no global claim).
+- Complete 90-trial results: `results/cohort-{baseline,critical8,mixed20}-{deadline,optimize}/cohort-experiment.json`.
+- This new negative evidence shows naive parent diversification plus larger job cohorts *does not automatically cross the 2006 barrier* in the chosen fixed-survivor representations. Do not spend another round only increasing cohort sizes or repeating seeds; jointly reformulate what can change among survivor jobs or use a different interface.
+
+**Next priority:** pursue a genuinely different scheduling interface that can change precedence relations among the survivors as well as among ejected jobs, and evaluate new feasible candidates using the official Few Shots certificate validator. Target a hard, source-backed improvement <=2005 (prefer <=2004 over the historical reported 2005). Other concurrent experiments on forced shared-precedence reversals are recorded in this same topic; avoid duplicating them.
+
 ## Frontier status — independently reproduced 2026-10-28 machine-distance bound
 
 **New:** `results/machine-budget14/decision.json` is an **independent direct CP-SAT decision model**, *without the 1,433 earlier learned cores*, asking if a ta41 schedule of Cmax <=2005 exists with <=14 of the 20 incumbent machine orders changed. The solver returned **INFEASIBLE** (OR-Tools 9.14.6206, 4 workers, 161.511 seconds; 37,557 conflicts and 110,406 branches). A candidate with <=14 changed orders would always be feasible in this model, so, subject to CP-SAT correctness, **every <=2005 schedule changes >=15 of the 20 machine permutations** relative to the published 2006 certificate. This supersedes the earlier 8-machine proof; it is NOT a global makespan lower bound.
@@ -173,3 +193,5 @@ Critical-path N1 adjacent moves can stall in local optima; a lack of improvement
 - 2026-10-29: One concrete distant neutral 2006 certificate independently validated with Few Shots official verifier, changing 16/20 machine sequences and 34 original adjacent arcs. Eight-job global reinsertion diversity objective solved optimally (1634). All 89 small ejection escapes from this new seed UNSAT. Iterated neutral-manifold basin migration in progress.
 
 - 2026-10-29 (new consensus-bone hypothesis): Four independently verified distant 2006 schedules. Exact two-parent whole-machine crossover across all ten pairs: 2,260,992 combinations, 31,010 score-2006, zero score<=2005. Intersection of all five parent permutation posets has 8548 agreed /152 discordant same-machine pairs; 671 cover arcs prove 2005 infeasible in 0.215s with a 21-cover-arc unsat core on five machines. Launched globally complete 21-way mandatory inversion branch and iterated neutral-basins; results pending.
+
+- 2026-10-28 PDT / 2026-10-29 UTC (new turn): Diagnosed job-reinsertion typo, reran five complete k1/k2 shards, and independently audited full 4525 k<=3 global job-ejection subspaces (653 independent DAG obstructions + 60 independently rebuilt CP infeasibility checks). Tested multi-parent 6-15 job cohort repair: 30 INFEASIBLE, 15 UNKNOWN in strict deadline mode, 45 neutral 2006 in incumbent-hinted optimization; no better schedule. Structural search representation needs further reformulation; do not infer global optimality.
