@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-28** | **4,403** | **2,556** |
+| **2014-08-09** | **2026-10-29** | **4,404** | **2,557** |
 
-### Latest All-Languages snapshot — 2026-10-28
+### Latest All-Languages snapshot — 2026-10-29
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills) | — | 1,395 |
-| 2 | [Nutlope/hallmark](https://github.com/Nutlope/hallmark) | CSS | 2,830 |
-| 3 | [nightly-labs/openbot](https://github.com/nightly-labs/openbot) | TypeScript | 777 |
-| 4 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 617 |
-| 5 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Rust | 1,449 |
-| 6 | [makecindy/cindy](https://github.com/makecindy/cindy) | TypeScript | 1,465 |
-| 7 | [gitroomhq/postiz-app](https://github.com/gitroomhq/postiz-app) | TypeScript | 951 |
-| 8 | [affaan-m/ECC](https://github.com/affaan-m/ECC) | JavaScript | 1,165 |
-| 9 | [HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor) | Python | 1,598 |
-| 10 | [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail) | TypeScript | 1,204 |
+| 1 | [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail) | TypeScript | 1,068 |
+| 2 | [elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills) | — | 2,139 |
+| 3 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 1,095 |
+| 4 | [HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor) | Python | 2,371 |
+| 5 | [macro-inc/macro](https://github.com/macro-inc/macro) | Rust | 117 |
+| 6 | [Nutlope/hallmark](https://github.com/Nutlope/hallmark) | CSS | 2,110 |
+| 7 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Rust | 1,472 |
+| 8 | [makecindy/cindy](https://github.com/makecindy/cindy) | TypeScript | 728 |
+| 9 | [nightly-labs/openbot](https://github.com/nightly-labs/openbot) | TypeScript | 1,054 |
+| 10 | [togg53192-cmd/jailbreaks](https://github.com/togg53192-cmd/jailbreaks) | — | 1,477 |
 
-[Open full snapshot →](data/2026/10/28/trending.json)
+[Open full snapshot →](data/2026/10/29/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 301 days  
+[`2026`](data/2026/) · 302 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
