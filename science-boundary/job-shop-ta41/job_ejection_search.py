@@ -21,6 +21,7 @@ import time
 from pathlib import Path
 from ortools.sat.python import cp_model
 from search import obtain, setup, evaluate
+from job_ejection_dag import lower_bound
 
 
 def counterfactual(orders,pos,duration,ejected,target,seconds,seed):
@@ -76,20 +77,38 @@ def solve(a):
     }
     a.out.mkdir(parents=True,exist_ok=True)
     began=time.monotonic()
+    def persist():
+        result['processed_subspaces']=len(result['outcomes'])
+        result['complete']=result['processed_subspaces']==len(chosen)
+        result['elapsed_seconds']=round(time.monotonic()-began,3)
+        (a.out/'job-ejection.json').write_text(json.dumps(result,indent=2)+'\\n')
+
     for idx,jobs in chosen:
         if time.monotonic()-began>a.total_seconds-2:break
-        rec,candidate=counterfactual(orders,pos,duration,jobs,2005,
-            min(a.per_subspace_seconds,max(0.5,a.total_seconds-(time.monotonic()-began)-1)),
-            a.seed+idx)
+        # Exact job/survivor precedence is a relaxation of the fully
+        # resource-constrained subspace. If its longest path exceeds the
+        # deadline, the full subspace is rigorously impossible.
+        lb=lower_bound(orders,pos,duration,jobs)
+        if lb>2005:
+            rec={'ejected_jobs':sorted(jobs),'status':'INFEASIBLE_BY_DAG_LB',
+                 'relaxed_longest_path':lb,'elapsed_seconds':0.0}
+            candidate=None
+        else:
+            rec,candidate=counterfactual(orders,pos,duration,jobs,2005,
+                min(a.per_subspace_seconds,max(0.5,a.total_seconds-(time.monotonic()-began)-1)),
+                a.seed+idx)
+            rec['relaxed_longest_path']=lb
         rec['global_index']=idx
         result['outcomes'].append(rec)
-        if rec['status']=='INFEASIBLE':result['proven_infeasible']+=1
+        if rec['status'] in ('INFEASIBLE','INFEASIBLE_BY_DAG_LB'):result['proven_infeasible']+=1
         elif rec['status'] in ('FEASIBLE','OPTIMAL'):
             result['feasible']+=1
             (a.out/'certificate.json').write_text(json.dumps({'machines':candidate},separators=(',',':'))+'\n')
             break
         else:result['unknown']+=1
         result['processed_subspaces']+=1
+        if result['processed_subspaces']%10==0:
+            persist()
         if result['processed_subspaces']%15==0:
             print('PROGRESS',a.shard,result['processed_subspaces'],len(chosen),
                   'unknown',result['unknown'],'seconds',round(time.monotonic()-began,1),flush=True)
