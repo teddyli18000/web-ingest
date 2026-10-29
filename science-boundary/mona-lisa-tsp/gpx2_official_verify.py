@@ -46,7 +46,7 @@ def main():
     assert scores[2]<=min(scores[:2]),('GPX2 recombination monotonicity violated',scores)
     blob=json.dumps({'tour':child},separators=(',',':')).encode()
     verdict=v.verify_bytes(blob,v.load_config())
-    assert verdict['valid'] and verdict['score']==scores[2]
+    assert verdict['valid'] and int(verdict['score'])==scores[2], verdict
     ea,eb,ec=edges(a),edges(b),edges(child)
     novel=ec-(ea|eb)
     result={'tag':args.tag,'parent_scores':scores[:2],'child_score':scores[2],
