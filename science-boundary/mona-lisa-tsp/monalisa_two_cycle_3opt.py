@@ -45,13 +45,13 @@ def patterns():
     assert len(good)==8,(len(good),good)
     return good
 def order_cycle(seed,adj):
-    route=[seed];prev=-1;cur=seed
+    route=[seed];seen=bytearray(N);seen[seed]=1;prev=-1;cur=seed
     while True:
         a,b=adj[cur]
         nxt=a if a!=prev else b
         if nxt==seed:break
-        assert nxt not in route
-        route.append(nxt)
+        assert not seen[nxt]
+        seen[nxt]=1;route.append(nxt)
         prev,cur=cur,nxt
     return route
 def main():
