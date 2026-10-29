@@ -1,0 +1,323 @@
+{
+  "source_run": 40870679131,
+  "evaluator_status": "success",
+  "protocol": "post-unsealing independent evaluator; search sees public.json only",
+  "confounders": [],
+  "cases": [
+    {
+      "instance": "rat99",
+      "certified_optimum": 1211,
+      "blind_incumbent": 1251,
+      "hidden_generator_best": 1226,
+      "missing_hidden_edges": 18,
+      "methods": [
+        {
+          "method": "uncertainty",
+          "score": 1226,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.12,
+          "hidden_structure_recall": 0.61111,
+          "hidden_target_edges_in_new_chords": 1,
+          "LP_meta": {
+            "novel_lp_supported": 12,
+            "fractional_lp_supported": 12
+          },
+          "optimal": false
+        },
+        {
+          "method": "control",
+          "score": 1233,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.031,
+          "hidden_structure_recall": 0.66667,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "baseline_only_parent_union": true
+          },
+          "optimal": false
+        },
+        {
+          "method": "repair",
+          "score": 1216,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.204,
+          "hidden_structure_recall": 0.88889,
+          "hidden_target_edges_in_new_chords": 4,
+          "LP_meta": {
+            "oracle_status": "OPTIMAL",
+            "oracle_components": 4,
+            "oracle_score": 1214
+          },
+          "optimal": false
+        },
+        {
+          "method": "conflict_v2",
+          "score": 1224,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.116,
+          "hidden_structure_recall": 0.83333,
+          "hidden_target_edges_in_new_chords": 2,
+          "LP_meta": {
+            "consensus_edges_rejected_by_LP": 5,
+            "selected_positive_LP": 2,
+            "selected_integer_one_LP": 2,
+            "selected_touch_rejected_consensus": 12
+          },
+          "optimal": false
+        }
+      ]
+    },
+    {
+      "instance": "ch130",
+      "certified_optimum": 6110,
+      "blind_incumbent": 6361,
+      "hidden_generator_best": 6328,
+      "missing_hidden_edges": 31,
+      "methods": [
+        {
+          "method": "conflict_v2",
+          "score": 6214,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 1.017,
+          "hidden_structure_recall": 0.29032,
+          "hidden_target_edges_in_new_chords": 3,
+          "LP_meta": {
+            "consensus_edges_rejected_by_LP": 12,
+            "selected_positive_LP": 12,
+            "selected_integer_one_LP": 12,
+            "selected_touch_rejected_consensus": 12
+          },
+          "optimal": false
+        },
+        {
+          "method": "repair",
+          "score": 6209,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 1.442,
+          "hidden_structure_recall": 0.32258,
+          "hidden_target_edges_in_new_chords": 1,
+          "LP_meta": {
+            "oracle_status": "OPTIMAL",
+            "oracle_components": 6,
+            "oracle_score": 6126
+          },
+          "optimal": false
+        },
+        {
+          "method": "control",
+          "score": 6214,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.32,
+          "hidden_structure_recall": 0.29032,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "baseline_only_parent_union": true
+          },
+          "optimal": false
+        },
+        {
+          "method": "uncertainty",
+          "score": 6214,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.589,
+          "hidden_structure_recall": 0.29032,
+          "hidden_target_edges_in_new_chords": 1,
+          "LP_meta": {
+            "novel_lp_supported": 12,
+            "fractional_lp_supported": 10
+          },
+          "optimal": false
+        }
+      ]
+    },
+    {
+      "instance": "eil101",
+      "certified_optimum": 629,
+      "blind_incumbent": 655,
+      "hidden_generator_best": 651,
+      "missing_hidden_edges": 32,
+      "methods": [
+        {
+          "method": "repair",
+          "score": 637,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.759,
+          "hidden_structure_recall": 0.59375,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "oracle_status": "OPTIMAL",
+            "oracle_components": 5,
+            "oracle_score": 636
+          },
+          "optimal": false
+        },
+        {
+          "method": "control",
+          "score": 637,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.242,
+          "hidden_structure_recall": 0.8125,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "baseline_only_parent_union": true
+          },
+          "optimal": false
+        },
+        {
+          "method": "conflict_v2",
+          "score": 634,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 1.538,
+          "hidden_structure_recall": 0.625,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "consensus_edges_rejected_by_LP": 5,
+            "selected_positive_LP": 7,
+            "selected_integer_one_LP": 7,
+            "selected_touch_rejected_consensus": 11
+          },
+          "optimal": false
+        },
+        {
+          "method": "uncertainty",
+          "score": 634,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.782,
+          "hidden_structure_recall": 0.6875,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "novel_lp_supported": 12,
+            "fractional_lp_supported": 10
+          },
+          "optimal": false
+        }
+      ]
+    },
+    {
+      "instance": "pr76",
+      "certified_optimum": 108159,
+      "blind_incumbent": 110357,
+      "hidden_generator_best": 109067,
+      "missing_hidden_edges": 9,
+      "methods": [
+        {
+          "method": "uncertainty",
+          "score": 109110,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.083,
+          "hidden_structure_recall": 0.66667,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "novel_lp_supported": 4,
+            "fractional_lp_supported": 3
+          },
+          "optimal": false
+        },
+        {
+          "method": "control",
+          "score": 109110,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.036,
+          "hidden_structure_recall": 0.66667,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "baseline_only_parent_union": true
+          },
+          "optimal": false
+        },
+        {
+          "method": "conflict_v2",
+          "score": 109110,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.137,
+          "hidden_structure_recall": 0.66667,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "consensus_edges_rejected_by_LP": 1,
+            "selected_positive_LP": 3,
+            "selected_integer_one_LP": 1,
+            "selected_touch_rejected_consensus": 11
+          },
+          "optimal": false
+        },
+        {
+          "method": "repair",
+          "score": 108830,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.149,
+          "hidden_structure_recall": 0.44444,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "oracle_status": "OPTIMAL",
+            "oracle_components": 3,
+            "oracle_score": 108304
+          },
+          "optimal": false
+        }
+      ]
+    },
+    {
+      "instance": "kroB100",
+      "certified_optimum": 22141,
+      "blind_incumbent": 22735,
+      "hidden_generator_best": 22486,
+      "missing_hidden_edges": 22,
+      "methods": [
+        {
+          "method": "conflict_v2",
+          "score": 22485,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.041,
+          "hidden_structure_recall": 0.09091,
+          "hidden_target_edges_in_new_chords": 1,
+          "LP_meta": {
+            "consensus_edges_rejected_by_LP": 7,
+            "selected_positive_LP": 6,
+            "selected_integer_one_LP": 6,
+            "selected_touch_rejected_consensus": 12
+          },
+          "optimal": false
+        },
+        {
+          "method": "repair",
+          "score": 22531,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.092,
+          "hidden_structure_recall": 0.27273,
+          "hidden_target_edges_in_new_chords": 1,
+          "LP_meta": {
+            "oracle_status": "OPTIMAL",
+            "oracle_components": 4,
+            "oracle_score": 22252
+          },
+          "optimal": false
+        },
+        {
+          "method": "control",
+          "score": 22569,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.029,
+          "hidden_structure_recall": 0.22727,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "baseline_only_parent_union": true
+          },
+          "optimal": false
+        },
+        {
+          "method": "uncertainty",
+          "score": 22569,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.064,
+          "hidden_structure_recall": 0.22727,
+          "hidden_target_edges_in_new_chords": 1,
+          "LP_meta": {
+            "novel_lp_supported": 12,
+            "fractional_lp_supported": 12
+          },
+          "optimal": false
+        }
+      ]
+    }
+  ]
+}
