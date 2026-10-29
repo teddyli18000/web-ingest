@@ -1,0 +1,45 @@
+name: temp-aes-gf16-right8-exhaustive
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-gf16-right8-exhaustive.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-gf16-right8-exhaustive
+  cancel-in-progress: false
+
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prove 960 weighted supports reduce to 16 exact symmetry orbits
+        run: |
+          python3 science-boundary/aes-sbox-circuit/prove_gf16_multiplier_right_support.py | tee /tmp/support-floor.log
+          python3 science-boundary/aes-sbox-circuit/prove_gf16_right8_semilinear_orbits.py | tee /tmp/orbits.log
+          grep -q '"weighted_support_candidates": 960' /tmp/orbits.log
+          grep -q '"orbits": 16' /tmp/orbits.log
+          grep -q '"covered_candidates": 960' /tmp/orbits.log
+      - name: Exhaust all 16 right8 orbit representatives
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -std=c++20 science-boundary/aes-sbox-circuit/prove_gf16_rank9_right8_exhaustive.cpp -o /tmp/right8-proof
+          /tmp/right8-proof | tee /tmp/right8-proof.log
+          grep -q 'NO_WITNESS reps=16 total_basis=322560 total_guesses=50787000 total_full=0' /tmp/right8-proof.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-gf16-right8-exhaustive-proof
+          path: |
+            /tmp/support-floor.log
+            /tmp/orbits.log
+            /tmp/right8-proof.log
