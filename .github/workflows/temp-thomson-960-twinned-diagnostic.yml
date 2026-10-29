@@ -1,0 +1,44 @@
+name: temp Thomson 960 historical twinned-motif diagnostic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-twinned-diagnostic.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - n: 912
+            url: https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/xyz/912.xyz
+          - n: 932
+            url: https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/xyz/932.xyz
+          - n: 942
+            url: https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson2/xyz/942.xyz
+          - n: 972
+            url: https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/xyz/972.xyz
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Fetch historical CCD structure
+        run: |
+          curl --fail --location --retry 3 '${{ matrix.url }}' -o "$RUNNER_TEMP/${{ matrix.n }}.xyz"
+          head -3 "$RUNNER_TEMP/${{ matrix.n }}.xyz"
+      - name: Diagnose coordination and 7-7 twin edges
+        run: |
+          python3 science-boundary/thomson-960/code/analyze_twinned_motif.py \
+            "$RUNNER_TEMP/${{ matrix.n }}.xyz" --out "$RUNNER_TEMP/twin-${{ matrix.n }}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-twin-diagnostic-${{ matrix.n }}
+          retention-days: 7
+          path: ${{ runner.temp }}/twin-${{ matrix.n }}.json
