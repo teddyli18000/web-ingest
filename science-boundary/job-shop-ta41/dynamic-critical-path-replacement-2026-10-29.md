@@ -33,6 +33,25 @@ Primary outcome: independent valid machine-order certificate with makespan <=200
 - If a policy improves to <=2005, validate `certificate.json` using Few Shots official `verify/verify.py`, recheck the current public 2005 historical value, and only then submit.
 - Do not call N7-inspired bounded insertions the full N7 neighborhood, and do not attribute untested dynamic feedback to the 2026 articles.
 
-## Current status
+## Results: first equal-evaluation pilot (eight controlled runs)
 
-Pilot launched; results not yet verified. Inspect `results/dcpr-{baseline,124}-{dynamic,static,core,random}-4107/pilot.json` and any `upstream-verdict.json` before editing this section.
+All eight pilot Actions completed successfully at **18,000 exact full-DAG candidate evaluations each**, seed 4107; all remained **makespan 2006**, with zero certificate at <=2005. The replacement-edge counts and number of accepted moves are:
+
+| Starting verified parent | Policy | Accepted moves | Accepted moves with new critical edges | New critical edges counted | Best |
+| --- | --- | ---: | ---: | ---: | ---: |
+| baseline | dynamic | 307 | 296 | 3082 | 2006 |
+| baseline | static | 629 | 181 | 2641 | 2006 |
+| baseline | core | 593 | 449 | 5572 | 2006 |
+| baseline | random | 659 | 94 | 1508 | 2006 |
+| gateway-124 | dynamic | 679 | 662 | 5538 | 2006 |
+| gateway-124 | static | 607 | 149 | 2281 | 2006 |
+| gateway-124 | core | 594 | 445 | 5470 | 2006 |
+| gateway-124 | random | 665 | 109 | 1569 | 2006 |
+
+These counts **are not effectiveness metrics** in isolation: replacements per accepted move differ, some strategies accept more moves, and one seed does not establish a statistical advantage. They demonstrate that newly generated critical paths are being observed and fed into the dynamic move generator. The static/core/random ablations also generate replacement events because actual objective dynamics are observed even when the selector does not use them.
+
+**Decision after pilot:** dynamic changes path geometry, but selecting the next isolated move still fails to improve makespan. Instead of simply multiplying iterations, run a second experiment with growing *operation-level CP release sets* constructed from the encountered replacement critical arcs, with matched release size, exact scorer and CP time caps. Implemented as `dynamic_critical_cp_repair.py` (eight jobs `temp-ta41-dynamic-critical-cp-repair.yml`); no result claimed until `results/dcprcp-*/dynamic-repair.json` exists.
+
+## Previous launch reference
+
+Pilot launched; results now verified. Inspect `results/dcpr-{baseline,124}-{dynamic,static,core,random}-4107/pilot.json` and any `upstream-verdict.json` before editing this section.
