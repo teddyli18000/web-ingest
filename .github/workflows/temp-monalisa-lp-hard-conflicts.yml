@@ -1,0 +1,49 @@
+name: temp-monalisa-lp-hard-conflicts
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/lp_hard_conflict_audit.py
+      - .github/workflows/temp-monalisa-lp-hard-conflicts.yml
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch independently published routes and LP snapshots
+        run: |
+          python -m pip install numpy matplotlib
+          mkdir -p /tmp/p010/tour /tmp/p010/lp
+          root=https://www.math.uwaterloo.ca/tsp/data/ml
+          for score in 5757199 5757200 5757203 5757204 5757205 5757241 5757245; do
+            curl -fsSL --retry 2 "$root/tour/monalisa_${score}.tour" -o "/tmp/p010/tour/monalisa_${score}.tour"
+          done
+          for variant in 6nsub 5zsub 4zsub; do
+            curl -fsSL --retry 2 "$root/x/mona.${variant}.x" -o "/tmp/p010/lp/mona.${variant}.x"
+          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          t=Path('/tmp/p010/tour');l=Path('/tmp/p010/lp')
+          Path('/tmp/p010/tours.json').write_text(json.dumps({f'historic_{s}':str(t/f'monalisa_{s}.tour') for s in (5757199,5757200,5757203,5757204,5757205,5757241,5757245)}))
+          Path('/tmp/p010/lps.json').write_text(json.dumps({'2012-04-18':str(l/'mona.6nsub.x'),'2012-01-21':str(l/'mona.5zsub.x'),'2011-07-15':str(l/'mona.4zsub.x')}))
+          PY
+      - name: Compare LP x-one edges that conflict with Nagata and historical strong tours
+        run: |
+          python science-boundary/mona-lisa-tsp/lp_hard_conflict_audit.py \
+            --baseline science-boundary/mona-lisa-tsp/data/nagata-archive-100k.json \
+            --tours /tmp/p010/tours.json --lps /tmp/p010/lps.json \
+            --components science-boundary/mona-lisa-tsp/data/historical-wiring-components-all.json \
+            --output science-boundary/mona-lisa-tsp/results/lp-hard-conflicts.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-lp-hard-conflict-audit
+          path: science-boundary/mona-lisa-tsp/results/lp-hard-conflicts.json
+          if-no-files-found: ignore
