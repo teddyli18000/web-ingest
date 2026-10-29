@@ -1,0 +1,98 @@
+name: Temp Science Boundary C7 terminal neutral SCC pairs
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-terminal-neutral-scc-pairs.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_terminal_neutral_scc_pairs.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-terminal-neutral-scc-pairs
+  cancel-in-progress: false
+
+jobs:
+  recombine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch pinned public sources read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+
+      - name: Exact neutral Hall SCC pair recombination
+        id: search
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/shot" "$RUNNER_TEMP/result"
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_terminal_neutral_scc_pairs.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/status.json" "$RUNNER_TEMP/shot" \
+            > "$RUNNER_TEMP/result/solver.stdout" 2> "$RUNNER_TEMP/result/solver.stderr"
+          cat "$RUNNER_TEMP/result/status.json"
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" \
+            | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1)) <= 134753:
+              raise SystemExit(f'candidate not a verified breakthrough: {r}')
+          print(f"VERIFIED BREAKTHROUGH score={r['score']}")
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+          cp "$RUNNER_TEMP/shot/metadata.json" "$RUNNER_TEMP/result/candidate-metadata.json"
+
+      - name: Upload reproducibility bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-terminal-neutral-scc-pairs
+          path: ${{ runner.temp }}/result
+          retention-days: 14
+
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## C7 exact terminal neutral Hall SCC pair recombination'
+            for f in status.json verify.json; do
+              if [[ -f "$RUNNER_TEMP/result/$f" ]]; then
+                echo '```json'
+                cat "$RUNNER_TEMP/result/$f"
+                echo '```'
+              fi
+            done
+            for f in solver.stdout solver.stderr; do
+              if [[ -f "$RUNNER_TEMP/result/$f" ]]; then
+                echo "### $f"
+                echo '```text'
+                tail -n 160 "$RUNNER_TEMP/result/$f"
+                echo '```'
+              fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
