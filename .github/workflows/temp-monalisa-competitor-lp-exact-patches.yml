@@ -16,7 +16,7 @@ jobs:
       matrix:
         include:
           - {regions: 1, selector: persistent, budget: 64}
-          - {regions: 1, selector: random, budget: 128}
+          - {regions: 1, selector: random, budget: 64}
           - {regions: 3, selector: persistent, budget: 128}
           - {regions: 3, selector: ambiguous, budget: 128}
           - {regions: 3, selector: random, budget: 128}
