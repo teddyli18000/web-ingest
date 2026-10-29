@@ -1,0 +1,78 @@
+name: temp-monalisa-gpx2-population-recombine
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["temp-monalisa-diverse-lkh-parents"]
+    types: [completed]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  crossover:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Published GPX2 and independently verified diverse parents
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PARENT_RUN_ID: ${{ github.event.workflow_run.id || '40844117009' }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          git clone --depth 1 https://github.com/rtinos/gpx2.git gpx2
+          cp science-boundary/mona-lisa-tsp/gpx2_population_driver.cpp gpx2/main.cpp
+          sed -i 's/g++ -Wall/g++ -O2 -Wall/g' gpx2/makefile
+          make -C gpx2 -j 4
+          mkdir -p /tmp/p010-parents
+          gh run download "$PARENT_RUN_ID" --repo teddyli18000/web-ingest --pattern 'monalisa-lkh-parent-*' --dir /tmp/p010-parents
+      - name: Construct valid parent population and exact TSPLIB instance
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          work=science-boundary/mona-lisa-tsp/results/gpx-population
+          mkdir -p "$work"
+          python science-boundary/mona-lisa-tsp/validate_gpx2_population.py prepare \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --input-root /tmp/p010-parents --workdir "$work"
+          python science-boundary/mona-lisa-tsp/lkh_parent_population.py prepare \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --neutral-moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --workdir "$work" --mask-mode baseline --seed 131
+      - name: Recombine every distinct parent pair with original GPX2
+        run: |
+          work=science-boundary/mona-lisa-tsp/results/gpx-population
+          shopt -s nullglob
+          files=("$work"/parent-*.raw)
+          count=0
+          for ((i=0;i<${#files[@]};i++)); do
+            for ((j=i+1;j<${#files[@]};j++)); do
+              if ./gpx2/gpx2 "$work/instance.tsp" "${files[i]}" "${files[j]}" "$work/child-${i}-${j}.raw"; then
+                count=$((count+1))
+              fi
+            done
+          done
+          echo "Successful GPX2 offspring: $count"
+      - name: Score each offspring independently using Few Shots exact verifier
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          work=science-boundary/mona-lisa-tsp/results/gpx-population
+          python science-boundary/mona-lisa-tsp/validate_gpx2_population.py check \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --input-root /tmp/p010-parents --workdir "$work"
+          if test -f "$work/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$work"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-gpx2-population-recombination
+          path: |
+            science-boundary/mona-lisa-tsp/results/gpx-population/report.json
+            science-boundary/mona-lisa-tsp/results/gpx-population/parents.json
+            science-boundary/mona-lisa-tsp/results/gpx-population/certificate.json
+          if-no-files-found: ignore
