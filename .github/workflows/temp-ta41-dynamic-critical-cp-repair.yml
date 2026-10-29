@@ -1,0 +1,67 @@
+name: temp-ta41-dynamic-critical-cp-repair
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-dynamic-critical-cp-repair.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-dynamic-critical-cp-repair
+  cancel-in-progress: false
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [dynamic, static, core, random]
+        parent: [baseline, '124']
+    runs-on: ubuntu-latest
+    timeout-minutes: 11
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned OR-Tools and syntax-test controlled study
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/dynamic_critical_cp_repair.py
+      - name: Grow coupled CP release set from incoming critical-path replacements
+        run: |
+          python3 science-boundary/job-shop-ta41/dynamic_critical_cp_repair.py \
+            --policy '${{ matrix.policy }}' --parent '${{ matrix.parent }}' --seed 4107 \
+            --growth 30 --rounds 8 --dag-evals 240 --batch 24 --cp-seconds 6 \
+            --out 'science-boundary/job-shop-ta41/results/dcprcp-${{ matrix.parent }}-${{ matrix.policy }}-4107'
+      - name: Independently check any strictly improved machine order with official Few Shots
+        if: always()
+        run: |
+          set -euo pipefail
+          out="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/dcprcp-${{ matrix.parent }}-${{ matrix.policy }}-4107"
+          if test -f "$out/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$out" | tee "$out/upstream-verdict.json"
+            python3 - "$out" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1])
+          v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+          fi
+      - name: Persist decisions or honest UNKNOWN with main push retries
+        if: always()
+        run: |
+          set -euo pipefail
+          out='science-boundary/job-shop-ta41/results/dcprcp-${{ matrix.parent }}-${{ matrix.policy }}-4107'
+          if ! test -d "$out"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$out"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): replacement-path driven CP repair ${{ matrix.parent }} ${{ matrix.policy }}'
+          for attempt in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
