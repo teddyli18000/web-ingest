@@ -4,14 +4,14 @@
 
 Can we find a binary sequence of length 100 with LABS energy below the public best-known value `578`?
 
-For signs `s_i in {−1,+1}`,
+For signs `s_i in {-1,+1}`,
 
 ```text
 C_k = sum_i s_i s_{i+k},
 E = sum_{k=1}^{99} C_k^2.
 ```
 
-Length-100 energies are `2 (mod 4)`, so the first possible improvement is `574`, followed by `570, 566, ...`.
+Length-100 energies are `2 (mod 4)`, so the first nominal improvement is `574`, followed by `570, 566, ...`.
 
 Few Shots problem: `few-shots/few-shots`, `problems/p006-labs-100`.
 
@@ -25,176 +25,192 @@ Public incumbent:
 ++++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-
 ```
 
-The most important new result is a rigorous structural exclusion:
+The strongest exact progress is now on the minimum odd-energy (`odd-perfect`) layer.
 
-> **The entire N=100 near-skew manifold has exact minimum energy 578.**
+### Exact near-skew result
 
-For any canonical near-skew `s=(s_0,...,s_99)`, delete `s_0` to get a skew-symmetric length-99 sequence `t`, and append `s_0` to get a skew-symmetric length-101 sequence `u`. Exact correlation algebra gives
+The entire standard N=100 near-skew manifold has exact minimum energy `578`.
+
+For canonical near-skew `s`, deleting one endpoint gives a skew-symmetric length-99 sequence `t`, while appending the matching endpoint gives a skew-symmetric length-101 sequence `u`. Exact correlation algebra gives
 
 ```text
-E(t) + E(u) = 2 E(s) - 1.
+E99(t) + E101(u) = 2 E100(s) - 1.
 ```
 
-Packebusch–Mertens exhaustively proved the skew-symmetric optima through N=119; their table gives `E_skew(99)=577` and `E_skew(101)=578`. Hence
+Packebusch-Mertens exhaustively proved the skew-symmetric optima through N=119; `E_skew(99)=577` and `E_skew(101)=578`. Hence `E100(s)>=578`, and the public incumbent attains equality.
+
+Proof: [`results/2026-10-29-nearskew-optimum-proof.md`](results/2026-10-29-nearskew-optimum-proof.md).
+
+### Exact odd-perfect endpoint exclusions
+
+Every odd-lag correlation of a length-100 sequence is odd. The minimum possible odd-lag energy is therefore 50. Call a sequence **odd-perfect** when every odd `|C_k|=1`.
+
+For the two length-99 endpoint deletions, let `d_L,d_R` be the number of nonzero odd deletion correlations, and define the invariant endpoint defect
 
 ```text
-2 E(s)-1 >= 577+578 = 1155,
-E(s) >= 578.
+d = min(d_L,d_R).
 ```
 
-The incumbent attains equality. Therefore **any unrestricted sequence with E<578 must lie outside every standard symmetry image of the near-skew manifold**.
-
-Full proof: [`results/2026-10-29-nearskew-optimum-proof.md`](results/2026-10-29-nearskew-optimum-proof.md).
-
-### Strongest current facts
-
-- Ordinary Hamming radii **1 through 7** around the incumbent are completely exhausted: `17,278,988,695` non-center sequences, no improvement. Radius-6 minimum `978`; radius-7 minimum `974`.
-- The incumbent is exactly `(+1, skew99)`, so all 50 odd-lag correlations have magnitude one; odd energy is `50`, even energy `528`.
-- The whole near-skew manifold is now **proved** to have optimum `578`; previous CP-SAT/BnB/local-shell work inside that manifold is superseded as a target route, though preserved as evidence.
-- A calibrated unrestricted **odd-perfect** search (`odd energy = 50`) repeatedly rediscovers the E578 near-skew basin from random starts. In 2,048 scaled starts all eight Actions shards reached 578, none reached <=574.
-- Searching odd-perfect states outside every near-skew symmetry orientation found the same reproducible `E=1162` orbit in all eight shards. That orbit has a `3-bit boundary + skew97 core`; it is not low enough to be competitive but exposes a structural hierarchy.
-- Exact boundary+skew-core searches exclude large structured classes: odd-perfect target feasibility is ruled out for full boundary classes `d=5,7,9,11,13`; the first odd-defect layer `O=58` is target-infeasible for `d=3`, and exact minima for `d=5..25` are all far above 574.
-- Exact pairwise crossover among eight inequivalent near-skew elites (`578,622,650,674,678,678,682,686`) exhausted **265,814,016** recombination states. Every one of 15 cubes has minimum exactly equal to its better parent; pairwise coordinate crossover gives no synergy.
-- Exact A/B block descent over the near-skew parity decomposition enumerated **1,258,291,200** full block states across eight random starts; best final energy was only `818`. This route is not worth scaling.
-- Direct neighboring-length editing remains weak: the 2025 unrestricted N=99 E553 record inserts to N=100 only at best `606`; historical N101 E578 deletes to an incumbent symmetry; N102/N103 transfers are much worse.
-- A finite Golay-52 deletion/relative-symmetry family was exhausted; best N100 energy `1478`.
-
-## Structural identities for the remaining unrestricted search
-
-Split the sequence by parity,
+The current exact picture for an odd-perfect `E<=574` candidate is
 
 ```text
-A_i = s_{2i},
-B_i = s_{2i+1},
-i=0,...,49,
-a = sum A_i,
-b = sum B_i.
+d=0   near-skew manifold: exact minimum E=578
+d=1   no E<=574
+d=2   no E<=574
+d=3   no E<=574
+d=4   no E<=574
+d=5   no E<=574
+```
+
+Thus any surviving odd-perfect breakthrough must satisfy
+
+```text
+d >= 6.
+```
+
+Durable endpoint records:
+
+- [`results/2026-10-29-endpoint-support-reflection-inversion.md`](results/2026-10-29-endpoint-support-reflection-inversion.md)
+- [`results/2026-10-29-endpoint-support-linearization.md`](results/2026-10-29-endpoint-support-linearization.md)
+- [`results/2026-10-29-endpoint-support-path.md`](results/2026-10-29-endpoint-support-path.md)
+- [`results/2026-10-29-endpoint-defect-class-coverage.md`](results/2026-10-29-endpoint-defect-class-coverage.md)
+- [`results/2026-10-29-endpoint-defect2-modular-exhaustion.md`](results/2026-10-29-endpoint-defect2-modular-exhaustion.md)
+- [`results/2026-10-29-endpoint-defect3-modular-exhaustion.md`](results/2026-10-29-endpoint-defect3-modular-exhaustion.md)
+- [`results/2026-10-29-endpoint-defect4-modular-exhaustion.md`](results/2026-10-29-endpoint-defect4-modular-exhaustion.md)
+- [`results/2026-10-29-endpoint-defect5-mod4-exhaustion.md`](results/2026-10-29-endpoint-defect5-mod4-exhaustion.md)
+
+The final defect-5 computation covers all `C(49,5)=1,906,884` supports. A new mod-4/GF(2) representation reduced the old `666,348,057` anchor-system formulation to `4,498,643,306` affine assignments, of which `1,190,683,248` satisfy every original integer odd-perfect equation exactly. No target had even energy `<=520`.
+
+Implementation: [`code/oddperfect_endpoint_mod4.cpp`](code/oddperfect_endpoint_mod4.cpp).
+
+## Global odd-perfect polynomial reformulation
+
+The endpoint hierarchy is useful evidence, but it should not be extended mechanically. A more global representation has now been derived.
+
+Split the sequence into parity halves and form Littlewood polynomials
+
+```text
+A(x) = sum_{i=0}^{49} s_{2i} x^i,
+B(x) = sum_{i=0}^{49} s_{2i+1} x^i.
+```
+
+Let `A^R(x)=x^49 A(x^-1)` and similarly for `B`. Odd-perfectness is equivalent to the exact cross factorization
+
+```text
+A B^R + x B A^R = (x^50 - 1) Q,                 (1)
+```
+
+where `Q` is a length-50 Littlewood polynomial satisfying
+
+```text
+Q_j = -Q_{49-j}.
+```
+
+So `Q` has only 25 independent signs.
+
+Define
+
+```text
+D(x) = A(x)^2 - x B(x)^2.
+```
+
+A Lagrange identity plus Parseval gives the exact objective identity on the odd-perfect layer
+
+```text
+||D||_2^2 = 9900 + 2 V,
+V = sum_{r=1}^{49} C_{2r}^2.
+```
+
+Therefore
+
+```text
+E<=574  <=>  ||D||_2^2 <= 10948,
+E<=570  <=>  ||D||_2^2 <= 10940.
+```
+
+The E578 incumbent has `||D||_2^2=10956`, only 8 above the nominal E574 threshold.
+
+Moreover every coefficient `d_n` of `D` lies in a fixed residue lattice:
+
+```text
+d_n == +1 (mod 4),   n=0,...,49,
+d_n == -1 (mod 4),   n=50,...,99,
+```
+
+and
+
+```text
+D(x^2) = S(x) S(-x)
+```
+
+for the original length-100 Littlewood polynomial `S`.
+
+Full derivation: [`results/2026-10-29-oddperfect-polynomial-factorization.md`](results/2026-10-29-oddperfect-polynomial-factorization.md).
+
+This factorization/norm-gap formulation is now the preferred first-principles route to the whole odd-perfect layer.
+
+## Target arithmetic
+
+Split by parity:
+
+```text
+A_i=s_{2i}, B_i=s_{2i+1},
+a=sum A_i, b=sum B_i.
 ```
 
 Then
 
 ```text
-C_{2r} = C_A(r) + C_B(r),
+C_{2r} = C_A(r)+C_B(r),
 sum_{k odd} C_k = ab,
 sum_{r=1}^{49} C_{2r} = (a^2+b^2-100)/2.
 ```
 
-Every odd-lag correlation is odd, so the minimum odd-lag energy is `50`. Call a sequence **odd-perfect** when every odd `|C_k|=1`. The opposite-lag congruence
+Odd-perfectness plus the opposite-lag congruence forces `ab=0`.
 
-```text
-C_k + C_{100-k} == 0 (mod 4)
-```
-
-forces opposite odd correlations to cancel in an odd-perfect sequence, hence `ab=0`.
-
-The interleaving form is useful outside near-skew too:
-
-```text
-C_s(2r)   = C_A(r)+C_B(r),
-C_s(2r+1) = C_{A,B}(r)+C_{B,A}(r+1).
-```
-
-Thus the next frontier is not another near-skew solver. It is to understand whether the simultaneous conditions
-
-```text
-all odd correlations = +/-1,
-even energy <= 524,
-not near-skew under any LABS symmetry
-```
-
-are feasible at all.
-
-## Exact target-layer arithmetic
-
-The energy/product congruence is target-specific:
+The global product controls energy mod 8:
 
 ```text
 global product +1 => E == 6 (mod 8),
 global product -1 => E == 2 (mod 8).
 ```
 
-Therefore exact `E=574` has global product `+1`, while exact `E=570` has product `-1`. Do not incorrectly use the 574 product class to exclude lower levels.
+Thus exact E574 and E570 belong to different product classes; never use the E574 product condition to exclude lower energies.
 
-Write odd energy as
+Target-specific records:
 
-```text
-O = 50 + 8t.
-```
+- [`results/2026-10-28-exact574-arithmetic.md`](results/2026-10-28-exact574-arithmetic.md)
+- [`results/2026-10-28-exact570-structure.md`](results/2026-10-28-exact570-structure.md)
 
-For exact E574, `code/target_arithmetic.py` combines odd opposite-pair defects, even-correlation square budgets, parity-half sums and the `z=i` Fourier identity. Surviving low-defect half-sum classes are recorded in [`results/2026-10-28-exact574-arithmetic.md`](results/2026-10-28-exact574-arithmetic.md).
+## Other exact / high-value evidence
 
-For exact E570, `O=58` is impossible by the mod-16/product congruence; the odd-perfect layer survives only in canonical half-sum classes `(2,0),(6,0),(10,0),(14,0),(18,0)`. See [`results/2026-10-28-exact570-structure.md`](results/2026-10-28-exact570-structure.md).
-
-## Evidence and experiments
-
-### Incumbent exact neighborhood
-
-- radii 1–5: 79,375,495 candidates, no improvement;
-- radius 6: 1,192,052,400 candidates, minimum `978`;
-- radius 7: Actions `40561186271`, 16,007,560,800 candidates, minimum `974`.
-
-Full record: [`results/2026-10-27-incumbent-shells.md`](results/2026-10-27-incumbent-shells.md).
-
-### Near-skew: now solved exactly
-
-Historical experiments included corrected free-coordinate shells, symmetry cubes, E622/E678 basin shells, complete parity-block best responses, 15 elite crossover cubes, CP-SAT and BnB calibration. These all remain reproducible negative evidence, but the exact skew99/skew101 sandwich proof now dominates them.
-
-Key records:
-
-- [`results/2026-10-28-near-skew.md`](results/2026-10-28-near-skew.md)
-- [`results/2026-10-28-nearskew-arithmetic.md`](results/2026-10-28-nearskew-arithmetic.md)
-- [`results/2026-10-28-nearskew-elite-basins.md`](results/2026-10-28-nearskew-elite-basins.md)
-- [`results/2026-10-28-nearskew-global-moves.md`](results/2026-10-28-nearskew-global-moves.md)
-- [`results/2026-10-29-nearskew-optimum-proof.md`](results/2026-10-29-nearskew-optimum-proof.md)
-
-### Odd-perfect outside near-skew
-
-`code/oddperfect_walk.cpp` is the first home-grown heuristic here calibrated into the record regime. `code/oddperfect_outside_nss.cpp` separately records the best state whose entire eight-element LABS symmetry orbit avoids near-skew.
-
-Actions `40634532205`: 1,024 random odd-perfect starts, 100,000 phase-2 steps each. Every shard's best outside-near-skew state had exact energy `1162`, and all are symmetry images of one orbit. That state is exactly `3-bit boundary + skew97` and is a strict weight-1/2 odd-perfect local minimum.
-
-Full records:
-
-- [`results/2026-10-28-odd-perfect.md`](results/2026-10-28-odd-perfect.md)
-- [`results/2026-10-28-odd-perfect-components.md`](results/2026-10-28-odd-perfect-components.md)
-- [`results/2026-10-28-oddperfect-outside-nearskew.md`](results/2026-10-28-oddperfect-outside-nearskew.md)
-
-### Boundary + skew-core hierarchy
-
-A finite-state decomposition keeps an odd boundary of length `d` and a skew-symmetric suffix. Exact target searches exclude all normalized odd-perfect classes for `d=5,7,9,11,13`. For `O=58`, `d=3` is target-infeasible and every odd `d=5..25` was fully enumerated; exact minima range from 2022 upward.
-
-Full record: [`results/2026-10-28-skewcore-hierarchy.md`](results/2026-10-28-skewcore-hierarchy.md).
-
-### Neighboring-length / complementary constructions
-
-See:
-
-- [`results/2026-10-27-cross-length.md`](results/2026-10-27-cross-length.md)
-- [`results/2026-10-28-golay52-deletion.md`](results/2026-10-28-golay52-deletion.md)
+- Ordinary Hamming radii **1 through 7** around the incumbent are completely exhausted: `17,278,988,695` non-center sequences, no improvement. Radius-6 minimum `978`; radius-7 minimum `974`. See [`results/2026-10-27-incumbent-shells.md`](results/2026-10-27-incumbent-shells.md).
+- The calibrated odd-perfect walk repeatedly rediscovers the near-skew E578 basin. Outside every near-skew symmetry orientation, 1,024 starts reproducibly reached the same E1162 orbit, a `3-bit boundary + skew97` structure. See [`results/2026-10-28-oddperfect-outside-nearskew.md`](results/2026-10-28-oddperfect-outside-nearskew.md).
+- Exact boundary+skew-core target searches exclude broad structured classes; see [`results/2026-10-28-skewcore-hierarchy.md`](results/2026-10-28-skewcore-hierarchy.md).
+- Pairwise crossover among eight near-skew elites exhausted `265,814,016` recombination states with no synergy; parity-block descent exhausted `1,258,291,200` states and stalled far above the record. Historical near-skew evidence is preserved under [`results/`](results/), but the exact near-skew proof supersedes it as a target route.
+- Neighboring-length transfer and the tested Golay-52 deletion family are weak: see [`results/2026-10-27-cross-length.md`](results/2026-10-27-cross-length.md) and [`results/2026-10-28-golay52-deletion.md`](results/2026-10-28-golay52-deletion.md).
 
 ## Dead ends / constraints learned
 
-- **Do not spend further compute inside near-skew to beat 578. It is now rigorously impossible.**
-- Do not repeat small ordinary edits around the incumbent; radius 7 is exact and strongly negative.
-- Do not use the withdrawn first near-skew shell numbers; the old scanner had an off-by-one mirror bug. The corrected data are preserved in the result note.
-- Do not scale simple CPU tabu/memetic/direct isolated-subsystem probes unchanged; their calibration is poor.
-- Do not scale strict odd-perfect walking merely with more starts; it repeatedly collapses into the now-proved-optimal near-skew basin.
-- Do not scale pairwise near-skew crossover or exact one-block descent; both have been tested at hundreds of millions to >1 billion exact states without synergy.
-- Raw neighboring-length insertion/deletion and the tested Golay-52 family are dead ends by themselves.
-- CP-SAT `UNKNOWN` is never an exclusion. Preserve only proved `INFEASIBLE` classes or independently verified certificates as exact claims.
+- Do not spend further compute inside near-skew to beat 578; it is rigorously impossible.
+- Do not repeat small ordinary incumbent edits; radius 7 is exact and strongly negative.
+- Do not treat CP-SAT `UNKNOWN`, process timeout, or killed jobs as exclusions.
+- Do not scale the old endpoint anchor/RREF formulation to higher defect; defect 5 required a representation change to mod-4 affine linearization.
+- Do not mechanically continue defect-by-defect merely because d=0..5 are now closed. Candidate quality has not improved; the global factorization (1) is a better search space.
+- The failed d4 `[150000,172000)` SIGKILL run is not evidence; that interval was later fully rerun in four successful subranges, as recorded in the clean d4 transcript.
 
 ## Next steps
 
-1. **Odd-perfect outside near-skew:** attack the proposition “every odd-perfect N100 sequence with `E<=574` is near-skew (up to LABS symmetry).” A proof would eliminate the entire `O=50` layer because near-skew is now exactly bounded by 578.
-2. Build the odd-perfect exact model directly in the `A/B` interleaving coordinates, explicitly excluding all eight near-skew orientations. Use cross-correlation constraints rather than a generic 100-bit full-correlation model.
-3. Search for an analytic lower bound coupling complementary-pair energy `sum_r(C_A+C_B)^2` to the odd cross-correlation constraints `C_{A,B}(r)+C_{B,A}(r+1)=+/-1`; equality/near-equality theory from Golay/near-complementary sequences may be relevant.
-4. Continue target-specific exact layers outside near-skew: `O=58` for exact 574, and `O=66`/higher layers according to the arithmetic decomposition. Keep exact 570 separate because its allowed defect parity differs.
+1. **Attack the global odd-perfect factorization.** Seek a proof that every Littlewood factorization `(1)` satisfies `||A^2-xB^2||_2^2 >= 10956`. That would eliminate the entire `O=50` layer at once.
+2. Use the fixed coefficient lattice of `D` and the factorization `D(x^2)=S(x)S(-x)` to search near the sharp norm thresholds `10948/10940`, rather than enumerating endpoint supports.
+3. Exploit the cross-spectral phase constraint from `(1)` at all 50th roots of unity; compare canonical-form/quad-decomposition methods from base/normal/near-normal sequence enumeration, but do not assume those theorems apply directly.
+4. Continue higher odd-energy target layers (`O=58`, `O=66`, ...) only with target-specific arithmetic and exact verification; keep E574 and E570 product classes separate.
 5. Re-check Few Shots/public record immediately before any claim. If `E<=574` is found, freeze the sequence, independently rescore with `code/verify.py`, verify with the Few Shots verifier, create only `certificate.json` and `SHOT.md`, run `tools/check.py`, then publish under `teddyli18000` as authorized.
 
 ## Durable artifacts
 
-- [`code/`](code/) — independent scorer; exact shell scanners; odd-perfect search kernels; target arithmetic/CP-SAT models; skew-core enumerators; neighboring-length and complementary-family tools.
-- [`results/`](results/) — all meaningful exact exclusions, calibrations, negative searches and structural derivations.
+- [`code/`](code/) — independent scorer; exact shell scanners; endpoint modular solvers; odd-perfect search kernels; target arithmetic models; skew-core and neighboring-length tools.
+- [`results/`](results/) — exact exclusions, proof transcripts, negative searches and structural derivations.
 - [`notes/literature-and-methods.md`](notes/literature-and-methods.md) — literature and method decisions.
 
 ## Sources
@@ -207,12 +223,11 @@ See:
 - Prestwich, improved LABS branch-and-bound: <https://arxiv.org/abs/1305.6187>
 - Bošković, Brglez & Brest, heuristic LABS search: <https://arxiv.org/abs/1406.5301>
 - Zhang et al., massively parallel memetic tabu (2025): <https://arxiv.org/abs/2504.00987>
-- Pšeničnik et al., dual-step optimization: <https://arxiv.org/abs/2409.07222>
 - Pšeničnik et al., search-space region prioritization (2026): <https://arxiv.org/abs/2607.09688>
-- Lau & Gangat, isolated-subsystem optimization (2026): <https://arxiv.org/abs/2610.14361>
+- Wang & Zhu, base/normal/near-normal sequences (2025/2026): <https://arxiv.org/abs/2506.20296>
 
 ## Work log
 
 - **2026-10-27:** Reproduced the baseline; added independent scoring/search kernels; exhausted incumbent Hamming radii through 6; surveyed current solver literature and neighboring-length records.
-- **2026-10-28:** Exhausted incumbent radius 7. Derived/corrected the near-skew representation. Calibrated odd-perfect search; found the reproducible outside-near-skew E1162 boundary+skew97 basin. Built exact skew-core and target-arithmetic decompositions. Exhausted large near-skew local, crossover and block neighborhoods. Established target-specific mod-8/mod-16 constraints for E574/E570.
-- **2026-10-29:** Proved the exact N100 near-skew optimum is 578 using `E99(t)+E101(u)=2E100(s)-1` plus Packebusch–Mertens' exact skew optima `577` and `578`. Refocused the frontier on non-near-skew odd-perfect and higher odd-defect layers.
+- **2026-10-28:** Exhausted incumbent radius 7. Derived/corrected near-skew representation. Calibrated odd-perfect search; found reproducible outside-near-skew E1162 boundary+skew97 basin. Built exact skew-core and target-arithmetic decompositions. Exhausted large near-skew local, crossover and block neighborhoods.
+- **2026-10-29:** Proved the exact N100 near-skew optimum 578. Developed reflection-support endpoint linearization and exactly excluded odd-perfect endpoint defects 1 through 5. Defect 5 required a new mod-4/GF(2) affine reformulation and a 1.9-million-support exhaustive search. Derived the global parity-polynomial factorization `A B^R+x B A^R=(x^50-1)Q` and exact norm identity `||A^2-xB^2||^2=9900+2V`, which is now the main route beyond low endpoint defect.
