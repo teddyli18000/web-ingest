@@ -1,0 +1,40 @@
+name: temp Thomson 960 C3 portal census
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-c3-portal-census.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  classify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - seed: 303
+            trial: 3
+            tag: e564
+          - seed: 404
+            trial: 3
+            tag: e802
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Replay and classify C3 portal
+        run: |
+          python3 science-boundary/thomson-960/code/harvest_classify_c3_portal.py \
+            "$RUNNER_TEMP/few-shots" --seed ${{ matrix.seed }} --trial ${{ matrix.trial }} --k 24 \
+            --out "$RUNNER_TEMP/portal-${{ matrix.tag }}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-c3-portal-${{ matrix.tag }}
+          retention-days: 7
+          path: ${{ runner.temp }}/portal-${{ matrix.tag }}.json
