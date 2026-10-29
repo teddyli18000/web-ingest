@@ -23,8 +23,10 @@ def main():
     'problems/p010-mona-lisa-tsp/verify/verify.py')
  v=importlib.util.module_from_spec(spec);spec.loader.exec_module(v)
  xs,ys=v.coordinates()
+ xs=np.asarray(xs);ys=np.asarray(ys)
  t=np.asarray(json.loads(Path(a.baseline).read_text())['tour'],dtype=np.int32)-1
  assert len(t)==N and v.tour_length((t+1).tolist())==5757191
+ position=np.empty(N,dtype=np.int32);position[t]=np.arange(N,dtype=np.int32)
  tours={'Nagata':t}
  for name,path in json.loads(Path(a.tours).read_text()).items():
     route=h.parse_tour(path)
@@ -108,7 +110,7 @@ def main():
        'fraction_given_disagreement':round(float(overlap/max(1,int(d2.sum()))),4),
        'competitor_wirings':len(variants),'wiring_source_groups':[g for g in variants.values()],
        'stable_boundary_edges':boundary[cid],
-       'Nagata_position_range':[int(min(np.where(np.isin(t,ids))[0])),int(max(np.where(np.isin(t,ids))[0]))],
+       'Nagata_position_range':[int(position[ids].min()),int(position[ids].max())],
        'bbox_xy':bbox,'mean_xy':[round(float(np.mean(xs[ids])),2),round(float(np.mean(ys[ids])),2)],
        'sample_city_ids_1based':[int(x)+1 for x in ids[:30]],
        'members_0based':ids.tolist()}
