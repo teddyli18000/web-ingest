@@ -1,0 +1,42 @@
+name: temp-p010-lp-precompute-cost-audit
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/tsplib_lp_precompute_audit.py
+      - .github/workflows/temp-p010-lp-precompute-cost-audit.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch public-only inputs across all 15 held-out cases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/parents-public/first /tmp/parents-public/second /tmp/parents-public/third
+          gh run download 40869449446 --repo teddyli18000/web-ingest --name p010-blind-5case-public --dir /tmp/parents-public/first
+          gh run download 40870679131 --repo teddyli18000/web-ingest --name p010-unseen-v2-public --dir /tmp/parents-public/second
+          gh run download 40871715238 --repo teddyli18000/web-ingest --name fold3-public-inputs --dir /tmp/parents-public/third
+          test "$(find /tmp/parents-public -name public.json | wc -l)" -eq 15
+          test "$(find /tmp/parents-public -name private.json | wc -l)" -eq 0
+          python -m pip install numpy scipy ortools
+      - name: Account for full LP preprocessing and validate deterministic LP support
+        run: |
+          OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python science-boundary/mona-lisa-tsp/tsplib_lp_precompute_audit.py \
+            --dir /tmp/parents-public --repeats 3 \
+            --out science-boundary/mona-lisa-tsp/results/tsplib-lp-precompute-costs.json
+          test -s science-boundary/mona-lisa-tsp/results/tsplib-lp-precompute-costs.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-15instance-lp-overhead-audit
+          path: science-boundary/mona-lisa-tsp/results/tsplib-lp-precompute-costs.json
+          if-no-files-found: ignore
