@@ -59,3 +59,37 @@ The reference and hidden local-search winner were generated deterministically wi
 - [blind_counterfactual_199.py](../blind_counterfactual_199.py), [blind_counterfactual_eval.py](../blind_counterfactual_eval.py), [blind199_hidden_support_audit.py](../blind199_hidden_support_audit.py)
 - [tsplib_counterfactual_bench.py](../tsplib_counterfactual_bench.py), [tsplib_selector_redundancy.py](../tsplib_selector_redundancy.py)
 - All workflows named `temp-p010-blind*`, `temp-p010-tsplib-*` are disposable one-shot orchestration and must be retired once output is preserved.
+
+## Ten-instance geometric negative controls and coherent-pair repair (post-hoc)
+
+Geometric controls [run 40871195577](https://github.com/teddyli18000/web-ingest/actions/runs/40871195577) introduce 12 truly novel chords by (i) absolute nearest distance, (ii) short edges adjusted by already-selected tour-neighbor lengths, or (iii) seeded random from 8-nearest-neighbor candidate graph. Same parent tours, exact metric and single-thread AddCircuit. The locally cost-adjusted near-neighbor heuristic sometimes equals the more elaborate LP methods; an LP-specific superiority claim is unsupported by these ten cases.
+
+The proposed **coupled 2-edge cross-subtour repairs** explicitly rank complete 2-opt reconnection pairs across disconnected 2-factor components by `d(u,v)+d(a,b)-d(u,a)-d(v,b)` rather than scoring the two new chords independently. Exact same 12-edge budget and single-thread AddCircuit [run 40871463432](https://github.com/teddyli18000/web-ingest/actions/runs/40871463432). On these ten previously examined splits, paired reconstruction **ties the original single-chord repair in 9/10 cases** and is better by 1 on `eil101` (636 vs 637). Thus the change improves *coherence of the proposal representation* but has little demonstrated incumbent-score benefit yet.
+
+| Case | Parent only | LP ambiguity | Real LP conflict v2 when available | One-chord defect repair | Two-edge paired repair | Nearest / local-surplus / random 8nn |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| eil51 | 431 | 429 | 429 (original, redundant) | 431 | 431 | 431 / 431 / 430 |
+| berlin52 | 7542 | 7542 | 7542 (original, redundant) | 7542 | 7542 | 7542 / 7542 / 7542 |
+| st70 | 681 | 680 | 680 (original, redundant) | 681 | 681 | 681 / 681 / 681 |
+| eil76 | 551 | 541 | 541 (original, redundant) | 551 | 551 | 551 / 549 / 551 |
+| kroA100 | 21473 | 21470 | 21470 (original, redundant) | 21443 | 21443 | 21473 / 21473 / 21473 |
+| rat99 | 1233 | 1226 | 1224 | 1216 | 1216 | 1227 / 1218 / 1233 |
+| ch130 | 6214 | 6214 | 6214 | 6209 | 6209 | 6214 / 6214 / 6214 |
+| eil101 | 637 | 634 | 634 | 637 | **636** | 637 / 637 / 637 |
+| pr76 | 109110 | 109110 | 109110 | 108830 | 108830 | 109110 / 109110 / 109110 |
+| kroB100 | 22569 | 22569 | 22485 | 22531 | 22531 | 22552 / **22485** / 22569 |
+
+**Evidentiary limits**: two entirely different generation regimes (Mona original published LP vs small-instance HiGHS degree+some SEC relaxations), correlated TSPLIB problems, deterministic single parent-generation seed, and only ten post-hoc cases. `berlin52` is degenerate (parent-only reaches known optimum). None of the above implies a globally optimal model or a statistically established win rate. The truly new `conflict_v2` method has only five evaluated instances in this table.
+
+### Preregistered separate third fold
+
+[Third-fold Action 40871715238](https://github.com/teddyli18000/web-ingest/actions/runs/40871715238) freezes **five unused certified TSPLIB cases** `kroC100, kroD100, kroE100, rd100, lin105` and compares all **eight** now distinct methods (zero-chord parent union, LP uncertainty, real consensus-vs-LP conflict, independent one-chord repairs, coherent two-chord repairs, absolute nearest, adjusted near-neighbor, random 8nn) at 12 novel edges and an 18-second inclusive search budget per method. Per-instance search receives only public parents, local coordinates and a full *independently generated* LP relaxation. Better hidden tour and official optimum are in a separate post-search job. This fold is the next honest generalization test, not a re-run tuned on exposed results.
+
+### Relevant methods literature reviewed before follow-on
+
+- Cook, Helsgaun, Hougardy, Schroeder, *Local elimination in the traveling salesman problem*, Mathematical Programming Computation (2024): https://doi.org/10.1007/s12532-024-00262-y — verified edge elimination, local exchange and LP reduced costs; useful for principled candidate pruning, but not a promise that kNN implies optimality.
+- Akcay, Delorme and Pferschy, *Machine-learning-enhanced strategies to generate subtour elimination constraints* (2026): https://optimization-online.org/2026/04/machine-learning-enhanced-strategies-to-generate-subtour-elimination-constraints-for-the-symmetric-traveling-salesman-problem/ — which SECs must be added early, with reported benefits and distribution-shift caveats. Prior art for counterexample-conditioned cut prioritization.
+- Fang, Weng and Ban, *ASAP: Exploiting the Satisficing Generalization Edge in Neural Combinatorial Optimization*, ICML 2026: https://proceedings.mlr.press/v306/fang26t.html — **proposal/selection** decomposition: first protect broad solution coverage, then optimize under the current constraints. It favors preserving many plausible hidden edges rather than hard top-12 candidate filtering.
+- Song et al., *DualCert: A Solver for the TSP with Constraint-Coupled Learning* (2026 preprint): https://arxiv.org/abs/2608.09042 — SEC-coupled guidance with deterministic verification, experiments on TSP1000; no evidence of a record improvement on Mona Lisa 100K.
+
+**Representation pivot:** a 12-edge-only rigid score ranking fails especially on Mona, where 1,978 Nagata-only edges are outside old parent union. A viable next model must admit a much broader candidate reservoir and *let Hamiltonian connectivity + admissible cuts jointly select coordinated edges*, rather than adding ever more isolated "best" edges. A diversity-preserving proposal stage is a plausible testable direction, not a demonstrated breakthrough.
