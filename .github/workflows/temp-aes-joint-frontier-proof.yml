@@ -1,0 +1,49 @@
+name: temp-aes-joint-frontier-proof
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-joint-frontier-proof.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-joint-frontier-proof
+  cancel-in-progress: false
+
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Enumerate exact helper frontier
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/aes-sbox-circuit
+          g++ -O3 -std=c++20 enumerate_joint_decoupled_frontier.cpp -o /tmp/aes-frontier
+          /tmp/aes-frontier 35 > /tmp/score35.csv
+          /tmp/aes-frontier 36 > /tmp/score36.csv
+          test "$(($(wc -l < /tmp/score35.csv) - 1))" -eq 136
+          test "$(($(wc -l < /tmp/score36.csv) - 1))" -eq 9625
+      - name: Prove frontier impossible within 101
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/aes-sbox-circuit
+          g++ -O3 -std=c++20 prove_joint_decoupled_frontier.cpp -o /tmp/aes-frontier-proof
+          /tmp/aes-frontier-proof /tmp/score35.csv /tmp/score36.csv | tee /tmp/proof.log
+          grep -q 'conclusion=all_helper_frontier_pairs_excluded_from_101' /tmp/proof.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-joint-frontier-proof
+          path: |
+            /tmp/score35.csv
+            /tmp/score36.csv
+            /tmp/proof.log
