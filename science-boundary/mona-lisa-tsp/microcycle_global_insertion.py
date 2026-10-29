@@ -64,10 +64,10 @@ def main():
     assert all(5<=len(x)<=8 for x in small)
     spec=importlib.util.spec_from_file_location('v',Path(os.environ['FEWSHOTS_ROOT'])/
        'problems/p010-mona-lisa-tsp/verify/verify.py')
-    v=importlib.util.module_from_spec(spec);spec.loader.exec_module(v)
+    verifier=importlib.util.module_from_spec(spec);spec.loader.exec_module(verifier)
     xs,ys=v.coordinates()
-    def d(a,b):return v.euc_2d(xs[a-1]-xs[b-1],ys[a-1]-ys[b-1])
-    assert v.tour_length(tour)==5757191
+    def d(a,b):return verifier.euc_2d(xs[a-1]-xs[b-1],ys[a-1]-ys[b-1])
+    assert verifier.tour_length(tour)==5757191
     seed_score=5757191-sum(m['gain'] for m in seeds)
     old_owner={};new_owner={};blocked=set()
     for i,m in enumerate(mods):
@@ -189,11 +189,11 @@ def main():
     candidate_cycles=components(n,eds)
     assert len(candidate_cycles)==1
     full=candidate_cycles[0]
-    actual=v.tour_length(full)
+    actual=verifier.tour_length(full)
     assert actual==estimated,(actual,estimated)
     report['verified_score']=actual
     report['winning_mask']=str(mask)
-    report['official_hash']=v.canonical_hash({'tour':v.canonical_tour(full)})
+    report['official_hash']=verifier.canonical_hash({'tour':verifier.canonical_tour(full)})
     if actual<5757191:
         out=Path(args.certificate);out.parent.mkdir(parents=True,exist_ok=True)
         out.write_text(json.dumps({'tour':full},separators=(',',':')))
