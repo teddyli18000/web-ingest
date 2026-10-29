@@ -1,0 +1,49 @@
+name: temp-ta41-shrink-new-cross-poset-cores
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/shrink_cross_poset_core.py'
+      - '.github/workflows/temp-ta41-shrink-new-cross-poset-cores.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-shrink-new-cross-poset-cores
+  cancel-in-progress: false
+jobs:
+  shrink:
+    strategy:
+      fail-fast: false
+      matrix:
+        cohort: [oldplusnine, gateways, oldnew, all12]
+    runs-on: ubuntu-latest
+    timeout-minutes: 11
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin OR-Tools for independent hard model rechecking
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/shrink_cross_poset_core.py
+      - name: Shrink 2005 no-overlap contradiction by deletion testing
+        run: |
+          python3 science-boundary/job-shop-ta41/shrink_cross_poset_core.py \
+            --cohort '${{ matrix.cohort }}' --passes 2 --per-test-seconds 3 \
+            --out 'science-boundary/job-shop-ta41/results/shrunk-poset-${{ matrix.cohort }}'
+      - name: Preserve verified final core only with honest minimality caveat
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/shrunk-poset-${{ matrix.cohort }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): shrink fresh cross-basin resource conflict core ${{ matrix.cohort }}'
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
