@@ -137,3 +137,33 @@ No transfer gain established. Learning inference/training costs ignored, favorin
 - Prior exploratory baseline and transfer analysis within this topic: [basin-geometry-2026-10-29.md](basin-geometry-2026-10-29.md).
 
 **Engineering boundary:** All new code and results are inside science-boundary/labs-ai4s-search/. Do not edit science-boundary/labs-100/. Source CSVs (~12 MB across five complete datasets) are reproducibly regenerated on demand rather than committed to avoid unchecked large artifacts.
+
+## 7. Directly attacking balanced-quartet motif proposals: held-out replication **fails**
+
+The exact Hamiltonian suggests structured four-flip moves whose indices form a **balanced quartet** a+d=b+c. We tested these as *actions* rather than merely a regression feature. [motif_vs_random.cpp](../motif_vs_random.cpp) samples, per independent deep basin, **12 uniformly random balanced quartets** and **12 uniformly random unrestricted 4-flip sets**. At N100 exactly 79,625 of all 3,921,225 four-element index subsets are balanced. For both arm types, choose the candidate with the smallest exact immediate ΔE, then run identical steepest and first-improvement descent; same pool size and relaxation-cost accounting by construction. [motif_compare.py](../motif_compare.py) additionally selects equal-immediate-energy matched motif/random candidate pairs *within the same incumbent* (pair choice uses only pre-relaxation scores).
+
+Completed, independent trials (positive post-relax gain in integer E units per *selected* candidate; group bootstrap 95% CI):
+
+| N, stage, seed | groups | balanced minus random, steepest (95% CI) | balanced minus random, first-improvement (95% CI) |
+|---|---:|---|---|
+| 100, 40, 152290 — exploratory | 4,000 | **+0.841 [+0.180,+1.538]** | +0.110 [−0.660,+0.936] |
+| 100, 40, 987534 — **new-seed replication** | 4,000 | **−0.015 [−0.720,+0.669]** | **−1.290 [−2.144,−0.436]** |
+| 64, 40, 952017 | 4,000 | +0.070 [−0.208,+0.357] | −0.140 [−0.412,+0.126] |
+| 100, 0, 481327 | 3,000 | +1.164 [−2.740,+5.100] | +2.951 [−1.047,+7.003] |
+
+This is **360,000 individually relaxed candidate outcomes under each of two descent rules** across four complete motif datasets. The stage120 oversized one-shot run timed out and is **excluded**.
+
+Under **exact immediate-energy ties**, the N100 stage40 exploratory cohort had 2,666 matched groups with steepest effect +0.299 [−0.204,+0.788], while the new-seed replication had 2,646 tied groups with effect −0.567 [−1.154,+0.020]. N64 stage40 tied effect −0.063 [−0.306,+0.177]. Thus there is **no repeatable positive signal after controlling exact ΔE**, and even the apparently promising initial unconstrained effect failed the independent replication.
+
+Reproduce:
+\`\`\`bash
+g++ -O3 -std=c++17 motif_vs_random.cpp -o /tmp/labs_motif
+/tmp/labs_motif motif100_stage40.csv 100 4000 152290 40
+/tmp/labs_motif motif100_stage40_confirm.csv 100 4000 987534 40
+/tmp/labs_motif motif64_stage40.csv 64 4000 952017 40
+/tmp/labs_motif motif100_stage0.csv 100 3000 481327 0
+python motif_compare.py motif100_stage40.csv motif100_stage40_confirm.csv motif64_stage40.csv motif100_stage0.csv
+\`\`\`
+
+**Falsified working idea:** selecting a *balanced quartet itself* is not reliably more valuable than random quartet proposals at equal sample pool size, nor does that motif independently forecast basin transition once exact initial ΔE is controlled. An exact high-order interaction representation is therefore **not enough** to construct a useful search operator. Search should focus on *interactions among proposed flips and the surrounding, unflipped hypergraph*, potentially for coordinated larger-than-four moves and diverse descent ensembles.
+
