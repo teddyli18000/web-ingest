@@ -199,7 +199,10 @@ def search(inp,strategy,budget,out,seconds=12):
     lp={E(r['u'],r['v']):r['x'] for r in pub['lp_positive']}
     eligible={e:x for e,x in lp.items() if e not in parent}
     meta={}
-    if strategy=='repair':
+    if strategy=='control':
+        selected=[]
+        meta={'baseline_only_parent_union':True}
+    elif strategy=='repair':
         selected,meta=select_repair(ref,D,parents,budget,20261029)
     else:
         def keyscore(pair):
