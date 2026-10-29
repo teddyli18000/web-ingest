@@ -1,0 +1,45 @@
+name: temp-aes-joint-decoupled-lb31
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-joint-decoupled-lb31.yml'
+      - 'science-boundary/aes-sbox-circuit/screen_joint_decoupled_lb.py'
+      - 'science-boundary/aes-sbox-circuit/prove_joint_decoupled_lb31_impossible.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-joint-decoupled-lb31
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Recompute complete 3^18 min-plus frontier
+        shell: bash
+        run: |
+          set -euo pipefail
+          python science-boundary/aes-sbox-circuit/screen_joint_decoupled_lb.py \
+            | tee /tmp/joint-decoupled-lb.log
+      - name: Exclude global LB31 tip with exact helper closure
+        shell: bash
+        run: |
+          set -euo pipefail
+          python science-boundary/aes-sbox-circuit/prove_joint_decoupled_lb31_impossible.py \
+            | tee /tmp/joint-decoupled-lb31-proof.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-joint-decoupled-lb31
+          path: |
+            /tmp/joint-decoupled-lb.log
+            /tmp/joint-decoupled-lb31-proof.log
+            science-boundary/aes-sbox-circuit/joint-decoupled-lb.json
