@@ -1,0 +1,43 @@
+# exact defect2 local proof log
+compiler: g++ -O3 -march=native -fopenmp -std=c++20
+command pattern: oddperfect_support_modular --threads 5 --start <a> --end <b>
+coverage: support indices [0,1176) in 12 disjoint contiguous ranges
+
+RANGE 0 100
+SUMMARY range=0:100 systems=4644 inconsistent=3739 prepared=905 chunks_done=1296/1296 complete=1 found=0 stopped=0 enum=134341772 pm_candidates=42685646 target_checked=25648645 maxnull=23 seconds=3.68911 threads=5
+TIME wall=3.90 cpu=384%
+RANGE 100 200
+SUMMARY range=100:200 systems=4608 inconsistent=3470 prepared=1138 chunks_done=1654/1654 complete=1 found=0 stopped=0 enum=180514648 pm_candidates=51154440 target_checked=33901606 maxnull=23 seconds=4.93726 threads=5
+TIME wall=5.14 cpu=387%
+RANGE 200 300
+SUMMARY range=200:300 systems=4584 inconsistent=3426 prepared=1158 chunks_done=1638/1638 complete=1 found=0 stopped=0 enum=183655428 pm_candidates=51289830 target_checked=34030478 maxnull=23 seconds=5.88504 threads=5
+TIME wall=6.10 cpu=390%
+RANGE 300 400
+SUMMARY range=300:400 systems=4536 inconsistent=3346 prepared=1190 chunks_done=1846/1846 complete=1 found=0 stopped=0 enum=262144046 pm_candidates=76691034 target_checked=50815779 maxnull=23 seconds=8.40694 threads=5
+TIME wall=8.60 cpu=394%
+RANGE 400 500
+SUMMARY range=400:500 systems=4512 inconsistent=3280 prepared=1232 chunks_done=1846/1846 complete=1 found=0 stopped=0 enum=245256228 pm_candidates=76654376 target_checked=50780827 maxnull=23 seconds=8.30481 threads=5
+TIME wall=8.50 cpu=393%
+RANGE 500 600
+SUMMARY range=500:600 systems=4584 inconsistent=3304 prepared=1280 chunks_done=1784/1784 complete=1 found=0 stopped=0 enum=226755432 pm_candidates=59943896 target_checked=42458731 maxnull=23 seconds=6.40489 threads=5
+TIME wall=6.60 cpu=390%
+RANGE 600 700
+SUMMARY range=600:700 systems=4440 inconsistent=3186 prepared=1254 chunks_done=2030/2030 complete=1 found=0 stopped=0 enum=312431158 pm_candidates=101977966 target_checked=67495062 maxnull=23 seconds=11.2128 threads=5
+TIME wall=11.40 cpu=394%
+RANGE 700 800
+SUMMARY range=700:800 systems=4512 inconsistent=3302 prepared=1210 chunks_done=1876/1876 complete=1 found=0 stopped=0 enum=289034006 pm_candidates=76747056 target_checked=50871375 maxnull=23 seconds=8.07437 threads=5
+TIME wall=8.30 cpu=392%
+RANGE 800 900
+SUMMARY range=800:900 systems=3918 inconsistent=2778 prepared=1140 chunks_done=2030/2030 complete=1 found=0 stopped=0 enum=321714384 pm_candidates=101865246 target_checked=75289347 maxnull=24 seconds=11.3751 threads=5
+TIME wall=11.56 cpu=395%
+RANGE 900 1000
+SUMMARY range=900:1000 systems=4800 inconsistent=3454 prepared=1346 chunks_done=1362/1362 complete=1 found=0 stopped=0 enum=37251616 pm_candidates=503304 target_checked=475486 maxnull=19 seconds=0.427462 threads=5
+TIME wall=0.66 cpu=295%
+RANGE 1000 1100
+SUMMARY range=1000:1100 systems=4800 inconsistent=3598 prepared=1202 chunks_done=1202/1202 complete=1 found=0 stopped=0 enum=2421778 pm_candidates=316584 target_checked=295602 maxnull=14 seconds=0.0439245 threads=5
+TIME wall=0.26 cpu=167%
+RANGE 1100 1176
+SUMMARY range=1100:1176 systems=3648 inconsistent=2804 prepared=844 chunks_done=844/844 complete=1 found=0 stopped=0 enum=51318 pm_candidates=35700 target_checked=34010 maxnull=9 seconds=0.00357368 threads=5
+TIME wall=0.18 cpu=106%
+
+AGGREGATE systems=53586 inconsistent=39687 prepared=13899 enum=2195571814 pm_candidates=639865078 target_checked=432096948
