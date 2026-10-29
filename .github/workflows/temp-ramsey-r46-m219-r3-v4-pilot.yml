@@ -82,10 +82,13 @@ jobs:
           if [[ ! -f /tmp/r46/out/summary.json ]]; then
             python - /tmp/r46/out/summary.json "$status" "$rc" '${{ matrix.a }}' '${{ matrix.b }}' <<'PY'
           import json,sys
-          p,st,rc,a,b=sys.argv[1:];open(p,'w').write(json.dumps({'campaign':'m219-r3-fixedAB-v4-k2-pilot','status':st,'solver_exit':int(rc),'a_ordinal':int(a),'b_ordinal':int(b)},indent=2,sort_keys=True)+'\n')
+          p,st,rc,a,b=sys.argv[1:]
+          open(p,'w').write(json.dumps({'campaign':'m219-r3-fixedAB-v4-k2-pilot','status':st,'solver_exit':int(rc),'a_ordinal':int(a),'b_ordinal':int(b)},indent=2,sort_keys=True)+'\n')
           PY
           fi
-          echo "status=$status" >> "$GITHUB_OUTPUT";cat /tmp/r46/out/summary.json;tail -n 30 /tmp/r46/out/solver.log || true
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          cat /tmp/r46/out/summary.json
+          tail -n 30 /tmp/r46/out/solver.log || true
           [[ "$status" != ERROR ]]
       - name: Authoritative Few Shots verification on SAT
         if: steps.solve.outputs.status == 'SAT'
@@ -94,13 +97,11 @@ jobs:
           set -euo pipefail
           git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
           git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
-          mkdir -p /tmp/candidate;cp /tmp/r46/out/candidate.json /tmp/candidate/certificate.json
+          mkdir -p /tmp/candidate
+          cp /tmp/r46/out/candidate.json /tmp/candidate/certificate.json
           cd /tmp/few-shots
           python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/out/few-shots-verify.json
-          python3 - /tmp/r46/out/few-shots-verify.json <<'PY'
-          import json,sys
-d=json.load(open(sys.argv[1]));assert d.get('valid') is True and str(d.get('score'))=='36',d
-          PY
+          python3 -c "import json;d=json.load(open('/tmp/r46/out/few-shots-verify.json'));assert d.get('valid') is True and str(d.get('score'))=='36',d"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -127,11 +128,13 @@ d=json.load(open(sys.argv[1]));assert d.get('valid') is True and str(d.get('scor
           mkdir -p /tmp/r46
           python - /tmp/parts /tmp/r46/result.json <<'PY'
           import json,pathlib,sys
-          rows=[json.load(open(p)) for p in pathlib.Path(sys.argv[1]).rglob('summary.json')];rows.sort(key=lambda d:(d['a_ordinal'],d['b_ordinal']))
+          rows=[json.load(open(p)) for p in pathlib.Path(sys.argv[1]).rglob('summary.json')]
+          rows.sort(key=lambda d:(d['a_ordinal'],d['b_ordinal']))
           c={}
           for r in rows:c[r['status']]=c.get(r['status'],0)+1
           d={'campaign':'m219-r3-fixedAB-v4-k2-pilot','expected_branches':4,'branches_attempted':len(rows),'status_counts':c,'rows':rows}
-          open(sys.argv[2],'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n');print(json.dumps({k:v for k,v in d.items() if k!='rows'},sort_keys=True))
+          open(sys.argv[2],'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({k:v for k,v in d.items() if k!='rows'},sort_keys=True))
           PY
       - name: Persist pilot and retire workflow
         shell: bash
@@ -139,7 +142,8 @@ d=json.load(open(sys.argv[1]));assert d.get('valid') is True and str(d.get('scor
           set -euo pipefail
           cp /tmp/r46/result.json science-boundary/ramsey-r46/results/m219-r3-fixedAB-v4-pilot.json
           git rm .github/workflows/temp-ramsey-r46-m219-r3-v4-pilot.yml
-          git config user.name github-actions[bot];git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add science-boundary/ramsey-r46/results/m219-r3-fixedAB-v4-pilot.json
           git commit -m 'ramsey-r46: record r3 k2-closure pilot'
           for i in 1 2 3 4 5;do git pull --rebase origin main && git push origin HEAD:main && exit 0;sleep $((i*4));done
