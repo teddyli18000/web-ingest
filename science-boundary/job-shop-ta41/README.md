@@ -1,5 +1,14 @@
 # Job-shop scheduling — Taillard ta41 (Few Shots p009)
 
+## Current verified frontier — 2026-10-29
+
+**Official best remains makespan 2006; no valid <=2005 submission.** This research turn completed a dynamic critical-path-replacement pilot (four matched policies), its growing fixed-survivor CP repair and independent obstruction audit, two-stage counterfactual N7-inspired insertions, unrestricted soft precedence reorientation, and a nine-core necessary-condition joint CP formulation. The key *new constructive witness* is [an officially validated 2006 schedule](results/ninecore-neutral-baseline/neutral-verdict.json) that reverses at least one precedence in **all nine independently necessary core sets**, differs from the original 2006 baseline on **15 machines / Kendall 36**, and is only **six Kendall inversions** away from the already verified gateway-124 2006 parent. [Full machine orders](results/ninecore-neutral-baseline/neutral-certificate.json); [independent geometry + all nine core replay](results/ninecore-neutral-analysis.json). The new witness creates **9 new critical machine arcs** relative to gateway124.
+
+**Causal experimental finding:** dynamic path replacement produces substantially more accepted neutral two-step transitions under identical evaluation budgets, but **none of 24 matched two-move trials (528,000 total exact candidate scores) achieved 2005**. Five of six earlier core-feedback CP subspaces were independently proved to have conditioned optimum 2006; full global soft models and nine-core necessary-cut models found additional feasible score-2006 solutions without proving optimality. [Complete mechanism/evidence/handoff](dynamic-critical-path-replacement-2026-10-29.md).
+
+**Next genuine reformulation:** construct a fresh intersection-poset/CP-core analysis from *diverse* officially verified 2006 parents including the nine-core neutral, gateway124 and other core-reversed parents. This seeks new necessary conflicts that survive the structural directions already crossed, instead of continuing to scale two-step insertions or previously exhausted fixed-survivor subspaces. The user's open question of whether a <=2005 schedule is geometrically close remains unresolved.
+
+
 ## Distance is not coordination — exact experimental distinction (2026-10-29)
 
 **See [distance-vs-coordination-2026-10-29.md](distance-vs-coordination-2026-10-29.md) for full evidence, exact mathematical definitions, and result provenance.** The earlier claim that >=15 changed machine orders implies a very distant 2005 solution is **unjustified**: a Few Shots-officially validated makespan-2006 schedule has exactly **15 Kendall machine-pair inversions spread across 15 machines**, obtained by solving all swaps atomically (`results/synchronous-single-2006/`). A second valid 2006 schedule has 18 inversions on 15 machines. These are genuine extremely small perturbations in the disjunctive pair metric, not wholesale order changes.
