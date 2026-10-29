@@ -1,0 +1,81 @@
+name: temp Thomson 960 resume corrected B-D MEP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-bd-resume.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  resume:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Download prior corrected MEP
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-bd-mep
+          path: ${{ runner.temp }}/prior
+          github-token: ${{ github.token }}
+          run-id: 40735463455
+      - name: Resume perpendicular-force string
+        run: |
+          python3 science-boundary/thomson-960/code/string_between_seeds.py \
+            science-boundary/thomson-960/data/basin-b-010566.json \
+            science-boundary/thomson-960/data/basin-d-018586.json \
+            --resume-json "$RUNNER_TEMP/prior/bd-mep.json" \
+            --iterations 4500 --eta 0.00055 --max-step 0.00035 \
+            --perp-tol 0.00002 --climb-iterations 0 \
+            --out "$RUNNER_TEMP/bd-mep-resumed.json"
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'bd-mep-resumed.json')))
+          print('MEP',d['string_converged'],d['performed_iterations'],d['max_path_perpendicular_gradient_rms'],d['max_image_index'],max(d['path_energies']))
+          PY
+      - name: Refine and classify only if MEP converged
+        run: |
+          OK=$(python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'bd-mep-resumed.json')))
+          print(1 if d['string_converged'] and not d['endpoint_collapsed'] else 0)
+          PY
+          )
+          if [ "$OK" = "1" ]; then
+            python3 science-boundary/thomson-960/code/refine_saddle_hybrid.py \
+              "$RUNNER_TEMP/bd-mep-resumed.json" --outer 8 --penalty 350000 --perp-maxiter 700 \
+              --newton-damping 0.35 --max-reaction-rms 0.00006 \
+              --out "$RUNNER_TEMP/bd-saddle.json"
+            NEG=$(python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'bd-saddle.json')))
+          print(d['negative_internal_modes_below_-1e-3'])
+          print('SADDLE',d['final_energy'],d['final_gradient_rms'],d['negative_internal_modes_below_-1e-3'],[m['eigenvalue'] for m in d['final_modes'][:5]],file=__import__('sys').stderr)
+          PY
+            )
+            if [ "$NEG" = "1" ]; then
+              python3 science-boundary/thomson-960/code/search_saddle_transverse.py \
+                "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/bd-saddle.json" \
+                --transverse-mode 1 --sign 1 --transverse-amps 0 \
+                --reaction-amps=-0.003,-0.0015,0.0015,0.003 \
+                --out "$RUNNER_TEMP/bd-reaction.json"
+            fi
+          else
+            echo "MEP not yet converged; no stationary refinement attempted"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-bd-mep-resumed
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            ${{ runner.temp }}/bd-mep-resumed.json
+            ${{ runner.temp }}/bd-saddle.json
+            ${{ runner.temp }}/bd-reaction.json
