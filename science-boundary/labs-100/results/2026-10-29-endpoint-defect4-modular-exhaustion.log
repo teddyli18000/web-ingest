@@ -1,0 +1,36 @@
+# exact odd-perfect endpoint-defect4 search
+# Only successful complete ranges are included here.
+# An earlier [150000,172000) process was terminated by SIGKILL under memory pressure;
+# it is deliberately excluded from the proof record and was replaced by the four
+# complete subranges [150000,155500), [155500,161000), [161000,166500), [166500,172000).
+
+method: reflection support linearization + direct alternating-sign symmetry gauge + mod-257 forward consistency + RREF of survivors + Gray-code nullspace enumeration
+support coverage: all C(49,4)=211876 supports, contiguous index range [0,211876)
+target filter after exact odd-perfect solve: A*B=0, max(|A|,|B|)<=20, even-energy cap 524 for h=0 mod 4 and 520 for h=2 mod 4
+
+SUMMARY range=0:22000 systems=2346064 inconsistent=2249777 prepared=96287 complete=1 found=0 stopped=0 enum=473904664 pm_candidates=246006152 target_checked=132190139 maxnull=23
+SUMMARY range=22000:44000 systems=2220750 inconsistent=2099658 prepared=121092 complete=1 found=0 stopped=0 enum=548550803 pm_candidates=357341986 target_checked=221233325 maxnull=23
+SUMMARY range=44000:66000 systems=2210532 inconsistent=2056276 prepared=154256 complete=1 found=0 stopped=0 enum=551219952 pm_candidates=346629002 target_checked=218733526 maxnull=23
+SUMMARY range=66000:88000 systems=2193666 inconsistent=1984847 prepared=208819 complete=1 found=0 stopped=0 enum=610363286 pm_candidates=385081625 target_checked=240370105 maxnull=23
+SUMMARY range=88000:106000 systems=1800120 inconsistent=1521231 prepared=278889 complete=1 found=0 stopped=0 enum=520525917 pm_candidates=313059082 target_checked=197930581 maxnull=23
+SUMMARY range=106000:128000 systems=2167376 inconsistent=1624574 prepared=542802 complete=1 found=0 stopped=0 enum=674473538 pm_candidates=406546404 target_checked=257309082 maxnull=23
+SUMMARY range=128000:150000 systems=2176014 inconsistent=1437496 prepared=738518 complete=1 found=0 stopped=0 enum=712742607 pm_candidates=404482667 target_checked=259346238 maxnull=23
+SUMMARY range=150000:155500 systems=543342 inconsistent=360671 prepared=182671 complete=1 found=0 stopped=0 enum=173986419 pm_candidates=87430172 target_checked=57421364 maxnull=23
+SUMMARY range=155500:161000 systems=538790 inconsistent=358707 prepared=180083 complete=1 found=0 stopped=0 enum=192770287 pm_candidates=95955100 target_checked=61744220 maxnull=23
+SUMMARY range=161000:166500 systems=538510 inconsistent=355582 prepared=182928 complete=1 found=0 stopped=0 enum=212351512 pm_candidates=98100143 target_checked=63849898 maxnull=23
+SUMMARY range=166500:172000 systems=536910 inconsistent=350669 prepared=186241 complete=1 found=0 stopped=0 enum=244598577 pm_candidates=98166821 target_checked=63910804 maxnull=23
+SUMMARY range=172000:194000 systems=2140706 inconsistent=1420170 prepared=720536 complete=1 found=0 stopped=0 enum=1316075035 pm_candidates=354346235 target_checked=246220107 maxnull=23
+SUMMARY range=194000:211876 systems=2002872 inconsistent=1589614 prepared=413258 complete=1 found=0 stopped=0 enum=274383093 pm_candidates=41956542 target_checked=36744950 maxnull=24
+
+AGGREGATE supports=211876 systems=21415652 inconsistent=17409272 prepared=4006380 enum=6505945690 pm_candidates=3235101931 target_checked=2057004339 maxnull=24 found=0
+
+INDEPENDENT_PYTHON_CHECK
+support=1,3,5,7 systems=128 inconsistent=116 enum=12 pm_candidates=12 target_checked=8 maxnull=0 best_exact_E=88066
+support=1,3,5,97 systems=8 inconsistent=2 enum=8 pm_candidates=4 target_checked=1 maxnull=1 best_exact_E=108486
+support=1,49,51,97 systems=4 inconsistent=2 enum=2 pm_candidates=2 target_checked=1 maxnull=0 best_exact_E=117214
+support=9,19,25,31 systems=128 inconsistent=122 enum=48 pm_candidates=10 target_checked=10 maxnull=3 best_exact_E=6118
+support=23,33,41,69 systems=128 inconsistent=40 enum=7872 pm_candidates=6 target_checked=6 maxnull=9 best_exact_E=4942
+support=25,35,53,69 systems=128 inconsistent=0 enum=5632 pm_candidates=2 target_checked=2 maxnull=6 best_exact_E=17086
+
+# A high-nullity Python calibration case was intentionally not fully enumerated and is not evidence.
+# All proof coverage comes from the complete C++ ranges above; the Python cases are implementation cross-checks only.
