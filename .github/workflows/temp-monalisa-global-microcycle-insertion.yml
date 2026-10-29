@@ -1,0 +1,60 @@
+name: temp-monalisa-global-microcycle-insertion
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/microcycle_global_insertion.py
+      - .github/workflows/temp-monalisa-global-microcycle-insertion.yml
+permissions:
+  contents: read
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {seeds: 52, neutral: false}
+          - {seeds: 52, neutral: true}
+          - {seeds: "52,105", neutral: false}
+          - {seeds: "52,105", neutral: true}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Acquire exact upstream verifier and source motifs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          mkdir -p /tmp/symbolic
+          gh run download 40830451326 --repo teddyli18000/web-ingest --name monalisa-symbolic-exact-exit-1 --dir /tmp/symbolic
+          test -s /tmp/symbolic/positive-motifs.json
+          python upstream/problems/p010-mona-lisa-tsp/verify/verify.py upstream/problems/p010-mona-lisa-tsp/baseline
+      - name: Exact complete-graph Hamilton path insertion around tiny cycles
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+          ALLOW_NEUTRAL: ${{ matrix.neutral }}
+        run: |
+          name=$(echo "${{ matrix.seeds }}" | tr ',' '-')
+          path="science-boundary/mona-lisa-tsp/results/microcycle-${name}-${ALLOW_NEUTRAL}"
+          mkdir -p "$path"
+          extras=()
+          if test "$ALLOW_NEUTRAL" = true; then extras+=(--include-neutral); fi
+          python science-boundary/mona-lisa-tsp/microcycle_global_insertion.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --motifs /tmp/symbolic/positive-motifs.json \
+            --report "$path/report.json" --certificate "$path/certificate.json" \
+            --seed-indices "${{ matrix.seeds }}" "${extras[@]}"
+          if test -f "$path/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$path"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-microcycle-${{ matrix.seeds }}-${{ matrix.neutral }}
+          path: science-boundary/mona-lisa-tsp/results/microcycle-*/
+          if-no-files-found: ignore
