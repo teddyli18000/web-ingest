@@ -1,0 +1,81 @@
+Thomson N=960 — batched Actions policy and learned nonlinear event frontier
+Date: 2026-10-29
+
+Why the compute interface changed
+---------------------------------
+The repository Actions queue exceeded 50 queued workflow runs while many older
+scientific workflows used job matrices whose individual shards occupied a
+hosted-runner slot but did not use all CPUs.  For subsequent Thomson campaigns,
+the default is therefore:
+
+- acquire one Actions runner per scientific campaign, not one runner per shard;
+- set OPENBLAS/OMP/MKL/NUMEXPR/VECLIB thread counts to 1;
+- parallelize independent Python calculations across os.cpu_count() worker
+  processes inside that one job;
+- keep the runner alive through dependent stages (classify -> select -> refine ->
+  certify) rather than returning to the global queue after every stage;
+- avoid oversubscription and retain explicit workflow timeouts.
+
+This changes scheduling/throughput, not scientific acceptance criteria.
+
+Current CPU-saturating campaigns
+--------------------------------
+1. Run 40813462959 — C3 portal landscape batch.
+   One runner classifies eight deterministic C3-constrained stationary states in
+   parallel, then automatically selects up to four low-energy modest-index
+   portals and launches index-k -> index-(k-1) downward searches within the same
+   runner lifetime.
+
+2. Run 40813875900 — B<->D / D-upward transition-frontier batch.
+   One runner performs four proximal normal-plane string variants in parallel,
+   four previously untried D upward directions, a second adaptive string sweep,
+   and, conditionally, parallel index-1 refiners plus side certification.
+
+3. Run 40814292106 — learned nonlinear event grammar.
+   One runner measures the live record's actual Delaunay motif signature, then
+   searches finite-amplitude event extrapolations learned from D->B, B->A and
+   A->R.  Stage 1 uses single events, C3-copy compositions, cross-edge secants and
+   finite-difference trend directions.  Stage 2 automatically takes the best
+   distinct non-record endpoints and applies a second event palette.  Full
+   unconstrained stable-difference L-BFGS is used for every endpoint.
+
+Older queued workflows remain valid evidence but should not be copied into new
+matrices.  In particular the four-way historical twinned-motif diagnostic run
+40798144771, N972 propagation run 40798582516, T-orbit-removal run 40798729324,
+and scar-to-twin flip run 40799277860 were still queued when this note was
+written.
+
+Representation change: from scalar twin count to learned motif events
+-----------------------------------------------------------------------
+Direct saved-coordinate Delaunay analysis established that the low-energy
+A/B/D/C configurations consist of twelve charge-+1 five-vertex defect units.
+Within this restricted component decomposition, each unit has a binary internal
+7-7 adjacency, but total twin count alone is not an energy model.  Higher C3
+control minima show that changing the component decomposition dominates any
+simple twin-count trend.
+
+More importantly, the full finite-amplitude C->D displacement is an elementary
+nonlinear rewrite event.  Its three C3-equivalent copies obey a closed event
+algebra at unit scale:
+
+  C -- one event --> D
+  C -- two equivalent events --> a C3 image of B
+  C -- all three events --> C
+
+Thus defect rewrites are coupled to global elastic/shear fields and are not
+independent Ising-bit flips.
+
+The next representation therefore learns full pointwise spherical displacement
+fields from actual lowering edges D->B, B->A and A->R.  After rigid Kabsch
+alignment to the live record, each field is parallel-transported to R and its C3
+copies are generated with the record point permutation.  The search then
+*extrapolates through the record* along these finite-amplitude reaction
+coordinates.  This is deliberately distinct from the already-saturated
+infinitesimal Hessian/soft-mode searches.
+
+The learned-event run also directly measures R's coordination-component and
+7-7 motif pattern from the live Few Shots certificate before using any motif
+trend.  Any endpoint below live_score-2e-7 persists full points and immediately
+triggers upstream re-check -> stable repolish -> rationalization -> official
+p007 verifier -> tools/check.py.  The required verified breakthrough remains at
+least 1e-6 below score 444368.3924061973.
