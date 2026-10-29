@@ -104,7 +104,7 @@ def main():
             val=pathlen+bridge[i][j]
             if mask not in single or val<single[mask][0]:
                 single[mask]=(val,tuple(S[q] for q in order),bridgeedge[i][j])
-        by_subset[1]={m:rec for m,rec in single.items()}
+        by_subset[1]={m:(rec[0],(m,)) for m,rec in single.items()}
         optimistic={1:(single[K][0],(K,))}
         for blocks in range(2,min(args.max_blocks,k)+1):
             last=by_subset[blocks-1]
