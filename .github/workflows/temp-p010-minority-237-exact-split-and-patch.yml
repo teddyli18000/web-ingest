@@ -1,0 +1,76 @@
+name: temp-p010-minority-237-exact-split-and-patch
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/minority_237_exact_tsp.py
+      - .github/workflows/temp-p010-minority-237-exact-split-and-patch.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {k: 8, label: "8nn"}
+          - {k: 16, label: "16nn"}
+          - {k: 32, label: "32nn"}
+          - {k: 0, label: "complete"}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Retrieve original metric verifier and 237-city 2-factor
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install numpy scipy ortools
+          python -m py_compile science-boundary/mona-lisa-tsp/minority_237_exact_tsp.py
+          mkdir -p /tmp/237
+          gh run download 40881188571 --repo teddyli18000/web-ingest --name p010-best-two-cycle-repair-evidence --dir /tmp/237
+          test "$(find /tmp/237 -name best-twofactor.json | wc -l)" -eq 1
+      - name: Solve the isolated 237-city exact integer Euclidean Hamiltonian problem
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          source=$(find /tmp/237 -name best-twofactor.json -print -quit)
+          dir="science-boundary/mona-lisa-tsp/results/237-island-${{ matrix.label }}"
+          mkdir -p "$dir"
+          python -u science-boundary/mona-lisa-tsp/minority_237_exact_tsp.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --factor "$source" --k ${{ matrix.k }} --workers 4 --seconds 180 \
+            --report "$dir/report.json" --factor-out "$dir/refined-factor.json"
+          test -s "$dir/report.json"
+      - name: If island improved, independently patch it to 100K Hamiltonian and verify record
+        if: success()
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          dir="science-boundary/mona-lisa-tsp/results/237-island-${{ matrix.label }}"
+          if test -s "$dir/refined-factor.json"; then
+            python -u science-boundary/mona-lisa-tsp/monalisa_factor_cross_repair.py \
+              --factor "$dir/refined-factor.json" \
+              --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+              --neighbors 512 --max-ports 30000 --top-per-component-pair 100 --beam 100 \
+              --report "$dir/twoopt-report.json" --certificate "$dir/certificate.json"
+            python -u science-boundary/mona-lisa-tsp/monalisa_two_cycle_3opt.py \
+              --factor "$dir/refined-factor.json" \
+              --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+              --neighbors 256 --per-edge 24 \
+              --report "$dir/threeopt-report.json" --certificate "$dir/certificate.json"
+            if test -s "$dir/certificate.json"; then
+              python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$dir"
+            fi
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-237city-exact-${{ matrix.label }}
+          path: science-boundary/mona-lisa-tsp/results/237-island-*/
+          if-no-files-found: ignore
