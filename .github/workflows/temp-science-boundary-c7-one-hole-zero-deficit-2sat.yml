@@ -1,0 +1,114 @@
+name: Temp Science Boundary C7 one-hole zero-deficit 2SAT
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-one-hole-zero-deficit-2sat.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_one_core_hole_zero_deficit_2sat.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-one-hole-zero-deficit-2sat
+  cancel-in-progress: false
+
+jobs:
+  packed-2sat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      MALLOC_ARENA_MAX: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install exact SAT dependency
+        run: python -m pip install --disable-pip-version-check python-sat
+      - name: Fetch pinned public sources read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          mkdir -p "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+      - name: Syntax-check exact engine
+        run: python -m py_compile science-boundary/shannon-capacity-c7/code/bpz_one_core_hole_zero_deficit_2sat.py
+      - name: Run all four exact shards concurrently
+        id: search
+        shell: bash
+        run: |
+          set -euo pipefail
+          pids=()
+          for s in 0 1 2 3; do
+            mkdir -p "$RUNNER_TEMP/shot/$s"
+            (
+              /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_one_core_hole_zero_deficit_2sat.py \
+                "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/shard-$s.json" "$RUNNER_TEMP/shot/$s" \
+                --shard "$s" --shards 4 \
+                > "$RUNNER_TEMP/result/shard-$s.stdout" 2> "$RUNNER_TEMP/result/shard-$s.stderr"
+            ) &
+            pids+=("$!")
+          done
+          rc=0
+          for p in "${pids[@]}"; do wait "$p" || rc=1; done
+          if [[ "$rc" -ne 0 ]]; then
+            echo 'at least one 2-SAT shard failed' >&2
+            exit 1
+          fi
+          found=false
+          for s in 0 1 2 3; do
+            cat "$RUNNER_TEMP/result/shard-$s.json"
+            if [[ -f "$RUNNER_TEMP/shot/$s/certificate.json" && "$found" == false ]]; then
+              cp "$RUNNER_TEMP/shot/$s/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+              cp "$RUNNER_TEMP/shot/$s/metadata.json" "$RUNNER_TEMP/result/candidate-metadata.json"
+              found=true
+            fi
+          done
+          echo "found=$found" >> "$GITHUB_OUTPUT"
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/verify-shot"
+          cp "$RUNNER_TEMP/result/candidate.json" "$RUNNER_TEMP/verify-shot/certificate.json"
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/verify-shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1))<=134753:
+              raise SystemExit(f'candidate not a verified breakthrough: {r}')
+          print(f"VERIFIED BREAKTHROUGH score={r['score']}")
+          PY
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-one-hole-zero-deficit-2sat
+          path: ${{ runner.temp }}/result
+          retention-days: 14
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## C7 one-hole zero-P-deficit exact 2-SAT'
+            for f in "$RUNNER_TEMP/result"/shard-*.json "$RUNNER_TEMP/result/verify.json"; do
+              if [[ -f "$f" ]]; then echo "### $(basename "$f")"; echo '```json'; cat "$f"; echo '```'; fi
+            done
+            for f in "$RUNNER_TEMP/result"/shard-*.stderr; do
+              if [[ -f "$f" ]]; then echo "### $(basename "$f") resource tail"; echo '```text'; tail -n 30 "$f"; echo '```'; fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
