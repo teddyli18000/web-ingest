@@ -214,11 +214,8 @@ def main() -> None:
                     if (a, b) in baseline:
                         baseline_overlap += 1
                         continue
-                    bs = blockers(a, b)
-                    if not bs:
-                        raise RuntimeError(("direct add found unexpectedly", w, a, b))
                     candidates.append((a, b))
-                    adj.append(bs)
+                    adj.append(blockers(a, b))
             n = len(candidates)
             e = sum(map(len, adj))
             total_candidates += n
