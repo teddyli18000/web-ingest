@@ -1,0 +1,116 @@
+Thomson N=960 — low-energy defect motif bit representation
+Date: 2026-10-29
+
+Purpose
+-------
+A direct spherical Delaunay re-analysis of the actual saved A/B/D/C coordinates
+corrects an earlier mistaken interpretation of the merged-shot scar shorthand.
+The low-energy configurations already contain Wales-style twinned motifs: a
+pair of degree-7 sites joined by a Delaunay edge with exactly three peripheral
+degree-5 sites.  Therefore '5-7-5-7-5 scar' must not be read as proof that the
+two heptagons are never adjacent in the full Delaunay graph.
+
+Direct topology counts
+----------------------
+All four states have coordination 36 five / 900 six / 24 seven.  Their induced
+defect graph (vertices with coordination != 6, Delaunay edges between them)
+has exactly 60 vertices and splits into exactly 12 disconnected components of
+five vertices each.  Every component contains exactly 3 pentagons and 2
+heptagons, and exactly four 5-7 defect edges.  The only additional binary
+feature is whether the two heptagons are joined by a 7-7 edge.
+
+Thus, for these states, the defect layer is naturally represented as twelve
+charge-+1 units, each with a binary motif state:
+  0 = conventional / no internal 7-7 edge
+  1 = twinned / internal 7-7 edge
+
+Measured twin counts from the actual coordinates:
+  A  E=444368.39568622573   twins=9
+  B  E=444368.40297286137   twins=8
+  D  E=444368.41099308454   twins=4
+  C  E=444368.41141788290   twins=3  (C is index-2, not a minimum)
+
+Every measured 7-7 edge has exactly three peripheral degree-5 sites, matching
+the historical Wales 'twinned defect' motif definition.
+
+Exact 7-7 edges by state
+------------------------
+C:
+  (12,774) (134,332) (454,652)
+
+D = C plus one:
+  (12,774) (134,332) (454,652) (822,842)
+
+B = D plus four:
+  (12,774) (134,332) (454,652) (822,842)
+  (499,683) (502,522) (537,639) (857,959)
+
+A:
+  shared with B: (12,774) (134,332) (499,683) (537,639) (822,842) (857,959)
+  lost relative to B: (454,652) (502,522)
+  gained relative to B: (108,522) (202,748) (217,319)
+
+The B->A change is not merely flipping two binary labels; it includes local
+charge/site rewiring.  Most strikingly, B has twin (502,522) with point 108 a
+peripheral pentagon, whereas A has twin (108,522) with point 502 a peripheral
+pentagon.  Thus point labels 108 and 502 exchange 5/7 roles across the local
+motif rewrite.
+
+C3 motif-orbit representation
+-----------------------------
+Using C's verified +120-degree C3 point permutation, the twelve defect
+components form four three-element component orbits:
+  O0 = [0,5,11]
+  O1 = [1,10,3]
+  O2 = [2,8,7]
+  O3 = [4,9,6]
+
+Matching components by maximum vertex overlap gives the following twin-bit
+patterns in C-component order:
+
+  C = 100001000001
+      orbit blocks: [111 | 000 | 000 | 000]
+
+  D = 100001000101
+      orbit blocks: [111 | 000 | 000 | 010]
+
+  B = 101011001111
+      orbit blocks: [111 | 010 | 110 | 110]
+
+  A = 101011111110
+      orbit blocks: [110 | 010 | 111 | 111]
+
+C->D is especially simple: the C component structure is identical in 11 of 12
+components and one motif changes from conventional to twinned.  The associated
+coordination-label changes are only four vertices:
+  602: 5->6
+  822: 6->7
+  831: 6->5
+  919: 7->6
+which is a local conserved defect rewrite producing twin edge (822,842).
+
+D->B retains all four D twin edges and creates four additional twin edges, with
+20 vertices changing coordination class.  B->A retains six of eight B twin
+edges, removes two and creates three, with 16 vertices changing coordination.
+
+Scientific implication
+----------------------
+The meaningful reduced coordinate is not 'scar family versus a separate twin
+family'.  The actual low-energy landscape already mixes conventional and
+twinned charge-+1 defect units.  A better search representation is therefore a
+12-motif discrete/continuous hybrid:
+
+- binary motif adjacency (whether each defect unit contains a 7-7 edge),
+- motif identity / local 5<->7 rewrites when a unit changes type,
+- global placement/orientation/shear coupling between the twelve units,
+- C3 symmetry groups the twelve units into four 3-cycles at symmetric states.
+
+The live record R has not yet been assigned a verified twin-bit pattern in this
+file.  Do not infer its twin count from energy or symmetry.  Measure it directly
+from the live certificate / a workflow before using twin-count trends as a
+record-level conclusion.
+
+Queued N=972 and scar-to-twin workflows remain scientifically useful, but their
+interpretation must change.  They are searches over motif-count/pattern and
+cross-size defect organization, not introductions of a previously absent twin
+topology.
