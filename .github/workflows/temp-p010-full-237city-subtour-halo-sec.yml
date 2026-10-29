@@ -1,0 +1,61 @@
+name: temp-p010-full-237city-subtour-halo-sec
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/monalisa_full_halo_sec.py
+      - .github/workflows/temp-p010-full-237city-subtour-halo-sec.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  joint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {halo: 32, local: 8, core: 100}
+          - {halo: 64, local: 12, core: 100}
+          - {halo: 128, local: 16, core: 100}
+          - {halo: 256, local: 24, core: 100}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: 100K source, official exact score and best two-cycle counterexample
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install numpy scipy ortools
+          python -m py_compile science-boundary/mona-lisa-tsp/monalisa_full_halo_sec.py
+          mkdir -p /tmp/best2
+          gh run download 40881188571 --repo teddyli18000/web-ingest --name p010-best-two-cycle-repair-evidence --dir /tmp/best2
+          test "$(find /tmp/best2 -name best-twofactor.json | wc -l)" -eq 1
+      - name: Full near-subtour and adjacent giant 8-24NN graph under exact SEC connectivity
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          f=$(find /tmp/best2 -name best-twofactor.json -print -quit)
+          out="science-boundary/mona-lisa-tsp/results/full-halo-${{ matrix.halo }}-${{ matrix.local }}"
+          mkdir -p "$out"
+          python -u science-boundary/mona-lisa-tsp/monalisa_full_halo_sec.py \
+            --factor "$f" --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --budget ${{ matrix.core }} --within-budget ${{ matrix.core }} \
+            --neighbors 64 --within-neighbors 24 \
+            --halo-neighbors ${{ matrix.halo }} --local-neighbors ${{ matrix.local }} \
+            --limit 210 --workers 4 --threshold 5757190 \
+            --report "$out/report.json" --certificate "$out/certificate.json"
+          test -s "$out/report.json"
+          if test -s "$out/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$out"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-full-237city-halo-${{ matrix.halo }}-${{ matrix.local }}
+          path: science-boundary/mona-lisa-tsp/results/full-halo-*/
+          if-no-files-found: ignore
