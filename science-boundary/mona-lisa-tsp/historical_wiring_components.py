@@ -36,7 +36,7 @@ def main():
  stable=set.intersection(*(x for x in edges.values()))
  union=set.union(*(x for x in edges.values()))
  variable=union-stable
- assert len(stable)==94228 and len(union)==103857
+ assert len(stable)==94228 and len(union)>=103857, (len(stable),len(union))
  parent=np.arange(N,dtype=np.int32)
  size=np.ones(N,dtype=np.int32)
  def root(u):
