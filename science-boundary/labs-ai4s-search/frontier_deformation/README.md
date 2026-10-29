@@ -1,10 +1,41 @@
 # Frontier-state curation and directed objective deformation — 2026-10-29
 
-## Verdict and hard gate
+## Latest: verified GPU frontier states and directed deformation
+
+**The frontier-data obstacle is now partially resolved using primary-source certificates.** [Zhang et al., arXiv 2504.00987v2, Table 2](https://arxiv.org/html/2504.00987v2) publishes hex solutions from 2025 GPU memetic Tabu. Independent exact integer scoring verifies 16 entries and their claimed energies. After full **eightfold LABS/FewShots symmetry** normalization, only **15 distinct orbits** remain, all non-near-skew. The N92 E490 pair XORs to the alternating-sign mask 0x55555555555555555555555; the paper only factors complement/reversal, which explains its different equivalence count. Its N110 E707 HTML hex entry contains **108 bits for a 110-bit sequence**; no correction is guessed, and the entry is excluded. See [reproduction](paper_gpu_extract.py), [exact dataset](results/2026-10-29-paper-gpu-elite.tsv), [audit](results/2026-10-29-paper-gpu-elite-audit.json).
+
+The combined [21 distinct frontier orbits](results/2026-10-29-frontier-elite-eval.tsv) comprise these 15 published GPU records plus six older QOBLIB anchors, spanning 19 lengths. Especially important: N99 GPU E553 non-skew versus older QOBLIB N99 E577 skew; N100 QOBLIB E578 near-skew. The different dataset sources and lineages remain labeled. These are **not 21 independently produced N100 near-record candidates**.
+
+Separately, the real published 2009-era unrestricted memetic Tabu **lMAts** successfully ran through [GitHub Actions 40926616804](https://github.com/teddyli18000/web-ingest/actions/runs/40926616804), using source commit 1aa123407636e48630174e0bf122037e369c1d68, 25 independent jobs at 30 sec each across lengths 80/92/96/99/100. All **25/25** scored exactly and produced 25 distinct symmetry orbits; best E=440/618/712/753/762, respectively. None passed the strict within-20%-of-public-boundary quality gate. This is a **historical memetic Tabu**, not the paper's more powerful 2025 GPU solver. See [collector](strong_collect.py), [results](results/2026-10-29-strong-corpus.tsv), [metadata](results/2026-10-29-strong-corpus.json) and [31-source pooled data](results/2026-10-29-verified-public-and-memetic-corpus.tsv). The numeric canonical-orbit field was corrected to use the same 0/1 ordering as the topic's other datasets.
+
+### Direct frozen-elite intervention evidence
+
+On the genuine [21-state frozen frontier dataset](results/2026-10-29-frontier-elite-eval.tsv), the existing [weighted-lag objective deformation](deform.cpp) compared plain Tabu (arm 0), high-lag-residual focusing (1), shuffled matched weights (2), and lag-residual release (3). Fixed parameters: 2500 moves per arm, tenure 9, 500-move epochs with alternation between deformed and **true** LABS energy. Quenching to the unmodified energy function checks whether reached states actually leave the old basin.
+
+- All 21 states, two complete independent repeats per state and four arms: **168 complete trajectories; zero strictly better original-LABS states**.
+- Five primary elites (N92 E490/498, N99 E553/577, N100 E578), 15 complete repeats per state and four arms: **300 complete trajectories; zero strictly better states**.
+- Lag-release did not reliably outperform unmodified Tabu on true-objective quenched non-skew endpoints; those endpoints were typically **hundreds of energy units above** the original frontier anchor.
+- Two earlier larger repeats timed out. Their partially written outputs are explicitly **excluded**. These trials were matched by search iteration count, **not CPU wall time**, and the Tabu kernel is diagnostic rather than the full published memetic engine.
+
+An additional explicit **structural target deformation** actively rewards breaking the actual skew paired-spin relations during half-epochs, with the original objective restored in the other half. Formula: E_deformed = E - 100 min(D, D_start+12), where D is the number of violating true skew-pair relations. A random pairing of the same size, initially with D=0, serves as a control. [Source](structural_deform.cpp). From **N99 skew E577 and N100 near-skew E578**, 25 independent random-tie-broken runs per method (plain, true structural, random-pair placebo), 5000 iterations: **150 complete trajectories, zero improvements**. At the best unmodified-energy **off-skew quenched** endpoint, structural minus plain Tabu (lower is better): N99 **−7.68 [−29.76,+12.32]**, N100 **−10.72 [−38.08,+19.20]** (within-seed paired 95% bootstrap). Neither rules out zero. The initial no-random-tie version had deterministic duplicate runs and was correctly **discarded for pseudoreplication**.
+
+**Reproducibility:** From this directory, run the GPU extractor, compile the two C++ sources with g++ -O3 -std=c++17, then run exact fixed-state comparisons using the frozen frontier TSV. Key complete commands are:
+
+- ./deform --compare results/2026-10-29-frontier-elite-eval.tsv /tmp/frontier.tsv 2 2500 500 0.65 9 3
+- Filter the five specified N/E pairs, then ./deform --compare /tmp/five.tsv /tmp/five.csv 15 2500 500 0.65 9 3
+- Filter (N99,E577),(N100,E578), then ./structural_deform /tmp/skew.csv /tmp/two.tsv 25 5000 100 12 9 500
+
+Source CSVs of completed experiments are preserved in the companion research data archive. The report contains code/versions, exact inputs and seeds for regeneration. **These are fixed-move diagnostics, not a fair head-to-head wall-clock benchmark against the published GPU memetic search or self-avoiding walk.**
+
+**Decision:** We now have genuinely boundary-quality, structure-tagged source states across lengths. Nevertheless, current target-shaping mechanisms fail to produce superior LABS solutions. Training a neural selector on these near-all-zero improvement labels is premature. The next formulation should target **jointly coordinated low-odd-defect/non-near-skew structural paths** while preserving low even-lag correlations, not simply upweighting large residual lags or increasing skew defects.
+
+---
+
+## Earlier phase: the homegrown corpus failed the frontier-quality gate
 
 **Do not train a neural intervention selector yet.** Six independently integer-verified public QOBLIB anchors at N=64/80/92/96/99/100 are real boundary data, but there is only **one public anchor per length** in this collection. A reproducible 12-seed dual-origin local Tabu diagnostic generated 28 extra symmetry-distinct states across those lengths; **none** is within 20% of its length's QOBLIB reference energy (at N100, best new E=810 vs reference E578). Fourteen of these non-anchor states were used for a small controlled direction-versus-placebo trial with no robust advantage. A separate N100 E578 experiment of periodic, directed correlation-lag deformation also found **no E<578**. The only apparent downstream direction signal is relative to a shuffled placebo on an *unavailable, high-energy non-near-skew quench endpoint*: its superiority to ordinary fixed-goal Tabu is not statistically supported.
 
-This is a **data-quality failure for the intended frontier-conditioned learner**, not evidence against all target-deformation methods. We should not silently relabel E≈800–1100 states as near-record LABS100 elites. A published *unrestricted* memetic Tabu solver, not our diagnostic Tabu, is now being used separately for prospective corpus collection; no final result or threshold pass is claimed until its exact checks succeed.
+This is a **data-quality failure for the intended frontier-conditioned learner**, not evidence against all target-deformation methods. We should not silently relabel E≈800–1100 states as near-record LABS100 elites. The historical unrestricted memetic Tabu source collector later completed and was exact verified; its outputs still fail the 20% gate. Primary-source GPU records, independently decoded, have now furnished the genuine frontier dataset described above.
 
 Current source files:
 - [anchors.tsv](anchors.tsv) — QOBLIB snapshot, sequences in 0/1 notation and exact recomputed energies;
@@ -32,16 +63,16 @@ Near-skew classification for even N: deletion of either endpoint produces a leng
 
 Generate corpus:
 
-\`\`\`sh
+```sh
 cd science-boundary/labs-ai4s-search/frontier_deformation
 g++ -O3 -std=c++17 deform.cpp -o /tmp/labs_deform
 /tmp/labs_deform --selftest
 /tmp/labs_deform --harvest anchors.tsv corpus.tsv 12 20000
 { head -n1 corpus.tsv; grep $'\tpublic_anchor\t' corpus.tsv; } > anchors_corpus.tsv
 python3 curate.py
-\`\`\`
+```
 
-The local producer ran 12 seeded branches from each public anchor and 12 seeded independent random starts per N, each for 20,000 exact single-flip Tabu iterations, retaining canonical-unique solutions with E≤1.55×reference. This deliberately **does not** reproduce published MTS; the strong published MTS collector is a separate source. In the current run there were 34 entries in \`corpus.tsv\`: 6 public anchors plus 28 new distinct orbits. Eight one-/two-paired-near-skew derived states were appended for each of N99 and N100 as labeled perturbation diagnostics, yielding **50 total rows**. Their provenance remains \`near_skew_manifold\`, never \`independent_random_start\`.
+The local producer ran 12 seeded branches from each public anchor and 12 seeded independent random starts per N, each for 20,000 exact single-flip Tabu iterations, retaining canonical-unique solutions with E≤1.55×reference. This deliberately **does not** reproduce published MTS; the strong published MTS collector is a separate source. In the current run there were 34 entries in `corpus.tsv`: 6 public anchors plus 28 new distinct orbits. Eight one-/two-paired-near-skew derived states were appended for each of N99 and N100 as labeled perturbation diagnostics, yielding **50 total rows**. Their provenance remains `near_skew_manifold`, never `independent_random_start`.
 
 | N | reference | best generated (all origins) | generated/reference | near-skew rows in expanded corpus |
 |---:|---:|---:|---:|---:|
@@ -71,10 +102,10 @@ Minimum energies at exactly d pair-groups changed:
 **These are exact restricted-neighborhood minima only** (under the specified near-skew parametric pair flips), not a global exclusion for N100. Since the initial N100 near-skew is E578 and the entire near-skew N100 manifold has optimum E578 (proved by the independent labs-100 owner), we should not spend record-seeking compute repeatedly reoptimizing within that manifold. The high one-pair barrier also explains why "near-skew children" from a record do not automatically yield additional near-record basins.
 
 Reproduce:
-\`\`\`sh
+```sh
 g++ -O3 -std=c++17 skew_harvest.cpp -o /tmp/labs_skew
 /tmp/labs_skew /tmp/skew_candidates.tsv anchors.tsv 5 760
-\`\`\`
+```
 It emits only E≤760 non-center hits (none) and prints exact depth-specific minima.
 
 ## Directional deformation hypothesis, pre-experimental status
@@ -133,18 +164,18 @@ Further direct target deformation should address escaping *specific exact struct
 - QOBLIB anchors and reference coordinates: https://github.com/ZIB-AOPT/QOBLIB/tree/main/02-labs/solutions
 - Zhang et al., GPU memetic tabu: https://arxiv.org/abs/2504.00987 (2025; **not reproduced in this preliminary experiment**)
 - Pšeničnik et al., Thompson sampling / GPU self-avoiding walk: https://arxiv.org/abs/2607.09688 (2026)
-- Bošković et al. archive and original code: https://github.com/borkob/git_labs , \`solvers/lMAts-lRRts/src\`
+- Bošković et al. archive and original code: https://github.com/borkob/git_labs , `solvers/lMAts-lRRts/src`
 - Packebusch/Mertens LABS exact enumeration and skew symmetries: https://arxiv.org/abs/1512.02475
 - Exact near-skew N100 lower bound and higher-defect research, maintained by the independent owner: https://github.com/teddyli18000/web-ingest/blob/main/science-boundary/labs-100/README.md (read only)
 - Official N100 certificate verifier: https://github.com/few-shots/few-shots/tree/main/problems/p006-labs-100
 
 ## Handoff
 
-- \`anchors.tsv\`, \`deform.cpp\`, \`curate.py\`, \`skew_harvest.cpp\` committed on main in this topic.
-- Build: GNU g++14.2, \`g++ -O3 -std=c++17 deform.cpp -o deform && ./deform --selftest\`; 27,200 randomized independent exact-delta checks passed.
-- Reconstruct the raw corpus: \`./deform --harvest anchors.tsv corpus.tsv 12 20000\`, then extract its anchor rows into \`anchors_corpus.tsv\` and run \`python3 curate.py\`.
-- Run principal record experiment: \`./deform --compare anchors_corpus.tsv record_trial.tsv 20 6000 600 0.65 9 6\` (to select N100 only, filter by column N first; see user's downloadable raw evidence archive).
-- Strong published solver source collector: \`strong_collect.py\`, orchestrated in disposable workflow \`.github/workflows/temp-labs-ai4s-strong-harvest.yml\`; confirm workflow result and independently validate the committed output before declaring stronger elite data available. Use GitHub run status, not a promise of background completion.
-- SHA256 from validated local source: \`deform.cpp\` original local run \`e72c9bab8a70ced5920ae38d773a64dbc02e9fd8c768533f2d4d68ce5c0a013a\`; the repo copy is semantically equivalent with only comments trimmed and may have a different SHA. Experimental records and raw CSV files are provided as the companion downloadable archive, and the topic contains complete regeneration commands.
-- No edits to \`science-boundary/labs-100/\`; no p006 submission or claimed record.
+- `anchors.tsv`, `deform.cpp`, `curate.py`, `skew_harvest.cpp` committed on main in this topic.
+- Build: GNU g++14.2, `g++ -O3 -std=c++17 deform.cpp -o deform && ./deform --selftest`; 27,200 randomized independent exact-delta checks passed.
+- Reconstruct the raw corpus: `./deform --harvest anchors.tsv corpus.tsv 12 20000`, then extract its anchor rows into `anchors_corpus.tsv` and run `python3 curate.py`.
+- Run principal record experiment: `./deform --compare anchors_corpus.tsv record_trial.tsv 20 6000 600 0.65 9 6` (to select N100 only, filter by column N first; see user's downloadable raw evidence archive).
+- Strong published solver source collector: `strong_collect.py`, orchestrated in disposable workflow `.github/workflows/temp-labs-ai4s-strong-harvest.yml`; that workflow completed and its 25 results were independently verified; it can be deleted after scientific artifacts have been preserved. Use GitHub run status, not a promise of background completion.
+- SHA256 from validated local source: `deform.cpp` original local run `e72c9bab8a70ced5920ae38d773a64dbc02e9fd8c768533f2d4d68ce5c0a013a`; the repo copy is semantically equivalent with only comments trimmed and may have a different SHA. Experimental records and raw CSV files are provided as the companion downloadable archive, and the topic contains complete regeneration commands.
+- No edits to `science-boundary/labs-100/`; no p006 submission or claimed record.
 
