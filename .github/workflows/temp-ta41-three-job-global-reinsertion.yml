@@ -47,6 +47,16 @@ jobs:
           git add 'science-boundary/job-shop-ta41/results/triples-${{ matrix.shard }}/'
           if ! git diff --cached --quiet; then
             git commit -m 'research(ta41): search diverse globally coupled 3-job cohorts ${{ matrix.shard }}'
-            git pull --rebase origin main
-            git push origin HEAD:main
+            # Parallel matrix jobs and unrelated science agents also update main.
+            # Rebase and retry the atomic push rather than losing computed evidence.
+            for attempt in $(seq 1 30); do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                exit 0
+              fi
+              sleep 2
+            done
+            echo 'All 30 main push attempts failed' >&2
+            exit 1
           fi
