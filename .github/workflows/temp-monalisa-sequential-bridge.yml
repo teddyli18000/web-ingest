@@ -1,0 +1,57 @@
+name: temp-monalisa-sequential-bridge
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/sequential_bridge_search.py
+      - .github/workflows/temp-monalisa-sequential-bridge.yml
+permissions:
+  contents: read
+jobs:
+  sequences:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {seed: 52, maxswitch: 1}
+          - {seed: 105, maxswitch: 1}
+          - {seed: 52, maxswitch: 2}
+          - {seed: 105, maxswitch: 2}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch exact scoring and certified-edge source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          git clone --depth 1 https://github.com/bicobico2/ElimTSP.git elimtsp
+          mkdir -p /tmp/symbolic
+          gh run download 40830451326 --repo teddyli18000/web-ingest --name monalisa-symbolic-exact-exit-1 --dir /tmp/symbolic
+          test -s /tmp/symbolic/positive-motifs.json
+      - name: Enumerate sequential ejection/bridge repairs across neutral states
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          path=science-boundary/mona-lisa-tsp/results/sequential-${{ matrix.seed }}-${{ matrix.maxswitch }}
+          mkdir -p "$path"
+          python science-boundary/mona-lisa-tsp/sequential_bridge_search.py \
+            --graph elimtsp/results/mona.248972.edg.gz \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --neutral-moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --positive-motifs /tmp/symbolic/positive-motifs.json \
+            --report "$path/report.json" --candidate "$path/certificate.json" \
+            --seed-indices ${{ matrix.seed }} --max-switches ${{ matrix.maxswitch }}
+          if test -f "$path/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$path"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-sequential-${{ matrix.seed }}-${{ matrix.maxswitch }}
+          path: science-boundary/mona-lisa-tsp/results/sequential-*/
+          if-no-files-found: ignore
