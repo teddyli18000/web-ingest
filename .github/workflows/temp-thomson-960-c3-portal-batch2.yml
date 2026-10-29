@@ -1,0 +1,58 @@
+name: temp Thomson 960 C3 portal landscape batch2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-c3-portal-batch2.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  batch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Report runner capacity
+        run: |
+          echo "nproc=$(nproc)"
+          free -h
+      - name: Parallel classify portals and expand solution landscape
+        run: |
+          python3 science-boundary/thomson-960/code/run_c3_portal_batch.py \
+            "$RUNNER_TEMP/few-shots" --outdir "$RUNNER_TEMP/portal-batch" \
+            --spec 303:7:e369578:444369.578278572357 \
+            --spec 202:5:e370085:444370.085482416092 \
+            --spec 101:6:e370466:444370.466503182484 \
+            --spec 404:7:e370781:444370.780596227210 \
+            --spec 101:8:e371317:444371.316645489424 \
+            --spec 404:8:e371368:444371.367849966162 \
+            --spec 101:7:e371480:444371.479581465595 \
+            --spec 404:6:e371824:444371.824095104763 \
+            --k 24 --downward-portals 4 --downward-outer 8 --downward-k 18
+      - name: Print batch summary
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/portal-batch/batch-summary.json" ]; then
+            cat "$RUNNER_TEMP/portal-batch/batch-summary.json"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-c3-portal-landscape-batch2
+          retention-days: 7
+          path: ${{ runner.temp }}/portal-batch/
