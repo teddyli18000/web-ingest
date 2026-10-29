@@ -1,0 +1,119 @@
+name: Temp Ramsey R46 regrow best other 2-vertex transversals
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-ramsey-r46-regrow-best-other-pairs.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      matrix:
+        v: [5, 10, 13]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate exact arbitrary two-vertex regrow CNF
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/r46
+          python3 science-boundary/ramsey-r46/regrow_vertices_sat.py generate \
+            science-boundary/ramsey-r46/results/methodb36-best.json \
+            /tmp/r46/regrow.cnf /tmp/r46/meta.json '${{ matrix.v }}' 35
+      - name: Build pinned Kissat 4.0.4
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --quiet https://github.com/arminbiere/kissat.git "$RUNNER_TEMP/kissat"
+          git -C "$RUNNER_TEMP/kissat" checkout --quiet 8af8e56f174b778aef3aa45af9f739b2a5f492c2
+          cd "$RUNNER_TEMP/kissat" && ./configure >/dev/null && make -j2 >/dev/null
+      - name: Solve exact regrow
+        id: solve
+        shell: bash
+        run: |
+          set -uo pipefail
+          set +e
+          timeout --signal=TERM --kill-after=15s 600 "$RUNNER_TEMP/kissat/build/kissat" /tmp/r46/regrow.cnf > /tmp/r46/solver.log 2>&1
+          rc=$?
+          set -e
+          case "$rc" in 10) status=SAT;; 20) status=UNSAT;; 124|137|143) status=TIMEOUT;; *) status=ERROR;; esac
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          python3 - /tmp/r46/meta.json /tmp/r46/summary.json "$status" "$rc" <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1])); d.update(campaign='methodb36-best-regrow-other-pairs',status=sys.argv[3],solver_exit=int(sys.argv[4]))
+          open(sys.argv[2],'w').write(json.dumps(d,indent=2,sort_keys=True)+'\n')
+          print(json.dumps({'removed':d['removed'],'variables':d['variables'],'clauses':d['clauses'],'status':d['status']},sort_keys=True))
+          PY
+          test "$status" != ERROR
+      - name: Decode and locally verify SAT
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/ramsey-r46/regrow_vertices_sat.py decode \
+            science-boundary/ramsey-r46/results/methodb36-best.json /tmp/r46/meta.json /tmp/r46/solver.log /tmp/r46/candidate.json
+          python3 science-boundary/ramsey-r46/regrow_vertices_sat.py verify /tmp/r46/candidate.json
+      - name: Authoritative Few Shots verification on SAT
+        if: steps.solve.outputs.status == 'SAT'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots sparse-checkout set problems/p003-ramsey-r46
+          mkdir -p /tmp/candidate && cp /tmp/r46/candidate.json /tmp/candidate/certificate.json
+          cd /tmp/few-shots
+          python3 problems/p003-ramsey-r46/verify/verify.py /tmp/candidate | tee /tmp/r46/few-shots-verify.json
+          python3 - /tmp/r46/few-shots-verify.json <<'PY'
+          import json,sys
+          d=json.load(open(sys.argv[1])); assert d.get('valid') is True and str(d.get('score'))=='36',d
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ramsey-r46-regrow-best-${{ matrix.v }}-35
+          path: /tmp/r46
+          retention-days: 7
+
+  collect:
+    if: always()
+    needs: solve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ramsey-r46-regrow-best-*-35
+          path: /tmp/parts
+      - name: Aggregate and persist
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,pathlib
+          rows=[json.load(open(p)) for p in pathlib.Path('/tmp/parts').rglob('summary.json')]
+          rows.sort(key=lambda d:d['removed'])
+          out={'campaign':'methodb36-best-regrow-other-two-vertex-transversals','expected':3,'rows':rows,
+               'complete':len(rows)==3,'sat_count':sum(r['status']=='SAT' for r in rows),
+               'unsat_count':sum(r['status']=='UNSAT' for r in rows),'timeout_count':sum(r['status']=='TIMEOUT' for r in rows)}
+          pathlib.Path('science-boundary/ramsey-r46/results/methodb36-best-regrow-other-pairs.json').write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
+          for p in pathlib.Path('/tmp/parts').rglob('candidate.json'):
+            tag=p.parent.name.removeprefix('ramsey-r46-regrow-best-')
+            pathlib.Path(f'science-boundary/ramsey-r46/results/methodb36-best-regrow-{tag}-candidate.json').write_bytes(p.read_bytes())
+          print(json.dumps({k:v for k,v in out.items() if k!='rows'},sort_keys=True))
+          PY
+          git rm .github/workflows/temp-ramsey-r46-regrow-best-other-pairs.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add science-boundary/ramsey-r46/results/methodb36-best-regrow-*
+          git commit -m 'ramsey-r46: record remaining exact two-vertex regrows' || exit 0
+          for attempt in 1 2 3 4 5; do git pull --rebase origin main && git push origin HEAD:main && exit 0; sleep $((attempt*4)); done
+          exit 1
