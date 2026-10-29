@@ -1,0 +1,33 @@
+name: temp-labs-ai4s-bridge-verify
+on:
+  push:
+    paths:
+      - ".github/workflows/temp-labs-ai4s-bridge-verify.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Compile and independently score known-answer N99 shortest-Hamming bridge
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search
+          g++ -O3 -std=c++17 audit_20261029/bridge_positive_control.cpp -o /tmp/bridge
+          /tmp/bridge 10000 1500 | tee audit_20261029/results/n99_bridge_positive_control.txt
+          grep -q "min_hamming=41" audit_20261029/results/n99_bridge_positive_control.txt
+          grep -q "beam_peak=1537" audit_20261029/results/n99_bridge_positive_control.txt
+      - name: Preserve checked scientific diagnostic
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add science-boundary/labs-ai4s-search/audit_20261029/results/n99_bridge_positive_control.txt
+          git commit -m "research(labs-ai4s): preserve verified known-answer N99 shortest-path barrier control"
+          git pull --rebase origin main
+          git push origin HEAD:main
