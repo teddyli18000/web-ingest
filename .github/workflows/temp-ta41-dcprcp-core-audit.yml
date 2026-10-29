@@ -1,0 +1,41 @@
+name: temp-ta41-dcprcp-core-audit
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-dcprcp-core-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-dcprcp-core-audit
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check syntax and pin solver
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/audit_dynamic_repair_cores.py
+          python3 -m pip install 'ortools==9.14.6206'
+      - name: Recover exact assumption cores from 8 supposedly freed 240-operation subspaces
+        run: python3 science-boundary/job-shop-ta41/audit_dynamic_repair_cores.py --seconds 4
+      - name: Preserve independent core audit
+        if: always()
+        run: |
+          set -euo pipefail
+          path='science-boundary/job-shop-ta41/results/dcprcp-independent-core-audit.json'
+          if ! test -f "$path"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$path"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): independently audit blockers of dynamic CP release'
+          for attempt in $(seq 1 30); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
