@@ -1,0 +1,57 @@
+name: temp-aes-joint-bc-frontier
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-joint-bc-frontier.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-joint-bc-frontier
+  cancel-in-progress: false
+
+jobs:
+  frontier:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {label: B, c: '0x9d', k: 3}
+          - {label: C, c: '0x5b', k: 3}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Emit transported instance
+        run: |
+          python3 science-boundary/aes-sbox-circuit/emit_joint_decoupled_instance.py \
+            --c '${{ matrix.c }}' --k '${{ matrix.k }}' --out /tmp/instance.txt
+      - name: Screen complete joint helper frontier
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/aes-sbox-circuit
+          g++ -O3 -std=c++20 screen_joint_decoupled_instance.cpp -o /tmp/aes-joint-instance
+          /tmp/aes-joint-instance /tmp/instance.txt > /tmp/frontier.csv 2> /tmp/frontier.log
+          cat /tmp/frontier.log
+          python3 - <<'PY'
+          import csv, collections
+          rows=list(csv.DictReader(open('/tmp/frontier.csv')))
+          print('rows',len(rows))
+          print('score',dict(sorted(collections.Counter(int(r['score']) for r in rows).items())))
+          print('middle',dict(sorted(collections.Counter(int(r['middle_support']) for r in rows).items())))
+          print('distance',dict(sorted(collections.Counter(int(r['distance']) for r in rows).items())))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-joint-${{ matrix.label }}-frontier
+          path: |
+            /tmp/instance.txt
+            /tmp/frontier.csv
+            /tmp/frontier.log
