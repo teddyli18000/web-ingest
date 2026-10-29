@@ -88,7 +88,7 @@ std::vector<Sample> read_states(const std::string&p){
  }
  return v;
 }
-void test(){
+void selftest_stall(){
  std::mt19937_64 rng(98310);
  for(int n:{12,64,80,92,99,100}){
   for(int rep=0;rep<15;rep++){
@@ -111,7 +111,7 @@ void test(){
  std::cout<<"PASS 90 random exact states; 270 injection/continuation paths; odd-defect parity\n";
 }
 int main(int argc,char**argv){
- if(argc==2 && std::string(argv[1])=="--test"){test();return 0;}
+ if(argc==2 && std::string(argv[1])=="--test"){selftest_stall();return 0;}
  if(argc<9){std::cerr<<"usage IN OUT BUDGET_MS REPS TENURE M STALL WARM_MAX [LIMIT]\n";return 2;}
  auto data=read_states(argv[1]);
  std::ofstream f(argv[2]);
