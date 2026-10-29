@@ -25,6 +25,7 @@ def main():
  p.add_argument('--minimum-gain',type=int,default=1)
  p.add_argument('--seconds',type=int,default=150)
  p.add_argument('--workers',type=int,default=4)
+ p.add_argument('--mode',choices=['improve','baseline','two-factor'],default='improve')
  args=p.parse_args();start=time.monotonic()
  tour=json.loads(Path(args.baseline).read_text())['tour']
  n=len(tour);assert n==100000 and len(set(tour))==n
@@ -81,13 +82,16 @@ def main():
  model=cp_model.CpModel()
  switches=[model.NewBoolVar(f'switch_{i}') for i in range(len(mods))]
  choices=[model.NewBoolVar(f'repair_{j}') for j in range(len(motifs))]
- model.AddExactlyOne(choices)
+ if args.mode=='baseline':model.Add(sum(choices)==0)
+ else:model.AddExactlyOne(choices)
  arcs=[]
+ degree=defaultdict(list)
  selectable={}
  for a,b in sorted(variable_edges):
     ed=(a,b)
     selected=model.NewBoolVar(f'sel_{a}_{b}')
     selectable[ed]=selected
+    degree[a].append(selected);degree[b].append(selected)
     if ed in old_owner:
         expr=1-switches[old_owner[ed]]
     elif ed in new_owner:
@@ -105,11 +109,14 @@ def main():
     f=model.NewBoolVar(f'MF_{a}_{b}')
     r=model.NewBoolVar(f'MR_{a}_{b}')
     model.Add(f+r==1)
+    degree[a].append(1);degree[b].append(1)
     arcs.extend(((index[a],index[b],f),(index[b],index[a],r)))
- model.AddCircuit(arcs)
+ if args.mode=='two-factor':
+    for city in ordered:model.Add(sum(degree[city])==2)
+ else:model.AddCircuit(arcs)
  model.Maximize(sum(m['gain']*choices[j] for j,m in enumerate(motifs)))
  report={'baseline':5757191,'switches':51,'total_motifs':len(motifs),
-       'minimum_gain':args.minimum_gain,'variable_edges':len(variable_edges),
+       'minimum_gain':args.minimum_gain,'mode':args.mode,'variable_edges':len(variable_edges),
        'contracted_vertices':len(ordered),'mandatory_macro_paths':len(macros),
        'maximum_gain_in_candidates':max(m['gain'] for m in motifs),
        'time_limit_seconds':args.seconds}
@@ -123,26 +130,49 @@ def main():
      'elapsed_seconds':round(time.monotonic()-start,2),
      'branches':solver.NumBranches(),'conflicts':solver.NumConflicts()})
  if status in (cp_model.FEASIBLE,cp_model.OPTIMAL):
-    j=next(i for i,y in enumerate(choices) if solver.Value(y))
+    j=next((i for i,y in enumerate(choices) if solver.Value(y)),None)
     mask=sum(1<<i for i,x in enumerate(switches) if solver.Value(x))
     selected=set(base)
     for i in range(len(switches)):
         if (mask>>i)&1:selected.difference_update(oldsets[i])
     for i in range(len(switches)):
         if (mask>>i)&1:selected.update(newsets[i])
-    motif=motifs[j]
-    for x in motif['old']:
-        ed=tuple(x)
-        assert ed in selected
-        selected.remove(ed)
-    for x in motif['added']:
-        ed=tuple(x)
-        assert ed not in selected
-        selected.add(ed)
+    motif=motifs[j] if j is not None else None
+    if motif is not None:
+        for x in motif['old']:
+            ed=tuple(x)
+            assert ed in selected
+            selected.remove(ed)
+        for x in motif['added']:
+            ed=tuple(x)
+            assert ed not in selected
+            selected.add(ed)
     assert len(selected)==n
     adj=[[] for _ in range(n+1)]
     for a,b in selected:adj[a].append(b);adj[b].append(a)
     assert all(len(adj[u])==2 for u in range(1,n+1))
+    if args.mode=='two-factor':
+        seen=bytearray(n+1)
+        sizes=[]
+        for start_vertex in range(1,n+1):
+            if seen[start_vertex]:continue
+            u=start_vertex;prev=0;size=0
+            while not seen[u]:
+                seen[u]=1;size+=1
+                aa,bb=adj[u];nxt=aa if aa!=prev else bb
+                prev,u=u,nxt
+            assert u==start_vertex
+            sizes.append(size)
+        expected=5757191-motif['gain']
+        actual=sum(cost(e) for e in selected)
+        assert actual==expected
+        report.update({'degree_two_factor_total':actual,'components':len(sizes),
+                       'component_sizes':sorted(sizes),'winning_gain':motif['gain'],
+                       'winning_motif':j,'neutral_mask':str(mask)})
+        dest=Path(args.report);dest.parent.mkdir(parents=True,exist_ok=True)
+        dest.write_text(json.dumps(report,indent=2)+'\n')
+        print(json.dumps({'stage':'result',**report}),flush=True)
+        return
     visited=bytearray(n+1);route=[];u=1;prev=0
     while not visited[u]:
         visited[u]=1;route.append(u)
@@ -152,13 +182,14 @@ def main():
     cert={'tour':route}
     payload=json.dumps(cert,separators=(',',':')).encode()
     verdict=v.verify_bytes(payload,v.load_config())
-    assert verdict['valid'] and int(verdict['score'])==5757191-motif['gain']
+    expected=5757191-(motif['gain'] if motif else 0)
+    assert verdict['valid'] and int(verdict['score'])==expected
     output=Path(args.certificate)
     output.parent.mkdir(parents=True,exist_ok=True)
     output.write_bytes(payload)
     report.update({'verified_score':int(verdict['score']),
        'canonical_hash':verdict['canonical_hash'],
-       'winning_motif':j,'winning_motif_gain':motif['gain'],
+       'winning_motif':j,'winning_motif_gain':motif['gain'] if motif else 0,
        'neutral_mask':str(mask)})
  else:
     report['best_objective_bound']=solver.BestObjectiveBound()
