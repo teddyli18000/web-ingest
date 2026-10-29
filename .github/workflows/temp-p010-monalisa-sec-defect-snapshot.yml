@@ -1,0 +1,59 @@
+name: temp-p010-monalisa-sec-defect-snapshot
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/lp_wiring_sec_factor_snapshot.py
+      - .github/workflows/temp-p010-monalisa-sec-defect-snapshot.yml
+permissions:
+  contents: read
+jobs:
+  factor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Original old strong tours, original Concorde LP and authoritative Few Shots scorer
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install numpy scipy networkx matplotlib ortools
+          python -m py_compile science-boundary/mona-lisa-tsp/lp_wiring_sec_factor_snapshot.py
+          mkdir -p /tmp/p010/tour /tmp/p010/lp
+          root=https://www.math.uwaterloo.ca/tsp/data/ml
+          for score in 5757199 5757200 5757203 5757204 5757205 5757241 5757245; do
+            curl -fsSL --retry 3 "$root/tour/monalisa_${score}.tour" -o "/tmp/p010/tour/monalisa_${score}.tour"
+          done
+          for variant in 6nsub 5zsub 4zsub; do
+            curl -fsSL --retry 3 "$root/x/mona.${variant}.x" -o "/tmp/p010/lp/mona.${variant}.x"
+          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          t=Path('/tmp/p010/tour');l=Path('/tmp/p010/lp')
+          Path('/tmp/p010/tours.json').write_text(json.dumps({f'historic_{s}':str(t/f'monalisa_{s}.tour') for s in (5757199,5757200,5757203,5757204,5757205,5757241,5757245)}))
+          Path('/tmp/p010/lps.json').write_text(json.dumps({'2012-04-18':str(l/'mona.6nsub.x'),'2012-01-21':str(l/'mona.5zsub.x'),'2011-07-15':str(l/'mona.4zsub.x')}))
+          PY
+      - name: Freeze last *disconnected* near-improving degree-two factor and cycle labels
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          d=science-boundary/mona-lisa-tsp/results/monalisa-sec-defect
+          mkdir -p "$d"
+          python -u science-boundary/mona-lisa-tsp/lp_wiring_sec_factor_snapshot.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --tours /tmp/p010/tours.json --lps /tmp/p010/lps.json \
+            --components science-boundary/mona-lisa-tsp/data/historical-wiring-components-all.json \
+            --selector persistent --attachment all --nregions 8 --lp-budget 1322 \
+            --seconds 220 --workers 4 --report "$d/report.json" \
+            --candidate "$d/certificate.json" --factor-report "$d/disconnected-factor.json"
+          test -s "$d/report.json"
+          test -s "$d/disconnected-factor.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-monalisa-sec-100k-defect-factor
+          path: science-boundary/mona-lisa-tsp/results/monalisa-sec-defect/
+          if-no-files-found: ignore
