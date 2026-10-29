@@ -1,0 +1,81 @@
+{
+  "conclusion": "all four k2 defect-transversal regrows and the nested k3..k8 hierarchy around the best 14-defect graph are exactly UNSAT",
+  "defects": {
+    "I6": 4,
+    "K4": 10
+  },
+  "k2": [
+    {
+      "core_size": 34,
+      "domain_count": 1,
+      "exact": {
+        "checked_h_states": 2,
+        "status": "UNSAT"
+      },
+      "removed": [2,35],
+      "unary": {"dfs_nodes":513,"independent5":626,"size_hist":{"12":1},"triangles":362}
+    },
+    {
+      "core_size": 34,
+      "domain_count": 0,
+      "exact": {"checked_h_states":0,"status":"UNSAT"},
+      "removed": [5,35],
+      "unary": {"dfs_nodes":609,"independent5":672,"size_hist":{},"triangles":359}
+    },
+    {
+      "core_size": 34,
+      "domain_count": 0,
+      "exact": {"checked_h_states":0,"status":"UNSAT"},
+      "removed": [10,35],
+      "unary": {"dfs_nodes":521,"independent5":632,"size_hist":{},"triangles":357}
+    },
+    {
+      "core_size": 34,
+      "domain_count": 0,
+      "exact": {"checked_h_states":0,"status":"UNSAT"},
+      "removed": [13,35],
+      "unary": {"dfs_nodes":521,"independent5":632,"size_hist":{},"triangles":357}
+    }
+  ],
+  "minimum_two_vertex_transversals": [[2,35],[5,35],[10,35],[13,35]],
+  "nested": [
+    {
+      "core_size":33,"domain_count":5,"k":3,
+      "proof":{"checked_h_states":1000,"status":"UNSAT"},
+      "removed":[2,35,13],
+      "unary":{"dfs_nodes":611,"independent5":498,"size_hist":{"11":2,"12":2,"13":1},"triangles":336}
+    },
+    {
+      "core_size":32,"domain_count":11,"k":4,
+      "proof":{"checked_h_states":774016,"status":"UNSAT"},
+      "removed":[2,35,13,5],
+      "unary":{"dfs_nodes":413,"independent5":410,"size_hist":{"10":3,"11":6,"12":2},"triangles":314}
+    },
+    {
+      "core_size":31,"domain_count":17,"k":5,
+      "proof":{"dfs_nodes":892,"pair_degree_feasible_tuples":0,"status":"UNSAT"},
+      "removed":[2,35,13,5,9],
+      "unary":{"dfs_nodes":479,"independent5":365,"size_hist":{"10":4,"11":7,"12":3,"13":2,"14":1},"triangles":280}
+    },
+    {
+      "core_size":30,"domain_count":25,"k":6,
+      "proof":{"dfs_nodes":5382,"pair_degree_feasible_tuples":0,"status":"UNSAT"},
+      "removed":[2,35,13,5,9,10],
+      "unary":{"dfs_nodes":657,"independent5":252,"size_hist":{"9":4,"10":10,"11":5,"12":2,"13":3,"14":1},"triangles":259}
+    },
+    {
+      "core_size":29,"domain_count":449,"k":7,
+      "proof":{"compat_edges":3814,"compat_loops":0,"omega":6,"status":"UNSAT"},
+      "removed":[2,35,13,5,9,10,34],
+      "unary":{"dfs_nodes":1347,"independent5":211,"size_hist":{"8":7,"9":45,"10":116,"11":147,"12":98,"13":32,"14":4},"triangles":231}
+    },
+    {
+      "core_size":28,"domain_count":1109,"k":8,
+      "proof":{"compat_edges":38794,"compat_loops":0,"omega":7,"status":"UNSAT"},
+      "removed":[2,35,13,5,9,10,34,25],
+      "unary":{"dfs_nodes":2705,"independent5":164,"size_hist":{"7":9,"8":78,"9":260,"10":388,"11":273,"12":90,"13":11},"triangles":209}
+    }
+  ],
+  "source": "science-boundary/ramsey-r46/results/methodb36-best.json",
+  "source_edges": 263
+}
