@@ -81,7 +81,7 @@ def solve(a):
         result['processed_subspaces']=len(result['outcomes'])
         result['complete']=result['processed_subspaces']==len(chosen)
         result['elapsed_seconds']=round(time.monotonic()-began,3)
-        (a.out/'job-ejection.json').write_text(json.dumps(result,indent=2)+'\\n')
+        (a.out/'job-ejection.json').write_text(json.dumps(result,indent=2)+'\n')
 
     for idx,jobs in chosen:
         if time.monotonic()-began>a.total_seconds-2:break
@@ -112,10 +112,7 @@ def solve(a):
         if result['processed_subspaces']%15==0:
             print('PROGRESS',a.shard,result['processed_subspaces'],len(chosen),
                   'unknown',result['unknown'],'seconds',round(time.monotonic()-began,1),flush=True)
-    result['processed_subspaces']=len(result['outcomes'])
-    result['complete']=result['processed_subspaces']==len(chosen)
-    result['elapsed_seconds']=round(time.monotonic()-began,3)
-    (a.out/'job-ejection.json').write_text(json.dumps(result,indent=2)+'\n')
+    persist()
     print('RESULT',json.dumps({k:v for k,v in result.items() if k!='outcomes'}),flush=True)
 
 
