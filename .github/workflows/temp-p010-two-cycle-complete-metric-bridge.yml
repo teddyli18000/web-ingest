@@ -1,0 +1,55 @@
+name: temp-p010-two-cycle-complete-metric-bridge
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/temp-p010-two-cycle-complete-metric-bridge.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        neighbors: [64, 128, 256, 512]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Obtain new two-cycle factor after dynamic SEC feedback and official scorer
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install numpy scipy
+          python -m py_compile science-boundary/mona-lisa-tsp/monalisa_factor_cross_repair.py
+          mkdir -p /tmp/twofactor
+          gh run download 40880661415 --repo teddyli18000/web-ingest --name p010-dynamic-four-cycle-feedback --dir /tmp/twofactor
+          find /tmp/twofactor -name new-factor.json
+          test "$(find /tmp/twofactor -path '*/round-2/new-factor.json' | wc -l)" -eq 1
+      - name: Evaluate complete-metric edge-pair replacements directly between final two subtours
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          source=$(find /tmp/twofactor -path '*/round-2/new-factor.json' -print -quit)
+          out="science-boundary/mona-lisa-tsp/results/two-cycle-bridges-${{ matrix.neighbors }}"
+          mkdir -p "$out"
+          python -u science-boundary/mona-lisa-tsp/monalisa_factor_cross_repair.py \
+            --factor "$source" --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --neighbors ${{ matrix.neighbors }} --max-ports 30000 \
+            --top-per-component-pair 100 --beam 100 \
+            --report "$out/report.json" --certificate "$out/certificate.json"
+          test -s "$out/report.json"
+          if test -s "$out/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$out"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-two-cycle-complete-metric-${{ matrix.neighbors }}
+          path: science-boundary/mona-lisa-tsp/results/two-cycle-bridges-*/
+          if-no-files-found: ignore
