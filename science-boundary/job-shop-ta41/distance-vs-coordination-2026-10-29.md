@@ -85,6 +85,17 @@ Source `results/gateway-{124,120,127}/gateway-cost.json` and respective `upstrea
 
 **Meaning:** The previously known necessary 2005 *precedence gateway* can itself be crossed while keeping score 2006 with only **30** of 8700 machine-pair inversions; one example still differs on just **13 machine permutations**. Thus neither high machine-order distance nor structural gateway violation independently requires a remote basin. What extra coupled changes are needed to actually reach 2005 remains open. A follow-up exact small co-swapping repair from these gateway parents has been launched (`temp-ta41-gateway-coordinated-micro-repair.yml`), not claimed complete.
 
+
+### Gateway-aware atomic repair: still not enough
+
+As a controlled follow-up, use each newly verified 2006 score-2006 gateway schedule as the new base, then jointly select any set of disjoint adjacent swaps under hard NoOverlap without requiring any intermediate objective improvement. All of these precise neighborhoods were independently CP-SAT **INFEASIBLE** for target 2005:
+
+- Gateway 124: <=1 swap per machine (up to 20 total), and <=2 disjoint swaps per machine (up to 40 total).
+- Gateway 120: <=1 per machine.
+- Gateway 127: <=1 per machine.
+
+All four reports: `results/gateway-repair-{124-r1,124-r2,120-r1,127-r1}/decision.json`; CP-SAT presolve resolved each in 0.09–0.16s. **Scope limitation:** This excludes only the disjoint-adjacent-swap representation *around each gateway parent*, not all small Kendall moves or more strongly coordinated multi-position shifts. Even after a mandatory core arc is reversed, crossing the final makespan threshold requires changing additional relationships that these simple swap families keep fixed.
+
 ## Interpretation and decision
 
 The evidence **falsifies the inference** that 15 changed machine permutations necessarily means a geometrically distant basin. It **directly demonstrates** that individually harmful micro-moves can have constructive, mutually enabling interactions. It does **not** determine whether a score<=2005 solution is geometrically near or far.
