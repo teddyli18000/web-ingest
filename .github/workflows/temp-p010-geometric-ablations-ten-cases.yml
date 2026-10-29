@@ -1,0 +1,61 @@
+name: temp-p010-geometric-ablations-ten-cases
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/tsplib_geometric_controls.py
+      - .github/workflows/temp-p010-geometric-ablations-ten-cases.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  control:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {instance: eil51, run: 40869449446, artifact: p010-blind-5case-public}
+          - {instance: berlin52, run: 40869449446, artifact: p010-blind-5case-public}
+          - {instance: st70, run: 40869449446, artifact: p010-blind-5case-public}
+          - {instance: eil76, run: 40869449446, artifact: p010-blind-5case-public}
+          - {instance: kroA100, run: 40869449446, artifact: p010-blind-5case-public}
+          - {instance: rat99, run: 40870679131, artifact: p010-unseen-v2-public}
+          - {instance: ch130, run: 40870679131, artifact: p010-unseen-v2-public}
+          - {instance: eil101, run: 40870679131, artifact: p010-unseen-v2-public}
+          - {instance: pr76, run: 40870679131, artifact: p010-unseen-v2-public}
+          - {instance: kroB100, run: 40870679131, artifact: p010-unseen-v2-public}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Public parent tours only; do not retrieve secrets or optimal solutions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/tsplib-public
+          gh run download "${{ matrix.run }}" --repo teddyli18000/web-ingest \
+            --name "${{ matrix.artifact }}" --dir /tmp/tsplib-public
+          python -m pip install numpy scipy ortools
+      - name: Compare three naive geometry controls under exact same twelve-chord budget
+        run: |
+          public=$(find /tmp/tsplib-public -name public.json -path '*/${{ matrix.instance }}/*' -print -quit)
+          test -s "$public"
+          if find /tmp/tsplib-public -name private.json | grep -q .; then
+            echo 'Hidden winner unexpectedly present' >&2
+            exit 1
+          fi
+          for method in nearest local_delta random_8nn; do
+            out="science-boundary/mona-lisa-tsp/results/geo-control-${{ matrix.instance }}-${method}/result.json"
+            python science-boundary/mona-lisa-tsp/tsplib_geometric_controls.py \
+              --public "$public" --strategy "$method" --budget 12 --seconds 18 --out "$out"
+            test -s "$out"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-geo-control-${{ matrix.instance }}
+          path: science-boundary/mona-lisa-tsp/results/geo-control-*/result.json
+          if-no-files-found: ignore
