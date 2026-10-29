@@ -64,3 +64,17 @@ But the union of neutral-parent disagreements improved by only FOUR original pai
 
 **First-principles pivot:** the previous iterative 2006-neural generator *minimized* orientation edits as a secondary objective, almost guaranteeing low diversity and making the consensus core loop repeatedly hit the same obstruction. Candidate quality stayed exactly 2006 while only the excluded/conflicting structure grew. Do not spend more compute on this objective. A qualitatively different global model `maxmin_neutral_orientations.py` now uses exact full NoOverlap and maximizes **minimum distance from every one of the 12 pre-existing 2006 parents** over all 580 baseline adjacent machine-pair orientations. Two controlled arms: unguided, and requiring the ten independently certified 2005 necessary core disjunctions. Unlike fixing operation groups or releasing a time band, this model can reorder any of the 8700 machine pairs. The measure of success is (a) official <=2005 certificate, or if neutral, (b) objectively larger min-distance to *all* known parents and genuinely decreased intersection-poset invariants after adding the witness. Workflow `temp-ta41-neutral-orientation-maxmin.yml`; its results were pending at the creation of this paragraph. This is a diversity objective, **not** a new makespan theorem.
 
+
+## New representation delivers genuinely distant official 2006 candidates
+
+The `maxmin_neutral_orientations.py` Action has now **completed and passed the official Few Shots verifier** in both the unguided and ten-core-guided arms (180s each). Instead of minimizing flips from a single 2006 parent, it maximizes the *minimum* disagreement over all 580 original adjacent machine pairs against all 12 previously verified neutral parents. Every machine order is free under full NoOverlap.
+
+| Variant | Valid makespan | Min Hamming distance on 580 baseline adjacencies to old 12 | Min **true Kendall** distance to old 12 | Kendall from original baseline | Changed machines |
+| --- | --- | --- | --- | --- | --- |
+| unconditioned | **2006** | **86** | **147** | **173** | 20/20 |
+| with ten certified necessary core disjunctions | **2006** | **86** | **141** | **167** | 20/20 |
+
+Official verifier hashes: unconditioned `9b66293661b29076288f274121f413f6450fcba174d2a0c76ca563cde18d925c`; conditioned `b8471151090bb48004861b3b57c853b766d76060975c97762b23ed9500f9f814`. Exact witnesses `results/orientation-maxmin-{false,true}/witness/certificate.json`, independent evidence `diversity.json`.
+
+This is **material candidate diversity improvement** over prior two locally neighboring 2006 witnesses (which reduced only four consensus pairs). It does NOT yet improve makespan. Next validation, `far_neutral_poset.py`, adds each new distant parent separately and together to the 12/14 parent ensemble and tests at 2005 with freshly independently checked resource-conflict cores. The new far-parent 2005 poset outcomes were pending when this section was authored. Do not assume maximal Hamming diversity implies closeness to the 2005 feasible set.
+
