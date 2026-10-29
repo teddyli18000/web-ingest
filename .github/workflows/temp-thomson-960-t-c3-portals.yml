@@ -1,0 +1,46 @@
+name: temp Thomson 960 T-seeded C3 portal harvest
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-t-c3-portals.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  harvest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - seed: 731
+            temperature: 0.008
+          - seed: 907
+            temperature: 0.025
+          - seed: 1151
+            temperature: 0.08
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Fetch authoritative old-T N=960 coordinates
+        run: |
+          curl --fail --location --retry 3 \
+            https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/site/s_1/dat/points_960_1.dat \
+            -o "$RUNNER_TEMP/points_960_1.dat"
+          test "$(wc -l < "$RUNNER_TEMP/points_960_1.dat")" -eq 960
+      - name: C3 orbit-space basin hopping
+        run: |
+          python3 science-boundary/thomson-960/code/search_t_c3_basin_hop.py \
+            "$RUNNER_TEMP/points_960_1.dat" \
+            --seed ${{ matrix.seed }} --steps 75 --temperature ${{ matrix.temperature }} \
+            --retain-below 444368.48 --out "$RUNNER_TEMP/t-c3-${{ matrix.seed }}.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-t-c3-portals-${{ matrix.seed }}
+          retention-days: 7
+          path: ${{ runner.temp }}/t-c3-${{ matrix.seed }}.json
