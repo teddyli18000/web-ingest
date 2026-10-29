@@ -1,0 +1,67 @@
+name: temp-monalisa-costly-bridge
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/island_bridge_motifs.py
+      - .github/workflows/temp-monalisa-costly-bridge.yml
+permissions:
+  contents: read
+jobs:
+  bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {positive_count: 120, bridge_min_gain: -12}
+          - {positive_count: 900, bridge_min_gain: -25}
+          - {positive_count: 2949, bridge_min_gain: -60}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare official verifier and full candidate graph
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          git clone --depth 1 https://github.com/bicobico2/ElimTSP.git elimtsp
+          python -m pip install ortools
+          mkdir -p /tmp/symbolic
+          gh run download 40830451326 --repo teddyli18000/web-ingest --name monalisa-symbolic-exact-exit-1 --dir /tmp/symbolic
+          test -s /tmp/symbolic/positive-motifs.json
+      - name: Generate independent negative-gain repair channels
+        run: |
+          mkdir -p science-boundary/mona-lisa-tsp/results/bridge-${{ matrix.positive_count }}-${{ matrix.bridge_min_gain }}
+          python science-boundary/mona-lisa-tsp/island_bridge_motifs.py \
+            --graph elimtsp/results/mona.248972.edg.gz \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --neutral-moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --positive-motifs /tmp/symbolic/positive-motifs.json \
+            --output science-boundary/mona-lisa-tsp/results/bridge-${{ matrix.positive_count }}-${{ matrix.bridge_min_gain }}/bridge-motifs.json \
+            --min-gain ${{ matrix.bridge_min_gain }} --max-gain 0
+      - name: Exact circuit with profitable and costly coupled exchanges
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          path=science-boundary/mona-lisa-tsp/results/bridge-${{ matrix.positive_count }}-${{ matrix.bridge_min_gain }}
+          python science-boundary/mona-lisa-tsp/symbolic_global_circuit.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --motifs /tmp/symbolic/positive-motifs.json \
+            --bridge-motifs "$path/bridge-motifs.json" \
+            --report "$path/report.json" --certificate "$path/certificate.json" \
+            --minimum-gain 1 --repairs 2 --mode improve --max-motifs ${{ matrix.positive_count }} \
+            --seconds 180 --workers 4
+          if test -f "$path/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$path"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-costly-bridge-${{ matrix.positive_count }}-${{ matrix.bridge_min_gain }}
+          path: science-boundary/mona-lisa-tsp/results/bridge-*/
+          if-no-files-found: ignore
