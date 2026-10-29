@@ -33,10 +33,17 @@ def snapshot(orders):
 def load_parent(name,pos,dur,baseline):
     if name=='baseline':
         return [seq[:] for seq in baseline]
-    folder=ROOT/'results'/('gateway-'+name)
-    v=json.loads((folder/'upstream-verdict.json').read_text())
+    if name=='ninecore':
+        folder=ROOT/'results'/'ninecore-neutral-baseline'
+        verdict_file='neutral-verdict.json'
+        certificate_file='neutral-certificate.json'
+    else:
+        folder=ROOT/'results'/('gateway-'+name)
+        verdict_file='upstream-verdict.json'
+        certificate_file='certificate.json'
+    v=json.loads((folder/verdict_file).read_text())
     assert v['valid'] and int(v['score'])==2006
-    parent=json.loads((folder/'certificate.json').read_text())['machines']
+    parent=json.loads((folder/certificate_file).read_text())['machines']
     assert evaluate(parent,pos,dur)==2006
     return parent
 
@@ -164,7 +171,7 @@ def run(a):
 if __name__=='__main__':
     p=argparse.ArgumentParser()
     p.add_argument('--policy',required=True,choices=['dynamic','static','core','random'])
-    p.add_argument('--parent',default='baseline',choices=['baseline','124'])
+    p.add_argument('--parent',default='baseline',choices=['baseline','124','ninecore'])
     p.add_argument('--seed',type=int,default=4107)
     p.add_argument('--first',type=int,default=8)
     p.add_argument('--second',type=int,default=14)
