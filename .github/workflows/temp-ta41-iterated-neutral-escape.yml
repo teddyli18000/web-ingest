@@ -1,0 +1,74 @@
+name: temp-ta41-iterated-neutral-escape
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/iterated_neutral_escape.py'
+      - '.github/workflows/temp-ta41-iterated-neutral-escape.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-iterated-neutral-escape
+  cancel-in-progress: false
+jobs:
+  explore:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [41, 777, 4107, 2026]
+    runs-on: ubuntu-latest
+    timeout-minutes: 11
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned exact CP engine
+        run: python -m pip install 'ortools==9.14.6206'
+      - name: Explore distant neutral 2006 schedule manifolds and attempt 2005 escapes
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/iterated_neutral_escape.py
+          python3 science-boundary/job-shop-ta41/iterated_neutral_escape.py --seed '${{ matrix.seed }}' --rounds 35 --seconds 390 --step-seconds 8 --escape-seconds 11 --out 'science-boundary/job-shop-ta41/results/neutral-walk-${{ matrix.seed }}'
+      - name: Independently verify any original-instance neutral or improved certificate
+        run: |
+          set -euo pipefail
+          dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/neutral-walk-${{ matrix.seed }}"
+          if test -f "$dir/neutral-certificate.json" || test -f "$dir/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+          fi
+          if test -f "$dir/neutral-certificate.json"; then
+            mkdir -p /tmp/ta41neutral
+            cp "$dir/neutral-certificate.json" /tmp/ta41neutral/certificate.json
+            ( cd /tmp/few-shots && python3 problems/p009-job-shop-ta41/verify/verify.py /tmp/ta41neutral ) | tee "$dir/neutral-verdict.json"
+            python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          d=json.loads((Path(sys.argv[1])/'neutral-verdict.json').read_text())
+          assert d['valid'] and d['score']=='2006',d
+          PY
+          fi
+          if test -f "$dir/certificate.json"; then
+            ( cd /tmp/few-shots && python3 problems/p009-job-shop-ta41/verify/verify.py "$dir" ) | tee "$dir/upstream-verdict.json"
+            python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          d=json.loads((Path(sys.argv[1])/'upstream-verdict.json').read_text())
+          assert d['valid'] and int(d['score'])<=2005,d
+          PY
+          fi
+      - name: Save verified search evidence on main with bounded conflict retries
+        if: always()
+        run: |
+          set -euo pipefail
+          dir="science-boundary/job-shop-ta41/results/neutral-walk-${{ matrix.seed }}"
+          test -f "$dir/neutral-walk.json"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): archive neutral-manifold escape experiment seed ${{ matrix.seed }}'
+          for attempt in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          echo 'Research computation complete but main persistence failed' >&2
+          exit 1
