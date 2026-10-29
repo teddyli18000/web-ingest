@@ -1,0 +1,67 @@
+name: temp-ta41-all-core-soft-orientation
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-all-core-soft-orientation.yml'
+      - 'science-boundary/job-shop-ta41/all_core_orientation_repair.py'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-all-core-soft-orientation
+  cancel-in-progress: false
+jobs:
+  optimize:
+    strategy:
+      fail-fast: false
+      matrix:
+        parent: [baseline,'124']
+        policy: [dynamic,core]
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned solver and verify source compiles
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/all_core_orientation_repair.py
+          python3 -m pip install 'ortools==9.14.6206'
+      - name: Joint 9-core necessary-cut global CP optimization
+        run: |
+          python3 science-boundary/job-shop-ta41/all_core_orientation_repair.py \
+            --parent '${{ matrix.parent }}' --policy '${{ matrix.policy }}' \
+            --seed 4113 --seconds 150 \
+            --out 'science-boundary/job-shop-ta41/results/allcores-${{ matrix.parent }}-${{ matrix.policy }}'
+      - name: Official verifier on any improved machine order
+        if: always()
+        run: |
+          set -euo pipefail
+          out="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/allcores-${{ matrix.parent }}-${{ matrix.policy }}"
+          if test -f "$out/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$out" | tee "$out/upstream-verdict.json"
+            python3 - "$out" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+          fi
+      - name: Persist exact candidate, valid bounds, or honest nonproof
+        if: always()
+        run: |
+          set -euo pipefail
+          out='science-boundary/job-shop-ta41/results/allcores-${{ matrix.parent }}-${{ matrix.policy }}'
+          if ! test -d "$out"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$out"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): globally correlated nine-core reorientation ${{ matrix.parent }} ${{ matrix.policy }}'
+          for attempt in $(seq 1 50); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 1
+          done
+          exit 1
