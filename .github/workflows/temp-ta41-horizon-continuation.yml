@@ -1,0 +1,81 @@
+name: temp-ta41-horizon-continuation
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/horizon_continuation.py'
+      - '.github/workflows/temp-ta41-horizon-continuation.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-horizon-continuation
+  cancel-in-progress: false
+jobs:
+  descend:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {arc: 0, seed: 40}
+          - {arc: 7, seed: 220}
+          - {arc: 8, seed: 305}
+          - {arc: 11, seed: 421}
+          - {arc: 15, seed: 1600}
+          - {arc: 20, seed: 2120}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin CP solver
+        run: python -m pip install 'ortools==9.14.6206'
+      - name: Traverse relaxed makespan horizons before forcing 2005
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/horizon_continuation.py
+          python3 science-boundary/job-shop-ta41/horizon_continuation.py --arc '${{ matrix.arc }}' --seed '${{ matrix.seed }}' --total-seconds 320 --phase-seconds 40 --out 'science-boundary/job-shop-ta41/results/continuation-${{ matrix.arc }}'
+      - name: Verify any best reversal and improved target schedule
+        run: |
+          set -euo pipefail
+          dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/continuation-${{ matrix.arc }}"
+          if test -f "$dir/best-reversed-order.json" || test -f "$dir/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+          fi
+          if test -f "$dir/best-reversed-order.json"; then
+            mkdir -p /tmp/ta41-best
+            cp "$dir/best-reversed-order.json" /tmp/ta41-best/certificate.json
+            (cd /tmp/few-shots && python3 problems/p009-job-shop-ta41/verify/verify.py /tmp/ta41-best) | tee "$dir/best-verdict.json"
+            python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1])
+          info=json.loads((p/'continuation.json').read_text())
+          v=json.loads((p/'best-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])==info['best_reversed_feasible_makespan'],(v,info)
+          PY
+          fi
+          if test -f "$dir/certificate.json"; then
+            (cd /tmp/few-shots && python3 problems/p009-job-shop-ta41/verify/verify.py "$dir") | tee "$dir/upstream-verdict.json"
+            python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          v=json.loads((Path(sys.argv[1])/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+          fi
+      - name: Preserve evidence under concurrent repository changes
+        if: always()
+        run: |
+          set -euo pipefail
+          dir="science-boundary/job-shop-ta41/results/continuation-${{ matrix.arc }}"
+          test -f "$dir/continuation.json"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): horizon continuation forced core reversal ${{ matrix.arc }}'
+          for attempt in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
