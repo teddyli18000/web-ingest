@@ -171,8 +171,8 @@ def main():
                 prev,cur=cur,following
             assert origin!=cur
             mandatory.append(E(origin,cur))
-    assert len(seen_frozen)==len(frozen),(len(seen_frozen),len(frozen)
-    assert frozen<=base,('Baseline contains no frozen factor-only edge',len(frozen-base)))
+    assert len(seen_frozen)==len(frozen),(len(seen_frozen),len(frozen))
+    assert frozen<=base,('Frozen factor-only edge would preclude the baseline',len(frozen-base))
     verts=sorted(active);index={u:i for i,u in enumerate(verts)}
     factor_breakcost=sum(d(*e) for e in breakable)
     variable_edges=sorted(breakable|chosen|within|restore)
