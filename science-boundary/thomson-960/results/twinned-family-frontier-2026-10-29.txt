@@ -1,115 +1,123 @@
-Thomson N=960 — twinned grain-boundary family frontier
+Thomson N=960 — twinned-motif / defect-organization frontier
 Date: 2026-10-29
 
-Motivation
-----------
-The current low-energy N=960 graph R/A/B/D and the C index-2 stationary state
-all belong to the same 24-dislocation scar composition: 12 alternating
-5-7-5-7-5 scars, with no intended 7-7 twin core.  Extensive local, Hessian,
-size-bounce, crossover and transition-network exploration has mainly moved
-within this topology family.
+IMPORTANT CORRECTION
+--------------------
+An earlier version of this note incorrectly treated the current low-energy
+R/A/B/D/C scar family as if it had no 7-7 twinned cores.  Direct spherical
+Delaunay analysis of the saved A/B/D/C coordinates disproves that premise.
+The merged-shot shorthand '12 scars 5-7-5-7-5' does not imply that the two
+heptagons are never adjacent elsewhere in the full Delaunay graph.
 
-A distinct defect family is documented in the historical Thomson literature:
+For A/B/D/C, the 60 non-sixfold sites split exactly into twelve disconnected
+five-vertex defect components.  Each component has 3 degree-5 + 2 degree-7
+vertices and four 5-7 edges.  Some components additionally contain the 7-7 edge
+that defines the historical Wales twinned motif.  Measured twin counts are:
 
-- Wales & Ulker, Phys. Rev. B 74, 212101 (2006), DOI 10.1103/PhysRevB.74.212101.
-  Selected large-N structures include a 'twinned' defect in which two
-  seven-coordinated sites share a Voronoi/Delaunay edge and are surrounded by
-  three pentagons, net topological charge +1.  N=912, 932 and 972 are explicit
-  examples in the paper.
-- Wales, McKay & Altschuler, Phys. Rev. B 79, 224115 (2009),
-  DOI 10.1103/PhysRevB.79.224115.  Around N~1000, twinned grain boundaries are
-  reported to become favorable before rosette motifs dominate at somewhat
-  larger N.
-- Historical coordinates are available from the Cambridge Cluster Database,
-  including 912.xyz, 932.xyz and 972.xyz under CCD/Thomson/xyz.  The historical
-  table identifies the N=972 structure as T_h symmetric.
+  A  444368.39568622573   9 twinned components
+  B  444368.40297286137   8 twinned components
+  D  444368.41099308454   4 twinned components
+  C  444368.41141788290   3 twinned components (C is index-2)
 
-A particularly strong arithmetic/topological match makes N=972 important rather
-than merely nearby in particle number.  Table I of Wales & Ulker gives the N=972
-historical minimum coordination as 36 pentagons / 912 hexagons / 24 heptagons.
-The current N=960 record family is 36 / 900 / 24.  Therefore the 12-particle
-size difference can, in principle, be absorbed entirely by deleting twelve
-sixfold bulk sites while leaving the complete defect count unchanged.  The
-historical N=972 minimum nevertheless contains the distinct twinned/grain-boundary
-arrangement.  This makes 972->960 a direct bridge between two defect organizations
-with identical 5/7 counts at the target.
+Every observed 7-7 edge has exactly three peripheral pentagons.  Full details,
+including exact edges and the C3 12-bit motif representation, are in
+`results/low-energy-defect-motif-bits.txt`.
 
-The same 2006 paper also reports an N=972 transition between twinned and
-conventional grain-boundary minima with forward/reverse barriers about 0.00424
-and 0.00104 atomic units.  Thus these defect organizations are already known to
-be near neighbors on the N=972 energy landscape, strengthening the case for
-searching the corresponding topology interface at N=960 rather than assuming
-one family dominates by a large barrier.
+The live record R has NOT yet had its twin count measured in this durable note.
+Do not infer it from energy, C3 symmetry, or shot prose.  The queued direct-live
+flip workflow will measure `initial_twin_count` when Actions scheduling resumes.
 
-This creates a genuinely different search space from further perturbation of
-R/A/B/D.
+Historical motivation
+---------------------
+Wales & Ulker, Phys. Rev. B 74, 212101 (2006), DOI 10.1103/PhysRevB.74.212101,
+describe the same local twinned motif: two seven-coordinated sites share a
+Voronoi/Delaunay edge with three peripheral pentagons, net topological charge
++1.  N=912, 932 and 972 are explicit examples.  Wales, McKay & Altschuler,
+Phys. Rev. B 79, 224115 (2009), DOI 10.1103/PhysRevB.79.224115, further analyze
+large-N defect motifs around this size regime.
 
-Topology discriminator
-----------------------
-`code/analyze_twinned_motif.py` computes spherical Delaunay coordination and
-counts 7-7 edges.  A direct heptagon-heptagon edge is the core signature of the
-historical twinned motif and distinguishes it from an ordinary alternating
-5-7-5-7-5 scar.
+The historical N=972 minimum remains especially useful, but now as a source of
+a different *motif pattern / global defect organization*, not as a wholly new
+binary topology family absent at N=960.  Its reported coordination is
+36 pentagons / 912 hexagons / 24 heptagons, while the N=960 low-energy states are
+36 / 900 / 24.  Thus the 12-particle size difference can in principle be
+absorbed entirely by deleting twelve sixfold bulk sites while leaving the full
+5/7 defect count unchanged.
 
-Diagnostic workflow: `.github/workflows/temp-thomson-960-twinned-diagnostic.yml`
-run 40798144771, matrix N=912/932/942/972.  It was queued when this note was
-written.
+The same 2006 work reports a low-barrier N=972 transition between twinned and
+conventional grain-boundary minima (about 0.00424 / 0.00104 in the two
+directions).  This is evidence that different local motif organizations can be
+nearby on the large-N landscape; it does not justify treating the twelve N=960
+motifs as independent binary variables without further tests.
 
-Search operator 1: topology-preserving size propagation
--------------------------------------------------------
-`code/propagate_twinned_family.py` propagates a historical parent to N=960 while
-actively retaining the topology family:
+Revised reduced representation
+------------------------------
+The useful discrete coordinate is now:
 
-- defect core = all non-sixfold sites, expanded by configurable Delaunay graph
-  distance (default 2 hops);
-- insertions are allowed only on convex-hull triangles outside that core;
-- removals are allowed only for sixfold sites outside the core;
-- beam selection first favors descendants retaining at least one 7-7 edge,
-  then ranks by energy;
-- all children receive full unconstrained stable long-double-difference L-BFGS
-  relaxation.
+- twelve charge-+1 defect components;
+- for each component, whether its two heptagons have an internal 7-7 edge;
+- the exact local 5<->7 identity rewrite when a component changes motif;
+- the placement/orientation/shear coupling among all twelve components.
 
-This is not the same as the merged-shot dead end that greedily removed 12
-particles from N=972: energy-only greedy propagation can immediately heal away
-the twin family.  This operator treats persistence of the defect topology as a
-search coordinate.
+At C, C3 symmetry groups the twelve components into four 3-cycles.  In C-aligned
+component order, the measured low-energy motif bits are:
 
-The 972->960 route was launched via run 40798582516, using branch=2, beam=2,
-core_hops=2 by default.  It was queued when this note was written.
+  C = [111 | 000 | 000 | 000]  (3 twins)
+  D = [111 | 000 | 000 | 010]  (4 twins)
+  B = [111 | 010 | 110 | 110]  (8 twins)
+  A = [110 | 010 | 111 | 111]  (9 twins)
 
-Search operator 2: one complete tetrahedral orbit removal
-----------------------------------------------------------
-N=972 -> N=960 is exactly 12 particles.  The proper tetrahedral rotation group
-T has generic orbit size 12, while the historical N=972 parent is T_h symmetric.
-This arithmetic/symmetry coincidence motivates a finite discrete search that is
-not represented by sequential deletion.  It is even more natural given the
-coordination counts above: a 12-point orbit consisting entirely of bulk
-sixfold sites maps 36/912/24 exactly to 36/900/24 before any topology change.
+C->D is almost an elementary motif rewrite: 11/12 defect components keep the
+same five point labels; one component changes from conventional to twinned with
+only four coordination-class changes (602 5->6, 822 6->7, 831 6->5, 919 7->6),
+creating twin edge (822,842).  This makes a defect-level rewrite search much
+more concrete than generic coordinate kicks.
 
-1. recover one exact C2 and one C3 symmetry axis from the N=972 point cloud by
-   nearest-neighbor symmetry fitting;
-2. generate/validate the proper T group of order 12;
-3. enumerate point orbits under T;
-4. retain only full 12-point orbits composed entirely of sixfold bulk sites at
-   least two graph hops from the defect core;
-5. remove one entire orbit, giving N=960 in a single symmetry-preserving move;
-6. screen by raw post-removal energy, then fully release the best children;
-7. record whether 7-7 twin edges survive.
+Queued cross-size searches: revised interpretation
+---------------------------------------------------
+The existing N=972 workflows remain scientifically useful but must be interpreted
+as *motif-pattern / defect-organization propagation* rather than preservation of
+an otherwise absent topology.
 
-Implementation: `code/search_972_twin_orbit_removal.py`.
-Workflow: `.github/workflows/temp-thomson-960-972-orbit-removal.yml`.
-This route was submitted on main and awaiting Actions scheduling when this note
-was written.
+1. Historical motif diagnostic
+   `code/analyze_twinned_motif.py`, run `40798144771` for N=912/932/942/972.
+   It will measure 7-7 counts and component structure for direct comparison with
+   A/B/D/C and, eventually, R.
+
+2. Bulk-only 972->960 propagation
+   `code/propagate_twinned_family.py`, run `40798582516`.
+   It excludes the non-sixfold defect core from particle deletion and gives beam
+   priority to descendants retaining 7-7 edges.  Its scientific role is to keep
+   a historically distinct high-twin/defect pattern alive during the 12-particle
+   size change, not to introduce the first twin at N=960.
+
+3. One complete 12-point tetrahedral orbit removal
+   `code/search_972_twin_orbit_removal.py`, run `40798729324`.
+   N=972 -> 960 is exactly 12 particles and the historical parent is T_h.  A
+   generic proper-T orbit has 12 points.  Removing a bulk sixfold 12-orbit maps
+   36/912/24 exactly to 36/900/24 before relaxation while preserving the global
+   symmetry skeleton.  This finite discrete construction remains a genuinely
+   different search interface from sequential greedy deletion.
+
+Direct N=960 motif rewrite search
+---------------------------------
+`code/search_scar_to_twin_flips.py`, queued run `40799277860`, should likewise be
+reinterpreted.  Because the live state may already contain twins, its objective
+is to find local Delaunay flips that *increase or rewire* 7-7 motif adjacency
+while preserving the 36/900/24 coordination histogram, not to create the first
+twin from a twin-free state.
+
+A coverage-safe BFS front-end, `code/search_scar_to_twin_flips_bfs.py`, records
+states explored by flip depth and an explicit truncation flag.  Do not launch it
+as a duplicate until the queued pilot has actually executed; use it if the pilot
+needs a coverage-controlled follow-up.
 
 Decision rule
 -------------
-- If a twinned-family N=960 child is below live_score-2e-7, immediately stop
-  exploration and run the stable repolish -> rationalization -> official
-  verifier -> tools/check.py pipeline.
-- If the family survives to N=960 but remains above the record, preserve the
-  lowest child as a distinct topology seed and explore its own local/symmetry
-  landscape rather than forcing it back into the R/A/B/D scar network.
-- If every constrained/topology-preserving route loses all 7-7 edges before
-  reaching N=960, that is meaningful evidence that this historical twin family
-  is not locally stable at N=960 under these propagation interfaces; it is not
-  a proof that no twinned N=960 minimum exists.
+- Any N=960 relaxed child below `live_score-2e-7` triggers immediate live-record
+  re-check, stable repolish, rationalization, official verifier and tools/check.py.
+- Otherwise compare each child by the full twelve-component motif pattern, not
+  just energy or total twin count.  Near-degenerate structures with different
+  motif placement must not be deduplicated solely by energy.
+- Failure of one 972 propagation or one short flip-BFS is evidence only about
+  that search interface, not proof that a given motif pattern is impossible.
