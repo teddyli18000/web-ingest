@@ -1,0 +1,19 @@
+# exact odd-perfect endpoint-defect3 search
+compiler: g++ -O3 -march=native -fopenmp -std=c++20
+method: reflection support linearization + mod-257 RREF + alternating-sign quotient u0=u1 + B=0 support-sum reduction
+support coverage: all C(49,3)=18,424 supports, five disjoint index ranges
+
+SUMMARY range=0:4000 systems=229056 inconsistent=212132 prepared=16924 chunks_done=17050/17050 complete=1 found=0 stopped=0 enum=56737151 pm_candidates=33892427 target_checked=33892427 maxnull=22 seconds=9.27407 threads=1
+SUMMARY range=4000:8000 systems=225048 inconsistent=188769 prepared=36279 chunks_done=36391/36391 complete=1 found=0 stopped=0 enum=57934806 pm_candidates=34012170 target_checked=34012170 maxnull=21 seconds=9.17667 threads=1
+SUMMARY range=8000:12000 systems=221824 inconsistent=144046 prepared=77778 chunks_done=77946/77946 complete=1 found=0 stopped=0 enum=96431203 pm_candidates=50982098 target_checked=50982098 maxnull=21 seconds=14.629 threads=1
+SUMMARY range=12000:16000 systems=217002 inconsistent=122972 prepared=94030 chunks_done=94420/94420 complete=1 found=0 stopped=0 enum=432146193 pm_candidates=84933398 target_checked=84933398 maxnull=22 seconds=14.7111 threads=5
+SUMMARY range=16000:18424 systems=145752 inconsistent=109815 prepared=35937 chunks_done=35947/35947 complete=1 found=0 stopped=0 enum=39844320 pm_candidates=367409 target_checked=367409 maxnull=20 seconds=2.75134 threads=1
+
+AGGREGATE systems=1038682 inconsistent=777734 prepared=260948 enum=683093673 pm_candidates=204187502 target_checked=204187502
+
+INDEPENDENT_PYTHON_CHECK
+support=1,3,5 systems=64 inconsistent=60 enum=4 pm_candidates=4 target_checked=4 maxnull=0 best_exact_E=102138
+support=9,19,25 systems=64 inconsistent=56 enum=48 pm_candidates=6 target_checked=6 maxnull=3 best_exact_E=12890
+support=49,61,73 systems=32 inconsistent=10 enum=67584 pm_candidates=654 target_checked=654 maxnull=13 best_exact_E=4946
+support=37,59,73 systems=64 inconsistent=0 enum=4096 pm_candidates=6 target_checked=6 maxnull=6 best_exact_E=10938
+support=1,3,97 systems=4 inconsistent=2 enum=2 pm_candidates=2 target_checked=2 maxnull=0 best_exact_E=57154
