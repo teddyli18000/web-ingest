@@ -28,6 +28,8 @@ def main():
  p.add_argument('--mode',choices=['improve','baseline','two-factor'],default='improve')
  p.add_argument('--repairs',type=int,default=1)
  p.add_argument('--max-motifs',type=int,default=0)
+ p.add_argument('--bridge-motifs',default=None)
+ p.add_argument('--max-bridges',type=int,default=0)
  args=p.parse_args();start=time.monotonic()
  tour=json.loads(Path(args.baseline).read_text())['tour']
  n=len(tour);assert n==100000 and len(set(tour))==n
@@ -41,6 +43,11 @@ def main():
  motifs=[x for x in motifs if x['gain']>=args.minimum_gain]
  motifs.sort(key=lambda x:-x['gain'])
  if args.max_motifs:motifs=motifs[:args.max_motifs]
+ positive_count=len(motifs)
+ if args.bridge_motifs:
+    bridges=json.loads(Path(args.bridge_motifs).read_text())['bridge_motifs']
+    if args.max_bridges:bridges=bridges[:args.max_bridges]
+    motifs+=bridges
  assert len(motifs)>=args.repairs>=1
  spec=importlib.util.spec_from_file_location('v',Path(os.environ['FEWSHOTS_ROOT'])/
     'problems/p010-mona-lisa-tsp/verify/verify.py')
@@ -88,6 +95,10 @@ def main():
  choices=[model.NewBoolVar(f'repair_{j}') for j in range(len(motifs))]
  if args.mode=='baseline':model.Add(sum(choices)==0)
  else:model.Add(sum(choices)==args.repairs)
+ if args.bridge_motifs and args.mode!='baseline':
+    model.Add(sum(choices[:positive_count])==args.repairs-1)
+    model.Add(sum(choices[positive_count:])==1)
+    model.Add(sum(m['gain']*choices[j] for j,m in enumerate(motifs))>=1)
  arcs=[]
  degree=defaultdict(list)
  selectable={}
@@ -121,6 +132,7 @@ def main():
  model.Maximize(sum(m['gain']*choices[j] for j,m in enumerate(motifs)))
  report={'baseline':5757191,'switches':51,'total_motifs':len(motifs),
        'minimum_gain':args.minimum_gain,'mode':args.mode,'repairs':args.repairs,
+       'positive_motifs':positive_count,'bridge_motifs':len(motifs)-positive_count,
        'variable_edges':len(variable_edges),
        'contracted_vertices':len(ordered),'mandatory_macro_paths':len(macros),
        'maximum_gain_in_candidates':max(m['gain'] for m in motifs),
