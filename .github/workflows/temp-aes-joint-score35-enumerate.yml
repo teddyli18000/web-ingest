@@ -1,0 +1,44 @@
+name: temp-aes-joint-score35-enumerate
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-joint-score35-enumerate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-joint-score35-enumerate
+  cancel-in-progress: false
+
+jobs:
+  enumerate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Enumerate helper-frontier score35 pairs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/aes-sbox-circuit
+          g++ -O3 -std=c++20 enumerate_joint_decoupled_score35.cpp -o /tmp/aes-score35
+          /tmp/aes-score35 > /tmp/score35.csv
+          test "$(($(wc -l < /tmp/score35.csv) - 1))" -eq 136
+          python3 - <<'PY'
+          import csv, collections
+          rows=list(csv.DictReader(open('/tmp/score35.csv')))
+          print('rows', len(rows))
+          print('middle', dict(sorted(collections.Counter(int(r['middle_support']) for r in rows).items())))
+          print('pre_lb', dict(sorted(collections.Counter(int(r['pre_lb']) for r in rows).items())))
+          print('output_lb', dict(sorted(collections.Counter(int(r['output_lb']) for r in rows).items())))
+          print('distance', dict(sorted(collections.Counter(int(r['distance']) for r in rows).items())))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-joint-score35-pairs
+          path: /tmp/score35.csv
