@@ -20,7 +20,7 @@ jobs:
       - name: Retrieve verified 100K disconnected 2-factor and authoritative original scorer
         env:
           GH_TOKEN: ${{ github.token }}
-          FACTOR_RUN: ${{ github.event.workflow_run.id || '40873841158' }}
+          FACTOR_RUN: ${{ github.event.workflow_run.id || '40874145856' }}
         run: |
           git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
           python -m pip install numpy scipy
