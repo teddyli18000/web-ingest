@@ -1,0 +1,71 @@
+name: temp-monalisa-competitor-lp-exact-patches
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/lp_wiring_region_exact.py
+      - .github/workflows/temp-monalisa-competitor-lp-exact-patches.yml
+permissions:
+  contents: read
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {regions: 1, selector: persistent, budget: 128}
+          - {regions: 1, selector: random, budget: 128}
+          - {regions: 3, selector: persistent, budget: 256}
+          - {regions: 3, selector: ambiguous, budget: 256}
+          - {regions: 3, selector: random, budget: 256}
+          - {regions: 8, selector: persistent, budget: 256}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Original Waterloo historic routes and Concorde primal LP solutions
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install numpy networkx ortools matplotlib
+          mkdir -p /tmp/p010-source/tour /tmp/p010-source/lp
+          root=https://www.math.uwaterloo.ca/tsp/data/ml
+          for score in 5757199 5757200 5757203 5757204 5757205 5757241 5757245; do
+            curl -fsSL --retry 3 --max-time 120 "$root/tour/monalisa_${score}.tour" -o "/tmp/p010-source/tour/monalisa_${score}.tour"
+          done
+          for variant in 6nsub 5zsub 4zsub; do
+            curl -fsSL --retry 3 --max-time 120 "$root/x/mona.${variant}.x" -o "/tmp/p010-source/lp/mona.${variant}.x"
+          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          t=Path('/tmp/p010-source/tour');l=Path('/tmp/p010-source/lp')
+          tours={f'historic_{s}':str(t/f'monalisa_{s}.tour') for s in (5757199,5757200,5757203,5757204,5757205,5757241,5757245)}
+          lps={'2012-04-18':str(l/'mona.6nsub.x'),'2012-01-21':str(l/'mona.5zsub.x'),'2011-07-15':str(l/'mona.4zsub.x')}
+          Path('/tmp/p010-source/tours.json').write_text(json.dumps(tours))
+          Path('/tmp/p010-source/lps.json').write_text(json.dumps(lps))
+          PY
+      - name: Reoptimize competing wiring components using persistent LP fractional edges
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          path=science-boundary/mona-lisa-tsp/results/lp-region-${{ matrix.regions }}-${{ matrix.selector }}-${{ matrix.budget }}
+          mkdir -p "$path"
+          python science-boundary/mona-lisa-tsp/lp_wiring_region_exact.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --tours /tmp/p010-source/tours.json --lps /tmp/p010-source/lps.json \
+            --components science-boundary/mona-lisa-tsp/data/historical-wiring-components-all.json \
+            --selector ${{ matrix.selector }} --nregions ${{ matrix.regions }} \
+            --lp-budget ${{ matrix.budget }} --seconds 160 --workers 4 \
+            --report "$path/report.json" --candidate "$path/certificate.json"
+          if test -s "$path/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$path"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-lp-wiring-region-${{ matrix.regions }}-${{ matrix.selector }}-${{ matrix.budget }}
+          path: science-boundary/mona-lisa-tsp/results/lp-region-*/
+          if-no-files-found: ignore
