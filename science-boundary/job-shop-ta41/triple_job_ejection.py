@@ -4,7 +4,7 @@
 A third job can change all 20 machine orders yet retain the baseline
 relative sequence of 27 unaffected jobs. Choose a bounded deterministic
 portfolio by exact precedence-relaxation LB and diversity coverage:
-50 smallest DAG-LB cohorts, then greedily add cohorts bringing new
+45 smallest DAG-LB cohorts, then greedily add cohorts bringing new
 pairwise job coverage, then seeded samples from other passing triples.
 
 This is an exploratory portfolio, *not* an exhaustive triple exclusion.
@@ -68,6 +68,12 @@ def run(a):
             min(a.per_case_seconds,max(0.5,a.total_seconds-(time.monotonic()-started)-1)),a.seed+idx)
         record.update(portfolio_index=idx,precedence_only_lower_bound=lb)
         result['results'].append(record)
+        if len(result['results']) % 5 == 0:
+            # Checkpoint within the shard: a stopped runner should not erase
+            # exact subspace exclusions already established.
+            result['examined']=len(result['results'])
+            result['elapsed_seconds']=round(time.monotonic()-started,3)
+            (a.out/'triple-portfolio.json').write_text(json.dumps(result,indent=2))
         if record['status']=='INFEASIBLE':result['infeasible']+=1
         elif record['status'] in ('FEASIBLE','OPTIMAL'):
             result['feasible']+=1
