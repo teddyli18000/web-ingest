@@ -112,6 +112,20 @@ The earlier N1/N2 swap and machine-near 2006 neighborhoods yielded no candidate;
 
 The original `temp-ta41-job-ejection-portfolio` and `temp-ta41-three-job-global-reinsertion` failed immediately in all shards due to `NameError: surviv` in `job_ejection_search.py`. It was repaired by changing the loop to `zip(survivors,survivors[1:])`. Several completed jobs previously failed to push to `main` because other science Agents advanced the same ref concurrently; both workflows were given bounded fetch/rebase/push retries and the lost shard outputs were recovered. This is an execution failure, **not** evidence of an impossible scheduling neighborhood.
 
+### Completed temporal operation-band experiments (2026-10-28 PDT)
+
+`temporal_band_repair.py` was run for three independently verified score-2006 parents (`baseline`, `critical8`, `mixed20`) and 20 contiguous original-time windows per parent (60 exact fixed-outside-order NoOverlap subspaces total). **43 returned INFEASIBLE, 17 UNKNOWN, no <=2005 candidate**. Results are `results/timeband-{baseline,critical8,mixed20}/temporal-band-analysis.json`. Some UNKNOWN regions free ~280–375 operations across all 20 machines, so neither a full impossibility theorem nor a locally complete exclusion is justified. This is a negative test of a time-coherent resource interface, not an upper-bound advance.
+
+### New verified 2006 orientation classes beyond the earlier consensus core
+
+The independently checked `results/consensus-five-parents/consensus-analysis.json` establishes that retaining 21 specified shared machine-precedence relations makes Cmax<=2005 impossible; a future improving schedule must reverse one of these. Subsequent horizon-continuation/warm-descent runs produced at least three **officially verified** 2006-neutral schedules that deliberately reverse **different** prior shared-core arcs:
+
+- `results/warm-backbone-5/neutral-certificate.json`, best-verdict `valid=true, score=2006`, reversed core index 5.
+- `results/warm-backbone-6/neutral-certificate.json`, best-verdict `valid=true, score=2006`, reversed core index 6.
+- `results/continuation-7/neutral-certificate.json`, best-verdict `valid=true, score=2006`, reversed core index 7 (machine 3, job 5 before job 27 instead of baseline job 27 before job 5).
+
+These are **qualitatively new 2006 starting basins**, not makespan improvements. `reversed_core_basin.py` now tests each with 15 global 6–15-job cohort repairs and 20 synchronous operation-time release bands (3 x (15+20) = 105 conditioned subspaces). Full original NoOverlap is always hard; every feasible improved schedule is independently DAG-rescored and sent to Few Shots verification. Workflow `temp-ta41-reversed-core-neutral-basin.yml`; report only after actual `results/reversed-basin-*/reversed-basin-analysis.json` appears. The purpose is to exploit a newly reachable orientation class rather than enlarging known exhausted neighborhoods.
+
 ## Approach / reproducibility
 `search.py` downloads immutable-shape upstream instance and baseline (instance SHA256 checked), asserts baseline makespan 2006, and evaluates a candidate by topologically sorting all 600 operations with job and machine arcs; cyclic candidates are rejected. It explores adjacent critical-path machine swaps, tabu tenure and diversified restarts. Local output includes `certificate.json` and `search-result.json`.
 
@@ -199,3 +213,5 @@ Critical-path N1 adjacent moves can stall in local optima; a lack of improvement
 - 2026-10-28 PDT / 2026-10-29 UTC (new turn): Diagnosed job-reinsertion typo, reran five complete k1/k2 shards, and independently audited full 4525 k<=3 global job-ejection subspaces (653 independent DAG obstructions + 60 independently rebuilt CP infeasibility checks). Tested multi-parent 6-15 job cohort repair: 30 INFEASIBLE, 15 UNKNOWN in strict deadline mode, 45 neutral 2006 in incumbent-hinted optimization; no better schedule. Structural search representation needs further reformulation; do not infer global optimality.
 
 - 2026-10-28 PDT / 2026-10-29 UTC: 3-parent 90-trial job-cohort comparison complete without new feasible score; converted representation to time-coherent operation release and launched 60 exact subspace checks (status pending at handoff). Recent 2025 CP-ALNS prior art was checked; no algorithmic novelty claim.
+
+- 2026-10-28 PDT / 2026-10-29 UTC (temporal + escaped-basin): All 60 time-slice NoOverlap subspaces completed (43 INFEASIBLE, 17 UNKNOWN, zero improvements); identified 3 independently scored 2006 neutral parents already reversing different consensus-core arcs (5/6/7), and launched 105 conditioned repair subspaces from these escaped orientation classes. No claimed score <2006 yet.
