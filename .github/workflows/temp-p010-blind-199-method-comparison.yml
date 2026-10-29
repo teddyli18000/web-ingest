@@ -1,0 +1,65 @@
+name: temp-p010-blind-199-method-comparison
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/blind_counterfactual_199.py
+      - .github/workflows/temp-p010-blind-199-method-comparison.yml
+permissions:
+  contents: read
+jobs:
+  masked-search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        method: [uncertainty, conflict, repair]
+        budget: [64, 192]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Obtain research-only inputs; physically hide the known Nagata solution
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          rm upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json
+          test ! -e upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json
+          python -m pip install numpy scipy networkx ortools
+          mkdir -p /tmp/p010-blind/tour /tmp/p010-blind/lp
+          root=https://www.math.uwaterloo.ca/tsp/data/ml
+          for score in 5757199 5757200 5757203 5757204 5757205 5757241 5757245; do
+            curl -fsSL --retry 3 --max-time 120 "$root/tour/monalisa_${score}.tour" -o "/tmp/p010-blind/tour/monalisa_${score}.tour"
+          done
+          for item in 6nsub 5zsub 4zsub; do
+            curl -fsSL --retry 3 --max-time 120 "$root/x/mona.${item}.x" -o "/tmp/p010-blind/lp/mona.${item}.x"
+          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          t=Path('/tmp/p010-blind/tour');l=Path('/tmp/p010-blind/lp')
+          parents={f'historical_{score}':str(t/f'monalisa_{score}.tour') for score in (5757200,5757203,5757204,5757205,5757241,5757245)}
+          lp={'2012-04-18':str(l/'mona.6nsub.x'),'2012-01-21':str(l/'mona.5zsub.x'),'2011-07-15':str(l/'mona.4zsub.x')}
+          Path('/tmp/p010-blind/parents.json').write_text(json.dumps(parents))
+          Path('/tmp/p010-blind/lps.json').write_text(json.dumps(lp))
+          PY
+      - name: Strict 199-blind and equal wall-budget optimization
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          out=science-boundary/mona-lisa-tsp/results/blind-199-${{ matrix.method }}-${{ matrix.budget }}
+          mkdir -p "$out"
+          python -u science-boundary/mona-lisa-tsp/blind_counterfactual_199.py \
+            --reference /tmp/p010-blind/tour/monalisa_5757199.tour \
+            --parents /tmp/p010-blind/parents.json --lps /tmp/p010-blind/lps.json \
+            --strategy ${{ matrix.method }} --budget ${{ matrix.budget }} \
+            --seconds 125 --workers 4 --seed 1701 --out "$out"
+          test -s "$out/report.json"
+          test ! -e upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-masked-199-${{ matrix.method }}-${{ matrix.budget }}
+          path: science-boundary/mona-lisa-tsp/results/blind-199-${{ matrix.method }}-${{ matrix.budget }}/
+          if-no-files-found: ignore
