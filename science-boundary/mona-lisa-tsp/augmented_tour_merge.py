@@ -22,7 +22,8 @@ def main():
     p.add_argument('--family',choices=['independent51','all58'],default='all58')
     p.add_argument('--motifs',required=True)
     p.add_argument('--price-report',default=None)
-    p.add_argument('--augmentation-count',type=int,default=64)
+    p.add_argument('--augmentation-count',type=int,default=2949)
+    p.add_argument('--edge-budget',type=int,default=128)
     p.add_argument('--selector',choices=['gain','repair','random'],default='gain')
     p.add_argument('--target-improvement',type=int,default=1)
     p.add_argument('--seconds',type=int,default=180)
@@ -60,13 +61,19 @@ def main():
         order=list(range(len(motifs)))
         random.Random(a.seed).shuffle(order)
     else:order=sorted(range(len(motifs)),key=lambda i:-motifs[i]['gain'])
-    selected_indices=order[:a.augmentation_count]
+    selected_indices=[]
     before=len(extra)
-    for i in selected_indices:
+    for i in order[:a.augmentation_count]:
+        changed=False
         for u,v in motifs[i]['added']:
             e=ek(u-1,v-1)
-            if e not in base:extra.add(e)
+            if e not in base and e not in extra and len(extra)-before<a.edge_budget:
+                extra.add(e)
+                changed=True
+        if changed:selected_indices.append(i)
+        if len(extra)-before>=a.edge_budget:break
     added_chords=len(extra)-before
+    assert added_chords==a.edge_budget,('insufficient new edges',a.selector,added_chords)
     active,ordered,macros=build_active(t,base,extra)
     assert len(ordered)>4 and len(extra)>0
     spec=importlib.util.spec_from_file_location('v',Path(os.environ['FEWSHOTS_ROOT'])/
@@ -109,6 +116,7 @@ def main():
     report={'family':a.family,'parents':len(chosen),
             'base_score':5757191,'target_gain':a.target_improvement,
             'selector':a.selector,'augmentation_count':len(selected_indices),
+            'target_new_chords':a.edge_budget,
             'augmented_chords':added_chords,
             'chosen_motif_indices':selected_indices,
             'nonbase_union_edges':len(extra),'parent_changed_cities':len(changed_sites),
