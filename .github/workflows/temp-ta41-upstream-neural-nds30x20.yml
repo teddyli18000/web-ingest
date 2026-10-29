@@ -24,7 +24,7 @@ jobs:
           test -f /tmp/nds-s/models/jssp30x20/checkpoint-1000.pt
       - name: Install pretrained inference dependencies (no training)
         run: |
-          python3 -m pip install torch torch-geometric hydra-core omegaconf cppimport pybind11 numpy wandb pytz
+          python3 -m pip install torch torch-geometric hydra-core omegaconf cppimport pybind11 numpy matplotlib wandb pytz
       - name: Evaluate official model once on exact ta41 at CPU scale
         run: |
           set -euo pipefail
