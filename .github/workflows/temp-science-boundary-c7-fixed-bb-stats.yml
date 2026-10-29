@@ -1,0 +1,57 @@
+name: Temp Science Boundary C7 fixed-BB universe stats
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-fixed-bb-stats.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_fixed_bb_universe_stats.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned Tandon/BPZ source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+      - name: Audit fixed BB structure exactly
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/result"
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_fixed_bb_universe_stats.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/status.json" \
+            > "$RUNNER_TEMP/result/stdout.txt" 2> "$RUNNER_TEMP/result/stderr.txt"
+          cat "$RUNNER_TEMP/result/status.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-fixed-bb-universe-stats
+          path: ${{ runner.temp }}/result
+          retention-days: 14
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## C7 fixed-BB universe exact structural audit'
+            for f in status.json stdout.txt stderr.txt; do
+              if [[ -f "$RUNNER_TEMP/result/$f" ]]; then
+                echo "### $f"
+                echo '```'
+                cat "$RUNNER_TEMP/result/$f"
+                echo '```'
+              fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
