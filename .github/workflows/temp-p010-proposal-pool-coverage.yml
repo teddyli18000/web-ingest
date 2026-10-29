@@ -1,0 +1,61 @@
+name: temp-p010-proposal-pool-coverage
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/tsplib_proposal_coverage.py
+      - .github/workflows/temp-p010-proposal-pool-coverage.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 11
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {i: eil51, run: 40869449446, a: p010-blind-5case-public}
+          - {i: berlin52, run: 40869449446, a: p010-blind-5case-public}
+          - {i: st70, run: 40869449446, a: p010-blind-5case-public}
+          - {i: eil76, run: 40869449446, a: p010-blind-5case-public}
+          - {i: kroA100, run: 40869449446, a: p010-blind-5case-public}
+          - {i: rat99, run: 40870679131, a: p010-unseen-v2-public}
+          - {i: ch130, run: 40870679131, a: p010-unseen-v2-public}
+          - {i: eil101, run: 40870679131, a: p010-unseen-v2-public}
+          - {i: pr76, run: 40870679131, a: p010-unseen-v2-public}
+          - {i: kroB100, run: 40870679131, a: p010-unseen-v2-public}
+          - {i: kroC100, run: 40871715238, a: fold3-public-inputs}
+          - {i: kroD100, run: 40871715238, a: fold3-public-inputs}
+          - {i: kroE100, run: 40871715238, a: fold3-public-inputs}
+          - {i: rd100, run: 40871715238, a: fold3-public-inputs}
+          - {i: lin105, run: 40871715238, a: fold3-public-inputs}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Read public inputs ONLY
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/proposals-public
+          gh run download "${{ matrix.run }}" --repo teddyli18000/web-ingest --name "${{ matrix.a }}" --dir /tmp/proposals-public
+          python -m pip install numpy scipy ortools
+      - name: Test full LP-positive, full 8NN and their union with identical time caps
+        run: |
+          p=$(find /tmp/proposals-public -name public.json -path '*/${{ matrix.i }}/*' -print -quit)
+          test -s "$p"
+          if find /tmp/proposals-public -name private.json | grep -q .; then exit 7; fi
+          for mode in lp_full knn8_full lp_knn_union; do
+            out="science-boundary/mona-lisa-tsp/results/proposals-${{ matrix.i }}-${mode}/result.json"
+            python science-boundary/mona-lisa-tsp/tsplib_proposal_coverage.py --public "$p" --selector "$mode" --seconds 18 --output "$out"
+            test -s "$out"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-proposal-pool-${{ matrix.i }}
+          path: science-boundary/mona-lisa-tsp/results/proposals-*/result.json
+          if-no-files-found: ignore
