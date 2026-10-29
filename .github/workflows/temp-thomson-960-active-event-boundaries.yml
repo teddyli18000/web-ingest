@@ -1,0 +1,62 @@
+name: temp Thomson 960 active learned-event basin boundaries
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-active-event-boundaries.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  batch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Report runner capacity
+        run: |
+          echo "nproc=$(nproc)"
+          free -h
+      - name: Active basin-boundary search in learned-event coordinates
+        run: |
+          python3 science-boundary/thomson-960/code/search_event_coefficient_boundaries.py \
+            "$RUNNER_TEMP/few-shots" \
+            --a science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --b science-boundary/thomson-960/data/basin-b-010566.json \
+            --d science-boundary/thomson-960/data/basin-d-018586.json \
+            --outdir "$RUNNER_TEMP/active-event" \
+            --initial 64 --rounds 4 --per-round 40 --maxiter 2200
+      - name: Print compact result
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/active-event/active-event-boundaries.json" ]; then
+            python3 - <<'PY'
+          import json,os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'active-event','active-event-boundaries.json')
+          d=json.load(open(p))
+          print('EVALUATIONS',d['evaluations'])
+          print('BASINS',json.dumps(d['basin_inventory'],sort_keys=True))
+          print('BEST',d['best_name'],d['best_energy'],d['best_delta_vs_live'],d['best_coeff'])
+          print('TOP',[(x['basin_label'],x['energy'],x['coeff'],x['twin_count']) for x in d['top_states']])
+          PY
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-active-event-boundaries
+          retention-days: 7
+          path: ${{ runner.temp }}/active-event/
