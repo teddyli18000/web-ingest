@@ -101,7 +101,7 @@ def degree_lp(D):
         if len(cuts)==before:break
     return [{'u':int(u),'v':int(v),'x':round(float(val),9)}
             for (u,v),val in zip(pairs,x) if val>1e-6],states
-def prepare(name,instance,out):
+def prepare(name,instance,out,parents_count=10):
     xy,D=read_tsp(instance)
     n=len(D);rng=random.Random(20261029+n)
     raw=[]
@@ -112,7 +112,7 @@ def prepare(name,instance,out):
             raw.append(twoopt(shake(t,rng),D,limit=rng.randint(6,32)))
     best=min(raw,key=lambda t:score(t,D))
     for i in range(85):
-        src=best if i%3 else raw[rng.randrange(len(raw))]
+        src=raw[rng.randrange(len(raw))]  # Never synthesize parents from hidden winner
         raw.append(twoopt(shake(src,rng),D,limit=rng.randint(2,14)))
     unique={}
     for t in raw:unique[frozenset(edge_set(t))]=(score(t,D),t)
@@ -121,8 +121,8 @@ def prepare(name,instance,out):
     bestscore,hidden=arr[0]
     refindex=next(i for i in range(2,len(arr)-2) if arr[i][0]>bestscore)
     refscore,ref=arr[refindex]
-    parents=[t for val,t in arr[refindex+1:] if val>=refscore][:10]
-    assert len(parents)>=4
+    parents=[t for val,t in arr[refindex+1:] if val>=refscore][:parents_count]
+    assert len(parents)>=min(parents_count,3)
     lp,rounds=degree_lp(D)
     pub={'instance':name,'n':n,'coordinates':xy.tolist(),'distance':D.tolist(),
          'reference':ref,'reference_score':refscore,'parents':parents,
@@ -291,7 +291,8 @@ if __name__=='__main__':
     for name in ('instance','name','out','public','private','results','strategy','budget','optimum'):
         p.add_argument('--'+name)
     p.add_argument('--seconds',type=float,default=12)
+    p.add_argument('--parents-count',type=int,default=10)
     a=p.parse_args()
-    if a.mode=='prepare':prepare(a.name,a.instance,a.out)
+    if a.mode=='prepare':prepare(a.name,a.instance,a.out,a.parents_count)
     if a.mode=='search':search(a.public,a.strategy,int(a.budget),a.out,a.seconds)
     if a.mode=='evaluate':evaluate(a.public,a.private,a.results,a.out,int(a.optimum))
