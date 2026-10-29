@@ -1,0 +1,354 @@
+{
+  "instance": "ta41",
+  "baseline_score": 2006,
+  "target": 2005,
+  "cohort": "oldnew",
+  "parents": [
+    "baseline",
+    "critical8",
+    "mixed12",
+    "mixed16",
+    "mixed20",
+    "gate120",
+    "gate124",
+    "gate127",
+    "ninecore"
+  ],
+  "total_known_parent_count": 12,
+  "retained_cover_precedences": 720,
+  "retained_consensus_pairwise_precedences": 8483,
+  "released_disagreements": 217,
+  "existing_21_core_edges_still_fixed": 16,
+  "per_machine_poset": [
+    {
+      "machine": 0,
+      "cover_arcs": 40,
+      "agreed_pairwise_orders": 423,
+      "free_pairwise_orders": 12
+    },
+    {
+      "machine": 1,
+      "cover_arcs": 33,
+      "agreed_pairwise_orders": 429,
+      "free_pairwise_orders": 6
+    },
+    {
+      "machine": 2,
+      "cover_arcs": 33,
+      "agreed_pairwise_orders": 429,
+      "free_pairwise_orders": 6
+    },
+    {
+      "machine": 3,
+      "cover_arcs": 34,
+      "agreed_pairwise_orders": 425,
+      "free_pairwise_orders": 10
+    },
+    {
+      "machine": 4,
+      "cover_arcs": 40,
+      "agreed_pairwise_orders": 419,
+      "free_pairwise_orders": 16
+    },
+    {
+      "machine": 5,
+      "cover_arcs": 37,
+      "agreed_pairwise_orders": 426,
+      "free_pairwise_orders": 9
+    },
+    {
+      "machine": 6,
+      "cover_arcs": 37,
+      "agreed_pairwise_orders": 425,
+      "free_pairwise_orders": 10
+    },
+    {
+      "machine": 7,
+      "cover_arcs": 34,
+      "agreed_pairwise_orders": 428,
+      "free_pairwise_orders": 7
+    },
+    {
+      "machine": 8,
+      "cover_arcs": 32,
+      "agreed_pairwise_orders": 427,
+      "free_pairwise_orders": 8
+    },
+    {
+      "machine": 9,
+      "cover_arcs": 36,
+      "agreed_pairwise_orders": 429,
+      "free_pairwise_orders": 6
+    },
+    {
+      "machine": 10,
+      "cover_arcs": 39,
+      "agreed_pairwise_orders": 423,
+      "free_pairwise_orders": 12
+    },
+    {
+      "machine": 11,
+      "cover_arcs": 42,
+      "agreed_pairwise_orders": 418,
+      "free_pairwise_orders": 17
+    },
+    {
+      "machine": 12,
+      "cover_arcs": 33,
+      "agreed_pairwise_orders": 421,
+      "free_pairwise_orders": 14
+    },
+    {
+      "machine": 13,
+      "cover_arcs": 38,
+      "agreed_pairwise_orders": 423,
+      "free_pairwise_orders": 12
+    },
+    {
+      "machine": 14,
+      "cover_arcs": 34,
+      "agreed_pairwise_orders": 423,
+      "free_pairwise_orders": 12
+    },
+    {
+      "machine": 15,
+      "cover_arcs": 38,
+      "agreed_pairwise_orders": 423,
+      "free_pairwise_orders": 12
+    },
+    {
+      "machine": 16,
+      "cover_arcs": 32,
+      "agreed_pairwise_orders": 428,
+      "free_pairwise_orders": 7
+    },
+    {
+      "machine": 17,
+      "cover_arcs": 34,
+      "agreed_pairwise_orders": 424,
+      "free_pairwise_orders": 11
+    },
+    {
+      "machine": 18,
+      "cover_arcs": 41,
+      "agreed_pairwise_orders": 410,
+      "free_pairwise_orders": 25
+    },
+    {
+      "machine": 19,
+      "cover_arcs": 33,
+      "agreed_pairwise_orders": 430,
+      "free_pairwise_orders": 5
+    }
+  ],
+  "independent_hard_core_revalidation": {
+    "status": "INFEASIBLE",
+    "elapsed_seconds": 0.03,
+    "conflicts": 0,
+    "branches": 0,
+    "intervals": 600,
+    "full_no_overlap": true,
+    "hard_consensus_arcs": 37
+  },
+  "inference": "A fresh unsat consensus-core proves at least one retained arc must reverse for any <=2005 schedule. It is a necessary disjunction, not a construction.",
+  "initial_oracle": {
+    "status": "INFEASIBLE",
+    "elapsed_seconds": 0.535,
+    "conflicts": 18,
+    "branches": 1734,
+    "intervals": 600,
+    "full_no_overlap": true,
+    "hard_consensus_arcs": 720
+  },
+  "new_sufficient_unsat_core": [
+    {
+      "machine": 1,
+      "from_job": 0,
+      "to_job": 23
+    },
+    {
+      "machine": 1,
+      "from_job": 2,
+      "to_job": 24
+    },
+    {
+      "machine": 1,
+      "from_job": 3,
+      "to_job": 27
+    },
+    {
+      "machine": 1,
+      "from_job": 6,
+      "to_job": 7
+    },
+    {
+      "machine": 1,
+      "from_job": 7,
+      "to_job": 0
+    },
+    {
+      "machine": 1,
+      "from_job": 11,
+      "to_job": 8
+    },
+    {
+      "machine": 1,
+      "from_job": 21,
+      "to_job": 11
+    },
+    {
+      "machine": 1,
+      "from_job": 23,
+      "to_job": 3
+    },
+    {
+      "machine": 1,
+      "from_job": 24,
+      "to_job": 6
+    },
+    {
+      "machine": 2,
+      "from_job": 0,
+      "to_job": 25
+    },
+    {
+      "machine": 3,
+      "from_job": 4,
+      "to_job": 2
+    },
+    {
+      "machine": 3,
+      "from_job": 6,
+      "to_job": 8
+    },
+    {
+      "machine": 3,
+      "from_job": 8,
+      "to_job": 9
+    },
+    {
+      "machine": 3,
+      "from_job": 13,
+      "to_job": 21
+    },
+    {
+      "machine": 3,
+      "from_job": 15,
+      "to_job": 1
+    },
+    {
+      "machine": 5,
+      "from_job": 4,
+      "to_job": 21
+    },
+    {
+      "machine": 5,
+      "from_job": 14,
+      "to_job": 4
+    },
+    {
+      "machine": 5,
+      "from_job": 18,
+      "to_job": 4
+    },
+    {
+      "machine": 6,
+      "from_job": 2,
+      "to_job": 25
+    },
+    {
+      "machine": 6,
+      "from_job": 2,
+      "to_job": 28
+    },
+    {
+      "machine": 6,
+      "from_job": 8,
+      "to_job": 2
+    },
+    {
+      "machine": 6,
+      "from_job": 14,
+      "to_job": 3
+    },
+    {
+      "machine": 11,
+      "from_job": 12,
+      "to_job": 28
+    },
+    {
+      "machine": 11,
+      "from_job": 14,
+      "to_job": 26
+    },
+    {
+      "machine": 11,
+      "from_job": 18,
+      "to_job": 12
+    },
+    {
+      "machine": 11,
+      "from_job": 24,
+      "to_job": 18
+    },
+    {
+      "machine": 11,
+      "from_job": 28,
+      "to_job": 14
+    },
+    {
+      "machine": 16,
+      "from_job": 5,
+      "to_job": 18
+    },
+    {
+      "machine": 16,
+      "from_job": 9,
+      "to_job": 15
+    },
+    {
+      "machine": 16,
+      "from_job": 10,
+      "to_job": 2
+    },
+    {
+      "machine": 16,
+      "from_job": 11,
+      "to_job": 10
+    },
+    {
+      "machine": 16,
+      "from_job": 15,
+      "to_job": 5
+    },
+    {
+      "machine": 16,
+      "from_job": 18,
+      "to_job": 14
+    },
+    {
+      "machine": 16,
+      "from_job": 19,
+      "to_job": 27
+    },
+    {
+      "machine": 16,
+      "from_job": 26,
+      "to_job": 9
+    },
+    {
+      "machine": 16,
+      "from_job": 27,
+      "to_job": 8
+    },
+    {
+      "machine": 19,
+      "from_job": 1,
+      "to_job": 13
+    }
+  ],
+  "new_core_size": 37,
+  "new_core_overlap_with_prior21": 11,
+  "certified_new_disjunction": true,
+  "found_candidate": false
+}
