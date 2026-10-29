@@ -1,0 +1,3 @@
+# LP-fractional cross-region edge counts
+
+Run 40849636146 computed 3,329 fractional edges between historical competing wiring components (1,443 already Nagata tour edges, 1,886 nonbaseline). The largest competitor component has 260 cross-LP chord candidates; 118 fractionally present in all three LP snapshots and 253 attach to historically undisputed vertices. Top three have 401 (203 persistent, 391 to undisputed vertices); top eight have 729 (391 persistent, 714 to undisputed vertices). These are candidate interfaces, not demonstrated tour improvements. The initial Action computed all counts but its git push collided with another main update; research status preserved here.
