@@ -49,3 +49,18 @@ Old DCPRR freed operation identities but kept hundreds of other survivor precede
 - [2026 CP solver benchmark](https://www.mdpi.com/2227-7390/14/12/2179).
 - [Project literature reassessment](literature-reassessment-2026-10-29.md).
 - [DCPRR prior attempted mechanism](dynamic-critical-path-replacement-2026-10-29.md).
+
+## Completed evidence and representation reassessment
+
+All five cross-basin consensus queries independently proved INFEASIBLE at 2005. Four deletion-shrink workflows retained hard-verified sufficient cores reduced **23→21**, **47→37**, **37→33**, **46→38**. Deletion testers had **42–76 UNKNOWN** verdicts, so do not claim exact minimal cores.
+
+The two-step counterexample-guided orientation loop (each 150s full global CP + fast consensus recheck) constructed TWO new **Few Shots-officially verified** Cmax=2006 machine-order certificates:
+- `results/iterative-poset-refinement/neutral-01/certificate.json`, official hash `79eb117a0adc0ac2757013976e5b6cece3fb545033ab937e3956c90101c86be4`
+- `results/iterative-poset-refinement/neutral-02/certificate.json`, official hash `2ab834d14f448695b64a36339cfe04196d90b406a2666720eeb25514ed8034bd`.
+
+But the union of neutral-parent disagreements improved by only FOUR original pairwise coordinates: **8431 shared orders among 12 parents→8429 among 13→8427 among 14**. Both new solutions were 2006; neither CP objective produced a better schedule. A 48-arc then a 41-arc sufficient 2005 UNSAT core was independently hard-certified. The original Action failed to serialize their *actual* core triples; separate `archive_refined_poset_cores.py` reran both from the verified full neutral certificates and saved all 48/41 exact machine order pairs, with independent hard-NoOverlap checks, and simple precedence-only longest-path lower bounds of **1868** and **1803**, respectively. These exact reproduced arcs are at `results/refined-poset-{1,2}-core.json`.
+
+**Negative test of stronger coordinated necessary conditions:** `core_simultaneous_reversal_lb.py` asks whether a target<=2005 schedule can reverse at most 1 or 2 pairwise relations in the original 21, new all12 46, or independently reconstructed refined14 core. All **six** complete full-NoOverlap CP-SAT tests returned **UNKNOWN after 130s each**; no lower bound beyond >=1 per core is certified. Do not infer that multiple core flips are required. See `results/core-multiflip-*/cardinality-core-decision.json`.
+
+**First-principles pivot:** the previous iterative 2006-neural generator *minimized* orientation edits as a secondary objective, almost guaranteeing low diversity and making the consensus core loop repeatedly hit the same obstruction. Candidate quality stayed exactly 2006 while only the excluded/conflicting structure grew. Do not spend more compute on this objective. A qualitatively different global model `maxmin_neutral_orientations.py` now uses exact full NoOverlap and maximizes **minimum distance from every one of the 12 pre-existing 2006 parents** over all 580 baseline adjacent machine-pair orientations. Two controlled arms: unguided, and requiring the ten independently certified 2005 necessary core disjunctions. Unlike fixing operation groups or releasing a time band, this model can reorder any of the 8700 machine pairs. The measure of success is (a) official <=2005 certificate, or if neutral, (b) objectively larger min-distance to *all* known parents and genuinely decreased intersection-poset invariants after adding the witness. Workflow `temp-ta41-neutral-orientation-maxmin.yml`; its results were pending at the creation of this paragraph. This is a diversity objective, **not** a new makespan theorem.
+
