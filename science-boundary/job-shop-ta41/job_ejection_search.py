@@ -35,7 +35,7 @@ def counterfactual(orders,pos,duration,ejected,target,seconds,seed):
     for m in range(20):
         model.add_no_overlap([intervals[j*20+pos[j][m]] for j in range(30)])
         survivors=[j for j in orders[m] if j not in ejected]
-        for j,h in zip(surviv,surviv[1:]):
+        for j,h in zip(survivors,survivors[1:]):
             model.add(starts[h*20+pos[h][m]]>=ends[j*20+pos[j][m]])
     solver=cp_model.CpSolver()
     solver.parameters.max_time_in_seconds=seconds
