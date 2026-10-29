@@ -1,0 +1,66 @@
+name: temp-p010-two-cycle-higher-order-3opt
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/monalisa_two_cycle_3opt.py
+      - .github/workflows/temp-p010-two-cycle-higher-order-3opt.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  triple:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {variant: best, near: 64, ports: 20}
+          - {variant: best, near: 256, ports: 24}
+          - {variant: best, near: 512, ports: 32}
+          - {variant: last, near: 256, ports: 24}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Acquire final 2-cycle and better 2-cycle factor, original TSP verifier
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install numpy scipy
+          python -m py_compile science-boundary/mona-lisa-tsp/monalisa_two_cycle_3opt.py
+          mkdir -p /tmp/tsp3opt
+          if test "${{ matrix.variant }}" = best; then
+            gh run download 40881188571 --repo teddyli18000/web-ingest --name p010-best-two-cycle-repair-evidence --dir /tmp/tsp3opt
+          else
+            gh run download 40880661415 --repo teddyli18000/web-ingest --name p010-dynamic-four-cycle-feedback --dir /tmp/tsp3opt
+          fi
+      - name: Complete metric 3-opt spanning all cycles with simultaneous three-edge rewiring
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          if test "${{ matrix.variant }}" = best; then
+            factor=$(find /tmp/tsp3opt -name best-twofactor.json -print -quit)
+          else
+            factor=$(find /tmp/tsp3opt -path '*/round-2/new-factor.json' -print -quit)
+          fi
+          test -s "$factor"
+          out="science-boundary/mona-lisa-tsp/results/two-cycle-3opt-${{ matrix.variant }}-${{ matrix.near }}-${{ matrix.ports }}"
+          mkdir -p "$out"
+          python -u science-boundary/mona-lisa-tsp/monalisa_two_cycle_3opt.py \
+            --factor "$factor" --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --neighbors ${{ matrix.near }} --per-edge ${{ matrix.ports }} \
+            --report "$out/report.json" --certificate "$out/certificate.json"
+          test -s "$out/report.json"
+          if test -s "$out/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$out"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-two-cycle-three-opt-${{ matrix.variant }}-${{ matrix.near }}
+          path: science-boundary/mona-lisa-tsp/results/two-cycle-3opt-*/
+          if-no-files-found: ignore
