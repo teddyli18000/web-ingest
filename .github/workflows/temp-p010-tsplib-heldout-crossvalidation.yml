@@ -1,0 +1,105 @@
+name: temp-p010-tsplib-heldout-crossvalidation
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/tsplib_counterfactual_bench.py
+      - .github/workflows/temp-p010-tsplib-heldout-crossvalidation.yml
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Obtain official TSPLIB inputs (NO published opt tour)
+        run: |
+          python -m pip install numpy scipy ortools
+          mkdir -p /tmp/tsplib/inputs
+          for name in eil51 berlin52 eil76; do
+            curl -fsSL --retry 3 --max-time 120               "https://comopt.ifi.uni-heidelberg.de/software/TSPLIB95/tsp/${name}.tsp"               -o "/tmp/tsplib/inputs/${name}.tsp"
+          done
+      - name: Pre-register public parent tours and independent held-out local optimum
+        run: |
+          for name in eil51 berlin52 eil76; do
+            python science-boundary/mona-lisa-tsp/tsplib_counterfactual_bench.py prepare               --name "$name" --instance "/tmp/tsplib/inputs/${name}.tsp"               --out "/tmp/tsplib/${name}"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tsp-crossval-public
+          path: /tmp/tsplib/*/public.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tsp-crossval-heldout
+          path: /tmp/tsplib/*/private.json
+  search:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        instance: [eil51, berlin52, eil76]
+        method: [uncertainty, conflict, repair]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch only public candidate information, never hidden solution
+        uses: actions/download-artifact@v4
+        with:
+          name: tsp-crossval-public
+          path: /tmp/benchmark
+      - name: Install exact optimizer and run one matched-budget search
+        run: |
+          python -m pip install numpy scipy ortools
+          public=$(find /tmp/benchmark -path "*/${{ matrix.instance }}/public.json" -print -quit)
+          test -s "$public"
+          test ! -e /tmp/benchmark/${{ matrix.instance }}/private.json
+          out=science-boundary/mona-lisa-tsp/results/tsplib-${{ matrix.instance }}-${{ matrix.method }}
+          mkdir -p "$out"
+          python science-boundary/mona-lisa-tsp/tsplib_counterfactual_bench.py search             --public "$public" --strategy ${{ matrix.method }} --budget 12             --seconds 14 --out "$out/result.json"
+          test -s "$out/result.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tsp-crossval-${{ matrix.instance }}-${{ matrix.method }}
+          path: science-boundary/mona-lisa-tsp/results/tsplib-*/result.json
+          if-no-files-found: ignore
+  evaluate:
+    needs: [prepare, search]
+    if: ${{ always() && needs.prepare.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: tsp-crossval-*
+          path: /tmp/benchresults
+      - name: Unseal withheld better tour and authoritative published optimal scores
+        run: |
+          python -m pip install numpy scipy ortools
+          for spec in eil51:426 berlin52:7542 eil76:538; do
+            name=${spec%:*}
+            best=${spec#*:}
+            public=$(find /tmp/benchresults -name public.json -path "*/${name}/*" -print -quit)
+            private=$(find /tmp/benchresults -name private.json -path "*/${name}/*" -print -quit)
+            test -s "$public"
+            test -s "$private"
+            python science-boundary/mona-lisa-tsp/tsplib_counterfactual_bench.py evaluate               --public "$public" --private "$private"               --results /tmp/benchresults --optimum "$best"               --out "science-boundary/mona-lisa-tsp/results/tsplib-eval-${name}.json"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tsp-crossval-unsealed-evaluation
+          path: science-boundary/mona-lisa-tsp/results/tsplib-eval-*.json
+          if-no-files-found: ignore
