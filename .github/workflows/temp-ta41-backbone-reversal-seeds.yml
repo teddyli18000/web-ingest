@@ -1,0 +1,65 @@
+name: temp-ta41-backbone-reversal-seeds
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/reversal_warm_seeds.py'
+      - '.github/workflows/temp-ta41-backbone-reversal-seeds.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-backbone-reversal-seeds
+  cancel-in-progress: false
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enumerate one-machine resource-preserving inversion seeds
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/reversal_warm_seeds.py
+          python3 science-boundary/job-shop-ta41/reversal_warm_seeds.py
+      - name: Verify the best complete inversion seed with official Few Shots evaluator
+        run: |
+          set -euo pipefail
+          out="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/reversal-warm-seeds"
+          python3 - "$out" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);r=json.loads((p/'reversal-seeding.json').read_text())
+          good=sorted((x for x in r['records'] if x['minimum_feasible_makespan'] is not None),
+                      key=lambda x:x['minimum_feasible_makespan'])
+          assert good
+          (p/'best-reversal-certificate.json').write_text(
+              (p/('reversal-warm-%02d.json'%good[0]['core_arc_index'])).read_text())
+          PY
+          git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+          mkdir -p /tmp/ta41-reversal
+          cp "$out/best-reversal-certificate.json" /tmp/ta41-reversal/certificate.json
+          (cd /tmp/few-shots && python3 problems/p009-job-shop-ta41/verify/verify.py /tmp/ta41-reversal) | tee "$out/best-reversal-verdict.json"
+          python3 - "$out" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);r=json.loads((p/'reversal-seeding.json').read_text())
+          v=json.loads((p/'best-reversal-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])==r['best_single_machine_backbone_reverse'],(v,r)
+          PY
+      - name: Persist construction and independent validation, retry main races
+        if: always()
+        run: |
+          set -euo pipefail
+          dir="science-boundary/job-shop-ta41/results/reversal-warm-seeds"
+          test -f "$dir/reversal-seeding.json"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): build exact feasible seeds breaking mandatory backbone arcs'
+          for attempt in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
