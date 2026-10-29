@@ -1,0 +1,357 @@
+{
+  "instance": "ta41",
+  "baseline": 2006,
+  "target": 2005,
+  "question": "Do minimal source-core-hitting releases expose replacement CP conflicts?",
+  "source_independent_unsat_cores": 8,
+  "source_core_sizes": [
+    88,
+    95,
+    86,
+    66,
+    85,
+    83,
+    68,
+    59
+  ],
+  "unique_core_endpoint_operations": 406,
+  "exact_minimum_hitting_set_operations": [
+    7,
+    30
+  ],
+  "hitting_set_minimal_cardinality": 2,
+  "hitting_set_method": "Exact 2^8 subset DP over operation-to-core endpoint incidence",
+  "control": "Two random nonreleased operations from each matched 240-op source subspace",
+  "tests": [
+    {
+      "parent": "baseline",
+      "policy": "dynamic",
+      "original_240_operation_core_size": 88,
+      "original_core_machine_count": 17,
+      "core_endpoint_count": 127,
+      "interventions": {
+        "hinge": {
+          "newly_released_operations": [
+            30,
+            48
+          ],
+          "original_core_arcs_no_longer_fixed": 3,
+          "original_core_broken": true,
+          "old_assumption_core_size": 88,
+          "remaining_fixed_machine_arcs": 338,
+          "new_status": "INFEASIBLE",
+          "new_sufficient_unsat_core_size": 70,
+          "new_core_overlap_old_core_arcs": 64,
+          "new_core_novel_arc_count": 6,
+          "new_core_machine_count": 17,
+          "solver_seconds": 0.436
+        },
+        "random": {
+          "newly_released_operations": [
+            65,
+            415
+          ],
+          "original_core_arcs_no_longer_fixed": 0,
+          "original_core_broken": false,
+          "old_assumption_core_size": 88,
+          "remaining_fixed_machine_arcs": 338,
+          "new_status": "INFEASIBLE",
+          "new_sufficient_unsat_core_size": 99,
+          "new_core_overlap_old_core_arcs": 76,
+          "new_core_novel_arc_count": 23,
+          "new_core_machine_count": 18,
+          "solver_seconds": 0.447
+        }
+      }
+    },
+    {
+      "parent": "baseline",
+      "policy": "static",
+      "original_240_operation_core_size": 95,
+      "original_core_machine_count": 14,
+      "core_endpoint_count": 129,
+      "interventions": {
+        "hinge": {
+          "newly_released_operations": [
+            0,
+            30
+          ],
+          "original_core_arcs_no_longer_fixed": 4,
+          "original_core_broken": true,
+          "old_assumption_core_size": 95,
+          "remaining_fixed_machine_arcs": 338,
+          "new_status": "INFEASIBLE",
+          "new_sufficient_unsat_core_size": 89,
+          "new_core_overlap_old_core_arcs": 79,
+          "new_core_novel_arc_count": 10,
+          "new_core_machine_count": 13,
+          "solver_seconds": 0.469
+        },
+        "random": {
+          "newly_released_operations": [
+            11,
+            14
+          ],
+          "original_core_arcs_no_longer_fixed": 0,
+          "original_core_broken": false,
+          "old_assumption_core_size": 95,
+          "remaining_fixed_machine_arcs": 338,
+          "new_status": "INFEASIBLE",
+          "new_sufficient_unsat_core_size": 91,
+          "new_core_overlap_old_core_arcs": 88,
+          "new_core_novel_arc_count": 3,
+          "new_core_machine_count": 13,
+          "solver_seconds": 0.507
+        }
+      }
+    },
+    {
+      "parent": "baseline",
+      "policy": "core",
+      "original_240_operation_core_size": 86,
+      "original_core_machine_count": 13,
+      "core_endpoint_count": 122,
+      "interventions": {
+        "hinge": {
+          "newly_released_operations": [
+            7,
+            30
+          ],
+          "original_core_arcs_no_longer_fixed": 3,
+          "original_core_broken": true,
+          "old_assumption_core_size": 86,
+          "remaining_fixed_machine_arcs": 338,
+          "new_status": "INFEASIBLE",
+          "new_sufficient_unsat_core_size": 81,
+          "new_core_overlap_old_core_arcs": 62,
+          "new_core_novel_arc_count": 19,
+          "new_core_machine_count": 14,
+          "solver_seconds": 0.58
+        },
+        "random": {
+          "newly_released_operations": [
+            74,
+            445
+          ],
+          "original_core_arcs_no_longer_fixed": 1,
+          "original_core_broken": true,
+          "old_assumption_core_size": 86,
+          "remaining_fixed_machine_arcs": 338,
+          "new_status": "INFEASIBLE",
+          "new_sufficient_unsat_core_size": 91,
+          "new_core_overlap_old_core_arcs": 62,
+          "new_core_novel_arc_count": 29,
+          "new_core_machine_count": 12,
+          "solver_seconds": 0.436
+        }
+      }
+    },
+    {
+      "parent": "baseline",
+      "policy": "random",
+      "original_240_operation_core_size": 66,
+      "original_core_machine_count": 16,
+      "core_endpoint_count": 94,
+      "interventions": {
+        "hinge": {
+          "newly_released_operations": [
+            7,
+            38
+          ],
+          "original_core_arcs_no_longer_fixed": 3,
+          "original_core_broken": true,
+          "old_assumption_core_size": 66,
+          "remaining_fixed_machine_arcs": 338,
+          "new_status": "INFEASIBLE",
+          "new_sufficient_unsat_core_size": 66,
+          "new_core_overlap_old_core_arcs": 43,
+          "new_core_novel_arc_count": 23,
+          "new_core_machine_count": 16,
+          "solver_seconds": 0.28
+        },
+        "random": {
+          "newly_released_operations": [
+            26,
+            160
+          ],
+          "original_core_arcs_no_longer_fixed": 0,
+          "original_core_broken": false,
+          "old_assumption_core_size": 66,
+          "remaining_fixed_machine_arcs": 338,
+          "new_status": "INFEASIBLE",
+          "new_sufficient_unsat_core_size": 61,
+          "new_core_overlap_old_core_arcs": 40,
+          "new_core_novel_arc_count": 21,
+          "new_core_machine_count": 15,
+          "solver_seconds": 0.266
+        }
+      }
+    },
+    {
+      "parent": "124",
+      "policy": "dynamic",
+      "original_240_operation_core_size": 85,
+      "original_core_machine_count": 14,
+      "core_endpoint_count": 110,
+      "interventions": {
+        "hinge": {
+          "newly_released_operations": [
+            1,
+            30
+          ],
+          "original_core_arcs_no_longer_fixed": 3,
+          "original_core_broken": true,
+          "old_assumption_core_size": 85,
+          "remaining_fixed_machine_arcs": 338,
+          "new_status": "INFEASIBLE",
+          "new_sufficient_unsat_core_size": 88,
+          "new_core_overlap_old_core_arcs": 51,
+          "new_core_novel_arc_count": 37,
+          "new_core_machine_count": 15,
+          "solver_seconds": 0.482
+        },
+        "random": {
+          "newly_released_operations": [
+            444,
+            501
+          ],
+          "original_core_arcs_no_longer_fixed": 2,
+          "original_core_broken": true,
+          "old_assumption_core_size": 85,
+          "remaining_fixed_machine_arcs": 338,
+          "new_status": "INFEASIBLE",
+          "new_sufficient_unsat_core_size": 89,
+          "new_core_overlap_old_core_arcs": 53,
+          "new_core_novel_arc_count": 36,
+          "new_core_machine_count": 15,
+          "solver_seconds": 0.571
+        }
+      }
+    },
+    {
+      "parent": "124",
+      "policy": "static",
+      "original_240_operation_core_size": 83,
+      "original_core_machine_count": 14,
+      "core_endpoint_count": 116,
+      "interventions": {
+        "hinge": {
+          "newly_released_operations": [
+            1,
+            30
+          ],
+          "original_core_arcs_no_longer_fixed": 3,
+          "original_core_broken": true,
+          "old_assumption_core_size": 83,
+          "remaining_fixed_machine_arcs": 338,
+          "new_status": "INFEASIBLE",
+          "new_sufficient_unsat_core_size": 102,
+          "new_core_overlap_old_core_arcs": 61,
+          "new_core_novel_arc_count": 41,
+          "new_core_machine_count": 14,
+          "solver_seconds": 0.507
+        },
+        "random": {
+          "newly_released_operations": [
+            221,
+            458
+          ],
+          "original_core_arcs_no_longer_fixed": 0,
+          "original_core_broken": false,
+          "old_assumption_core_size": 83,
+          "remaining_fixed_machine_arcs": 338,
+          "new_status": "INFEASIBLE",
+          "new_sufficient_unsat_core_size": 78,
+          "new_core_overlap_old_core_arcs": 60,
+          "new_core_novel_arc_count": 18,
+          "new_core_machine_count": 14,
+          "solver_seconds": 0.638
+        }
+      }
+    },
+    {
+      "parent": "124",
+      "policy": "core",
+      "original_240_operation_core_size": 68,
+      "original_core_machine_count": 9,
+      "core_endpoint_count": 93,
+      "interventions": {
+        "hinge": {
+          "newly_released_operations": [
+            2,
+            30
+          ],
+          "original_core_arcs_no_longer_fixed": 3,
+          "original_core_broken": true,
+          "old_assumption_core_size": 68,
+          "remaining_fixed_machine_arcs": 338,
+          "new_status": "INFEASIBLE",
+          "new_sufficient_unsat_core_size": 83,
+          "new_core_overlap_old_core_arcs": 58,
+          "new_core_novel_arc_count": 25,
+          "new_core_machine_count": 12,
+          "solver_seconds": 0.368
+        },
+        "random": {
+          "newly_released_operations": [
+            25,
+            223
+          ],
+          "original_core_arcs_no_longer_fixed": 1,
+          "original_core_broken": true,
+          "old_assumption_core_size": 68,
+          "remaining_fixed_machine_arcs": 338,
+          "new_status": "INFEASIBLE",
+          "new_sufficient_unsat_core_size": 65,
+          "new_core_overlap_old_core_arcs": 54,
+          "new_core_novel_arc_count": 11,
+          "new_core_machine_count": 9,
+          "solver_seconds": 0.348
+        }
+      }
+    },
+    {
+      "parent": "124",
+      "policy": "random",
+      "original_240_operation_core_size": 59,
+      "original_core_machine_count": 12,
+      "core_endpoint_count": 83,
+      "interventions": {
+        "hinge": {
+          "newly_released_operations": [
+            7,
+            30
+          ],
+          "original_core_arcs_no_longer_fixed": 3,
+          "original_core_broken": true,
+          "old_assumption_core_size": 59,
+          "remaining_fixed_machine_arcs": 338,
+          "new_status": "INFEASIBLE",
+          "new_sufficient_unsat_core_size": 74,
+          "new_core_overlap_old_core_arcs": 41,
+          "new_core_novel_arc_count": 33,
+          "new_core_machine_count": 13,
+          "solver_seconds": 0.421
+        },
+        "random": {
+          "newly_released_operations": [
+            91,
+            583
+          ],
+          "original_core_arcs_no_longer_fixed": 2,
+          "original_core_broken": true,
+          "old_assumption_core_size": 59,
+          "remaining_fixed_machine_arcs": 338,
+          "new_status": "INFEASIBLE",
+          "new_sufficient_unsat_core_size": 68,
+          "new_core_overlap_old_core_arcs": 48,
+          "new_core_novel_arc_count": 20,
+          "new_core_machine_count": 13,
+          "solver_seconds": 0.486
+        }
+      }
+    }
+  ],
+  "elapsed_seconds": 7.701,
+  "limits": "Hitting a particular UNSAT witness only removes that witness, not every possible reason for infeasibility. Each new CP core is sufficient not minimal; UNKNOWN proves nothing. These are 8 different conditioned subspaces."
+}
