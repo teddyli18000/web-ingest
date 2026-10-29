@@ -65,7 +65,7 @@ def main():
     spec=importlib.util.spec_from_file_location('v',Path(os.environ['FEWSHOTS_ROOT'])/
        'problems/p010-mona-lisa-tsp/verify/verify.py')
     verifier=importlib.util.module_from_spec(spec);spec.loader.exec_module(verifier)
-    xs,ys=v.coordinates()
+    xs,ys=verifier.coordinates()
     def d(a,b):return verifier.euc_2d(xs[a-1]-xs[b-1],ys[a-1]-ys[b-1])
     assert verifier.tour_length(tour)==5757191
     seed_score=5757191-sum(m['gain'] for m in seeds)
