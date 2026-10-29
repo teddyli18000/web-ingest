@@ -1,0 +1,59 @@
+name: temp Thomson 960 transition frontier batch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-transition-frontier-batch.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  batch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Download corrected B-D perpendicular-force string
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-bd-mep
+          path: ${{ runner.temp }}/bd-mep
+          github-token: ${{ github.token }}
+          run-id: 40735463455
+      - name: Report runner capacity
+        run: |
+          echo "nproc=$(nproc)"
+          free -h
+          ls -lh "$RUNNER_TEMP/bd-mep"
+      - name: Saturated transition-frontier computation
+        run: |
+          python3 science-boundary/thomson-960/code/run_transition_frontier_batch.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/bd-mep/bd-mep.json" \
+            --outdir "$RUNNER_TEMP/transition-batch" --mep-target 0.0002
+      - name: Print batch summary
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/transition-batch/batch-summary.json" ]; then
+            cat "$RUNNER_TEMP/transition-batch/batch-summary.json"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-transition-frontier-batch
+          retention-days: 7
+          path: ${{ runner.temp }}/transition-batch/
