@@ -25,7 +25,7 @@ def main():
     for name in ('baseline','tours','lps','components','report','candidate'):
         p.add_argument('--'+name,required=True)
     p.add_argument('--selector',choices=['persistent','ambiguous','random'],required=True)
-    p.add_argument('--attachment',choices=['interior','cross'],default='interior')
+    p.add_argument('--attachment',choices=['interior','cross','all'],default='interior')
     p.add_argument('--nregions',type=int,default=3)
     p.add_argument('--lp-budget',type=int,default=256)
     p.add_argument('--seconds',type=float,default=110)
@@ -65,9 +65,11 @@ def main():
             u,w=unpack(en)
             if args.attachment=='interior':
                 allowed=(u in vertices and w in vertices)
-            else:
+            elif args.attachment=='cross':
                 allowed=(comp_map[u]!=comp_map[w] and
                          (comp_map[u] in top_ids or comp_map[w] in top_ids))
+            else:
+                allowed=(comp_map[u] in top_ids or comp_map[w] in top_ids)
             if not allowed or en in base_edges or en in alt:continue
             values.setdefault(en,[]).append(float(x))
     pool=list(values)
