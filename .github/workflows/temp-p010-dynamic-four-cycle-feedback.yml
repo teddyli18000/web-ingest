@@ -1,0 +1,78 @@
+name: temp-p010-dynamic-four-cycle-feedback
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/monalisa_dynamic_cycle_feedback.py
+      - .github/workflows/temp-p010-dynamic-four-cycle-feedback.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  feedback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Original p010 oracle and current cycle counterexample
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install numpy scipy ortools
+          python -m py_compile science-boundary/mona-lisa-tsp/monalisa_dynamic_cycle_feedback.py
+          mkdir -p /tmp/p010-feedback
+          gh run download 40879009756 --repo teddyli18000/web-ingest --name p010-100k-factor-cost-subtour-frontier --dir /tmp/p010-feedback
+          find /tmp/p010-feedback -name factor-10-4cycles.json
+          test "$(find /tmp/p010-feedback -name factor-10-4cycles.json | wc -l)" -eq 1
+      - name: Feedback newly created subtours into the next coupled interior and cross-cycle search
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          input=$(find /tmp/p010-feedback -name factor-10-4cycles.json -print -quit)
+          dir=science-boundary/mona-lisa-tsp/results/dynamic-four-feedback
+          mkdir -p "$dir"
+          for round in 1 2 3; do
+            output="$dir/round-${round}"
+            mkdir -p "$output"
+            echo "Cycle-feedback round $round: factor=$input"
+            python -u science-boundary/mona-lisa-tsp/monalisa_dynamic_cycle_feedback.py \
+              --factor "$input" --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+              --budget 200 --neighbors 64 --within-budget 300 --within-neighbors 48 \
+              --limit 100 --workers 4 --threshold 5757190 \
+              --factor-snapshot "$output/new-factor.json" \
+              --report "$output/report.json" --certificate "$output/certificate.json"
+            test -s "$output/report.json"
+            if test -s "$output/certificate.json"; then
+              python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$output"
+              exit 0
+            fi
+            if test ! -s "$output/new-factor.json"; then
+              echo "No distinct feasible disconnected factor supplied by restricted solver"
+              break
+            fi
+            export PREVIOUS_FACTOR="$input" NEXT_FACTOR="$output/new-factor.json"
+            if ! python - <<'PY'
+          import json,os,sys
+          a=json.load(open(os.environ['PREVIOUS_FACTOR']))
+          b=json.load(open(os.environ['NEXT_FACTOR']))
+          same=(a['removed_baseline_edges']==b['removed_baseline_edges'] and a['added_nonbaseline_edges']==b['added_nonbaseline_edges'])
+          dominated=(b['factor_score']>=a['factor_score'] and b['cycles']>=a['cycles'])
+          print({'old_factor_score':a['factor_score'],'old_cycles':a['cycles'],'new_factor_score':b['factor_score'],'new_cycles':b['cycles'],'same_structure':same,'dominated':dominated},flush=True)
+          sys.exit(1 if same or dominated else 0)
+          PY
+            then
+              echo "Reformulate rather than repeatedly optimizing the same or a dominated factor"
+              break
+            fi
+            input="$output/new-factor.json"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-dynamic-four-cycle-feedback
+          path: science-boundary/mona-lisa-tsp/results/dynamic-four-feedback/
+          if-no-files-found: ignore
