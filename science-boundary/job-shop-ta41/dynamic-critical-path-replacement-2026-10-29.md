@@ -56,6 +56,25 @@ These counts **are not effectiveness metrics** in isolation: replacements per ac
 
 Pilot launched; results now verified. Inspect `results/dcpr-{baseline,124}-{dynamic,static,core,random}-4107/pilot.json` and any `upstream-verdict.json` before editing this section.
 
+## Phase IV objective verification — completed
+
+All six `optimize_core_feedback_subspaces.py` runs completed from the **actual** initial 240-operation released sets PLUS their subsequent CP-core-guided releases. The first run exposed a state-reconstruction bug (forgot the initial 240 released operations); repaired, rerun, and all six persisted with independently checked scores:
+
+| Parent | Release strategy | Free operations | Solver status | Optimality lower bound | Independently scored feasible makespan | Runtime |
+| --- | --- | ---: | --- | ---: | ---: | ---: |
+| baseline | degree | 312 | **OPTIMAL** | 2006 | 2006 | 102.341s |
+| baseline | core_random | 288 | **OPTIMAL** | 2006 | 2006 | 0.451s |
+| baseline | random | 336 | **OPTIMAL** | 2006 | 2006 | 5.220s |
+| gateway-124 | degree | 288 | **OPTIMAL** | 2006 | 2006 | 70.726s |
+| gateway-124 | core_random | 288 | **OPTIMAL** | 2006 | 2006 | 32.132s |
+| gateway-124 | random | 336 | **FEASIBLE** | 1996 | 2006 | 105.008s |
+
+These are full hard resource NoOverlap + all job-route constraints, with other survivor pairs fixed to the source 2006 schedule. Five subspace optimizations are rigorously **2006-optimal** (under CP-SAT's computational correctness); the sixth is still **undecided** (FEASIBLE 2006 does not exclude 2005, despite lower bound 1996). No target 2005 witness was found, so no shot was submitted.
+
+**Causal conclusion:** dynamic path-replacement selects different candidate moves and produces many more replacement events, but *not* a better makespan at the matched budget. Greedy operation release—even guided by exact CP infeasibility cores—does not reliably dissolve the coupled 2005 barrier. Prematurely claiming core-guided success from earlier assumption UNKNOWN would have been wrong; full objective verification disproves that interpretation in five of six cases.
+
+**Representation reassessment for next substantive effort:** remove the remaining survivor-pair **hard freezing** interface. Work instead with soft/selective precedence orientation variables plus objective-based repair that can reorient formerly frozen pairs jointly; crucially condition the repair on both old and newly emerged critical chains AND solver-derived conflict cores. Pre-register matched controls and inspect critical-path transitions, but prioritize official valid makespan improvements over the number of transitions. Do not merely scale the same fixed-survivor release search.
+
 ## Phase II and III verified: dynamic CP release versus core feedback
 
 **Phase II — direct dynamic release is insufficient:** `dynamic_critical_cp_repair.py` accumulates newly critical operation endpoints over eight rounds, releases exactly 30 new operations per round, preserves the remaining jobs' relative machine order, and calls a full hard-NoOverlap 2005 decision oracle. Four policies x two verified parents x eight rounds = **64 separate exact CP-SAT decisions**, and **all 64 were INFEASIBLE** (zero UNKNOWN, zero target certificate) even after releasing 240/600 operations. All eight outcome logs: `results/dcprcp-{baseline,124}-{dynamic,static,core,random}-4107/dynamic-repair.json`.
