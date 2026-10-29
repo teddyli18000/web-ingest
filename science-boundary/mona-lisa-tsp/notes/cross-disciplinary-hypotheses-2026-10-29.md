@@ -56,7 +56,7 @@ It may provide additional leads later; do not claim its pending results have bee
 
 ## Next actions and release gate
 
-1. Recheck the running neutral-conditioned path-interface action; label timeouts/UNKNOWN accurately. Reassess based on outcomes, not just more samples.
+1. **Checked [Action 40833598794](https://github.com/teddyli18000/web-ingest/actions/runs/40833598794)**: six independently run 120-model shards (720 total) starting from best-continuous, all-on, or random neutral tour states with full-metric 16/20/24/28-edge remote cuts. All 720 returned CP-SAT `INFEASIBLE`, 0 timeout/UNKNOWN, incumbent remains 5,757,191. Negative only for these particular path interfaces and masks; reinforces suspension of random cut scaling. Reassess based on outcomes, not more samples.
 2. Obtain a reproducible LP/cut dual benchmark on the **published reduced planar graph** with independently validated edge weights and baseline; start with a subset or perturbation to understand dual stability.
 3. Implement deterministic, equal-budget H1 selector comparison before training neural models. A strict improvement requires official Few Shots verifier and upstream submission; no manuscript or shot claiming victory until then.
 
