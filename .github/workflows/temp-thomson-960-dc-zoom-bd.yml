@@ -1,0 +1,93 @@
+name: temp Thomson 960 D-C endpoint zoom and B-D saddle
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-dc-zoom-bd.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  map:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Download A-B hybrid saddle
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-saddle-ab-hybrid
+          path: ${{ runner.temp }}/ab
+          github-token: ${{ github.token }}
+          run-id: 40634347073
+      - name: Reproduce D and C
+        run: |
+          python3 science-boundary/thomson-960/code/harvest_saddle_branch.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/ab/hybrid-ab.json" \
+            --mode 2 --sign -1 --transverse-amp 0.012 --reaction-amp 0 \
+            --out "$RUNNER_TEMP/basin-d.json"
+          python3 science-boundary/thomson-960/code/harvest_basin_c.py \
+            "$RUNNER_TEMP/few-shots" \
+            --neighbor-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --scale 0.95 --out "$RUNNER_TEMP/basin-c.json"
+      - name: Resolve ultra-shallow D-C endpoint barrier
+        run: |
+          python3 science-boundary/thomson-960/code/refine_endpoint_string.py \
+            "$RUNNER_TEMP/basin-d.json" "$RUNNER_TEMP/basin-c.json" \
+            --images 21 --iterations 220 --levels 5 --eta 0.00015 --max-step 0.00010 \
+            --out "$RUNNER_TEMP/zoom-dc.json"
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'zoom-dc.json')
+          d=json.load(open(p))
+          print('resolved',d['resolved_interior_maximum'],'probe_E',d['probe_energy'],'probe_grad',d['probe_gradient_rms'])
+          for z in d['levels']:
+              print('level',z['level'],'span',z['rms_span'],'maxE',z['max_energy'],'imax',z['max_index'],'collapsed',z['endpoint_collapsed'],'perp',z['max_perpendicular_gradient_rms'])
+          PY
+      - name: Refine B-D minimum-energy path
+        run: |
+          python3 science-boundary/thomson-960/code/string_between_seeds.py \
+            science-boundary/thomson-960/data/basin-b-010566.json "$RUNNER_TEMP/basin-d.json" \
+            --images 11 --iterations 450 --perp-tol 0.00002 --climb-iterations 0 \
+            --eta 0.00020 --max-step 0.00045 --out "$RUNNER_TEMP/string-bd.json"
+      - name: Hybrid-refine B-D and resolved D-C seeds
+        run: |
+          python3 science-boundary/thomson-960/code/refine_saddle_hybrid.py \
+            "$RUNNER_TEMP/string-bd.json" --outer 7 --penalty 300000 --perp-maxiter 650 \
+            --newton-damping 0.2 --max-reaction-rms 0.00005 \
+            --out "$RUNNER_TEMP/hybrid-bd.json"
+          python3 - <<'PY'
+          import json, os, subprocess
+          rt=os.environ['RUNNER_TEMP']
+          z=json.load(open(os.path.join(rt,'zoom-dc.json')))
+          if z['resolved_interior_maximum']:
+              subprocess.check_call(['python3','science-boundary/thomson-960/code/refine_saddle_hybrid.py',
+                  os.path.join(rt,'zoom-dc.json'),'--outer','8','--penalty','400000','--perp-maxiter','650',
+                  '--newton-damping','0.1','--max-reaction-rms','0.00001','--out',os.path.join(rt,'hybrid-dc.json')])
+          else:
+              print('D-C maximum still endpoint-collapsed; skip hybrid rather than slide to an endpoint')
+          bd=json.load(open(os.path.join(rt,'hybrid-bd.json')))
+          print('BD',bd['final_energy'],bd['final_gradient_rms'],bd['negative_internal_modes_below_-1e-3'],[m['eigenvalue'] for m in bd['final_modes'][:4]])
+          if os.path.exists(os.path.join(rt,'hybrid-dc.json')):
+              dc=json.load(open(os.path.join(rt,'hybrid-dc.json')))
+              print('DC',dc['final_energy'],dc['final_gradient_rms'],dc['negative_internal_modes_below_-1e-3'],[m['eigenvalue'] for m in dc['final_modes'][:4]])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-dc-zoom-bd
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/basin-d.json
+            ${{ runner.temp }}/basin-c.json
+            ${{ runner.temp }}/zoom-dc.json
+            ${{ runner.temp }}/string-bd.json
+            ${{ runner.temp }}/hybrid-bd.json
+            ${{ runner.temp }}/hybrid-dc.json
