@@ -14,14 +14,17 @@ r-for-r exchange.
 
 This script computes those minimal neutral pieces for every Hall-saturated
 omitted BPZ terminal word, indexes them by baseline blocker, and tests every
-pair of pieces from distinct words that shares a blocker.  If their selected
-vertices are disjoint and cross-independent, their combined gain is exactly
+pair of pieces from distinct words that shares a blocker.  Product blocks may
+overlap as actual vertex sets, so selected vertices are unioned rather than
+required disjoint.  For neutral pieces A1,A2 the exact combined gain is
 
-    |N(A1) intersect N(A2)| >= 1.
+    |N(A1) intersect N(A2)| - |A1 intersect A2|.
 
-Any winner is materialized as a Few Shots p004 certificate.  A negative result
-is exact only for the *terminal-SCC-pair slice*; larger tight closures and
-individually negative pieces are separate search spaces.
+Cross-confusability is tested only between distinct selected vertices; the same
+vertex occurring in both blocks is one legal selected vertex, not a conflict.
+Any positive-gain winner is materialized as a Few Shots p004 certificate.  A
+negative result is exact only for the *terminal-SCC-pair slice*; larger tight
+closures and individually negative pieces are separate search spaces.
 """
 
 import argparse
@@ -250,8 +253,6 @@ def main():
             deficiency = len(candidates) - matching
             if deficiency:
                 direct_deficient.append({"word":"".join(w), "deficiency":deficiency})
-                # The single-block Hall sweep is responsible for materializing this
-                # stronger case; do not mix it with the neutral-pair proof below.
                 block_summary.append({"word":"".join(w), "candidates":len(candidates),
                                       "deficiency":deficiency, "terminal_sccs":None})
                 continue
@@ -287,76 +288,79 @@ def main():
                     continue
                 candidate_pairs.add((ids[i], ids[j]))
 
-    def cross_conflict(P, Q):
-        # Build sparse first-coordinate -> bitset(second coordinates) for Q.
+    def cross_conflict_distinct(P, Q):
+        """Whether P,Q contain a confusable pair of *distinct* actual vertices."""
         by_first = {}
         for a, b in Q:
             by_first[a] = by_first.get(a, 0) | (1 << b)
-        cache = {}
         for a, b in P:
-            m = cache.get(a)
-            if m is None:
-                m = 0
-                for c in ring.NB[a]:
-                    m |= by_first.get(c, 0)
-                cache[a] = m
-            if m & ring.BITS[b]:
-                return True
+            for c in ring.NB[a]:
+                bits = by_first.get(c, 0) & ring.BITS[b]
+                if c == a and (a, b) in Q:
+                    bits &= ~(1 << b)
+                if bits:
+                    return True
         return False
 
     best = None
     tested = 0
-    duplicate_skips = 0
+    overlap_candidate_pairs = 0
+    nonpositive_overlap_pairs = 0
     conflict_skips = 0
     for i, j in sorted(candidate_pairs,
                        key=lambda ij:(len(pieces[ij[0]]["selected"])+len(pieces[ij[1]]["selected"]), ij)):
         p, q = pieces[i], pieces[j]
         sp, sq = set(p["selected"]), set(q["selected"])
-        if sp & sq:
-            duplicate_skips += 1
+        bp, bq = set(p["blockers"]), set(q["blockers"])
+        blocker_overlap = bp & bq
+        if not blocker_overlap:
+            raise RuntimeError(("indexed pair lost shared blocker", i, j))
+        candidate_overlap = sp & sq
+        if candidate_overlap:
+            overlap_candidate_pairs += 1
+        gain = len(blocker_overlap) - len(candidate_overlap)
+        if gain <= 0:
+            nonpositive_overlap_pairs += 1
             continue
         tested += 1
-        # Test smaller side as probes for the factorized bitset check.
         if len(sp) <= len(sq):
-            bad = cross_conflict(sp, sq)
+            bad = cross_conflict_distinct(sp, sq)
         else:
-            bad = cross_conflict(sq, sp)
+            bad = cross_conflict_distinct(sq, sp)
         if bad:
             conflict_skips += 1
             continue
-        bp, bq = set(p["blockers"]), set(q["blockers"])
-        overlap = bp & bq
-        if not overlap:
-            raise RuntimeError(("indexed pair lost shared blocker", i, j))
         deleted_ids = bp | bq
         added = sp | sq
-        gain = len(added) - len(deleted_ids)
-        if gain != len(overlap) or gain <= 0:
-            raise RuntimeError(("gain identity failed", i, j, gain, len(overlap)))
+        if len(added) - len(deleted_ids) != gain:
+            raise RuntimeError(("gain identity failed", i, j, gain,
+                                len(added), len(deleted_ids),
+                                len(blocker_overlap), len(candidate_overlap)))
         candidate_set = (baseline - {owner_pair[b] for b in deleted_ids}) | added
         if len(candidate_set) != EXPECTED_SCORE + gain:
             raise RuntimeError(("candidate size mismatch", len(candidate_set), gain))
         rec = {
             "piece1": i, "piece2": j, "word1": p["word"], "word2": q["word"],
             "size1": len(sp), "size2": len(sq),
-            "shared_blockers": len(overlap), "deleted": len(deleted_ids),
-            "added": len(added), "gain": gain, "candidate_score": len(candidate_set),
+            "shared_blockers": len(blocker_overlap),
+            "shared_candidates": len(candidate_overlap),
+            "deleted": len(deleted_ids), "added": len(added),
+            "gain": gain, "candidate_score": len(candidate_set),
         }
         if best is None or (gain, -len(deleted_ids)) > (best[0], -best[1]):
             best = (gain, len(deleted_ids), rec, candidate_set)
-            # One verified +1 is enough scientifically, but continue the exact SCC-pair
-            # slice so the result also records its best gain.
 
     status = {
-        "method": "exact-bpz-neutral-terminal-scc-pair-recombination",
+        "method": "exact-bpz-neutral-terminal-scc-pair-recombination-overlap-aware",
         "record_score": EXPECTED_SCORE,
         "family_sizes": sizes,
         "single_block_deficient": direct_deficient,
         "blocks": block_summary,
         "terminal_pieces": len(pieces),
         "shared_blocker_piece_pairs": len(candidate_pairs),
-        "tested_disjoint_piece_pairs": tested,
-        "duplicate_candidate_skips": duplicate_skips,
+        "overlapping_candidate_piece_pairs": overlap_candidate_pairs,
+        "nonpositive_overlap_pairs": nonpositive_overlap_pairs,
+        "tested_positive_gain_piece_pairs": tested,
         "cross_conflict_skips": conflict_skips,
         "breakthrough": best is not None,
         "best": None if best is None else best[2],
