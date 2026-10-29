@@ -1,0 +1,73 @@
+Thomson N=960 — certified B<->D Landau-descended index-1 saddle
+Date: 2026-10-29
+
+Source / construction
+---------------------
+The C index-2 negative doublet was treated as a C3 Landau order parameter.  A
+ridge direction was first predicted in that two-dimensional unstable subspace,
+then the orthogonal 1918-dimensional complement was minimized under a strong
+order-parameter restraint.  The resulting candidate was hybrid-polished in full
+space and independently certified by descending both sides of its true negative
+mode.
+
+Final certification
+-------------------
+GitHub Actions run: 40740593797
+Artifact: thomson-bd-landau-certified
+
+Clean first-order saddle:
+  E = 444368.411086411099
+  physical tangent gradient RMS = 4.8339504e-6
+  number of negative internal modes (< -1e-3) = 1
+
+Lowest internal Hessian eigenvalues:
+  -1.012110340497
+  +1.089983537077
+  +2.816869491700
+  +3.874656241843
+  +4.107856807563
+
+Reaction-side validation
+------------------------
+Perturbations along the unique negative mode were fully unconstrained-relaxed
+with the stable pair-energy-difference objective:
+
+  reaction RMS -0.0001 -> B = 444368.40297286137
+  reaction RMS -0.0003 -> B = 444368.40297286137
+  reaction RMS +0.0001 -> D = 444368.41099308443
+  reaction RMS +0.0003 -> D = 444368.41099308454
+
+Thus this is a directly certified B<->D transition state, not merely a nearby
+index-1 point.
+
+Scientific implication
+----------------------
+The low-energy minimum graph now has three clean edges with full-space
+certification:
+
+  R <-> A
+  A <-> B
+  B <-> D
+
+The B<->D saddle lies only ~9.33e-5 above D and ~8.11e-3 above B.  This explains
+why the earlier B-D string was numerically delicate: the D-side barrier is very
+shallow and a coarse path easily collapses into the D endpoint.
+
+More importantly, the saddle was found by reducing the C index-2 instability to
+a symmetry-informed Landau order parameter and relaxing its complement.  This
+is stronger evidence for the stationary-state / reduced-reaction-coordinate
+formulation than simply extending string iterations.
+
+Next search
+-----------
+The A<->B saddle transverse search discovered D, so the analogous high-value
+experiment is transverse expansion of the certified B<->D saddle.  A new
+single-runner CPU-saturating batch scans positive modes 1..8 in both signs over
+multiple transverse amplitudes and small reaction biases, preserving all new
+basin representatives and automatically second-hopping the two lowest unknown
+minima.  Do not return to brute-force B-D string refinement as the primary
+route; use string/proximal results only as independent cross-checks.
+
+Any endpoint below live_score-2e-7 triggers live upstream re-check, stable
+repolish, rationalization, official p007 verifier, and tools/check.py.  The
+required verified improvement remains at least 1e-6 below 444368.3924061973.
