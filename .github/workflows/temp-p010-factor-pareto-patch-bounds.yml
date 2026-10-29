@@ -1,0 +1,48 @@
+name: temp-p010-factor-Pareto-patch-bounds
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["temp-p010-monalisa-factor-pareto-frontier"]
+    types: [completed]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  bounds:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Retrieve disjoint 100K 2-factors from SEC cost-cycle frontier
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE: ${{ github.event.workflow_run.id || '40879009756' }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install numpy scipy
+          python -m py_compile science-boundary/mona-lisa-tsp/monalisa_factor_patch_bound.py
+          mkdir -p /tmp/frontier
+          gh run download "$SOURCE" --repo teddyli18000/web-ingest --name p010-100k-factor-cost-subtour-frontier --dir /tmp/frontier
+          test "$(find /tmp/frontier -name 'factor-*.json' | wc -l)" -ge 2
+      - name: Cost-vs-connectivity Pareto factor analysis using original metric
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          mkdir -p science-boundary/mona-lisa-tsp/results/factor-patch-bounds
+          for factor in $(find /tmp/frontier -name 'factor-*.json' | sort); do
+            name=$(basename "$factor" .json)
+            python -u science-boundary/mona-lisa-tsp/monalisa_factor_patch_bound.py \
+              --factor "$factor" --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+              --neighbors 32 --max-ports 20000 \
+              --report "science-boundary/mona-lisa-tsp/results/factor-patch-bounds/${name}.json"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-100k-factor-pareto-patch-bounds
+          path: science-boundary/mona-lisa-tsp/results/factor-patch-bounds/
+          if-no-files-found: ignore
