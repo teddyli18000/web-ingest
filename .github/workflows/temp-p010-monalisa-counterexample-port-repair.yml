@@ -1,6 +1,10 @@
 name: temp-p010-monalisa-counterexample-port-repair
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/monalisa_factor_cross_repair.py
+      - .github/workflows/temp-p010-monalisa-counterexample-port-repair.yml
   workflow_run:
     workflows: ["temp-p010-monalisa-sec-defect-snapshot"]
     types: [completed]
@@ -9,7 +13,7 @@ permissions:
   actions: read
 jobs:
   repair:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 16
     steps:
@@ -39,7 +43,7 @@ jobs:
           python -u science-boundary/mona-lisa-tsp/monalisa_factor_cross_repair.py \
             --factor "$snapshot" \
             --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
-            --neighbors 64 --max-ports 25000 --top-per-component-pair 80 --beam 150 \
+            --neighbors 32 --max-ports 25000 --top-per-component-pair 24 --beam 40 \
             --report "$d/report.json" --certificate "$d/certificate.json"
           test -s "$d/report.json"
           if test -s "$d/certificate.json"; then
