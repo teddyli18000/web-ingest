@@ -1,0 +1,93 @@
+Thomson N=960 — local transverse probes of the certified B<->D saddle
+Date: 2026-10-29
+
+Certified parent saddle
+-----------------------
+From run 40740593797:
+  E = 444368.411086411099
+  physical gradient RMS = 4.8339504e-6
+  Hessian index = 1
+  lambda0 = -1.0121103405
+  positive modes begin
+    lambda1 = 1.0899835371
+    lambda2 = 2.8168694917
+    lambda3 = 3.8746562418
+    lambda4 = 4.1078568076
+    lambda5 = 4.9072976145
+    lambda6 = 6.5086778162
+    lambda7 = 7.7203232936
+    lambda8 = 8.7756673946
+
+Method
+------
+The certified artifact was downloaded locally.  For each probe, the saddle was
+perturbed by 0.012 RMS radians along one positive full-space physical Hessian
+eigenmode (reaction bias zero) and fully unconstrained-relaxed with the same
+stable long-double pair-energy-difference L-BFGS objective used by the durable
+search code.  The purpose was rapid interface diagnosis while the Actions queue
+was stalled, not verifier scoring.
+
+0.012-rad single-mode slice
+---------------------------
+  mode 1 + -> B  444368.40297286125
+  mode 1 - -> A  444368.39568622580
+
+  mode 2 + -> D  444368.41099308480
+  mode 2 - -> D  444368.41099308466  (iteration cap, energy already D)
+
+  mode 3 + -> B  444368.40297286150
+  mode 3 - -> B  444368.40297286125
+
+  mode 4 + -> A  444368.39568622580
+  mode 4 - -> B  444368.40297286140
+
+  mode 5 + -> B  444368.40297286150
+  mode 5 - -> B  444368.40297286140
+
+  mode 6 + -> B  444368.40297286154
+  mode 6 - -> R  444368.39240619750
+
+  mode 7 + -> A  444368.39568622580
+  mode 7 - -> A  444368.39568622597
+
+  mode 8 + -> B  444368.40297286180  (iteration cap, energy already B)
+  mode 8 - -> A  444368.39568622614
+
+Thus one local neighborhood of the B<->D index-1 saddle already exposes all four
+known lowest minima R/A/B/D through positive transverse directions.  It is a
+multi-basin junction, not a simple isolated two-basin interface.
+
+Finite R window along mode6 negative direction
+-----------------------------------------------
+Additional zero-reaction-bias probes along -mode6:
+  amp 0.0070 -> A
+  amp 0.0080 -> A
+  amp 0.0095 -> R
+  amp 0.0120 -> R
+  amp 0.0170 -> R
+  amp 0.0260 -> R
+  amp 0.0295 -> A  (iteration cap, energy already A)
+  amp 0.0330 -> A  (iteration cap, energy already A)
+  amp 0.0400 -> A  (iteration cap, energy already A)
+
+So R occupies a finite window roughly between 0.009 and 0.028 RMS radians along
+this one-dimensional cut, surrounded by A outside the window.  This
+non-monotone basin map is exactly the situation where uniform mode enumeration
+is inefficient and active refinement of mixed transverse coordinates is more
+appropriate.
+
+Representation consequence
+--------------------------
+The minimal three-mode basis that already reaches all four known basins is
+(mode1, mode2, mode6):
+  mode1 distinguishes A/B,
+  mode2 reaches D,
+  mode6 distinguishes R/B.
+
+A new search therefore treats coefficients in this 3D positive-mode subspace as
+a reaction-coordinate space.  Space-filling samples are fully relaxed; Delaunay
+simplices whose vertices map to different basins are refined adaptively, with
+special priority on 3- and 4-basin junctions.  Small reaction-coordinate biases
+are then evaluated around the most heterogeneous boundary points.  This changes
+the search space from single eigenmodes to nonlinear mixed saddle-interface
+coordinates.
