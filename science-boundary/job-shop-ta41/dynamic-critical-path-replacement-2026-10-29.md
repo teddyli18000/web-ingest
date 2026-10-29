@@ -93,3 +93,20 @@ This specifically tests operation identities selected adaptively from *successiv
 
 **Mechanistic interpretation:** the first adaptive critical feedback implementation definitively changes critical-path identity much more often, but does not outperform controls on best makespan in the pilot. Its release interface still freezes hundreds of precedence arcs. The next qualitatively different idea, if all CP objective checks stagnate, is to jointly *reorient* relations via a soft baseline order with propagated conflicts rather than simply unlock more operation IDs in the same fixed-survivor model. The 2026 N7 batch paper accelerates evaluation, not this joint interaction, and the Liu-Li-Gao paper's exact parameterization release cannot be claimed reproduced from its ScheduleOpt citation alone.
 
+
+
+## Phase V: counterfactual two-step coordinated critical-path replacement (complete)
+
+To test the representation issue rather than simply release more operations, `replacement_macro_pilot.py` selects the **same first critical-path operation insertion candidate family** for every arm, applies a tentative move (its intermediate makespan may exceed 2006 by up to 180), recomputes the **new** critical path, and then chooses the **second** insertion according to either freshly created critical edges (dynamic), original fixed edges (static), 21-core precedence edges (core), or uniform random positions. Only the **final two-operation macro** is scored for acceptance, subject to a small final score envelope of 2006+24. No survivor precedences are fixed. This is an N7-inspired insertion, **not** a faithful full N7 implementation or the 2026 Ba–Liu–Yuan approximate evaluator.
+
+Sixteen complete experimental runs (2 verified parents x 4 policies x seeds 4107/4113), exactly **22,000 full DAG evaluations per run, 352,000 total**, all stayed at makespan **2006**. Aggregated empirical behavior:
+
+| Parent | Dynamic distinct visited states (two seeds) | Static | Core-guided | Random |
+| --- | --- | --- | --- | --- |
+| baseline | 71, 73 | 18, 29 | 18, 14 | 65, 87 |
+| verified gateway-124 | 113, 118 | 23, 35 | 11, 20 | 55, 73 |
+
+These are *distinct accepted schedules, including temporarily worse scores*, **not** unique 2006-equivalent optima. For instance baseline/dynamic seed4107 accepted 247 macros but only 16 ended exactly 2006; 231 ended above 2006, though no more than +24. Most accepted macros had an individually harmful first intermediate step, showing the macro is operational rather than simply cherry-picking separately good steps. Dynamic selection moves more frequently into alternate schedule geometry, especially from gateway124; no score improvement or statistical conclusion is claimed from two seeds.
+
+The next *representation* test is **fully soft predecessor reorientation**, not operation release. The new `soft_reorientation_feedback.py` model makes **all 340 previously fixed survivor arcs reversible Boolean disjunctions**; no survivor order is hard-frozen. It keeps full job chains and NoOverlap, enforces one independently certified necessary 2005 core reversal, and minimizes makespan first, then policy-weighted reorientation costs. Policies dynamic/static/core/random and both 2006 parents have equal 130-second CP caps. The model is globally complete despite different optimization guidance; a score-2006 FEASIBLE outcome is not a global lower bound. Results pending at `results/soft-orientation-{baseline,124}-{dynamic,static,core,random}/soft-orientation.json`.
+
