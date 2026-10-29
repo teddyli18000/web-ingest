@@ -1,0 +1,80 @@
+name: temp-ta41-exact-kendall-radius
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/exact_kendall_radius.py'
+      - '.github/workflows/temp-ta41-exact-kendall-radius.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-exact-kendall-radius
+  cancel-in-progress: false
+jobs:
+  decision:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: local2-radius20
+            window: 2
+            radius: 20
+          - label: local3-radius30
+            window: 3
+            radius: 30
+          - label: local5-radius47
+            window: 5
+            radius: 47
+          - label: global-radius20
+            window: 29
+            radius: 20
+          - label: global-radius40
+            window: 29
+            radius: 40
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin solver and check original reproducible model
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/exact_kendall_radius.py
+      - name: Check exact small Kendall radius at Cmax 2005
+        run: |
+          python3 science-boundary/job-shop-ta41/exact_kendall_radius.py \
+            --window '${{ matrix.window }}' --radius '${{ matrix.radius }}' \
+            --seconds 210 --workers 4 --out 'science-boundary/job-shop-ta41/results/kendall-${{ matrix.label }}'
+      - name: Official Few Shots verifier on any improved candidate
+        if: always()
+        run: |
+          set -euo pipefail
+          out="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/kendall-${{ matrix.label }}"
+          if test -f "$out/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$out" | tee "$out/upstream-verdict.json"
+            python3 - "$out" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+          fi
+      - name: Save sound radius theorems or honest uncertainty
+        if: always()
+        run: |
+          set -euo pipefail
+          out='science-boundary/job-shop-ta41/results/kendall-${{ matrix.label }}'
+          if ! test -d "$out"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$out"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): exact Kendall radius ${{ matrix.label }}'
+          for i in $(seq 1 30); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
