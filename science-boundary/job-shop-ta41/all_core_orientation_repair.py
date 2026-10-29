@@ -184,6 +184,11 @@ def run(a):
         assert all(v>=1 for v in report['cuts_checked'].values())
         if makespan<=2005:
             (a.out/'certificate.json').write_text(json.dumps({'machines':cert},separators=(',',':'))+'\n')
+        if makespan==2006:
+            # Retain every machine permutation for an independently checked
+            # neutral schedule satisfying all 9 necessary 2005 core cuts.
+            (a.out/'neutral-certificate.json').write_text(
+                json.dumps({'machines':cert},separators=(',',':'))+'\n')
     (a.out/'all-cores-reorientation.json').write_text(json.dumps(report,indent=2)+'\n')
     print('RESULT',json.dumps(report),flush=True)
 
