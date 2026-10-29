@@ -1,0 +1,150 @@
+name: Temp Science Boundary C7 packed global one-hole frontier
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-packed-global-one-hole.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_global_one_core_hole_sat.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-packed-global-one-hole
+  cancel-in-progress: false
+
+jobs:
+  packed-frontier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    env:
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      MALLOC_ARENA_MAX: '2'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install exact SAT dependency
+        run: python -m pip install --disable-pip-version-check python-sat
+      - name: Fetch pinned public sources read-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          mkdir -p "$RUNNER_TEMP/result/global" "$RUNNER_TEMP/shot/fixed" "$RUNNER_TEMP/shot/global"
+      - name: Syntax-check reusable research code
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            science-boundary/shannon-capacity-c7/code/bpz_fixed_bb_universe_stats.py \
+            science-boundary/shannon-capacity-c7/code/bpz_optimal_terminal_periphery_sat.py \
+            science-boundary/shannon-capacity-c7/code/bpz_global_one_core_hole_sat.py
+      - name: Exact fixed-BB structural audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_fixed_bb_universe_stats.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/fixed-bb-stats.json" \
+            > "$RUNNER_TEMP/result/fixed-bb-stats.stdout" 2> "$RUNNER_TEMP/result/fixed-bb-stats.stderr"
+          cat "$RUNNER_TEMP/result/fixed-bb-stats.json"
+      - name: Packed exact frontier search on all four cores
+        id: search
+        shell: bash
+        run: |
+          set -euo pipefail
+          run_fixed() {
+            /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_optimal_terminal_periphery_sat.py \
+              "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/fixed-periphery.json" "$RUNNER_TEMP/shot/fixed" \
+              > "$RUNNER_TEMP/result/fixed-periphery.stdout" 2> "$RUNNER_TEMP/result/fixed-periphery.stderr"
+          }
+          run_global() {
+            s="$1"
+            mkdir -p "$RUNNER_TEMP/shot/global/$s"
+            /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_global_one_core_hole_sat.py \
+              "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/global/shard-$s.json" "$RUNNER_TEMP/shot/global/$s" \
+              --shard "$s" --shards 4 \
+              > "$RUNNER_TEMP/result/global/shard-$s.stdout" 2> "$RUNNER_TEMP/result/global/shard-$s.stderr"
+          }
+          run_fixed & p_fixed=$!
+          run_global 0 & p0=$!
+          run_global 1 & p1=$!
+          run_global 2 & p2=$!
+          rc=0
+          wait "$p_fixed" || rc=1
+          if [[ -f "$RUNNER_TEMP/shot/fixed/certificate.json" ]]; then
+            echo 'fixed-core breakthrough found; no need to start fourth one-hole shard'
+          else
+            run_global 3 & p3=$!
+          fi
+          wait "$p0" || rc=1
+          wait "$p1" || rc=1
+          wait "$p2" || rc=1
+          if [[ -n "${p3:-}" ]]; then wait "$p3" || rc=1; fi
+          if [[ "$rc" -ne 0 ]]; then
+            echo 'at least one exact worker failed' >&2
+            exit 1
+          fi
+          found=false
+          if [[ -f "$RUNNER_TEMP/shot/fixed/certificate.json" ]]; then
+            cp "$RUNNER_TEMP/shot/fixed/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+            cp "$RUNNER_TEMP/shot/fixed/metadata.json" "$RUNNER_TEMP/result/candidate-metadata.json"
+            found=true
+          else
+            for s in 0 1 2 3; do
+              if [[ -f "$RUNNER_TEMP/shot/global/$s/certificate.json" ]]; then
+                cp "$RUNNER_TEMP/shot/global/$s/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+                cp "$RUNNER_TEMP/shot/global/$s/metadata.json" "$RUNNER_TEMP/result/candidate-metadata.json"
+                found=true
+                break
+              fi
+            done
+          fi
+          echo "found=$found" >> "$GITHUB_OUTPUT"
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/verify-shot"
+          cp "$RUNNER_TEMP/result/candidate.json" "$RUNNER_TEMP/verify-shot/certificate.json"
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/verify-shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1))<=134753:
+              raise SystemExit(f'candidate not a verified breakthrough: {r}')
+          print(f"VERIFIED BREAKTHROUGH score={r['score']}")
+          PY
+      - name: Upload packed campaign result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-packed-global-one-hole-frontier
+          path: ${{ runner.temp }}/result
+          retention-days: 14
+      - name: Summarize
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '## C7 packed fixed-core / global one-hole exact frontier'
+            for f in "$RUNNER_TEMP/result/fixed-bb-stats.json" "$RUNNER_TEMP/result/fixed-periphery.json" "$RUNNER_TEMP/result/global"/shard-*.json "$RUNNER_TEMP/result/verify.json"; do
+              if [[ -f "$f" ]]; then echo "### $(basename "$f")"; echo '```json'; cat "$f"; echo '```'; fi
+            done
+            echo '### Resource tails'
+            for f in "$RUNNER_TEMP/result"/*.stderr "$RUNNER_TEMP/result/global"/*.stderr; do
+              if [[ -f "$f" ]]; then echo "#### $(basename "$f")"; echo '```text'; tail -n 40 "$f"; echo '```'; fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
