@@ -34,7 +34,7 @@ def main():
     a=p.parse_args();started=time.monotonic()
     tbase=np.asarray(json.loads(Path(a.baseline).read_text())['tour'],dtype=np.int32)-1
     assert len(tbase)==N and len(np.unique(tbase))==N
-    base={hist.encode(np.asarray([tbase[i]]),np.asarray([tbase[(i+1)%N]])).item() for i in range(N)}
+    base=set(hist.tour_edges(tbase).tolist())
     verify_path=Path(os.environ['FEWSHOTS_ROOT'])/'problems/p010-mona-lisa-tsp/verify/verify.py'
     spec=importlib.util.spec_from_file_location('verify',verify_path)
     v=importlib.util.module_from_spec(spec);spec.loader.exec_module(v)
@@ -134,10 +134,11 @@ def main():
     # Solve a separate integer 2-factor relaxation of exactly the same pool.
     model2=cp_model.CpModel()
     x2={e:model2.NewBoolVar(f'e{e[0]}_{e[1]}') for e in sorted(active)}
-    for u in ordered_vertices:
-        incident=[x2[e] for e in x2 if u in e]
-        constant_inc=sum(1 for aa,bb in macro if u in (aa,bb))
-        model2.Add(sum(incident)+constant_inc==2)
+    in2={u:[] for u in ordered_vertices}
+    for (u,w),xx in x2.items():in2[u].append(xx);in2[w].append(xx)
+    mandatory={u:0 for u in ordered_vertices}
+    for u,w in macro:mandatory[u]+=1;mandatory[w]+=1
+    for u in ordered_vertices:model2.Add(sum(in2[u])+mandatory[u]==2)
     delta2=sum(cost(*e)*b for e,b in x2.items())-constant
     model2.Minimize(delta2)
     relax=cp_model.CpSolver()
