@@ -1,0 +1,58 @@
+name: temp-monalisa-edge-selector-comparison
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/augmented_tour_merge.py
+      - .github/workflows/temp-monalisa-edge-selector-comparison.yml
+permissions:
+  contents: read
+jobs:
+  select:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        selector: [gain, repair, random]
+        edge_budget: [128, 320]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch official verifier and archived motifs and cut prices
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install ortools networkx
+          mkdir -p /tmp/p010-motifs /tmp/p010-prices
+          gh run download 40830451326 --repo teddyli18000/web-ingest --name monalisa-symbolic-exact-exit-1 --dir /tmp/p010-motifs
+          gh run download 40843492262 --repo teddyli18000/web-ingest --name monalisa-defect-prices --dir /tmp/p010-prices
+          test -s /tmp/p010-motifs/positive-motifs.json
+          test -s /tmp/p010-prices/report.json
+      - name: Matched-budget exact recombination over differently selected defect edges
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          dir=science-boundary/mona-lisa-tsp/results/selector-${{ matrix.selector }}-${{ matrix.edge_budget }}
+          mkdir -p "$dir"
+          python science-boundary/mona-lisa-tsp/augmented_tour_merge.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --neutral-moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --motifs /tmp/p010-motifs/positive-motifs.json \
+            --price-report /tmp/p010-prices/report.json \
+            --family all58 --selector ${{ matrix.selector }} \
+            --edge-budget ${{ matrix.edge_budget }} --augmentation-count 2949 \
+            --target-improvement 1 --seconds 180 --workers 4 \
+            --report "$dir/report.json" --candidate "$dir/certificate.json"
+          if test -s "$dir/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$dir"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-selector-${{ matrix.selector }}-${{ matrix.edge_budget }}
+          path: science-boundary/mona-lisa-tsp/results/selector-*/
+          if-no-files-found: ignore
