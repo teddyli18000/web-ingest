@@ -1,0 +1,47 @@
+name: temp-p010-independent-sec-certification
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/independent_tsplib_sec_verify.py
+      - .github/workflows/temp-p010-independent-sec-certification.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch 15 public instances and 15 candidate tour artifacts; no hidden inputs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/independent/parents/one /tmp/independent/parents/two /tmp/independent/parents/three /tmp/independent/tours /tmp/independent/instances
+          gh run download 40869449446 --repo teddyli18000/web-ingest --name p010-blind-5case-public --dir /tmp/independent/parents/one
+          gh run download 40870679131 --repo teddyli18000/web-ingest --name p010-unseen-v2-public --dir /tmp/independent/parents/two
+          gh run download 40871715238 --repo teddyli18000/web-ingest --name fold3-public-inputs --dir /tmp/independent/parents/three
+          gh run download 40873038213 --repo teddyli18000/web-ingest --pattern 'p010-knn-sec-*' --dir /tmp/independent/tours
+          for instance in eil51 berlin52 st70 eil76 kroA100 rat99 ch130 eil101 pr76 kroB100 kroC100 kroD100 kroE100 rd100 lin105; do
+            curl -fsSL --retry 2 "https://raw.githubusercontent.com/mastqe/tsplib/master/${instance}.tsp" -o "/tmp/independent/instances/${instance}.tsp"
+          done
+          test "$(find /tmp/independent/parents -name public.json | wc -l)" -eq 15
+          test "$(find /tmp/independent/tours -name result.json | wc -l)" -eq 15
+          test "$(find /tmp/independent -name private.json | wc -l)" -eq 0
+          cat > /tmp/independent/optima.json <<'JSON'
+          {"eil51":426,"berlin52":7542,"st70":675,"eil76":538,"kroA100":21282,"rat99":1211,"ch130":6110,"eil101":629,"pr76":108159,"kroB100":22141,"kroC100":20749,"kroD100":21294,"kroE100":22068,"rd100":7910,"lin105":14379}
+          JSON
+      - name: Fully independent integer score, permutation, published-optimum and edge-pool verification
+        run: |
+          python science-boundary/mona-lisa-tsp/independent_tsplib_sec_verify.py \
+            --public /tmp/independent/parents --results /tmp/independent/tours \
+            --instance /tmp/independent/instances --optima /tmp/independent/optima.json \
+            --output science-boundary/mona-lisa-tsp/results/independent-sec-15case-verification.json
+          cat science-boundary/mona-lisa-tsp/results/independent-sec-15case-verification.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-independent-sec-certified-scoring
+          path: science-boundary/mona-lisa-tsp/results/independent-sec-15case-verification.json
+          if-no-files-found: ignore
