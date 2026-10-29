@@ -1,0 +1,68 @@
+name: temp-ta41-neutral-orientation-maxmin
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/maxmin_neutral_orientations.py'
+      - '.github/workflows/temp-ta41-neutral-orientation-maxmin.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-neutral-orientation-maxmin
+  cancel-in-progress: false
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        guided: ["false","true"]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin solver and syntax check
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/maxmin_neutral_orientations.py
+      - name: Optimize max-min joint orientation diversity on full NoOverlap model
+        run: |
+          if test '${{ matrix.guided }}' = 'true'; then arg='--guided'; else arg=''; fi
+          python3 science-boundary/job-shop-ta41/maxmin_neutral_orientations.py \
+            $arg --seed 4107 --seconds 180 \
+            --out 'science-boundary/job-shop-ta41/results/orientation-maxmin-${{ matrix.guided }}'
+      - name: Validate any neutral or improved machine orders against official Few Shots
+        if: always()
+        run: |
+          set -euo pipefail
+          out="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/orientation-maxmin-${{ matrix.guided }}"
+          if test -f "$out/witness/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$out/witness" | tee "$out/witness/upstream-verdict.json"
+            python3 - "$out" <<'PY'
+          import json,sys
+          from pathlib import Path
+          out=Path(sys.argv[1]);v=json.loads((out/'witness/upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2006,v
+          if (out/'certificate.json').exists():
+              assert int(v['score'])<=2005,v
+          PY
+          fi
+      - name: Persist verified witness or objective status with retry
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/orientation-maxmin-${{ matrix.guided }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): max-min neutral orientation diversity guided ${{ matrix.guided }}'
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
