@@ -1,4 +1,4 @@
-name: temp Thomson 960 D-node transition network
+name: temp Thomson 960 D-node transition network v2
 
 on:
   push:
@@ -12,9 +12,9 @@ permissions:
   actions: read
 
 jobs:
-  map:
+  prepare:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Install numerical dependencies
@@ -28,7 +28,7 @@ jobs:
           path: ${{ runner.temp }}/ab
           github-token: ${{ github.token }}
           run-id: 40634347073
-      - name: Harvest D and reproduce C
+      - name: Reproduce D and C
         run: |
           python3 science-boundary/thomson-960/code/harvest_saddle_branch.py \
             "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/ab/hybrid-ab.json" \
@@ -38,44 +38,113 @@ jobs:
             "$RUNNER_TEMP/few-shots" \
             --neighbor-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
             --scale 0.95 --out "$RUNNER_TEMP/basin-c.json"
-      - name: Optimize B-D, D-C, and B-C strings
-        run: |
-          python3 science-boundary/thomson-960/code/string_between_seeds.py \
-            science-boundary/thomson-960/data/basin-b-010566.json "$RUNNER_TEMP/basin-d.json" \
-            --images 9 --iterations 240 --climb-iterations 0 --eta 0.00025 --max-step 0.0007 \
-            --out "$RUNNER_TEMP/string-bd.json"
-          python3 science-boundary/thomson-960/code/string_between_seeds.py \
-            "$RUNNER_TEMP/basin-d.json" "$RUNNER_TEMP/basin-c.json" \
-            --images 9 --iterations 240 --climb-iterations 0 --eta 0.00025 --max-step 0.0007 \
-            --out "$RUNNER_TEMP/string-dc.json"
-          python3 science-boundary/thomson-960/code/string_between_seeds.py \
-            science-boundary/thomson-960/data/basin-b-010566.json "$RUNNER_TEMP/basin-c.json" \
-            --images 11 --iterations 320 --climb-iterations 0 --eta 0.00020 --max-step 0.00055 \
-            --out "$RUNNER_TEMP/string-bc-fine.json"
-      - name: Conservative hybrid refinement on all three interfaces
-        run: |
-          for edge in bd dc bc-fine; do
-            python3 science-boundary/thomson-960/code/refine_saddle_hybrid.py \
-              "$RUNNER_TEMP/string-$edge.json" --outer 6 --penalty 300000 --perp-maxiter 600 \
-              --newton-damping 0.2 --max-reaction-rms 0.00005 \
-              --out "$RUNNER_TEMP/hybrid-$edge.json"
-          done
-          python3 - <<'PY'
-          import json, os
-          for edge in ('bd','dc','bc-fine'):
-              p=os.path.join(os.environ['RUNNER_TEMP'],f'hybrid-{edge}.json')
-              d=json.load(open(p)); print(edge, d['final_energy'], d['final_gradient_rms'], d['negative_internal_modes_below_-1e-3'], [m['eigenvalue'] for m in d['final_modes'][:4]])
-          PY
       - uses: actions/upload-artifact@v4
         with:
-          name: thomson-d-network
+          name: thomson-dc-nodes
           retention-days: 7
           path: |
             ${{ runner.temp }}/basin-d.json
             ${{ runner.temp }}/basin-c.json
+
+  bd:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-dc-nodes
+          path: ${{ runner.temp }}/nodes
+      - name: B-D minimum-energy path and conservative hybrid
+        run: |
+          python3 science-boundary/thomson-960/code/string_between_seeds.py \
+            science-boundary/thomson-960/data/basin-b-010566.json "$RUNNER_TEMP/nodes/basin-d.json" \
+            --images 13 --iterations 420 --climb-iterations 0 --eta 0.00020 --max-step 0.00045 \
+            --perp-tol 2e-5 --out "$RUNNER_TEMP/string-bd.json"
+          python3 science-boundary/thomson-960/code/refine_saddle_hybrid.py \
+            "$RUNNER_TEMP/string-bd.json" --outer 7 --penalty 300000 --perp-maxiter 650 \
+            --newton-damping 0.15 --max-reaction-rms 0.00003 --out "$RUNNER_TEMP/hybrid-bd.json"
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'hybrid-bd.json')))
+          print('BD_FINAL',d['final_energy'],d['final_gradient_rms'],d['negative_internal_modes_below_-1e-3'],[m['eigenvalue'] for m in d['final_modes'][:5]])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-bd-edge
+          retention-days: 7
+          path: |
             ${{ runner.temp }}/string-bd.json
-            ${{ runner.temp }}/string-dc.json
-            ${{ runner.temp }}/string-bc-fine.json
             ${{ runner.temp }}/hybrid-bd.json
+
+  dc:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-dc-nodes
+          path: ${{ runner.temp }}/nodes
+      - name: Adaptive D-C endpoint zoom and conservative hybrid
+        run: |
+          python3 science-boundary/thomson-960/code/refine_endpoint_string.py \
+            "$RUNNER_TEMP/nodes/basin-d.json" "$RUNNER_TEMP/nodes/basin-c.json" \
+            --images 17 --iterations 160 --levels 5 --eta 0.00018 --max-step 0.00020 \
+            --out "$RUNNER_TEMP/adaptive-dc.json"
+          python3 science-boundary/thomson-960/code/refine_saddle_hybrid.py \
+            "$RUNNER_TEMP/adaptive-dc.json" --outer 8 --penalty 400000 --perp-maxiter 650 \
+            --newton-damping 0.10 --max-reaction-rms 0.00001 --out "$RUNNER_TEMP/hybrid-dc.json"
+          python3 - <<'PY'
+          import json,os
+          a=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'adaptive-dc.json')))
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'hybrid-dc.json')))
+          print('DC_ADAPTIVE',a['resolved_interior_maximum'],a['probe_energy'],[(x['max_index'],x['rms_span'],x['max_energy']) for x in a['levels']])
+          print('DC_FINAL',d['final_energy'],d['final_gradient_rms'],d['negative_internal_modes_below_-1e-3'],[m['eigenvalue'] for m in d['final_modes'][:5]])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-dc-edge
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/adaptive-dc.json
             ${{ runner.temp }}/hybrid-dc.json
-            ${{ runner.temp }}/hybrid-bc-fine.json
+
+  bc:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-dc-nodes
+          path: ${{ runner.temp }}/nodes
+      - name: Fine B-C path and conservative hybrid
+        run: |
+          python3 science-boundary/thomson-960/code/string_between_seeds.py \
+            science-boundary/thomson-960/data/basin-b-010566.json "$RUNNER_TEMP/nodes/basin-c.json" \
+            --images 17 --iterations 520 --climb-iterations 0 --eta 0.00016 --max-step 0.00035 \
+            --perp-tol 2e-5 --out "$RUNNER_TEMP/string-bc.json"
+          python3 science-boundary/thomson-960/code/refine_saddle_hybrid.py \
+            "$RUNNER_TEMP/string-bc.json" --outer 8 --penalty 400000 --perp-maxiter 650 \
+            --newton-damping 0.10 --max-reaction-rms 0.00001 --out "$RUNNER_TEMP/hybrid-bc.json"
+          python3 - <<'PY'
+          import json,os
+          s=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'string-bc.json')))
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'hybrid-bc.json')))
+          print('BC_STRING',s['endpoint_collapsed'],max(s['path_energies']),s['max_path_perpendicular_gradient_rms'])
+          print('BC_FINAL',d['final_energy'],d['final_gradient_rms'],d['negative_internal_modes_below_-1e-3'],[m['eigenvalue'] for m in d['final_modes'][:5]])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-bc-edge-v2
+          retention-days: 7
+          path: |
+            ${{ runner.temp }}/string-bc.json
+            ${{ runner.temp }}/hybrid-bc.json
