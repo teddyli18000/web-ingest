@@ -1,6 +1,10 @@
 name: temp Thomson 960 topology-preserving twinned-family propagation
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "science-boundary/thomson-960/launch-twinned-972.flag"
   workflow_dispatch:
     inputs:
       n:
@@ -31,22 +35,28 @@ jobs:
   propagate:
     runs-on: ubuntu-latest
     timeout-minutes: 55
+    env:
+      SRC_N: ${{ inputs.n || '972' }}
+      SRC_URL: ${{ inputs.url || 'https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/xyz/972.xyz' }}
+      BRANCH: ${{ inputs.branch || '2' }}
+      BEAM: ${{ inputs.beam || '2' }}
+      CORE_HOPS: ${{ inputs.core_hops || '2' }}
     steps:
       - uses: actions/checkout@v4
       - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
       - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
       - name: Fetch selected historical twinned parent
         run: |
-          curl --fail --location --retry 3 '${{ inputs.url }}' -o "$RUNNER_TEMP/parent.xyz"
+          curl --fail --location --retry 3 "$SRC_URL" -o "$RUNNER_TEMP/parent.xyz"
       - name: Topology-preserving size propagation
         run: |
           python3 science-boundary/thomson-960/code/propagate_twinned_family.py \
             "$RUNNER_TEMP/parent.xyz" "$RUNNER_TEMP/few-shots" \
-            --target 960 --branch '${{ inputs.branch }}' --beam '${{ inputs.beam }}' \
-            --core-hops '${{ inputs.core_hops }}' --min-e77 1 \
-            --out "$RUNNER_TEMP/twinned-${{ inputs.n }}-to-960.json"
+            --target 960 --branch "$BRANCH" --beam "$BEAM" \
+            --core-hops "$CORE_HOPS" --min-e77 1 \
+            --out "$RUNNER_TEMP/twinned-${SRC_N}-to-960.json"
       - uses: actions/upload-artifact@v4
         with:
-          name: thomson-twinned-${{ inputs.n }}-to-960
+          name: thomson-twinned-${{ env.SRC_N }}-to-960
           retention-days: 7
-          path: ${{ runner.temp }}/twinned-${{ inputs.n }}-to-960.json
+          path: ${{ runner.temp }}/twinned-${{ env.SRC_N }}-to-960.json
