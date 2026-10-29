@@ -1,0 +1,61 @@
+name: temp-ta41-dynamic-core-hinge-replacement
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/dynamic_core_hinge.py'
+      - '.github/workflows/temp-ta41-dynamic-core-hinge-replacement.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-dynamic-core-hinge-replacement
+  cancel-in-progress: false
+jobs:
+  experiment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin CP solver and check syntax
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/dynamic_core_hinge.py
+      - name: Reconstruct exact 8-core endpoint hitting set and rerun independently
+        run: |
+          python3 science-boundary/job-shop-ta41/dynamic_core_hinge.py --core-seconds 4 --hard-seconds 9
+      - name: Verify any unexpectedly improved certificate using official Few Shots
+        if: always()
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          candidates=(science-boundary/job-shop-ta41/results/hinge-improved-*.json)
+          if (( ${#candidates[@]} )); then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            for file in "${candidates[@]}"; do
+              folder=$(mktemp -d)
+              cp "$file" "$folder/certificate.json"
+              (cd /tmp/few-shots && python3 problems/p009-job-shop-ta41/verify/verify.py "$folder") | tee "$folder/verdict.json"
+              python3 - "$folder/verdict.json" <<'PY'
+          import json,sys
+          v=json.load(open(sys.argv[1]))
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+            done
+          fi
+      - name: Persist verified scientific results
+        if: always()
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/job-shop-ta41/results/dynamic-core-hinge-replacement.json
+          git add science-boundary/job-shop-ta41/results/hinge-improved-*.json 2>/dev/null || true
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): exact cross-policy core hinge and replacement audit'
+          for attempt in $(seq 1 30); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
