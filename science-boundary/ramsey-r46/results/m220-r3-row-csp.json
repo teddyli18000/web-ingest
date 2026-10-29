@@ -1,0 +1,21 @@
+{
+  "campaign": "m220-r3-row-csp",
+  "scope": "all m=220 degree-11 anchors with r=t-w=3, equivalently S(v)=129",
+  "local_strata": [
+    {"A_edges":25,"B_edges":116,"A_count":6,"B_count":9,"cross_edges":68,"pairs":54},
+    {"A_edges":26,"B_edges":117,"A_count":2,"B_count":90,"cross_edges":66,"pairs":180}
+  ],
+  "pairs_checked":234,
+  "status_counts":{"UNSAT":234},
+  "all_unsat":true,
+  "total_search_nodes":27912,
+  "maximum_search_depth":2,
+  "timeouts":0,
+  "sat":0,
+  "relaxation":"For each fixed A/B pair, every A-side global degree label is independently relaxed to any value 11..17. Only the exact aggregate cross-edge total implied by S(v)=129 is retained; B-side degree labels and column degrees are completely relaxed.",
+  "conclusion":"In any hypothetical 220-edge R(4,6,36) graph, every degree-11 vertex satisfies r(v)=t(v)-w(v)>=4. Hence the degree-11 induced subgraph has minimum degree at least 4, so n11 cannot be 1,2,3,4,or5.",
+  "structural_survivors_after_r3_exclusion":96,
+  "crosscheck":"The separately fixed-P3 n11=5 row search enumerated 22,950 actual P3 placements across the same local strata and independently returned 22,950 UNSAT, 0 TIMEOUT, 0 SAT.",
+  "source_catalogs":"McKay complete R(3,6,11) catalogue strata A25/A26 and complete R(4,5,24) strata B116/B117; source SHA-256 values were authenticated in the earlier m219 r4 workflow.",
+  "solver_family":"same exact row-dual mixed-K4/I6 engine as m220_r2_row_csp.cpp, with aggregate cross totals 68 (A25/B116) and 66 (A26/B117)"
+}
