@@ -1,0 +1,96 @@
+Thomson N=960 — twinned grain-boundary family frontier
+Date: 2026-10-29
+
+Motivation
+----------
+The current low-energy N=960 graph R/A/B/D and the C index-2 stationary state
+all belong to the same 24-dislocation scar composition: 12 alternating
+5-7-5-7-5 scars, with no intended 7-7 twin core.  Extensive local, Hessian,
+size-bounce, crossover and transition-network exploration has mainly moved
+within this topology family.
+
+A distinct defect family is documented in the historical Thomson literature:
+
+- Wales & Ulker, Phys. Rev. B 74, 212101 (2006), DOI 10.1103/PhysRevB.74.212101.
+  Selected large-N structures include a 'twinned' defect in which two
+  seven-coordinated sites share a Voronoi/Delaunay edge and are surrounded by
+  three pentagons, net topological charge +1.  N=912, 932 and 972 are explicit
+  examples in the paper.
+- Wales, McKay & Altschuler, Phys. Rev. B 79, 224115 (2009),
+  DOI 10.1103/PhysRevB.79.224115.  Around N~1000, twinned grain boundaries are
+  reported to become favorable before rosette motifs dominate at somewhat
+  larger N.
+- Historical coordinates are available from the Cambridge Cluster Database,
+  including 912.xyz, 932.xyz and 972.xyz under CCD/Thomson/xyz.  The historical
+  table identifies the N=972 structure as T_h symmetric.
+
+This creates a genuinely different search space from further perturbation of
+R/A/B/D.
+
+Topology discriminator
+----------------------
+`code/analyze_twinned_motif.py` computes spherical Delaunay coordination and
+counts 7-7 edges.  A direct heptagon-heptagon edge is the core signature of the
+historical twinned motif and distinguishes it from an ordinary alternating
+5-7-5-7-5 scar.
+
+Diagnostic workflow: `.github/workflows/temp-thomson-960-twinned-diagnostic.yml`
+run 40798144771, matrix N=912/932/942/972.  It was queued when this note was
+written.
+
+Search operator 1: topology-preserving size propagation
+-------------------------------------------------------
+`code/propagate_twinned_family.py` propagates a historical parent to N=960 while
+actively retaining the topology family:
+
+- defect core = all non-sixfold sites, expanded by configurable Delaunay graph
+  distance (default 2 hops);
+- insertions are allowed only on convex-hull triangles outside that core;
+- removals are allowed only for sixfold sites outside the core;
+- beam selection first favors descendants retaining at least one 7-7 edge,
+  then ranks by energy;
+- all children receive full unconstrained stable long-double-difference L-BFGS
+  relaxation.
+
+This is not the same as the merged-shot dead end that greedily removed 12
+particles from N=972: energy-only greedy propagation can immediately heal away
+the twin family.  This operator treats persistence of the defect topology as a
+search coordinate.
+
+The 972->960 route was launched via run 40798582516, using branch=2, beam=2,
+core_hops=2 by default.  It was queued when this note was written.
+
+Search operator 2: one complete tetrahedral orbit removal
+----------------------------------------------------------
+N=972 -> N=960 is exactly 12 particles.  The proper tetrahedral rotation group
+T has generic orbit size 12, while the historical N=972 parent is T_h symmetric.
+This arithmetic/symmetry coincidence motivates a finite discrete search that is
+not represented by sequential deletion:
+
+1. recover one exact C2 and one C3 symmetry axis from the N=972 point cloud by
+   nearest-neighbor symmetry fitting;
+2. generate/validate the proper T group of order 12;
+3. enumerate point orbits under T;
+4. retain only full 12-point orbits composed entirely of sixfold bulk sites at
+   least two graph hops from the defect core;
+5. remove one entire orbit, giving N=960 in a single symmetry-preserving move;
+6. screen by raw post-removal energy, then fully release the best children;
+7. record whether 7-7 twin edges survive.
+
+Implementation: `code/search_972_twin_orbit_removal.py`.
+Workflow: `.github/workflows/temp-thomson-960-972-orbit-removal.yml`.
+This route was submitted on main and awaiting Actions scheduling when this note
+was written.
+
+Decision rule
+-------------
+- If a twinned-family N=960 child is below live_score-2e-7, immediately stop
+  exploration and run the stable repolish -> rationalization -> official
+  verifier -> tools/check.py pipeline.
+- If the family survives to N=960 but remains above the record, preserve the
+  lowest child as a distinct topology seed and explore its own local/symmetry
+  landscape rather than forcing it back into the R/A/B/D scar network.
+- If every constrained/topology-preserving route loses all 7-7 edges before
+  reaching N=960, that is meaningful evidence that this historical twin family
+  is not locally stable at N=960 under these propagation interfaces; it is not
+  a proof that no twinned N=960 minimum exists.
