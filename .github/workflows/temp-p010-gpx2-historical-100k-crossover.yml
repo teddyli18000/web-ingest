@@ -1,0 +1,70 @@
+name: temp-p010-gpx2-historical-100k-crossover
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/gpx2_cross_parent.cpp
+      - science-boundary/mona-lisa-tsp/gpx2_official_verify.py
+      - .github/workflows/temp-p010-gpx2-historical-100k-crossover.yml
+permissions:
+  contents: read
+jobs:
+  crossover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {p1: "nagata", p2: "5757199"}
+          - {p1: "nagata", p2: "5757200"}
+          - {p1: "nagata", p2: "5757203"}
+          - {p1: "nagata", p2: "5757204"}
+          - {p1: "nagata", p2: "5757205"}
+          - {p1: "nagata", p2: "5757241"}
+          - {p1: "5757199", p2: "5757203"}
+          - {p1: "5757199", p2: "5757204"}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch authoritative TSP, pre-2009 historical tours, separate GPX2 GPL source, official scorer
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          git clone --depth 1 https://github.com/rtinos/gpx2.git /tmp/gpx2
+          echo "UPSTREAM_GPX_COMMIT=$(git -C /tmp/gpx2 rev-parse HEAD)"
+          mkdir -p /tmp/mona/tours
+          curl -fsSL --retry 3 https://www.math.uwaterloo.ca/tsp/data/ml/mona-lisa100K.tsp -o /tmp/mona/mona-lisa100K.tsp
+          for val in ${{ matrix.p1 }} ${{ matrix.p2 }}; do
+            if test "$val" = "nagata"; then continue; fi
+            curl -fsSL --retry 3 "https://www.math.uwaterloo.ca/tsp/data/ml/tour/monalisa_${val}.tour" -o "/tmp/mona/tours/${val}.tour"
+          done
+          test -s /tmp/mona/mona-lisa100K.tsp
+          g++ -std=c++11 -O2 -Wall -Wno-unused-variable -I /tmp/gpx2 \
+            science-boundary/mona-lisa-tsp/gpx2_cross_parent.cpp \
+            /tmp/gpx2/global.cpp /tmp/gpx2/util_functions.cpp /tmp/gpx2/file_man.cpp /tmp/gpx2/gpx.cpp \
+            -o /tmp/mona/gpx2
+          test -x /tmp/mona/gpx2
+      - name: Recombine two strong 100K complete tours without any novel synthetic edge source
+        run: |
+          p1="/tmp/mona/tours/${{ matrix.p1 }}.tour"
+          p2="/tmp/mona/tours/${{ matrix.p2 }}.tour"
+          if test "${{ matrix.p1 }}" = "nagata"; then p1=upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json; fi
+          if test "${{ matrix.p2 }}" = "nagata"; then p2=upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json; fi
+          /tmp/mona/gpx2 /tmp/mona/mona-lisa100K.tsp "$p1" "$p2" /tmp/mona/child.txt
+          result="science-boundary/mona-lisa-tsp/results/gpx2-${{ matrix.p1 }}-${{ matrix.p2 }}"
+          FEWSHOTS_ROOT="${{ github.workspace }}/upstream" \
+            python -u science-boundary/mona-lisa-tsp/gpx2_official_verify.py \
+            --child /tmp/mona/child.txt --parentA "$p1" --parentB "$p2" \
+            --tag "${{ matrix.p1 }}_vs_${{ matrix.p2 }}" --out "$result"
+          test -s "$result/report.json"
+          if test -s "$result/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$result"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-gpx2-${{ matrix.p1 }}-${{ matrix.p2 }}
+          path: science-boundary/mona-lisa-tsp/results/gpx2-*/
+          if-no-files-found: ignore
