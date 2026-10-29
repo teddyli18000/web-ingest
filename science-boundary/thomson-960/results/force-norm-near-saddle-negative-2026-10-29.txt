@@ -1,0 +1,59 @@
+Thomson N=960 — force-norm refinement negative result on shallow C-down branches
+Date: 2026-10-29
+
+Question
+--------
+Could the Amore-style stationary-point reformulation V=1/2||g||^2 efficiently
+refine the two C-down near-index-1 branches that have the correct Morse index but
+physical tangent gradient RMS ~3e-4 to 4e-4?
+
+Method
+------
+Used `code/refine_stationary_force_norm.py` mathematics locally on the already
+downloaded run-40735119192 artifacts.  The exact spherical metric derivative in
+dV/dq was included, rigid-rotation leakage was projected, and matrix-free
+centered finite-difference Hessian-vector products supplied H g.  This was a
+numerical-interface test only; no candidate score was inferred from it.
+
+p100 branch
+-----------
+Initial:
+  E = 444368.40388814337
+  physical gradient RMS = 3.60468894e-4
+  lowest curvature ~ -0.00668914
+  H g RMS = 2.272754e-2
+
+After 100 L-BFGS iterations minimizing V:
+  E = 444368.4038881443 (scientifically unchanged)
+  physical gradient RMS = 3.60417891e-4
+  H g RMS = 1.1566e-3
+
+The optimizer made H g small while leaving g essentially unchanged.  This is the
+expected nonzero/near-null local-minimum failure mode of the force-norm
+objective near an almost-flat Hessian direction.
+
+p0 branch
+---------
+Initial:
+  E = 444368.4038646134
+  physical gradient RMS = 4.19966394e-4
+  lowest curvature ~ -0.0927087
+  H g RMS = 7.21157e-1
+
+After 50 L-BFGS iterations:
+  E = 444368.40386456635
+  physical gradient RMS = 3.66373751e-4
+  lowest curvature after the short refinement ~ -0.11596
+  H g RMS = 1.8987e-2
+
+The force decreased only ~13% and H g was non-monotone.  This is far too slow to
+justify scarce Actions runner time relative to overlap-tracked eigenvector/
+subspace following.
+
+Decision
+--------
+Do not launch a dedicated force-norm Actions batch for these C-down shallow
+separatrix seeds.  Retain `refine_stationary_force_norm.py` as a diagnostic or
+for seeds where the Hessian is well-conditioned, but use overlap-tracked
+index-1 / CHiSD-style dynamics for the present shallow branches.  In particular,
+small H g is not sufficient evidence of stationarity when g remains nonzero.
