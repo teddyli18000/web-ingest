@@ -122,3 +122,17 @@ Eight 130-second CP-SAT runs (two verified 2006 starts x four policies) all retu
 
 **Phase VII launched:** `all_core_orientation_repair.py` uses a fully unconstrained NoOverlap job-shop machine-order representation plus **nine separately verified necessary orientation cuts** (eight independently hard-checked cores + 21-arc consensus core) and the independently CP-SAT-proven >=15 changed machine orders condition. These conditions are necessary for any <=2005 schedule, not arbitrary heuristic hard freezes. The solver may still find 2006; FEASIBLE 2006 does not prove optimum. Four initial pilot arms (two parents x dynamic/core weighting) under equal 150-second limits. Only cite this as a *constructed test* until `results/allcores-*/all-cores-reorientation.json` exists and any strict improvement is officially validated.
 
+
+
+## Phase VII result: nine independent conflict cuts can all be crossed at 2006
+
+`all_core_orientation_repair.py` built a **globally complete** CP-SAT NoOverlap model (no hard survivor freezing) subject to (i) eight independently rebuilt sufficient 2005 UNSAT cores, (ii) the separate 21-arc consensus 2005 UNSAT core, and (iii) the independently proven necessary change to **at least 15/20 machine permutations**. Each cut is a disjunction of *true reversed pairwise orderings*, not a nominally removed assumption. All conditions are necessary for 2005, though far from sufficient.
+
+Four 150-second pilots (baseline/gateway124 x dynamic/core soft-flip weighting) all returned **FEASIBLE score=2006**, never OPTIMAL. Each found **15 changed machine orders and exactly 21 reversed original adjacent relations**; each genuinely reversed at least one oriented relation in **every one of the nine certified core sets** (the independent cut-test counts were included per report). Solver objective lower bounds `187000000`–`187100000` still fall far short of proving 2005 infeasible.
+
+This is a structural *existence* result: previously we knew a 15-inversion score-2006 neutral state that **did not** cross the 21-arc core, and a 30-Kendall neutral gateway state that crossed just one. The new 15-machine/21-baseline-adjacency candidates cross **all nine known necessary obstruction sets simultaneously** while keeping score 2006. They are not score breakthroughs; they could be useful neutral starting points for adaptive new-bottleneck repair.
+
+**Reproducibility caveat:** The initial four pilots saved verified DAG scores and complete cut counts, not the resulting 20x30 permutations. A single replay with the same pinned solver version is launched via `temp-ta41-ninecore-neutral-certificate.yml` to retain a full `neutral-certificate.json` and have Few Shots officially validate score 2006; do not cite the *new* replay schedule as independently certified until the verdict file exists.
+
+Next decision: only if this nine-cut neutral certificate is officially valid, resume new-critical-path macro search *from that exact orientation class*, rather than simply rerun the original baseline. The real open question remains reaching **2005**, not just crossing a growing collection of necessary disjunctions at score 2006.
+
