@@ -1,0 +1,35 @@
+name: temp Thomson 960 scar-to-twin topology flips
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-scar-to-twin-flips.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Enumerate and realize scar-to-twin flip sequences
+        run: |
+          python3 science-boundary/thomson-960/code/search_scar_to_twin_flips.py \
+            "$RUNNER_TEMP/few-shots" --depth 3 --max-topologies 80 --screen 24 --relax 12 \
+            --out "$RUNNER_TEMP/scar-to-twin.json"
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'scar-to-twin.json')))
+          print('SUMMARY',d['initial_coord_hist'],d['initial_twin_count'],len(d['abstract_candidates']),d['realized_count'],d.get('best_float_energy'),d.get('best_delta_vs_live'))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-scar-to-twin-flips
+          retention-days: 7
+          path: ${{ runner.temp }}/scar-to-twin.json
