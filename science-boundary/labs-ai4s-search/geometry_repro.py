@@ -83,6 +83,14 @@ def selftest():
     v=s.copy();w=c.copy();flip(v,w,j)
     assert energy(v)==energy(t) and np.array_equal(cor(v),w)
  assert len(CERT)==100
+ # Exact mean single-spin barrier sum identity, valid at every sequence.
+ for n in (12,24,40,64,100):
+  for seed in range(30):
+   s=np.array([1 if (i*i+seed*i+seed*seed)%13<6 else -1 for i in range(n)],dtype=np.int8)
+   c=cor(s);e=energy(s)
+   lhs=sum(delta(s,c,j) for j in range(n))
+   rhs=4*n*(n-1)-8*e+8*sum(int(c[k]) for k in range(2,n,2))
+   assert lhs==rhs
  s=np.array([1 if v=='+' else -1 for v in CERT],dtype=np.int8)
  assert energy(s)==578
  for method in (0,1):
