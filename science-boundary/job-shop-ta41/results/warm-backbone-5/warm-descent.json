@@ -1,0 +1,72 @@
+{
+  "instance": "ta41",
+  "baseline": 2006,
+  "target": 2005,
+  "method": "valid inverted-21-core schedule as CP-SAT optimization hint with alternating 0/2/4 machine-order anchors",
+  "selected_shared_core_arc": 5,
+  "original_start_score": 2044,
+  "best_reversed_schedule_score": 2006,
+  "improved": false,
+  "neutral_with_core_reversed": true,
+  "stages": [
+    {
+      "status": "FEASIBLE",
+      "seconds": 75.009,
+      "initial_valid_makespan": 2044,
+      "fixed_machine_orders": [],
+      "solver_objective_bound": 1850.0,
+      "branches": 112886,
+      "conflicts": 32006,
+      "independent_dag_makespan": 2006,
+      "changed_machines_from_baseline": 18,
+      "stage": 0
+    },
+    {
+      "status": "FEASIBLE",
+      "seconds": 75.006,
+      "initial_valid_makespan": 2006,
+      "fixed_machine_orders": [
+        6,
+        12
+      ],
+      "solver_objective_bound": 1956.0,
+      "branches": 35573,
+      "conflicts": 10431,
+      "independent_dag_makespan": 2006,
+      "changed_machines_from_baseline": 18,
+      "stage": 1
+    },
+    {
+      "status": "OPTIMAL",
+      "seconds": 2.591,
+      "initial_valid_makespan": 2006,
+      "fixed_machine_orders": [
+        9,
+        11,
+        12,
+        13
+      ],
+      "solver_objective_bound": 2006.0,
+      "branches": 3272,
+      "conflicts": 252,
+      "independent_dag_makespan": 2006,
+      "changed_machines_from_baseline": 18,
+      "stage": 2
+    },
+    {
+      "status": "FEASIBLE",
+      "seconds": 75.009,
+      "initial_valid_makespan": 2006,
+      "fixed_machine_orders": [],
+      "solver_objective_bound": 1850.0,
+      "branches": 323439,
+      "conflicts": 18176,
+      "independent_dag_makespan": 2006,
+      "changed_machines_from_baseline": 18,
+      "stage": 3
+    }
+  ],
+  "seed": 350,
+  "all_hard_NoOverlap": true,
+  "note": "Every produced schedule rechecked against original disjunctive DAG. Official Few Shots verifier is independent required next step."
+}
