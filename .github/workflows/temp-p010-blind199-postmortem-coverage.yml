@@ -1,0 +1,52 @@
+name: temp-p010-blind199-postmortem-coverage
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/blind199_hidden_support_audit.py
+      - .github/workflows/temp-p010-blind199-postmortem-coverage.yml
+permissions:
+  contents: read
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: After blind jobs are final, retrieve hidden tour and public historical inputs
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install scipy numpy
+          mkdir -p /tmp/blind/post/tour /tmp/blind/post/lp
+          root=https://www.math.uwaterloo.ca/tsp/data/ml
+          for score in 5757199 5757200 5757203 5757204 5757205 5757241 5757245; do
+            curl -fsSL --retry 2 "$root/tour/monalisa_${score}.tour" -o "/tmp/blind/post/tour/monalisa_${score}.tour"
+          done
+          for v in 6nsub 5zsub 4zsub; do
+            curl -fsSL --retry 2 "$root/x/mona.${v}.x" -o "/tmp/blind/post/lp/mona.${v}.x"
+          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          t=Path('/tmp/blind/post/tour');l=Path('/tmp/blind/post/lp')
+          Path('/tmp/blind/post/parents.json').write_text(json.dumps({str(s):str(t/f'monalisa_{s}.tour') for s in (5757200,5757203,5757204,5757205,5757241,5757245)}))
+          Path('/tmp/blind/post/lps.json').write_text(json.dumps({'2012-04-18':str(l/'mona.6nsub.x'),'2012-01-21':str(l/'mona.5zsub.x'),'2011-07-15':str(l/'mona.4zsub.x')}))
+          PY
+      - name: Strictly post-hoc hidden-edge observability audit
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          python science-boundary/mona-lisa-tsp/blind199_hidden_support_audit.py \
+            --reference /tmp/blind/post/tour/monalisa_5757199.tour \
+            --hidden upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --parents /tmp/blind/post/parents.json --lps /tmp/blind/post/lps.json \
+            --output science-boundary/mona-lisa-tsp/results/blind199-hidden-support.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-blind199-postmortem-coverage
+          path: science-boundary/mona-lisa-tsp/results/blind199-hidden-support.json
+          if-no-files-found: ignore
