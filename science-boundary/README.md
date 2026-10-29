@@ -17,7 +17,7 @@ This workspace is permanent. It is **not** part of `temp-work/` and is not subje
 | [`thomson-960/`](thomson-960/) | Can the N=960 Coulomb energy be improved below the live Few Shots record? | Active — synced to `444368.3924061973`; live-record diagnostics and next-generation basin search starting. |
 | [`aes-sbox-circuit/`](aes-sbox-circuit/) | Can the AES S-box be implemented in at most 102 AND/XOR/XNOR gates? | Active — live Few Shots record is 103; ODC neutral-walk search from the new 103 construction launched. |
 
-| [`job-shop-ta41/`](job-shop-ta41/) | Can a verifiable ta41 schedule beat makespan 2006, and what structural changes are necessary? | Active — no improved certificate; independent CP excludes ≤14 changed machine orders (>=15 required for Cmax<=2005); 114 independently verified group obstructions, exact 2^20 cover, and incumbent-guided search. |
+| [`job-shop-ta41/`](job-shop-ta41/) | Can a verifiable ta41 schedule beat makespan 2006; is the barrier geometric distance or coordination of small edits? | Active — proved 15 adjacent inversions across 15 machines already give certified 2006; exact 2^15 coordination lattice finds enabling micro-move dependencies; 2005 distance remains unresolved. |
 
 | [`mona-lisa-tsp/`](mona-lisa-tsp/) | Can Nagata's 5,757,191-city-tour score on Mona Lisa 100K be improved? | Active — exact nearest-neighbor 2-opt probe prepared; no verified improvement yet. |
 
