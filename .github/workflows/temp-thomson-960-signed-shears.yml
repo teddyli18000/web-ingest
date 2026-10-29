@@ -1,0 +1,53 @@
+name: temp Thomson 960 signed global-shear event census
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-signed-shears.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: [0,1,2,3]
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Exhaust signed nonlinear shear sequences in this batch
+        shell: bash
+        run: |
+          set -euo pipefail
+          case '${{ matrix.batch }}' in
+            0) SEQS=('0,-1' '0,-2' '-0,1' '-0,2' '-0,-1') ;;
+            1) SEQS=('-0,-2' '0,1,-2' '0,-1,2' '0,-1,-2' '-0,1,2') ;;
+            2) SEQS=('-0,1,-2' '-0,-1,2' '-0,-1,-2' '0,2,-1' '0,-2,1') ;;
+            3) SEQS=('0,-2,-1' '-0,2,1' '-0,2,-1' '-0,-2,1' '-0,-2,-1') ;;
+          esac
+          i=0
+          for seq in "${SEQS[@]}"; do
+            python3 science-boundary/thomson-960/code/search_composed_shears.py \
+              "$RUNNER_TEMP/few-shots" \
+              --neighbor-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+              --kind sequential --sequence "$seq" --scales '0.55,0.75,0.95,1.15,1.35' \
+              --out "$RUNNER_TEMP/signed-${{ matrix.batch }}-$i.json"
+            python3 - <<PY
+          import json
+          d=json.load(open('$RUNNER_TEMP/signed-${{ matrix.batch }}-$i.json'))
+          print('SIGNED', '$seq', d['best_float_energy'], d['best_delta_vs_live'])
+          PY
+            i=$((i+1))
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-signed-shears-b${{ matrix.batch }}
+          retention-days: 7
+          path: ${{ runner.temp }}/signed-${{ matrix.batch }}-*.json
