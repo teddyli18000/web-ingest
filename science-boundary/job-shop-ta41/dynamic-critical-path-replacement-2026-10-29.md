@@ -55,3 +55,22 @@ These counts **are not effectiveness metrics** in isolation: replacements per ac
 ## Previous launch reference
 
 Pilot launched; results now verified. Inspect `results/dcpr-{baseline,124}-{dynamic,static,core,random}-4107/pilot.json` and any `upstream-verdict.json` before editing this section.
+
+## Phase II and III verified: dynamic CP release versus core feedback
+
+**Phase II — direct dynamic release is insufficient:** `dynamic_critical_cp_repair.py` accumulates newly critical operation endpoints over eight rounds, releases exactly 30 new operations per round, preserves the remaining jobs' relative machine order, and calls a full hard-NoOverlap 2005 decision oracle. Four policies x two verified parents x eight rounds = **64 separate exact CP-SAT decisions**, and **all 64 were INFEASIBLE** (zero UNKNOWN, zero target certificate) even after releasing 240/600 operations. All eight outcome logs: `results/dcprcp-{baseline,124}-{dynamic,static,core,random}-4107/dynamic-repair.json`.
+
+This specifically tests operation identities selected adaptively from *successive* critical-path replacements, not a static time band. Yet the fixed-survivor partial-order interface remains restrictive. The solver usually rejects in presolve with zero conflicts. This is evidence about this representation, NOT a global ta41 makespan bound.
+
+**Independent obstruction audit:** `audit_dynamic_repair_cores.py` reconstructed all eight final 240-operation neighborhoods using a fresh model, made every remaining successor precedence conditional on CP assumptions, and extracted sufficient UNSAT assumption cores (not necessarily minimal). The cores have **59, 66, 68, 83, 85, 86, 88, 95** pinned machine precedences across **9–17 machines**, even though all have already freed 240 operations. Source: `results/dcprcp-independent-core-audit.json`. Thus a moving critical path does not necessarily expose the still-fixed necessary resource relationships.
+
+**Phase III — feedback from CP obstructions:** starting from the same 240 operations selected by the dynamic policy, `core_feedback_release.py` unlocks 24 more per round based on (a) maximum assumption-core endpoint incidence, (b) random core endpoints, or (c) uniform random operations; two parents. The first assumption-UNKNOWN radius occurred with additional releases:
+- Baseline 2006: degree **312** total released; core-random **288**; unstructured random **336**.
+- Gateway-124 2006: degree **288**; core-random **288**; unstructured random **336**.
+
+**Critical caution:** in baseline core-random at 288 freed, a separate hard constraint solve returned **INFEASIBLE**, despite the assumption oracle returning UNKNOWN. The other five hard status checks were UNKNOWN after 12s. Neither a larger core nor first UNKNOWN is a proof of nearness to 2005 or evidence of an improved feasible schedule. Source: `results/core-feedback-{baseline,124}-{degree,core_random,random}/core-release.json`.
+
+**Phase IV — actual objective check of these six subspaces:** `optimize_core_feedback_subspaces.py` uses the official 2006 starting schedules as full interval hints, minimizes makespan under the same partial survivor pinning with a 105s/four-worker CP budget, and records objective lower bounds / optimality / true certificates. Workflow `temp-ta41-core-feedback-objective.yml`. Do not claim results until `results/core-objective-*/objective-repair.json` exists. A score-2006 FEASIBLE result is not an optimality certificate, whereas OPTIMAL=2006 rules out its exact conditioned subspace.
+
+**Mechanistic interpretation:** the first adaptive critical feedback implementation definitively changes critical-path identity much more often, but does not outperform controls on best makespan in the pilot. Its release interface still freezes hundreds of precedence arcs. The next qualitatively different idea, if all CP objective checks stagnate, is to jointly *reorient* relations via a soft baseline order with propagated conflicts rather than simply unlock more operation IDs in the same fixed-survivor model. The 2026 N7 batch paper accelerates evaluation, not this joint interaction, and the Liu-Li-Gao paper's exact parameterization release cannot be claimed reproduced from its ScheduleOpt citation alone.
+
