@@ -1,0 +1,59 @@
+name: temp-p010-joint-100k-port-sec
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/monalisa_joint_port_sec.py
+      - .github/workflows/temp-p010-joint-100k-port-sec.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  joint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {budget: 120, neighbors: 32}
+          - {budget: 300, neighbors: 48}
+          - {budget: 600, neighbors: 48}
+          - {budget: 1200, neighbors: 64}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch counterexample factor, authoritative verifier, and run compile check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install numpy scipy ortools
+          python -m py_compile science-boundary/mona-lisa-tsp/monalisa_joint_port_sec.py
+          mkdir -p /tmp/p010-factor
+          gh run download 40874145856 --repo teddyli18000/web-ingest --name p010-monalisa-sec-100k-defect-factor --dir /tmp/p010-factor
+          test "$(find /tmp/p010-factor -name disconnected-factor.json | wc -l)" -eq 1
+      - name: Exact joint interior+cross-component reoptimization with dynamic SEC
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          source=$(find /tmp/p010-factor -name disconnected-factor.json -print -quit)
+          out="science-boundary/mona-lisa-tsp/results/joint-sec-${{ matrix.budget }}"
+          mkdir -p "$out"
+          python -u science-boundary/mona-lisa-tsp/monalisa_joint_port_sec.py \
+            --factor "$source" --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --budget ${{ matrix.budget }} --neighbors ${{ matrix.neighbors }} \
+            --limit 220 --workers 4 --threshold 5757190 \
+            --report "$out/report.json" --certificate "$out/certificate.json"
+          test -s "$out/report.json"
+          if test -s "$out/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$out"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-joint-port-sec-${{ matrix.budget }}
+          path: science-boundary/mona-lisa-tsp/results/joint-sec-${{ matrix.budget }}/
+          if-no-files-found: ignore
