@@ -70,6 +70,21 @@ Heuristic monotone target-directed adjacent-swap beam search (width 100) found u
 
 Important: Only fully unrestricted exact Kendall-ball infeasibility could certify a true global incumbent-relative distance radius; **neither global radius 20 nor 40 was solved**. Therefore there is still **no proven nearest-distance answer for 2005**. Narrow-window negatives exclude exactly their tested subfamilies, not all nearby solutions.
 
+
+## Verified low-distance crossings of certified structural gateways
+
+The three exact-Kendall, 8700-pair guided CP optimizations **completed** (OR-Tools 9.14.6206; 180s each) with new **Few Shots-officially verified** 2006 schedules:
+
+| Forced reversal in mandatory 21-arc core | Best found Kendall inversions from original | Changed machine permutations | Reversed core relations | Status |
+|---|---:|---:|---|---|
+| Arc 124, machine 3, job 24 before job 16 in baseline | **30** | 13 | [124] | FEASIBLE, not OPTIMAL |
+| Arc 120, machine 3, job 19 before job 25 in baseline | **36** | 13 | [120,124,125] | FEASIBLE, not OPTIMAL |
+| Arc 127, machine 3, job 27 before job 5 in baseline | **43** | 17 | [127,181] | FEASIBLE, not OPTIMAL |
+
+Source `results/gateway-{124,120,127}/gateway-cost.json` and respective `upstream-verdict.json`. The solver best objective bound stayed **2** at the deadline for all three, so these are **existence upper bounds**, not minimum distances.
+
+**Meaning:** The previously known necessary 2005 *precedence gateway* can itself be crossed while keeping score 2006 with only **30** of 8700 machine-pair inversions; one example still differs on just **13 machine permutations**. Thus neither high machine-order distance nor structural gateway violation independently requires a remote basin. What extra coupled changes are needed to actually reach 2005 remains open. A follow-up exact small co-swapping repair from these gateway parents has been launched (`temp-ta41-gateway-coordinated-micro-repair.yml`), not claimed complete.
+
 ## Interpretation and decision
 
 The evidence **falsifies the inference** that 15 changed machine permutations necessarily means a geometrically distant basin. It **directly demonstrates** that individually harmful micro-moves can have constructive, mutually enabling interactions. It does **not** determine whether a score<=2005 solution is geometrically near or far.
