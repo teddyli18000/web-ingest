@@ -20,11 +20,11 @@ struct S {
  }
 };
 string alternate(string s){for(int i=1;i<(int)s.size();i+=2)s[i]=(s[i]=='1'?'0':'1');return s;}
-string negate(string s){for(char &c:s)c=(c=='1'?'0':'1');return s;}
+string negate_bits(string s){for(char &c:s)c=(c=='1'?'0':'1');return s;}
 vector<string> orbit(string s){
  vector<string>v;for(int rev=0;rev<2;rev++){
   string b=s;if(rev)reverse(b.begin(),b.end());
-  for(int alt=0;alt<2;alt++){string a=alt?alternate(b):b;v.push_back(a);v.push_back(negate(a));}
+  for(int alt=0;alt<2;alt++){string a=alt?alternate(b):b;v.push_back(a);v.push_back(negate_bits(a));}
  }return v;
 }
 int hamming(string a,string b){int k=0;for(int i=0;i<(int)a.size();i++)k+=a[i]!=b[i];return k;}
