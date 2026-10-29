@@ -1,0 +1,62 @@
+name: temp-p010-restored-baseline-joint-feasibility
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/monalisa_joint_baseline_restoration.py
+      - .github/workflows/temp-p010-restored-baseline-joint-feasibility.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {cross: 200, within: 300, mode: optimize}
+          - {cross: 400, within: 800, mode: optimize}
+          - {cross: 800, within: 1600, mode: optimize}
+          - {cross: 400, within: 800, mode: feasibility}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch original verifier and compressed exact 100K disconnected-factor counterexample
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install numpy scipy ortools
+          python -m py_compile science-boundary/mona-lisa-tsp/monalisa_joint_baseline_restoration.py
+          mkdir -p /tmp/factor
+          gh run download 40874145856 --repo teddyli18000/web-ingest --name p010-monalisa-sec-100k-defect-factor --dir /tmp/factor
+          test "$(find /tmp/factor -name disconnected-factor.json | wc -l)" -eq 1
+      - name: Keep baseline tour accessible while jointly unlocking factor interiors and cross-cycle connectors
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          f=$(find /tmp/factor -name disconnected-factor.json -print -quit)
+          out="science-boundary/mona-lisa-tsp/results/restored-joint-${{ matrix.cross }}-${{ matrix.within }}-${{ matrix.mode }}"
+          mkdir -p "$out"
+          extra=""
+          if test "${{ matrix.mode }}" = feasibility; then extra="--feasibility-only"; fi
+          python -u science-boundary/mona-lisa-tsp/monalisa_joint_baseline_restoration.py \
+            --factor "$f" --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --budget ${{ matrix.cross }} --within-budget ${{ matrix.within }} \
+            --within-neighbors 32 --neighbors 48 \
+            --limit 210 --workers 4 --threshold 5757190 $extra \
+            --report "$out/report.json" --certificate "$out/certificate.json"
+          test -s "$out/report.json"
+          if test -s "$out/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$out"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-restored-joint-${{ matrix.cross }}-${{ matrix.within }}-${{ matrix.mode }}
+          path: science-boundary/mona-lisa-tsp/results/restored-joint-*/
+          if-no-files-found: ignore
