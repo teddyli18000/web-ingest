@@ -35,11 +35,18 @@ def main():
     elif a.selector=='knn8_full':candidates=knn-parent_edges
     else:candidates=(lp|knn)-parent_edges
     m=cp_model.CpModel();arcs=[];vars={}
+    incumbent_oriented={(ref[i],ref[(i+1)%n]) for i in range(n)}
+    incumbent_set=edge_set(ref)
     for u,v in sorted(parent_edges|candidates):
         q=m.NewBoolVar(f'e{u}_{v}');f=m.NewBoolVar(f'f{u}_{v}');r=m.NewBoolVar(f'r{u}_{v}')
         m.Add(f+r==q)
         arcs.extend(((u,v,f),(v,u,r)))
         vars[(u,v)]=q
+        # Warm-start the exact incumbent in the much larger candidate graph;
+        # previous version returned worse feasible tours under short time caps.
+        m.AddHint(q,1 if (u,v) in incumbent_set else 0)
+        m.AddHint(f,1 if (u,v) in incumbent_oriented else 0)
+        m.AddHint(r,1 if (v,u) in incumbent_oriented else 0)
     m.AddCircuit(arcs)
     m.Minimize(sum(int(D[u,v])*q for (u,v),q in vars.items()))
     solver=cp_model.CpSolver()
@@ -54,7 +61,8 @@ def main():
        'added_candidate_edges':len(candidates),
        'status':solver.StatusName(status),'elapsed_seconds':round(time.perf_counter()-start,4),
        'selected_chords':[list(e) for e in sorted(candidates)],
-       'solver_bound':solver.BestObjectiveBound()}
+       'solver_bound':solver.BestObjectiveBound(),
+       'incumbent_warm_start':True}
     if status in (cp_model.OPTIMAL,cp_model.FEASIBLE):
         selected={e for e,q in vars.items() if solver.Value(q)}
         assert len(selected)==n
