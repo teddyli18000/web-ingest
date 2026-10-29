@@ -1,11 +1,22 @@
 # Mona Lisa 100,000-city TSP (p010)
 
-## Current state (2026-10-28)
+## Current state (2026-10-29)
 - **Goal:** construct a valid 100,000-city tour of integer TSPLIB EUC_2D length **at most 5,757,190**, beating Nagata's published 5,757,191 tour by one or more units.
 - **Independently documented lower bound:** 5,757,084 (Cook's Mona Lisa TSP Challenge, July 2012), leaving a gap of 107 to the baseline.
 - **Few Shots accepted p010 shots:** none at initial read (FEWSHOT.md record chain contains baseline only).
 - **Latest verified status:** record remains **5,757,191**. A certified **51-dimensional neutral tour family** of 2,251,799,813,685,248 distinct equal-score Hamiltonian cycles is documented below (CP-SAT + Z3 universal connectivity, sampled official-verifier cross-check). No record claim.
 - **Important:** scoring uses exact integer rounded EUC_2D, NOT ordinary Euclidean float length. Always check a candidate with the authoritative p010 verifier.
+
+## 2026-10-29 — blinded 199 counterfactual and exact SEC representation
+
+**No improvement on the published 100,000-city best of 5,757,191 has been verified or submitted.** Research now has reproducible held-out controls instead of repeatedly enlarging Nagata-centered local swaps.
+
+- **Strict blind Mona study** [run 40867628330](https://github.com/teddyli18000/web-ingest/actions/runs/40867628330): treat the legal 5,757,199 tour as incumbent, permit six other older complete tours plus real Concorde LP x but physically remove Nagata certificate. Six equal-budget 64/192-edge selections (LP disagreement, LP consensus conflict, degree-two defect repair) all returned `UNKNOWN` after 125 s and produced no valid improvement. Independent [unsealing](https://github.com/teddyli18000/web-ingest/actions/runs/40868003912) found **zero** chosen chords in hidden Nagata-only edges. [Postmortem](https://github.com/teddyli18000/web-ingest/actions/runs/40869098503) found 1,978 hidden Nagata edges outside permitted parents; **all 1,978 are geometric nearest-eight neighbor edges** and 1,936 appear in at least one archived LP positive support set. Those target labels are forbidden from future "blind" selection on the same split.
+- **Generalization benchmark** [15 independently held-out TSPLIB cases](notes/blinded-counterfactual-2026-10-29.md) and [machine-readable results](data/blind-tsplib-strict-fold3.json): parent-union exact solver, two distinct LP selectors, two defect repair methods, and three naive geometric controls with equal 12-chord budgets. An earlier apparent agreement of two LP methods was proved *identical selected edge sets*, and the corrected method was tested on new, untouched cases. [LP construction overhead](data/tsplib-lp-overhead-15.json) measured 0.012–0.253 s median per small test case; it is not free end-to-end compute.
+- **The critical solver-formulation result:** full old-parent plus all 8-nearest-neighbor candidate edges, 18s single worker. Naive AddCircuit often returned only FEASIBLE, but degree-2 + **dynamic valid subtour cuts** achieved **14/15 restricted-graph OPTIMAL certificates and 13/15 published GLOBAL optimal tour scores**, all **15/15 independently** rescored and checked for Hamiltonicity and candidate-edge membership in [audit](data/independent-tsplib-sec-15-verified.json). `kroD100` is proved best within its candidate graph at 21,307 but global optimum is 21,294; `pr76` remained FEASIBLE at 108,395 vs global 108,159. SECs are classical prior art; this is an experimentally validated **representation choice**, not a new global result.
+- **Return to 100K counterexamples:** [run 40874145856](https://github.com/teddyli18000/web-ingest/actions/runs/40874145856) recorded a disconnected integer 2-factor of length **5,757,188** in **12 cycles** (after 352 SEC cuts, 220s, status UNKNOWN) over top-eight historical/LP disputed regions. [Counterexample port repair workflow](https://github.com/teddyli18000/web-ingest/actions/workflows/temp-p010-monalisa-counterexample-port-repair.yml) evaluates new paired cross-cycle 2-opt connectors using complete original metric and requires authoritative verifier acceptance for any record. A disconnected factor is **not** a candidate tour.
+
+Full experimental protocol, design leaks, counterfactual evidence, failure modes, literature and future handoff: [notes/blinded-counterfactual-2026-10-29.md](notes/blinded-counterfactual-2026-10-29.md).
 
 ## October 29 — real algorithm disagreement × Concorde LP fractions
 
@@ -148,6 +159,7 @@ The scripts produce no new tour unless a candidate passes exact integer scoring.
 - [Published baseline certificate](https://github.com/few-shots/few-shots/blob/main/problems/p010-mona-lisa-tsp/baseline/certificate.json)
 
 ## Work log
+- 2026-10-29: strictly blinded 5,757,199 counterfactual and 15 certified TSPLIB controls. LP + historical selection requires edge-overlap ablations; full 8NN with degree-2 + dynamic subtour separation independently recovers 13/15 published global optima and exactly solves 14 restricted graphs, vs frequent AddCircuit stalls. New 12-cycle 100K defect frozen for boundary-port repair; no record claimed.
 - 2026-10-29: real strong-tour-vs-LP joint study: 94,228 Nagata edges stable among seven old tours, 517 competing alternative-wiring components, 85.85% LP-fraction overlap among ≥2-disagreement nodes. Ten matched selector TSP searches plus regional/port controls no strict gain; top-one exact SEC proves huge 89-unit nonconnected false improvement. Top-eight full LP/historical candidate model remains a separately labeled incomplete search.
 - 2026-10-29: research-driven crossover and constraint selection campaign: exact 58-parent union optimum equals 5,757,191, 654 priced splits best repair net 0, matched 128/320-edge selector tests all infeasible. Suspended unsupported learned selector, launched LKH-3 diverse parent and downstream GPX2 standard crossover benchmark.
 - 2026-10-28 local (2026-10-29 UTC): verified 51-cube single positive exchange exclusion and positive controls; verified two-positive-motif exclusion (3-cycle 2-factor of 5+8+99,987 at 5,757,162). Launched topologically seeded exact island boundary search allowing cost-increasing intermediate edge substitutions.
