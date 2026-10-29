@@ -147,7 +147,9 @@ int main(int argc,char**argv){
  if(argc==2&&string(argv[1])=="--selftest"){test();return 0;}
  if(argc<8){cerr<<"usage: OUT.csv N STAGE BASES SEED M MASKS [record]\n";return 2;}
  ofstream f(argv[1]);int n=stoi(argv[2]),stage=stoi(argv[3]),bases=stoi(argv[4]),m=stoi(argv[6]),masks=stoi(argv[7]);
- bool record=argc>8&&string(argv[8])=="record";
+ string mode=argc>8?string(argv[8]):"random";
+ bool record=mode=="record",near=(mode.rfind("near",0)==0);
+ int near_radius=near?stoi(mode.substr(4)):0;
  if(m<4||m>18||m>n)return 3;
  mt19937_64 rng(stoull(argv[5])),proposal_rng(stoull(argv[5])+101007),seed_rng(stoull(argv[5])+51487);
  string cert="++++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-";
@@ -156,7 +158,9 @@ int main(int argc,char**argv){
  f<<"n,group,stage,baseE,method,mask,m,repairE,excE,repairDist,excDist,repairSteep,repairFirst,excSteep,excFirst,stepsRepairSteep,stepsRepairFirst,stepsExcSteep,stepsExcFirst,enumStates,selectionSeconds,enumevalSeconds,descentSeconds\n";
  f<<fixed<<setprecision(9);
  for(int g=0;g<bases;g++){
-  vector<int> s(n);for(int&i:s)i=seed_rng()%2?1:-1;L base(record?rec:s);base.descend();
+  vector<int> s(n);for(int&i:s)i=seed_rng()%2?1:-1;L base(record||near?rec:s);
+  if(near){for(int i:random_mask(n,near_radius,seed_rng))base.flip(i);}
+  base.descend();
   if(!record)for(int t=0;t<stage;t++){
    auto x=base;auto ids=random_mask(n,4,rng);for(int i:ids)x.flip(i);
    x.descend();if(x.e<base.e)base=move(x);
