@@ -135,7 +135,7 @@ def execute(a):
             stall+=1
             continue
         # Same objective and bounded perturbation rule for every arm.
-        feasible=[v for v in candidates if v[0]<=max(now,global_best)+a.max_uphill]
+        feasible=[v for v in candidates if v[0]<=global_best+a.max_uphill]
         if not feasible:
             stall+=1
             continue
@@ -151,14 +151,17 @@ def execute(a):
         if score>now:uphill_accepts+=1
         now=score
         stage+=1
-        if a.policy=='dynamic' or (stage%4==0):
-            _,critical,_=state(orders,pos,duration)
-            emerging=critical-previous_critical
-            if emerging:newly_created+=len(emerging);replacements+=1
-            if a.policy=='dynamic':
-                frontier=emerging if emerging else critical
-            previous_critical=critical
-            current_critical=critical
+        # Recompute and log after EVERY move in ALL arms; only dynamic
+        # feeds the new bottlenecks back into the next candidate focus.
+        _,critical,_=state(orders,pos,duration)
+        emerging=critical-previous_critical
+        if emerging:
+            newly_created+=len(emerging)
+            replacements+=1
+        if a.policy=='dynamic':
+            frontier=emerging if emerging else critical
+        previous_critical=critical
+        current_critical=critical
         if now<global_best:
             global_best=now
             best=[x[:] for x in orders]
