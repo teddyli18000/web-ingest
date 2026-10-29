@@ -1,0 +1,42 @@
+name: temp-aes-gf16-right-support-classification
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-gf16-right-support-classification.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-gf16-right-support-classification
+  cancel-in-progress: false
+
+jobs:
+  classify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Reproduce support symmetry and XOR-cost census
+        run: |
+          python3 science-boundary/aes-sbox-circuit/classify_gf16_rank9_right_supports.py | tee /tmp/supports.log
+          grep -q '"necessary_supports": 385' /tmp/supports.log
+          grep -q '"realizable_supports": 40' /tmp/supports.log
+      - name: Exact grouped-matrix support-orbit classification
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -std=c++20 science-boundary/aes-sbox-circuit/prove_gf16_rank9_right_supports.cpp -o /tmp/support-proof
+          /tmp/support-proof | tee /tmp/support-proof.log
+          grep -q 'CLASSIFICATION realizable_orbits=1,8,10 realizable_supports=40' /tmp/support-proof.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-gf16-right-support-classification
+          path: |
+            /tmp/supports.log
+            /tmp/support-proof.log
