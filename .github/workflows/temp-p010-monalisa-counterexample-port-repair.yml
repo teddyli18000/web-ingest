@@ -1,0 +1,53 @@
+name: temp-p010-monalisa-counterexample-port-repair
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["temp-p010-monalisa-sec-defect-snapshot"]
+    types: [completed]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  repair:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Retrieve verified 100K disconnected 2-factor and authoritative original scorer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FACTOR_RUN: ${{ github.event.workflow_run.id || '40873841158' }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install numpy scipy
+          python -m py_compile science-boundary/mona-lisa-tsp/monalisa_factor_cross_repair.py
+          mkdir -p /tmp/monalisa-factor
+          gh run download "$FACTOR_RUN" --repo teddyli18000/web-ingest --name p010-monalisa-sec-100k-defect-factor --dir /tmp/monalisa-factor
+          find /tmp/monalisa-factor -type f -maxdepth 5
+          test "$(find /tmp/monalisa-factor -name disconnected-factor.json | wc -l)" -eq 1
+      - name: Coordinate 2-opt pairs across violated component cuts and verify connected score
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          snapshot=$(find /tmp/monalisa-factor -name disconnected-factor.json -print -quit)
+          d=science-boundary/mona-lisa-tsp/results/counterexample-ports
+          mkdir -p "$d"
+          python -u science-boundary/mona-lisa-tsp/monalisa_factor_cross_repair.py \
+            --factor "$snapshot" \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --neighbors 64 --max-ports 25000 --top-per-component-pair 80 --beam 150 \
+            --report "$d/report.json" --certificate "$d/certificate.json"
+          test -s "$d/report.json"
+          if test -s "$d/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$d"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-monalisa-counterexample-ports
+          path: science-boundary/mona-lisa-tsp/results/counterexample-ports/
+          if-no-files-found: ignore
