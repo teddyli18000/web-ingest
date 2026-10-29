@@ -1,0 +1,315 @@
+{
+  "source_run": 40869449446,
+  "evaluator_status": "success",
+  "protocol": "post-unsealing independent evaluator; search sees public.json only",
+  "confounders": [
+    "original conflict selector identical chord sets as uncertainty"
+  ],
+  "cases": [
+    {
+      "instance": "eil51",
+      "certified_optimum": 426,
+      "blind_incumbent": 433,
+      "hidden_generator_best": 428,
+      "missing_hidden_edges": 18,
+      "methods": [
+        {
+          "method": "uncertainty",
+          "score": 429,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.052,
+          "hidden_structure_recall": 0.5,
+          "hidden_target_edges_in_new_chords": 6,
+          "LP_meta": {
+            "novel_lp_supported": 7,
+            "fractional_lp_supported": 2
+          },
+          "optimal": false
+        },
+        {
+          "method": "control",
+          "score": 431,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.015,
+          "hidden_structure_recall": 0.27778,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "baseline_only_parent_union": true
+          },
+          "optimal": false
+        },
+        {
+          "method": "repair",
+          "score": 431,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.048,
+          "hidden_structure_recall": 0.16667,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "oracle_status": "OPTIMAL",
+            "oracle_components": 2,
+            "oracle_score": 430
+          },
+          "optimal": false
+        },
+        {
+          "method": "conflict",
+          "score": 429,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.03,
+          "hidden_structure_recall": 0.5,
+          "hidden_target_edges_in_new_chords": 6,
+          "LP_meta": {
+            "novel_lp_supported": 7,
+            "fractional_lp_supported": 2
+          },
+          "optimal": false
+        }
+      ]
+    },
+    {
+      "instance": "berlin52",
+      "certified_optimum": 7542,
+      "blind_incumbent": 7734,
+      "hidden_generator_best": 7542,
+      "missing_hidden_edges": 3,
+      "methods": [
+        {
+          "method": "repair",
+          "score": 7542,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.024,
+          "hidden_structure_recall": 1,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "oracle_status": "OPTIMAL",
+            "oracle_components": 1,
+            "oracle_score": 7542
+          },
+          "optimal": true
+        },
+        {
+          "method": "control",
+          "score": 7542,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.011,
+          "hidden_structure_recall": 1,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "baseline_only_parent_union": true
+          },
+          "optimal": true
+        },
+        {
+          "method": "uncertainty",
+          "score": 7542,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.016,
+          "hidden_structure_recall": 1,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "novel_lp_supported": 0,
+            "fractional_lp_supported": 0
+          },
+          "optimal": true
+        },
+        {
+          "method": "conflict",
+          "score": 7542,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.016,
+          "hidden_structure_recall": 1,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "novel_lp_supported": 0,
+            "fractional_lp_supported": 0
+          },
+          "optimal": true
+        }
+      ]
+    },
+    {
+      "instance": "st70",
+      "certified_optimum": 675,
+      "blind_incumbent": 684,
+      "hidden_generator_best": 682,
+      "missing_hidden_edges": 17,
+      "methods": [
+        {
+          "method": "control",
+          "score": 681,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.052,
+          "hidden_structure_recall": 0.11765,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "baseline_only_parent_union": true
+          },
+          "optimal": false
+        },
+        {
+          "method": "uncertainty",
+          "score": 680,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.156,
+          "hidden_structure_recall": 0.11765,
+          "hidden_target_edges_in_new_chords": 3,
+          "LP_meta": {
+            "novel_lp_supported": 10,
+            "fractional_lp_supported": 2
+          },
+          "optimal": false
+        },
+        {
+          "method": "repair",
+          "score": 681,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.098,
+          "hidden_structure_recall": 0.17647,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "oracle_status": "OPTIMAL",
+            "oracle_components": 5,
+            "oracle_score": 659
+          },
+          "optimal": false
+        },
+        {
+          "method": "conflict",
+          "score": 680,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.116,
+          "hidden_structure_recall": 0.11765,
+          "hidden_target_edges_in_new_chords": 3,
+          "LP_meta": {
+            "novel_lp_supported": 10,
+            "fractional_lp_supported": 2
+          },
+          "optimal": false
+        }
+      ]
+    },
+    {
+      "instance": "eil76",
+      "certified_optimum": 538,
+      "blind_incumbent": 552,
+      "hidden_generator_best": 548,
+      "missing_hidden_edges": 18,
+      "methods": [
+        {
+          "method": "conflict",
+          "score": 541,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.124,
+          "hidden_structure_recall": 0.44444,
+          "hidden_target_edges_in_new_chords": 4,
+          "LP_meta": {
+            "novel_lp_supported": 12,
+            "fractional_lp_supported": 4
+          },
+          "optimal": false
+        },
+        {
+          "method": "repair",
+          "score": 551,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.07,
+          "hidden_structure_recall": 0.11111,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "oracle_status": "OPTIMAL",
+            "oracle_components": 2,
+            "oracle_score": 548
+          },
+          "optimal": false
+        },
+        {
+          "method": "control",
+          "score": 551,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.064,
+          "hidden_structure_recall": 0.05556,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "baseline_only_parent_union": true
+          },
+          "optimal": false
+        },
+        {
+          "method": "uncertainty",
+          "score": 541,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.121,
+          "hidden_structure_recall": 0.44444,
+          "hidden_target_edges_in_new_chords": 4,
+          "LP_meta": {
+            "novel_lp_supported": 12,
+            "fractional_lp_supported": 4
+          },
+          "optimal": false
+        }
+      ]
+    },
+    {
+      "instance": "kroA100",
+      "certified_optimum": 21282,
+      "blind_incumbent": 21811,
+      "hidden_generator_best": 21689,
+      "missing_hidden_edges": 17,
+      "methods": [
+        {
+          "method": "conflict",
+          "score": 21470,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.047,
+          "hidden_structure_recall": 0.29412,
+          "hidden_target_edges_in_new_chords": 1,
+          "LP_meta": {
+            "novel_lp_supported": 12,
+            "fractional_lp_supported": 9
+          },
+          "optimal": false
+        },
+        {
+          "method": "uncertainty",
+          "score": 21470,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.03,
+          "hidden_structure_recall": 0.29412,
+          "hidden_target_edges_in_new_chords": 1,
+          "LP_meta": {
+            "novel_lp_supported": 12,
+            "fractional_lp_supported": 9
+          },
+          "optimal": false
+        },
+        {
+          "method": "control",
+          "score": 21473,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.021,
+          "hidden_structure_recall": 0.29412,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "baseline_only_parent_union": true
+          },
+          "optimal": false
+        },
+        {
+          "method": "repair",
+          "score": 21443,
+          "solver_status": "OPTIMAL",
+          "elapsed_seconds": 0.042,
+          "hidden_structure_recall": 0.35294,
+          "hidden_target_edges_in_new_chords": 0,
+          "LP_meta": {
+            "oracle_status": "OPTIMAL",
+            "oracle_components": 4,
+            "oracle_score": 21174
+          },
+          "optimal": false
+        }
+      ]
+    }
+  ]
+}
