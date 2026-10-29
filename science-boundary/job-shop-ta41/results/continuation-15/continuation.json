@@ -1,0 +1,110 @@
+{
+  "instance": "ta41",
+  "baseline": 2006,
+  "target": 2005,
+  "core_arc_index": 15,
+  "mandatory_reversal": {
+    "machine": 15,
+    "from_job": 21,
+    "to_job": 23,
+    "index": 526
+  },
+  "continuation_horizons": [
+    2600,
+    2350,
+    2200,
+    2125,
+    2075,
+    2050,
+    2025,
+    2010,
+    2006,
+    2005
+  ],
+  "complete_target_coverage": false,
+  "best_reversed_feasible_makespan": 2012,
+  "found_improved_certificate": false,
+  "found_neutral_reversed_certificate": false,
+  "stages": [
+    {
+      "horizon": 2600,
+      "status": "FEASIBLE",
+      "wall_seconds": 40.014,
+      "best_objective_bound": 1851.0,
+      "branches": 56176,
+      "conflicts": 16450,
+      "score": 2038,
+      "change_machines": 20
+    },
+    {
+      "horizon": 2350,
+      "status": "FEASIBLE",
+      "wall_seconds": 40.007,
+      "best_objective_bound": 1850.0,
+      "branches": 21544,
+      "conflicts": 14822,
+      "score": 2038,
+      "change_machines": 20
+    },
+    {
+      "horizon": 2200,
+      "status": "FEASIBLE",
+      "wall_seconds": 40.022,
+      "best_objective_bound": 1850.0,
+      "branches": 21550,
+      "conflicts": 14826,
+      "score": 2028,
+      "change_machines": 20
+    },
+    {
+      "horizon": 2125,
+      "status": "FEASIBLE",
+      "wall_seconds": 40.005,
+      "best_objective_bound": 1850.0,
+      "branches": 235087,
+      "conflicts": 11034,
+      "score": 2023,
+      "change_machines": 20
+    },
+    {
+      "horizon": 2075,
+      "status": "FEASIBLE",
+      "wall_seconds": 40.013,
+      "best_objective_bound": 1850.0,
+      "branches": 144875,
+      "conflicts": 11411,
+      "score": 2015,
+      "change_machines": 20
+    },
+    {
+      "horizon": 2050,
+      "status": "FEASIBLE",
+      "wall_seconds": 40.023,
+      "best_objective_bound": 1850.0,
+      "branches": 66338,
+      "conflicts": 33202,
+      "score": 2012,
+      "change_machines": 19
+    },
+    {
+      "horizon": 2025,
+      "status": "FEASIBLE",
+      "wall_seconds": 40.014,
+      "best_objective_bound": 1850.0,
+      "branches": 187396,
+      "conflicts": 13010,
+      "score": 2012,
+      "change_machines": 19
+    },
+    {
+      "horizon": 2010,
+      "status": "UNKNOWN",
+      "wall_seconds": 37.714,
+      "best_objective_bound": 1792.0,
+      "branches": 192569,
+      "conflicts": 10856
+    }
+  ],
+  "elapsed_seconds": 318.028,
+  "semantics": "All stages retain hard original machine NoOverlap, job precedence, and mandatory reversed shared-core arc; UNKNOWN is inconclusive. An improving certificate requires external official verification."
+}
