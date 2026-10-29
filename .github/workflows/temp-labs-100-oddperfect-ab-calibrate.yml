@@ -1,0 +1,98 @@
+name: temp labs-100 odd-perfect A/B BnB calibration
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs-100-oddperfect-ab-calibrate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Build strengthened exact BnB
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/oddperfect_ab_bnb.cpp \
+            -o /tmp/oddperfect-ab-bnb
+      - name: Replay verified E678 path through every bound
+        shell: bash
+        run: |
+          set -euo pipefail
+          seq='+++++++++-++-+-++-++-+--+----+++-++++--+++--+---+--+++-+++--+--++-+---+--+-+++----+++-----+++-+-+-+-'
+          /tmp/oddperfect-ab-bnb --check "$seq" 2>&1 | tee /tmp/check.txt
+          grep -F 'CHECK_OK e=678 odd=50 cap=628 a=8 b=0' /tmp/check.txt
+          python3 science-boundary/labs-100/code/verify.py -- "$seq"
+
+  exact-a20:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Build strengthened exact BnB
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/oddperfect_ab_bnb.cpp \
+            -o /tmp/oddperfect-ab-bnb
+      - name: Prove the a=20 target class or verify a certificate
+        shell: bash
+        run: |
+          set +e
+          /tmp/oddperfect-ab-bnb --asum 20 --cap 524 --prefix 7 --threads 4 --seconds 480 | tee /tmp/out.txt
+          rc=${PIPESTATUS[0]}
+          set -e
+          if grep -q '^FOUND ' /tmp/out.txt; then
+            seq=$(sed -n 's/^FOUND .* seq=//p' /tmp/out.txt | tail -n1)
+            python3 science-boundary/labs-100/code/verify.py -- "$seq"
+            exit 0
+          fi
+          if [ "$rc" -ne 0 ]; then exit "$rc"; fi
+          grep -E '^SUMMARY .*complete=1 found=0 timeout=0' /tmp/out.txt
+
+  representative-shards:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - asum: 0
+            shard: 0
+          - asum: 8
+            shard: 17
+          - asum: 16
+            shard: 41
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Build strengthened exact BnB
+        run: |
+          g++ -O3 -march=native -std=c++20 -fopenmp -DNDEBUG \
+            science-boundary/labs-100/code/oddperfect_ab_bnb.cpp \
+            -o /tmp/oddperfect-ab-bnb
+      - name: Prove representative 64-way shard or verify a certificate
+        shell: bash
+        run: |
+          set +e
+          /tmp/oddperfect-ab-bnb --asum '${{ matrix.asum }}' --cap 524 --prefix 7 \
+            --shards 64 --shard '${{ matrix.shard }}' --threads 4 --seconds 480 \
+            | tee /tmp/out.txt
+          rc=${PIPESTATUS[0]}
+          set -e
+          if grep -q '^FOUND ' /tmp/out.txt; then
+            seq=$(sed -n 's/^FOUND .* seq=//p' /tmp/out.txt | tail -n1)
+            python3 science-boundary/labs-100/code/verify.py -- "$seq"
+            exit 0
+          fi
+          if [ "$rc" -ne 0 ]; then exit "$rc"; fi
+          grep -E '^SUMMARY .*complete=1 found=0 timeout=0' /tmp/out.txt
