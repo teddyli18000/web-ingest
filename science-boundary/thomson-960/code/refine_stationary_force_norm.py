@@ -8,10 +8,13 @@ zero-valued global minima of
 
     V = 1/2 ||g||^2.
 
-The physical-coordinate gradient of V is H g, where H is the tangent Hessian of
-the Coulomb energy.  We obtain H g matrix-free with the same centered finite-
-difference HVP used by diagnose_soft_modes.py.  This avoids reaction Newton
-steps -g/lambda and is therefore useful for shallow-curvature separatrix seeds.
+The leading physical-coordinate derivative is H g.  We obtain the Hessian-vector
+product matrix-free with the same centered finite-difference machinery used by
+diagnose_soft_modes.py.  Because our optimization variables are raw spherical
+angles q=(theta,phi), the exact coordinate gradient also includes the derivative
+of the tangent metric g_{phi phi}=sin(theta)^2; that O(g_phi^2) term is included
+explicitly below.  This avoids reaction Newton steps -g/lambda and is therefore
+useful for shallow-curvature separatrix seeds.
 
 A nonzero local minimum of V is possible in principle, so convergence is never
 accepted merely from the optimizer flag: final tangent-force norm, Hessian
@@ -37,16 +40,26 @@ def load_seed(path):
 
 def force_norm_fg(q,fd_step):
     E,gq=sm.fg(q); scale=sm.physical_scale(q); gy=gq/scale; Q=sm.rotation_basis(q)
-    # Remove tiny numerical leakage into exact rigid rotations.
+    # Exact energy gradients are orthogonal to rigid rotations.  Project tiny
+    # floating leakage before constructing the force norm / Hessian action.
     gy=gy-Q@(Q.T@gy)
     V=0.5*float(gy@gy)
-    # raw_hy is the physical tangent Hessian action.  Its centered difference
-    # normalizes the supplied vector internally, so H*g remains stable even
-    # when ||g|| is already small.
+
+    # For V(q)=1/2 sum_i [g_theta_i^2 + g_phi_i^2/sin(theta_i)^2],
+    # dV/dq = H_q * [g_theta, g_phi/sin^2(theta)] + metric_derivative.
+    # raw(gy), followed by multiplication by scale, produces exactly the first
+    # H_q*w term because build_hessian uses dq=(1/scale)*gy internally.
     H,raw,Q2,calls=sm.build_hessian(q,fd_step,0.0)
     hgy=raw(gy); hgy-=Q@(Q.T@hgy)
-    # y=(dtheta,sin(theta)dphi), hence dV/dq = scale * dV/dy.
     gV=scale*hgy
+
+    # Derivative of 1/2 * g_phi^2 / sin(theta)^2 with respect to theta,
+    # holding the coordinate gradient components fixed for this explicit metric
+    # contribution.  The Hessian term above already differentiates gq itself.
+    a=q.reshape(-1,2); gqa=gq.reshape(-1,2); gVa=gV.reshape(-1,2)
+    s=np.maximum(np.sin(a[:,0]),1e-6); c=np.cos(a[:,0])
+    gVa[:,0] += -(gqa[:,1]**2)*c/(s**3)
+    gV=gVa.ravel()
     return V,gV,E,gy,hgy,calls['n']
 
 def classify(q,k,fd_step):
@@ -56,7 +69,8 @@ def classify(q,k,fd_step):
     rows=[]
     for j,lam in enumerate(vals):
         y=V[:,j];Hy=raw(y)+1e6*(Q@(Q.T@y));rows.append({'index':j,'eigenvalue':float(lam),'rotation_overlap':float(np.sum((Q.T@y)**2)),'residual':float(np.linalg.norm(Hy-lam*y))})
-    # H*g without rotation penalty is a direct first-order stationarity check for V.
+    # H*g without rotation penalty is a direct local diagnostic.  At an exact
+    # stationary state both g and H*g vanish; a nonzero V-minimum is rejected.
     hgy=raw(gy);hgy-=Q@(Q.T@hgy)
     return E,gy,hgy,vals,V,rows,calls['n']
 
