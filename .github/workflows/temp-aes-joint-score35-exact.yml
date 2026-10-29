@@ -1,0 +1,54 @@
+name: temp-aes-joint-score35-exact
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-joint-score35-exact.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-aes-joint-score35-exact
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Enumerate score35 pairs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/aes-sbox-circuit
+          g++ -O3 -std=c++20 enumerate_joint_decoupled_score35.cpp -o /tmp/aes-score35
+          /tmp/aes-score35 > /tmp/score35.csv
+          test "$(($(wc -l < /tmp/score35.csv) - 1))" -eq 136
+      - name: Exact materialization search
+        shell: bash
+        run: |
+          set -euo pipefail
+          out=/tmp/aes-joint-score35-exact
+          mkdir -p "$out"
+          python3 science-boundary/aes-sbox-circuit/search_joint_decoupled_score35.py \
+            --pairs /tmp/score35.csv --out "$out" | tee "$out/run.log"
+          python3 - <<'PY'
+          import json
+          s=json.load(open('/tmp/aes-joint-score35-exact/summary.json'))
+          print(json.dumps(s, sort_keys=True))
+          if s['counts']['candidates_101']:
+              print('CANDIDATE_PRESENT')
+          print('NULLITY_GT2', s['counts']['nullity_gt2'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: aes-joint-score35-exact
+          path: |
+            /tmp/score35.csv
+            /tmp/aes-joint-score35-exact
