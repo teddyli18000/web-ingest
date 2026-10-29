@@ -1,0 +1,71 @@
+Thomson N=960 — C stationary-state / solution-landscape summary
+Date: 2026-10-29
+
+Live record R
+-------------
+444368.3924061973 (Ronnie2025/c3-replica-exchange-scars)
+Required next valid score <= 444368.3924051973.
+
+Stationary state C
+------------------
+C = 444368.41141788312 = R + 0.0190116858, C3 symmetric, coordination 36/900/24.
+C is NOT a full-space minimum. Full-space Hessian run 40732118945 gives
+approximately
+  lambda0 = -0.931826777147
+  lambda1 = -0.931747227271
+  lambda2 = +1.56333826701
+with physical gradient RMS ~7.57e-6. Thus C is an index-2 stationary state.
+The nearly degenerate negative pair transforms as the two-dimensional C3
+representation and supplies the symmetry-breaking unstable manifold.
+
+Complete direct unstable-manifold portrait
+------------------------------------------
+Authoritative run 40733401539 sampled phases 0,5,...,115 degrees in the C
+negative doublet and amplitudes 0.0015, 0.003, 0.006, 0.012 RMS radians,
+96 full unconstrained stable relaxations in total.
+
+All 96 endpoints are already-known same-topology minima:
+  A  444368.3956862257...   12 / 96
+  B  444368.4029728614...   70 / 96
+  D  444368.4109930845...   14 / 96
+No new minimum and no record candidate occurred. Every endpoint retains the
+36 five / 900 six / 24 seven coordination composition.
+
+At the smallest amplitude 0.0015, the D sector occupies approximately phases
+45--100 degrees while B occupies the complement. A appears only at larger
+nonlinear excursions, concentrated around roughly phases 50--85 degrees.
+This portrait establishes C as an organizing index-2 state over A/B/D rather
+than a wide portal to unknown low minima.
+
+C -> index-1 downward search
+----------------------------
+Run 40735119192 used overlap-tracked high-index-saddle dynamics from C at
+phases 0,20,40,60,80,100 degrees. Unrefined endpoints include:
+  phase 0:   E=444368.4038646134, grad RMS=4.20e-4, index 1
+  phase 20:  E=444368.4057752037, grad RMS=1.14e-3, index 1
+  phase 40:  E=444368.4058610627, index 0
+  phase 60:  E=444368.4109931071, index 0 -> D
+  phase 80:  E=444368.4109930919, index 0 -> D
+  phase 100: E=444368.4038881434, grad RMS=3.60e-4, index 1
+The phase-0/20/100 index-1 candidates require stationary refinement and
+reaction-side endpoint classification before being treated as certified edges.
+Certification run 40795427402 was active when this summary was written.
+
+Nearby constrained C3 states
+----------------------------
+The next two distinct low C3-orbit-space states from the historical smooth
+search were recovered deterministically and classified in full space by run
+40740132938:
+
+1. E=444368.564539204235 (R+0.1721330069)
+   physical grad RMS 5.50e-5; zero negative modes among the lowest 20;
+   lambda0=lambda1~+5.203424. This is a genuine full-space minimum.
+
+2. E=444368.802303647506 (R+0.4098974502)
+   physical grad RMS 3.08e-5; zero negative modes among the lowest 20;
+   lambda0=lambda1~+4.324089. This is also a genuine full-space minimum.
+
+Therefore C is currently the special low-energy C3 constrained state that is
+actually a higher-index full-space portal. The next justified work is to
+complete C's index-1 descendant certification before expanding to substantially
+higher symmetric stationary states.
