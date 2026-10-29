@@ -225,7 +225,7 @@ def search(inp,strategy,budget,out,seconds=12):
         meta={'consensus_edges_rejected_by_LP':len(rejected),
               'selected_positive_LP':sum(lp.get(e,0)>1e-5 for e in selected),
               'selected_integer_one_LP':sum(lp.get(e,0)>=1-1e-5 for e in selected),
-              'selected_touch_rejected_consensus':sum(conflict_vertices[u]>0 or conflict_vertices[v]>0 for u,v in selected)}
+              'selected_touch_rejected_consensus':sum(int(conflict_vertices[u]>0 or conflict_vertices[v]>0) for u,v in selected)}
     else:
         def keyscore(pair):
             (u,v),x=pair
