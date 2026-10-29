@@ -12,6 +12,7 @@ import argparse,json,time
 from pathlib import Path
 from ortools.sat.python import cp_model
 from search import obtain,setup,evaluate
+ROOT=Path(__file__).resolve().parent
 
 def distance(new,base):
     changed=0;distance=0
@@ -24,7 +25,14 @@ def distance(new,base):
 
 def main(a):
     routes,durs,base=obtain();pos,dur=setup(routes,durs)
+    original=base
+    if a.parent != 'baseline':
+        folder=ROOT/'results'/('gateway-'+a.parent)
+        verdict=json.loads((folder/'upstream-verdict.json').read_text())
+        assert verdict['valid'] and int(verdict['score'])==2006
+        base=json.loads((folder/'certificate.json').read_text())['machines']
     assert evaluate(base,pos,dur)==2006
+    assert evaluate(original,pos,dur)==2006
     mod=cp_model.CpModel()
     s=[mod.new_int_var(0,a.target,f's{i}') for i in range(600)]
     e=[mod.new_int_var(0,a.target,f'e{i}') for i in range(600)]
@@ -56,7 +64,7 @@ def main(a):
     slv.parameters.num_search_workers=4
     slv.parameters.random_seed=9241
     begin=time.monotonic();status=slv.solve(mod)
-    out={'instance':'ta41','target_makespan':a.target,'baseline_makespan':2006,
+    out={'instance':'ta41','target_makespan':a.target,'baseline_makespan':2006,'source_parent':a.parent,
          'representation':'simultaneous disjoint adjacent swaps; no intermediate schedule required',
          'per_machine_max_swaps':a.per_machine,'min_swaps':a.min_swaps,
          'max_swaps':a.max_swaps,'min_changed_machine_orders':a.min_machines,
@@ -82,6 +90,7 @@ def main(a):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser()
+    p.add_argument('--parent',type=str,choices=('baseline','120','124','127'),default='baseline')
     p.add_argument('--target',type=int,required=True)
     p.add_argument('--per-machine',type=int,required=True)
     p.add_argument('--min-swaps',type=int,default=15)
