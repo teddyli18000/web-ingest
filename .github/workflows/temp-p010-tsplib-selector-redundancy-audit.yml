@@ -1,0 +1,33 @@
+name: temp-p010-tsplib-selector-redundancy-audit
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/tsplib_selector_redundancy.py
+      - .github/workflows/temp-p010-tsplib-selector-redundancy-audit.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve all twenty masked search certificates, not hidden reference tours
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/strict-selection
+          gh run download 40869449446 --repo teddyli18000/web-ingest --pattern 'p010-blind5-*' --dir /tmp/strict-selection
+      - name: Evaluate overlap and which chosen chords were actually necessary
+        run: |
+          python science-boundary/mona-lisa-tsp/tsplib_selector_redundancy.py \
+            --artifacts /tmp/strict-selection \
+            --output science-boundary/mona-lisa-tsp/results/strict-fivecase-selector-redundancy.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-fivecase-selection-overlap-audit
+          path: science-boundary/mona-lisa-tsp/results/strict-fivecase-selector-redundancy.json
+          if-no-files-found: ignore
