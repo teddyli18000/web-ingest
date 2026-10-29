@@ -1,0 +1,63 @@
+name: temp Thomson 960 shallow C-descendant reaction continuation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-c-reaction-continuation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  refine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        phase: [0, 20, 100]
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-c-i1-p${{ matrix.phase }}
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ github.token }}
+          run-id: 40735119192
+      - name: Reaction-coordinate continuation
+        run: |
+          python3 science-boundary/thomson-960/code/refine_saddle_reaction_continuation.py \
+            "$RUNNER_TEMP/seed/c-i1-p${{ matrix.phase }}.json" \
+            --outer 22 --penalty 350000 --perp-maxiter 550 \
+            --damping 0.75 --max-rms-step 0.003 --min-rms-step 0.00015 \
+            --out "$RUNNER_TEMP/root-p${{ matrix.phase }}.json"
+      - name: Classify reaction sides if stationary index1
+        run: |
+          OK=$(python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'root-p${{ matrix.phase }}.json')))
+          ok=(d['negative_internal_modes_below_-1e-3']==1 and d['final_gradient_rms']<5e-5 and abs(d['final_reaction_gradient'])<0.001)
+          print(1 if ok else 0)
+          print('ROOT',d['final_energy'],d['final_gradient_rms'],d['negative_internal_modes_below_-1e-3'],d['final_tracked_mode_eigenvalue'],d['final_reaction_gradient'],file=__import__('sys').stderr)
+          PY
+          )
+          if [ "$OK" = "1" ]; then
+            python3 science-boundary/thomson-960/code/search_saddle_transverse.py \
+              "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/root-p${{ matrix.phase }}.json" \
+              --transverse-mode 1 --sign 1 --transverse-amps 0 \
+              --reaction-amps=-0.003,-0.0015,0.0015,0.003 \
+              --out "$RUNNER_TEMP/reaction-p${{ matrix.phase }}.json"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-c-reaction-root-p${{ matrix.phase }}
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            ${{ runner.temp }}/root-p${{ matrix.phase }}.json
+            ${{ runner.temp }}/reaction-p${{ matrix.phase }}.json
