@@ -1,0 +1,62 @@
+name: temp Thomson 960 learned nonlinear event grammar
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-learned-event-grammar.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  batch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Report runner capacity
+        run: |
+          echo "nproc=$(nproc)"
+          free -h
+      - name: Learned event-grammar search
+        run: |
+          python3 science-boundary/thomson-960/code/search_learned_event_grammar.py \
+            "$RUNNER_TEMP/few-shots" \
+            --a science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --b science-boundary/thomson-960/data/basin-b-010566.json \
+            --d science-boundary/thomson-960/data/basin-d-018586.json \
+            --outdir "$RUNNER_TEMP/event-grammar"
+      - name: Print compact result
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/event-grammar/event-grammar.json" ]; then
+            python3 - <<'PY'
+          import json,os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'event-grammar','event-grammar.json')
+          d=json.load(open(p))
+          print('LIVE_SIGNATURE',d['live_signature'])
+          print('FIELD_RMS',d['field_rms'])
+          print('FIELD_GRAM',d['field_gram_per_point'])
+          print('BEST',d['best_name'],d['best_energy'],d['best_delta_vs_live'])
+          print('TOP',[(x['name'],x['energy'],x['twin_count'],x['coord']) for x in d['top_states']])
+          PY
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-learned-event-grammar
+          retention-days: 7
+          path: ${{ runner.temp }}/event-grammar/
