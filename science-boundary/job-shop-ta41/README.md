@@ -52,6 +52,29 @@ A constructive counterpart has been launched: `incumbent_warmstart_cp.py` explic
 - `results/job-cohort-precedence-relaxation.json` exhausts **30 singles**, **435 pairs**, and **4,060 triples** of globally ejected jobs, with all non-ejected job relative machine orders retained and ejected-job machine conflicts temporarily relaxed for a provable longest-path LB. Necessary LB<=2005 holds for **10 singles**, **299 pairs**, and **3,563 triples**. Best single-ejection LB=2001 (job 9 or 26), best pair LB=1991 (jobs 9/24 or 24/28), best triple LB=1968 (jobs 0/4/15). Actual NoOverlap remains unrelaxed in the separately launched CP experiments.
 - Exact constructive CP tests are launched for all 465 single/two-job subspaces (`job_ejection_search.py`, 5 shards) and a diverse 200-triple portfolio (`triple_job_ejection.py`, 5 shards); do not infer either a success or exclusion until their result files and official verifiers exist. All k15 survivor-machine-mask CP shards must likewise be inspected; some initial 5-second checks returned UNKNOWN.
 
+## New current checkpoint — 2026-10-29 (global job-space exact enumeration)
+
+**Best independently verified feasible makespan remains 2006. No valid 2005/2004 candidate yet.** The live Few Shots p009 FEWSHOT record chain still contains only its 2006 baseline, despite literature reporting an unattached 2005 result.
+
+### Complete job-centered subspace exclusion
+
+After fixing a misspelled `survivors` loop variable, all previously failed CP jobs were rerun and the true results audited. Every operation retains its original processing time and job precedence, and each machine retains **unconditional NoOverlap**. For each ejected job cohort S, all **non-ejected** jobs keep their relative order on each machine, while every ejected job may be arbitrarily reinserted on all 20 machines.
+
+- Single and double job ejection: **all 30 + 435 = 465** possible cohorts returned `INFEASIBLE`, zero `UNKNOWN`, across five shards in `results/job-eject-0/...` through `results/job-eject-4/...`.
+- Three-job ejection: **all C(30,3)=4,060** cohorts conclusively excluded, zero `UNKNOWN`. Of these, 497 were ruled out by a rigorous precedence-only longest-path lower bound over 2005, and the remaining **3,563** returned exact CP-SAT `INFEASIBLE` in the full NoOverlap model. Eight complete shard files: `results/job-frontier-k3-s0/analysis.json` through `...-s7/analysis.json`; `job_ejection_frontier.py` recreates them.
+- Four-job ejection: a reproducible seeded **500/27,405** random-cohort sample (seed 4141) excluded **16** by precedence-only LB and **484** by exact CP-SAT, zero `UNKNOWN`. Five complete shard files `results/job-frontier-k4-s0/analysis.json` through `...-s4/analysis.json`. **Not an exhaustive proof at k=4.**
+- Independently, a diversified 200-triple portfolio (seed 4107) returned 200/200 exact CP-SAT `INFEASIBLE`, zero `UNKNOWN` (the full 4,060 enumeration above subsumes this).
+
+**Precise incumbent-relative theorem:** A <=2005 solution cannot be obtained from this exact verified 2006 machine-order certificate by removing/reinserting at most three jobs while retaining the pairwise relative machine order among all remaining jobs. Hence its *global job-deletion/insertion distance* from the incumbent must be at least 4, under this representation. This is different from and consistent with the independently proved >=15 changed entire machine orders. It does **not** imply a global makespan lower bound or that no 2005 schedule exists.
+
+### Constructive pivot: neutral manifold instead of more local exclusions
+
+The earlier N1/N2 swap and machine-near 2006 neighborhoods yielded no candidate; job-centered k<=3 is now saturated with a certified negative. **Do not just scale k=4/k=5 exclusions indefinitely**. The new `neutral_plateau_escape.py` / one-shot `temp-ta41-neutral-plateau-escape.yml` preserves makespan <=2006 and every NoOverlap but **maximizes the number of entire machine permutations changed**, secondarily maximizing reversed old adjacency relationships, while releasing a deliberately diverse cohort of 8/12/16/20 jobs. These neutral schedules are radically different basins when found; exact 2005 global job reinsertion is then attempted from each new feasible neutral seed. The experiment must record the machine permutation differences and independent Few Shots verification. **Do not claim neutral seeds or improved candidate until result files exist**.
+
+### Corrected engineering failures
+
+The original `temp-ta41-job-ejection-portfolio` and `temp-ta41-three-job-global-reinsertion` failed immediately in all shards due to `NameError: surviv` in `job_ejection_search.py`. It was repaired by changing the loop to `zip(survivors,survivors[1:])`. Several completed jobs previously failed to push to `main` because other science Agents advanced the same ref concurrently; both workflows were given bounded fetch/rebase/push retries and the lost shard outputs were recovered. This is an execution failure, **not** evidence of an impossible scheduling neighborhood.
+
 ## Approach / reproducibility
 `search.py` downloads immutable-shape upstream instance and baseline (instance SHA256 checked), asserts baseline makespan 2006, and evaluates a candidate by topologically sorting all 600 operations with job and machine arcs; cyclic candidates are rejected. It explores adjacent critical-path machine swaps, tabu tenure and diversified restarts. Local output includes `certificate.json` and `search-result.json`.
 
@@ -129,3 +152,5 @@ Critical-path N1 adjacent moves can stall in local optima; a lack of improvement
 - 2026-10-28 (new frontier): 4772 mined machine-UNSAT cores plus one independently hard-checked fixed-six core close exact 2^20 machine group cover at 15 changes. Launch compact independently-checked finite proof and all 465 single/two-job global ejection neighborhoods as a cross-machine representation pivot. No schedule <=2005 yet.
 
 - 2026-10-28 (job-centered restructuring): Exhaustive 1–3 job-ejection DAG relaxations show 10/299/3563 candidate cohorts at target 2005; best single/ejection path LB 2001. Launch all 465 exact 1/2-job and diversified 200 triple global reinsertion CP tests. Completed 15-machine group covering after 4772 assumption cores + independently hard-tested six-machine final core. Compact selected 835-core validation incomplete at core 825 (UNKNOWN), not a theorem.
+
+- 2026-10-29: Audited GitHub Actions logs: all initial 5 job-ejection and 5 triple-portfolio jobs failed before computation due to NameError, not negative solver results; fixed loop and Git push races. Completed full 465 single/double and 4060 triple exact global job reinsertion exclusions; 500 sampled quartets also negative. Pivoted constructively to neutral-equal-score machine-order diversity optimization and escape from distant seeds, avoiding further incremental exclusion-only rounds.
