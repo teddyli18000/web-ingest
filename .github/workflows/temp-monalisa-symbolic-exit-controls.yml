@@ -1,0 +1,52 @@
+name: temp-monalisa-symbolic-exit-controls
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/symbolic_global_circuit.py
+      - .github/workflows/temp-monalisa-symbolic-exit-controls.yml
+permissions:
+  contents: read
+jobs:
+  control:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [baseline, two-factor, improve]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Get authoritative verifier and precomputed exact motifs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          python -m pip install ortools
+          mkdir -p /tmp/symbolic
+          gh run download 40830451326 --repo teddyli18000/web-ingest --name monalisa-symbolic-exact-exit-1 --dir /tmp/symbolic
+          test -s /tmp/symbolic/positive-motifs.json
+      - name: Compare feasible baseline, 2-factor, and connected-improvement controls
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          mkdir -p science-boundary/mona-lisa-tsp/results/control-${{ matrix.mode }}
+          python science-boundary/mona-lisa-tsp/symbolic_global_circuit.py \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --motifs /tmp/symbolic/positive-motifs.json \
+            --report science-boundary/mona-lisa-tsp/results/control-${{ matrix.mode }}/report.json \
+            --certificate science-boundary/mona-lisa-tsp/results/control-${{ matrix.mode }}/certificate.json \
+            --minimum-gain 1 --mode ${{ matrix.mode }} --seconds 180 --workers 4
+          if test -f science-boundary/mona-lisa-tsp/results/control-${{ matrix.mode }}/certificate.json; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py science-boundary/mona-lisa-tsp/results/control-${{ matrix.mode }}
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-exit-control-${{ matrix.mode }}
+          path: science-boundary/mona-lisa-tsp/results/control-${{ matrix.mode }}/
+          if-no-files-found: ignore
