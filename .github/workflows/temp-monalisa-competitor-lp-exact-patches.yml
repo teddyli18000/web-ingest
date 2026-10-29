@@ -15,12 +15,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {regions: 1, selector: persistent, budget: 128}
+          - {regions: 1, selector: persistent, budget: 64}
           - {regions: 1, selector: random, budget: 128}
-          - {regions: 3, selector: persistent, budget: 256}
-          - {regions: 3, selector: ambiguous, budget: 256}
-          - {regions: 3, selector: random, budget: 256}
-          - {regions: 8, selector: persistent, budget: 256}
+          - {regions: 3, selector: persistent, budget: 128}
+          - {regions: 3, selector: ambiguous, budget: 128}
+          - {regions: 3, selector: random, budget: 128}
+          - {regions: 8, selector: persistent, budget: 192}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
