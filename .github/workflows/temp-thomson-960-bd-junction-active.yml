@@ -1,0 +1,71 @@
+name: temp Thomson 960 B-D junction active mixed-mode search
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-bd-junction-active.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  batch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Download certified B-D saddle
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-bd-landau-certified
+          path: ${{ runner.temp }}/bd
+          github-token: ${{ github.token }}
+          run-id: 40740593797
+      - name: Report runner capacity
+        run: |
+          echo "nproc=$(nproc)"
+          free -h
+      - name: Active mixed-mode basin-junction search
+        run: |
+          python3 science-boundary/thomson-960/code/search_bd_junction_boundaries.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/bd/bd-landau-polished.json" \
+            --outdir "$RUNNER_TEMP/bd-junction" \
+            --modes 1,2,6 \
+            --lo=-0.025,-0.025,-0.040 --hi=0.025,0.025,0.025 \
+            --initial 64 --rounds 4 --per-round 36 --reaction-probes 24 --reaction-bias 0.00018
+      - name: Print compact result
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/bd-junction/bd-junction-active.json" ]; then
+            python3 - <<'PY'
+          import json,os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'bd-junction','bd-junction-active.json')
+          d=json.load(open(p))
+          print('EVALUATIONS',d['evaluations'])
+          print('BASINS',json.dumps(d['basin_inventory'],sort_keys=True))
+          print('NEW_BASINS',d['new_basin_count'])
+          print('BEST',d['best_energy'],d['best_delta_vs_live'])
+          print('TOP',[(x['basin_label'],x['energy'],x['coeff'],x['reaction_bias'],x['twin_count']) for x in d['top_representatives']])
+          print('SECOND',[(x['tag'],x.get('best_energy'),x.get('best_delta')) for x in d['second_hop']])
+          PY
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-bd-junction-active
+          retention-days: 7
+          path: ${{ runner.temp }}/bd-junction/
