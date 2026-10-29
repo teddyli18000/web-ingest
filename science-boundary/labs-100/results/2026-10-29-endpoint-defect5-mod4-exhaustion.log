@@ -1,0 +1,35 @@
+# exact odd-perfect endpoint-defect5 search
+compiler: g++ -O3 -march=native -fopenmp -std=c++20
+method: reflection support inversion + mod-4 Boolean linearization over GF(2) + affine-nullspace enumeration + exact integer equation check + bitset even-energy screening
+support coverage: all C(49,5)=1,906,884 supports
+
+# Five contiguous ranges were chosen by a preceding full affine-workload profile,
+# not by equal support count, to keep CPU load balanced.
+
+SUMMARY defect=5 range=0:910000 supports=910000 inconsistent=0 affine_enum=902404068 exact=492467726 target=492467726 maxnull=24 complete=1 found=0 seconds=238.985 threads=1
+TIME wall=239.14 cpu=94% rss=106212KB
+SUMMARY defect=5 range=910000:1460000 supports=550000 inconsistent=0 affine_enum=905549268 exact=399200788 target=399200788 maxnull=23 complete=1 found=0 seconds=206.668 threads=1
+TIME wall=206.77 cpu=93% rss=106084KB
+SUMMARY defect=5 range=1460000:1670000 supports=210000 inconsistent=0 affine_enum=848528446 exact=161494211 target=161494211 maxnull=24 complete=1 found=0 seconds=125.244 threads=1
+TIME wall=125.35 cpu=88% rss=106216KB
+SUMMARY defect=5 range=1670000:1760000 supports=90000 inconsistent=0 affine_enum=892755976 exact=76553544 target=76553544 maxnull=23 complete=1 found=0 seconds=79.5915 threads=1
+TIME wall=79.69 cpu=82% rss=106088KB
+SUMMARY defect=5 range=1760000:1906884 supports=146884 inconsistent=0 affine_enum=949405548 exact=60966979 target=60966979 maxnull=24 complete=1 found=0 seconds=70.3717 threads=1
+TIME wall=70.55 cpu=74% rss=106216KB
+
+AGGREGATE supports=1906884 affine_enum=4498643306 exact=1190683248 target=1190683248 maxnull=24 found=0
+
+# Independent representation checks
+# 1. The same mod-4 solver re-exhausted the complete d=3 layer and returned
+#    exact=204187502, exactly matching the earlier mod-257 anchor solver's
+#    +/-1 candidate count 204187502; both found no E<=574 candidate.
+# 2. Four d=5 supports were compared against the older mod-257 anchor solver:
+#
+# support             old exact +/-1     mod-4 exact
+# 1,3,5,7,9                    38               38
+# 1,5,9,13,17                  32               32
+# 1,11,21,31,41              2054             2054
+# 49,61,73,85,97             4098             4098
+#
+# The proof claim comes from the complete five ranges above. Cross-checks are
+# implementation validation, not substitutes for range coverage.
