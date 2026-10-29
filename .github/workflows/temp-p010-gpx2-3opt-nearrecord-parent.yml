@@ -1,0 +1,68 @@
+name: temp-p010-gpx2-3opt-nearrecord-parent
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/reconstruct_3opt_nearrecord.py
+      - .github/workflows/temp-p010-gpx2-3opt-nearrecord-parent.yml
+permissions:
+  contents: read
+  actions: read
+jobs:
+  recombine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        other: ["nagata","5757199","5757200","5757204"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch original solver, GPX2 literature code and exact near-record 3opt counterexample
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          git clone --depth 1 https://github.com/rtinos/gpx2.git /tmp/gpx2
+          mkdir -p /tmp/seed/factor /tmp/seed/patch /tmp/seed/tours
+          gh run download 40881188571 --repo teddyli18000/web-ingest --name p010-best-two-cycle-repair-evidence --dir /tmp/seed/factor
+          gh run download 40881757984 --repo teddyli18000/web-ingest --name p010-two-cycle-three-opt-best-256 --dir /tmp/seed/patch
+          test "$(find /tmp/seed/factor -name best-twofactor.json | wc -l)" -eq 1
+          test "$(find /tmp/seed/patch -name report.json | wc -l)" -eq 1
+          curl -fsSL --retry 3 https://www.math.uwaterloo.ca/tsp/data/ml/mona-lisa100K.tsp -o /tmp/seed/mona.tsp
+          if test "${{ matrix.other }}" != "nagata"; then
+            curl -fsSL --retry 3 "https://www.math.uwaterloo.ca/tsp/data/ml/tour/monalisa_${{ matrix.other }}.tour" -o "/tmp/seed/tours/${{ matrix.other }}.tour"
+          fi
+          g++ -std=c++11 -O2 -Wall -Wno-unused-variable -I /tmp/gpx2 \
+            science-boundary/mona-lisa-tsp/gpx2_cross_parent.cpp \
+            /tmp/gpx2/global.cpp /tmp/gpx2/util_functions.cpp /tmp/gpx2/file_man.cpp /tmp/gpx2/gpx.cpp -o /tmp/seed/gpx2
+      - name: Reconstruct 3-opt tour and recombine with an independent high-quality parent
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          f=$(find /tmp/seed/factor -name best-twofactor.json -print -quit)
+          p=$(find /tmp/seed/patch -name report.json -print -quit)
+          python science-boundary/mona-lisa-tsp/reconstruct_3opt_nearrecord.py \
+            --factor "$f" --patch "$p" \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --out /tmp/seed/near-record.json
+          other=upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json
+          if test "${{ matrix.other }}" != nagata; then other="/tmp/seed/tours/${{ matrix.other }}.tour"; fi
+          /tmp/seed/gpx2 /tmp/seed/mona.tsp /tmp/seed/near-record.json "$other" /tmp/seed/offspring.txt
+          out=science-boundary/mona-lisa-tsp/results/gpx2-new-3opt-${{ matrix.other }}
+          python science-boundary/mona-lisa-tsp/gpx2_official_verify.py \
+            --child /tmp/seed/offspring.txt --parentA /tmp/seed/near-record.json \
+            --parentB "$other" --tag "3opt5757195_vs_${{ matrix.other }}" --out "$out"
+          test -s "$out/report.json"
+          if test -s "$out/certificate.json"; then
+            python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$out"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p010-gpx2-nearrecord-vs-${{ matrix.other }}
+          path: science-boundary/mona-lisa-tsp/results/gpx2-new-3opt-*/
+          if-no-files-found: ignore
