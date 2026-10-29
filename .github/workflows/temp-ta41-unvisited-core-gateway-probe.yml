@@ -1,0 +1,65 @@
+name: temp-ta41-unvisited-core-gateway-probe
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/unvisited_core_gateway.py'
+      - '.github/workflows/temp-ta41-unvisited-core-gateway-probe.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-unvisited-core-gateway-probe
+  cancel-in-progress: false
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        arc: [115,172,380,526,541]
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin CP-SAT and verify source syntax
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/unvisited_core_gateway.py
+      - name: Probe global feasibility of unvisited mandatory core orientation gateway
+        run: |
+          python3 science-boundary/job-shop-ta41/unvisited_core_gateway.py \
+            --arc '${{ matrix.arc }}' --seconds 160 \
+            --out 'science-boundary/job-shop-ta41/results/unvisited-gateway-${{ matrix.arc }}'
+      - name: Independently validate any new 2006-or-better orientation class
+        if: always()
+        run: |
+          set -euo pipefail
+          dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/unvisited-gateway-${{ matrix.arc }}"
+          if test -f "$dir/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$dir" | tee "$dir/upstream-verdict.json"
+            python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2006,v
+          PY
+          fi
+      - name: Save sound new class or honest UNKNOWN
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/unvisited-gateway-${{ matrix.arc }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): exact unvisited consensus gateway ${{ matrix.arc }}'
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
