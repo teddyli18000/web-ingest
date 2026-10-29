@@ -28,7 +28,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
-          python -m pip install ortools
+          python -m pip install ortools networkx
           python -m py_compile science-boundary/mona-lisa-tsp/gpx_neutral_novelty_merge.py
           mkdir -p /tmp/neutral/offspring /tmp/neutral/factor /tmp/neutral/patch
           gh run download 40883374235 --repo teddyli18000/web-ingest --name p010-gpx2-nearrecord-vs-nagata --dir /tmp/neutral/offspring
