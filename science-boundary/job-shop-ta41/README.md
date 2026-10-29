@@ -137,6 +137,8 @@ These are **qualitatively new 2006 starting basins**, not makespan improvements.
 - **Prior-art significance:** Tested exact original code, not paraphrased papers or a fresh imitation. Fixing the source/solver representation is necessary but insufficient at Q10. Consider pair-frequency-guided destroy + full activity-list repair or a runtime license-compliant alternate engine next, rather than repeating fixed-survivor CP subspaces.
 - **Research detail and precise citations:** `literature-reassessment-2026-10-29.md`, section "Direct upstream method reproduction".
 
+**NDS-S warmstart result now verified (2026-10-29):** `results/nds-neural-warmstart/neural-eval.json` reports original jssp30x20 pretrained policy from exact verified 2006 activity-list bootstrap, 120s CPU, **best 2006**. Original C++ activity-list replay and independent Few Shots DAG both agree 2006. This closes the controlled checkpoint test without a new certificate. The prior author's original `ndss.eval` cold-start run obtained 2439 and the authors' archived ta41 30x20 cold-start result is 2325; results depend on initialization. **No <=2005 score was produced in any upstream NDS-S test.**
+
 ## Approach / reproducibility
 `search.py` downloads immutable-shape upstream instance and baseline (instance SHA256 checked), asserts baseline makespan 2006, and evaluates a candidate by topologically sorting all 600 operations with job and machine arcs; cyclic candidates are rejected. It explores adjacent critical-path machine swaps, tabu tenure and diversified restarts. Local output includes `certificate.json` and `search-result.json`.
 
