@@ -1,0 +1,112 @@
+name: temp-p010-third-fold-preregistered
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/temp-p010-third-fold-preregistered.yml
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Retrieve independent test instances; NOT optimum solutions
+        run: |
+          python -m pip install numpy scipy ortools
+          mkdir -p /tmp/fold3/instance
+          for instance in kroC100 kroD100 kroE100 rd100 lin105; do
+            curl -fsSL --retry 2 "https://raw.githubusercontent.com/mastqe/tsplib/master/${instance}.tsp" -o "/tmp/fold3/instance/${instance}.tsp"
+          done
+      - name: Generate three independent older parents, freeze public inputs and hide better heuristic incumbent
+        run: |
+          for instance in kroC100 kroD100 kroE100 rd100 lin105; do
+            python science-boundary/mona-lisa-tsp/tsplib_counterfactual_bench.py prepare --name "$instance" --instance "/tmp/fold3/instance/${instance}.tsp" --parents-count 3 --out "/tmp/fold3/${instance}"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fold3-public-inputs
+          path: /tmp/fold3/*/public.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fold3-private-heldouts
+          path: /tmp/fold3/*/private.json
+  search:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        instance: [kroC100, kroD100, kroE100, rd100, lin105]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: fold3-public-inputs
+          path: /tmp/fold3-public
+      - name: Exact same inputs, 12 new chords, 18s inclusive each
+        run: |
+          python -m pip install numpy scipy ortools
+          pub=$(find /tmp/fold3-public -name public.json -path '*/${{ matrix.instance }}/*' -print -quit)
+          test -s "$pub"
+          if find /tmp/fold3-public -name private.json | grep -q .; then exit 7; fi
+          prefix=science-boundary/mona-lisa-tsp/results/thirdfold-${{ matrix.instance }}
+          for method in control uncertainty conflict_v2 repair; do
+            budget=12
+            if test "$method" = control; then budget=0; fi
+            mkdir -p "$prefix/$method"
+            python science-boundary/mona-lisa-tsp/tsplib_counterfactual_bench.py search --public "$pub" --strategy "$method" --budget "$budget" --seconds 18 --out "$prefix/$method/result.json"
+          done
+          for method in nearest local_delta random_8nn; do
+            mkdir -p "$prefix/$method"
+            python science-boundary/mona-lisa-tsp/tsplib_geometric_controls.py --public "$pub" --strategy "$method" --budget 12 --seconds 18 --out "$prefix/$method/result.json"
+          done
+          mkdir -p "$prefix/paired_subtour_repair"
+          python science-boundary/mona-lisa-tsp/tsplib_paired_subtour_repair.py --public "$pub" --budget 12 --seconds 18 --output "$prefix/paired_subtour_repair/result.json"
+          test "$(find "$prefix" -name result.json | wc -l)" -eq 8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fold3-blind-${{ matrix.instance }}
+          path: science-boundary/mona-lisa-tsp/results/thirdfold-${{ matrix.instance }}/
+          if-no-files-found: ignore
+  evaluate:
+    needs: [prepare, search]
+    if: ${{ always() && needs.prepare.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: fold3-*
+          path: /tmp/fold3-eval
+      - name: Unseal only after all method selections; check exact official TSPLIB minima
+        run: |
+          python -m pip install numpy scipy ortools
+          for entry in kroC100:20749 kroD100:21294 kroE100:22068 rd100:7910 lin105:14379; do
+            instance=${entry%:*}
+            optimum=${entry#*:}
+            pub=$(find /tmp/fold3-eval -name public.json -path "*/${instance}/*" -print -quit)
+            priv=$(find /tmp/fold3-eval -name private.json -path "*/${instance}/*" -print -quit)
+            test -s "$pub"
+            test -s "$priv"
+            python science-boundary/mona-lisa-tsp/tsplib_counterfactual_bench.py evaluate --public "$pub" --private "$priv" --results /tmp/fold3-eval --optimum "$optimum" --out "science-boundary/mona-lisa-tsp/results/thirdfold-eval-${instance}.json"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fold3-independent-unsealing
+          path: science-boundary/mona-lisa-tsp/results/thirdfold-eval-*.json
+          if-no-files-found: ignore
