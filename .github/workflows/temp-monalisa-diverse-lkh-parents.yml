@@ -1,0 +1,66 @@
+name: temp-monalisa-diverse-lkh-parents
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - science-boundary/mona-lisa-tsp/lkh_parent_population.py
+      - .github/workflows/temp-monalisa-diverse-lkh-parents.yml
+permissions:
+  contents: read
+jobs:
+  parent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {mask: baseline, seed: 1307}
+          - {mask: all, seed: 1709}
+          - {mask: euclidean, seed: 2003}
+          - {mask: random, seed: 2608}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Get independent baseline verifier and original LKH-3
+        run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
+          git clone --depth 1 https://github.com/cerebis/LKH3.git lkh3
+          make -C lkh3 -j 4
+      - name: Prepare exact TSPLIB and diverse official-verified starting tour
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          work=science-boundary/mona-lisa-tsp/results/lkh-parent-${{ matrix.mask }}-${{ matrix.seed }}
+          mkdir -p "$work"
+          python science-boundary/mona-lisa-tsp/lkh_parent_population.py prepare \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --neutral-moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --workdir "$work" --mask-mode ${{ matrix.mask }} \
+            --seconds 100 --seed ${{ matrix.seed }}
+      - name: Generate distinct locally competitive parents
+        run: |
+          work=science-boundary/mona-lisa-tsp/results/lkh-parent-${{ matrix.mask }}-${{ matrix.seed }}
+          ./lkh3/LKH "$work/params.par" | tee "$work/lkh.log"
+      - name: Verify score, Hamiltonicity and structural novelty
+        env:
+          FEWSHOTS_ROOT: ${{ github.workspace }}/upstream
+        run: |
+          work=science-boundary/mona-lisa-tsp/results/lkh-parent-${{ matrix.mask }}-${{ matrix.seed }}
+          python science-boundary/mona-lisa-tsp/lkh_parent_population.py collect \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
+            --neutral-moves science-boundary/mona-lisa-tsp/data/all-face-neutral-moves.json \
+            --workdir "$work" --mask-mode ${{ matrix.mask }} \
+            --seconds 100 --seed ${{ matrix.seed }}
+          python upstream/problems/p010-mona-lisa-tsp/verify/verify.py "$work"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monalisa-lkh-parent-${{ matrix.mask }}-${{ matrix.seed }}
+          path: |
+            science-boundary/mona-lisa-tsp/results/lkh-parent-*/certificate.json
+            science-boundary/mona-lisa-tsp/results/lkh-parent-*/report.json
+            science-boundary/mona-lisa-tsp/results/lkh-parent-*/lkh.log
+          if-no-files-found: ignore
