@@ -18,6 +18,7 @@ jobs:
           python-version: '3.12'
       - name: Fetch independently published routes and LP snapshots
         run: |
+          git clone --depth 1 https://github.com/few-shots/few-shots.git upstream
           python -m pip install numpy matplotlib
           mkdir -p /tmp/p010/tour /tmp/p010/lp
           root=https://www.math.uwaterloo.ca/tsp/data/ml
@@ -37,7 +38,7 @@ jobs:
       - name: Compare LP x-one edges that conflict with Nagata and historical strong tours
         run: |
           python science-boundary/mona-lisa-tsp/lp_hard_conflict_audit.py \
-            --baseline science-boundary/mona-lisa-tsp/data/nagata-archive-100k.json \
+            --baseline upstream/problems/p010-mona-lisa-tsp/baseline/certificate.json \
             --tours /tmp/p010/tours.json --lps /tmp/p010/lps.json \
             --components science-boundary/mona-lisa-tsp/data/historical-wiring-components-all.json \
             --output science-boundary/mona-lisa-tsp/results/lp-hard-conflicts.json
