@@ -1,0 +1,72 @@
+{
+  "instance": "ta41",
+  "target": 2005,
+  "reference": 2006,
+  "parent": "baseline",
+  "policy": "dynamic",
+  "seed": 4113,
+  "nine_independently_validated_necessary_orientation_cuts": [
+    {
+      "source": "baseline-dynamic",
+      "necessary_arc_count": 88
+    },
+    {
+      "source": "baseline-static",
+      "necessary_arc_count": 95
+    },
+    {
+      "source": "baseline-core",
+      "necessary_arc_count": 86
+    },
+    {
+      "source": "baseline-random",
+      "necessary_arc_count": 66
+    },
+    {
+      "source": "124-dynamic",
+      "necessary_arc_count": 85
+    },
+    {
+      "source": "124-static",
+      "necessary_arc_count": 83
+    },
+    {
+      "source": "124-core",
+      "necessary_arc_count": 68
+    },
+    {
+      "source": "124-random",
+      "necessary_arc_count": 59
+    },
+    {
+      "source": "consensus-21",
+      "necessary_arc_count": 21
+    }
+  ],
+  "required_changed_machine_orders": 15,
+  "orientation_boolean_count": 643,
+  "baseline_adjacent_order_variables": 580,
+  "all_pairs_unrestricted_except_true_job_resource_constraints": true,
+  "status": "FEASIBLE",
+  "objective_bound": 187000000.0,
+  "conflicts": 54757,
+  "branches": 229056,
+  "seconds": 150.011,
+  "claimed_global_proof": false,
+  "note": "All nine cuts are necessary for <=2005; optimization with horizon 2006 may return a neutral feasible solution. UNKNOWN/FEASIBLE do not prove target impossible.",
+  "verified_score": 2006,
+  "changed_machine_orders": 15,
+  "solver_objective": 200600112.0,
+  "reversed_baseline_adjacencies": 21,
+  "cuts_checked": {
+    "baseline-dynamic": 5,
+    "baseline-static": 5,
+    "baseline-core": 2,
+    "baseline-random": 4,
+    "124-dynamic": 1,
+    "124-static": 1,
+    "124-core": 1,
+    "124-random": 1,
+    "consensus-21": 1
+  }
+}
