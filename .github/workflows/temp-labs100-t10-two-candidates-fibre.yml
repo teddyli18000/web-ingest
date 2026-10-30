@@ -1,0 +1,55 @@
+name: temp labs100 t10 two compressed survivors fibre test
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-t10-two-candidates-fibre.yml'
+
+concurrency:
+  group: temp-labs100-t10-two-candidates-fibre
+  cancel-in-progress: false
+
+jobs:
+  exact-fibre:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact fibre oracle
+        run: g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_order25_fibre_mitm.cpp -o "$RUNNER_TEMP/fibre"
+      - name: Test both compressed survivors against defect one and two using all CPUs
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "runner_cpus=$(nproc)"
+          mkdir -p "$RUNNER_TEMP/candidates"
+          cat > "$RUNNER_TEMP/candidates/one.txt" <<'EOF'
+          1 -1 1 0 1 1 0 1 -1 1 1 1 0 0 0 1 0 0 0 1 0 0 0 1 1
+          0 1 1 -1 0 0 1 -1 -1 0 -1 -1 0 0 0 1 0 0 0 -1 0 0 0 1 1
+          EOF
+          cat > "$RUNNER_TEMP/candidates/two.txt" <<'EOF'
+          0 0 1 1 0 0 1 1 0 0 -1 1 0 1 0 1 1 0 1 1 0 1 0 1 -1
+          1 0 0 0 0 0 0 0 0 -1 -1 -1 0 1 0 -1 1 0 -1 1 0 -1 0 1 1
+          EOF
+          : > "$RUNNER_TEMP/fibre.log"
+          for name in one two; do
+            for d in 1 2; do
+              echo "candidate=$name defect=$d" | tee -a "$RUNNER_TEMP/fibre.log"
+              OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/fibre" --defect "$d" \
+                < "$RUNNER_TEMP/candidates/$name.txt" | tee -a "$RUNNER_TEMP/fibre.log"
+            done
+          done
+          test "$(grep -c '^FIBRE_MITM ' "$RUNNER_TEMP/fibre.log")" -eq 4
+          if grep -E 'compatible_probe_lifts=[1-9][0-9]*' "$RUNNER_TEMP/fibre.log"; then
+            echo HAS_COMPATIBLE_FIBRE_LIFT
+          else
+            echo NO_COMPATIBLE_FIBRE_LIFT
+          fi
+      - name: Upload exact transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-t10-two-candidates-fibre
+          path: ${{ runner.temp }}/fibre.log
+          if-no-files-found: error
