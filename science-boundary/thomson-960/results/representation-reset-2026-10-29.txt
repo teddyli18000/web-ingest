@@ -1,0 +1,104 @@
+Thomson N=960 — representation reset after local-network saturation
+Date: 2026-10-29 (America/Los_Angeles)
+
+Live target
+-----------
+Few Shots merged record remains 444368.3924061973; epsilon is 1e-6, so a valid
+next score must be <= 444368.3924051973. Re-check main/open PRs immediately
+before any claim.
+
+Why the search representation changed
+-------------------------------------
+The low-energy 24-dislocation network around the live record is now strongly
+sampled. Certified/diagnosed states R/A/B/D and index-2 state C, fixed low modes,
+C's complete negative-doublet phase portrait, learned nonlinear secant/event
+compositions, and transition-network variants have not produced a lower N=960
+minimum. The latest nonlinear event-grammar batch relaxed 124 starts and closed
+only on R/A. C's 96-point negative-doublet portrait closes only on A/B/D.
+
+C3 stationary-state portal census also weakened the hypothesis that constrained
+C3 minima generally hide useful full-space saddles. Successfully replayed states
+at approximately 444368.564539, 444368.802304, 444369.578279, 444370.085482,
+444370.466503, 444370.780596, and 444371.824095 all had zero negative modes in
+the tested full-space low spectrum. C is a special index-2 portal, not the rule.
+
+B<->D path precision is no longer the main bottleneck. Even corrected normal-
+force/proximal strings stalled near 5e-4 perpendicular-gradient RMS. Recent
+p-HiSD/iHiSD work is relevant if a genuine saddle candidate later deserves
+precision refinement, but more saddle iterations in the same local network are
+not the highest-information search now.
+
+Defect-motif correction
+-----------------------
+The useful reduced structural variable is not simply the number of 7-7 twin
+edges. Direct Delaunay analysis gives twin counts R=9, A=9, B=8, D=4, C=3.
+R and A therefore have equal twin count despite an energy gap of ~0.00328.
+The informative object is the complete twelve-component motif pattern plus its
+global shear/orientation coupling.
+
+Cross-size evidence and new hypothesis
+--------------------------------------
+Historical N=972 starts with 36/912/24 coordination and 12 7-7 twin edges.
+Sequential one-particle, bulk-preserving deletion to N=960 (run 40798582516)
+progressively loses the motif and ends at 444369.4572208757 = R+1.0648146784,
+with only 5 twin edges. This is a negative result for sequential deletion, not
+for cross-size transfer itself.
+
+N=972 -> N=960 differs by exactly 12 particles, matching one generic orbit of
+the proper tetrahedral rotation group T. The active stronger test therefore
+removes a complete 12-point T orbit in one event, fully relaxes every such child,
+classifies the best distinct children by the full-space Hessian, and releases
+any symmetry-constrained negative modes before relinquishing the runner.
+
+The first exact-T implementation failed before science because independently
+recovered numerical C2/C3 axes did not produce a bijective canonical-T frame.
+This was an infrastructure/numerical symmetry-recovery failure. The robust v2
+recovers multiple C2 and C3 axis lines, tests all compatible pairs, and selects
+the best exact canonical-T conjugation by point-cloud validation.
+
+Incoming-size representation
+----------------------------
+The reverse neighboring-size interface is also active: start from a distinct
+public minimum at N != 960 and propagate *into* N=960, rather than starting from
+R and moving outward. Two beam policies are compared:
+  (1) energy-ranked Amore-Wales-style candidates;
+  (2) motif-preserving moves in sixfold bulk, with beam preference for the
+      source's non-sixfold component organization / twin pattern.
+
+The legacy CCD Thomson/xyz directory has no 956--964 coordinates; an attempted
+batch correctly found zero parents. The current Riesz s=1 database is also
+sparse in this interval, with public entries at 900, 912, 920, 932, 960, 972.
+Therefore the active incoming experiments use genuinely available public parents:
+  - historical N=932 -> 960, 28 insertions, energy and motif beam policies;
+  - modern Riesz s=1 N=920 -> 960, 40 insertions, energy and motif policies.
+
+Public source pages:
+  https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/xyz/
+  https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/site/s_1/index.html
+  modern coordinate path pattern:
+  https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/site/s_1/dat/points_<N>_1.dat
+
+Actions compute policy
+----------------------
+Use one Actions runner per scientific campaign and keep dependent stages on that
+runner. Set BLAS/OpenMP libraries to one thread, then use independent worker
+processes only up to the CPU affinity actually assigned to the runner. Do not
+use Python os.cpu_count() alone: current hosted runners have shown shell
+`nproc=1` while os.cpu_count() reports 4. Workflows therefore pass
+`--workers "$(nproc)"` explicitly. This avoids oversubscription while still
+using all assigned compute.
+
+Active runs at time of note
+---------------------------
+- 40991054819: robust exhaustive N972 -> N960 T-orbit transfer batch.
+- 40991011714: historical N932 -> N960 incoming propagation.
+- modern N920 -> N960 incoming workflow was just launched; discover its run ID
+  from the workflow commit if needed.
+
+Decision rule
+-------------
+Any relaxed N=960 endpoint below live_score-2e-7 triggers immediate upstream
+re-check, independent stable repolish, rationalization, official p007 verifier,
+and tools/check.py. Only a verified >=1e-6 improvement is submission-worthy.
+Otherwise preserve motif-pattern / topology evidence and use failures to decide
+whether the next search family should change representation again.
