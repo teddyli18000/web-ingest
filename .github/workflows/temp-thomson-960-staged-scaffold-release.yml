@@ -1,0 +1,89 @@
+name: temp Thomson 960 staged scaffold release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-staged-scaffold-release.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  staged-release:
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - family: 0
+            multiplier: "1.05"
+            tag: f0-m105
+          - family: 0
+            multiplier: "1.20"
+            tag: f0-m120
+          - family: 1
+            multiplier: "1.05"
+            tag: f1-m105
+          - family: 1
+            multiplier: "1.20"
+            tag: f1-m120
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Run staged release beam
+        shell: bash
+        run: |
+          echo "nproc=$(nproc), one worker, family=${{ matrix.family }} multiplier=${{ matrix.multiplier }}"
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 science-boundary/thomson-960/code/search_staged_scaffold_release.py \
+            science-boundary/thomson-960/data/basin-e545-21.json \
+            --family ${{ matrix.family }} --multiplier ${{ matrix.multiplier }} \
+            --stage-maxiter 1000 --final-maxiter 2400 --beam 10 \
+            --out "$RUNNER_TEMP/out/staged.json"
+      - name: Conditional soft modes from surviving 20 basin
+        shell: bash
+        run: |
+          p="$RUNNER_TEMP/out/staged.best20.json"
+          if [ ! -f "$p" ]; then
+            echo "No 20-dislocation survivor."
+            exit 0
+          fi
+          git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+            "$RUNNER_TEMP/few-shots" "$p" \
+            --modes 0,1,2 --amps 0.003,0.008,0.016,0.030 \
+            --k 10 --workers 1 --maxiter 2400 --keep-basins 12 \
+            --out "$RUNNER_TEMP/out/survivor-modes.json"
+      - name: Summarize
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,os
+          r=os.path.join(os.environ['RUNNER_TEMP'],'out'); d=json.load(open(os.path.join(r,'staged.json')))
+          print('family',d['family'],'multiplier',d['multiplier'],'all_fixed',d['all_fixed_energy'],d['all_fixed_coord'])
+          for lev in d['levels']:
+              print('DEPTH',lev['depth'],[(x['energy'],x['coord_counts'],x['released']) for x in lev['nodes']])
+          print('FINAL',[(x['energy'],x['coord_counts'],x['released']) for x in d['finals']])
+          print('SURVIVING20',[(x['energy'],x['released']) for x in d['surviving_20']])
+          p=os.path.join(r,'survivor-modes.json')
+          if os.path.exists(p):
+              m=json.load(open(p)); print('MODEBEST',m['best_energy'],m['best_delta_vs_live'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-staged-scaffold-${{ matrix.tag }}
+          path: ${{ runner.temp }}/out
+          retention-days: 7
+          compression-level: 6
