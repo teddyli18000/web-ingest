@@ -1,0 +1,93 @@
+name: temp Thomson 960 low-defect event transfer
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-lowdefect-event-transfer.yml'
+
+jobs:
+  transfer:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - direction: d2-to-e569
+            seed: 9601
+          - direction: d2-to-e569
+            seed: 9602
+          - direction: d2-to-e569
+            seed: 9603
+          - direction: e569-to-live
+            seed: 9701
+          - direction: e569-to-live
+            seed: 9702
+          - direction: e569-to-live
+            seed: 9703
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone current Few Shots
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Reproduce e569 19-dislocation seed
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 science-boundary/thomson-960/code/harvest_20_string_image.py \
+            "$RUNNER_TEMP/few-shots" science-boundary/thomson-960/data/basin-20-morph-9136.json \
+            --seed 7301 --starts 18 --images 11 --iterations 260 --eta 0.00022 --max-step 0.0006 \
+            --image-index 7 --expected 444368.5698901982 --tol 0.00005 --quench-maxiter 2800 \
+            --out "$RUNNER_TEMP/out/e569.json"
+      - name: Materialize D2 and live seeds
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, os, sys
+          sys.path.insert(0,'science-boundary/thomson-960/code')
+          import search_topology_morph as tm
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'few-shots'; out=pathlib.Path(os.environ['RUNNER_TEMP'])/'out'
+          d2=tm.cert_xyz(root/tm.D2_REL)
+          (out/'d2.json').write_text(json.dumps({'name':'D2','energy':tm.raw_energy(d2),'coord_counts':tm.coord_counts(d2),'points':d2.tolist()},separators=(',',':'))+'\n')
+          score,live_dir=tm.find_live(root); live=tm.cert_xyz(live_dir/'certificate.json')
+          (out/'live.json').write_text(json.dumps({'name':'live','energy':tm.raw_energy(live),'score':score,'coord_counts':tm.coord_counts(live),'points':live.tolist()},separators=(',',':'))+'\n')
+          (out/'live-score.txt').write_text(str(score))
+          print('D2',tm.raw_energy(d2),tm.coord_counts(d2),'LIVE',score,tm.raw_energy(live),tm.coord_counts(live))
+          PY
+      - name: Continue learned collective event
+        shell: bash
+        run: |
+          set -euo pipefail
+          live=$(cat "$RUNNER_TEMP/out/live-score.txt")
+          if [[ '${{ matrix.direction }}' == 'd2-to-e569' ]]; then
+            src="$RUNNER_TEMP/out/d2.json"; dst="$RUNNER_TEMP/out/e569.json"
+            ts='-0.25,0.25,0.55,0.80,1.05,1.12,1.22,1.35,1.55,1.80,2.10'
+            alphas='-0.6,-0.3,0.18,0.35,0.55,0.80,1.10,1.45'
+          else
+            src="$RUNNER_TEMP/out/e569.json"; dst="$RUNNER_TEMP/out/live.json"
+            ts='-0.20,0.25,0.55,0.80,1.03,1.07,1.12,1.20,1.32,1.50'
+            alphas='-0.5,-0.25,0.10,0.20,0.35,0.55,0.80,1.10'
+          fi
+          echo "nproc=$(nproc) direction=${{ matrix.direction }} seed=${{ matrix.seed }} live=$live"
+          python3 science-boundary/thomson-960/code/search_pair_event_transfer.py \
+            "$src" "$dst" --seed '${{ matrix.seed }}' --starts 18 --maxiter 2600 \
+            --ts "$ts" --fracs 0.10,0.18,0.30,0.50,0.75,1.0 --alphas "$alphas" \
+            --live-score "$live" --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('BEST',d['best_energy'],'DELTA_LIVE',d['best_delta_live'],'LABEL',d['best_label'])
+          for b in d['distinct_low_basins'][:16]: print('BASIN',b['energy'],b['coord_counts'],b['label'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-lowdefect-transfer-${{ matrix.direction }}-${{ matrix.seed }}
+          path: ${{ runner.temp }}/out
+          retention-days: 7
