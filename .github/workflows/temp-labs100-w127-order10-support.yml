@@ -1,0 +1,46 @@
+name: temp labs100 W127 order10 support projection
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-w127-order10-support.yml'
+
+concurrency:
+  group: temp-labs100-w127-order10-support
+  cancel-in-progress: false
+
+jobs:
+  project-support:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact projection kernels
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h20_w127_h10_profiles.cpp -o /tmp/h10_profiles
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h20_w127_ngp10.cpp -o /tmp/ngp10
+      - name: Regenerate exact order-10 survivors using all CPUs
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          echo "runner_cpus=$OMP_NUM_THREADS"
+          /tmp/h10_profiles "$RUNNER_TEMP/h10"
+          /tmp/ngp10 "$RUNNER_TEMP/h10"
+      - name: Project survivors onto exact +25-pair support layers
+        shell: bash
+        run: |
+          set -euo pipefail
+          python science-boundary/labs-100/code/oddperfect_w127_profile_support_filter.py \
+            "$RUNNER_TEMP/h10_ngp10_survivors.txt" | tee "$RUNNER_TEMP/support-summary.txt"
+          grep -q '^input_ngp10_survivors=4220$' "$RUNNER_TEMP/support-summary.txt"
+      - name: Upload compact evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-w127-order10-support
+          path: |
+            ${{ runner.temp }}/support-summary.txt
+            ${{ runner.temp }}/h10_ngp10_survivors.txt
+          if-no-files-found: warn
