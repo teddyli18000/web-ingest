@@ -1,0 +1,63 @@
+name: temp Thomson 960 e564 to D2 morphs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-e564-d2-morph.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  morph:
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        seed: [6101, 6102, 6103, 6104]
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Download e564 seed
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-c3-portal-e564
+          path: ${{ runner.temp }}/e564
+          github-token: ${{ github.token }}
+          run-id: 40796920780
+      - name: Morph e564 to merged D2
+        shell: bash
+        run: |
+          echo "runner nproc=$(nproc), alignment seed=${{ matrix.seed }}"
+          python3 science-boundary/thomson-960/code/search_seed_to_d2_morph.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/e564/portal-e564.json" \
+            --seed "${{ matrix.seed }}" \
+            --ts 0.10,0.20,0.30,0.40,0.50,0.60,0.70,0.80,0.90 \
+            --out "$RUNNER_TEMP/e564-d2-${{ matrix.seed }}.json"
+          python3 - <<'PY'
+          import glob,json
+          p=glob.glob('/home/runner/work/_temp/e564-d2-*.json')[0]; d=json.load(open(p))
+          print('ALIGN',d['icp_nn_rms'],d['hungarian_rms'],'BEST',d['best_energy'])
+          for b in d['lowest_distinct_basins']:
+              print('BASIN',b['energy'],b['coord_counts'],b['t'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e564-d2-${{ matrix.seed }}
+          path: ${{ runner.temp }}/e564-d2-${{ matrix.seed }}.json
+          retention-days: 7
