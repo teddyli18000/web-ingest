@@ -1,0 +1,51 @@
+name: Temp Science Boundary C7 support3 iterated charge closure
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-support3-charge-closure.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_support3_iterated_charge_closure.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-support3-charge-closure
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      OMP_NUM_THREADS: 4
+      OMP_PROC_BIND: "true"
+      OMP_PLACES: cores
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned BPZ source and dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          python3 -m pip install --disable-pip-version-check python-sat
+          mkdir -p "$RUNNER_TEMP/result"
+      - name: Exact iterated charge-overlap closure and raw-core upper bound
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_support3_iterated_charge_closure.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/closure.json" \
+            | tee "$RUNNER_TEMP/result/closure.stdout"
+          cat "$RUNNER_TEMP/result/closure.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-support3-iterated-charge-closure
+          path: ${{ runner.temp }}/result
+          retention-days: 14
