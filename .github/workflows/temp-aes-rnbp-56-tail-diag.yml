@@ -1,0 +1,67 @@
+name: temp-aes-rnbp-56-tail-diag
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-rnbp-56-tail-diag.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect exact affine distances from the 56-linear prefix
+        run: |
+          set -euxo pipefail
+          python - <<'PY'
+          import json,sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          import temporal_rnbp_synth as tr
+          import rnbp_prefix_variant_tail as pv
+          base=ras.load_circuit('fs-101')
+          sk,S,names,gates,lin,stage,soft,applied,trace=pv.build_variant(base,0.24,1,4,67)
+          assert applied and stage==33 and lin==56,(applied,stage,lin)
+          C=1<<sk['const_bit']; P=tr.pair_map(S,C)
+          rows=[]
+          for i,t in enumerate(sk['outputs']):
+              one=t in P
+              mids=[]
+              if not one and t not in S:
+                  for a in S:
+                      for m in (t^a,t^a^C):
+                          if m in P: mids.append(m)
+              rows.append({'output':i,'present':t in S,'one_gate':one,
+                           'two_gate_mid_count':len(set(mids)),
+                           'weight':tr.affine_weight(t,sk['const_bit'])})
+          print(json.dumps({'prefix_linear':lin,'available':len(S),'pair_outputs':len(P),'outputs':rows},indent=2))
+          # Greedy RNBP output-only completion, deterministic.
+          S=set(S); names=dict(names); gg=list(gates); added=0
+          while added<24 and not all(t in S for t in sk['outputs']):
+              P=tr.pair_map(S,C)
+              direct=[t for t in sk['outputs'] if t not in S and t in P]
+              if direct:
+                  w=direct[0]; op,a,b=P[w]
+              else:
+                  scored=[]
+                  for w,(op,a,b) in P.items():
+                      sc=0
+                      for t in sk['outputs']:
+                          if t in S: continue
+                          d=tr.dist2(t,S,P,C); rem=tr.residual_closeness(t,w,S,P,C)
+                          nd=min(d,1+rem); sc+=(d-nd)*1000
+                          before=tr.affine_weight(t,sk['const_bit'])
+                          after=min(tr.affine_weight(t^w,sk['const_bit']),tr.affine_weight(t^w^C,sk['const_bit']))
+                          sc+=(before-after)*2
+                      scored.append((sc,w,op,a,b))
+                  scored.sort(reverse=True); _,w,op,a,b=scored[0]
+              out=f'__diag_{added}'; gg.append({'op':op,'a':names[a],'b':names[b],'out':out})
+              S.add(w); names[w]=out; added+=1
+              print(json.dumps({'tail_step':added,'remaining':sum(t not in S for t in sk['outputs'])}))
+          print(json.dumps({'greedy_tail':added,'complete':all(t in S for t in sk['outputs'])}))
+          PY
