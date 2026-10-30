@@ -1,0 +1,55 @@
+name: temp Thomson 960 defect motif diagnostic
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-defect-motif-diagnostic.yml'
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Materialize D2 live e569 e560
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 science-boundary/thomson-960/code/harvest_20_string_image.py \
+            "$RUNNER_TEMP/few-shots" science-boundary/thomson-960/data/basin-20-morph-9136.json \
+            --seed 7301 --starts 18 --images 11 --iterations 260 --eta 0.00022 --max-step 0.0006 \
+            --image-index 7 --expected 444368.5698901982 --tol 0.00005 --quench-maxiter 2800 \
+            --out "$RUNNER_TEMP/out/e569.json"
+          python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/out/e569.json" \
+            --modes 5 --amps 0.020 --k 8 --workers "$(nproc)" --maxiter 2600 --keep-basins 4 \
+            --out "$RUNNER_TEMP/out/e560-step.json"
+          python3 - <<'PY'
+          import json,pathlib,os,sys,numpy as np
+          sys.path.insert(0,'science-boundary/thomson-960/code')
+          import search_topology_morph as tm
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'out'; root=pathlib.Path(os.environ['RUNNER_TEMP'])/'few-shots'
+          d=json.loads((out/'e560-step.json').read_text()); target=444368.56093335064
+          b=min(d['lowest_distinct_basins'],key=lambda z:abs(z['energy']-target)); x=np.asarray(b['points'],float); x/=np.linalg.norm(x,axis=1)[:,None]
+          (out/'e560.json').write_text(json.dumps({'energy':b['energy'],'points':x.tolist()},separators=(',',':'))+'\n')
+          d2=tm.cert_xyz(root/tm.D2_REL); (out/'d2.json').write_text(json.dumps({'energy':tm.raw_energy(d2),'points':d2.tolist()},separators=(',',':'))+'\n')
+          score,live_dir=tm.find_live(root); live=tm.cert_xyz(live_dir/'certificate.json'); (out/'live.json').write_text(json.dumps({'energy':score,'points':live.tolist()},separators=(',',':'))+'\n')
+          PY
+      - name: Compare defect motifs
+        run: |
+          python3 science-boundary/thomson-960/code/analyze_defect_motif_transition.py \
+            --state d2="$RUNNER_TEMP/out/d2.json" --state e569="$RUNNER_TEMP/out/e569.json" \
+            --state e560="$RUNNER_TEMP/out/e560.json" --state live="$RUNNER_TEMP/out/live.json" \
+            --pair d2,e569 --pair e569,e560 --pair d2,live --pair e560,live \
+            --starts 30 --out "$RUNNER_TEMP/out/defect-motif.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-defect-motif-diagnostic
+          path: ${{ runner.temp }}/out/defect-motif.json
+          retention-days: 14
