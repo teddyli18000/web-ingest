@@ -1,0 +1,34 @@
+Thomson N=960 — e432/B interface geometry — 2026-10-30
+
+Context
+-------
+e432 = 444368.4322496275, coordination 35/902/23.
+B = 444368.4029728615, coordination 36/900/24.
+Live R = 444368.3924061973.
+The natural-label e474->A corridor has t=0.49 -> e432 and t=0.50 -> B under full stable unconstrained relaxation.
+
+Defect motif
+------------
+Direct spherical Delaunay component analysis of the frozen e432/B-natural artifact shows:
+- e432: 11 full 5-7-5-7-5 scars + 1 short 5-7-5 scar.
+- B: 12 full 5-7-5-7-5 scars.
+Thus the topology difference is exactly one missing dislocation in a single short-scar component, but the physical transition is not a single isolated combinatorial flip.
+
+Natural-label Delaunay interpolation diagnostic
+----------------------------------------------
+Keeping the meaningful e432/B point labels fixed and sampling the unrelaxed spherical geodesic between the endpoint coordinates changes the triangulation through roughly two dozen one-edge bistellar events across t in [0,1]. The direct endpoint triangulations differ through 22 source-edge -> opposite-target-edge flip candidates, and no single one of those flips by itself converts e432's 35/902/23 degree counts to B's 36/900/24 counts.
+
+Therefore:
+1. The short-scar completion is a coordinated local reconstruction with elastic accommodation, not one standalone Delaunay flip.
+2. A topology-aware single-flip search is still a useful exclusion/control, but failure of any one flip must not be interpreted as excluding the e432->B transition family.
+3. The highest-information representation is the narrow e432/B basin interface itself: refine a perpendicular-force string / index-1 saddle, then perturb low positive transverse modes. This mirrors the A<->B saddle transverse experiment that previously revealed D.
+4. Dense stable-relaxation zoom of the original e474->A t in [0.49,0.50] is justified because the basin switch occurs inside only ~0.01 of interpolation parameter and may contain a thin additional basin missed by coarse scans.
+
+Active calculations
+-------------------
+- e432 frontier run 41043461011: modes0..11, two MOTO populations, fixed-label e432->B core/broad transfer, fixed-label e432->live transfer, and core-live transfer.
+- e432->B saddle/transverse run 41043864404.
+- e432->B Delaunay-flip control run 41044162522.
+- dense natural-corridor boundary zoom run 41044360652.
+
+Any endpoint below live-2e-7 immediately switches to stable independent repolish/upstream recheck; only verified >=1e-6 improvement is submission-worthy.
