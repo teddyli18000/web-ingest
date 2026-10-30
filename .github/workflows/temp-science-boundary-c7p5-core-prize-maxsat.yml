@@ -1,0 +1,120 @@
+name: Temp Science Boundary C7p5 exact 315-core prize MaxSAT
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7p5-core-prize-maxsat.yml
+      - science-boundary/shannon-capacity-c7/code/c7p5_core_prize_maxsat.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7p5-core-prize-maxsat
+  cancel-in-progress: false
+
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned C7p5 source and Few Shots verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/c7-five"
+          git -C "$RUNNER_TEMP/c7-five" remote add origin https://github.com/molind/c7-five.git
+          git -C "$RUNNER_TEMP/c7-five" fetch --depth 1 origin ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+          git -C "$RUNNER_TEMP/c7-five" checkout FETCH_HEAD
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          python3 -m pip install --disable-pip-version-check python-sat
+          mkdir -p "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+
+      - name: Solve both lossless parity branches concurrently
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS=1
+          (
+            /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/c7p5_core_prize_maxsat.py \
+              "$RUNNER_TEMP/c7-five" "$RUNNER_TEMP/result/cert0.json" "$RUNNER_TEMP/result/status0.json" \
+              --solver g4 --branch-mod 2 --branch-residue 0 \
+              > "$RUNNER_TEMP/result/branch0.stdout" 2> "$RUNNER_TEMP/result/branch0.stderr"
+          ) & p0=$!
+          (
+            /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/c7p5_core_prize_maxsat.py \
+              "$RUNNER_TEMP/c7-five" "$RUNNER_TEMP/result/cert1.json" "$RUNNER_TEMP/result/status1.json" \
+              --solver g4 --branch-mod 2 --branch-residue 1 \
+              > "$RUNNER_TEMP/result/branch1.stdout" 2> "$RUNNER_TEMP/result/branch1.stderr"
+          ) & p1=$!
+          set +e
+          wait "$p0"; s0=$?
+          wait "$p1"; s1=$?
+          set -e
+          echo "branch_exit_0=$s0 branch_exit_1=$s1"
+          tail -n 120 "$RUNNER_TEMP/result/branch0.stdout" || true
+          tail -n 120 "$RUNNER_TEMP/result/branch1.stdout" || true
+          if [[ "$s0" -ne 0 || "$s1" -ne 0 ]]; then
+            echo "branch failure" >&2
+            exit 1
+          fi
+
+      - name: Aggregate exact branches
+        id: aggregate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/result/status0.json" "$RUNNER_TEMP/result/status1.json" "$RUNNER_TEMP/result/aggregate.json" "$RUNNER_TEMP/shot/certificate.json" "$GITHUB_OUTPUT" <<'PY'
+          import json,shutil,sys,os
+          p0,p1,out,cert,gout=sys.argv[1:]
+          rows=[json.load(open(p0)),json.load(open(p1))]
+          if any(r['setup']['branch_mod']!=2 for r in rows): raise SystemExit(rows)
+          best=max(enumerate(rows),key=lambda z:z[1]['exact_optimum'])
+          idx,r=best
+          agg={
+            'method':'exact-c7p5-315core-prize-maxsat-parity-cover',
+            'branch_optima':[x['exact_optimum'] for x in rows],
+            'exact_optimum':r['exact_optimum'],
+            'candidate_368':r['exact_optimum']>=368,
+            'best_branch':idx,
+            'coverage_argument':'vertex-transitivity fixes 0; every size>=2 solution contains a nonzero even or odd vertex, so the two hard branch disjunctions cover all solutions',
+          }
+          json.dump(agg,open(out,'w'),indent=2,sort_keys=True);open(out,'a').write('\n')
+          src=os.path.join(os.path.dirname(p0),f'cert{idx}.json')
+          if agg['candidate_368']:
+            if not os.path.exists(src): raise SystemExit(('missing candidate',src))
+            shutil.copyfile(src,cert)
+          with open(gout,'a') as f:
+            f.write(f"score={agg['exact_optimum']}\n")
+            f.write(f"found={'true' if agg['candidate_368'] else 'false'}\n")
+          print(json.dumps(agg,sort_keys=True))
+          PY
+          cat "$RUNNER_TEMP/result/aggregate.json"
+
+      - name: Verify squared breakthrough with Few Shots verifier
+        if: steps.aggregate.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          if not r.get('valid') or int(r.get('score',-1)) != 135424: raise SystemExit(r)
+          print('VERIFIED BREAKTHROUGH',r)
+          PY
+
+      - name: Upload exact result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7p5-core-prize-maxsat
+          path: |
+            ${{ runner.temp }}/result
+            ${{ runner.temp }}/shot
+          if-no-files-found: warn
+          retention-days: 14
