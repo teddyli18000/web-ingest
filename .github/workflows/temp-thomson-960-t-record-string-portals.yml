@@ -1,0 +1,79 @@
+name: temp Thomson 960 old-T to record string portals
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-t-record-string-portals.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: temp-thomson-960-t-record-string-portals
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  portals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Static-check portal code
+        run: python3 -m py_compile science-boundary/thomson-960/code/search_t_record_string_portals.py
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Fetch modern old-T N960 configuration
+        run: |
+          curl --fail --location --retry 3 \
+            https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/site/s_1/dat/points_960_1.dat \
+            -o "$RUNNER_TEMP/oldT.xyz"
+          test "$(wc -l < "$RUNNER_TEMP/oldT.xyz")" -ge 900
+      - name: Report runner capacity
+        run: |
+          echo "nproc=$(nproc)"
+          free -h || true
+      - name: Optimize T-to-R string and classify portals
+        run: |
+          python3 science-boundary/thomson-960/code/search_t_record_string_portals.py \
+            "$RUNNER_TEMP/oldT.xyz" "$RUNNER_TEMP/few-shots" \
+            --images 17 --iterations 600 \
+            --out "$RUNNER_TEMP/t-record-portals.json"
+      - name: Print compact scientific summary
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/t-record-portals.json" ]; then
+            python3 - <<'PY'
+          import json, os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'t-record-portals.json')))
+          print('LIVE',d['live_score'],'OLDT',d['old_t_energy'])
+          print('ALIGN',d['icp_nn_rms'],d['hungarian_rms'])
+          print('STRING',d['string_converged'],d['max_path_perpendicular_gradient_rms'],max(d['path_energies']))
+          print('BEST',d['best_float_energy'],d['best_delta_vs_live'],d['best_source'])
+          for r in sorted(d['relaxed_images'], key=lambda q:q['energy']):
+              print('RELAX',r['image'],r['energy'],r['delta_vs_live'],r['signature']['twins'],r['signature']['coord'])
+          for p in d['portals']:
+              print('PORTAL',p['image'],p['path_energy'],p['gradient_rms'],p['negative_modes'],p['lowest_eigenvalues'][:5])
+              if 'refined' in p:
+                  rr=p['refined']; print('REFINED',rr['final_energy'],rr['gradient_rms'],rr['negative_modes'],[(s['sign'],s['energy'],s['signature']['twins']) for s in rr['sides']])
+          PY
+          else
+            echo "No result JSON produced"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-t-record-string-portals
+          retention-days: 7
+          path: ${{ runner.temp }}/t-record-portals.json
+          if-no-files-found: warn
