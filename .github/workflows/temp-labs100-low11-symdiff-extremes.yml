@@ -1,0 +1,47 @@
+name: temp labs100 low11 symmetric-difference extremes
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-low11-symdiff-extremes.yml'
+
+concurrency:
+  group: temp-labs100-low11-symdiff-extremes
+  cancel-in-progress: false
+
+jobs:
+  exact-extremes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact symmetric-difference enumerator
+        run: g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_low11_symdiff_exact.cpp -o "$RUNNER_TEMP/symdiff"
+      - name: Exhaust t=2 and t=12, both kp splits, using every CPU
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "runner_cpus=$(nproc)"
+          mkdir -p "$RUNNER_TEMP/out"
+          export RUNNER_TEMP
+          printf '%s\n' '2 12' '2 14' '12 12' '12 14' | \
+          xargs -P"$(nproc)" -n2 bash -c '
+            t="$1"; k="$2"
+            OMP_NUM_THREADS=1 "$RUNNER_TEMP/symdiff" --overlap "$t" --kp "$k" \
+              >"$RUNNER_TEMP/out/t${t}-k${k}.log" 2>&1
+          ' _
+          cat "$RUNNER_TEMP"/out/*.log | tee "$RUNNER_TEMP/summary.log"
+          test "$(grep -c 'compressed_hits=0' "$RUNNER_TEMP/summary.log")" -eq 4
+          grep -q 'overlap=12 kp=12 kc=14 difference_orbits=2 support_pair_orbits=788 p_sign_tests=9456 H_matches=266 compressed_hits=0' "$RUNNER_TEMP/summary.log"
+          grep -q 'overlap=12 kp=14 kc=12 difference_orbits=2 support_pair_orbits=788 p_sign_tests=71708 H_matches=125127 compressed_hits=0' "$RUNNER_TEMP/summary.log"
+          grep -q 'overlap=2 kp=12 kc=14 difference_orbits=6 support_pair_orbits=4374 p_sign_tests=52488 H_matches=1007 compressed_hits=0' "$RUNNER_TEMP/summary.log"
+          grep -q 'overlap=2 kp=14 kc=12 difference_orbits=6 support_pair_orbits=4374 p_sign_tests=398034 H_matches=126214 compressed_hits=0' "$RUNNER_TEMP/summary.log"
+      - name: Upload exact transcript
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-low11-symdiff-extremes
+          path: |
+            ${{ runner.temp }}/summary.log
+            ${{ runner.temp }}/out/*.log
+          if-no-files-found: error
