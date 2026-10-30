@@ -1,0 +1,92 @@
+name: temp labs100 joint order10 order25 fibre search
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-low11-order10-fibre.yml'
+
+concurrency:
+  group: temp-labs100-low11-order10-fibre
+  cancel-in-progress: false
+
+jobs:
+  exact-joint-fibre:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact profile and fibre tools
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h20_w129_w131_order10_profiles.cpp -o "$RUNNER_TEMP/profiles"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_order25_fibre_mitm.cpp -o "$RUNNER_TEMP/fibre"
+      - name: Generate exact low11 order10 table using all CPUs
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "runner_cpus=$(nproc)"
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/profiles" "$RUNNER_TEMP/w" 2>&1 | tee "$RUNNER_TEMP/profile-summary.txt"
+          test "$(wc -l < "$RUNNER_TEMP/w_low11.txt")" -eq 95420
+      - name: Install OR-Tools
+        run: python -m pip install --disable-pip-version-check 'ortools>=9.14,<10'
+      - name: Search all even-overlap shards with exact order10 fibre coupling
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p "$RUNNER_TEMP/labs"
+          export RUNNER_TEMP
+          for k in 12 14; do
+            for t in 2 4 6 8 10 12; do
+              echo "$k $t"
+            done
+          done | xargs -P"$(nproc)" -n2 bash -c '
+            k="$1"; t="$2"
+            set +e
+            python science-boundary/labs-100/code/oddperfect_low11_compressed_order10_fibre_cpsat.py \
+              --kp "$k" --overlap "$t" --profiles "$RUNNER_TEMP/w_low11.txt" \
+              --seconds 120 --workers 1 --seed $((401030+100*k+t)) \
+              >"$RUNNER_TEMP/labs/k${k}-t${t}.json" 2>&1
+            rc=$?
+            echo "kp${k} t${t} rc=${rc}" >"$RUNNER_TEMP/labs/k${k}-t${t}.status"
+            exit 0
+          ' _
+          cat "$RUNNER_TEMP"/labs/*.json | tee "$RUNNER_TEMP/summary.log"
+          cat "$RUNNER_TEMP"/labs/*.status | sort | tee "$RUNNER_TEMP/status.txt"
+      - name: Exact full fibre test every verified compressed candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > "$RUNNER_TEMP/fibre.log"
+          for src in "$RUNNER_TEMP"/labs/*.json; do
+            if ! grep -q '"independent_check": true' "$src"; then
+              continue
+            fi
+            stem=$(basename "$src" .json)
+            python - "$src" "$RUNNER_TEMP/candidate.txt" <<'PY'
+          import json,sys
+          z=json.load(open(sys.argv[1]))
+          with open(sys.argv[2],'w') as f:
+              f.write(' '.join(map(str,z['p']))+'\n')
+              f.write(' '.join(map(str,z['c']))+'\n')
+          PY
+            for d in 1 2; do
+              echo "$stem defect$d" | tee -a "$RUNNER_TEMP/fibre.log"
+              OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/fibre" --defect "$d" < "$RUNNER_TEMP/candidate.txt" | tee -a "$RUNNER_TEMP/fibre.log"
+            done
+          done
+          if grep -E 'compatible_probe_lifts=[1-9][0-9]*' "$RUNNER_TEMP/fibre.log"; then
+            echo JOINT_COMPRESSED_CANDIDATE_HAS_TARGET_FIBRE_LIFT
+          fi
+      - name: Upload transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-low11-order10-fibre
+          path: |
+            ${{ runner.temp }}/profile-summary.txt
+            ${{ runner.temp }}/summary.log
+            ${{ runner.temp }}/status.txt
+            ${{ runner.temp }}/fibre.log
+            ${{ runner.temp }}/labs/*.json
+            ${{ runner.temp }}/labs/*.status
+          if-no-files-found: warn
