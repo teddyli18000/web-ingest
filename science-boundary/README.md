@@ -15,7 +15,7 @@ This workspace is permanent. It is **not** part of `temp-work/` and is not subje
 | [`labs-ai4s-search/`](labs-ai4s-search/) | Can learned or discovered LABS search methods improve across unseen lengths under fair compute comparisons? | Active — independent AI4S methodology track; prior pilots linked, no new record claimed. |
 | [`ramsey-r46/`](ramsey-r46/) | Can a `(4,6)`-graph on at least 36 vertices improve the lower bound for `R(4,6)`? | Active — all 37 direct extensions, all 36-point circulants, and a 14-defect seed's Hamming ball through radius 12 are ruled out; degree-17 catalogue SAT and independent Algorithm-22 basins are running. |
 | [`thomson-960/`](thomson-960/) | Can the N=960 Coulomb energy be improved below the live Few Shots record? | Active — synced to `444368.3924061973`; live-record diagnostics and next-generation basin search starting. |
-| [`aes-sbox-circuit/`](aes-sbox-circuit/) | Can the AES S-box be implemented in at most 102 AND/XOR/XNOR gates? | Active — live Few Shots record is 103; ODC neutral-walk search from the new 103 construction launched. |
+| [`aes-sbox-circuit/`](aes-sbox-circuit/) | Can the AES S-box be implemented in at most 100 AND/XOR/XNOR gates? | Active — live verified Few Shots record is 101; strategy reset toward structurally distinct high-quality seed families and full-circuit cross-boundary sharing. |
 
 | [`job-shop-ta41/`](job-shop-ta41/) | Can a verifiable ta41 schedule beat makespan 2006; is the barrier geometric distance or coordination of small edits? | Active — proved 15 adjacent inversions across 15 machines already give certified 2006; exact 2^15 coordination lattice finds enabling micro-move dependencies; 2005 distance remains unresolved. |
 
