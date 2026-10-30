@@ -1,0 +1,61 @@
+name: temp Thomson 960 e432 boundary zoom
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-e432-boundary-zoom.yml'
+
+jobs:
+  zoom:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      actions: read
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e432-seed
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41043461011
+      - name: Dense natural-corridor boundary scan
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 - <<'PY'
+          import json,pathlib,os,sys,numpy as np
+          sys.path.insert(0,'science-boundary/thomson-960/code')
+          import search_topology_morph as tm
+          seed=pathlib.Path(os.environ['RUNNER_TEMP'])/'seed'; out=pathlib.Path(os.environ['RUNNER_TEMP'])/'out'
+          L=np.asarray(json.loads((seed/'e474.json').read_text())['points'],float)
+          A=np.asarray(json.loads((seed/'A-natural.json').read_text())['points'],float)
+          live=float((seed/'live-score.txt').read_text())
+          ts=np.concatenate([np.linspace(0.4900,0.5000,21),np.linspace(0.4910,0.4990,33)])
+          ts=sorted(set(round(float(t),7) for t in ts))
+          rows=[]; basins=[]
+          for t in ts:
+              x=tm.geodesic(L,A,t); start=tm.raw_energy(x); E,y,nit,ok=tm.relax(x,maxiter=3400); cc=tm.coord_counts(y)
+              row={'t':t,'start_energy':start,'energy':E,'delta_live':E-live,'coord_counts':cc,'nit':nit,'success':ok}
+              rows.append(row); print('T',t,'start',f'{start:.9f}','E',f'{E:.12f}','dLive',f'{E-live:+.9g}','cc',cc,'nit',nit,flush=True)
+              if E<live+0.15 and all(abs(E-z['energy'])>2e-6 or cc!=z['coord_counts'] for z in basins):
+                  basins.append({'t':t,'energy':E,'delta_live':E-live,'coord_counts':cc,'points':y.tolist()})
+          basins.sort(key=lambda z:z['energy'])
+          d={'live_score':live,'rows':rows,'distinct_low_basins':basins,'best_energy':min(r['energy'] for r in rows),'best_delta_live':min(r['energy'] for r in rows)-live}
+          (out/'result.json').write_text(json.dumps(d,separators=(',',':'))+'\n')
+          if basins and basins[0]['energy']<live-2e-7:
+              (out/'candidate.json').write_text(json.dumps(basins[0],separators=(',',':'))+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e432-boundary-zoom
+          path: ${{ runner.temp }}/out
+          retention-days: 10
