@@ -1,0 +1,48 @@
+name: Temp Science Boundary C7 neutral5 product-26 types
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-neutral5-product26.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_neutral5_product26_types.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-neutral5-product26
+  cancel-in-progress: false
+
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned source and dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          python3 -m pip install --disable-pip-version-check networkx python-sat
+          mkdir -p "$RUNNER_TEMP/result"
+      - name: Exact unrooted type quotient and product-26 SAT screen
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_neutral5_product26_types.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/status.json" --workers "$(nproc)" \
+            > "$RUNNER_TEMP/result/stdout" 2> "$RUNNER_TEMP/result/stderr"
+          cat "$RUNNER_TEMP/result/stdout"
+          tail -n 120 "$RUNNER_TEMP/result/stderr"
+      - name: Upload exact screen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-neutral5-product26-types
+          path: ${{ runner.temp }}/result
+          retention-days: 14
