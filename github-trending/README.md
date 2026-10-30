@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-29** | **4,404** | **2,557** |
+| **2014-08-09** | **2026-10-30** | **4,405** | **2,558** |
 
-### Latest All-Languages snapshot — 2026-10-29
+### Latest All-Languages snapshot — 2026-10-30
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail) | TypeScript | 1,068 |
-| 2 | [elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills) | — | 2,139 |
-| 3 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 1,095 |
-| 4 | [HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor) | Python | 2,371 |
-| 5 | [macro-inc/macro](https://github.com/macro-inc/macro) | Rust | 117 |
-| 6 | [Nutlope/hallmark](https://github.com/Nutlope/hallmark) | CSS | 2,110 |
-| 7 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Rust | 1,472 |
-| 8 | [makecindy/cindy](https://github.com/makecindy/cindy) | TypeScript | 728 |
-| 9 | [nightly-labs/openbot](https://github.com/nightly-labs/openbot) | TypeScript | 1,054 |
-| 10 | [togg53192-cmd/jailbreaks](https://github.com/togg53192-cmd/jailbreaks) | — | 1,477 |
+| 1 | [HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor) | Python | 1,930 |
+| 2 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 1,034 |
+| 3 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Rust | 2,870 |
+| 4 | [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail) | TypeScript | 1,117 |
+| 5 | [milind-soni/OpenMausBot](https://github.com/milind-soni/OpenMausBot) | TypeScript | 1,199 |
+| 6 | [nightly-labs/openbot](https://github.com/nightly-labs/openbot) | TypeScript | 709 |
+| 7 | [elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills) | — | 1,187 |
+| 8 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 336 |
+| 9 | [CopilotKit/OpenBot](https://github.com/CopilotKit/OpenBot) | TypeScript | 247 |
+| 10 | [togg53192-cmd/jailbreaks](https://github.com/togg53192-cmd/jailbreaks) | — | 1,594 |
 
-[Open full snapshot →](data/2026/10/29/trending.json)
+[Open full snapshot →](data/2026/10/30/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 302 days  
+[`2026`](data/2026/) · 303 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
