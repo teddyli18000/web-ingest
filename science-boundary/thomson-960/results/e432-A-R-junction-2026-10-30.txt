@@ -1,0 +1,82 @@
+Thomson N=960 — e432/B/A/R transition-network junction — 2026-10-30
+
+Current live record R
+---------------------
+E(R) = 444368.3924061973.
+A = 444368.3956862257 = R +0.0032800284.
+B = 444368.4029728614 = R +0.0105666641.
+e432 = 444368.4322496275 = R +0.0398434302, coordination 35/902/23.
+
+Refined e432<->B saddle (discovery quality)
+--------------------------------------------
+Run 41045248541, artifact thomson-e432-B-refined-saddle.
+E = 444369.0242294195, gradient RMS = 1.55195e-3.
+One strongly negative reaction mode, lambda0 ~= -82.2571.  This is not yet a
+certified saddle because the gradient is too large, but it is sufficient as a
+transition-interface probe.
+
+Broad transverse A funnel
+-------------------------
+Positive saddle modes 1..6 were scanned independently on both signs, with small
+reaction-coordinate biases.  Every one of modes 1,2,3,4,5,6 has at least one
+amplitude/sign that fully relaxes to A.  No mode reached R or a new lower basin.
+Thus A is not attached through one exceptional soft transverse direction: a broad
+transverse sector of the e432/B interface drains into A.
+
+A mode1 x mode5 joint plane was then searched.  The completed positive-positive
+quadrant returns only e432, B, and A; no new basin.  Remaining quadrants are
+running in run 41047271451.  Do not enlarge this low-mode plane if they behave
+similarly: the e432->B reaction is known to be broad-spectrum and mostly beyond
+the first 48 Hessian modes.
+
+Full-spectrum A->R continuation in the e432/B-saddle frame
+-----------------------------------------------------------
+Using exact physical log-map vectors y_A and y_R from the e432/B saddle, search
+  y(t) = y_A + t (y_R - y_A)
+with small radial scale variation.
+Run 41047742748.
+Near-A shard result:
+- t=0.35 -> A for all tested radial scales.
+- t=0.50 already switches to R for scales 0.97..1.10 (scale 0.90 still A).
+- t=0.65,0.78,0.88 -> R for all tested scales.
+- no third basin between A and R.
+- apparent ~1e-10 below-live values are floating summation noise, not candidates.
+The near-R and t>1 beyond-R shards are still active; t>1 is the important test
+because it continues the same collective field through the current record.
+
+Junction geometry at A
+----------------------
+With labeled Kabsch alignment and spherical log maps at A:
+- RMS(A -> e432/B saddle) ~= 0.00940864 rad.
+- RMS(A -> certified R/A saddle) ~= 0.00182752 rad.
+- RMS(A -> R) ~= 0.00386893 rad.
+- cos[ A->(e432/B saddle), A->R ] ~= 0.0102: essentially orthogonal.
+- cos[ A->(R/A saddle), A->R ] ~= 0.7791.
+Projecting A->R on the two-vector span {A->e432/B saddle, A->R/A saddle} captures
+~61.6% of its squared norm; the e432/B coefficient is small (~0.040) while the
+R/A-saddle coefficient is dominant (~1.672).
+
+Interpretation
+--------------
+The low-energy network is better represented as a transition-network junction
+  e432 <-> B --transverse--> A <-> R
+than as a collection of minimum-centered low Hessian modes.  The e432/B incoming
+field at A supplies an approximately orthogonal collective coordinate to the
+A->R reaction coordinate.  This motivates composing transition interfaces rather
+than extending single-mode scans.
+
+Two-saddle transport experiment
+-------------------------------
+The certified R<->A saddle remains valid:
+E = 444368.40394898446, gradient RMS = 6.31e-6, lambda0 ~= -5.86558.
+Its artifact from run 40633736125 is still available.
+
+Code search_two_saddle_transport.py parallel-transports the rigid-rotation-cleaned
+physical e432/B->A incoming field from A along the short A->(R/A saddle) geodesic,
+then removes rigid rotations and the certified R/A reaction mode at the saddle.
+The transported field is therefore a genuine transverse collective coordinate at
+a certified saddle, not an arbitrary low Hessian mode.  Two signs are scanned
+with reaction biases in run 41048513864.  If a fourth basin appears, freeze it and
+expand immediately.  If only A/R appear, the junction is locally saturated in
+this transported direction and the next representation should compose full
+transition fields nonlinearly rather than add more isolated Hessian modes.
