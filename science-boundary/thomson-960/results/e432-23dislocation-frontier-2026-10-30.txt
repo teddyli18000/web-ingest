@@ -1,0 +1,36 @@
+Thomson N=960 — e432 23-dislocation frontier — 2026-10-30
+
+Live merged Few Shots score at discovery: 444368.3924061973.
+
+Discovery path
+--------------
+D2->live perpendicular-string basin-discovery run 41041110943, seed 9852, produced adjacent quenched minima:
+- image 10: e474 = 444368.47436229355, coordination 35/902/23.
+- image 11: A = 444368.3956862259, coordination 36/900/24.
+The string is not a certified MEP (max perpendicular gradient remains ~0.197), but the two quenched minima inherit a meaningful pointwise correspondence from adjacent path images.
+
+After Kabsch removal of global rotation, the natural-label e474->A particle RMS displacement is ~0.0137646. Geodesic interpolation using this fixed physical correspondence and stable unconstrained long-double relaxation gives:
+- t=0.30 -> e474 again, 444368.47436229355.
+- t=0.48 -> NEW e432 = 444368.4322496275, coordination 35/902/23.
+- t=0.49 -> same e432 basin, 444368.4322496274 (independent rerun).
+- t=0.50 -> known B = 444368.40297286125, coordination 36/900/24.
+- t=0.62 -> known A = 444368.3956862259, coordination 36/900/24.
+
+Thus e432 is a reproducible new 23-dislocation minimum at live +0.0398434302. It is not a summation artifact: it is separated from both e474 and B by ~3e-2 in energy and reproduces at multiple interpolation parameters.
+
+Geometry
+--------
+Natural-label/Kabsch RMS:
+- e432 -> B: ~0.0122528.
+- e432 -> live: ~0.0132521.
+This identifies a narrow physical transition corridor connecting the newly discovered low-defect family to the already mapped B/A/live transition network.
+
+Interpretation / search decision
+--------------------------------
+This is stronger evidence than simply reducing defect count. The low-energy staircase currently contains:
+high20 -> e569(19) -> e560(18), and separately along the unique D2-live 9852 corridor e474(23) -> e432(23) -> B(24) -> A(24) / live.
+The next high-information search is e432-centered low modes and index-1 exploration plus fixed-correspondence e432->B/e432->live event variants, rather than more generic D2/live strings.
+
+Active workflow launched at commit e87d0de3d45109c777085f14ae955d1bcba2ef77: e432 low modes, two MOTO populations, fixed-label e432->B and e432->live event continuations, and defect-core transfer.
+
+No score below the live record has been found at the time of this note. Any endpoint below live-2e-7 must trigger the full independent repolish/rationalization/official-verifier pipeline before any breakthrough claim.
