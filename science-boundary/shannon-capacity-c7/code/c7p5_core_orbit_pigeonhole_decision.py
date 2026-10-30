@@ -1,24 +1,5 @@
 #!/usr/bin/env python3
-"""Exact 50-branch 368 decision with stabilizer-orbit pigeonhole cuts.
-
-After translating one selected word to 00000, the remaining 367 selected words
-fall into 50 nonconfusable orbits under the zero stabilizer (coordinate
-permutations and independent sign reversals). Therefore at least one orbit
-contains >= ceil(367/50) = 8 selected words. For such an orbit, map one of its
-selected words to the canonical representative using the same stabilizer.
-
-Thus every 368-set has an automorphic image satisfying one of 50 branches:
-  * 00000 selected;
-  * the branch's canonical representative selected;
-  * at least 8 selected words from that entire orbit.
-
-All 50 occupancy constraints live natively in one MiniCard instance.  Each is
-gated by eight tiny proxy literals equal to NOT(selector): when the selector is
-false the eight proxies satisfy the >=8 constraint automatically; when true all
-proxies are false and MiniCard enforces >=8 actual orbit selections.  An
-at-most-one selector constraint means an assumption on one selector disables
-every other orbit constraint while learned clauses remain reusable.
-"""
+"""Exact 50-branch 368 decision with stabilizer-orbit pigeonhole cuts."""
 from __future__ import annotations
 import argparse,gzip,itertools,json
 from pathlib import Path
@@ -38,6 +19,9 @@ def orbit_types():
  a=[t for t in itertools.combinations_with_replacement(range(4),D) if max(t)>=2]
  if len(a)!=50:raise RuntimeError(len(a))
  return a
+def add_atleast(s,lits,k):
+ if not 0<=k<=len(lits):raise ValueError((len(lits),k))
+ s.add_atmost([-z for z in lits],len(lits)-k)
 def main():
  ap=argparse.ArgumentParser();ap.add_argument('c7five_root',type=Path);ap.add_argument('output',type=Path);ap.add_argument('--shard',type=int,default=0);ap.add_argument('--shards',type=int,default=1);a=ap.parse_args()
  if a.shards<1 or not 0<=a.shard<a.shards:raise SystemExit('bad shard')
@@ -54,26 +38,25 @@ def main():
   hist[len(supp)]=hist.get(len(supp),0)+1
   for c in supp:s.add_clause([-x[v],b[c]]);impl+=1
  sel_lit=lambda v:(-b[v] if v in C else x[v])
- s.add_atleast([sel_lit(v) for v in range(U)],TARGET)
- s.add_atleast([b[c] for c in core],4)
+ add_atleast(s,[sel_lit(v) for v in range(U)],TARGET)
+ add_atleast(s,[b[c] for c in core],4)
  s.add_clause([sel_lit(0)])
  types=orbit_types();by={t:[] for t in types}
  for v in range(1,U):
   t=dtype(v)
   if t in by:by[t].append(v)
  if sum(map(len,by.values()))!=U-243:raise RuntimeError(('orbit partition',sum(map(len,by.values()))))
- # Native conditional occupancy: q_j == not selector.  With selector off the
- # eight q_j make the >=8 native constraint tautological; with selector on they
- # are all false and the orbit itself must supply eight selected literals.
+ # Native conditional occupancy: q_j == not selector. With selector off the
+ # eight q_j make the >=8 constraint tautological; with selector on they are
+ # all false and the orbit itself must supply eight selected literals.
  top=bb+len(core)-1;selectors=[];reps=[];gate_clauses=0
  for t in types:
   rep=enc(t)
   if dtype(rep)!=t or rep not in by[t]:raise RuntimeError(('rep',t,rep))
   top+=1;sv=top;selectors.append(sv);reps.append(rep);gates=[]
   for _ in range(OCC):
-   top+=1;q=top;gates.append(q)
-   s.add_clause([q,sv]);s.add_clause([-q,-sv]);gate_clauses+=2
-  s.add_atleast([sel_lit(v) for v in by[t]]+gates,OCC)
+   top+=1;q=top;gates.append(q);s.add_clause([q,sv]);s.add_clause([-q,-sv]);gate_clauses+=2
+  add_atleast(s,[sel_lit(v) for v in by[t]]+gates,OCC)
   s.add_clause([-sv,sel_lit(rep)]);gate_clauses+=1
  for i in range(len(selectors)):
   for j in range(i+1,len(selectors)):s.add_clause([-selectors[i],-selectors[j]]);gate_clauses+=1
