@@ -54,7 +54,7 @@ def main():
         row={'label':label,'start_energy':start,'energy':e,'delta_live':e-args.live_score,'coord_counts':cc,'nit':nit,'success':ok}
         rows.append(row); print(label,'start',f'{start:.9f}','E',f'{e:.12f}','dLive',f'{e-args.live_score:+.9g}','cc',cc,'nit',nit,flush=True)
         if e < max(es,et)+0.35:
-            if all(abs(e,z['energy'])>2e-6 or cc!=z['coord_counts'] for z in saved):
+            if all(abs(e-z['energy'])>2e-6 or cc!=z['coord_counts'] for z in saved):
                 saved.append({'energy':e,'coord_counts':cc,'label':label,'points':y.tolist()})
     for t in [float(z) for z in args.ts.split(',') if z]:
         run(f'geo:t={t:g}',tm.geodesic(sm,target,t))
