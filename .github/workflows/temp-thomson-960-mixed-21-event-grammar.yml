@@ -1,0 +1,103 @@
+name: temp Thomson 960 mixed 21-dislocation event grammar
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-mixed-21-event-grammar.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  explore:
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        kind: [same-site, cross-site, difference, support3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Report actual CPU affinity
+        shell: bash
+        run: |
+          echo "runner nproc=$(nproc), shard=${{ matrix.kind }}; one numerical worker per runner"
+      - name: Download e564 root minimum
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-c3-portal-e564
+          path: ${{ runner.temp }}/e564
+          github-token: ${{ github.token }}
+          run-id: 40796920780
+      - name: Mixed nonlinear event grammar plus recursive scaffold
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 science-boundary/thomson-960/code/search_mixed_21_event_grammar.py \
+            "$RUNNER_TEMP/e564/portal-e564.json" \
+            science-boundary/thomson-960/data/basin-e553-21.json \
+            science-boundary/thomson-960/data/basin-e558-a.json \
+            science-boundary/thomson-960/data/basin-e558-b.json \
+            --kind "${{ matrix.kind }}" \
+            --scales 0.45,0.70,0.95,1.20,1.50 \
+            --maxiter 1800 --keep 12 \
+            --scaffold-top 2 --scaffold-families 4 \
+            --scaffold-mults 1.05,1.25,1.60 \
+            --fixed-maxiter 900 --release-maxiter 1800 \
+            --out "$RUNNER_TEMP/out/result.json"
+      - name: If a 20-dislocation basin survives, use the same runner for soft-mode exits
+        shell: bash
+        run: |
+          set -e
+          p="$RUNNER_TEMP/out/result.best20.json"
+          if [ ! -f "$p" ]; then
+            echo "No surviving 20-dislocation basin in this shard; no conditional mode stage."
+            exit 0
+          fi
+          python3 - <<'PY'
+          import json,os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'out','result.best20.json')
+          d=json.load(open(p)); print('best20',d['energy'],d['coord_counts'])
+          PY
+          git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+            "$RUNNER_TEMP/few-shots" "$p" \
+            --modes 0,1,2 --amps 0.004,0.010,0.022,0.040 \
+            --k 10 --workers 1 --maxiter 2200 --keep-basins 12 \
+            --out "$RUNNER_TEMP/out/best20-modes.json"
+      - name: Summarize shard
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,os
+          root=os.path.join(os.environ['RUNNER_TEMP'],'out')
+          d=json.load(open(os.path.join(root,'result.json')))
+          print('kind',d['kind'],'patterns',d['patterns'])
+          print('new basins')
+          for b in d['new_lowest_basins'][:12]: print(b['energy'],b['coord_counts'],b['pattern'],b['scale'])
+          print('best20',None if d['best_20_basin'] is None else (d['best_20_basin']['energy'],d['best_20_basin']['coord_counts']))
+          p=os.path.join(root,'best20-modes.json')
+          if os.path.exists(p):
+              m=json.load(open(p)); print('best20 mode search best',m['best_energy'],'delta_live',m['best_delta_vs_live'])
+              for b in m['lowest_distinct_basins'][:8]: print('MODE',b['energy'],b['mode'],b['sign'],b['amp'])
+          PY
+      - name: Upload shard artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: thomson-mixed-21-event-${{ matrix.kind }}
+          path: ${{ runner.temp }}/out
+          retention-days: 7
+          compression-level: 6
