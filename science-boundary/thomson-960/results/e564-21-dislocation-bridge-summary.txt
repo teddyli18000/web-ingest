@@ -1,0 +1,63 @@
+Thomson N=960 — e564 21-dislocation bridge
+Date: 2026-10-29
+
+Source / classification
+-----------------------
+The exact-C3 constrained minimum reproduced from search_c3_smooth seed 303, trial 3 has
+floating energy 444368.564539199113 (live-record delta +0.172133002) and exact C3 symmetry
+to numerical precision. Full-space Hessian classification in Actions run 40796920780 found
+no negative mode among the 24 lowest internal modes. Lowest eigenvalues begin
+5.20524619146, 5.20524698888, 6.20674837036, 6.22828951210, 6.22828984750.
+It is therefore a genuine full-space minimum, not a symmetry-constrained saddle.
+
+Defect structure
+----------------
+Convex-hull/Delaunay coordination is 33 fivefold / 906 sixfold / 21 sevenfold, i.e. 21
+dislocations with net topological charge 12.
+
+The non-sixfold subgraph decomposes as:
+- nine connected 5-7-5-7-5 scars (3 fivefold + 2 sevenfold each): 18 dislocations;
+- three connected 5-7 dipoles: 3 dislocations;
+- three isolated fivefold vertices.
+Each isolated fivefold is about 0.1863010893 rad from one of the three 5-7 dipoles, and the
+three such structures form a C3 orbit. Thus a useful structural description is nine full
+scars plus three spatially broken short-scar structures.
+
+Direct 21 -> 20 topology interface
+----------------------------------
+The e564 triangulation contains exactly nine flippable edges whose combinatorial edge flip
+reduces total |coordination-6| by two and changes the coordination counts exactly
+
+  33/906/21 -> 32/908/20.
+
+All nine are 7-7 edges lying inside the nine full 5-7-5-7-5 scars. The opposite vertices
+have degrees 5 and 6. Therefore one such flip converts one full two-dislocation scar into a
+one-dislocation short scar. The resulting defect composition is exactly eight full scars
+plus four short scars — the same 20-dislocation composition as the merged D2 record — but
+starting from the distinct C3-derived global arrangement.
+
+The nine flips split into three C3-equivalent families. A balanced spherical perturbation
+that moves the new-diagonal endpoints together and old-diagonal endpoints apart crosses the
+actual convex-hull flip boundary at RMS-local amplitudes about 0.0179668, 0.0180433, and
+0.0184463 rad for the three families. Two local pilot relaxations started at 1.05 times the
+boundary healed back to e564, so merely crossing the boundary is insufficient; larger and
+geometrically different overshoots remain scientifically open.
+
+Active compute
+--------------
+Run 40990733845: one-runner, internally parallel e564 multimode basin map (72 relaxations)
+followed by eight upward eigenfollow trajectories from modes 0..3, both signs. BLAS threads
+are fixed to one per process and independent workers are sized from nproc.
+
+Run 40991088178: one-runner, internally parallel targeted defect-flip search. For one
+representative of each of the three flip families it tests balanced/new-diagonal/old-diagonal
+crossing directions over multiple boundary overshoots, fully relaxes every 20-dislocation
+start, and preserves the lowest distinct endpoints.
+
+Interpretation
+--------------
+This is the first project state that gives a direct, one-local-topology-event bridge from a
+C3-derived minimum to the exact defect composition of the known D2 20-dislocation family.
+The key question is no longer whether a 20-dislocation topology can be manufactured, but
+whether breaking C3 at one of the nine full scars can stabilize a different low-energy
+20-dislocation global arrangement instead of healing to e564 or the known D2 basin.
