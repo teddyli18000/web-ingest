@@ -1,0 +1,44 @@
+name: Temp Science Boundary C7 outside factor census
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-outside-factor-census.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_outside_factor_census.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-outside-outside-deficit
+  cancel-in-progress: true
+
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned BPZ source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          mkdir -p "$RUNNER_TEMP/result"
+      - name: Exact factor deficit census
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_outside_factor_census.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/census.json" | tee "$RUNNER_TEMP/result/census.stdout"
+      - name: Upload census
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-outside-factor-census
+          path: ${{ runner.temp }}/result
+          retention-days: 14
