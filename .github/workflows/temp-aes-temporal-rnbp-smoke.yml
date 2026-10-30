@@ -1,0 +1,57 @@
+name: temp-aes-temporal-rnbp-smoke
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/temporal_rnbp_synth.py'
+      - '.github/workflows/temp-aes-temporal-rnbp-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [1, 2, 3, 4, 5, 6, 7, 8]
+        topk: [1, 6]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run temporal RNBP
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/temporal_rnbp_synth.py
+          python science-boundary/aes-sbox-circuit/temporal_rnbp_synth.py \
+            --family fs-101 --rng-seed '${{ matrix.seed }}' --topk '${{ matrix.topk }}' \
+            --max-linear 78 --out result | tee run.log
+          python - <<'PY'
+          import json, pathlib, sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          s=json.load(open('result/summary.json'))
+          if pathlib.Path('result/candidate.json').exists():
+              c=json.load(open('result/candidate.json'))
+              assert ras.independent_check(c)[0]
+          print(json.dumps({k:s.get(k) for k in ['status','seed','raw_linear','released_ands','candidate_gates']}))
+          PY
+      - name: Official verifier if <=100
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ] && [ "$(python -c "import json; print(len(json.load(open('result/candidate.json'))['gates']))")" -le 100 ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot; cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-temporal-rnbp-s${{ matrix.seed }}-k${{ matrix.topk }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
