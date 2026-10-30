@@ -25,7 +25,7 @@ Public incumbent:
 ++++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-
 ```
 
-The strongest exact progress is now on the minimum odd-energy (`odd-perfect`) layer.
+The strongest exact progress is now on the minimum odd-energy (`odd-perfect`) layer. The sharp `(20,0), W=127` corner has been reduced to an order-25 ternary projection with eight support splits; the four high-support splits `ka=18,20,22,24` are now exactly excluded, leaving only `ka=10,12,14,16` in that branch.
 
 ### Exact near-skew result
 
@@ -149,6 +149,50 @@ Full derivation: [`results/2026-10-29-oddperfect-polynomial-factorization.md`](r
 
 This factorization/norm-gap formulation is now the preferred first-principles route to the whole odd-perfect layer.
 
+### Sharp `(20,0), W=127` order-25 branch
+
+For half sums `(20,0)`, integer convexity gives `W>=127`. At equality the even-correlation multiset is forced, and the parity halves form an NGP50 subject to the additional odd-perfect cross condition. Compressing opposite positions gives ternary length-25 sequences `p,c` with
+
+```text
+sum p = 10,
+sum c = 0,
+||p||^2+||c||^2 = 26,
+p c* + c p* = 0  in Z[x]/(x^25-1),
+PAF_p(r)+PAF_c(r) in {2,3,4},
+sum_{r=1}^{12}[PAF_p(r)+PAF_c(r)] = 37.
+```
+
+Writing `ka=||p||^2`, the only possible splits are
+
+```text
+ka = 10,12,14,16,18,20,22,24.
+```
+
+Exact non-CP-SAT computations now give
+
+```text
+ka=18  impossible
+ka=20  impossible
+ka=22  impossible
+ka=24  impossible
+```
+
+so W127 survives only at
+
+```text
+ka = 10,12,14,16.
+```
+
+The `ka=18` computation is the strongest new representation step: for fixed `c`, write `p=1-z-2n`. The cross equation becomes `Mz+2Mn=0`; reducing modulo 2 restricts the 7-zero mask `z` to a small GF(2) kernel before an exact base-17 integer MITM. It exhausts 2,191 support orbits and 75,987 signed `c` orbits, finds 3,675,345 exact cross-compatible pairs, and no W127 target. An independent four-core GitHub Actions reproduction returned the same counts.
+
+Durable records:
+
+- [`results/2026-10-29-h20-ngp50-paley-exclusion.md`](results/2026-10-29-h20-ngp50-paley-exclusion.md)
+- [`results/2026-10-29-h20-w127-order10-ngp-projection.md`](results/2026-10-29-h20-w127-order10-ngp-projection.md)
+- [`results/2026-10-29-w127-order25-ka24-exclusion.md`](results/2026-10-29-w127-order25-ka24-exclusion.md)
+- [`results/2026-10-29-w127-order25-ka20-ka22-exclusion.md`](results/2026-10-29-w127-order25-ka20-ka22-exclusion.md)
+- [`results/2026-10-29-w127-order25-ka18-kernel-mitm-exclusion.md`](results/2026-10-29-w127-order25-ka18-kernel-mitm-exclusion.md)
+
 ## Target arithmetic
 
 Split by parity:
@@ -195,17 +239,19 @@ Target-specific records:
 - Do not spend further compute inside near-skew to beat 578; it is rigorously impossible.
 - Do not repeat small ordinary incumbent edits; radius 7 is exact and strongly negative.
 - Do not treat CP-SAT `UNKNOWN`, process timeout, or killed jobs as exclusions.
+- The generic order-25 CP-SAT W127 model timed out with `UNKNOWN` in every `ka` shard; the exact high-`ka` exclusions came only after changing representation to orbit/MITM and GF(2)-kernel/MITM.
 - Do not scale the old endpoint anchor/RREF formulation to higher defect; defect 5 required a representation change to mod-4 affine linearization.
 - Do not mechanically continue defect-by-defect merely because d=0..5 are now closed. Candidate quality has not improved; the global factorization (1) is a better search space.
 - The failed d4 `[150000,172000)` SIGKILL run is not evidence; that interval was later fully rerun in four successful subranges, as recorded in the clean d4 transcript.
 
 ## Next steps
 
-1. **Attack the global odd-perfect factorization.** Seek a proof that every Littlewood factorization `(1)` satisfies `||A^2-xB^2||_2^2 >= 10956`. That would eliminate the entire `O=50` layer at once.
-2. Use the fixed coefficient lattice of `D` and the factorization `D(x^2)=S(x)S(-x)` to search near the sharp norm thresholds `10948/10940`, rather than enumerating endpoint supports.
-3. Exploit the cross-spectral phase constraint from `(1)` at all 50th roots of unity; compare canonical-form/quad-decomposition methods from base/normal/near-normal sequence enumeration, but do not assume those theorems apply directly.
-4. Continue higher odd-energy target layers (`O=58`, `O=66`, ...) only with target-specific arithmetic and exact verification; keep E574 and E570 product classes separate.
-5. Re-check Few Shots/public record immediately before any claim. If `E<=574` is found, freeze the sequence, independently rescore with `code/verify.py`, verify with the Few Shots verifier, create only `certificate.json` and `SHOT.md`, run `tools/check.py`, then publish under `teddyli18000` as authorized.
+1. **Close the four remaining W127 order-25 splits `ka=10,12,14,16`.** Prefer a joint representation over four unrelated enumerations. The identity `X=p+c`, `Y=p-c` turns the cross equation into periodic homometry `PAF_X=PAF_Y`; every W127 candidate has `sum X=sum Y=10`, `||X||^2=||Y||^2=26`, and nonzero autocorrelations in `{2,3,4}` with independent-lag sum 37.
+2. If the homometric route does not close W127, extend the GF(2)-kernel/MITM only where its kernel/support counts remain demonstrably small; do not return to the timed-out generic CP-SAT model.
+3. Then use the already-derived sparse near-NGP classification for W129/W131 rather than restarting from generic LABS search.
+4. In parallel, continue attacking the global odd-perfect factorization and the norm threshold `||A^2-xB^2||_2^2 >= 10956`, which would eliminate the whole `O=50` layer at once.
+5. Continue higher odd-energy target layers (`O=58`, `O=66`, ...) only with target-specific arithmetic and exact verification; keep E574 and E570 product classes separate.
+6. Re-check Few Shots/public record immediately before any claim. If `E<=574` is found, freeze the sequence, independently rescore with `code/verify.py`, verify with the Few Shots verifier, create only `certificate.json` and `SHOT.md`, run `tools/check.py`, then publish under `teddyli18000` as authorized.
 
 ## Durable artifacts
 
@@ -230,4 +276,4 @@ Target-specific records:
 
 - **2026-10-27:** Reproduced the baseline; added independent scoring/search kernels; exhausted incumbent Hamming radii through 6; surveyed current solver literature and neighboring-length records.
 - **2026-10-28:** Exhausted incumbent radius 7. Derived/corrected near-skew representation. Calibrated odd-perfect search; found reproducible outside-near-skew E1162 boundary+skew97 basin. Built exact skew-core and target-arithmetic decompositions. Exhausted large near-skew local, crossover and block neighborhoods.
-- **2026-10-29:** Proved the exact N100 near-skew optimum 578. Developed reflection-support endpoint linearization and exactly excluded odd-perfect endpoint defects 1 through 5. Defect 5 required a new mod-4/GF(2) affine reformulation and a 1.9-million-support exhaustive search. Derived the global parity-polynomial factorization `A B^R+x B A^R=(x^50-1)Q` and exact norm identity `||A^2-xB^2||^2=9900+2V`, which is now the main route beyond low endpoint defect.
+- **2026-10-29:** Proved the exact N100 near-skew optimum 578. Developed reflection-support endpoint linearization and exactly excluded odd-perfect endpoint defects 1 through 5. Defect 5 required a new mod-4/GF(2) affine reformulation and a 1.9-million-support exhaustive search. Derived the global parity-polynomial factorization `A B^R+x B A^R=(x^50-1)Q` and exact norm identity `||A^2-xB^2||^2=9900+2V`. In the sharp `(20,0),W127` branch, reduced to an order-25 ternary projection, exactly excluded `ka=18,20,22,24`, and independently reproduced the `ka=18` GF(2)-kernel/MITM count on a four-core GitHub runner.
