@@ -1,0 +1,49 @@
+name: temp-aes-rnbp-exact-tail
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/rnbp_exact_tail.py'
+      - '.github/workflows/temp-aes-rnbp-exact-tail.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  tail:
+    strategy:
+      fail-fast: false
+      matrix:
+        slots: [4, 5, 6, 7]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Z3
+        run: python -m pip install --quiet z3-solver
+      - name: Build 61-linear prefix and solve exact tail
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/rnbp_exact_tail.py
+          python science-boundary/aes-sbox-circuit/rnbp_exact_tail.py \
+            --family fs-101 --rng-seed 1 --topk 1 --prefix-max-linear 67 \
+            --tail-slots '${{ matrix.slots }}' --timeout-ms 480000 --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier if <=100
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ] && [ "$(python -c "import json; print(len(json.load(open('result/candidate.json'))['gates']))")" -le 100 ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot; cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-rnbp-exact-tail-${{ matrix.slots }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
