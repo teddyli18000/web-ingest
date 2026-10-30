@@ -1,0 +1,60 @@
+name: temp Thomson 960 e564 scaffolded flips
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-e564-scaffold.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  scaffold:
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        family: [0, 1, 2]
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Download e564 seed
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-c3-portal-e564
+          path: ${{ runner.temp }}/e564
+          github-token: ${{ github.token }}
+          run-id: 40796920780
+      - name: Scaffold local 20-dislocation topology then release
+        shell: bash
+        run: |
+          echo "runner nproc=$(nproc), family=${{ matrix.family }}"
+          python3 science-boundary/thomson-960/code/search_e564_scaffolded_flip.py \
+            "$RUNNER_TEMP/e564/portal-e564.json" --family "${{ matrix.family }}" \
+            --multipliers 1.05,1.20,1.50,2.00 --fixed-maxiter 1400 --release-maxiter 2200 \
+            --out "$RUNNER_TEMP/scaffold-f${{ matrix.family }}.json"
+          python3 - <<'PY'
+          import glob,json
+          p=glob.glob('/home/runner/work/_temp/scaffold-*.json')[0]; d=json.load(open(p))
+          print('BEST',d['best_release_energy'])
+          for r in d['rows']:
+              print('ROW',r['multiplier'],r['fixed_energy'],r['fixed_coord'],r['release_energy'],r['release_coord'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e564-scaffold-f${{ matrix.family }}
+          path: ${{ runner.temp }}/scaffold-f${{ matrix.family }}.json
+          retention-days: 7
