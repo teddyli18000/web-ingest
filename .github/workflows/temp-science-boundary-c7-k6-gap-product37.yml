@@ -1,0 +1,63 @@
+name: Temp Science Boundary C7 k6 gap product37 closure
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-k6-gap-product37.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_support_clique_cover_gap_census.py
+      - science-boundary/shannon-capacity-c7/code/bpz_k6_gap_irreducibility_audit.py
+      - science-boundary/shannon-capacity-c7/code/bpz_k6_gap_product37.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-k6-gap-product37
+  cancel-in-progress: false
+
+jobs:
+  closure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned Tan/BPZ source and dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          python3 -m pip install --disable-pip-version-check python-sat networkx
+          mkdir -p "$RUNNER_TEMP/result"
+      - name: Exact k6 gap census and irreducibility audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_support_clique_cover_gap_census.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/k6.json" --k 6 --workers "$(nproc)" \
+            > "$RUNNER_TEMP/result/k6.stdout" 2> "$RUNNER_TEMP/result/k6.stderr"
+          cat "$RUNNER_TEMP/result/k6.stdout"
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_k6_gap_irreducibility_audit.py \
+            "$RUNNER_TEMP/result/k6.json" "$RUNNER_TEMP/result/audit.json" \
+            > "$RUNNER_TEMP/result/audit.stdout" 2> "$RUNNER_TEMP/result/audit.stderr"
+          cat "$RUNNER_TEMP/result/audit.stdout"
+      - name: Exact rooted-type product37 SAT closure
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_k6_gap_product37.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/audit.json" "$RUNNER_TEMP/result/product37.json" \
+            --workers "$(nproc)" \
+            > "$RUNNER_TEMP/result/product37.stdout" 2> "$RUNNER_TEMP/result/product37.stderr"
+          cat "$RUNNER_TEMP/result/product37.stdout"
+          tail -n 120 "$RUNNER_TEMP/result/product37.stderr"
+      - name: Upload exact closure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-k6-gap-product37
+          path: ${{ runner.temp }}/result
+          retention-days: 14
