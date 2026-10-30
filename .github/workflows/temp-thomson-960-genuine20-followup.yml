@@ -1,0 +1,88 @@
+name: temp Thomson 960 genuine20 novel-basin followup
+
+on:
+  workflow_run:
+    workflows: ['temp Thomson 960 genuine20 string quench']
+    types: [completed]
+
+jobs:
+  follow-novel20:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [7301, 7302, 7303, 7304]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    permissions:
+      actions: read
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone current Few Shots
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Download parent string artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-genuine20-string-${{ matrix.seed }}
+          path: ${{ runner.temp }}/parent
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      - name: Continue local Hessian exits modes 4-11
+        shell: bash
+        run: |
+          set -euo pipefail
+          seedjson="$RUNNER_TEMP/parent/string-quench.json.best20.json"
+          if [[ ! -f "$seedjson" ]]; then
+            echo 'Parent string produced no novel 20 basin; skip.'
+            exit 0
+          fi
+          mkdir -p "$RUNNER_TEMP/out"
+          cp "$seedjson" "$RUNNER_TEMP/out/seed.json"
+          echo "nproc=$(nproc) parent_seed=${{ matrix.seed }}"
+          python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+            "$RUNNER_TEMP/few-shots" "$seedjson" \
+            --modes 4,5,6,7,8,9,10,11 \
+            --amps 0.004,0.009,0.018,0.035,0.060,0.095 \
+            --k 14 --workers "$(nproc)" --maxiter 2400 --keep-basins 20 \
+            --out "$RUNNER_TEMP/out/modes4-11.json"
+      - name: Connect novel basin onward to D2 and quench corridor
+        shell: bash
+        run: |
+          set -euo pipefail
+          seedjson="$RUNNER_TEMP/parent/string-quench.json.best20.json"
+          if [[ ! -f "$seedjson" ]]; then exit 0; fi
+          python3 science-boundary/thomson-960/code/search_20_string_quench.py \
+            "$RUNNER_TEMP/few-shots" "$seedjson" \
+            --seed $((8300 + ${{ matrix.seed }} - 7300)) --starts 14 \
+            --images 9 --iterations 220 --eta 0.00022 --max-step 0.0006 \
+            --quench-maxiter 2400 --out "$RUNNER_TEMP/out/to-d2-string.json"
+      - name: Summarize follow-up
+        run: |
+          python3 - <<'PY'
+          import json, os
+          r=os.path.join(os.environ['RUNNER_TEMP'],'out')
+          for fn in ('modes4-11.json','to-d2-string.json'):
+              p=os.path.join(r,fn)
+              if not os.path.exists(p): continue
+              d=json.load(open(p))
+              print(fn,'BEST',d.get('best_energy',d.get('best_novel_20_energy')),
+                    'DELTA_LIVE',d.get('best_delta_vs_live',d.get('best_delta_live')))
+              for b in d.get('lowest_distinct_basins',[])[:12]:
+                  print('BASIN',b['energy'],b['mode'],b['sign'],b['amp'])
+              for b in d.get('novel_20_basins',[])[:12]:
+                  print('NOVEL20',b['energy'],'image',b['image'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-genuine20-followup-${{ matrix.seed }}
+          path: ${{ runner.temp }}/out
+          retention-days: 7
