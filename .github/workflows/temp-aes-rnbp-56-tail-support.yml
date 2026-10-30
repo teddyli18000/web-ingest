@@ -1,0 +1,53 @@
+name: temp-aes-rnbp-56-tail-support
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/rnbp_prefix_tail_support.py'
+      - '.github/workflows/temp-aes-rnbp-56-tail-support.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - {label: d1r4, d: 1, r: 4}
+          - {label: d3r2, d: 3, r: 2}
+        seed: [1, 2, 3, 4, 5, 6, 7, 8]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install --quiet z3-solver
+      - name: Search pure-linear tail under the 11-gate budget
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/rnbp_prefix_tail_support.py
+          python science-boundary/aes-sbox-circuit/rnbp_prefix_tail_support.py \
+            --family fs-101 --projection-weight 0.24 \
+            --deviation-index '${{ matrix.variant.d }}' --deviation-rank '${{ matrix.variant.r }}' \
+            --seed '${{ matrix.seed }}' --max-tail 11 --max-support 8 --elite 12 \
+            --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier if <=100
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ] && [ "$(python -c "import json; print(len(json.load(open('result/candidate.json'))['gates']))")" -le 100 ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot; cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-rnbp-56tail-${{ matrix.variant.label }}-s${{ matrix.seed }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
