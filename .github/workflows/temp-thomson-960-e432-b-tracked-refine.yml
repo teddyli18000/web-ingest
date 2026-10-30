@@ -1,0 +1,52 @@
+name: temp Thomson 960 e432-B tracked refine
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-e432-b-tracked-refine.yml'
+
+jobs:
+  refine:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 170
+    permissions:
+      actions: read
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e432-B-refined-saddle
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41045248541
+      - name: Overlap-tracked index-1 refinement
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 science-boundary/thomson-960/code/refine_tracked_index1.py \
+            "$RUNNER_TEMP/seed/refined.json" --outer 22 --k 12 --fd-step 3e-6 \
+            --penalty 400000 --perp-maxiter 900 --reaction-damping 0.45 \
+            --curv-floor 0.08 --max-reaction-rms 0.00002 --grad-tol 0.00002 \
+            --out "$RUNNER_TEMP/out/tracked.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','tracked.json')))
+          print('STATUS',d['status'],'E',d['final_energy'],'GRAD',d['final_gradient_rms'],'NEG',d['negative_internal_modes_below_-1e-3'])
+          print('TRACKED',d['final_tracked_mode_index'],d['final_tracked_mode_eigenvalue'],d['final_tracked_overlap'])
+          print('LOWS',d['final_eigenvalues'][:8])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e432-B-tracked-refined
+          path: ${{ runner.temp }}/out
+          retention-days: 10
