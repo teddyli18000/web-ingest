@@ -1,0 +1,118 @@
+name: temp-aes-mutated-seed-strict-resub
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/exact_strict_resub.py'
+      - '.github/workflows/temp-aes-mutated-seed-strict-resub.yml'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  shave:
+    strategy:
+      fail-fast: false
+      matrix:
+        source: [fs101, care53]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download completed architecture-mutation archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euxo pipefail
+          mkdir -p prior
+          gh run download 40996646594 -p 'aes-joint-factor-${{ matrix.source }}-*' -D prior
+      - name: Select one verified 102 seed per mutated AND root
+        run: |
+          python - <<'PY'
+          import glob,json,pathlib,shutil
+          root=pathlib.Path('prior'); out=pathlib.Path('selected'); out.mkdir()
+          choices={}
+          for sf in root.glob('**/summary.json'):
+              s=json.load(open(sf))
+              for a in s.get('archive',[]):
+                  if a['gates']!=102: continue
+                  key=a['and_index']
+                  cand=(a['care_bits'],a['hash'],sf.parent/a['file'],a)
+                  if key not in choices or cand[:2]<choices[key][:2]: choices[key]=cand
+          manifest=[]
+          for i,(idx,(care,h,path,a)) in enumerate(sorted(choices.items())):
+              dst=out/f'seed-{i:02d}-root{idx}-care{care}-{h[:10]}.json'
+              shutil.copy2(path,dst)
+              manifest.append({'file':str(dst),'and_index':idx,'care_bits':care,'hash':h})
+          json.dump(manifest,open('selected-manifest.json','w'),indent=2)
+          print(json.dumps({'source':'${{ matrix.source }}','selected':len(manifest),'roots':[x['and_index'] for x in manifest]}))
+          assert len(manifest)>=20, len(manifest)
+          PY
+      - name: Exhaust strict two-step resubstitution in four CPU lanes
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p outputs logs
+          mapfile -t files < <(find selected -name '*.json' | sort)
+          pids=()
+          for lane in 0 1 2 3; do
+            (
+              rc=0
+              for i in "${!files[@]}"; do
+                if (( i % 4 != lane )); then continue; fi
+                f="${files[$i]}"; b=$(basename "$f" .json)
+                python science-boundary/aes-sbox-circuit/exact_strict_resub.py \
+                  --input "$f" --out "outputs/$b" --depth 2 --target 100 \
+                  > "logs/$b.log" 2>&1 || rc=1
+              done
+              exit "$rc"
+            ) &
+            pids+=("$!")
+          done
+          rc=0
+          for p in "${pids[@]}"; do wait "$p" || rc=1; done
+          grep -h '"best_gates"' logs/*.log || true
+          exit "$rc"
+      - name: Aggregate and independently verify best
+        run: |
+          python - <<'PY'
+          import glob,json,pathlib,sys,shutil
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          rows=[]
+          for sf in glob.glob('outputs/*/summary.json'):
+              s=json.load(open(sf)); rows.append((s['best_gates'],sf,s))
+          assert rows
+          rows.sort(key=lambda x:(x[0],x[1]))
+          bestn,sf,s=rows[0]; bp=str(pathlib.Path(sf).with_name('best.json'))
+          c=json.load(open(bp)); assert ras.independent_check(c)[0]
+          shutil.copy2(bp,'aggregate-best.json')
+          agg={'source':'${{ matrix.source }}','seeds':len(rows),'best_gates':bestn,
+               'size_hist':{},'states_seen':sum(x[2]['states_seen'] for x in rows),
+               'total_gate_tests':sum(x[2]['tests'].get('gate_tests',0) for x in rows),
+               'total_alias_tests':sum(x[2]['tests'].get('alias_tests',0) for x in rows),
+               'winning_summary':s}
+          from collections import Counter
+          agg['size_hist']=dict(sorted(Counter(x[0] for x in rows).items()))
+          json.dump(agg,open('aggregate.json','w'),indent=2)
+          print(json.dumps(agg))
+          PY
+          if [ "$(python -c "import json; print(json.load(open('aggregate.json'))['best_gates'])")" -le 100 ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot; cp aggregate-best.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-mutated-strict-${{ matrix.source }}
+          path: |
+            selected-manifest.json
+            aggregate.json
+            aggregate-best.json
+            official-verifier.jsonl
+            outputs/*/summary.json
+            outputs/*/best-path.json
