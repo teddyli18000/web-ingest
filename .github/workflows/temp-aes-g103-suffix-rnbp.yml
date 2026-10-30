@@ -1,0 +1,48 @@
+name: temp-aes-g103-suffix-rnbp
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/g103_suffix_linear_rnbp.py'
+      - '.github/workflows/temp-aes-g103-suffix-rnbp.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        budget: [19, 20, 21]
+        seed: [1, 2, 3, 4, 5, 6, 7, 8]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Search exact G103 suffix map
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/g103_suffix_linear_rnbp.py
+          python science-boundary/aes-sbox-circuit/g103_suffix_linear_rnbp.py \
+            --family nist-g103 --budget '${{ matrix.budget }}' --seed '${{ matrix.seed }}' \
+            --max-support 8 --elite 24 --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier if original-prefix recombination reaches <=100
+        run: |
+          set -euxo pipefail
+          if [ -f result/full.json ] && [ "$(python -c "import json; print(len(json.load(open('result/full.json'))['gates']))")" -le 100 ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot; cp result/full.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-suffix-b${{ matrix.budget }}-s${{ matrix.seed }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
