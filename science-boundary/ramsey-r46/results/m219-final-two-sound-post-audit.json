@@ -1,0 +1,66 @@
+{
+  "all_unsat": true,
+  "campaign": "m219-final-two-sound-post-audit",
+  "catalog_counts": {
+    "A25": 6,
+    "A26": 2,
+    "B116": 9,
+    "B117": 90
+  },
+  "edges": 219,
+  "hitting_numbers": {
+    "A25": [
+      [2,25],
+      [2,16],
+      [2,20],
+      [2,16],
+      [2,20],
+      [2,20]
+    ],
+    "A26": [
+      [2,20],
+      [2,16]
+    ]
+  },
+  "seq0": {
+    "degree_sequence": {"11":7,"12":16,"13":13},
+    "forcing": "after r=3 is excluded, if every low vertex had r>=5 then sum r>=35, but K4-free on 7 lows gives sum t<=2*ex(7,K4)=32 and r<=t; hence an r=4 anchor exists",
+    "post_audit_r3_evidence": {
+      "t356": "m219-seq0-r3-t356-transversal",
+      "t4": "m219-seq0-r3-t4-col2"
+    },
+    "r4_label_exclusions": {
+      "4": {"B116_contexts":0,"B117_contexts":0},
+      "5": {"B116_contexts":0,"B117_contexts":0}
+    },
+    "r4_t6_edge_upper": 24,
+    "status": "UNSAT"
+  },
+  "seq1": {
+    "class_relaxation_count": 210,
+    "degree_sequence": {"11":8,"12":14,"13":14},
+    "forcing": "after r=3 is excluded, eight lows with r>=4 and max sum r=32 force r=4 at every low vertex; t=4,5,6 are impossible, so all would need t=7, giving K8 and hence K4",
+    "max_sum_r": 32,
+    "r3_subbranches": {
+      "3": {"B116_contexts":0},
+      "4": {"B116_contexts":0},
+      "5": {
+        "local_B_class_counts": {"11":2,"12":10,"13":12},
+        "reason": "identical A26/B116 local strata and B degree-class counts",
+        "reuses_sound_certificate": "m219-seq0-r3-t4-col2"
+      },
+      "6": {
+        "candidate_B_low_vertices": [[1,0]],
+        "reduction": "q has d_B=8, no B-high neighbour, x=3, no B-low neighbour; r(q)>=3 forces q to be t=3,r=3"
+      },
+      "7": {"A26_partition_support_counts":[0,0]}
+    },
+    "r4_label_exclusions": {
+      "4": {"B116_contexts":0,"B117_contexts":0},
+      "5": {"B116_contexts":0,"B117_contexts":0},
+      "6": {"B116_contexts":0,"B117_contexts":0}
+    },
+    "status": "UNSAT"
+  },
+  "soundness": "No conclusion here uses the withdrawn row-domain triangle-free predicate. B-label scans use only cross-degree>=2 from I5 hitting and r lower bounds; the reused col2 certificate keeps only necessary mixed K4/I6 constraints; remaining arguments are finite A26 enumeration or extremal edge counts."
+}
