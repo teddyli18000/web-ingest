@@ -1,10 +1,10 @@
-name: Temp Science Boundary C7 neutral5 by k6 witness sweep
+name: Temp Science Boundary C7 neutral5 by k6 all-maxset sweep
 
 on:
   push:
     paths:
       - .github/workflows/temp-science-boundary-c7-neutral5-k6-witness-sweep.yml
-      - science-boundary/shannon-capacity-c7/code/bpz_neutral5_k6_witness_sweep.py
+      - science-boundary/shannon-capacity-c7/code/bpz_neutral5_k6_allmax_sweep.py
   workflow_dispatch:
 
 permissions:
@@ -37,12 +37,12 @@ jobs:
           mkdir -p "$RUNNER_TEMP/audit" "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
           gh run download 40994810518 -R teddyli18000/web-ingest -n c7-neutral5-killer-audit -D "$RUNNER_TEMP/audit"
           test -f "$RUNNER_TEMP/audit/audit.json"
-      - name: Exact audited neutral5 x k6 witness replay
+      - name: Exhaust every outside-only neutral5 maxset x k6 witness
         id: sweep
         shell: bash
         run: |
           set -euo pipefail
-          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_neutral5_k6_witness_sweep.py \
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_neutral5_k6_allmax_sweep.py \
             "$RUNNER_TEMP/tan" "$RUNNER_TEMP/audit/audit.json" "$RUNNER_TEMP/result/status.json" "$RUNNER_TEMP/shot/certificate.json" \
             > "$RUNNER_TEMP/result/stdout" 2> "$RUNNER_TEMP/result/stderr"
           cat "$RUNNER_TEMP/result/stdout"
@@ -64,7 +64,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: c7-neutral5-k6-witness-sweep
+          name: c7-neutral5-k6-allmax-sweep
           path: |
             ${{ runner.temp }}/result
             ${{ runner.temp }}/shot
