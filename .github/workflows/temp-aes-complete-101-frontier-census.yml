@@ -1,0 +1,131 @@
+name: temp-aes-complete-101-frontier-census
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/exact_strict_resub.py'
+      - '.github/workflows/temp-aes-complete-101-frontier-census.yml'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  census:
+    strategy:
+      fail-fast: false
+      matrix:
+        source: [fs101, care53]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download every verified 102 mutation
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euxo pipefail
+          mkdir -p prior all-seeds
+          gh run download 40996646594 -p 'aes-joint-factor-${{ matrix.source }}-*' -D prior
+          python - <<'PY'
+          import glob,json,pathlib,shutil
+          out=pathlib.Path('all-seeds'); seen=set(); rows=[]
+          for sf in pathlib.Path('prior').glob('**/summary.json'):
+              s=json.load(open(sf))
+              for a in s.get('archive',[]):
+                  if a['gates']!=102 or a['hash'] in seen: continue
+                  seen.add(a['hash'])
+                  src=sf.parent/a['file']
+                  dst=out/f"seed-{len(rows):03d}-root{a['and_index']}-care{a['care_bits']}-{a['hash'][:12]}.json"
+                  shutil.copy2(src,dst)
+                  rows.append({'file':str(dst),'hash':a['hash'],'root':a['and_index'],'care_bits':a['care_bits']})
+          json.dump(rows,open('all-seeds.json','w'),indent=2)
+          print(json.dumps({'source':'${{ matrix.source }}','seeds':len(rows)}))
+          assert len(rows)==244,len(rows)
+          PY
+      - name: Exhaust every strict one-gate shave in eight lanes
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p outputs logs
+          mapfile -t files < <(find all-seeds -name '*.json' | sort)
+          pids=()
+          for lane in 0 1 2 3 4 5 6 7; do
+            (
+              rc=0
+              for i in "${!files[@]}"; do
+                if (( i % 8 != lane )); then continue; fi
+                f="${files[$i]}"; b=$(basename "$f" .json)
+                python science-boundary/aes-sbox-circuit/exact_strict_resub.py \
+                  --input "$f" --out "outputs/$b" --depth 1 --target 100 \
+                  --archive-improvements > "logs/$b.log" 2>&1 || rc=1
+              done
+              exit "$rc"
+            ) &
+            pids+=("$!")
+          done
+          rc=0
+          for p in "${pids[@]}"; do wait "$p" || rc=1; done
+          exit "$rc"
+      - name: Build semantic 101 frontier and official-verify every class
+        shell: bash
+        run: |
+          set -euxo pipefail
+          git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+          python - <<'PY'
+          import glob,hashlib,json,pathlib,shutil,subprocess,sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          import seed_family_census as c
+          def fp(circ):
+              circ=ras.prune(circ); vals,*_=c.eval_circuit(circ,False)
+              wires=sorted({vals[g['out']] for g in circ['gates']})
+              ands=sorted({vals[g['out']] for g in circ['gates'] if g['op']=='AND'})
+              def h(xs):
+                  z=hashlib.sha256()
+                  for x in xs:z.update(int(x).to_bytes(32,'big'))
+                  return z.hexdigest()
+              return h(wires),h(ands),len(wires),len(ands)
+          known={}
+          fs=c.load('fs-101',c.DEFAULTS['fs-101'])['circuit']; known['fs101']=fp(fs)
+          subprocess.run([sys.executable,'science-boundary/aes-sbox-circuit/make_fs101_care53_seed.py','--out','/tmp/care53.json'],check=True)
+          known['care53']=fp(json.load(open('/tmp/care53.json')))
+          candidates=[]
+          for f in glob.glob('outputs/*/improvements/*.json'):
+              circ=json.load(open(f))
+              if len(circ['gates'])!=101: continue
+              assert ras.independent_check(circ)[0],f
+              candidates.append((fp(circ),f,circ))
+          classes={}
+          for fingerprint,f,circ in candidates:
+              classes.setdefault(fingerprint,(f,circ,[]))[2].append(f)
+          out=pathlib.Path('frontier');out.mkdir()
+          rows=[]
+          for i,(fingerprint,(src,circ,origins)) in enumerate(sorted(classes.items(),key=lambda kv:kv[0])):
+              label=next((k for k,v in known.items() if v==fingerprint),None)
+              dst=out/f'node-{i:03d}-{fingerprint[0][:12]}.json'
+              shutil.copy2(src,dst)
+              shot=pathlib.Path('/tmp/frontier-shot');shutil.rmtree(shot,ignore_errors=True);shot.mkdir()
+              shutil.copy2(dst,shot/'certificate.json')
+              p=subprocess.run([sys.executable,'/tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py',str(shot)],text=True,capture_output=True,check=True)
+              verdict=json.loads(p.stdout.strip());assert verdict['valid'] and verdict['score']=='101',(dst,p.stdout,p.stderr)
+              rows.append({'file':str(dst),'wire_hash':fingerprint[0],'and_hash':fingerprint[1],
+                           'wire_functions':fingerprint[2],'and_functions':fingerprint[3],
+                           'known_label':label,'origin_count':len(origins),'official_score':verdict['score']})
+          summary={'source':'${{ matrix.source }}','mutation_seeds':244,
+                   'raw_101_children':len(candidates),'semantic_101_classes':len(rows),
+                   'known_classes':sum(r['known_label'] is not None for r in rows),
+                   'new_classes':sum(r['known_label'] is None for r in rows),
+                   'classes':rows}
+          json.dump(summary,open('frontier-summary.json','w'),indent=2)
+          print(json.dumps({k:v for k,v in summary.items() if k!='classes'}))
+          for r in rows: print(json.dumps(r))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-complete-101-frontier-${{ matrix.source }}
+          path: |
+            frontier-summary.json
+            frontier
+            all-seeds.json
