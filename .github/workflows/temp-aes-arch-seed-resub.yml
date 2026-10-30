@@ -1,0 +1,82 @@
+name: temp-aes-arch-seed-resub
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/search_arch_seed.py'
+      - 'science-boundary/aes-sbox-circuit/seed_family_census.py'
+      - '.github/workflows/temp-aes-arch-seed-resub.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - family: nist-g103
+            shard: 0
+          - family: nist-g103
+            shard: 1
+          - family: nist-g103
+            shard: 2
+          - family: fs-101
+            shard: 3
+    runs-on: ubuntu-latest
+    timeout-minutes: 28
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run four CPU workers inside this runner
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p results
+          pids=()
+          for lane in 0 1 2 3; do
+            seed=$((2026103000 + ${{ matrix.shard }} * 10 + lane))
+            python science-boundary/aes-sbox-circuit/search_arch_seed.py \
+              --seed-family '${{ matrix.family }}' \
+              --rng-seed "$seed" --seconds 1200 --trials1 750 --trials2 1400 \
+              --max-extra 1 --target 100 --out "results/lane-$lane" \
+              > "results/lane-$lane.log" 2>&1 &
+            pids+=("$!")
+          done
+          rc=0
+          for p in "${pids[@]}"; do wait "$p" || rc=1; done
+          cat results/lane-*.log
+          exit "$rc"
+      - name: Aggregate and independently recheck best candidate
+        run: |
+          python - <<'PY'
+          import glob,json,sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import search_arch_seed as s
+          rows=[]
+          for f in glob.glob('results/lane-*/summary.json'):
+              x=json.load(open(f)); rows.append((x['best_gates'],f,x))
+          assert len(rows)==4, rows
+          rows.sort(key=lambda z:z[0]); bestn,f,x=rows[0]
+          bestfile=f.replace('summary.json','best.json')
+          c=json.load(open(bestfile)); assert s.independent_check(c)[0]
+          json.dump(c,open('best-certificate.json','w'),indent=2)
+          json.dump({'best_gates':bestn,'best_summary':x,'all':[r[2] for r in rows]},open('aggregate.json','w'),indent=2)
+          print(json.dumps({'best_gates':bestn,'family':'${{ matrix.family }}','shard':${{ matrix.shard }}}))
+          PY
+      - name: Official Few Shots verifier cross-check
+        run: |
+          set -euxo pipefail
+          git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+          mkdir -p /tmp/candidate-shot
+          cp best-certificate.json /tmp/candidate-shot/certificate.json
+          python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/candidate-shot | tee official-verifier.jsonl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-arch-${{ matrix.family }}-${{ matrix.shard }}
+          path: |
+            results
+            aggregate.json
+            best-certificate.json
+            official-verifier.jsonl
