@@ -15,21 +15,27 @@ orbit0 (novel relative to A/B):
 - fixed scaffold at multiplier 1.003: E = 444368.397249536, only +0.004843339 above live
 - full release -> R
 
+orbit1 (same scar triplet as orbit0):
+- representative delete (59,639), add (935,603)
+- balanced threshold 0.005546013 rad
+- fixed scaffold at multiplier 1.003: E = 444368.398633507, +0.006227309 above live
+- full release -> R
+
 orbit3 (points along known A direction):
 - representative delete (21,230), add (74,363)
 - balanced threshold 0.006112343 rad
 - fixed scaffold around E = 444368.401030609
 - full release -> R
 
-orbit4 (novel relative to A/B):
+orbit4 (novel relative to A/B and on a different scar triplet from orbit0):
 - representative delete (108,282), add (511,599)
 - balanced threshold 0.007035118 rad
 - fixed scaffold around E = 444368.404102223
 - full release -> R
 
-C3-coordinated triple glides
-----------------------------
-Runs 41055622500 and 41055971097 crossed all three symmetry copies together for orbits 0,1,2,3,4. Every tested pattern/amplitude fully relaxed back to R. Restoring C3 symmetry alone therefore does not stabilize the displaced topology.
+C3-coordinated triple glides — retired
+--------------------------------------
+Runs 41055622500 and 41055971097 crossed all three symmetry copies together for orbits 0,1,2,3,4. Every tested pattern/amplitude fully relaxed back to R. Restoring C3 symmetry alone does not stabilize the displaced topology.
 
 For orbit0 the balanced triple fixed scaffold is E~444368.407094745, substantially higher than the single-glide scaffold 444368.397249536. Thus orbit0's softness is specifically a local one-scar interface, not a hidden low C3 collective minimum.
 
@@ -44,22 +50,31 @@ Then the energy approaches R smoothly as kappa decreases; kappa=0 returns R.
 
 Therefore the orbit0 topology branch terminates between kappa 1000 and 3000; it is not a free metastable minimum. At the last-flipped kappa=3000 state, the inverse Delaunay crossing threshold is only ~3.6e-6 rad, so the state lies extremely close to the healing boundary.
 
-Minimal same-scar continuation
-------------------------------
-At the last-flipped orbit0 state, enumerate all same-count one-flip moves touching its defect component. The softest non-healing successor is uniquely:
-- delete (319,699), add (283,615), threshold ~0.00738267 rad.
-The next alternative on the same defect component is already ~0.0139027 rad.
-This successor is a symmetry copy of live orbit1 and acts on the same 5-7-5-7-5 scar component as the chosen orbit0 representative.
+Same-scar sequential two-glide chain — retired
+----------------------------------------------
+At the last-flipped orbit0 state, the uniquely soft non-healing successor on the same defect component is delete (319,699), add (283,615), threshold ~0.00738267 rad; the next alternative is already ~0.0139027 rad. Run 41056915565 therefore tested this minimal orbit0->orbit1 same-scar chain at three just-over-threshold depths.
 
-Interpretation
---------------
-Single glide fails; C3-synchronous glide fails; and the single-glide branch terminates under substantial restraint. The smallest remaining topology representation supported by the data is therefore a sequential two-glide chain along one scar, introduced while the first glide is still alive.
+For multiplier 1.002:
+- both diagonals can be maintained only under hard fixation, fixed E=444368.417622881;
+- at the first finite restraint stage kappa=10000 both diagonals have already healed;
+- no state ever has both glides alive under finite harmonic restraint;
+- final free relaxation returns R.
 
-Active test
------------
-Run 41056915565 starts from the kappa=3000 last-flipped orbit0 state, crosses the unique soft same-scar orbit1 successor, adapts with both quads fixed, then jointly releases both events through a common restraint homotopy. Three just-over-threshold depths are tested independently.
+For multiplier 1.04:
+- hard-fixed both-glide E=444368.419314465;
+- at kappa=10000 orbit0 has already healed while orbit1 remains alive;
+- orbit1 survives alone through kappa=2200 and heals by kappa=1600;
+- final free relaxation returns R.
+
+Thus the second glide does not stabilize the first. Deeper crossing merely converts the branch into an orbit1-only restrained branch before returning to R. Sequential extension along this scar is retired; a third same-scar glide is not justified.
+
+Current reformulation: coupling different scar triplets
+-------------------------------------------------------
+The two strongest genuinely novel live-local interfaces are orbit0 and orbit4. They lie on different C3 scar triplets and neither is simply an A/B route edge. The next minimal representation is therefore a paired glide across those two scar triplets, testing whether nonlocal elastic incompatibilities can cancel even though isolated, C3-triple, and same-scar events all heal.
+
+Run 41057440886 tests orbit0 paired with each of the three C3-relative phases of orbit4. Each pair is crossed independently just beyond its exact Delaunay threshold, globally adapted with both quads fixed, then jointly released under a common restraint schedule from kappa=100000 down to zero. The three phases are sufficient because simultaneous global C3 rotation makes the other six pairings equivalent.
 
 Decision rule:
-- If both glides survive to much smaller restraint than orbit0 alone, the second event stabilizes the branch and the next step is to continue the scar glide chain rather than broaden the one-flip census.
-- If the two-event branch also collapses at high restraint, retire sequential glides on this scar and reformulate around coupled changes between different scar triplets / grain-boundary rearrangement.
+- If one relative phase keeps both glides alive to substantially lower restraint than orbit0 alone, exploit that cross-scar interaction and continue only from that phase.
+- If all three phases lose one/both glides at high restraint and return R, retire pairwise glide coupling as well and reformulate at the level of whole scar-triplet / grain-boundary reconstruction rather than individual Delaunay events.
 - Any fully free state below live by >2e-7 triggers immediate independent verification; ~1e-10 score differences are numerical noise.
