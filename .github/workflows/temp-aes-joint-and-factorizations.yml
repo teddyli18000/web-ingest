@@ -1,0 +1,78 @@
+name: temp-aes-joint-and-factorizations
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/enumerate_joint_and_factorizations.py'
+      - '.github/workflows/temp-aes-joint-and-factorizations.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  enumerate:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [fs101, care53, nist-g103]
+        shard: [0, 1, 2, 3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare alternate 101 seed when requested
+        if: matrix.seed == 'care53'
+        run: |
+          python science-boundary/aes-sbox-circuit/make_fs101_care53_seed.py --out /tmp/care53.json
+      - name: Enumerate joint affine AND factorizations
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p results
+          if [ '${{ matrix.seed }}' = fs101 ]; then
+            src=(--seed-family fs-101)
+          elif [ '${{ matrix.seed }}' = nist-g103 ]; then
+            src=(--seed-family nist-g103)
+          else
+            src=(--seed-file /tmp/care53.json --seed-label fs101-care53)
+          fi
+          python science-boundary/aes-sbox-circuit/enumerate_joint_and_factorizations.py \
+            "${src[@]}" --shard '${{ matrix.shard }}' --shards 4 \
+            --max-reps 4 --max-kept 120 --keep-delta 1 --out results | tee summary.log
+      - name: Independently verify archived candidates and official-check any 100
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python - <<'PY'
+          import glob,json,sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          files=glob.glob('results/candidate-*.json')
+          for f in files:
+              c=json.load(open(f)); assert ras.independent_check(c)[0],f
+          s=json.load(open('results/summary.json'))
+          print(json.dumps({'verified_archive':len(files),'best_gates':s['best_gates'],'sizes':s['kept_by_size']}))
+          PY
+          best=$(python - <<'PY'
+          import glob,json
+          xs=[]
+          for f in glob.glob('results/candidate-*.json'):
+              c=json.load(open(f)); xs.append((len(c['gates']),f))
+          xs.sort(); print(xs[0][1] if xs and xs[0][0] <= 100 else '')
+          PY
+          )
+          if [ -n "$best" ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot; cp "$best" /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-joint-factor-${{ matrix.seed }}-${{ matrix.shard }}
+          path: |
+            results
+            summary.log
+            official-verifier.jsonl
