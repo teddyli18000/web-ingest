@@ -1,0 +1,125 @@
+name: Temp Science Boundary C7p5 projected core-prize LS
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7p5-core-prize-ls.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7p5-core-prize-ls
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned public sources and verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          git init "$RUNNER_TEMP/c7-five"
+          git -C "$RUNNER_TEMP/c7-five" remote add origin https://github.com/molind/c7-five.git
+          git -C "$RUNNER_TEMP/c7-five" fetch --depth 1 origin ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+          git -C "$RUNNER_TEMP/c7-five" checkout FETCH_HEAD
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          python3 -m pip install --disable-pip-version-check numpy
+          mkdir -p "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+
+      - name: Build validated public 367 corpus and projected seeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/public367_corpus.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/c7-five" "$RUNNER_TEMP/result/corpus.json" \
+            | tee "$RUNNER_TEMP/result/corpus.stdout"
+          python3 science-boundary/shannon-capacity-c7/code/c7p5_core_prize_ls_export.py \
+            "$RUNNER_TEMP/c7-five" "$RUNNER_TEMP/result/corpus.json" \
+            "$RUNNER_TEMP/result/ls-input.txt" "$RUNNER_TEMP/result/export.json" \
+            | tee "$RUNNER_TEMP/result/export.stdout"
+          cat "$RUNNER_TEMP/result/export.json"
+
+      - name: Compile projected large-neighborhood search
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp \
+            science-boundary/shannon-capacity-c7/code/c7p5_core_prize_ls.cpp \
+            -o "$RUNNER_TEMP/search"
+
+      - name: Full-CPU prize-guided search
+        shell: bash
+        env:
+          OMP_PROC_BIND: spread
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          THREADS="$(nproc)"
+          export OMP_NUM_THREADS="$THREADS"
+          /usr/bin/time -v "$RUNNER_TEMP/search" \
+            "$RUNNER_TEMP/result/ls-input.txt" "$RUNNER_TEMP/result/best.ids" \
+            18000 "$THREADS" 2026103001 \
+            > "$RUNNER_TEMP/result/search.json" 2> "$RUNNER_TEMP/result/search.stderr"
+          cat "$RUNNER_TEMP/result/search.json"
+          tail -n 200 "$RUNNER_TEMP/result/search.stderr"
+
+      - name: Replay best and materialize square if 368
+        id: replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/result/best.ids" "$RUNNER_TEMP/result/replay.json" "$RUNNER_TEMP/shot/certificate.json" "$GITHUB_OUTPUT" <<'PY'
+          import itertools,json,sys
+          inp,out,cert,gout=sys.argv[1:]
+          S=sorted({int(x) for x in open(inp) if x.strip()})
+          def dec(v): return tuple((v//(7**i))%7 for i in range(5))
+          def conflict(a,b): return a==b or all((x-y)%7 in (0,1,6) for x,y in zip(dec(a),dec(b)))
+          ok=all(not conflict(a,b) for a,b in itertools.combinations(S,2))
+          if not ok: raise SystemExit('search output conflict')
+          st={'method':'projected-core-prize-ls-independent-replay','best_size':len(S),'candidate_368':len(S)>=368}
+          json.dump(st,open(out,'w'),indent=2,sort_keys=True);open(out,'a').write('\n')
+          if len(S)>=368:
+            S=S[:368]; pts=[]
+            ds={v:''.join(map(str,dec(v))) for v in S}
+            for a in S:
+              for b in S: pts.append(ds[a]+ds[b])
+            if len(pts)!=135424 or len(set(pts))!=135424: raise SystemExit('square size')
+            json.dump({'points':sorted(pts)},open(cert,'w'),separators=(',',':'));open(cert,'a').write('\n')
+          with open(gout,'a') as f:f.write(f"found={'true' if len(S)>=368 else 'false'}\n")
+          print(json.dumps(st,sort_keys=True))
+          PY
+
+      - name: Verify 135424 breakthrough with Few Shots verifier
+        if: steps.replay.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          if not r.get('valid') or int(r.get('score',-1)) != 135424: raise SystemExit(r)
+          print('VERIFIED BREAKTHROUGH',r)
+          PY
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7p5-projected-core-prize-ls
+          path: |
+            ${{ runner.temp }}/result
+            ${{ runner.temp }}/shot
+          if-no-files-found: warn
+          retention-days: 14
