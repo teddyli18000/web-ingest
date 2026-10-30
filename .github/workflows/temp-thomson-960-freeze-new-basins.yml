@@ -1,0 +1,86 @@
+name: temp Thomson 960 freeze new basins
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-freeze-new-basins.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download two e558 source artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: thomson-e564-coupled-f*-s-1
+          path: ${{ runner.temp }}/coupled
+          merge-multiple: false
+          github-token: ${{ github.token }}
+          run-id: 40991679399
+      - name: Download new 20-dislocation morph artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-e564-d2-6103
+          path: ${{ runner.temp }}/morph
+          github-token: ${{ github.token }}
+          run-id: 40991766111
+      - name: Extract durable basin coordinates
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob,json,os,pathlib
+          root=pathlib.Path('science-boundary/thomson-960/data'); root.mkdir(parents=True,exist_ok=True)
+          coupled=[]
+          for p in glob.glob(os.path.join(os.environ['RUNNER_TEMP'],'coupled','**','*.json'),recursive=True):
+              d=json.load(open(p))
+              for b in d.get('lowest_distinct_basins',[]):
+                  if b['energy'] < 444368.559:
+                      coupled.append((b['energy'],d['family'],d['soft_sign'],p,b))
+          coupled.sort(key=lambda z:z[0])
+          # Keep structurally distinct representatives known from the source shards:
+          # f0/sign- and f2/sign- are not rotationally superposable (ICP RMS ~4.6e-3).
+          picks=[]
+          for fam in (0,2):
+              cand=[z for z in coupled if z[1]==fam and z[2]==-1]
+              if cand: picks.append(cand[0])
+          for tag,z in zip(('a','b'),picks):
+              e,fam,sgn,p,b=z
+              out={'name':f'e558-{tag}','energy':e,'coord_counts':b['coord'],
+                   'source_run':40991679399,'source_family':fam,'source_soft_sign':sgn,
+                   'source_soft_amp':b['soft_amp'],'source_flip_mult':b['flip_mult'],
+                   'points':b['points']}
+              (root/f'basin-e558-{tag}.json').write_text(json.dumps(out,separators=(',',':'))+'\n')
+              print('freeze',tag,e,fam,sgn)
+          mp=glob.glob(os.path.join(os.environ['RUNNER_TEMP'],'morph','*.json'))[0]
+          md=json.load(open(mp)); candidates=[]
+          for b in md.get('lowest_distinct_basins',[]):
+              cc=b.get('coord_counts',{})
+              if cc=={'5':32,'6':908,'7':20} and b['energy']>444368.6:
+                  candidates.append(b)
+          if candidates:
+              b=min(candidates,key=lambda z:z['energy'])
+              out={'name':'morph-20-high','energy':b['energy'],'coord_counts':b['coord_counts'],
+                   'source_run':40991766111,'alignment_seed':6103,'source_t':b['t'],'points':b['points']}
+              (root/'basin-20-morph-9136.json').write_text(json.dumps(out,separators=(',',':'))+'\n')
+              print('freeze 20',b['energy'])
+          PY
+      - name: Commit durable basins
+        shell: bash
+        run: |
+          git config user.name "boundary-agent"
+          git config user.email "boundary-agent@users.noreply.github.com"
+          git add science-boundary/thomson-960/data/basin-e558-*.json science-boundary/thomson-960/data/basin-20-morph-9136.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "thomson: freeze new 21- and 20-dislocation basins"
+          git pull --rebase origin main
+          git push origin HEAD:main
