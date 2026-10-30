@@ -1,0 +1,47 @@
+name: Temp Science Boundary C7 k7 support cover-gap census
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-k7-cover-gap-census.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_support_clique_cover_gap_census.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-k7-cover-gap-census
+  cancel-in-progress: false
+
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned BPZ source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          mkdir -p "$RUNNER_TEMP/result"
+      - name: Exact k7 connected-support clique-cover-gap census
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_support_clique_cover_gap_census.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/k7.json" --k 7 --workers "$(nproc)" \
+            > "$RUNNER_TEMP/result/stdout" 2> "$RUNNER_TEMP/result/stderr"
+          cat "$RUNNER_TEMP/result/stdout"
+          tail -n 200 "$RUNNER_TEMP/result/stderr"
+      - name: Upload exact census
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-k7-cover-gap-census
+          path: ${{ runner.temp }}/result
+          retention-days: 14
