@@ -1,0 +1,117 @@
+name: temp labs100 low11 symmetric-difference t6 mod3 enumeration
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-low11-symdiff-t6-mod3.yml'
+
+concurrency:
+  group: temp-labs100-low11-symdiff-t6-mod3
+  cancel-in-progress: false
+
+jobs:
+  exact-t6:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact mod3-nullspace enumerator and fibre oracle
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_low11_symdiff_mod3_enum_exact.cpp -o "$RUNNER_TEMP/symdiff"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_order25_fibre_mitm.cpp -o "$RUNNER_TEMP/fibre"
+      - name: Regression against already audited exact H counts
+        shell: bash
+        run: |
+          set -euo pipefail
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/symdiff" --overlap 12 --kp 12 > "$RUNNER_TEMP/reg12-12.log"
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/symdiff" --overlap 2 --kp 14 > "$RUNNER_TEMP/reg2-14.log"
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/symdiff" --overlap 4 --kp 12 --begin 0 --end 12 > "$RUNNER_TEMP/reg4-12.log"
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/symdiff" --overlap 4 --kp 14 --begin 0 --end 12 > "$RUNNER_TEMP/reg4-14.log"
+          grep -q 'support_pair_orbits=788 p_sign_tests=9456 modular_nonempty_p=158 H_matches=266 compressed_hits=0' "$RUNNER_TEMP/reg12-12.log"
+          grep -q 'support_pair_orbits=4374 p_sign_tests=398034 modular_nonempty_p=5279 H_matches=126214 compressed_hits=0' "$RUNNER_TEMP/reg2-14.log"
+          grep -q 'support_pair_orbits=8332 p_sign_tests=99984 modular_nonempty_p=1534 H_matches=1760 compressed_hits=0' "$RUNNER_TEMP/reg4-12.log"
+          grep -q 'support_pair_orbits=8332 p_sign_tests=758212 modular_nonempty_p=7663 H_matches=172041 compressed_hits=0' "$RUNNER_TEMP/reg4-14.log"
+      - name: Exhaust all 8956 t6 difference orbits for both kp splits using all CPUs
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "runner_cpus=$(nproc)"
+          mkdir -p "$RUNNER_TEMP/out"
+          export RUNNER_TEMP
+          : > "$RUNNER_TEMP/tasks.txt"
+          for k in 12 14; do
+            b=0
+            while [ "$b" -lt 8956 ]; do
+              e=$((b+49)); [ "$e" -gt 8956 ] && e=8956
+              echo "$k $b $e" >> "$RUNNER_TEMP/tasks.txt"
+              b="$e"
+            done
+          done
+          cat "$RUNNER_TEMP/tasks.txt" | xargs -P"$(nproc)" -n3 bash -c '
+            k="$1"; b="$2"; e="$3"
+            OMP_NUM_THREADS=1 "$RUNNER_TEMP/symdiff" --overlap 6 --kp "$k" --begin "$b" --end "$e" \
+              >"$RUNNER_TEMP/out/k${k}-${b}-${e}.log" 2>&1
+          ' _
+          cat "$RUNNER_TEMP"/out/*.log > "$RUNNER_TEMP/summary.log"
+          python - "$RUNNER_TEMP/summary.log" "$RUNNER_TEMP/candidates.txt" <<'PY'
+          import re,sys
+          lines=open(sys.argv[1]).read().splitlines(); out=open(sys.argv[2],'w')
+          for k in (12,14):
+              spans=[]; agg={x:0 for x in ('support_pair_orbits','p_sign_tests','modular_nonempty_p','H_matches','compressed_hits')}; nhit=0
+              current_k=None
+              for line in lines:
+                  if line.startswith('SUMMARY overlap=6 kp='):
+                      m0=re.match(r'SUMMARY overlap=6 kp=(12|14) ',line); assert m0,line
+                      current_k=int(m0.group(1))
+                      if current_k==k:
+                          m=re.search(r'range_begin=(\d+) range_end=(\d+)',line); assert m,line
+                          spans.append(tuple(map(int,m.groups())))
+                          for x in agg:
+                              q=re.search(rf'{x}=(\d+)',line); assert q,(x,line); agg[x]+=int(q.group(1))
+                  elif line.startswith('HIT ') and current_k==k:
+                      ppart,cpart=line[6:].split('|c=')
+                      p=list(map(int,ppart.split())); c=list(map(int,cpart.split()))
+                      assert sum(x*x for x in p)==k
+                      out.write(str(k)+'|'+','.join(map(str,p))+'|'+','.join(map(str,c))+'\n'); nhit+=1
+              spans.sort(); assert spans and spans[0][0]==0 and spans[-1][1]==8956,spans
+              assert all(spans[i][1]==spans[i+1][0] for i in range(len(spans)-1)),spans
+              assert nhit==agg['compressed_hits'],(k,nhit,agg['compressed_hits'],'hit output truncated or malformed')
+              print('AGGREGATE',k,agg,'shards',len(spans),'emitted_hits',nhit)
+          out.close()
+          PY
+          cat "$RUNNER_TEMP/summary.log"
+          echo "candidate_count=$(wc -l < "$RUNNER_TEMP/candidates.txt")"
+      - name: Exact fibre-test every compressed survivor for defect one and two
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > "$RUNNER_TEMP/fibre.log"
+          n=0
+          while IFS='|' read -r k p c; do
+            [ -n "$k" ] || continue
+            n=$((n+1))
+            printf '%s\n' "${p//,/ }" "${c//,/ }" > "$RUNNER_TEMP/one.txt"
+            for d in 1 2; do
+              echo "candidate=$n kp=$k defect=$d" | tee -a "$RUNNER_TEMP/fibre.log"
+              OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/fibre" --defect "$d" < "$RUNNER_TEMP/one.txt" | tee -a "$RUNNER_TEMP/fibre.log"
+            done
+          done < "$RUNNER_TEMP/candidates.txt"
+          if grep -E 'compatible_probe_lifts=[1-9][0-9]*' "$RUNNER_TEMP/fibre.log"; then
+            echo HAS_COMPATIBLE_T6_FIBRE_LIFT
+          else
+            echo NO_COMPATIBLE_T6_FIBRE_LIFT
+          fi
+      - name: Upload exact transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-low11-symdiff-t6-mod3
+          path: |
+            ${{ runner.temp }}/reg*.log
+            ${{ runner.temp }}/tasks.txt
+            ${{ runner.temp }}/summary.log
+            ${{ runner.temp }}/candidates.txt
+            ${{ runner.temp }}/fibre.log
+            ${{ runner.temp }}/out/*.log
+          if-no-files-found: warn
