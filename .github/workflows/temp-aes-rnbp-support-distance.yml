@@ -1,0 +1,39 @@
+name: temp-aes-rnbp-support-distance
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/rnbp_support_distance.py'
+      - '.github/workflows/temp-aes-rnbp-support-distance.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - {label: d1r4, d: 1, r: 4}
+          - {label: d3r2, d: 3, r: 2}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exact support distance through six current signals
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/rnbp_support_distance.py
+          python science-boundary/aes-sbox-circuit/rnbp_support_distance.py \
+            --family fs-101 --projection-weight 0.24 \
+            --deviation-index '${{ matrix.variant.d }}' --deviation-rank '${{ matrix.variant.r }}' \
+            --max-support 6 --out result | tee run.log
+          cat result/summary.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-rnbp-support-${{ matrix.variant.label }}
+          path: |
+            result
+            run.log
