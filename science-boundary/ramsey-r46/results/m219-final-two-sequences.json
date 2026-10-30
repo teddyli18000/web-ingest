@@ -1,0 +1,33 @@
+{
+  "all_unsat": true,
+  "campaign": "m219-final-two-sequences",
+  "edges": 219,
+  "logic": {
+    "dependency": "the second degree-class relaxation uses the already-certified no-lucky-d12 consequence S<=146 at m=219",
+    "forcing": "after r=3 is excluded, 11^7 12^16 13^13 forces r=4 by Turan on the seven low vertices; 11^8 12^14 13^14 forces r=4 by the exact degree-class relaxation max sum r=32",
+    "r3": "r=3 implies A26/B116; all 18 fixed pairs are UNSAT in a relaxed binary row CSP",
+    "r4": "r=4 implies A25/B116 or A26/B117; all 234 fixed pairs are UNSAT in the same relaxed binary row CSP"
+  },
+  "rows": [
+    {
+      "class_relaxation_count": 161,
+      "degree_sequence": {"11": 7, "12": 16, "13": 13},
+      "max_sum_r": 31,
+      "r3_excluded_by_binary_csp": true,
+      "r4_excluded_by_binary_csp": true,
+      "r4_forced": true,
+      "simple_turan_sum_r_upper": 32,
+      "status": "UNSAT"
+    },
+    {
+      "class_relaxation_count": 210,
+      "degree_sequence": {"11": 8, "12": 14, "13": 14},
+      "max_sum_r": 32,
+      "r3_excluded_by_binary_csp": true,
+      "r4_excluded_by_binary_csp": true,
+      "r4_forced": true,
+      "simple_turan_sum_r_upper": null,
+      "status": "UNSAT"
+    }
+  ]
+}
