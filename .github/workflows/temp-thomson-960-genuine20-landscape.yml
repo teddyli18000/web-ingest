@@ -1,0 +1,87 @@
+name: temp Thomson 960 genuine 20-topology landscape
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-genuine20-landscape.yml'
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - kind: corridor
+            tag: corridor-7201
+            seed: 7201
+          - kind: corridor
+            tag: corridor-7202
+            seed: 7202
+          - kind: corridor
+            tag: corridor-7203
+            seed: 7203
+          - kind: corridor
+            tag: corridor-7204
+            seed: 7204
+          - kind: modes-low
+            tag: modes-0-5
+            seed: 0
+          - kind: modes-high
+            tag: modes-6-11
+            seed: 0
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone current Few Shots
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Report runner and search branch
+        run: echo "nproc=$(nproc) kind=${{ matrix.kind }} tag=${{ matrix.tag }}"
+      - name: Search genuine 20-topology landscape
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/out"
+          if [[ '${{ matrix.kind }}' == corridor ]]; then
+            python3 science-boundary/thomson-960/code/search_20_event_transfer.py \
+              "$RUNNER_TEMP/few-shots" \
+              science-boundary/thomson-960/data/basin-20-morph-9136.json \
+              --seed '${{ matrix.seed }}' --starts 20 --maxiter 2400 \
+              --out "$RUNNER_TEMP/out/result.json"
+          elif [[ '${{ matrix.kind }}' == modes-low ]]; then
+            python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+              "$RUNNER_TEMP/few-shots" science-boundary/thomson-960/data/basin-20-morph-9136.json \
+              --modes 0,1,2,3,4,5 --amps 0.004,0.008,0.015,0.028,0.050,0.085 \
+              --k 14 --workers "$(nproc)" --maxiter 2400 --keep-basins 18 \
+              --out "$RUNNER_TEMP/out/result.json"
+          else
+            python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+              "$RUNNER_TEMP/few-shots" science-boundary/thomson-960/data/basin-20-morph-9136.json \
+              --modes 6,7,8,9,10,11 --amps 0.004,0.008,0.015,0.028,0.050,0.085 \
+              --k 14 --workers "$(nproc)" --maxiter 2400 --keep-basins 18 \
+              --out "$RUNNER_TEMP/out/result.json"
+          fi
+      - name: Summarize result
+        run: |
+          python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')
+          d=json.load(open(p))
+          print('BEST',d.get('best_energy'), 'DELTA_LIVE',d.get('best_delta_live',d.get('best_delta_vs_live')))
+          if 'best20_energy' in d: print('BEST20',d['best20_energy'],'LABEL',d.get('best_label'))
+          for b in d.get('lowest_distinct_basins',[])[:12]:
+              print('BASIN',b['energy'],'mode',b['mode'],'sign',b['sign'],'amp',b['amp'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-genuine20-${{ matrix.tag }}
+          path: ${{ runner.temp }}/out
+          retention-days: 7
