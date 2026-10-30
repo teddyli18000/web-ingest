@@ -1,0 +1,62 @@
+Thomson N=960 — old T-symmetric minimum to live C3 record string portal census
+Date: 2026-10-29/30
+Actions run: 40991487707
+
+Endpoints
+---------
+Live C3 record R: 444368.3924061973
+Modern/old T-symmetric N=960 configuration: 444368.4373479895 = R+0.0449417922
+ICP NN RMS after alignment: 0.0361381
+Hungarian one-to-one RMS correspondence: 0.0425710
+
+Method
+------
+A 17-image spherical string between point-corresponded R and old-T was evolved
+using only the gradient perpendicular to the local path tangent, with arc-length
+reparameterization. Every interior final image was then independently fully
+relaxed. Every discrete local path-energy maximum was diagnosed with the
+full-space physical tangent Hessian.
+
+String quality
+--------------
+The 600-iteration path was NOT a converged minimum-energy path. Maximum
+perpendicular gradient RMS remained 0.150056. Therefore its discrete path
+maxima must not be interpreted as transition states or barriers.
+
+Relaxed interior images
+-----------------------
+No record candidate was found.
+
+Lowest relaxed endpoints:
+- image 1 -> A: 444368.3956862259 = R+0.0032800286, 36/900/24, twin count 9.
+- image 15 -> old-T: 444368.4373479898 = R+0.0449417924, 36/900/24, twin count 12.
+- lowest genuinely different intermediate basin:
+  image 2 -> 444368.6154133898 = R+0.2230071925,
+  coordination 35/902/23, twin count 6.
+- next distinct basins:
+  444368.6679019489 = R+0.2754957515, 36/900/24, twin count 10;
+  444368.6795106178 = R+0.2871044205, 35/902/23, twin count 9.
+All remaining relaxed images were >= R+0.80.
+
+Path stationary diagnostics
+---------------------------
+Discrete path maxima were high and not stationary:
+- image 5: path R+2.21788, grad RMS 0.1557, 4 negative low modes;
+- image 7: path R+2.65372, grad RMS 0.0986, no negative low mode among tested 10;
+- image 10: path R+2.23836, grad RMS 0.0894, 4 negative low modes;
+- image 12: path R+2.07809, grad RMS 0.3465, 4 negative low modes.
+Because the string transverse force is large, these are only path-shape
+diagnostics, not certified stationary states.
+
+Interpretation
+--------------
+A direct geometric interpolation between the old T arrangement and the current
+C3 record does cross several topology families, but unconstrained relaxation of
+all sampled interior images does not reveal a near-record basin beyond A. The
+lowest new topology-changing basin is already ~0.223 above R. Simply extending
+this unconverged string for more iterations is not justified: candidate quality
+is flat and the path has entered high-energy topology-changing regions.
+
+Do not repeat this R<->old-T direct string. A future use of old-T should change
+the representation (e.g. discrete defect-component arrangement/recombination or
+cross-size propagation), not merely increase string iterations.
