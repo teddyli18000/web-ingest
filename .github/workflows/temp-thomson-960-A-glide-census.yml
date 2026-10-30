@@ -1,0 +1,52 @@
+name: temp Thomson 960 A glide census
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-A-glide-census.yml'
+
+jobs:
+  census:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      actions: read
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e432-seed
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41043461011
+      - name: Census A-centered same-count glides
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          echo "nproc=$(nproc)"
+          python3 science-boundary/thomson-960/code/census_minimum_samecount_glides.py \
+            "$RUNNER_TEMP/seed/A-natural.json" --tag A --top 15 --multiplier 1.003 \
+            --fixed-maxiter 1600 --release-maxiter 3200 --live-score 444368.3924061973 \
+            --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('LEGAL',d['legal_count'],'BEST',d['best_free_energy'],'DELTA',d['best_delta_live'])
+          for r in sorted(d['tested'],key=lambda z:z['free_energy']):
+              print('MOVE',r['rank'],r['delete'],'->',r['add'],'t',r['threshold'],'fix',r['fixed_energy'],'free',r['free_class'],r['free_energy'],r['free_delta_live'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-A-glide-census
+          path: ${{ runner.temp }}/out
+          retention-days: 10
