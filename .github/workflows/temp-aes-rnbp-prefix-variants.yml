@@ -1,0 +1,101 @@
+name: temp-aes-rnbp-prefix-variants
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/rnbp_prefix_variant_tail.py'
+      - '.github/workflows/temp-aes-rnbp-prefix-variants.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  frontier:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install --quiet z3-solver
+      - name: Enumerate single-deviation tasks
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          set -euxo pipefail
+          python - <<'PY' > tasks.txt
+          import os,sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          import rnbp_prefix_variant_tail as v
+          base=ras.load_circuit('fs-101')
+          x=v.build_variant(base,0.24,10**6,1,67)
+          soft=x[6]
+          shard=int(os.environ['SHARD']); tasks=[]
+          for d in range(soft):
+              for rank in (1,2,3,4):
+                  tasks.append((d,rank))
+          print(f'# soft={soft} tasks={len(tasks)} shard={shard}',file=sys.stderr)
+          for i,t in enumerate(tasks):
+              if i%8==shard: print(*t)
+          PY
+          cat tasks.txt
+      - name: Build variant prefixes and exact-test tails
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p results logs
+          run_one() {
+            d="$1"; r="$2"; tag="d${d}-r${r}"
+            python science-boundary/aes-sbox-circuit/rnbp_prefix_variant_tail.py \
+              --family fs-101 --projection-weight 0.24 \
+              --deviation-index "$d" --deviation-rank "$r" \
+              --prefix-max-linear 67 --total-linear-budget 67 --timeout-ms 45000 \
+              --out "results/$tag" > "logs/$tag.log" 2>&1
+          }
+          export -f run_one
+          grep -v '^#' tasks.txt | xargs -r -n2 -P4 bash -c 'run_one "$0" "$1"'
+          grep -h '"status"' logs/*.log || true
+      - name: Aggregate and verify any <=100 candidate
+        run: |
+          set -euxo pipefail
+          python - <<'PY'
+          import glob,json,pathlib,shutil,sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          rows=[]; cands=[]
+          for sf in glob.glob('results/*/summary.json'):
+              s=json.load(open(sf)); rows.append(s)
+              cf=pathlib.Path(sf).with_name('candidate.json')
+              if cf.exists():
+                  c=json.load(open(cf)); assert ras.independent_check(c)[0]
+                  cands.append((len(c['gates']),str(cf),s))
+          cands.sort(key=lambda x:(x[0],x[1]))
+          from collections import Counter
+          agg={'shard':${{ matrix.shard }},'tested':len(rows),
+               'status_hist':dict(Counter(r['status'] for r in rows)),
+               'prefix_hist':dict(Counter(r.get('prefix_linear') for r in rows)),
+               'best_gates':cands[0][0] if cands else None}
+          json.dump(agg,open('aggregate.json','w'),indent=2)
+          print(json.dumps(agg))
+          if cands: shutil.copy2(cands[0][1],'best-candidate.json')
+          PY
+          if [ -f best-candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot; cp best-candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-rnbp-prefix-variants-${{ matrix.shard }}
+          path: |
+            tasks.txt
+            aggregate.json
+            best-candidate.json
+            official-verifier.jsonl
+            results/*/summary.json
