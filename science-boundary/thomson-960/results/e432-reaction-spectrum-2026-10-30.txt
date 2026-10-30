@@ -1,0 +1,51 @@
+Thomson N=960 — e432 -> B reaction spectrum — 2026-10-30
+
+Endpoints
+---------
+e432 = 444368.4322496275, coordination 35/902/23, motif 11 full 5-7-5-7-5 scars + one short 5-7-5 scar.
+B = 444368.4029728615, coordination 36/900/24, 12 full scars.
+Live R = 444368.3924061973.
+The topology change completes the unique short scar.
+
+Endpoint Hessian overlap
+------------------------
+Projecting the exact natural-label e432->B physical tangent reaction onto e432's Hessian eigenmodes gives:
+- first 6 modes: 3.75016% of reaction power
+- first 12: 6.62910%
+- first 24: 11.06102%
+- first 48: 30.83892%
+- therefore >48 residual: 69.16108%
+The largest individual low-48 overlap is mode 42 (lambda about 56.40, ~5.68% power), not a soft mode.
+Conclusion: short-scar completion is a broad-spectrum / short-scale collective event, not a soft-mode instability.
+
+Direct spectral-band relaxation
+-------------------------------
+Run 41045840701:
+- modes24..47 alone (~19.78% power): all tested scales relax back to e432.
+- entire first48 projection (~30.84% power): all tested scales through +1.8 relax back to e432.
+- >48 residual alone (~69.16% power): negative/small positive scales remain e432; positive scale about 0.7 and above reproducibly cross to B.
+- full reaction with first12 removed (~93.37% power): positive scale about 0.7 and above crosses to B.
+- full reaction with first24 removed (~88.94% power): positive scale about 0.7 and above crosses to B.
+Thus the topology-switch carrier lies predominantly in the >48 short-scale residual. The first48 modes are elastic accompaniment and are insufficient even collectively.
+
+Interface saddle
+----------------
+Perpendicular-string + hybrid eigenvector-follow candidate rebuilt in run 41045248541:
+- final energy 444369.0242294195
+- gradient RMS 0.00155195 (useful for basin discovery but not high-precision certification)
+- exactly one negative computed mode
+- reaction lambda0 ~ -82.2571
+- first positive lambda1 ~ +0.62024, followed by +3.5131, +4.5392, +4.8507, +5.6391, +6.4781...
+This is a very stiff topology-changing reaction direction with a much softer transverse direction.
+Parallel transverse modes1..6 are active in run 41045248541. An overlap-tracked index-1 refinement is also active to reduce the saddle gradient before any final transition-state claim.
+
+Active spatial decomposition
+----------------------------
+Two complementary searches are active:
+1. full e432->B reaction split by graph shells around the unique short-scar defect component (run 41046146049), independently scaling plastic-core and far-field displacement;
+2. >48 residual-only split by the same graph shells (run 41046597461), which directly localizes the proven topology-switch carrier.
+
+Decision rule
+-------------
+Do not extend blind endpoint Hessian mode scans: modes0..11 are already saturated and the reaction-spectrum calculation explains why. If saddle transverse and residual-core decompositions only close on e432/B/A/R, change representation again rather than adding more amplitudes.
+Any endpoint below live-2e-7 switches immediately to independent stable repolish and upstream re-check; only a verified >=1e-6 improvement is submission-worthy.
