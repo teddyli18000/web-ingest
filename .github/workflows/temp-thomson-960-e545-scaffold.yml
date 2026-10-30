@@ -1,0 +1,62 @@
+name: temp Thomson 960 e545 scaffolded flips
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-e545-scaffold.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  scaffold:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        family: [0, 1]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Download e545 source
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-e558-a-modes-1
+          path: ${{ runner.temp }}/source
+          github-token: ${{ github.token }}
+          run-id: 40992325351
+      - name: Extract e545 and scaffold current flip family
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob,json,os
+          p=glob.glob(os.path.join(os.environ['RUNNER_TEMP'],'source','*.json'))[0]; d=json.load(open(p)); b=min(d['lowest_distinct_basins'],key=lambda z:z['energy'])
+          json.dump({'energy':b['energy'],'coord_counts':{'5':33,'6':906,'7':21},'points':b['points']},open(os.path.join(os.environ['RUNNER_TEMP'],'seed.json'),'w'),separators=(',',':'))
+          PY
+          python3 science-boundary/thomson-960/code/search_e564_scaffolded_flip.py \
+            "$RUNNER_TEMP/seed.json" --family "${{ matrix.family }}" \
+            --multipliers 1.05,1.20,1.50,2.00,2.50,3.00 \
+            --fixed-maxiter 1700 --release-maxiter 2600 \
+            --out "$RUNNER_TEMP/e545-scaffold-f${{ matrix.family }}.json"
+          python3 - <<'PY'
+          import glob,json
+          d=json.load(open(glob.glob('/home/runner/work/_temp/e545-scaffold-*.json')[0])); print('BEST',d['best_release_energy'])
+          for r in d['rows']: print('ROW',r['multiplier'],r['fixed_energy'],r['fixed_coord'],r['release_energy'],r['release_coord'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e545-scaffold-f${{ matrix.family }}
+          path: ${{ runner.temp }}/e545-scaffold-f${{ matrix.family }}.json
+          retention-days: 7
