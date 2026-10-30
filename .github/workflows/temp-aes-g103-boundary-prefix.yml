@@ -1,0 +1,49 @@
+name: temp-aes-g103-boundary-prefix
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/g103_boundary_prefix_rnbp.py'
+      - '.github/workflows/temp-aes-g103-boundary-prefix.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        weight: [1, 2, 3, 5]
+        seed: [1, 2, 3, 4]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Search boundary-preserving compressed prefix
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/g103_boundary_prefix_rnbp.py
+          python science-boundary/aes-sbox-circuit/g103_boundary_prefix_rnbp.py \
+            --family nist-g103 --budget 47 --max-support 8 --elite 16 \
+            --extra-weight '${{ matrix.weight }}' --seed '${{ matrix.seed }}' \
+            --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier if reattached original suffix is already <=100
+        run: |
+          set -euxo pipefail
+          if [ -f result/full-original-suffix.json ] && [ "$(python -c "import json; print(len(json.load(open('result/full-original-suffix.json'))['gates']))")" -le 100 ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot; cp result/full-original-suffix.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-boundary-w${{ matrix.weight }}-s${{ matrix.seed }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
