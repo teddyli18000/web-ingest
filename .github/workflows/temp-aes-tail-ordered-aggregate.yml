@@ -1,0 +1,59 @@
+name: temp-aes-tail-ordered-aggregate
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-tail-ordered-aggregate.yml'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download exact ordered-tail matrix
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euxo pipefail
+          mkdir -p prior
+          gh run download 41044306752 -p 'aes-rnbp-tail-ordered-*' -D prior
+      - name: Aggregate solver statuses
+        run: |
+          set -euxo pipefail
+          python - <<'PY'
+          import glob,json,pathlib
+          rows=[]
+          for sf in glob.glob('prior/**/summary.json',recursive=True):
+              s=json.load(open(sf));
+              rows.append({
+                  'path':sf,
+                  'variant':f"d{s['deviation_index']}r{s['deviation_rank']}",
+                  'helpers':s['helpers'],
+                  'pos':s.get('extra_helper_pos'),
+                  'status':s['status'],
+                  'elapsed_s':s.get('elapsed_s'),
+                  'candidate_gates':s.get('candidate_gates')})
+          rows.sort(key=lambda r:(r['variant'],r['helpers'], -1 if r['pos'] is None else r['pos']))
+          from collections import Counter,defaultdict
+          hist=Counter(r['status'] for r in rows)
+          by=defaultdict(Counter)
+          for r in rows: by[r['variant']][r['status']]+=1
+          agg={'rows':rows,'status_hist':dict(hist),'by_variant':{k:dict(v) for k,v in by.items()},
+               'sat':sum(r['status']=='sat' for r in rows),
+               'unsat':sum(r['status']=='unsat' for r in rows),
+               'unknown':sum(r['status']=='unknown' for r in rows)}
+          json.dump(agg,open('ordered-tail-aggregate.json','w'),indent=2)
+          print(json.dumps({k:v for k,v in agg.items() if k!='rows'}))
+          for r in rows: print(json.dumps(r))
+          assert len(rows)==20,len(rows)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-tail-ordered-aggregate
+          path: ordered-tail-aggregate.json
