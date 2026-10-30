@@ -1,0 +1,64 @@
+name: temp Thomson 960 D2-live core sequence
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-d2-live-core-sequence.yml'
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [9871, 9872]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Materialize D2 and live
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 - <<'PY'
+          import json,pathlib,os,sys
+          sys.path.insert(0,'science-boundary/thomson-960/code')
+          import search_topology_morph as tm
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'few-shots'; out=pathlib.Path(os.environ['RUNNER_TEMP'])/'out'
+          d2=tm.cert_xyz(root/tm.D2_REL)
+          (out/'d2.json').write_text(json.dumps({'energy':tm.raw_energy(d2),'points':d2.tolist()},separators=(',',':'))+'\n')
+          score,live_dir=tm.find_live(root); live=tm.cert_xyz(live_dir/'certificate.json')
+          (out/'live.json').write_text(json.dumps({'energy':score,'points':live.tolist()},separators=(',',':'))+'\n')
+          (out/'live-score.txt').write_text(str(score))
+          print('D2',tm.raw_energy(d2),tm.coord_counts(d2),'LIVE',score,tm.coord_counts(live))
+          PY
+      - name: Search sequential core nucleation
+        run: |
+          live=$(cat "$RUNNER_TEMP/out/live-score.txt")
+          echo "nproc=$(nproc) seed=${{ matrix.seed }} live=$live"
+          python3 science-boundary/thomson-960/code/search_defect_core_sequence.py \
+            "$RUNNER_TEMP/out/d2.json" "$RUNNER_TEMP/out/live.json" \
+            --seed '${{ matrix.seed }}' --starts 30 \
+            --radii 0.10,0.18 --alphas 0.45,0.80,1.15 \
+            --beam 6 --per-used 2 --maxiter 3000 --live-score "$live" \
+            --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('BEST',d['best_energy'],'DELTA_LIVE',d['best_delta_live'],'COORD',d['best_coord'],'USED',d['best_used'])
+          for i,s in enumerate(d['best_path']): print('PATH',i+1,s)
+          for z in d['final_beam'][:12]: print('FINAL',z['energy'],z['delta_live'],z['coord_counts'],z['used'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-d2-live-core-sequence-${{ matrix.seed }}
+          path: ${{ runner.temp }}/out
+          retention-days: 7
