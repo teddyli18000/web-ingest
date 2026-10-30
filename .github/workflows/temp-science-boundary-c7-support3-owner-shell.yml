@@ -1,0 +1,46 @@
+name: Temp Science Boundary C7 support3 owner-shell closure
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-support3-owner-shell.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_support3_owner_shell_closure.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-support3-owner-shell
+  cancel-in-progress: false
+
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned BPZ source and install dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          python3 -m pip install --disable-pip-version-check python-sat
+          mkdir -p "$RUNNER_TEMP/result"
+      - name: Packed exact maximum-closure over obstruction shells
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_support3_owner_shell_closure.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/shell.json" --modes subset,overlap2 --pair-limit 300000 --workers 4 \
+            | tee "$RUNNER_TEMP/result/shell.stdout"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-support3-owner-shell
+          path: ${{ runner.temp }}/result
+          retention-days: 14
