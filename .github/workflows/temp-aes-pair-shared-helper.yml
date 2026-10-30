@@ -1,0 +1,73 @@
+name: temp-aes-pair-shared-helper
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/pair_shared_helper_search.py'
+      - '.github/workflows/temp-aes-pair-shared-helper.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [fs101, care53, nist-g103, nist-a34-g110]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare seed and enumerate coupled shared helpers
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p results
+          if [ '${{ matrix.seed }}' = fs101 ]; then
+            src=(--seed-family fs-101)
+          elif [ '${{ matrix.seed }}' = care53 ]; then
+            python science-boundary/aes-sbox-circuit/make_fs101_care53_seed.py --out /tmp/care53.json
+            src=(--seed-file /tmp/care53.json --seed-label fs101-care53)
+          elif [ '${{ matrix.seed }}' = nist-g103 ]; then
+            src=(--seed-family nist-g103)
+          else
+            src=(--seed-family nist-a34-g110)
+          fi
+          python science-boundary/aes-sbox-circuit/pair_shared_helper_search.py \
+            "${src[@]}" --out results --max-kept 300 | tee summary.log
+      - name: Independently verify archive and official-check any <=100
+        shell: bash
+        run: |
+          set -euxo pipefail
+          python - <<'PY'
+          import glob,json,sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          for f in glob.glob('results/candidate-*.json'):
+              c=json.load(open(f)); assert ras.independent_check(c)[0],f
+          s=json.load(open('results/summary.json'))
+          print(json.dumps({'best_gates':s['best_gates'],'kept_by_size':s['kept_by_size'],
+                            'pairs':s['pair_candidates_tested']}))
+          PY
+          best=$(python - <<'PY'
+          import json
+          c=json.load(open('results/best.json'))
+          print('results/best.json' if len(c['gates']) <= 100 else '')
+          PY
+          )
+          if [ -n "$best" ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot; cp "$best" /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-pair-shared-helper-${{ matrix.seed }}
+          path: |
+            results
+            summary.log
+            official-verifier.jsonl
