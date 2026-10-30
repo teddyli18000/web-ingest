@@ -1,3 +1,4 @@
+# retrigger after correcting actual-blocker prize objective
 name: Temp Science Boundary C7p5 public367 blocker-basin closures
 
 on:
@@ -44,7 +45,7 @@ jobs:
             "$RUNNER_TEMP/tan" "$RUNNER_TEMP/c7-five" "$RUNNER_TEMP/result/corpus.json" \
             | tee "$RUNNER_TEMP/result/corpus.stdout"
 
-      - name: Exact fixed-blocker basin closures on all cores
+      - name: Exact support-subset prize closures on all public basins
         id: close
         shell: bash
         run: |
@@ -59,6 +60,7 @@ jobs:
           python3 - "$RUNNER_TEMP/result/closure.json" "$GITHUB_OUTPUT" <<'PY'
           import json,sys
           r=json.load(open(sys.argv[1]))
+          if r.get('method')!='exact-public367-support-subset-core-prize-closure':raise SystemExit(r)
           with open(sys.argv[2],'a') as f:
               f.write(f"best={r['best_score']}\n")
               f.write(f"found={'true' if r.get('candidate_368') else 'false'}\n")
