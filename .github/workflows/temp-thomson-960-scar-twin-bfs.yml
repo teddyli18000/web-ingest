@@ -1,0 +1,68 @@
+name: temp Thomson 960 scar-to-twin BFS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-scar-twin-bfs.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: temp-thomson-960-scar-twin-bfs
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Static-check BFS
+        run: python3 -m py_compile science-boundary/thomson-960/code/search_scar_to_twin_flips_bfs.py
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Report runner capacity
+        run: |
+          echo "nproc=$(nproc)"
+          free -h || true
+      - name: Enumerate topology flips and relax best starts
+        run: |
+          python3 science-boundary/thomson-960/code/search_scar_to_twin_flips_bfs.py \
+            "$RUNNER_TEMP/few-shots" \
+            --depth 3 --max-topologies 160 --max-states 180000 \
+            --screen 36 --relax 16 \
+            --out "$RUNNER_TEMP/scar-twin-bfs.json"
+      - name: Print compact scientific summary
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/scar-twin-bfs.json" ]; then
+            python3 - <<'PY'
+          import json, os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'scar-twin-bfs.json')))
+          print('LIVE',d['live_score'],'INIT_TWINS',d['initial_twin_count'])
+          print('COVERAGE',d['coverage'])
+          print('ABSTRACT',len(d['abstract_candidates']),'REALIZED',d['realized_count'])
+          print('BEST',d.get('best_float_energy'),d.get('best_delta_vs_live'))
+          for r in sorted(d['relaxed_rows'],key=lambda q:q['relaxed_energy'])[:12]:
+              print('ROW',r['depth'],r['relaxed_energy'],r['delta_vs_live'],len(r['post_twins']),r['post_coord_hist'],r['sequence'])
+          PY
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-scar-twin-bfs
+          retention-days: 7
+          path: ${{ runner.temp }}/scar-twin-bfs.json
+          if-no-files-found: warn
