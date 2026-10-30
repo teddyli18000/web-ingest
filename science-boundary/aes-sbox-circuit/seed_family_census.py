@@ -21,6 +21,7 @@ DEFAULTS={
   "nist-a32-g104":"https://raw.githubusercontent.com/usnistgov/Circuits/master/data/slp/aes/aes-sbox/aes-sbox-a32-ad5-g104-gd30-xx72-5.circ.txt",
   "nist-a32-g105":"https://raw.githubusercontent.com/usnistgov/Circuits/master/data/slp/aes/aes-sbox/aes-sbox-a32-ad5-g105-gd26-xx73-5.circ.txt",
   "nist-a33-g105":"https://raw.githubusercontent.com/usnistgov/Circuits/master/data/slp/aes/aes-sbox/aes-sbox-a33-ad4-g105-gd25-xx72-6.circ.txt",
+  "nist-a34-g110":"https://raw.githubusercontent.com/usnistgov/Circuits/master/data/slp/aes/aes-sbox/aes-sbox-a34-ad4-g110-gd22-xx76-3.circ.txt",
   "nist-a28-g124":"https://raw.githubusercontent.com/usnistgov/Circuits/master/data/slp/aes/aes-sbox/aes-sbox-a28-ad5-g124-gd27-xx96-26.circ.txt",
   "jain-106-d24":"https://raw.githubusercontent.com/ahrazzle/gf2m-circuits/main/sbox/circuits/sbox106_d24.json",
   "jain-106-d34":"https://raw.githubusercontent.com/ahrazzle/gf2m-circuits/main/sbox/circuits/sbox106_d34.json",
@@ -28,6 +29,11 @@ DEFAULTS={
   "fs-102":"https://raw.githubusercontent.com/few-shots/few-shots/main/problems/p008-aes-sbox-circuit/shots/huangxin-design/aes102-field-plane-offsets/certificate.json",
   "fs-103":"https://raw.githubusercontent.com/few-shots/few-shots/main/problems/p008-aes-sbox-circuit/shots/fancify/aes103-joint-plane-orientations/certificate.json",
 }
+# Compatibility aliases used by older durable p008 scripts.  Exclude them from
+# the census itself so they do not create duplicate seed rows.
+DEFAULTS["nist-g103"]=DEFAULTS["nist-a32-g103"]
+DEFAULTS["nist-g104"]=DEFAULTS["nist-a32-g104"]
+ALIASES={"nist-g103","nist-g104"}
 
 def get(url):
     with urllib.request.urlopen(url, timeout=30) as r:
@@ -198,7 +204,7 @@ def load(name,url):
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument("--out",default="seed-family-census.json")
     args=ap.parse_args()
-    seeds=[load(n,u) for n,u in DEFAULTS.items()]
+    seeds=[load(n,u) for n,u in DEFAULTS.items() if n not in ALIASES]
     out={"seeds":{s["name"]:s["summary"] for s in seeds},"pairs":{}}
     for i,a in enumerate(seeds):
         for b in seeds[i+1:]:
