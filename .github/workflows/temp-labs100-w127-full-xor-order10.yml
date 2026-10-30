@@ -1,4 +1,4 @@
-name: temp labs100 W127 full XOR plus order10
+name: temp labs100 W127 full XOR order10 partition audit
 
 on:
   workflow_dispatch:
@@ -11,9 +11,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  exact-last-two:
+  forbidden-half:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - name: Install OR-Tools and build exact order10 generators
@@ -21,7 +21,7 @@ jobs:
           python -m pip install --disable-pip-version-check 'ortools>=9.14,<10'
           g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h20_w127_h10_profiles.cpp -o /tmp/h10_profiles
           g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h20_w127_ngp10.cpp -o /tmp/ngp10
-      - name: Regenerate the 4220 exact order10 profiles
+      - name: Regenerate the same 4220 rows used only to define the partition
         shell: bash
         run: |
           set -euo pipefail
@@ -29,37 +29,35 @@ jobs:
           /tmp/h10_profiles "$RUNNER_TEMP/h10"
           /tmp/ngp10 "$RUNNER_TEMP/h10" | tee "$RUNNER_TEMP/ngp10.log"
           grep -q '^SUMMARY input_pairs=63660 projected_NGP_survivors=4220$' "$RUNNER_TEMP/ngp10.log"
-      - name: Solve ka12 and ka14 concurrently with two workers each
+      - name: Solve the complementary outside-table half for ka12 and ka14
         shell: bash
         run: |
           set -uo pipefail
           echo "runner_cpus=$(nproc)"
           set +e
           python science-boundary/labs-100/code/oddperfect_e558_xor_order10_cpsat.py \
-            --ka 12 --profiles "$RUNNER_TEMP/h10_ngp10_survivors.txt" --seconds 720 --workers 2 --seed 120127 \
-            >"$RUNNER_TEMP/ka12.log" 2>&1 & p12=$!
+            --mode forbidden --ka 12 --profiles "$RUNNER_TEMP/h10_ngp10_survivors.txt" \
+            --seconds 540 --workers 2 --seed 120128 >"$RUNNER_TEMP/ka12-forbidden.log" 2>&1 & p12=$!
           python science-boundary/labs-100/code/oddperfect_e558_xor_order10_cpsat.py \
-            --ka 14 --profiles "$RUNNER_TEMP/h10_ngp10_survivors.txt" --seconds 720 --workers 2 --seed 140127 \
-            >"$RUNNER_TEMP/ka14.log" 2>&1 & p14=$!
+            --mode forbidden --ka 14 --profiles "$RUNNER_TEMP/h10_ngp10_survivors.txt" \
+            --seconds 540 --workers 2 --seed 140128 >"$RUNNER_TEMP/ka14-forbidden.log" 2>&1 & p14=$!
           wait $p12; r12=$?
           wait $p14; r14=$?
           set -e
-          cat "$RUNNER_TEMP/ka12.log"
-          cat "$RUNNER_TEMP/ka14.log"
+          cat "$RUNNER_TEMP/ka12-forbidden.log"
+          cat "$RUNNER_TEMP/ka14-forbidden.log"
           echo "exit_ka12=$r12 exit_ka14=$r14" | tee "$RUNNER_TEMP/status.txt"
-          # UNKNOWN exits 2 and is evidence only about this search, not exclusion.
-          # Any independently checked FEASIBLE candidate is surfaced as success for immediate freezing.
-          if grep -q '"independent_check": true' "$RUNNER_TEMP/ka12.log" "$RUNNER_TEMP/ka14.log"; then
-            echo 'FOUND_E558_CANDIDATE'
+          if grep -q '"independent_check": true' "$RUNNER_TEMP/ka12-forbidden.log" "$RUNNER_TEMP/ka14-forbidden.log"; then
+            echo 'FOUND_E558_OUTSIDE_PROFILE_TABLE'
           fi
-      - name: Upload exact transcripts
+      - name: Upload partition-audit transcripts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: labs100-w127-full-xor-order10
+          name: labs100-w127-full-xor-order10-forbidden
           path: |
             ${{ runner.temp }}/ngp10.log
-            ${{ runner.temp }}/ka12.log
-            ${{ runner.temp }}/ka14.log
+            ${{ runner.temp }}/ka12-forbidden.log
+            ${{ runner.temp }}/ka14-forbidden.log
             ${{ runner.temp }}/status.txt
           if-no-files-found: warn
