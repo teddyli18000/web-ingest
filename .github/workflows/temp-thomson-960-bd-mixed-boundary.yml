@@ -1,0 +1,82 @@
+name: temp Thomson 960 B-D mixed boundary
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-bd-mixed-boundary.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: temp-thomson-960-bd-mixed-boundary
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  adaptive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Static-check adaptive search
+        run: python3 -m py_compile science-boundary/thomson-960/code/search_bd_mixed_boundary.py
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Download certified B-D saddle
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-bd-landau-certified
+          path: ${{ runner.temp }}/bd
+          github-token: ${{ github.token }}
+          run-id: 40740593797
+      - name: Report runner capacity
+        run: |
+          echo "nproc=$(nproc)"
+          free -h || true
+          ls -lh "$RUNNER_TEMP/bd"
+      - name: Adaptive mixed-mode basin-boundary search
+        run: |
+          python3 science-boundary/thomson-960/code/search_bd_mixed_boundary.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/bd/bd-landau-polished.json" \
+            --workers "$(nproc)" \
+            --base 32 --scale 0.032 --radius-cap 0.050 \
+            --adaptive 20 --reaction-points 8 --reaction-amp 0.00015 \
+            --maxiter 1800 \
+            --out "$RUNNER_TEMP/bd-mixed-boundary.json"
+      - name: Print compact scientific summary
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/bd-mixed-boundary.json" ]; then
+            python3 - <<'PY'
+          import json, os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'bd-mixed-boundary.json')))
+          print('LIVE',d['live_score'],'EVALS',d['evaluations'],'WORKERS',d['workers'])
+          print('KNOWN',d['known_counts'],'UNKNOWN',d['unknown_basin_count'])
+          print('BEST',d['best_energy'],d['best_delta_vs_live'],d['best_label'])
+          for r in d['top_unknown']:
+              print('UNKNOWN',r['energy'],r['delta_vs_live'],r['coeff'],r['reaction_amp'],r['signature']['twins'],r['signature']['coord'])
+          for s in d['second_hop']:
+              print('SECOND',s['parent_label'],s['parent_energy'],s['best_energy'])
+          PY
+          else
+            echo "No result JSON produced"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-bd-mixed-boundary
+          retention-days: 7
+          path: ${{ runner.temp }}/bd-mixed-boundary.json
+          if-no-files-found: warn
