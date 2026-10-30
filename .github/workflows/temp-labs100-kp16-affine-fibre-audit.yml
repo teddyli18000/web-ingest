@@ -24,7 +24,7 @@ jobs:
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/cands" "$RUNNER_TEMP/out"
           python - "$RUNNER_TEMP/cands" <<'PY'
-          import math,re,sys
+          import math,sys
           from pathlib import Path
           out=Path(sys.argv[1])
           rows=[x for x in Path('science-boundary/labs-100/data/w127-ka16-order25-survivors.txt').read_text().splitlines() if x.strip() and not x.startswith('#')]
@@ -37,11 +37,8 @@ jobs:
               return y
           meta=[]
           for si,row in enumerate(rows,1):
-              # durable rows contain p=...|c=...
-              pm=re.search(r'p=([^| ]+)',row)
-              cm=re.search(r'c=([^| ]+)',row)
-              assert pm and cm,row
-              p=list(map(int,pm.group(1).split(','))); c=list(map(int,cm.group(1).split(',')))
+              left,right=row.split('|')
+              p=list(map(int,left.split())); c=list(map(int,right.split()))
               assert len(p)==len(c)==25
               for a in units:
                   for b in range(25):
