@@ -1,0 +1,53 @@
+name: temp-aes-released-skeleton-calibrate
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/released_and_skeleton.py'
+      - '.github/workflows/temp-aes-released-skeleton-calibrate.yml'
+permissions:
+  contents: read
+jobs:
+  calibrate:
+    strategy:
+      fail-fast: false
+      matrix:
+        family: [fs-101, nist-g103, nist-g104, nist-a34-g110]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Identity calibration with four randomized workers
+        run: |
+          set -euxo pipefail
+          mkdir -p results
+          pids=()
+          for lane in 0 1 2 3; do
+            python science-boundary/aes-sbox-circuit/released_and_skeleton.py \
+              --seed-family '${{ matrix.family }}' --rng-seed $((2026103000+lane)) \
+              --future-weight $((4+lane*4)) --topk $((4+lane*2)) --max-helpers 10 \
+              --out results/candidate-$lane.json > results/run-$lane.log 2>&1 &
+            pids+=("$!")
+          done
+          rc=0; for p in "${pids[@]}"; do wait "$p" || rc=1; done
+          cat results/run-*.log
+          exit "$rc"
+      - name: Aggregate
+        run: |
+          python - <<'PY'
+          import glob,json,re
+          rows=[]
+          for f in glob.glob('results/run-*.log'):
+              lines=[x for x in open(f) if x.startswith('{')]
+              assert lines,(f,open(f).read())
+              x=json.loads(lines[-1]); rows.append(x)
+          rows.sort(key=lambda x:x['result']['total'])
+          print(json.dumps({'family':'${{ matrix.family }}','best':rows[0],'all':rows},indent=2))
+          open('aggregate.json','w').write(json.dumps({'family':'${{ matrix.family }}','best':rows[0],'all':rows},indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-released-calibrate-${{ matrix.family }}
+          path: |
+            aggregate.json
+            results
