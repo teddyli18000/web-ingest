@@ -4,12 +4,12 @@
 The source state is the pinned BPZ/Tan terminal q=H,r=H,orientation=0 at
 commit c753408492dde92a239708986d16c15dbf6c3235.  The exact lexicographic
 plateau search (run 40993717057) found a largest 18-for-18 zero-gain exchange.
-This script freezes that state without rerunning the 288-scenario MaxSAT sweep.
+This script freezes that state without rerunning the 288-scenario MaxSAT sweep
+and intentionally has no python-sat dependency.
 """
 from __future__ import annotations
-import argparse,json
+import argparse,json,sys
 from pathlib import Path
-from bpz_joint_row_defects_maxsat import load_geometry,terminal_periphery
 
 SELECTED = {
  (6110,6494),(6494,1553),(6494,3716),(6494,13158),(6494,13358),
@@ -26,20 +26,38 @@ DELETED = {
 EXPECTED_HASH = "636cbc9a3368fccd6bac3155aa0a73eaf9ddd5d9f053ba74ca00f748437b9d94"
 
 
+def load_geometry(root: Path):
+    sys.path.insert(0,str(root))
+    from shannon.certificates import load_base  # type: ignore
+    p=root/"data"/"base_c7.json"; raw=json.loads(p.read_text())
+    base,_t,_e,ax=load_base(p)
+    if not all(ax.values()): raise RuntimeError({k:v for k,v in ax.items() if not v})
+    ring=base.ring; I=set(map(int,raw["I0"])); owners={int(p[0]) for p in raw["private_pairs"]}; B=I-owners
+    PH=set(map(int,raw["PH"])); PV=set(map(int,raw["PV"]))
+    fam={"B":B,"N":set(base.X0.elements),"A":set(base.XV.elements),"D":set(base.XH.elements),"O":set(base.R.elements),"H":PH,"V":PV}
+    if len(B)!=359 or len(PH)!=8 or len(PV)!=8: raise RuntimeError((len(B),len(PH),len(PV)))
+    return ring,B,fam
+
+
+def terminal_hh0(fam):
+    # terminal_periphery(fam,"H","H",0) copied explicitly so this frozen seed
+    # does not import any MaxSAT module.
+    words=(("N","H"),("A","H"),("D","V"),("H","N"),("H","D"),("V","A"))
+    P=set()
+    for u,v in words:P.update((a,b) for a in fam[u] for b in fam[v])
+    if len(P)!=5872: raise RuntimeError(("periphery",len(P)))
+    return P
+
+
 def main():
     ap=argparse.ArgumentParser();ap.add_argument("tan_root",type=Path);ap.add_argument("certificate",type=Path);ap.add_argument("status",type=Path);a=ap.parse_args()
-    _base,ring,B,fam=load_geometry(a.tan_root.resolve()); B=set(B)
-    core={(x,y) for x in B for y in B}; per=terminal_periphery(fam,"H","H",0); base=core|per
+    ring,B,fam=load_geometry(a.tan_root.resolve()); B=set(B)
+    core={(x,y) for x in B for y in B}; per=terminal_hh0(fam); base=core|per
     if len(base)!=134753 or len(SELECTED)!=18 or len(DELETED)!=18: raise RuntimeError((len(base),len(SELECTED),len(DELETED)))
     if not DELETED <= base: raise RuntimeError(("deleted-not-baseline",sorted(DELETED-base)))
     if SELECTED & (base-DELETED): raise RuntimeError(("selected-overlap",sorted(SELECTED&(base-DELETED))))
     cand=(base-DELETED)|SELECTED
     if len(cand)!=134753: raise RuntimeError(("score",len(cand)))
-    # Independent structural replay, with neighborhoods supplied by the pinned source.
-    cv=list(cand)
-    # Checking all ~9e9 pairs is unnecessary: only selected points are new, and
-    # the original base is already certified.  Check every selected-new against
-    # retained old and against every other selected-new.
     kept=base-DELETED
     for p in SELECTED:
         nx,ny=ring.NB[p[0]],ring.NB[p[1]]
