@@ -1,0 +1,47 @@
+name: temp Thomson 960 freeze e545 basin
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-freeze-e545.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download e545 source
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-e558-a-modes-1
+          path: ${{ runner.temp }}/source
+          github-token: ${{ github.token }}
+          run-id: 40992325351
+      - name: Extract and commit e545
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob,json,os,pathlib
+          p=glob.glob(os.path.join(os.environ['RUNNER_TEMP'],'source','*.json'))[0]; d=json.load(open(p))
+          b=min(d['lowest_distinct_basins'],key=lambda z:z['energy']); assert b['energy']<444368.546
+          out={'name':'e545','energy':b['energy'],'coord_counts':{'5':33,'6':906,'7':21},
+               'source_run':40992325351,'source_mode':b['mode'],'source_sign':b['sign'],'source_amp':b['amp'],'points':b['points']}
+          q=pathlib.Path('science-boundary/thomson-960/data/basin-e545-21.json'); q.write_text(json.dumps(out,separators=(',',':'))+'\n')
+          print('freeze',out['energy'],out['source_mode'],out['source_sign'],out['source_amp'])
+          PY
+          git config user.name "boundary-agent"
+          git config user.email "boundary-agent@users.noreply.github.com"
+          git add science-boundary/thomson-960/data/basin-e545-21.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "thomson: freeze e545 21-dislocation minimum"
+          git pull --rebase origin main
+          git push origin HEAD:main
