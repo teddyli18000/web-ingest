@@ -1,0 +1,58 @@
+name: temp-aes-rnbp-projected-tail
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/rnbp_projected_tail_search.py'
+      - '.github/workflows/temp-aes-rnbp-projected-tail.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        weight: ['0.03', '0.06', '0.12', '0.24', '0.48', '0.96', '1.92']
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install --quiet z3-solver
+      - name: Build projected prefix and exact-test the remaining 67-linear budget
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/rnbp_projected_tail_search.py
+          python science-boundary/aes-sbox-circuit/rnbp_projected_tail_search.py \
+            --family fs-101 --rng-seed 1 --topk 1 \
+            --projection-weight '${{ matrix.weight }}' \
+            --prefix-max-linear 67 --total-linear-budget 67 --timeout-ms 180000 \
+            --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier if <=100
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            python - <<'PY'
+          import json,sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          c=json.load(open('result/candidate.json'))
+          assert len(c['gates']) <= 100, len(c['gates'])
+          assert ras.independent_check(c)[0]
+          PY
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot; cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-rnbp-projected-${{ matrix.weight }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
