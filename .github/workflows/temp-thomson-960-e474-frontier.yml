@@ -1,0 +1,159 @@
+name: temp Thomson 960 e474 frontier
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-e474-frontier.yml'
+
+jobs:
+  harvest:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Reproduce seed-9852 D2-live corridor and freeze e474
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 - <<'PY'
+          import json,pathlib,os,sys
+          sys.path.insert(0,'science-boundary/thomson-960/code')
+          import search_topology_morph as tm
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'few-shots'; out=pathlib.Path(os.environ['RUNNER_TEMP'])/'out'
+          d2=tm.cert_xyz(root/tm.D2_REL); score,live_dir=tm.find_live(root); live=tm.cert_xyz(live_dir/'certificate.json')
+          (out/'d2.json').write_text(json.dumps({'name':'D2','energy':tm.raw_energy(d2),'coord_counts':tm.coord_counts(d2),'points':d2.tolist()},separators=(',',':'))+'\n')
+          (out/'live.json').write_text(json.dumps({'name':'live','energy':tm.raw_energy(live),'score':score,'coord_counts':tm.coord_counts(live),'points':live.tolist()},separators=(',',':'))+'\n')
+          (out/'live-score.txt').write_text(str(score))
+          PY
+          python3 science-boundary/thomson-960/code/search_pair_string_quench.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/out/d2.json" "$RUNNER_TEMP/out/live.json" \
+            --seed 9852 --starts 20 --images 13 --iterations 340 --eta 0.00020 --max-step 0.00050 \
+            --quench-maxiter 3000 --retain-window 0.40 --out "$RUNNER_TEMP/out/string.json"
+          python3 - <<'PY'
+          import json,pathlib,os,numpy as np,sys
+          sys.path.insert(0,'science-boundary/thomson-960/code')
+          import search_topology_morph as tm
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'out'; d=json.loads((out/'string.json').read_text())
+          target=444368.47436229355
+          cand=[z for z in d['distinct_low_basins'] if z['coord_counts']=={'5':35,'6':902,'7':23}]
+          if not cand: raise RuntimeError('no 23-dislocation basin found')
+          b=min(cand,key=lambda z:abs(z['energy']-target))
+          if abs(b['energy']-target)>5e-5: raise RuntimeError(f'e474 miss {b["energy"]}')
+          x=np.asarray(b['points'],float); x/=np.linalg.norm(x,axis=1)[:,None]
+          cc=tm.coord_counts(x)
+          seed={'name':'basin-23-e474362','energy':float(b['energy']),'coord_counts':cc,
+                'source':{'run_seed':9852,'string_image':b['image']},'points':x.tolist()}
+          (out/'e474.json').write_text(json.dumps(seed,separators=(',',':'))+'\n')
+          print('E474',b['energy'],cc,'image',b['image'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e474-seed
+          path: |
+            ${{ runner.temp }}/out/e474.json
+            ${{ runner.temp }}/out/live.json
+            ${{ runner.temp }}/out/live-score.txt
+            ${{ runner.temp }}/out/string.json
+          retention-days: 7
+
+  expand:
+    needs: harvest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - kind: modes-low
+            seed: 0
+            tag: modes-0-5
+          - kind: modes-high
+            seed: 0
+            tag: modes-6-11
+          - kind: moto
+            seed: 9971
+            tag: moto-9971
+          - kind: moto
+            seed: 9972
+            tag: moto-9972
+          - kind: core-live
+            seed: 9981
+            tag: core-live-9981
+          - kind: core-live
+            seed: 9982
+            tag: core-live-9982
+          - kind: core-live
+            seed: 9983
+            tag: core-live-9983
+    runs-on: ubuntu-24.04
+    timeout-minutes: 160
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e474-seed
+          path: ${{ runner.temp }}/seed
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Expand e474
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/out"
+          if [[ '${{ matrix.kind }}' == 'modes-low' ]]; then
+            python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+              "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/seed/e474.json" \
+              --modes 0,1,2,3,4,5 --amps 0.0015,0.003,0.006,0.012,0.024,0.045,0.070 \
+              --k 14 --workers "$(nproc)" --maxiter 2800 --keep-basins 28 \
+              --out "$RUNNER_TEMP/out/result.json"
+          elif [[ '${{ matrix.kind }}' == 'modes-high' ]]; then
+            python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+              "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/seed/e474.json" \
+              --modes 6,7,8,9,10,11 --amps 0.0015,0.003,0.006,0.012,0.024,0.045,0.070 \
+              --k 14 --workers "$(nproc)" --maxiter 2800 --keep-basins 28 \
+              --out "$RUNNER_TEMP/out/result.json"
+          elif [[ '${{ matrix.kind }}' == 'moto' ]]; then
+            python3 science-boundary/thomson-960/code/moto_like_saddle_explorer.py \
+              "$RUNNER_TEMP/few-shots" --seed-json "$RUNNER_TEMP/seed/e474.json" \
+              --seed '${{ matrix.seed }}' --population 14 --select 4 --basis-k 14 \
+              --scales 0.0025,0.0045,0.0075,0.012,0.020,0.032 \
+              --mmf-cycles 8 --mmf-steps 65 --mmf-eta 0.00022 --mmf-max-rms 0.000010 \
+              --certify-amp 0.0015 --out "$RUNNER_TEMP/out/result.json"
+          else
+            live=$(cat "$RUNNER_TEMP/seed/live-score.txt")
+            python3 science-boundary/thomson-960/code/search_defect_core_transfer.py \
+              "$RUNNER_TEMP/seed/e474.json" "$RUNNER_TEMP/seed/live.json" \
+              --seed '${{ matrix.seed }}' --starts 30 --radii 0.055,0.075,0.10,0.14,0.20,0.28 \
+              --alphas 0.12,0.25,0.45,0.70,0.95,1.20,1.50,1.90 \
+              --maxiter 3000 --live-score "$live" --out "$RUNNER_TEMP/out/result.json"
+          fi
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('KIND','${{ matrix.kind }}','BEST',d.get('best_energy',d.get('best_certified_endpoint_energy')),
+                'DELTA',d.get('best_delta_live',d.get('best_delta_vs_live')))
+          print('CORES',len(d.get('cores',[])))
+          for b in d.get('lowest_distinct_basins',[])[:20]: print('BASIN',b['energy'],b.get('mode'),b.get('sign'),b.get('amp'))
+          for b in d.get('distinct_low_basins',[])[:20]: print('BASIN',b['energy'],b.get('coord_counts'),b.get('label'))
+          for r in d.get('results',[]):
+              print('SADDLE',r['saddle_energy'],'grad',r['saddle_gradient_rms'],'neg',r['negative_modes'])
+              for z in r.get('certified_endpoints',[]): print('END',z['energy'],z['delta_vs_live'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e474-${{ matrix.tag }}
+          path: ${{ runner.temp }}/out
+          retention-days: 7
