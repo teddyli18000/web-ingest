@@ -17,6 +17,8 @@ Hard constraints:
 - x_u + x_v <= 1 for outside conflict edges;
 - x_v -> b_c for every core neighbour c of v;
 - sum(x_v) + sum(1-b_c) >= 368;
+- the independently certified molind core-overlap cut sum(b_c) >= 4, valid for
+  every target-368 set on this exact 315-core;
 - lossless symmetry: completed solution contains vertex 0;
 - optional residue branch over a second nonzero completed vertex.
 
@@ -38,6 +40,7 @@ D=5
 U=Q**D
 TARGET=368
 CORE_EXPECT=315
+MIN_TARGET_BLOCKERS=4
 POW=tuple(Q**i for i in range(D))
 
 
@@ -109,6 +112,11 @@ def main():
     value_lits=[x[v] for v in outside]+[-b[c] for c in core]
     s.add_atleast(value_lits,TARGET)
 
+    # Certified target-specific overlap cut from molind/c7-five: every 368-set
+    # omits at least four points of this exact 315-word core.  In the completed
+    # representation, omitted core points are exactly the activated blockers.
+    s.add_atleast([b[c] for c in core],MIN_TARGET_BLOCKERS)
+
     # Lossless graph-transitivity symmetry break.
     if 0 in C:
         s.add_clause([-b[0]])
@@ -136,6 +144,7 @@ def main():
         'support_implications':implications,
         'support_size_histogram':{str(k):v for k,v in sorted(support_hist.items())},
         'target':TARGET,
+        'certified_target_min_core_blockers':MIN_TARGET_BLOCKERS,
         'symmetry_break':sym,
         'branch_mod':a.branch_mod,
         'branch_residue':a.branch_residue,
@@ -156,6 +165,8 @@ def main():
         completed=Y|(C-blocked)
         if len(completed)<TARGET or not independent(completed) or 0 not in completed:
             raise RuntimeError(('SAT replay',len(completed)))
+        if len(blocked)<MIN_TARGET_BLOCKERS:
+            raise RuntimeError(('certified overlap replay',len(blocked)))
         if a.branch_mod>1 and not any(v and v%a.branch_mod==a.branch_residue for v in completed):
             raise RuntimeError('branch replay')
         S=sorted(completed)[:TARGET]
