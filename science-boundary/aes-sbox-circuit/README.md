@@ -13,9 +13,11 @@ Before substantial p008 work, re-check the live Few Shots board, recent/open p00
 - **Live verified record: 101 gates**, `chunfeng11221/aes101-nist-interface-resub`, merged PR #31.
 - Official board: score 101, verified `2026-10-29T10:51:03Z`, recorded `2026-10-29T10:52:38Z`.
 - Circuit: **33 AND + 40 XOR + 28 XNOR = 101**, depth 44.
-- Canonical hash reported by the shot/verifier: `9371891b3eb422ac1514f067212a5c42d6f07d0a378deb37dad0941de7220093`.
+- Canonical hash reported by the merged shot/verifier: `9371891b3eb422ac1514f067212a5c42d6f07d0a378deb37dad0941de7220093`.
 - Record chain: 106 → 105 → 104 → 103 → 102 → **101**.
 - Next valid breakthrough: **100 gates or fewer**.
+
+The search strategy has been reset around **architecture diversity + whole-circuit interfaces**, not deeper local search around the old merged 102.
 
 ## Main lesson from 101
 
@@ -88,31 +90,142 @@ Exact-function overlap gives a useful calibration:
 
 So the successful field/representation change in PR #31 genuinely moved the full circuit into a different nonlinear function basis. This is exactly the kind of architecture shift future search should seek.
 
-`seed_family_census_extended.py` expands this comparison to near-best NIST A32/A33/A34 circuits plus an A28 remote control family.
+### Extended census
+
+Action `40991496201` validated the near-frontier NIST A32/A33/A34 set. A32/G103,G104,G105,G109 and A33/G105,G108 form one high-overlap nonlinear family; for example:
+
+- A32/G103 vs G104: `30/34` AND Jaccard `0.882353`;
+- A32/G103 vs G105: `27/37`, `0.729730`;
+- A32/G104 vs A33/G105: `29/36`, `0.805556`;
+- A32/G105 vs G109 use the same 32 AND functions and dependency-shape hash;
+- A33/G105 vs G108 use the same 33 AND functions and dependency-shape hash.
+
+NIST A34/G110 is a distinct nonlinear family:
+
+- 110 gates = 34 AND + 73 XOR + 3 XNOR;
+- AND depth 4, profile `9,3,4,18`;
+- exact AND overlap with A32/G103: **0**;
+- overlap with A32/G104: **1**;
+- overlap with A32/G105/G109 or A33/G105/G108: **3**;
+- overlap with merged 101: **0**.
+
+The first extended-census attempt also included an A28 control, but that file uses NIST `U/S` naming rather than the `x/y` convention handled by the initial parser. The A28 entry was removed rather than treating a parser failure as scientific evidence. Current extended results refer only to the uniformly parsed A32/A33/A34 set.
+
+At least three useful representation domains are therefore distinguished:
+
+1. NIST main A32/A33 near-frontier family;
+2. PR #31's field/plane transformed 101 family;
+3. NIST A34/G110 nonlinear family.
+
+See `ARCHITECTURE-CENSUS-2026-10-29.md`.
+
+## Whole-circuit released-AND representation
+
+`released_and_skeleton.py` removes named linear boundaries from a circuit. Any `{AND,XOR,XNOR}` circuit is represented as:
+
+- eight primary inputs;
+- an ordered sequence of AND atoms `A_i`;
+- two affine operand forms for every `A_i`, over the primary inputs and already released `A_j`;
+- eight final affine output forms.
+
+Thus an XOR/XNOR helper is an implementation choice, not intrinsically a `prelinear`, `middle`, `core`, `final multiplier`, or `output` wire. A helper can in principle persist across all those boundaries.
+
+A first released/deadline greedy synthesizer was deliberately calibrated before any large transform sweep. It failed calibration badly:
+
+- merged FS101: reconstructed only **120** gates versus 101;
+- NIST G103: reconstructed only **135** versus 103.
+
+Therefore this greedy is **not** used to infer that any transported skeleton is expensive. The representation remains useful; that synthesizer is rejected as too weak.
+
+### Semilinear whole-skeleton proxy
+
+`scan_semilinear_skeletons.py` scans all 2,040 maps `P(x)=c*x^(2^k)` and measures affine-support / common-pair structure of all AND operand and final-output forms. This is only a seed generator, not a real linear-gate cost oracle.
+
+Action `40992444133` found:
+
+- NIST G103 best structural proxy: `(c=57,k=6)`;
+- NIST G104 independently selects the same `(57,6)`;
+- merged FS101 best: `(92,4)`, identity rank 11;
+- A34/G110 best: `(197,1)`, identity rank 187.
+
+Crucially, PR #31's actually successful map `(0x3f,5)` ranks poorly under this proxy (roughly 1509 on FS101 and 1372 on G103). Therefore support sparsity cannot replace real synthesis. The repeated `(57,6)` selection inside the NIST-main family is only a candidate-generation signal.
+
+## Exact AND-care transfer around 101
+
+The final PR #31 saving suggests the exact identity for an AND `y=u&v`: replacing `u` with `w` is legal iff `(u XOR w)&v=0` on all 256 inputs.
+
+`mine_and_care_aliases.py` exhaustively searched every AND operand in three structural domains, including every earlier existing wire and every one-new-XOR/XNOR helper.
+
+Action `40992283892`:
+
+- A34/G110: no direct alias; about 90 one-helper care matches, none strictly reduce 110;
+- NIST G103: no direct alias; 76 one-helper care matches, none strictly reduce 103;
+- merged FS101: exactly one direct neutral alias and 107 one-helper care matches, none strictly reduce 101.
+
+The unique FS101 alias is:
+
+```text
+AND gate index 53, second operand: g52 -> g50
+care states: 68 / 256
+```
+
+`make_fs101_care53_seed.py` freezes this variant. Action `40992848614` independently checks all 256 inputs and the unchanged Few Shots verifier returns:
+
+```json
+{"valid":true,"score":"101","canonical_hash":"809241a987d8fb986125782715485ed2e2975233b4c16d5196c57842b8975a23","message":"ok"}
+```
+
+This differs from the merged 101 hash and is therefore a second official-valid structural 101 seed, not a renaming.
+
+`enumerate_and_care_neutral.py` then exhaustively enumerated the same direct/one-helper ≤101 neighborhood around both seeds (Action `40992895931`):
+
+- original 101: 298,896 helper expressions tested; the only kept ≤101 neighbor is `g52 -> g50`;
+- care53 101: 298,896 helper expressions tested; the only kept ≤101 neighbor is the reverse `g50 -> g52`;
+- neither side contains a 100-gate candidate.
+
+So this exact one-helper AND-care graph is a **two-node island**. Do not spend more compute extending this same neighborhood. This says nothing about wider multi-gate or architecture-changing rewrites.
+
+## Hybrid nonlinear-atom pool
+
+`hybrid_and_pool.py` aligns the NIST G103 and G104 AND outputs by exact Boolean truth function, pools their known affine factorizations, and asks whether a 32-atom subset can be topologically realized and linearly span all AES outputs.
+
+Action `40993221045`:
+
+- union: 34 distinct AND functions;
+- shared: 30;
+- all 30 shared atoms have multiple source factorizations;
+- all `C(34,32)=561` 32-atom subsets tested;
+- exactly **2** atom subsets are feasible under the pooled known factorizations: the original G103 set and the original G104 set.
+
+Thus there is no third 32-atom **subset** hybrid in this restricted pool. This does not exclude new AND functions or new factorizations. It instead exposes the next freedom: transfer the alternate G103/G104 factorization of a shared atom while keeping the nonlinear atom set fixed.
+
+`transfer_and_factorizations.py` implements that cross-seed transfer, allowing the alternate factors when they are already earlier target wires or can be synthesized by at most two new XOR/XNOR helpers, followed by pruning. Action `40993326479` is active.
 
 ## Current hypotheses toward 100
 
-### H1 — alternate near-best seed families can expose a different cross-boundary saving
+### H1 — architecture diversity before local depth
 
-A seed need not already beat 101. A 102–105 circuit with a different nonlinear dependency skeleton can be more valuable than another neutral mutation of the record if full-circuit rewriting can cross boundaries unavailable in the current representation.
+A 102–110 circuit with a meaningfully different nonlinear skeleton can be more valuable than another neutral mutation of the record if it exposes a new whole-circuit linear sharing opportunity. Current descriptors include exact AND-function overlap, AND dependency shape/depth, semilinear coordinate, and cross-boundary care identities.
 
-The first active branch is NIST A32/G103. It is only one gate smaller than the G104 seed used by PR #31, retains 32 ANDs, but changes two AND functions and reorganizes the nonlinear depth from 5 to 7. It is close enough to the frontier to be useful while exposing different observability paths.
+### H2 — 33 AND + 67 linear gates within the current transformed skeleton
 
-### H2 — search architecture diversity before local depth
+The merged record has 33 AND + 68 linear gates. `synthesize_fixed_and_schedule_z3.py` removes the hand-written linear boundaries and asks Z3 to synthesize all affine interfaces globally for the fixed ordered 33-AND skeleton.
 
-For each candidate family, measure:
+The first exact family preserves the original AND-release schedule but deletes one linear slot from one nonempty interval at a time. A SAT instance yields 67 linears + 33 AND = **100**; UNSAT excludes only that release/schedule template; timeout/`unknown` is only a solver limitation.
 
-- exact AND-function overlap with known records;
-- nonlinear dependency/AND-depth profile;
-- intermediate-function overlap with the 101 circuit;
-- where affine/nonlinear boundaries occur and whether factors consumed downstream are already available elsewhere;
-- full-circuit observability masks, especially identities involving signals on opposite sides of an apparent decomposition boundary.
+Workflow `temp-aes-fs101-z3-67linear.yml`, run **`40992776375`**, uses 8 runner shards and up to four Z3 processes per runner. Any SAT model is reconstructed as a full circuit, independently checked on all 256 inputs, and sent to the official Few Shots verifier.
 
-Only then spend large local-search compute.
+If this fixed schedule is exhausted, the next search will move linear slots between adjacent AND-release intervals while keeping total linear cost 67, rather than treating the original schedule as architectural truth.
 
-### H3 — the current 101 itself is a new architecture and still deserves full-circuit search, but not as the only seed
+### H3 — 32 AND + 68 linear gates from a NIST-family representation
 
-The 101 shot's successful basin was reached only after the new NIST-derived 102 construction. Further full-circuit neutral/+1 walks from 101 are legitimate, but they are run in parallel with alternate seed families rather than treated as evidence that the old fixed-core frontier is globally saturated.
+NIST G103 is already 32 AND + 71 linear. Reaching 100 requires three linear savings rather than changing AND count. The current boundary-free full-circuit search uses G103 as a complete seed; factorization transfer and semilinear transport are additional ways to generate structurally different 32-AND seeds before applying compression.
+
+### H4 — search an archive of representation niches, not one incumbent
+
+The 2026-10-14 Yoshan work on S-box co-synthesis independently supports a quality-diversity view: maintain multiple algebraic/circuit seed classes, evolve DAGs, then compress with cross-DAG CSE and SMT sub-DAG shaving. Yoshan optimizes a broader S-box design problem and does not solve fixed AES G≤100, so its results are not imported as a record claim. Its search-space lesson is directly relevant: preserve structurally distinct complete representations instead of collapsing all compute onto one best circuit.
+
+A future p008 archive should keep the best complete AES circuits per nonlinear family / coordinate / dependency-shape niche and use ODC or sub-DAG shaving only after the archive has architecture diversity.
 
 ## Active experiments
 
@@ -120,13 +233,15 @@ The 101 shot's successful basin was reached only after the new NIST-derived 102 
 
 `search_arch_seed.py` is boundary-free: it accepts a complete verified seed, computes exact 256-bit observability masks, allows neutral moves and bounded temporary `+1` expansions, keeps searching after intermediate improvements, and stops only at target 100.
 
-Workflow `.github/workflows/temp-aes-arch-seed-resub.yml` runs four CPU workers per runner over both NIST G103 and the merged 101. Every job independently rechecks all 256 AES inputs and invokes the official Few Shots verifier on its best certificate. Initial run: `40991271507`.
+Workflow `.github/workflows/temp-aes-arch-seed-resub.yml`, run **`40991271507`**, runs four CPU workers per runner over NIST G103 and the merged 101. This is a second-stage probe, not the main search-space definition. If it returns no improvement, do not simply scale the same random walk.
 
-This experiment is intentionally different from extending the old fixed-core ODC campaign: the primary new branch begins from a different complete circuit representation and does not preserve any core/tail boundary.
+### Global 67-linear Z3 synthesis
 
-### Extended seed census
+Run **`40992776375`** is the main direct 100 campaign at this checkpoint: 8 runner shards × up to four Z3 processes, fixed 33-AND functions/order but no named linear stage boundaries.
 
-`.github/workflows/temp-aes-seed-census-extended.yml` classifies the near-best NIST A32/A33/A34 circuits and an A28 control by exact nonlinear-function overlap and dependency shape. The goal is to select subsequent seed-construction campaigns by structural diversity, not merely gate count.
+### Cross-seed AND factorization transfer
+
+Run **`40993326479`** transfers alternate factorizations of the 30 shared G103/G104 nonlinear atoms into the other complete circuit and prunes. This tests whether two high-quality sibling architectures contain compatible local nonlinear forms that neither original circuit exploited globally.
 
 ## What not to do next
 
@@ -135,6 +250,9 @@ This experiment is intentionally different from extending the old fixed-core ODC
 - Do not optimize AND count independently of linear/interface cost.
 - Do not preserve `prelinear | middle | core | final multipliers | output` as a hard partition when searching for rewrites.
 - Do not call NIST G103 a wholly independent family: the census shows 30/32 AND functions shared with G104.
+- Do not use affine-support sparsity as a surrogate for physical gate count: it ranks PR #31's successful map poorly.
+- Do not extend the exact one-helper care-neutral graph: it is already a two-node island.
+- Do not infer anything from released-AND greedy failures until a synthesis method reproduces the baseline linear cost.
 
 ## Verification protocol for any ≤100 candidate
 
@@ -145,12 +263,16 @@ This experiment is intentionally different from extending the old fixed-core ODC
 5. Run the repository submission checks required by Few Shots.
 6. Only then prepare/publish the shot.
 
+For an exact UNSAT claim that materially narrows the frontier, prefer a proof-producing/checkable encoding when practical; a solver timeout is never an exclusion.
+
 ## Sources
 
 - Few Shots live `data/board.json` and merged PR #31.
 - `aes101-nist-interface-resub/SHOT.md` and certificate.
 - Earlier Few Shots 105/104/103/102 shots and certificates.
 - NIST `usnistgov/Circuits` AES S-box NCFF files and README.
+- NIST Boyar–Peralta implementation sources and current AES circuit challenge page.
+- Yoshan, IACR ePrint 2026/2488, for architecture-diverse co-synthesis methodology.
 - Existing topic-local exact-screen notes, retained with their represented-family scope.
 
 ## Work log
@@ -160,7 +282,11 @@ This experiment is intentionally different from extending the old fixed-core ODC
 - Re-synced after PR #31 merged; board confirms verified live score 101.
 - Read the complete 101 shot and recorded its dead ends and the cross-boundary identity responsible for the final saving.
 - Reclassified all old fixed-interface/core exact results as family-scoped negatives, not global evidence against 100.
-- Added `seed_family_census.py`; Action `40991160742` independently verified NIST G103/G104 and Few Shots 101/102/103 on all 256 inputs and measured nonlinear-function overlap.
-- Found that NIST G103/G104 are close siblings (30/32 AND functions shared) while the 101 field-transformed circuit shares zero AND functions with either NIST seed.
-- Added extended census across near-best NIST families.
-- Added boundary-free `search_arch_seed.py` and launched run `40991271507` with 4 CPU workers per runner, using NIST G103 and the merged 101 as separate complete seeds, target 100.
+- Added seed-family census and independently verified NIST G103/G104 plus Few Shots 101/102/103 on all 256 inputs.
+- Extended census to NIST A32/A33/A34 and identified A34/G110 as a third distinct nonlinear family.
+- Added a released-AND whole-circuit representation; rejected its first greedy synthesizer after baseline calibration failed (FS101→120, G103→135).
+- Scanned all 2,040 semilinear coordinates structurally; NIST G103/G104 both select `(57,6)` under the proxy, but the proxy is explicitly not a gate-cost oracle.
+- Exhaustively mined direct/one-helper AND-care substitutions; found and officially verified a second 101 seed (`g52→g50`, canonical hash `809241...a23`).
+- Exhaustively closed that one-helper neutral family and proved it is a two-node island under the represented move set.
+- Pooled G103/G104 nonlinear atoms: 561 32-atom subsets tested, only the two original atom sets feasible under known factorizations.
+- Launched cross-seed factorization transfer, global 67-linear fixed-AND-schedule Z3 synthesis, and boundary-free full-circuit search on architecture-diverse seeds.
