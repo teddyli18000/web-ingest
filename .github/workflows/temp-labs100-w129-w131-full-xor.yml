@@ -1,0 +1,54 @@
+name: temp labs100 W129 W131 full XOR search
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-w129-w131-full-xor.yml'
+
+concurrency:
+  group: temp-labs100-w129-w131-full-xor
+  cancel-in-progress: false
+
+jobs:
+  all-structural-cases:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install OR-Tools
+        run: python -m pip install --disable-pip-version-check 'ortools>=9.14,<10'
+      - name: Run up to four exact structural cases concurrently
+        shell: bash
+        run: |
+          set -uo pipefail
+          echo "runner_cpus=$(nproc)"
+          mkdir -p "$RUNNER_TEMP/labs"
+          cases='W131-A0 W131-A2 W131-B3 W131-B1 W131-C0 W131-C2 W131-C3 W129-A W129-B0 W129-B1'
+          export RUNNER_TEMP
+          printf '%s\n' $cases | xargs -n1 -P"$(nproc)" -I{} bash -c '
+            c="$1"
+            set +e
+            python science-boundary/labs-100/code/oddperfect_h20_w129_w131_xor_cpsat.py \
+              --case "$c" --seconds 150 --workers 1 --seed 29131 \
+              >"$RUNNER_TEMP/labs/$c.log" 2>&1
+            rc=$?
+            echo "$c $rc" >"$RUNNER_TEMP/labs/$c.status"
+            exit 0
+          ' _ {}
+          cat "$RUNNER_TEMP"/labs/*.log | tee "$RUNNER_TEMP/summary.log"
+          cat "$RUNNER_TEMP"/labs/*.status | sort | tee "$RUNNER_TEMP/status.txt"
+          if grep -q '"independent_check": true' "$RUNNER_TEMP"/labs/*.log; then
+            echo 'FOUND_VERIFIED_RECORD_CANDIDATE'
+          fi
+      - name: Upload all case transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-w129-w131-full-xor
+          path: |
+            ${{ runner.temp }}/summary.log
+            ${{ runner.temp }}/status.txt
+            ${{ runner.temp }}/labs/*.log
+            ${{ runner.temp }}/labs/*.status
+          if-no-files-found: warn
