@@ -1,0 +1,68 @@
+name: temp-aes-temporal-window-smoke
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/temporal_window_resynth.py'
+      - '.github/workflows/temp-aes-temporal-window-smoke.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and calibrate on a 7-linear multi-AND window
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/temporal_window_resynth.py
+          python science-boundary/aes-sbox-circuit/temporal_window_resynth.py \
+            --family fs-101 --start 2 --end 5 --delta 0 \
+            --beam 320 --max-candidates 48 --restarts 3 --seed 11 --out calibration | tee calibration.log
+          python - <<'PY'
+          import json
+          s=json.load(open('calibration/summary.json'))
+          assert s['status']=='found',s
+          assert s['candidate_gates']<=101,s
+          print(json.dumps({'calibration':'ok','candidate_gates':s['candidate_gates']}))
+          PY
+      - name: Try the same joint window at one fewer linear gate
+        run: |
+          set -euxo pipefail
+          python science-boundary/aes-sbox-circuit/temporal_window_resynth.py \
+            --family fs-101 --start 2 --end 5 --delta 1 \
+            --beam 800 --max-candidates 64 --restarts 8 --seed 29 --out search | tee search.log
+          python - <<'PY'
+          import json,sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          s=json.load(open('search/summary.json'))
+          if s['status']=='found':
+              c=json.load(open('search/candidate.json'))
+              assert ras.independent_check(c)[0]
+          print(json.dumps(s))
+          PY
+      - name: Official verifier if a 100-gate candidate exists
+        run: |
+          set -euxo pipefail
+          if [ -f search/candidate.json ] && [ "$(python -c "import json; print(len(json.load(open('search/candidate.json'))['gates']))")" -le 100 ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp search/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-temporal-window-smoke
+          path: |
+            calibration
+            search
+            calibration.log
+            search.log
+            official-verifier.jsonl
