@@ -1,0 +1,121 @@
+name: Temp Science Boundary C7 public367 union exact SAT
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-public367-union-sat.yml
+      - science-boundary/shannon-capacity-c7/code/public367_union_sat.py
+      - science-boundary/shannon-capacity-c7/code/public367_corpus.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-public367-union-sat
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned public sources and verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          git init "$RUNNER_TEMP/c7-five"
+          git -C "$RUNNER_TEMP/c7-five" remote add origin https://github.com/molind/c7-five.git
+          git -C "$RUNNER_TEMP/c7-five" fetch --depth 1 origin ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+          git -C "$RUNNER_TEMP/c7-five" checkout FETCH_HEAD
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          python3 -m pip install --disable-pip-version-check python-sat numpy
+          mkdir -p "$RUNNER_TEMP/work" "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+      - name: Build validated corpus and exact union SAT instance
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/public367_corpus.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/c7-five" "$RUNNER_TEMP/result/corpus.json" \
+            | tee "$RUNNER_TEMP/result/corpus.stdout"
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/public367_union_sat.py build \
+            "$RUNNER_TEMP/result/corpus.json" "$RUNNER_TEMP/work/union.cnf" "$RUNNER_TEMP/result/meta.json" \
+            > "$RUNNER_TEMP/result/build.stdout" 2> "$RUNNER_TEMP/result/build.stderr"
+          cat "$RUNNER_TEMP/result/build.stdout"
+          tail -n 80 "$RUNNER_TEMP/result/build.stderr"
+      - name: Race four exact SAT backends on one runner
+        id: sat
+        shell: bash
+        run: |
+          set -euo pipefail
+          solvers=(cadical195 glucose42 maplechrono maplesat)
+          pids=()
+          for s in "${solvers[@]}"; do
+            python3 science-boundary/shannon-capacity-c7/code/public367_union_sat.py worker \
+              "$RUNNER_TEMP/work/union.cnf" "$s" "$RUNNER_TEMP/result/solver-$s.json" \
+              > "$RUNNER_TEMP/result/solver-$s.stdout" 2> "$RUNNER_TEMP/result/solver-$s.stderr" &
+            pids+=("$!")
+          done
+          winner=""
+          while :; do
+            for s in "${solvers[@]}"; do
+              f="$RUNNER_TEMP/result/solver-$s.json"
+              if [[ -s "$f" ]] && grep -Eq '"status": "(sat|unsat)"' "$f"; then
+                winner="$f"
+                break 2
+              fi
+            done
+            alive=0
+            for p in "${pids[@]}"; do if kill -0 "$p" 2>/dev/null; then alive=1; fi; done
+            if [[ "$alive" -eq 0 ]]; then break; fi
+            sleep 2
+          done
+          if [[ -z "$winner" ]]; then
+            echo "All SAT backends failed before a SAT/UNSAT answer" >&2
+            for s in "${solvers[@]}"; do cat "$RUNNER_TEMP/result/solver-$s.stderr" 2>/dev/null || true; done
+            exit 1
+          fi
+          cp "$winner" "$RUNNER_TEMP/result/winner.json"
+          for p in "${pids[@]}"; do kill "$p" 2>/dev/null || true; done
+          wait || true
+          cat "$RUNNER_TEMP/result/winner.json"
+          python3 - "$RUNNER_TEMP/result/winner.json" "$GITHUB_OUTPUT" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          with open(sys.argv[2],'a') as f:
+              f.write('found=' + ('true' if r.get('status')=='sat' else 'false') + '\n')
+          PY
+      - name: Replay exact answer and materialize 368 square
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/public367_union_sat.py replay \
+            "$RUNNER_TEMP/result/meta.json" "$RUNNER_TEMP/result/winner.json" \
+            "$RUNNER_TEMP/result/witness5.json" "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/status.json"
+          cat "$RUNNER_TEMP/result/status.json"
+      - name: Verify 135424 breakthrough with Few Shots verifier
+        if: steps.sat.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          if not r.get('valid') or int(r.get('score',-1)) < 135424: raise SystemExit(r)
+          print('VERIFIED 368-SQUARE BREAKTHROUGH',r)
+          PY
+      - name: Upload exact result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-public367-union-exact-sat
+          path: ${{ runner.temp }}/result
+          retention-days: 14
