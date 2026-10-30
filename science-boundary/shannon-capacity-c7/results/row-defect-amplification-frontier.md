@@ -60,18 +60,43 @@ scenarios were solved exactly with RC2 using four worker processes in one Action
 
 Reusable code: `code/bpz_joint_row_defects_maxsat.py`.
 
+## Biaxial row+column amplification: exact negative
+
+The final extension of this mechanism opens both axes simultaneously. A row choice `(a,m)` replaces `{a} x C_m` by `{a} x Y_m`; independently a column choice `(b,n)` replaces `C_n x {b}` by `Y_n x {b}`.
+
+If `a in C_n` and `b in C_m`, the two deleted core rectangles would overlap at `(a,b)`, apparently creating a `+1` overlap bonus. The exact model therefore includes:
+
+- per-row and per-column mode partitions;
+- exact shared terminal-periphery losses;
+- hard row-new / column-new incompatibilities;
+- an AND variable worth `+1` for every compatible core overlap.
+
+The exact objective is
+
+`#row choices + #column choices + #compatible core-overlap bonuses - #distinct periphery losses`.
+
+- Workflow run: `40990263531`
+- Job: `123850679964`
+- All 18 terminal scenarios were solved exactly with four RC2 worker processes.
+- Result: every scenario has exact optimum `delta = 0`; the best solution is empty.
+- Stronger structural fact: there are **841 cross-axis incompatibilities and zero compatible overlap variables** in each reported best geometry (`overlap_vars = 0`). Every potential row/column core overlap of these five raw defects is accompanied by at least one conflict between their newly introduced points, so the hoped-for overlap bonus is never realizable.
+- Runtime: about 115 seconds wall clock at about 372% CPU; peak RSS about 377 MB.
+- Few Shots verifier was skipped because no positive candidate existed.
+
+Reusable code: `code/bpz_biaxial_rowcol_defects_maxsat.py`.
+
 ## What this closes
 
-These two results rule out a superficially attractive mechanism: taking any of the five known raw 5D `+1` defects and amortizing its peripheral cost over many independent `B` rows, even when different rows are free to choose different defect modes and all losses are shared exactly.
+Taken together, these exact results close the natural amplification family built from the five known 5D raw `+1` defects:
 
-They do **not** rule out simultaneous row and column use. When a row defect and a column defect are selected together, their deleted core rectangles can overlap. Each compatible overlap saves one core deletion, producing a new positive interaction term that is absent from the one-axis models; row-new and column-new points can also conflict.
+1. repeating one defect over arbitrary rows;
+2. mixing all five defects independently over arbitrary rows or columns;
+3. combining row and column uses while sharing exact peripheral losses and accounting for possible core-overlap savings.
 
-## Current next layer
+The biaxial calculation removes the only obvious positive interaction missing from the one-axis models: every potential core-overlap bonus is structurally incompatible with simultaneously keeping the corresponding new row and column gadgets.
 
-`code/bpz_biaxial_rowcol_defects_maxsat.py` models both axes simultaneously. Its exact objective is
+This is a family-specific exclusion, not a proof that `alpha(C7^10)=134753`.
 
-`#row choices + #column choices + #compatible core-overlap bonuses - #distinct periphery losses`,
+## Current frontier
 
-with exact cross-axis incompatibilities and AND variables for overlap bonuses. A positive optimum is replayed structurally, materialized as a full 10D certificate, and must pass the upstream Few Shots verifier.
-
-This biaxial layer is the smallest remaining extension of the row-defect mechanism; if it is also nonpositive, further work should move to genuinely different support-product / nonrectangular core-deletion families rather than enlarging the same one-axis search.
+Further work should leave this five-defect amplification family. The strongest active routes are now support-product / nonrectangular core-deletion mechanisms, especially owner-support conflict graphs whose clique-cover number exceeds their independence number. Those are the cases for which the elementary product bound no longer forces multiplicativity.
