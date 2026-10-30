@@ -2,15 +2,21 @@
 """Released-AND RNBP using Boyar-Peralta minimum-support distance.
 
 This is a temporal-legality adaptation of the support-distance machinery in the
-public Extended-BP RNBP optimizer.  Targets are exact affine operands of the 33
-ordered AND atoms plus the eight AES outputs.  A target is unavailable while it
-contains an unreleased AND atom.  Helpers may use only signals already in S.
+public Extended-BP RNBP optimizer. Targets are exact affine operands of the 33
+ordered AND atoms plus the eight AES outputs. A target is unavailable while it
+contains an unreleased AND atom. Helpers may use only signals already in S.
 When both exact operands of an AND are present, its atom is released for free.
 
-Distance is minimum support cardinality over S minus one.  Because XNOR has the
+Distance is minimum support cardinality over S minus one. Because XNOR has the
 same gate cost as XOR here, for support size >=2 we also allow a free affine
-constant flip.  Candidate XOR/XNOR pairs are scored by the exact one-step support
+constant flip. Candidate XOR/XNOR pairs are scored by the exact one-step support
 distance reductions they cause, then by the Extended-BP sum/norm criterion.
+
+Finite distances are updated incrementally: one new helper is itself made from
+two old signals, so it can lower minimum support by at most one. Full recursive
+distance initialization is needed only for covered targets that are still INF.
+This matches the public RNBP update semantics while avoiding a full recomputation
+for every target after every gate.
 
 Every completed candidate is independently checked on all 256 AES inputs.
 """
@@ -56,25 +62,27 @@ def exists_exact_support(S,sx,goal,k):
     if k<0:return False
     if k<=4:return goal in sx[k]
     # Extended-BP-style recursion: peel signals until a <=4 membership query.
-    # For minimum-support discovery, overlap at the base case would imply an
-    # already smaller representation, so it cannot create a false minimum.
+    # If the base membership overlaps an already selected signal, the symmetric
+    # difference is an even smaller valid representation; since distances are
+    # initialized from low support upward, this cannot create a false minimum.
     xs=list(S); n=len(xs)
     def rec(i,v,r):
         if r<=4:return (goal^v) in sx[r]
         if n-i<r:return False
-        # Branch on including current signal, then excluding it.
         if rec(i+1,v^xs[i],r-1):return True
         return rec(i+1,v,r)
     return rec(0,0,k)
 
 
+def target_is_covered(S,t,C):
+    mask=covered_mask(S)
+    atom_part=t & (C-1)
+    return (mask & atom_part)==atom_part
+
+
 def min_distance(S,sx,t,C,max_support=9):
     if t in sx[1]:return 0
-    mask=covered_mask(S)
-    # Constant is affine metadata, not a released nonlinear atom; mask coverage
-    # applies to all nonconstant coordinates only.
-    atom_part=t & (C-1)
-    if (mask & atom_part)!=atom_part:return INF
+    if not target_is_covered(S,t,C):return INF
     for k in range(2,max_support+1):
         if exists_exact_support(S,sx,t,k) or exists_exact_support(S,sx,t^C,k):
             return k-1
@@ -82,14 +90,18 @@ def min_distance(S,sx,t,C,max_support=9):
 
 
 def candidate_reduces(S,sx,t,C,dist,w):
-    """Whether adding w lowers known support distance by exactly one."""
+    """Whether adding pair-output w lowers known support distance by one."""
     if dist in (0,INF):return False
-    # old support = dist+1; a strictly better representation with the new signal
-    # has support dist, hence needs dist-1 old signals besides w.
+    # Old support = dist+1. Since w expands to two old signals (with an optional
+    # affine constant flip), adding it can reduce support by at most one. A new
+    # support of dist uses w plus dist-1 old signals.
     r=dist-1
     a=t^w
     if exists_exact_support(S,sx,a,r):return True
-    if dist>=1 and exists_exact_support(S,sx,a^C,r):return True
+    # For r>=1, the final combination may use XNOR at no extra gate cost. For
+    # r==0, t==w is already caught by the exact branch above; t==w^C is not a
+    # zero-gate realization and therefore must not be accepted.
+    if r>=1 and exists_exact_support(S,sx,a^C,r):return True
     return False
 
 
@@ -114,6 +126,7 @@ def target_rows(sk):
 
 
 def release_ready(sk,S,sx,names,gates,released):
+    added=[]
     changed=True
     while changed:
         changed=False
@@ -123,9 +136,20 @@ def release_ready(sk,S,sx,names,gates,released):
             if ab["a"] in S and ab["b"] in S:
                 out=f"w{len(gates)}"
                 gates.append({"op":"AND","a":names[ab["a"]],"b":names[ab["b"]],"out":out})
-                S.add(atom);names[atom]=out;add_sx(sx,atom);released.add(i)
+                S.add(atom);names[atom]=out;add_sx(sx,atom);released.add(i);added.append(i)
                 changed=True
-    return released
+    return added
+
+
+def initialize_covered_inf(Dist,targets,S,sx,C,max_support):
+    """Initialize only INF targets whose nonlinear atom support is now legal."""
+    mask=covered_mask(S)
+    for i,d in enumerate(Dist):
+        if d!=INF:continue
+        t=targets[i]
+        atom_part=t & (C-1)
+        if (mask & atom_part)!=atom_part:continue
+        Dist[i]=min_distance(S,sx,t,C,max_support)
 
 
 def synthesize(base,seed,max_linear=67,max_support=9,elite=1):
@@ -139,24 +163,23 @@ def synthesize(base,seed,max_linear=67,max_support=9,elite=1):
     Dist=[min_distance(S,sx,t,C,max_support) for t in targets]
 
     while linear<max_linear and any(d!=0 for d in Dist):
-        # Free nonlinear releases may make previously INF targets legal.
-        before=len(released)
-        release_ready(sk,S,sx,names,gates,released)
-        if len(released)!=before:
-            Dist=[0 if targets[i] in S else min_distance(S,sx,targets[i],C,max_support)
-                  for i in range(len(targets))]
+        # Any newly free nonlinear atoms can only make previously-uncovered INF
+        # targets legal. Existing finite targets contain none of those atoms.
+        added_ands=release_ready(sk,S,sx,names,gates,released)
+        if added_ands:
+            initialize_covered_inf(Dist,targets,S,sx,C,max_support)
         if all(d==0 for d in Dist):break
 
         WD=pair_candidates(S,C)
         ones=[i for i,d in enumerate(Dist) if d==1]
         preempt=False
+        reductions=None
         if ones:
             # Prefer a distance-1 target that is itself a legal pair output.
             choices=[i for i in ones if targets[i] in WD]
             if not choices:
                 raise AssertionError(("distance1 without pair witness",ones))
             ti=choices[0];w=targets[ti];preempt=True
-            chosen_tuple=None
         else:
             finite=[d for d in Dist if 0<d<INF]
             if not finite:
@@ -165,19 +188,20 @@ def synthesize(base,seed,max_linear=67,max_support=9,elite=1):
             base_sum=sum(finite)
             scored=[]
             for w in WD:
-                reductions=[]
+                wr=[]
                 for i,d in enumerate(Dist):
                     if 0<d<INF and candidate_reduces(S,sx,targets[i],C,d,w):
-                        reductions.append(i)
-                if not reductions:continue
-                new_sum=base_sum-len(reductions)
+                        wr.append(i)
+                if not wr:continue
+                new_sum=base_sum-len(wr)
                 # Extended-BP tie-break: maximize Euclidean norm after minimizing sum.
                 norm=0
+                wrset=set(wr)
                 for i,d in enumerate(Dist):
                     if d in (0,INF):continue
-                    nd=d-1 if i in reductions else d
+                    nd=d-1 if i in wrset else d
                     norm+=nd*nd
-                scored.append((new_sum,-norm,w,reductions))
+                scored.append((new_sum,-norm,w,wr))
             if not scored:
                 return None,{"status":"stuck_no_reducing_pair","seed":seed,"linear":linear,
                              "released_ands":len(released),"finite_distances":finite,
@@ -186,25 +210,36 @@ def synthesize(base,seed,max_linear=67,max_support=9,elite=1):
             bestkey=scored[0][:2]
             pool=[x for x in scored if x[:2]==bestkey]
             pool=pool[:max(1,elite)] if elite>0 else pool
-            chosen_tuple=rng.choice(pool)
-            _,_,w,reductions=chosen_tuple
+            _,_,w,reductions=rng.choice(pool)
+
+        # Even a preemptive target helper may improve other finite targets; get
+        # the exact one-step reduction set before mutating S/sx.
+        if reductions is None:
+            reductions=[i for i,d in enumerate(Dist)
+                        if 0<d<INF and candidate_reduces(S,sx,targets[i],C,d,w)]
 
         op,a,b=WD[w]
         out=f"w{len(gates)}";gates.append({"op":op,"a":names[a],"b":names[b],"out":out})
+        for i in reductions:
+            Dist[i]-=1
         S.add(w);names[w]=out;add_sx(sx,w);linear+=1
-        # One new helper can lower support distance by at most one.  Recompute
-        # only finite targets for robustness; newly covered INF targets are also initialized.
-        Dist=[0 if targets[i] in S else min_distance(S,sx,targets[i],C,max_support)
-              for i in range(len(targets))]
-        oldrel=len(released);release_ready(sk,S,sx,names,gates,released)
-        if len(released)!=oldrel:
-            Dist=[0 if targets[i] in S else min_distance(S,sx,targets[i],C,max_support)
-                  for i in range(len(targets))]
-        trace.append({"linear":linear,"released_ands":len(released),
-                      "positive_sum":sum(d for d in Dist if 0<d<INF),
-                      "finite_remaining":sum(0<d<INF for d in Dist),
-                      "inf_remaining":sum(d==INF for d in Dist),
-                      "preemptive":preempt,"pair_candidates":len(WD)})
+
+        # A covered-but-too-distant INF target can become finite as the basis
+        # improves, so test only those INF targets after each helper. This is the
+        # expensive initialization path, but it is normally a small subset.
+        initialize_covered_inf(Dist,targets,S,sx,C,max_support)
+        added_ands=release_ready(sk,S,sx,names,gates,released)
+        if added_ands:
+            initialize_covered_inf(Dist,targets,S,sx,C,max_support)
+
+        rec={"linear":linear,"released_ands":len(released),
+             "positive_sum":sum(d for d in Dist if 0<d<INF),
+             "finite_remaining":sum(0<d<INF for d in Dist),
+             "inf_remaining":sum(d==INF for d in Dist),
+             "preemptive":preempt,"pair_candidates":len(WD),
+             "reductions":len(reductions),"new_ands":added_ands}
+        trace.append(rec)
+        print(json.dumps({"progress":rec,"seed":seed}),flush=True)
 
     if any(d!=0 for d in Dist):
         return None,{"status":"budget_exhausted","seed":seed,"linear":linear,
