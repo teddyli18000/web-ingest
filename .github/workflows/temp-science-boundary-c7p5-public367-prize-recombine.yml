@@ -1,0 +1,101 @@
+name: Temp Science Boundary C7p5 public367 core-prize recombination
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7p5-public367-prize-recombine.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7p5-public367-prize-recombine
+  cancel-in-progress: false
+
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned public sources and verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          git init "$RUNNER_TEMP/c7-five"
+          git -C "$RUNNER_TEMP/c7-five" remote add origin https://github.com/molind/c7-five.git
+          git -C "$RUNNER_TEMP/c7-five" fetch --depth 1 origin ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+          git -C "$RUNNER_TEMP/c7-five" checkout FETCH_HEAD
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          python3 -m pip install --disable-pip-version-check python-sat numpy
+          mkdir -p "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+
+      - name: Build and validate public 367 corpus
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/public367_corpus.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/c7-five" "$RUNNER_TEMP/result/corpus.json" \
+            | tee "$RUNNER_TEMP/result/corpus.stdout"
+
+      - name: Exact three-pool cross-basin prize recombination
+        id: recombine
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/c7p5_public367_core_prize_recombine.py \
+            "$RUNNER_TEMP/c7-five" "$RUNNER_TEMP/result/corpus.json" \
+            "$RUNNER_TEMP/result/recombine.json" "$RUNNER_TEMP/result/candidate5.json" \
+            --workers 3 \
+            > "$RUNNER_TEMP/result/recombine.stdout" 2> "$RUNNER_TEMP/result/recombine.stderr"
+          cat "$RUNNER_TEMP/result/recombine.stdout"
+          tail -n 200 "$RUNNER_TEMP/result/recombine.stderr"
+          python3 - "$RUNNER_TEMP/result/recombine.json" "$GITHUB_OUTPUT" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          with open(sys.argv[2],'a') as f:
+              f.write(f"best={r['best_score']}\n")
+              f.write(f"found={'true' if r.get('candidate_368') else 'false'}\n")
+          PY
+
+      - name: Square candidate and verify Few Shots breakthrough
+        if: steps.recombine.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/result/candidate5.json" "$RUNNER_TEMP/shot/certificate.json" <<'PY'
+          import itertools,json,sys
+          S=list(map(int,json.load(open(sys.argv[1]))['points5']))
+          if len(S)!=368 or len(set(S))!=368: raise SystemExit(('size',len(S),len(set(S))))
+          def dec(v): return tuple((v//(7**i))%7 for i in range(5))
+          def cf(a,b): return a==b or all((x-y)%7 in (0,1,6) for x,y in zip(dec(a),dec(b)))
+          if any(cf(a,b) for a,b in itertools.combinations(S,2)): raise SystemExit('5D conflict')
+          ds={v:''.join(map(str,dec(v))) for v in S};pts=[ds[a]+ds[b] for a in S for b in S]
+          if len(pts)!=135424 or len(set(pts))!=135424: raise SystemExit('square')
+          json.dump({'points':sorted(pts)},open(sys.argv[2],'w'),separators=(',',':'));open(sys.argv[2],'a').write('\n')
+          PY
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          if not r.get('valid') or int(r.get('score',-1))!=135424:raise SystemExit(r)
+          print('VERIFIED BREAKTHROUGH',r)
+          PY
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7p5-public367-prize-recombine
+          path: |
+            ${{ runner.temp }}/result
+            ${{ runner.temp }}/shot
+          if-no-files-found: warn
+          retention-days: 14
