@@ -1,0 +1,54 @@
+name: temp Thomson 960 freeze e553 basin
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-freeze-e553.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download source scaffold artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-e564-scaffold-f0
+          path: ${{ runner.temp }}/source
+          github-token: ${{ github.token }}
+          run-id: 40991851757
+      - name: Extract best e553 basin
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob,json,os,pathlib
+          p=glob.glob(os.path.join(os.environ['RUNNER_TEMP'],'source','*.json'))[0]
+          d=json.load(open(p))
+          b=min(d['lowest_distinct_release_basins'],key=lambda z:z['release_energy'])
+          assert b['release_energy'] < 444368.554
+          out={'name':'e553','energy':b['release_energy'],'coord_counts':b['release_coord'],
+               'source_run':40991851757,'source_family':0,'source_multiplier':b['multiplier'],
+               'fixed_energy':b['fixed_energy'],'fixed_coord':b['fixed_coord'],'points':b['points']}
+          q=pathlib.Path('science-boundary/thomson-960/data/basin-e553-21.json')
+          q.write_text(json.dumps(out,separators=(',',':'))+'\n')
+          print('freeze',out['energy'],out['coord_counts'])
+          PY
+      - name: Commit durable e553
+        shell: bash
+        run: |
+          git config user.name "boundary-agent"
+          git config user.email "boundary-agent@users.noreply.github.com"
+          git add science-boundary/thomson-960/data/basin-e553-21.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "thomson: freeze e553 21-dislocation minimum"
+          git pull --rebase origin main
+          git push origin HEAD:main
