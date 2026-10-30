@@ -1,0 +1,87 @@
+Thomson N=960 — dependent scar-walk R -> A — 2026-10-30
+
+Record and endpoint
+-------------------
+Live record R: E = 444368.3924061973, coordination 36/900/24.
+Known A minimum: E ~= 444368.3956862258, coordination 36/900/24.
+
+The key result is not a lower energy candidate. It is an explicit topology-changing path from the live-record neighborhood to A that survives complete removal of all external restraints.
+
+Dependent topology sequence
+---------------------------
+The sequence acts on a five-vertex local support {108,282,511,599,502}. Each move changes the Delaunay triangulation and creates the next legal move.
+
+q1 (live orbit4):
+- quad [108,282,511,599]
+- delete edge (108,282), add edge (511,599)
+- balanced crossing threshold t1 = 0.007035118103027342
+
+q2 (not legal until q1 is crossed):
+- quad [108,511,502,599]
+- delete edge (108,511), add edge (502,599)
+- balanced crossing threshold t2 = 0.013832907371520998 after q1
+
+With q1 multiplier 1.003 and q2 multiplier 1.04, the two-event branch remains intact down to kappa=100 but heals by kappa=30.  Thus q1+q2 alone is not a free branch.
+
+A same-count flip census on the q1+q2 state at kappa=100 found six moves that are legal there but absent from the live one-flip neighborhood.  The softest new move is the exact q2 inverse and is a healing event.  The first meaningful forward event is:
+
+q3 (created by q1+q2):
+- quad [511,599,282,502]
+- delete edge (511,599), add edge (282,502)
+- balanced threshold t3 = 0.007878242492675781
+
+q3 removes the bridge created by q1, so this sequence cannot be represented as three independent simultaneously flipped diagonals. The appropriate state variable is the full edge signature. After q3 the characteristic signature is:
+- old q1 edge (108,282): absent
+- old q2 edge (108,511): absent
+- transient q1 bridge (511,599): absent
+- q2 new edge (502,599): present
+- q3 new edge (282,502): present
+
+Free-release result
+-------------------
+Run 41098021516 tested q3 overshoots from the q1+q2 / kappa=100 state.
+
+third multiplier 1.002:
+- fixed-adapted E = 444368.4446716298
+- the exact three-step edge signature survives every restraint stage down to kappa=0
+- kappa 100: E = 444368.4072439727
+- kappa 70:  E = 444368.4026177922
+- kappa 50:  E = 444368.3995989875
+- kappa 30:  E = 444368.3972118453
+- kappa 10:  E = 444368.3958675445
+- kappa 1:   E = 444368.3956880990
+- kappa 0:   E = 444368.3956862264
+- FIRST_LOST = None
+- final coordination 36/900/24, chain signature intact
+
+third multiplier 1.04 independently gives the same free endpoint:
+- kappa 0 / final E = 444368.39568622585
+- FIRST_LOST = None
+- chain signature intact
+
+The final energy equals A to numerical precision. Therefore q3 is a genuine topological completion event: after q1 and q2 prepare the local triangulation, q3 converts the restrained branch into the free A basin.
+
+Mechanistic interpretation
+--------------------------
+On the five-vertex support the high-coordination site migrates approximately
+  108 -> 599 -> 502
+while the low-coordination endpoints reorganize.  The sequence is therefore better interpreted as a local scar/dislocation migration or retriangulation walk than as a sum of independent flips.
+
+This explains a failure mode of ordinary low-mode search. R and A differ by only ~0.00328 in energy, but the connection requires history-dependent Delaunay changes: the next useful event does not exist before the preceding event has changed connectivity.
+
+Search-space consequence
+------------------------
+Do not deepen q3 amplitude scans: q3 robustly terminates at known A.
+
+Use q1->q2->q3->A as a positive-control example for a dynamic scar-walk search:
+1. start from other novel soft same-count live flip orbits;
+2. cross one topology boundary and locally adapt;
+3. re-enumerate same-count flips in the new triangulation;
+4. prefer newly-created, non-inverse, low-threshold moves touching the active defect component;
+5. recursively expand a small beam for depth ~3-5;
+6. periodically fully release each path and deduplicate free endpoints;
+7. freeze and expand any endpoint distinct from R/A/B, especially any E < live.
+
+Scientific decision rule
+------------------------
+The relevant object is now a path in the evolving triangulation / scar-migration graph, not a fixed list of perturbation vectors.  If candidate quality is flat while only more independent flips are excluded, reformulate around this history-dependent topology path rather than expanding static event combinations.
