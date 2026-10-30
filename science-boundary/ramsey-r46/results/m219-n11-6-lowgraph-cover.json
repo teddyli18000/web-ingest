@@ -1,0 +1,24 @@
+{
+  "anchor_orbit_count": 6,
+  "campaign": "m219-n11-6-lowgraph-cover",
+  "conclusion": "For the first two n11=6 degree sequences, every non-K222 candidate has a degree-3 low anchor. The exact B116 weak label condition forces its two low B vertices to be the adjacent pair {0,3} of B116 ordinal 1. Three low-graph types violate this at a degree-3 anchor; K222 is independently excluded; exactly the five hard-coded fixed-low CSP types remain.",
+  "eliminated_by_unique_B_edge_pair": [
+    {"bad_degree3_anchors":[0,1,2,3,4,5],"canonical":"001110111111000","degree_sequence":[3,3,3,3,3,3]},
+    {"bad_degree3_anchors":[3,4,5],"canonical":"001110111111001","degree_sequence":[3,3,3,3,4,4]},
+    {"bad_degree3_anchors":[3,4,5],"canonical":"001110111111011","degree_sequence":[3,3,3,4,4,5]}
+  ],
+  "k222_types": [{"canonical":"011111111011110","degree_sequence":[4,4,4,4,4,4]}],
+  "surviving_type_count": 5,
+  "surviving_types": [
+    {"degree3_anchor_orbits":[[0,1]],"degree_sequence":[3,3,4,4,4,4],"rows":["001110","001101","110011","110011","101101","011110"],"type":3},
+    {"degree3_anchor_orbits":[[0,1,2,3,4]],"degree_sequence":[3,3,3,3,3,5],"rows":["011001","100101","100011","010011","001101","111110"],"type":4},
+    {"degree3_anchor_orbits":[[0,1],[2,3]],"degree_sequence":[3,3,3,3,4,4],"rows":["011010","100101","100011","010011","101101","011110"],"type":5},
+    {"degree3_anchor_orbits":[[0,1,4,5]],"degree_sequence":[3,3,4,4,3,3],"rows":["011100","101100","110011","110011","001101","001110"],"type":6},
+    {"degree3_anchor_orbits":[[0,1,2,3,4,5]],"degree_sequence":[3,3,3,3,3,3],"rows":["011100","101010","110001","100011","010101","001110"],"type":7}
+  ],
+  "unlabeled_low_types": 9,
+  "weak_B_unique_pair": {
+    "S0":[{"b_ordinal":1,"pairs":[[0,3]]}],
+    "S1":[{"b_ordinal":1,"pairs":[[0,3]]}]
+  }
+}
