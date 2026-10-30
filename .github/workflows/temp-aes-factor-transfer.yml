@@ -1,0 +1,47 @@
+name: temp-aes-factor-transfer
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/transfer_and_factorizations.py'
+      - '.github/workflows/temp-aes-factor-transfer.yml'
+permissions:
+  contents: read
+jobs:
+  transfer:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: nist-g103
+            source: nist-g104
+          - target: nist-g104
+            source: nist-g103
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Transfer alternate factorizations
+        run: |
+          set -euxo pipefail
+          python science-boundary/aes-sbox-circuit/transfer_and_factorizations.py \
+            --target '${{ matrix.target }}' --source '${{ matrix.source }}' --out results | tee summary.log
+      - name: Official verify any candidate at or below 101
+        run: |
+          set -euxo pipefail
+          best=$(find results -name 'candidate-*.json' | sort | head -1 || true)
+          if [ -n "$best" ]; then
+            gates=$(python -c "import json,sys; print(len(json.load(open(sys.argv[1]))['gates']))" "$best")
+            if [ "$gates" -le 101 ]; then
+              git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+              mkdir -p /tmp/shot; cp "$best" /tmp/shot/certificate.json
+              python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee verifier.jsonl
+            else echo '{"skipped":true}' | tee verifier.jsonl; fi
+          else echo '{"candidate":null}' | tee verifier.jsonl; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-factor-transfer-${{ matrix.target }}
+          path: |
+            results
+            summary.log
+            verifier.jsonl
