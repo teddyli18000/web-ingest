@@ -1,0 +1,42 @@
+name: temp labs100 h18 K19 kp19 negacyclic
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k19-kp19-negacyclic.yml'
+
+concurrency:
+  group: temp-labs100-h18-k19-kp19-negacyclic
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build independent exact programs
+        run: |
+          g++ -O3 -march=native science-boundary/labs-100/code/oddperfect_h18_k19_kp19_compressed.cpp -o "$RUNNER_TEMP/compressed"
+          g++ -O3 -march=native science-boundary/labs-100/code/oddperfect_h18_k19_kp19_affine_lifts.cpp -o "$RUNNER_TEMP/lifts"
+      - name: Enumerate compressed orbits and negacyclic cyclic-cross lifts
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/compressed" > "$RUNNER_TEMP/reps.txt" 2> "$RUNNER_TEMP/compressed.log"
+          test "$(wc -l < "$RUNNER_TEMP/reps.txt")" -eq 95
+          grep -F 'COMPRESSED_SUMMARY support_orbits=366 sign_tests=4255848 spectral_hits_raw=96 base_hits_raw=5 affine_p_orbits=95' "$RUNNER_TEMP/compressed.log"
+          "$RUNNER_TEMP/lifts" "$RUNNER_TEMP/reps.txt" | tee "$RUNNER_TEMP/lifts.log"
+          grep -F 'K19_KP19_SUMMARY reps=95 alphas=6080 cyclic_lifts_halfB=69314 affine_transforms=34657000 target_V_pass=0' "$RUNNER_TEMP/lifts.log"
+          grep -F 'EXACT_EXCLUSION h18_K19_kp19_kc0_Wle130' "$RUNNER_TEMP/lifts.log"
+      - name: Upload independent transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k19-kp19-negacyclic
+          path: |
+            ${{ runner.temp }}/compressed.log
+            ${{ runner.temp }}/reps.txt
+            ${{ runner.temp }}/lifts.log
+          if-no-files-found: warn
