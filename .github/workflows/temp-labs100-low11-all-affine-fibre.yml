@@ -1,0 +1,87 @@
+name: temp labs100 low11 all-affine fibre audit
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-low11-all-affine-fibre.yml'
+
+concurrency:
+  group: temp-labs100-low11-all-affine-fibre
+  cancel-in-progress: false
+
+jobs:
+  exact-all-affine-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build committed exact fibre oracle
+        run: g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_order25_fibre_mitm.cpp -o "$RUNNER_TEMP/fibre"
+      - name: Expand all 11 compressed survivors to every affine image
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/cands" "$RUNNER_TEMP/out"
+          python - "$RUNNER_TEMP/cands" <<'PY'
+          import math,sys
+          from pathlib import Path
+          out=Path(sys.argv[1])
+          src=Path('science-boundary/labs-100/data/low11-affine-fibre-survivors.txt')
+          rows=[x for x in src.read_text().splitlines() if x.strip() and not x.startswith('#')]
+          assert len(rows)==11,len(rows)
+          units=[a for a in range(25) if math.gcd(a,25)==1]
+          seen={}
+          meta=[]
+          def tr(x,a,b):
+              y=[0]*25
+              for i,v in enumerate(x): y[(a*i+b)%25]=v
+              return y
+          for row in rows:
+              overlap,sid,kp,ps,cs=row.split('|')
+              p=list(map(int,ps.split(','))); c=list(map(int,cs.split(',')))
+              assert len(p)==len(c)==25
+              assert sum(p)==10 and sum(c)==0
+              assert sum(v*v for v in p)==int(kp)
+              assert sum(v*v for v in c)==26-int(kp)
+              local=0
+              for a in units:
+                  for b in range(25):
+                      pp=tr(p,a,b); cc=tr(c,a,b); key=(tuple(pp),tuple(cc))
+                      if key in seen: continue
+                      n=len(meta); seen[key]=n; local+=1
+                      meta.append((overlap,sid,kp,a,b))
+                      (out/f'{n:04d}.txt').write_text(' '.join(map(str,pp))+'\n'+' '.join(map(str,cc))+'\n')
+              assert local==500,(overlap,sid,local)
+          assert len(meta)==5500,len(meta)
+          Path(sys.argv[1]).parent.joinpath('meta.txt').write_text(
+              '\n'.join(f'{i} {t} {sid} {kp} {a} {b}' for i,(t,sid,kp,a,b) in enumerate(meta))+'\n')
+          print('AFFINE_IMAGES',len(meta))
+          PY
+          test "$(find "$RUNNER_TEMP/cands" -name '*.txt' | wc -l)" -eq 5500
+      - name: Test defect1 and defect2 for all images using every runner CPU
+        shell: bash
+        run: |
+          set -euo pipefail
+          export RUNNER_TEMP
+          find "$RUNNER_TEMP/cands" -name '*.txt' -print0 | \
+            xargs -0 -P"$(nproc)" -I{} bash -c '
+              f="$1"; n=$(basename "$f" .txt)
+              h1=$(OMP_NUM_THREADS=1 "$RUNNER_TEMP/fibre" --defect 1 < "$f" | sed -n "s/.*compatible_probe_lifts=\([0-9][0-9]*\).*/\1/p")
+              h2=$(OMP_NUM_THREADS=1 "$RUNNER_TEMP/fibre" --defect 2 < "$f" | sed -n "s/.*compatible_probe_lifts=\([0-9][0-9]*\).*/\1/p")
+              test -n "$h1"; test -n "$h2"
+              echo "$n $h1 $h2" > "$RUNNER_TEMP/out/$n.txt"
+            ' _ {}
+          cat "$RUNNER_TEMP"/out/*.txt | sort -n > "$RUNNER_TEMP/affine-fibre.tsv"
+          test "$(wc -l < "$RUNNER_TEMP/affine-fibre.tsv")" -eq 5500
+          awk '{s1+=$2;s2+=$3;if($2||$3)h++} END{print "AFFINE_FIBRE_SUMMARY images="NR,"hit_images="h+0,"sum_defect1="s1+0,"sum_defect2="s2+0; if(h||s1||s2) exit 1}' "$RUNNER_TEMP/affine-fibre.tsv" | tee "$RUNNER_TEMP/summary.txt"
+      - name: Upload exact transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-low11-all-affine-fibre
+          path: |
+            ${{ runner.temp }}/summary.txt
+            ${{ runner.temp }}/affine-fibre.tsv
+            ${{ runner.temp }}/meta.txt
+          if-no-files-found: warn
