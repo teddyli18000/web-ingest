@@ -1,0 +1,70 @@
+name: Temp Science Boundary C7 mixed row-defect MaxSAT
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-joint-row-defects.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_joint_row_defects_maxsat.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-joint-row-defects
+  cancel-in-progress: false
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          python3 -m pip install --disable-pip-version-check python-sat
+          mkdir -p "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+      - name: Exact mixed-mode weighted MaxSAT
+        id: search
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_joint_row_defects_maxsat.py \
+            "$RUNNER_TEMP/tan" \
+            "$RUNNER_TEMP/result/status.json" \
+            "$RUNNER_TEMP/shot/certificate.json" \
+            --workers "$(nproc)" \
+            > "$RUNNER_TEMP/result/solver.stdout" \
+            2> "$RUNNER_TEMP/result/solver.stderr"
+          cat "$RUNNER_TEMP/result/solver.stdout"
+          tail -n 120 "$RUNNER_TEMP/result/solver.stderr"
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.search.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1)) <= 134753: raise SystemExit(r)
+          print('VERIFIED BREAKTHROUGH',r)
+          PY
+          cp "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/candidate.json"
+      - name: Upload reproducibility bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-joint-row-defects
+          path: ${{ runner.temp }}/result
+          retention-days: 14
