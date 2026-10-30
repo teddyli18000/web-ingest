@@ -1,0 +1,76 @@
+name: temp labs100 low11 symmetric-difference t4 rank search
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-low11-symdiff-t4-rank.yml'
+
+concurrency:
+  group: temp-labs100-low11-symdiff-t4-rank
+  cancel-in-progress: false
+
+jobs:
+  exact-t4:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact rank-prefiltered enumerator
+        run: g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_low11_symdiff_rank_exact.cpp -o "$RUNNER_TEMP/symdiff"
+      - name: Regression on the already closed extreme layers
+        shell: bash
+        run: |
+          set -euo pipefail
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/symdiff" --overlap 12 --kp 12 > "$RUNNER_TEMP/reg12-12.log"
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/symdiff" --overlap 2 --kp 14 > "$RUNNER_TEMP/reg2-14.log"
+          grep -q 'support_pair_orbits=788 p_sign_tests=9456 mod3_rank_pass=9456 H_matches=266 compressed_hits=0' "$RUNNER_TEMP/reg12-12.log"
+          grep -q 'support_pair_orbits=4374 p_sign_tests=398034 mod3_rank_pass=82686 H_matches=126214 compressed_hits=0' "$RUNNER_TEMP/reg2-14.log"
+      - name: Exhaust all 974 t4 difference orbits for both kp splits using all CPUs
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "runner_cpus=$(nproc)"
+          mkdir -p "$RUNNER_TEMP/out"
+          export RUNNER_TEMP
+          : > "$RUNNER_TEMP/tasks.txt"
+          for k in 12 14; do
+            b=0
+            while [ "$b" -lt 974 ]; do
+              e=$((b+49)); [ "$e" -gt 974 ] && e=974
+              echo "$k $b $e" >> "$RUNNER_TEMP/tasks.txt"
+              b="$e"
+            done
+          done
+          cat "$RUNNER_TEMP/tasks.txt" | xargs -P"$(nproc)" -n3 bash -c '
+            k="$1"; b="$2"; e="$3"
+            OMP_NUM_THREADS=1 "$RUNNER_TEMP/symdiff" --overlap 4 --kp "$k" --begin "$b" --end "$e" \
+              >"$RUNNER_TEMP/out/k${k}-${b}-${e}.log" 2>&1
+          ' _
+          cat "$RUNNER_TEMP"/out/*.log | tee "$RUNNER_TEMP/summary.log"
+          python - "$RUNNER_TEMP/summary.log" <<'PY'
+          import re,sys
+          lines=open(sys.argv[1]).read().splitlines()
+          for k in (12,14):
+              spans=[]; agg={x:0 for x in ('support_pair_orbits','p_sign_tests','mod3_rank_pass','H_matches','compressed_hits')}
+              for line in lines:
+                  if not line.startswith(f'SUMMARY overlap=4 kp={k} '): continue
+                  m=re.search(r'range_begin=(\d+) range_end=(\d+)',line); assert m,line
+                  spans.append(tuple(map(int,m.groups())))
+                  for x in agg:
+                      q=re.search(rf'{x}=(\d+)',line); assert q,(x,line); agg[x]+=int(q.group(1))
+              spans.sort(); assert spans and spans[0][0]==0 and spans[-1][1]==974,spans
+              assert all(spans[i][1]==spans[i+1][0] for i in range(len(spans)-1)),spans
+              print('AGGREGATE',k,agg,'shards',len(spans))
+          PY
+      - name: Upload exact transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-low11-symdiff-t4-rank
+          path: |
+            ${{ runner.temp }}/reg*.log
+            ${{ runner.temp }}/tasks.txt
+            ${{ runner.temp }}/summary.log
+            ${{ runner.temp }}/out/*.log
+          if-no-files-found: warn
