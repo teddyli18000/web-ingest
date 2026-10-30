@@ -11,6 +11,8 @@ Every retained circuit is independently checked on all 256 AES inputs.
 With --depth 2 this is a deterministic test of the mechanism
     architecture mutation -> strict shave -> strict shave,
 which is deliberately different from a neutral random ODC walk.
+With --archive-improvements every distinct reduced circuit is persisted, which
+is useful for building a semantic census of the 101-gate frontier.
 """
 from __future__ import annotations
 import argparse, collections, hashlib, json, pathlib
@@ -65,7 +67,6 @@ def strict_children(c,max_children=100000):
     for idx,g in enumerate(c['gates']):
         care=care_mask(c,idx,outs);rv=vals[g['out']]&care
         earlier=[f'x{i}' for i in range(8)]+[q['out'] for q in c['gates'][:idx]]
-        # Zero-gate alias replacements.
         for w in earlier:
             stats['alias_tests']+=1
             if (vals[w]&care)!=rv:continue
@@ -77,15 +78,12 @@ def strict_children(c,max_children=100000):
             seen.add(h);children.append((nc,{'kind':'alias','root_index':idx,'care_bits':care.bit_count(),'wire':w}))
             stats['strict_aliases']+=1
             if len(children)>=max_children:return children,stats
-        # One-gate replacements. Include a==b: XNOR(a,a) is a legal way to
-        # create constant 1 using the scored gate basis.
         for ia,a in enumerate(earlier):
             va=vals[a]
             for b in earlier[ia:]:
                 vb=vals[b]
                 for op in OPS:
                     stats['gate_tests']+=1
-                    # Skip the exact incumbent expression.
                     if op==g['op'] and {a,b}=={g['a'],g['b']}:continue
                     if (census.op_eval(op,va,vb)&care)!=rv:continue
                     nc=replace_gate(c,idx,op,a,b)
@@ -106,8 +104,11 @@ def main():
     ap.add_argument('--depth',type=int,default=2)
     ap.add_argument('--target',type=int,default=100)
     ap.add_argument('--max-children',type=int,default=100000)
+    ap.add_argument('--archive-improvements',action='store_true')
     args=ap.parse_args()
     outdir=pathlib.Path(args.out);outdir.mkdir(parents=True,exist_ok=True)
+    archive_dir=outdir/'improvements'
+    if args.archive_improvements:archive_dir.mkdir(exist_ok=True)
     start=ras.prune(json.load(open(args.input)))
     assert ras.independent_check(start)[0]
     queue=[(start,0,[])];seen={sig(start)};best=start;improvements=[]
@@ -123,6 +124,10 @@ def main():
             seen.add(h);np=path+[move]
             rec={'depth':d+1,'gates':len(nc['gates']),'hash':h,'path':np}
             improvements.append(rec);states_by_depth[d+1]+=1
+            if args.archive_improvements:
+                fn=f'd{d+1}-g{len(nc["gates"])}-{h[:16]}.json'
+                (archive_dir/fn).write_text(json.dumps(nc,indent=2)+'\n')
+                rec['file']=str(pathlib.Path('improvements')/fn)
             if len(nc['gates'])<len(best['gates']):
                 best=nc
                 (outdir/'best.json').write_text(json.dumps(best,indent=2)+'\n')
@@ -134,6 +139,7 @@ def main():
              'depth':args.depth,'target':args.target,'states_seen':len(seen),
              'states_by_depth':dict(sorted(states_by_depth.items())),
              'improvements_by_size':dict(sorted(collections.Counter(x['gates'] for x in improvements).items())),
+             'improvements':improvements if args.archive_improvements else [],
              'tests':dict(aggregate),'verified_best':ras.independent_check(best)[0],
              'best_hash':sig(best),'best_path':next((x['path'] for x in improvements if x['hash']==sig(best)),[])}
     (outdir/'summary.json').write_text(json.dumps(summary,indent=2)+'\n')
