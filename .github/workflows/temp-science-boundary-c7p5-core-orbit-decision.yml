@@ -1,0 +1,108 @@
+name: Temp Science Boundary C7p5 exact 50-orbit 368 decision
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7p5-core-orbit-decision.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7p5-core-orbit-decision
+  cancel-in-progress: false
+
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned source and verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/c7-five"
+          git -C "$RUNNER_TEMP/c7-five" remote add origin https://github.com/molind/c7-five.git
+          git -C "$RUNNER_TEMP/c7-five" fetch --depth 1 origin ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+          git -C "$RUNNER_TEMP/c7-five" checkout FETCH_HEAD
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          python3 -m pip install --disable-pip-version-check python-sat
+          mkdir -p "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+
+      - name: Solve two exact orbit shards concurrently
+        shell: bash
+        run: |
+          set -euo pipefail
+          (
+            /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/c7p5_core_orbit_decision.py \
+              "$RUNNER_TEMP/c7-five" "$RUNNER_TEMP/result/shard0.json" --shard 0 --shards 2 \
+              > "$RUNNER_TEMP/result/shard0.stdout" 2> "$RUNNER_TEMP/result/shard0.stderr"
+          ) & p0=$!
+          (
+            /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/c7p5_core_orbit_decision.py \
+              "$RUNNER_TEMP/c7-five" "$RUNNER_TEMP/result/shard1.json" --shard 1 --shards 2 \
+              > "$RUNNER_TEMP/result/shard1.stdout" 2> "$RUNNER_TEMP/result/shard1.stderr"
+          ) & p1=$!
+          set +e
+          wait "$p0"; s0=$?
+          wait "$p1"; s1=$?
+          set -e
+          echo "exit0=$s0 exit1=$s1"
+          tail -n 200 "$RUNNER_TEMP/result/shard0.stdout" || true
+          tail -n 200 "$RUNNER_TEMP/result/shard1.stdout" || true
+          if [[ "$s0" -ne 0 || "$s1" -ne 0 ]]; then exit 1; fi
+
+      - name: Aggregate exact orbit cover
+        id: aggregate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/result/shard0.json" "$RUNNER_TEMP/result/shard1.json" "$RUNNER_TEMP/result/aggregate.json" "$RUNNER_TEMP/shot/certificate.json" "$GITHUB_OUTPUT" <<'PY'
+          import json,sys
+          p0,p1,out,cert,gout=sys.argv[1:]
+          rr=[json.load(open(p0)),json.load(open(p1))]
+          cand=next((r for r in rr if r.get('candidate')),None)
+          tested=sum(len(r.get('rows',[])) for r in rr)
+          complete=(cand is not None) or (tested==50 and all(len(r.get('rows',[]))==25 for r in rr))
+          if not complete: raise SystemExit(('incomplete orbit cover',tested,[len(r.get('rows',[])) for r in rr]))
+          agg={'method':'exact-c7p5-50-orbit-minicard-cover','candidate_368':bool(cand),'orbits_tested':tested,'complete_no368':cand is None and tested==50}
+          if cand:
+            S=list(map(int,cand['points5']))[:368]
+            def dec(v):return tuple((v//(7**i))%7 for i in range(5))
+            pts=[];ds={v:''.join(map(str,dec(v))) for v in S}
+            for a in S:
+              for b in S:pts.append(ds[a]+ds[b])
+            if len(pts)!=135424 or len(set(pts))!=135424:raise SystemExit('square')
+            json.dump({'points':sorted(pts)},open(cert,'w'),separators=(',',':'));open(cert,'a').write('\n')
+          json.dump(agg,open(out,'w'),indent=2,sort_keys=True);open(out,'a').write('\n')
+          with open(gout,'a') as f:f.write(f"found={'true' if cand else 'false'}\n")
+          print(json.dumps(agg,sort_keys=True))
+          PY
+
+      - name: Verify 135424 breakthrough with Few Shots verifier
+        if: steps.aggregate.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          if not r.get('valid') or int(r.get('score',-1)) != 135424:raise SystemExit(r)
+          print('VERIFIED BREAKTHROUGH',r)
+          PY
+
+      - name: Upload exact result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7p5-core-orbit-decision
+          path: |
+            ${{ runner.temp }}/result
+            ${{ runner.temp }}/shot
+          if-no-files-found: warn
+          retention-days: 14
