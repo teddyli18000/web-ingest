@@ -1,0 +1,33 @@
+name: temp labs100 h18 K19 kp17 exact
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k19-kp17-exact.yml'
+
+concurrency:
+  group: temp-labs100-h18-k19-kp17-exact
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and exhaust exact compressed branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -march=native science-boundary/labs-100/code/oddperfect_h18_k19_kp17_exact.cpp -o "$RUNNER_TEMP/kp17"
+          "$RUNNER_TEMP/kp17" | tee "$RUNNER_TEMP/kp17.log"
+          grep -F 'K19_KP17_SUMMARY tested=15943230 d1_valid=9240 d5_valid=11160 valid=20400 spectral_hits=0' "$RUNNER_TEMP/kp17.log"
+          grep -F 'EXACT_EXCLUSION h18_K19_kp17_kc2_t2_Wle130' "$RUNNER_TEMP/kp17.log"
+      - name: Upload exact transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k19-kp17-exact
+          path: ${{ runner.temp }}/kp17.log
+          if-no-files-found: warn
