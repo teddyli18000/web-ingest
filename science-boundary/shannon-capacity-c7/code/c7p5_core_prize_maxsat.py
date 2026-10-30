@@ -17,12 +17,14 @@ negative blocker clauses charge each touched core vertex once.  Hard clauses
 encode outside conflicts and candidate -> touched-core implications.
 
 Vertex transitivity gives a lossless symmetry break that the completed solution
-contains vertex 0.  If 0 lies in C we force its blocker false; otherwise we force
-the outside candidate 0 true.
+contains vertex 0.  Optional --branch-mod/--branch-residue adds a second lossless
+partition constraint: the completed solution must contain a nonzero vertex in
+that residue class.  Running all residues covers every solution of size >=2 and
+allows exact branches to be solved in parallel without changing the problem.
 
 An exact optimum >=368 is squared to a Few Shots C7^10 certificate of size at
-least 135424.  If an exact solver returns 367, the formulation itself is an exact
-upper-bound route alpha(C7^5)=367; such a claim should still receive an
+least 135424.  If all exact branches return at most 367, the formulation is an
+exact upper-bound route alpha(C7^5)=367; such a claim should still receive an
 independent UNSAT/proof replay before publication.
 """
 from __future__ import annotations
@@ -60,13 +62,6 @@ def neighbors(v: int):
         yield enc(tuple((d[i] + delta[i]) % Q for i in range(D)))
 
 
-def conflict(a: int, b: int) -> bool:
-    if a == b:
-        return True
-    da, db = dec(a), dec(b)
-    return all((x - y) % Q in (0, 1, Q - 1) for x, y in zip(da, db))
-
-
 def independent(s) -> bool:
     s = set(s)
     for v in s:
@@ -82,7 +77,11 @@ def main():
     ap.add_argument("certificate", type=Path)
     ap.add_argument("status", type=Path)
     ap.add_argument("--solver", default="g4")
+    ap.add_argument("--branch-mod", type=int, default=1)
+    ap.add_argument("--branch-residue", type=int, default=0)
     a = ap.parse_args()
+    if a.branch_mod < 1 or not 0 <= a.branch_residue < a.branch_mod:
+        raise SystemExit("invalid branch")
 
     with gzip.open(a.c7five_root / "data" / "core-overlap.json.gz", "rt") as f:
         bundle = json.load(f)
@@ -91,8 +90,7 @@ def main():
         raise RuntimeError(("bad certified core", len(core), len(set(core))))
     core_set = set(core)
     outside = tuple(v for v in range(U) if v not in core_set)
-    oi = {v: i for i, v in enumerate(outside)}
-    ci = {v: i for i, v in enumerate(core)}
+    outside_set = set(outside)
 
     # Candidate variables first, then one blocker variable per core point.
     cvar = {v: i + 1 for i, v in enumerate(outside)}
@@ -109,7 +107,7 @@ def main():
         for u in neighbors(v):
             if u in core_set:
                 sv.append(u)
-            elif u in oi and u > v:
+            elif u in outside_set and u > v:
                 w.append([-cvar[v], -cvar[u]])
                 outside_edges += 1
         support_hist[len(sv)] = support_hist.get(len(sv), 0) + 1
@@ -131,6 +129,20 @@ def main():
         w.append([cvar[0]])
         symmetry = {"kind": "outside-zero-selected", "vertex": 0}
 
+    # Optional exact branch partition.  A full selected point is represented by
+    # cvar[v] outside C and by -bvar[v] inside C, because every unblocked core
+    # vertex belongs to the completed optimum.  Across every residue, these hard
+    # disjunctions cover every completed solution with at least two points.
+    branch_clause = []
+    if a.branch_mod > 1:
+        for v in range(1, U):
+            if v % a.branch_mod != a.branch_residue:
+                continue
+            branch_clause.append(-bvar[v] if v in core_set else cvar[v])
+        if not branch_clause:
+            raise RuntimeError("empty branch clause")
+        w.append(branch_clause)
+
     setup = {
         "method": "exact-c7p5-315core-prize-maxsat",
         "ambient_vertices": U,
@@ -143,6 +155,9 @@ def main():
         "target": TARGET,
         "solver": a.solver,
         "symmetry_break": symmetry,
+        "branch_mod": a.branch_mod,
+        "branch_residue": a.branch_residue,
+        "branch_clause_literals": len(branch_clause),
         "core_source_commit": "ae81e0d24b356aef3d388238f6fb4d02c4aa32a5",
     }
     print("SETUP", json.dumps(setup, sort_keys=True), flush=True)
@@ -169,6 +184,8 @@ def main():
         raise RuntimeError(("objective replay mismatch", len(completed), maxsat_score, len(selected), len(blocked)))
     if 0 not in completed:
         raise RuntimeError("symmetry replay failed")
+    if a.branch_mod > 1 and not any(v != 0 and v % a.branch_mod == a.branch_residue for v in completed):
+        raise RuntimeError("branch replay failed")
 
     st = {
         "candidate": len(completed) >= TARGET,
