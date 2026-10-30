@@ -36,12 +36,31 @@ one-dislocation short scar. The resulting defect composition is exactly eight fu
 plus four short scars — the same 20-dislocation composition as the merged D2 record — but
 starting from the distinct C3-derived global arrangement.
 
-The nine flips split into three C3-equivalent families. A balanced spherical perturbation
-that moves the new-diagonal endpoints together and old-diagonal endpoints apart crosses the
-actual convex-hull flip boundary at RMS-local amplitudes about 0.0179668, 0.0180433, and
-0.0184463 rad for the three families. Two local pilot relaxations started at 1.05 times the
-boundary healed back to e564, so merely crossing the boundary is insufficient; larger and
-geometrically different overshoots remain scientifically open.
+The nine flips form three distinct C3 orbits. A balanced spherical perturbation that moves
+the new-diagonal endpoints together and old-diagonal endpoints apart crosses the actual
+convex-hull flip boundary at amplitudes about 0.0179668, 0.0180433, and 0.0184463 rad for
+the three orbits. Two local pilot relaxations started at 1.05 times the boundary healed back
+to e564, so merely crossing the boundary is insufficient; larger and geometrically
+different overshoots remain scientifically open.
+
+Soft-mode / topology coupling
+-----------------------------
+An independent local Hessian recomputation reproduced the soft pair as
+lambda0 = 5.20524653, lambda1 = 5.20524671. Under +120 degree rotation about the exact C3
+axis, this two-dimensional eigenspace transforms as
+
+  [[-1/2, +sqrt(3)/2], [-sqrt(3)/2, -1/2]]
+
+with pair-subspace residual about 1.0e-6. Thus it is the expected non-trivial real C3
+doublet and naturally selects one member of a threefold-equivalent structural set when C3
+is broken.
+
+The pair-subspace displacement weight on one-ring neighborhoods of the nine full scars is
+not uniform. Grouped by the three C3 scar orbits, the weights are approximately
+0.09482, 0.04250, and 0.03899 per scar. The highest-weight orbit is exactly the orbit whose
+balanced Delaunay-flip threshold is lowest, about 0.0179668 rad. Hence the Hessian soft-mode
+representation and the explicit Delaunay topology representation independently identify the
+same easiest scar-shortening channel.
 
 Active compute
 --------------
@@ -49,10 +68,14 @@ Run 40990733845: one-runner, internally parallel e564 multimode basin map (72 re
 followed by eight upward eigenfollow trajectories from modes 0..3, both signs. BLAS threads
 are fixed to one per process and independent workers are sized from nproc.
 
-Run 40991088178: one-runner, internally parallel targeted defect-flip search. For one
-representative of each of the three flip families it tests balanced/new-diagonal/old-diagonal
-crossing directions over multiple boundary overshoots, fully relaxes every 20-dislocation
-start, and preserves the lowest distinct endpoints.
+Run 40991088178: one-runner, internally parallel targeted defect-flip search over two of the
+three C3 flip orbits, three geometric crossing directions and multiple boundary overshoots.
+An initial 1e-4 threshold de-duplication tolerance accidentally merged the two closest orbit
+thresholds; the numerical search itself remains valid for the two retained orbits.
+
+Run 40991269145: one-runner internally parallel completion of the omitted middle-threshold
+orbit, after tightening orbit de-duplication to 3e-5. Together the two runs cover all three
+non-equivalent C3 scar orbits without rerunning the already active cases.
 
 Interpretation
 --------------
