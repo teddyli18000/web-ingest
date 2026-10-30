@@ -1,0 +1,90 @@
+name: temp Thomson 960 scaffold restraint homotopy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-scaffold-restraint-homotopy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  homotopy:
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - family: 0
+            multiplier: "1.05"
+            tag: f0-m105
+          - family: 0
+            multiplier: "1.20"
+            tag: f0-m120
+          - family: 1
+            multiplier: "1.05"
+            tag: f1-m105
+          - family: 1
+            multiplier: "1.20"
+            tag: f1-m120
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Continue 20-topology branch while releasing harmonic restraint
+        shell: bash
+        run: |
+          echo "nproc=$(nproc), one numerical worker; family=${{ matrix.family }} multiplier=${{ matrix.multiplier }}"
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 science-boundary/thomson-960/code/search_scaffold_restraint_homotopy.py \
+            science-boundary/thomson-960/data/basin-e545-21.json \
+            --family ${{ matrix.family }} --multiplier ${{ matrix.multiplier }} \
+            --schedule 3000,1000,300,100,30,10,3,1,0.3,0.1,0.03,0.01,0.003,0.001,0 \
+            --fixed-maxiter 1200 --stage-maxiter 1400 --final-maxiter 2600 \
+            --out "$RUNNER_TEMP/out/homotopy.json"
+      - name: Conditional low modes from surviving 20 topology
+        shell: bash
+        run: |
+          p="$RUNNER_TEMP/out/homotopy.best20.json"
+          if [ ! -f "$p" ]; then
+            echo "No unrestrained 20-dislocation survivor."
+            exit 0
+          fi
+          git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+            "$RUNNER_TEMP/few-shots" "$p" \
+            --modes 0,1,2 --amps 0.003,0.008,0.016,0.030 \
+            --k 10 --workers 1 --maxiter 2400 --keep-basins 12 \
+            --out "$RUNNER_TEMP/out/survivor-modes.json"
+      - name: Summarize branch
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,os
+          root=os.path.join(os.environ['RUNNER_TEMP'],'out'); d=json.load(open(os.path.join(root,'homotopy.json')))
+          print('family',d['family'],'multiplier',d['multiplier'],'fixed',d['all_fixed_energy'],d['all_fixed_coord'])
+          print('last20',None if d['last_20_state'] is None else (d['last_20_state']['kappa'],d['last_20_state']['energy'],d['last_20_state']['coord_counts']))
+          print('firstheal',d['first_healed_state'])
+          print('final',d['final']['energy'],d['final']['coord_counts'])
+          for r in d['rows']: print('K',r['kappa'],r['energy'],r['coord_counts'],r['anchor_rms'],r['penalty'])
+          p=os.path.join(root,'survivor-modes.json')
+          if os.path.exists(p):
+              m=json.load(open(p)); print('MODEBEST',m['best_energy'],m['best_delta_vs_live'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-scaffold-homotopy-${{ matrix.tag }}
+          path: ${{ runner.temp }}/out
+          retention-days: 7
+          compression-level: 6
