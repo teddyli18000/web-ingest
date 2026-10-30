@@ -1,0 +1,32 @@
+name: temp Thomson 960 e432 enumerate completions
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-e432-enumerate-completions.yml'
+
+jobs:
+  enumerate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Enumerate source-only 23-to-24 flips
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 science-boundary/thomson-960/code/enumerate_local_defect_increasing_flips.py \
+            science-boundary/thomson-960/data/basin-23-e432249.json \
+            --max-shell 3 --out "$RUNNER_TEMP/out/result.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e432-target-independent-completions
+          path: ${{ runner.temp }}/out
+          retention-days: 10
