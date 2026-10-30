@@ -1,0 +1,39 @@
+Thomson N=960 — target-independent local completions of e432 — 2026-10-30
+
+Source e432:
+- E = 444368.4322496275 = live +0.0398434302
+- coordination 35/902/23
+- defect motif: 11 full 5-7-5-7-5 scars + unique short 5-7-5 scar
+- short-scar vertices: [537,639,669], degrees [5,7,5]
+
+Target-independent enumeration
+------------------------------
+Enumerating every legal source Delaunay edge flip whose combinatorial degree counts become exactly 36/900/24 gives 96 candidates globally. Only 7 touch the unique short-scar component (minimum graph distance 0); these are the complete local single-flip 23->24 family around that scar:
+
+family 0: delete (603,639), add (127,201), source quad degrees (6,7,6,6), balanced threshold ~0.02225336 rad
+family 1: delete (127,412), add (48,669), source quad degrees (6,6,6,5), balanced threshold ~0.01633676 rad
+family 2: delete (201,628), add (542,537), source quad degrees (6,6,6,5), balanced threshold ~0.01573684 rad
+family 3: delete (412,818), add (669,754), source quad degrees (6,6,5,6), balanced threshold ~0.01781511 rad
+family 4: delete (628,879), add (537,826), source quad degrees (6,6,5,6), balanced threshold ~0.01727083 rad
+family 5: delete (785,818), add (669,730), source quad degrees (6,6,5,6), balanced threshold ~0.01944012 rad
+family 6: delete (871,879), add (537,552), source quad degrees (6,6,5,6), balanced threshold ~0.01868982 rad
+
+Novelty relative to known low-energy 24-dislocation minima
+----------------------------------------------------------
+Using the meaningful natural labels from the e432 seed artifact, compare each local candidate with final triangulations of A, B and live R:
+- For all 7 families, the candidate *new edge* is absent from A, absent from B, and absent from R.
+- For all 7 families, the candidate *deleted old edge* is present in A, present in B, and present in R.
+Therefore none of the seven local completions is merely the final A/B/R triangulation expressed through another perturbation amplitude. They are genuinely target-independent combinatorial completion families at the first topology-changing step.
+
+Active search
+-------------
+Run 41047867851 launches all seven families independently. For each family:
+- three boundary-crossing geometries: balanced, new-diagonal-only, old-diagonal-only;
+- multipliers 1.01,1.04,1.10,1.22,1.45,1.80 above the exact flip threshold;
+- after crossing, freeze the four quadrilateral vertices while the other 956 points relax;
+- then fully release all 960 points with stable long-double relaxation.
+This tests whether a novel 24-dislocation basin survives cooperative elastic accommodation before the local flip is allowed to heal.
+
+Interpretation rule
+-------------------
+A direct full release back to e432/A/B/R does not by itself exclude the family if the fixed-scaffold state remains a low-energy 36/900/24 configuration; in that case use staged restraint/homotopy release rather than more overshoot amplitudes. If both fixed-scaffold and staged release fail across all seven families, the local single-flip completion space is saturated and the next representation must involve multi-flip/component-level scar reconstruction.
