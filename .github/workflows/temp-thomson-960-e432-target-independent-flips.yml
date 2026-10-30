@@ -1,0 +1,62 @@
+name: temp Thomson 960 e432 target-independent flips
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-e432-target-independent-flips.yml'
+
+jobs:
+  flip:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - family: 0
+            quad: '603,639,127,201'
+          - family: 1
+            quad: '127,412,48,669'
+          - family: 2
+            quad: '201,628,542,537'
+          - family: 3
+            quad: '412,818,669,754'
+          - family: 4
+            quad: '628,879,537,826'
+          - family: 5
+            quad: '785,818,669,730'
+          - family: 6
+            quad: '871,879,537,552'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 160
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Cross and scaffold one local 23-to-24 completion
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 science-boundary/thomson-960/code/search_explicit_scaffolded_flip.py \
+            science-boundary/thomson-960/data/basin-23-e432249.json \
+            --quad '${{ matrix.quad }}' --patterns balanced,newdiag,olddiag \
+            --multipliers 1.01,1.04,1.10,1.22,1.45,1.80 \
+            --fixed-maxiter 1800 --release-maxiter 3000 \
+            --live-score 444368.3924061973 --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('QUAD',d['quad'],'THRESHOLDS',d['thresholds'])
+          print('BEST',d['best_release_energy'],'DELTA',d['best_delta_live'])
+          for b in d['lowest_distinct_release_basins'][:16]:
+              print('BASIN',b['energy'],b['delta_live'],b['coord_counts'],b['pattern'],b['multiplier'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e432-target-flip-${{ matrix.family }}
+          path: ${{ runner.temp }}/out
+          retention-days: 10
