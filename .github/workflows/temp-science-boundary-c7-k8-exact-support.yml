@@ -1,0 +1,153 @@
+name: Temp Science Boundary C7 exact k8 support frontier
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-k8-exact-support.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_irreducible_support_sat.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-k8-exact-support
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      OMP_NUM_THREADS: 1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned BPZ source and install SAT backends
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          python3 -m pip install --disable-pip-version-check python-sat
+          mkdir -p "$RUNNER_TEMP/result"
+      - name: Build exact k7 regression instance
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_irreducible_support_sat.py build \
+            "$RUNNER_TEMP/tan" 7 "$RUNNER_TEMP/k7.cnf" "$RUNNER_TEMP/k7.meta.json" \
+            > "$RUNNER_TEMP/result/k7-build.stdout" 2> "$RUNNER_TEMP/result/k7-build.stderr"
+          cat "$RUNNER_TEMP/result/k7-build.stdout"
+      - name: Exact k7 regression self-check
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/bpz_irreducible_support_sat.py worker \
+            "$RUNNER_TEMP/k7.cnf" glucose4 "$RUNNER_TEMP/k7.result.json"
+          python3 science-boundary/shannon-capacity-c7/code/bpz_irreducible_support_sat.py replay \
+            "$RUNNER_TEMP/k7.meta.json" "$RUNNER_TEMP/k7.result.json" "$RUNNER_TEMP/result/k7.replay.json"
+          python3 - "$RUNNER_TEMP/result/k7.replay.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          if not r.get('candidate') or r.get('support_union_size')!=7 or r.get('witness_size',0)<8:
+              raise SystemExit(('k7 regression failed',r))
+          print('k7 regression SAT',r['witness_size'],r['owners'])
+          PY
+      - name: Build killer-free exact k8 frontier
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_irreducible_support_sat.py build \
+            "$RUNNER_TEMP/tan" 8 "$RUNNER_TEMP/k8kf.cnf" "$RUNNER_TEMP/k8kf.meta.json" --killer-free \
+            > "$RUNNER_TEMP/result/k8kf-build.stdout" 2> "$RUNNER_TEMP/result/k8kf-build.stderr"
+          cat "$RUNNER_TEMP/result/k8kf-build.stdout"
+      - name: Race exact SAT backends on killer-free k8
+        id: k8kf
+        shell: bash
+        run: |
+          set -euo pipefail
+          solvers=(cadical195 glucose4 maplechrono minisat22)
+          pids=()
+          for s in "${solvers[@]}"; do
+            (python3 science-boundary/shannon-capacity-c7/code/bpz_irreducible_support_sat.py worker \
+              "$RUNNER_TEMP/k8kf.cnf" "$s" "$RUNNER_TEMP/k8kf-$s.json" \
+              > "$RUNNER_TEMP/result/k8kf-$s.stdout" 2> "$RUNNER_TEMP/result/k8kf-$s.stderr") &
+            pids+=("$!")
+          done
+          winner=""
+          while [[ -z "$winner" ]]; do
+            alive=0
+            for s in "${solvers[@]}"; do
+              f="$RUNNER_TEMP/k8kf-$s.json"
+              if [[ -s "$f" ]]; then
+                status=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("status",""))' "$f")
+                if [[ "$status" == sat || "$status" == unsat ]]; then winner="$f"; break; fi
+              fi
+            done
+            [[ -n "$winner" ]] && break
+            for p in "${pids[@]}"; do kill -0 "$p" 2>/dev/null && alive=$((alive+1)) || true; done
+            if [[ "$alive" -eq 0 ]]; then echo 'all SAT backends failed' >&2; exit 1; fi
+            sleep 2
+          done
+          cp "$winner" "$RUNNER_TEMP/k8kf.winner.json"
+          for p in "${pids[@]}"; do kill "$p" 2>/dev/null || true; done
+          wait || true
+          python3 science-boundary/shannon-capacity-c7/code/bpz_irreducible_support_sat.py replay \
+            "$RUNNER_TEMP/k8kf.meta.json" "$RUNNER_TEMP/k8kf.winner.json" "$RUNNER_TEMP/result/k8kf.replay.json"
+          python3 - "$RUNNER_TEMP/result/k8kf.replay.json" "$GITHUB_OUTPUT" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          with open(sys.argv[2],'a') as f:f.write('candidate='+('true' if r.get('candidate') else 'false')+'\n')
+          print(r)
+          PY
+      - name: Build unrestricted exact k8 frontier
+        if: steps.k8kf.outputs.candidate != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_irreducible_support_sat.py build \
+            "$RUNNER_TEMP/tan" 8 "$RUNNER_TEMP/k8.cnf" "$RUNNER_TEMP/k8.meta.json" \
+            > "$RUNNER_TEMP/result/k8-build.stdout" 2> "$RUNNER_TEMP/result/k8-build.stderr"
+          cat "$RUNNER_TEMP/result/k8-build.stdout"
+      - name: Race exact SAT backends on unrestricted k8
+        if: steps.k8kf.outputs.candidate != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          solvers=(cadical195 glucose4 maplechrono minisat22)
+          pids=()
+          for s in "${solvers[@]}"; do
+            (python3 science-boundary/shannon-capacity-c7/code/bpz_irreducible_support_sat.py worker \
+              "$RUNNER_TEMP/k8.cnf" "$s" "$RUNNER_TEMP/k8-$s.json" \
+              > "$RUNNER_TEMP/result/k8-$s.stdout" 2> "$RUNNER_TEMP/result/k8-$s.stderr") &
+            pids+=("$!")
+          done
+          winner=""
+          while [[ -z "$winner" ]]; do
+            alive=0
+            for s in "${solvers[@]}"; do
+              f="$RUNNER_TEMP/k8-$s.json"
+              if [[ -s "$f" ]]; then
+                status=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("status",""))' "$f")
+                if [[ "$status" == sat || "$status" == unsat ]]; then winner="$f"; break; fi
+              fi
+            done
+            [[ -n "$winner" ]] && break
+            for p in "${pids[@]}"; do kill -0 "$p" 2>/dev/null && alive=$((alive+1)) || true; done
+            if [[ "$alive" -eq 0 ]]; then echo 'all SAT backends failed' >&2; exit 1; fi
+            sleep 2
+          done
+          cp "$winner" "$RUNNER_TEMP/k8.winner.json"
+          for p in "${pids[@]}"; do kill "$p" 2>/dev/null || true; done
+          wait || true
+          python3 science-boundary/shannon-capacity-c7/code/bpz_irreducible_support_sat.py replay \
+            "$RUNNER_TEMP/k8.meta.json" "$RUNNER_TEMP/k8.winner.json" "$RUNNER_TEMP/result/k8.replay.json"
+      - name: Upload exact support results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-k8-exact-support-frontier
+          path: ${{ runner.temp }}/result
+          retention-days: 14
