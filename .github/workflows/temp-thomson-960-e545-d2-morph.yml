@@ -1,0 +1,62 @@
+name: temp Thomson 960 e545 to D2 morphs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-e545-d2-morph.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  morph:
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        seed: [6301,6302,6303,6304]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Download e545 source
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-e558-a-modes-1
+          path: ${{ runner.temp }}/source
+          github-token: ${{ github.token }}
+          run-id: 40992325351
+      - name: Extract e545 and morph to D2
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob,json,os
+          p=glob.glob(os.path.join(os.environ['RUNNER_TEMP'],'source','*.json'))[0]; d=json.load(open(p)); b=min(d['lowest_distinct_basins'],key=lambda z:z['energy'])
+          json.dump({'energy':b['energy'],'coord_counts':{'5':33,'6':906,'7':21},'points':b['points']},open(os.path.join(os.environ['RUNNER_TEMP'],'seed.json'),'w'),separators=(',',':'))
+          PY
+          python3 science-boundary/thomson-960/code/search_seed_to_d2_morph.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/seed.json" --seed "${{ matrix.seed }}" \
+            --ts 0.28,0.36,0.42,0.46,0.50,0.54,0.58,0.62 \
+            --out "$RUNNER_TEMP/e545-d2-${{ matrix.seed }}.json"
+          python3 - <<'PY'
+          import glob,json
+          d=json.load(open(glob.glob('/home/runner/work/_temp/e545-d2-*.json')[0])); print('ALIGN',d['icp_nn_rms'],d['hungarian_rms'],'BEST',d['best_energy'])
+          for b in d['lowest_distinct_basins']: print('BASIN',b['energy'],b['coord_counts'],b['t'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e545-d2-${{ matrix.seed }}
+          path: ${{ runner.temp }}/e545-d2-${{ matrix.seed }}.json
+          retention-days: 7
