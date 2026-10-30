@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 """Robust entry point for exhaustive N972 -> N960 T-orbit transfer.
 
-The first batch recovered one C2 and one C3 axis independently.  Although each
+The first batch recovered one C2 and one C3 axis independently. Although each
 axis can be a good standalone symmetry direction, numerical axis recovery may
 select a local minimum that does not yield a stable exact tetrahedral frame when
-paired.  This wrapper recovers several symmetry-axis lines independently,
+paired. This wrapper recovers several symmetry-axis lines independently,
 deduplicates them, tries all C2/C3 pairs, and chooses the exact canonical-T
-conjugation with the best point-cloud validation.  The downstream exhaustive
+conjugation with the best point-cloud validation. The downstream exhaustive
 orbit transfer/classification/release logic is unchanged.
 """
 from __future__ import annotations
 import math
 import numpy as np
+from scipy.spatial import cKDTree
 
 import search_t_orbit_transfer_batch as base
+from search_972_twin_orbit_removal import symmetry_objective
 
 PI=math.pi
 _ORIG=base.exact_t_group_from_axes
@@ -28,13 +30,18 @@ def _line_unique(rows, score, axis, tol=0.9995):
     rows.append((score,axis))
 
 
+def _axis_score(x,axis,angle):
+    axis=np.asarray(axis,float); axis/=np.linalg.norm(axis)
+    v=[math.acos(np.clip(axis[2],-1,1)),math.atan2(axis[1],axis[0])]
+    return symmetry_objective(v,x,cKDTree(x),angle)
+
+
 def robust_exact_t_group(x,n2_first,n3_first):
     c2=[]; c3=[]
     # Include the axes already paid for by base.main.
-    s2=base.symmetry_objective([math.acos(np.clip(n2_first[2],-1,1)),math.atan2(n2_first[1],n2_first[0])],x,base.cKDTree(x),PI)
-    s3=base.symmetry_objective([math.acos(np.clip(n3_first[2],-1,1)),math.atan2(n3_first[1],n3_first[0])],x,base.cKDTree(x),2*PI/3)
-    _line_unique(c2,s2,n2_first); _line_unique(c3,s3,n3_first)
-    # True T has three C2 axis lines and four C3 axis lines.  Multiple global
+    _line_unique(c2,_axis_score(x,n2_first,PI),n2_first)
+    _line_unique(c3,_axis_score(x,n3_first,2*PI/3),n3_first)
+    # True T has three C2 axis lines and four C3 axis lines. Multiple global
     # searches are cheap compared with the downstream orbit relaxations.
     for seed in range(97220,97232):
         if len(c2)<3:
@@ -45,9 +52,7 @@ def robust_exact_t_group(x,n2_first,n3_first):
     c2.sort(key=lambda t:t[0]); c3.sort(key=lambda t:t[0])
     print('C2_AXES',[(s,a.tolist()) for s,a in c2],flush=True)
     print('C3_AXES',[(s,a.tolist()) for s,a in c3],flush=True)
-    best=None; errors=[]
-    target=1/math.sqrt(3)
-    # Prefer geometrically compatible pairs, but try all recovered lines.
+    best=None; errors=[]; target=1/math.sqrt(3)
     pairs=[]
     for s2,a2 in c2:
         for s3,a3 in c3:
