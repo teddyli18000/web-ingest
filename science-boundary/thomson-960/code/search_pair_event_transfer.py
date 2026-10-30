@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Transfer/extrapolate a collective event learned between two Thomson minima.
 
-Given source and target 960-point minima, find a multistart ICP/Hungarian point
-correspondence, then search the geodesic event and smooth displacement-localized
-versions of its continuation *through the target*.  This is intended for real
-low-energy topology-changing pairs (e.g. D2 20-dislocation -> e569 19-dislocation,
-or e569 -> current live record), where continuation may expose a qualitatively
-new defect family rather than another random local perturbation.
+Given source and target 960-point minima, search the geodesic event and smooth
+displacement-localized versions of its continuation *through the target*.
+
+For unrelated minima, the default multistart ICP/Hungarian correspondence is
+appropriate.  For a child obtained directly by perturbing/relaxing a parent,
+``--fixed-correspondence`` preserves that physical particle correspondence and
+only removes an overall Kabsch rotation.  This matters for local defect events:
+a fresh assignment can otherwise relabel the scar that actually moved.
 """
 from __future__ import annotations
 import argparse,json,pathlib
@@ -33,6 +35,20 @@ def align(source,target,seed,starts):
     return sm,rms,mrms
 
 
+def align_fixed(source,target):
+    """Preserve labels, removing only the best rigid rotation source -> target."""
+    C=source.T@target
+    U,_,Vt=np.linalg.svd(C)
+    R=U@Vt
+    if np.linalg.det(R)<0:
+        U[:,-1]*=-1
+        R=U@Vt
+    sm=source@R
+    sm/=np.linalg.norm(sm,axis=1)[:,None]
+    rms=float(np.sqrt(np.mean(np.sum((target-sm)**2,axis=1))))
+    return sm,rms,rms
+
+
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument('source_json'); ap.add_argument('target_json')
@@ -41,13 +57,20 @@ def main():
     ap.add_argument('--ts',default='-0.35,-0.15,0.25,0.5,0.75,1.08,1.16,1.28,1.45,1.70,2.0')
     ap.add_argument('--fracs',default='0.12,0.20,0.35,0.55,0.80,1.0')
     ap.add_argument('--alphas',default='-0.8,-0.45,0.20,0.45,0.75,1.05,1.40')
+    ap.add_argument('--fixed-correspondence',action='store_true',
+                    help='preserve source/target particle labels; remove only rigid rotation')
     ap.add_argument('--live-score',type=float,default=444368.3924061973)
     ap.add_argument('--out',required=True)
     args=ap.parse_args()
     source=load(args.source_json); target=load(args.target_json)
-    sm,rms,mrms=align(source,target,args.seed,args.starts)
+    if args.fixed_correspondence:
+        sm,rms,mrms=align_fixed(source,target)
+        corr='fixed-kabsch'
+    else:
+        sm,rms,mrms=align(source,target,args.seed,args.starts)
+        corr='icp-hungarian'
     es=tm.raw_energy(sm); et=tm.raw_energy(target)
-    print(f'PAIR seed={args.seed} source={es:.12f} {tm.coord_counts(sm)} target={et:.12f} {tm.coord_counts(target)} nn={rms:.7g} assign={mrms:.7g}',flush=True)
+    print(f'PAIR seed={args.seed} corr={corr} source={es:.12f} {tm.coord_counts(sm)} target={et:.12f} {tm.coord_counts(target)} nn={rms:.7g} assign={mrms:.7g}',flush=True)
     rows=[]; saved=[]
     def run(label,x):
         start=tm.raw_energy(x); e,y,nit,ok=tm.relax(x,maxiter=args.maxiter); cc=tm.coord_counts(y)
@@ -66,7 +89,7 @@ def main():
             run(f'mask:f={f:g}:a={a:g}',ev.exp_field(target,v,a,w))
     saved.sort(key=lambda z:z['energy'])
     best=min(rows,key=lambda z:z['energy'])
-    out={'seed':args.seed,'source_energy':es,'source_coord':tm.coord_counts(sm),'target_energy':et,'target_coord':tm.coord_counts(target),
+    out={'seed':args.seed,'correspondence':corr,'source_energy':es,'source_coord':tm.coord_counts(sm),'target_energy':et,'target_coord':tm.coord_counts(target),
          'icp_nn_rms':rms,'assignment_rms':mrms,'rows':rows,'best_energy':best['energy'],'best_label':best['label'],
          'best_delta_live':best['delta_live'],'distinct_low_basins':saved[:16]}
     pathlib.Path(args.out).write_text(json.dumps(out,separators=(',',':'))+'\n')
