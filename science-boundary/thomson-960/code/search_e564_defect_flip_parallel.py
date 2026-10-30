@@ -2,10 +2,11 @@
 """Targeted 21->20 dislocation search from the C3 e564 Thomson minimum.
 
 The e564 triangulation has nine flippable 7-7 edges whose combinatorial flip
-changes coordination 33/906/21 -> 32/908/20.  They form three C3-equivalent
-families.  For one representative of each family, locate the smallest spherical
-perturbation that actually changes the convex-hull diagonal, then overshoot the
-boundary in several geometrically distinct ways and fully relax in parallel.
+changes coordination 33/906/21 -> 32/908/20.  They form three distinct C3
+orbits. For one representative of each requested orbit, locate the smallest
+spherical perturbation that actually changes the convex-hull diagonal, then
+over-shoot the boundary in several geometrically distinct ways and fully relax
+in parallel.
 """
 from __future__ import annotations
 import argparse, concurrent.futures as cf, json, math, pathlib
@@ -43,8 +44,8 @@ def defect_reducing_flips(x):
 
 
 def tangent_to(p,target):
-    t=target-float(np.dot(target,p))*p; n=float(np.linalg.norm(t))
-    return t/n
+    t=target-float(np.dot(target,p))*p
+    return t/float(np.linalg.norm(t))
 
 
 def perturb(x,quad,amp,pattern):
@@ -81,7 +82,7 @@ def threshold(x,quad,pattern):
 def relax_one(task):
     x,quad,pattern,thr,mult,maxiter=task
     start=perturb(x,quad,thr*mult,pattern)
-    sd,_,=topology(start); sc=Counter(sd.tolist())
+    sd,_=topology(start); sc=Counter(sd.tolist())
     q=sm.xyz_to_vars(start)
     e,raw,z,nit,ok,msg=stable_relax_q(q,maxiter=maxiter)
     dd,_=topology(z); dc=Counter(dd.tolist())
@@ -95,12 +96,14 @@ def main():
     ap=argparse.ArgumentParser(); ap.add_argument('seed_json')
     ap.add_argument('--patterns',default='balanced,newdiag,olddiag')
     ap.add_argument('--multipliers',default='1.02,1.08,1.18,1.35,1.60,2.00')
+    ap.add_argument('--family-indices',default='all',help='comma-separated indices in balanced-threshold order, or all')
     ap.add_argument('--workers',type=int,default=4); ap.add_argument('--maxiter',type=int,default=1800)
     ap.add_argument('--out',required=True); args=ap.parse_args()
     meta,x=load_seed(args.seed_json); E0,_=sm.fg(sm.xyz_to_vars(x))
     flips=defect_reducing_flips(x)
     if len(flips)!=9: print(f'WARNING expected 9 flips, got {len(flips)}',flush=True)
-    # Balanced-boundary thresholds split the 9 edges into three C3-equivalent families.
+    # The three C3 orbits have balanced thresholds near 0.017967, 0.018043,
+    # and 0.018446 rad.  Use a tolerance safely below their 7.6e-5 minimum gap.
     tmp=[]
     for q in flips:
         t=threshold(x,q,'balanced')
@@ -108,8 +111,11 @@ def main():
     tmp.sort()
     reps=[]
     for t,q in tmp:
-        if any(abs(t-r[0])<1e-4 for r in reps): continue
+        if any(abs(t-r[0])<3e-5 for r in reps): continue
         reps.append((t,q))
+    if args.family_indices!='all':
+        keep={int(s) for s in args.family_indices.split(',') if s}
+        reps=[r for i,r in enumerate(reps) if i in keep]
     print('representatives',[(t,q) for t,q in reps],flush=True)
     patterns=[s for s in args.patterns.split(',') if s]
     mults=[float(s) for s in args.multipliers.split(',') if s]
@@ -134,7 +140,6 @@ def main():
     good=sorted((r for r in rows if 'energy' in r),key=lambda r:r['energy'])
     basins=[]
     for r in good:
-        sig=(round(r['energy'],6),tuple(sorted(r['coord'].items())))
         if any(abs(r['energy']-b['energy'])<2e-6 and r['coord']==b['coord'] for b in basins): continue
         basins.append(r)
         if len(basins)>=12: break
