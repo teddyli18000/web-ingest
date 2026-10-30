@@ -1,0 +1,177 @@
+name: Temp Science Boundary C7 mixed public-367 fibers
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-mixed-public367-fibers.yml
+      - science-boundary/shannon-capacity-c7/code/public367_corpus.py
+      - science-boundary/shannon-capacity-c7/code/bpz_mixed_public367_fibers.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-mixed-public367-fibers
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned public sources and dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          git init "$RUNNER_TEMP/c7-five"
+          git -C "$RUNNER_TEMP/c7-five" remote add origin https://github.com/molind/c7-five.git
+          git -C "$RUNNER_TEMP/c7-five" fetch --depth 1 origin ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+          git -C "$RUNNER_TEMP/c7-five" checkout FETCH_HEAD
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          python3 -m pip install --disable-pip-version-check numpy python-sat
+          mkdir -p "$RUNNER_TEMP/result" "$RUNNER_TEMP/base" "$RUNNER_TEMP/shot"
+      - name: Build and independently validate public 367-set corpus
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/public367_corpus.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/c7-five" "$RUNNER_TEMP/result/corpus.json" \
+            | tee "$RUNNER_TEMP/result/corpus.stdout"
+      - name: Exact farthest mixed-fiber record mother
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_mixed_public367_fibers.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/corpus.json" "$RUNNER_TEMP/result/mixed.json" "$RUNNER_TEMP/base/certificate.json" \
+            > "$RUNNER_TEMP/result/mixed.stdout" 2> "$RUNNER_TEMP/result/mixed.stderr"
+          cat "$RUNNER_TEMP/result/mixed.stdout"
+          tail -n 120 "$RUNNER_TEMP/result/mixed.stderr"
+      - name: Verify mixed-fiber mother upstream and convert IDs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/base" | tee "$RUNNER_TEMP/result/seed-verify.json"
+          python3 - "$RUNNER_TEMP/result/seed-verify.json" <<'PY'
+          import json,sys;r=json.load(open(sys.argv[1]));
+          if not r.get('valid') or int(r.get('score',-1))!=134753:raise SystemExit(r)
+          print('verified mixed-fiber mother',r)
+          PY
+          python3 - "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/base/ids.txt" <<'PY'
+          import json,sys
+          pts=json.load(open(sys.argv[1]))['points']
+          if len(pts)!=134753 or len(set(pts))!=134753:raise SystemExit(('seed',len(pts),len(set(pts))))
+          open(sys.argv[2],'w').write(''.join(f'{int(p,7)}\n' for p in pts))
+          PY
+      - name: Exact unrestricted net1 through radius4
+        id: r4
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/patch_search_net1_r4_compile.py \
+            science-boundary/shannon-capacity-c7/code/search_net1_r4_complete.cpp "$RUNNER_TEMP/r4.cpp"
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp "$RUNNER_TEMP/r4.cpp" -o "$RUNNER_TEMP/r4"
+          export OMP_NUM_THREADS="$(nproc)"
+          /usr/bin/time -v "$RUNNER_TEMP/r4" "$RUNNER_TEMP/base/ids.txt" > "$RUNNER_TEMP/result/r4.json" 2> "$RUNNER_TEMP/result/r4.stderr"
+          cat "$RUNNER_TEMP/result/r4.json"
+          python3 - "$RUNNER_TEMP/result/r4.json" "$GITHUB_OUTPUT" <<'PY'
+          import json,sys;r=json.load(open(sys.argv[1]));open(sys.argv[2],'a').write(f"found={'true' if r.get('kind')!='none' else 'false'}\n")
+          PY
+      - name: Build exact radius5 solvers
+        if: steps.r4.outputs.found != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/patch_r5_net2_to_net1.py direct science-boundary/shannon-capacity-c7/code/search_net2_r5_direct.cpp "$RUNNER_TEMP/r5d.cpp"
+          python3 science-boundary/shannon-capacity-c7/code/patch_r5_net2_to_net1.py lower science-boundary/shannon-capacity-c7/code/search_net2_r5_lower.cpp "$RUNNER_TEMP/r5l.cpp"
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp "$RUNNER_TEMP/r5d.cpp" -o "$RUNNER_TEMP/r5d"
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp "$RUNNER_TEMP/r5l.cpp" -o "$RUNNER_TEMP/r5l"
+      - name: Exact radius5 direct
+        id: r5d
+        if: steps.r4.outputs.found != 'true'
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          /usr/bin/time -v "$RUNNER_TEMP/r5d" "$RUNNER_TEMP/base/ids.txt" > "$RUNNER_TEMP/result/r5-direct.json" 2> "$RUNNER_TEMP/result/r5-direct.stderr"
+          cat "$RUNNER_TEMP/result/r5-direct.json"
+          python3 - "$RUNNER_TEMP/result/r5-direct.json" "$GITHUB_OUTPUT" <<'PY'
+          import json,sys;r=json.load(open(sys.argv[1]));open(sys.argv[2],'a').write(f"found={'true' if r.get('kind')!='none' else 'false'}\n")
+          PY
+      - name: Exact radius5 lower support
+        id: r5l
+        if: steps.r4.outputs.found != 'true' && steps.r5d.outputs.found != 'true'
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          /usr/bin/time -v "$RUNNER_TEMP/r5l" "$RUNNER_TEMP/base/ids.txt" > "$RUNNER_TEMP/result/r5-lower.json" 2> "$RUNNER_TEMP/result/r5-lower.stderr"
+          cat "$RUNNER_TEMP/result/r5-lower.json"
+          python3 - "$RUNNER_TEMP/result/r5-lower.json" "$GITHUB_OUTPUT" <<'PY'
+          import json,sys;r=json.load(open(sys.argv[1]));open(sys.argv[2],'a').write(f"found={'true' if r.get('kind')!='none' else 'false'}\n")
+          PY
+      - name: Materialize first local breakthrough
+        id: materialize
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/base/ids.txt" "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot/certificate.json" "$GITHUB_OUTPUT" <<'PY'
+          import json,os,sys
+          bp,rd,out,gout=sys.argv[1:];base=set(int(x) for x in open(bp) if x.strip());hit=None
+          for fn in ('r4.json','r5-direct.json','r5-lower.json'):
+              p=os.path.join(rd,fn)
+              if os.path.exists(p):
+                  z=json.load(open(p))
+                  if z.get('kind')!='none':hit=z;break
+          found=False
+          if hit:
+              rem=list(map(int,hit.get('remove',[])));add=list(map(int,hit.get('add',[])));cur=base-set(rem)
+              if any(x not in base for x in rem) or any(x in cur for x in add):raise SystemExit(('exchange',hit))
+              cur.update(add)
+              if len(cur)!=134754:raise SystemExit(('score',len(cur)))
+              def enc(z):
+                  d=[]
+                  for _ in range(10):d.append(str(z%7));z//=7
+                  return ''.join(reversed(d))
+              json.dump({'points':[enc(z) for z in sorted(cur)]},open(out,'w'),separators=(',',':'));open(out,'a').write('\n');found=True
+          open(gout,'a').write(f"found={'true' if found else 'false'}\n")
+          PY
+      - name: Verify breakthrough
+        if: steps.materialize.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys;r=json.load(open(sys.argv[1]));
+          if not r.get('valid') or int(r.get('score',-1))<134754:raise SystemExit(r)
+          print('VERIFIED BREAKTHROUGH',r)
+          PY
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-mixed-public367-fibers
+          path: |
+            ${{ runner.temp }}/result
+            ${{ runner.temp }}/base/certificate.json
+            ${{ runner.temp }}/shot/certificate.json
+          if-no-files-found: warn
+          retention-days: 14
