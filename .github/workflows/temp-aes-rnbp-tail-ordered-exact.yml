@@ -1,0 +1,89 @@
+name: temp-aes-rnbp-tail-ordered-exact
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/rnbp_tail_ordered_exact_z3.py'
+      - '.github/workflows/temp-aes-rnbp-tail-ordered-exact.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  h2:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - {label: d1r4, d: 1, r: 4}
+          - {label: d3r2, d: 3, r: 2}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install --quiet z3-solver
+      - name: Exact 10-gate tail with two helpers and output reuse
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/rnbp_tail_ordered_exact_z3.py
+          python science-boundary/aes-sbox-circuit/rnbp_tail_ordered_exact_z3.py \
+            --family fs-101 --projection-weight 0.24 \
+            --deviation-index '${{ matrix.variant.d }}' --deviation-rank '${{ matrix.variant.r }}' \
+            --helpers 2 --timeout-ms 480000 --out result | tee run.log
+      - name: Verify any breakthrough
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot; cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-rnbp-tail-ordered-${{ matrix.variant.label }}-h2
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
+
+  h3:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - {label: d1r4, d: 1, r: 4}
+          - {label: d3r2, d: 3, r: 2}
+        pos: [2, 3, 4, 5, 6, 7, 8, 9, 10]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install --quiet z3-solver
+      - name: Exact 11-gate tail schedule
+        run: |
+          set -euxo pipefail
+          python science-boundary/aes-sbox-circuit/rnbp_tail_ordered_exact_z3.py \
+            --family fs-101 --projection-weight 0.24 \
+            --deviation-index '${{ matrix.variant.d }}' --deviation-rank '${{ matrix.variant.r }}' \
+            --helpers 3 --extra-helper-pos '${{ matrix.pos }}' \
+            --timeout-ms 480000 --out result | tee run.log
+      - name: Verify any breakthrough
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot; cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-rnbp-tail-ordered-${{ matrix.variant.label }}-p${{ matrix.pos }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
