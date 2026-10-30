@@ -1,0 +1,73 @@
+name: temp Thomson 960 e553 low-mode search
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-e553-modes.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  modes:
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        modes: ["0,1", "2,3", "4,5"]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Download e553 source artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-e564-scaffold-f0
+          path: ${{ runner.temp }}/source
+          github-token: ${{ github.token }}
+          run-id: 40991851757
+      - name: Extract e553 seed
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob,json,os
+          p=glob.glob(os.path.join(os.environ['RUNNER_TEMP'],'source','*.json'))[0]
+          d=json.load(open(p)); b=min(d['lowest_distinct_release_basins'],key=lambda z:z['release_energy'])
+          json.dump({'energy':b['release_energy'],'coord_counts':b['release_coord'],'points':b['points']},open(os.path.join(os.environ['RUNNER_TEMP'],'seed.json'),'w'),separators=(',',':'))
+          print('seed',b['release_energy'],b['release_coord'])
+          PY
+      - name: Recompute e553 Hessian and scan modes
+        shell: bash
+        run: |
+          tag=$(echo '${{ matrix.modes }}' | tr ',' '-')
+          python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/seed.json" \
+            --modes "${{ matrix.modes }}" --amps 0.003,0.006,0.012,0.022,0.038,0.060 \
+            --k 10 --workers 1 --maxiter 2200 --keep-basins 14 \
+            --out "$RUNNER_TEMP/e553-modes-${tag}.json"
+          python3 - <<'PY'
+          import glob,json
+          p=glob.glob('/home/runner/work/_temp/e553-modes-*.json')[0]; d=json.load(open(p))
+          print('LAMBDA',d['eigenvalues'][:8]); print('BEST',d['best_energy'],d['best_delta_vs_live'])
+          for b in d['lowest_distinct_basins']:
+              print('BASIN',b['energy'],b['mode'],b['sign'],b['amp'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e553-modes-${{ strategy.job-index }}
+          path: ${{ runner.temp }}/e553-modes-*.json
+          retention-days: 7
