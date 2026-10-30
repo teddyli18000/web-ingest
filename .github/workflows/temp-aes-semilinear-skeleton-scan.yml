@@ -1,0 +1,29 @@
+name: temp-aes-semilinear-skeleton-scan
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/scan_semilinear_skeletons.py'
+      - '.github/workflows/temp-aes-semilinear-skeleton-scan.yml'
+permissions:
+  contents: read
+jobs:
+  scan:
+    strategy:
+      fail-fast: false
+      matrix:
+        family: [fs-101, nist-g103, nist-g104, nist-a34-g110]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan all 2040 semilinear field maps
+        run: |
+          python science-boundary/aes-sbox-circuit/scan_semilinear_skeletons.py \
+            --seed-family '${{ matrix.family }}' --out scan.json | tee summary.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-semilinear-scan-${{ matrix.family }}
+          path: |
+            scan.json
+            summary.log
