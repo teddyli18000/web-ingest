@@ -1,0 +1,25 @@
+name: temp-aes-hybrid-family-pool
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/hybrid_family_pool.py'
+      - '.github/workflows/temp-aes-hybrid-family-pool.yml'
+permissions:
+  contents: read
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exhaust one/two atom swaps around every 32-AND NIST family seed
+        run: |
+          set -euxo pipefail
+          python science-boundary/aes-sbox-circuit/hybrid_family_pool.py --max-swaps 2 --out hybrid-family.json | tee summary.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-hybrid-family-pool
+          path: |
+            hybrid-family.json
+            summary.log
