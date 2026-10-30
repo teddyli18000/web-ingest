@@ -1,0 +1,69 @@
+name: temp Thomson 960 incoming N932 batch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-incoming-932-batch.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  batch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Static-check search code
+        run: python3 -m py_compile science-boundary/thomson-960/code/search_incoming_size_batch.py
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Fetch historical N932 parent
+        run: |
+          mkdir -p "$RUNNER_TEMP/ccd"
+          curl --fail --location --retry 3 \
+            https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/xyz/932.xyz \
+            -o "$RUNNER_TEMP/ccd/932.xyz"
+      - name: Report runner capacity
+        run: |
+          echo "nproc=$(nproc)"
+          free -h || true
+      - name: Propagate N932 to N960 under energy and motif policies
+        run: |
+          python3 science-boundary/thomson-960/code/search_incoming_size_batch.py \
+            "$RUNNER_TEMP/ccd" "$RUNNER_TEMP/few-shots" \
+            --branch 2 --beam 2 \
+            --out "$RUNNER_TEMP/incoming-932.json"
+      - name: Print compact scientific summary
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/incoming-932.json" ]; then
+            python3 - <<'PY'
+          import json, os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'incoming-932.json')))
+          print('LIVE',d['live_score'],'WORKERS',d['workers'])
+          print('BEST',d['best_float_energy'],d['best_delta_vs_live'],d['best_policy'])
+          for r in sorted([q for q in d['results'] if q.get('status')=='ok'], key=lambda q:q['best_float_energy']):
+              print('ROW',r['policy'],r['source_energy'],r['source_signature']['twins'],'->',r['best_float_energy'],r['delta_vs_live'],r['best_signature']['twins'],r['best_signature']['coord'])
+          PY
+          else
+            echo "No result JSON produced"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-incoming-932-batch
+          retention-days: 7
+          path: ${{ runner.temp }}/incoming-932.json
+          if-no-files-found: warn
