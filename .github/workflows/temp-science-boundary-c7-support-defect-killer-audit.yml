@@ -1,0 +1,41 @@
+name: Temp Science Boundary C7 support-defect killer audit
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-support-defect-killer-audit.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_support_defect_killer_audit.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned Tan/BPZ source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+      - name: Exact killer-color audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/result"
+          python3 science-boundary/shannon-capacity-c7/code/bpz_support_defect_killer_audit.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/audit.json"
+          cat "$RUNNER_TEMP/result/audit.json"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-support-defect-killer-audit
+          path: ${{ runner.temp }}/result
+          retention-days: 14
