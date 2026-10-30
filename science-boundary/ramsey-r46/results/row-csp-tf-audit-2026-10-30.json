@@ -1,0 +1,43 @@
+{
+  "audit": "row-domain triangle-free predicate",
+  "date": "2026-10-30",
+  "status": "affected UNSAT conclusions withdrawn pending corrected replay",
+  "bug": {
+    "old_logic": "for u in row, let z=N_B(u) intersect remaining_row; for v in z, reject if N_B(v) intersects remaining_row",
+    "problem": "the old test rejects a length-2 path u-v-w even when u-w is a nonedge; it therefore tests a condition strictly stronger than triangle-freeness",
+    "correct_logic": "after choosing v from z, reject only if N_B(v) intersects the remaining part of z (equivalently a third row vertex adjacent to both u and v)",
+    "minimal_code_change": "replace if(B[v]&q) by if(B[v]&z) in tf() after z has removed v"
+  },
+  "independent_regression": {
+    "known_graph": "WkGjGVA_SdqKItLBGiIoSFPNoRsxd@eoOEsZQXWoXQjkF~?",
+    "source": "frozen complete B116 catalogue",
+    "splitting_vertex": 0,
+    "degree": 8,
+    "actual_cross_row_sizes": [6,4,5,6,6,7,6,6],
+    "fact": "all eight actual rows are triangle-free in the 15-vertex antineighbour graph, as required because the 24-vertex graph is K4-free",
+    "old_predicate_behavior": "rejects those valid rows; therefore the old row-domain search is not a sound UNSAT verifier"
+  },
+  "affected_sources": [
+    "science-boundary/ramsey-r46/m219_r34_binary_csp.cpp",
+    "science-boundary/ramsey-r46/m220_r2_row_csp.cpp"
+  ],
+  "affected_results_or_downstream_claims": [
+    "science-boundary/ramsey-r46/results/m219-r34-binary-csp.json",
+    "science-boundary/ramsey-r46/m219_final_two_sequences.py and its recorded all-UNSAT conclusion",
+    "the complete 219-edge exclusion claim insofar as it depends on the final two degree sequences",
+    "science-boundary/ramsey-r46/results/m220-r2-row-csp.json",
+    "science-boundary/ramsey-r46/results/m220-r3-row-csp.json if produced from the same row-domain core",
+    "science-boundary/ramsey-r46/results/m220-r4-A25-B117-row-csp.json"
+  ],
+  "unaffected_by_this_specific_bug": [
+    "solver-free and low-graph obstruction arguments that do not call the faulty tf() implementation",
+    "the earlier 216-218 edge exclusions, subject to their own independent audit trail",
+    "the d12 fixed-pair closure, subject to its own independent solver/code trail"
+  ],
+  "required_next_steps": [
+    "introduce corrected-v2 row-domain solvers with a positive regression on a known R(4,5,24) splitting",
+    "replay m219 r3/r4 local pairs with the corrected predicate",
+    "replay m220 r2/r3 before reusing r>=4",
+    "only then restore any full-edge-layer exclusion claim"
+  ]
+}
