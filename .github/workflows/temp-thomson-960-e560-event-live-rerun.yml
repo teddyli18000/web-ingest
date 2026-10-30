@@ -1,0 +1,77 @@
+name: temp Thomson 960 e560 event-live rerun
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-e560-event-live-rerun.yml'
+
+jobs:
+  event:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [9951, 9952, 9953]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Reproduce e560 and live
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 science-boundary/thomson-960/code/harvest_20_string_image.py \
+            "$RUNNER_TEMP/few-shots" science-boundary/thomson-960/data/basin-20-morph-9136.json \
+            --seed 7301 --starts 18 --images 11 --iterations 260 --eta 0.00022 --max-step 0.0006 \
+            --image-index 7 --expected 444368.5698901982 --tol 0.00005 --quench-maxiter 2800 \
+            --out "$RUNNER_TEMP/out/e569.json"
+          python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/out/e569.json" \
+            --modes 5 --amps 0.020 --k 8 --workers "$(nproc)" --maxiter 2600 --keep-basins 4 \
+            --out "$RUNNER_TEMP/out/e560-step.json"
+          python3 - <<'PY'
+          import json,pathlib,os,sys,numpy as np
+          sys.path.insert(0,'science-boundary/thomson-960/code')
+          import search_topology_morph as tm
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'out'; root=pathlib.Path(os.environ['RUNNER_TEMP'])/'few-shots'
+          d=json.loads((out/'e560-step.json').read_text()); target=444368.56093335064
+          b=min(d['lowest_distinct_basins'],key=lambda z:abs(z['energy']-target))
+          if abs(b['energy']-target)>5e-5: raise RuntimeError(f'e560 miss {b["energy"]}')
+          x=np.asarray(b['points'],float); x/=np.linalg.norm(x,axis=1)[:,None]
+          cc=tm.coord_counts(x)
+          if cc!={'5':30,'6':912,'7':18}: raise RuntimeError(f'e560 topology {cc}')
+          (out/'e560.json').write_text(json.dumps({'energy':b['energy'],'coord_counts':cc,'points':x.tolist()},separators=(',',':'))+'\n')
+          score,live_dir=tm.find_live(root); live=tm.cert_xyz(live_dir/'certificate.json')
+          (out/'live.json').write_text(json.dumps({'energy':tm.raw_energy(live),'coord_counts':tm.coord_counts(live),'points':live.tolist()},separators=(',',':'))+'\n')
+          (out/'live-score.txt').write_text(str(score))
+          print('E560',b['energy'],cc,'LIVE',score)
+          PY
+      - name: Continue e560 through live
+        run: |
+          live=$(cat "$RUNNER_TEMP/out/live-score.txt")
+          ts='-0.18,0.20,0.45,0.65,0.80,0.90,0.96,1.02,1.05,1.08,1.12,1.18,1.28,1.42,1.60'
+          alphas='-0.45,-0.22,0.08,0.16,0.28,0.42,0.62,0.88,1.18,1.50'
+          python3 science-boundary/thomson-960/code/search_pair_event_transfer.py \
+            "$RUNNER_TEMP/out/e560.json" "$RUNNER_TEMP/out/live.json" \
+            --seed '${{ matrix.seed }}' --starts 20 --maxiter 2800 \
+            --ts="$ts" --fracs 0.06,0.10,0.15,0.22,0.35,0.50,0.75,1.0 --alphas="$alphas" \
+            --live-score "$live" --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('BEST',d['best_energy'],'DELTA_LIVE',d['best_delta_live'],'LABEL',d['best_label'])
+          for b in d['distinct_low_basins'][:20]: print('BASIN',b['energy'],b['coord_counts'],b['label'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e560-event-live-${{ matrix.seed }}
+          path: ${{ runner.temp }}/out
+          retention-days: 7
