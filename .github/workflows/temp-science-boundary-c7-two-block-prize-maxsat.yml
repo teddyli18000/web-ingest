@@ -17,7 +17,7 @@ concurrency:
 jobs:
   optimize:
     runs-on: ubuntu-latest
-    timeout-minutes: 240
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
       - name: Fetch pinned public sources
@@ -39,7 +39,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
           /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_two_block_prize_maxsat.py \
             "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/status.json" "$RUNNER_TEMP/shot" \
-            --cap 6000 --workers "$(nproc)" \
+            --cap 30000 --workers "$(nproc)" \
             > "$RUNNER_TEMP/result/solver.stdout" 2> "$RUNNER_TEMP/result/solver.stderr"
           cat "$RUNNER_TEMP/result/solver.stdout"
           tail -n 120 "$RUNNER_TEMP/result/solver.stderr"
@@ -63,6 +63,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: c7-two-block-prize-maxsat
+          name: c7-two-block-prize-maxsat-30k
           path: ${{ runner.temp }}/result
           retention-days: 14
