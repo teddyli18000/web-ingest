@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-28** | **686** | **686** | **686** | **686** | **685** |
+| **2024-11-28** | **2026-10-30** | **687** | **687** | **687** | **687** | **686** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 180 |
+| `google_trending_now` | 184 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-28
+### Latest SG snapshot — 2026-10-30
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | sfa deli hub catering suspension | 5000+ |
-| 2 | smuggling | 5000+ |
-| 3 | efl cup | 20000+ |
-| 4 | zermatt neo restaurant | 2000+ |
-| 5 | muse | 2000+ |
-| 6 | bangladesh vs west indies | 5000+ |
-| 7 | israel elections 2026 | 5000+ |
-| 8 | singapore malaysia rts link fire drill | 1000+ |
-| 9 | chris hemsworth | 1000+ |
-| 10 | mark zuckerberg | 500+ |
+| 1 | patrick stewart | 20000+ |
+| 2 | binance | 5000+ |
+| 3 | dawson hdb record price singapore | 2000+ |
+| 4 | new zealand vs india | 5000+ |
+| 5 | mta coe car length proposal | 2000+ |
+| 6 | tampines ave 12 | 1000+ |
+| 7 | halloween 2026 | 2000+ |
+| 8 | singapore private hire vehicle financing restrictions | 5000+ |
+| 9 | alexandra eala | 1000+ |
+| 10 | bus | 500+ |
 
-### Latest US snapshot — 2026-10-28
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | susan saint james | 200000+ |
-| 2 | jason galanis | 200000+ |
-| 3 | trail blazers vs lakers | 200000+ |
-| 4 | pistons vs knicks | 200000+ |
-| 5 | brewers | 1000000+ |
-| 6 | butter | 100000+ |
-| 7 | mcdonalds new holiday menu items | 100000+ |
-| 8 | fleetwood vs arsenal | 200000+ |
-| 9 | kings vs spurs | 100000+ |
-| 10 | israeli elections exit polls | 100000+ |
-
-### Latest GB snapshot — 2026-10-28
+### Latest US snapshot — 2026-10-30
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | donnie iris | 200000+ |
-| 2 | fleetwood vs arsenal | 500000+ |
-| 3 | snow | 100000+ |
-| 4 | what time is the budget | 20000+ |
-| 5 | spanish train | 20000+ |
-| 6 | royal navy vanguard-class submarines | 50000+ |
-| 7 | civil service pension scheme recovery plan | 20000+ |
-| 8 | portreath | 5000+ |
-| 9 | product recall | 10000+ |
-| 10 | leweston school | 10000+ |
+| 1 | patrick stewart | 5000000+ |
+| 2 | packers vs panthers | 500000+ |
+| 3 | jeffery simmons | 200000+ |
+| 4 | binance | 100000+ |
+| 5 | grizzlies vs trail blazers | 100000+ |
+| 6 | cavaliers vs hawks | 100000+ |
+| 7 | christian watson | 200000+ |
+| 8 | elke sommer | 20000+ |
+| 9 | dylan larkin | 50000+ |
+| 10 | corey heim | 50000+ |
 
-### Latest HK snapshot — 2026-10-28
+### Latest GB snapshot — 2026-10-30
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | cityline 陳奕迅 | 20000+ |
-| 2 | 陳婉珍 | 2000+ |
-| 3 | 退休金 | 2000+ |
-| 4 | 一粥麵 | 2000+ |
-| 5 | 公職人員行為失當罪 | 2000+ |
-| 6 | 應采兒 | 500+ |
-| 7 | samsung | 2000+ |
-| 8 | 刘延东 | 500+ |
-| 9 | 劉延東 | 500+ |
-| 10 | 許秋怡 | 500+ |
+| 1 | patrick stewart | 1000000+ |
+| 2 | everton vs newcastle | 200000+ |
+| 3 | tom jones | 20000+ |
+| 4 | binance | 20000+ |
+| 5 | james acaster | 50000+ |
+| 6 | joanna wietrzyk | 10000+ |
+| 7 | jack grealish | 20000+ |
+| 8 | celtic fc scottish fa appeal | 10000+ |
+| 9 | ticketmaster | 10000+ |
+| 10 | obr bbc licence fee projections | 2000+ |
 
-[Open full snapshot →](data/2026/10/28/trending.json)
+### Latest HK snapshot — 2026-10-30
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | patrick stewart | 5000+ |
+| 2 | 林盛斌 | 2000+ |
+| 3 | 2027 | 1000+ |
+| 4 | binance | 2000+ |
+| 5 | halloween | 1000+ |
+| 6 | 萬聖節 | 1000+ |
+| 7 | 王至尊 | 500+ |
+| 8 | 蔣家旻 | 1000+ |
+| 9 | 幣安 | 500+ |
+| 10 | 利息 | 500+ |
+
+[Open full snapshot →](data/2026/10/30/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 288 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 289 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
