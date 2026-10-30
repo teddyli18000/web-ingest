@@ -1,0 +1,60 @@
+name: temp-aes-rnbp-tail-precondition
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/rnbp_tail_precondition_z3.py'
+      - '.github/workflows/temp-aes-rnbp-tail-precondition.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - {label: d1r4, d: 1, r: 4}
+          - {label: d3r2, d: 3, r: 2}
+        helpers: [2, 3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install --quiet z3-solver
+      - name: Solve exact leaf-output tail family
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/rnbp_tail_precondition_z3.py
+          python science-boundary/aes-sbox-circuit/rnbp_tail_precondition_z3.py \
+            --family fs-101 --projection-weight 0.24 \
+            --deviation-index '${{ matrix.variant.d }}' --deviation-rank '${{ matrix.variant.r }}' \
+            --helpers '${{ matrix.helpers }}' --timeout-ms 480000 --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier if candidate found
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            python - <<'PY'
+          import json,sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          c=json.load(open('result/candidate.json'))
+          assert len(c['gates']) <= 100, len(c['gates'])
+          assert ras.independent_check(c)[0]
+          PY
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot; cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-rnbp-tail-precondition-${{ matrix.variant.label }}-h${{ matrix.helpers }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
