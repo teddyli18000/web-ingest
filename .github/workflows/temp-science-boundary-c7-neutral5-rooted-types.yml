@@ -1,0 +1,44 @@
+name: Temp Science Boundary C7 neutral-five rooted types
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-neutral5-rooted-types.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_neutral5_rooted_types.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  classify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned source and dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          python3 -m pip install --disable-pip-version-check networkx
+      - name: Exact rooted-type census
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/result"
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_neutral5_rooted_types.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/types.json" \
+            > "$RUNNER_TEMP/result/stdout" 2> "$RUNNER_TEMP/result/stderr"
+          cat "$RUNNER_TEMP/result/stdout"
+          tail -n 100 "$RUNNER_TEMP/result/stderr"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-neutral5-rooted-types
+          path: ${{ runner.temp }}/result
+          retention-days: 14
