@@ -1,0 +1,48 @@
+name: temp-aes-g103-support-aggregate
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-g103-support-aggregate.yml'
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download G103 support artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euxo pipefail
+          mkdir -p prior
+          gh run download 41045542990 -p 'aes-released-rnbp-g103-*' -D prior
+          find prior -maxdepth 3 -type f -print | sort
+      - name: Aggregate exact terminal target indices
+        run: |
+          set -euxo pipefail
+          python - <<'PY'
+          import glob,json,pathlib,re
+          rows=[]
+          for sf in glob.glob('prior/**/summary.json',recursive=True):
+              s=json.load(open(sf))
+              seed=s['seed']; d=s['dist']
+              nz=[{'index':i,'distance':v,'target':(f'y{i-64}' if i>=64 else f'operand{i}')} for i,v in enumerate(d) if v]
+              rows.append({'seed':seed,'linear':s['linear'],'released_ands':s['released_ands'],
+                           'status':s['status'],'nonzero':nz})
+          rows.sort(key=lambda r:r['seed'])
+          assert [r['seed'] for r in rows]==[1,2,3,4],rows
+          agg={'run_id':41045542990,'rows':rows}
+          json.dump(agg,open('g103-support-aggregate.json','w'),indent=2)
+          print(json.dumps(agg,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-support-aggregate
+          path: g103-support-aggregate.json
