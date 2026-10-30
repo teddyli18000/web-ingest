@@ -1,0 +1,74 @@
+name: temp Thomson 960 exhaustive T-orbit transfer batch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-t-orbit-transfer-batch.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  batch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Fetch historical N972 parent
+        run: |
+          curl --fail --location --retry 3 \
+            https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/xyz/972.xyz \
+            -o "$RUNNER_TEMP/972.xyz"
+      - name: Report runner capacity
+        run: |
+          echo "nproc=$(nproc)"
+          free -h || true
+      - name: Exhaustive orbit transfer, classification, and portal release
+        run: |
+          python3 science-boundary/thomson-960/code/search_t_orbit_transfer_batch.py \
+            "$RUNNER_TEMP/972.xyz" "$RUNNER_TEMP/few-shots" \
+            --classify 16 --hessian-k 12 \
+            --out "$RUNNER_TEMP/t-orbit-transfer.json"
+      - name: Print compact scientific summary
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/t-orbit-transfer.json" ]; then
+            python3 - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'t-orbit-transfer.json')
+          d=json.load(open(p))
+          print('LIVE',d['live_score'])
+          print('GROUP',d['group_validation_max'],d['group_validation_rms_max'],d['orbit_size_hist'],d['generic_orbit_count'])
+          print('BEST',d['best_float_energy'],d['best_delta_vs_live'],d['best_source'])
+          print('TOP')
+          for r in d['all_relaxed'][:12]:
+              s=r['signature']
+              print(r['orbit_index'],r['energy'],r['delta_vs_live'],s['twin_count'],s['coord'],r['all_six'],r['min_core_distance'])
+          print('CLASSIFIED')
+          for r in d['classified']:
+              print(r['rank'],r['energy'],r['gradient_rms'],r['negative_modes_among_k'],r['lowest_eigenvalues'][:5])
+          print('PORTAL_RELEASES',len(d['portal_releases']))
+          PY
+          else
+            echo "No result JSON produced"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-t-orbit-transfer-batch
+          retention-days: 7
+          path: ${{ runner.temp }}/t-orbit-transfer.json
+          if-no-files-found: warn
