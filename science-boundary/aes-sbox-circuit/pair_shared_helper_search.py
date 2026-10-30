@@ -6,7 +6,7 @@ A new XOR/XNOR helper can be locally neutral or even +1 around either root, yet
 become globally useful when the same helper replaces operands at two different
 AND roots and lets old linear support disappear after pruning.
 
-For each AND operand site, enumerate one-gate affine helpers h = a XOR/XNOR b
+For each AND operand site, enumerate every one-gate affine helper h = a XOR/XNOR b
 from wires available before that root. Keep helpers satisfying exact full-circuit
 observability care at the root. Then pair distinct roots that admit the same
 syntactic helper, materialize the helper once before the earlier root, rewrite
@@ -65,7 +65,6 @@ def enumerate_matches(c):
         for side in ('a','b'):
             old=g[side];other=g['b' if side=='a' else 'a']
             target=(vals[old]&vals[other])&care
-            seen_tv=set()
             for ia,a in enumerate(earlier):
                 va=vals[a]
                 for b in earlier[ia:]:
@@ -73,11 +72,10 @@ def enumerate_matches(c):
                     for op in OPS:
                         tv=census.op_eval(op,va,vb)
                         if (tv&vals[other]&care)!=target:continue
-                        # identical helper truth functions at one site do not add
-                        # scientific coverage; retain the first syntactic witness.
-                        keytv=tv&care
-                        if keytv in seen_tv:continue
-                        seen_tv.add(keytv)
+                        # Do not collapse locally equivalent helpers: two helpers
+                        # can agree on this site's care set but differ on another
+                        # root's care set, which is exactly the coupled effect we
+                        # are trying to enumerate completely.
                         ek=(op,a,b)
                         matches[ek].append({'idx':idx,'out':g['out'],'side':side,
                                             'old':old,'other':other,
@@ -115,8 +113,6 @@ def main():
         if len(sites)<2:continue
         for s1,s2 in itertools.combinations(sites,2):
             if s1['out']==s2['out']:continue
-            # The same expression is guaranteed available at both sites because
-            # it was independently enumerated from each site's earlier wires.
             pairs_tested+=1
             nc=materialize(base,expr,s1,s2)
             h=sig(nc)
