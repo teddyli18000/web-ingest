@@ -1,0 +1,72 @@
+name: temp-aes-global-linear-resynth
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/resynth_linear_skeleton.py'
+      - '.github/workflows/temp-aes-global-linear-resynth.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  resynth:
+    strategy:
+      fail-fast: false
+      matrix:
+        family: [nist-a32-g103, nist-a32-g104, nist-a33-g105, jain-106-d34]
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Four randomized global linear synthesis workers
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p results
+          pids=()
+          for lane in 0 1 2 3; do
+            seed=$((2026103100 + lane))
+            python science-boundary/aes-sbox-circuit/resynth_linear_skeleton.py \
+              --family '${{ matrix.family }}' --seed "$seed" --seconds 480 --trials 500 \
+              --max-three-scan 1800 --out "results/lane-$lane" \
+              > "results/lane-$lane.log" 2>&1 &
+            pids+=("$!")
+          done
+          rc=0
+          for p in "${pids[@]}"; do wait "$p" || rc=1; done
+          cat results/lane-*.log
+          exit "$rc"
+      - name: Aggregate and verify best candidate
+        run: |
+          python - <<'PY'
+          import glob,json,sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import seed_family_census as c
+          rows=[]
+          for f in glob.glob('results/lane-*/summary.json'):
+              s=json.load(open(f)); rows.append((s['best_gates'],f,s))
+          assert len(rows)==4,rows
+          rows.sort(key=lambda x:x[0]); bestn,f,s=rows[0]
+          cert=json.load(open(f.replace('summary.json','best.json')))
+          vals,*_=c.eval_circuit(cert,False)
+          for x in range(256):
+              y=sum(((vals[w]>>x)&1)<<i for i,w in enumerate(cert['outputs']))
+              assert y==c.aes_sbox(x),(x,y,c.aes_sbox(x))
+          json.dump(cert,open('best-certificate.json','w'),indent=2)
+          json.dump({'family':'${{ matrix.family }}','best_gates':bestn,'all':[x[2] for x in rows]},open('aggregate.json','w'),indent=2)
+          print(json.dumps({'family':'${{ matrix.family }}','best_gates':bestn}))
+          PY
+          git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+          mkdir -p /tmp/candidate-shot
+          cp best-certificate.json /tmp/candidate-shot/certificate.json
+          python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/candidate-shot | tee official-verifier.jsonl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-global-linear-${{ matrix.family }}
+          path: |
+            results
+            aggregate.json
+            best-certificate.json
+            official-verifier.jsonl
