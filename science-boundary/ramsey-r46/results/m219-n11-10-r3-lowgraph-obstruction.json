@@ -1,0 +1,27 @@
+{
+  "A26_transversal_numbers": [2,2],
+  "campaign": "m219-n11-10-r3-lowgraph-obstruction",
+  "class_relaxation_count": 76,
+  "conclusion": "degree sequence 11^10 12^10 13^16 is impossible for an m=219 (4,6)-Ramsey graph",
+  "counting_obstruction": "for six marked r3 vertices R, H[R] is triangle-free with Delta<=2 and alpha<=3. Each of four U vertices must hit every independent triple of H[R]. For every possible component type, 12-2e(H[R]) < 4*tau_3(H[R]).",
+  "degree_sequence": {"11":10,"12":10,"13":16},
+  "dependencies": {"A26":"complete authenticated McKay stratum, 2 graphs; both I5 transversal number 2","B116":"complete authenticated McKay stratum, 9 graphs","no_lucky_d12":"certified closure implies S(v)<=146 for degree 12 in class relaxation"},
+  "marked_complement_types": {
+    "P2 + P2 + P2":{"edges_in_R":3,"independent_triple_transversal":2,"available_RU_edges":6,"required_RU_edges_for_four_U":8},
+    "P2 + P4":{"edges_in_R":4,"independent_triple_transversal":2,"available_RU_edges":4,"required_RU_edges_for_four_U":8},
+    "C5 + P1":{"edges_in_R":5,"independent_triple_transversal":1,"available_RU_edges":2,"required_RU_edges_for_four_U":4},
+    "P6":{"edges_in_R":5,"independent_triple_transversal":2,"available_RU_edges":2,"required_RU_edges_for_four_U":8},
+    "C4 + P2":{"edges_in_R":5,"independent_triple_transversal":2,"available_RU_edges":2,"required_RU_edges_for_four_U":8},
+    "C6":{"edges_in_R":6,"independent_triple_transversal":2,"available_RU_edges":0,"required_RU_edges_for_four_U":8}
+  },
+  "max_sum_r": 34,
+  "minimum_forced_r3_vertices": 6,
+  "r3_local_cases": [
+    {"t":3,"B_counts":[6,2,16,0],"feasible_B_types":[]},
+    {"t":4,"B_counts":[5,4,15,0],"feasible_B_types":[]},
+    {"t":5,"B_counts":[4,6,14,0],"feasible_B_types":[]},
+    {"t":6,"B_counts":[3,8,13,0],"feasible_B_types":[]},
+    {"t":7,"B_counts":[2,10,12,0],"feasible_B_types":[{"b_ordinal":1,"possible_low_sets":[[0,3]],"edge_0_3":true}]}
+  ],
+  "r3_local_rule": "r=3 forces t=7; weak B DP uniquely leaves B116 ordinal1 with the two low non-neighbours {0,3}, which are adjacent"
+}
