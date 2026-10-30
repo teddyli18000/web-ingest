@@ -1,0 +1,79 @@
+Thomson N=960 — activated defect-cloud avalanche at the e432/B/A/R junction — 2026-10-30
+
+Starting point
+--------------
+e432 = 444368.4322496274, coordination 35/902/23.
+Known low 24-dislocation destinations: B=444368.402972861..., A=444368.395686226..., live R=444368.3924061973.
+All endpoint files use the natural labeled correspondence from the frozen e432 seed artifact.
+
+Key correction to the old mechanism picture
+-------------------------------------------
+The transition out of e432 is NOT a local 23->24 completion of the unique short 5-7-5 scar.
+The complete target-independent family of seven local single-flip completions was scaffolded and released in run 41047867851. All seven either heal to e432 or produce substantially higher minima. The lowest surviving new 24-dislocation basin found there is about 444368.524418964, far above B/A/R. The lowest fixed 24-dislocation scaffold is about 444368.588526556 and heals to e432 on release.
+
+Delaunay event avalanche along the natural e432->B geodesic
+------------------------------------------------------------
+The source and B triangulations differ by 24 deleted and 24 added edges. Along the pointwise spherical geodesic, those changes occur in 22 event windows because two windows contain two simultaneous flips.
+
+Approximate event centers from a 0.002 t grid:
+  0  t~0.193  delete (547,783) add (91,318)       23 -> 23 dislocations
+  1  t~0.263  delete (639,871) add (537,785)      23 -> 23
+  2  t~0.269  delete (424,613) add (477,784)      23 -> 23
+  3  t~0.355  delete (639,785) add (537,669)      23 -> 23
+  4  t~0.443  delete (173,838) add (799,925)      23 -> 25
+  5  t~0.447  delete (40,925)  add (58,173)       25 -> 25
+  6  t~0.467  delete (58,359)  add (40,435)       25 -> 25
+  7  t~0.477  delete (415,459) add (18,547)       25 -> 26
+  8  t~0.489  delete (18,580)  add (415,796)      26 -> 26
+  9  t~0.499  delete (172,804) add (190,613)      26 -> 27
+ 10  t~0.505  delete (190,444) add (172,893)      27 -> 27
+ 11  t~0.509  two flips: (208,311)->(208,580), (574,796)->(359,574), 27 -> 26
+ 12  t~0.513  two flips: (59,799)->(603,838), (435,893)->(311,444), 26 -> 24
+ 13  t~0.523  delete (428,602) add (831,919)      24 -> 24
+ 14  t~0.547  delete (43,714)  add (661,870)      24 -> 24
+ 15  t~0.573  delete (379,959) add (295,923)      24 -> 24
+ 16  t~0.597  delete (201,603) add (639,935)      24 -> 24
+ 17  t~0.609  delete (191,279) add (182,922)      24 -> 24
+ 18  t~0.661  delete (566,784) add (202,804)      24 -> 24
+ 19  t~0.675  delete (318,606) add (332,459)      24 -> 24
+ 20  t~0.709  delete (35,323)  add (79,134)       24 -> 24
+ 21  t~0.915  delete (603,935) add (59,639)       24 -> 24
+
+The crucial activated interval is events 4-12: the path nucleates extra defect pairs, reaches 25, then 26, then 27 dislocations, and only later annihilates back to 24. This is a defect-cloud / reconstruction avalanche, not monotone scar completion.
+
+Most important geometric fact
+-----------------------------
+The independently measured e432/B relaxation basin boundary is t in (0.49250,0.49275). There is NO Delaunay event in that interval: event 8 is near t~0.489 and event 9 near t~0.499.
+Therefore the e432/B basin boundary lies strictly inside one fixed triangulation cell with coordination 38/896/26.
+
+This explains why single-flip searches were misleading. The decisive variable is elastic geometry inside an already activated 26-dislocation topology, after several distributed edge events have occurred.
+
+Comparison of B/A/R activated paths
+-----------------------------------
+At t=0.492 all three natural e432->B, e432->A and e432->R paths have exactly coordination 38/896/26.
+Their activated states are close but not identical:
+- B vs A angular RMS ~0.00195422 rad; triangulations differ by 2 source-side edges.
+- B vs R angular RMS ~0.00318314 rad; triangulations differ by 4 source-side edges.
+- A vs R angular RMS ~0.00230689 rad; triangulations differ by 2 source-side edges.
+
+Event-family overlap over the whole paths:
+- B/A share 16 event windows.
+- B/R share 16.
+- A/R share 19.
+The destinations therefore differ less by a wholly different defect mechanism than by the ordering/insertion of a small number of events in the central avalanche.
+
+Search consequence
+------------------
+Retire these representations as primary directions:
+1. ordinary low Hessian modes around e432;
+2. linear decompositions of the same e432->B reaction field;
+3. local one-step 23->24 scar completion;
+4. one-dimensional A->R continuation through/beyond the record;
+5. linear parallel transport of the e432/B interface field onto the R/A saddle.
+
+Next representation: activated defect-cloud simplex / event-order search.
+Construct the B/A/R activated states at t~0.492 and mix/extrapolate them BEFORE relaxation. This directly perturbs the ordering of the small central event set while staying near the physically relevant 26-dislocation activated topology. Active workflow run 41053249957 searches this simplex.
+
+Literature consistency
+----------------------
+Recent spherical-crystal work supports treating defect morphology changes as collective reconstruction rather than smooth local scar growth. In particular, the 2024 Phys. Rev. Research clouds-to-scars study attributes morphology selection to defect core energy, and 2026 spherical-crystal studies emphasize cooperative/topological defect reorganization. These are qualitative motivation only; the event-avalanche statement above comes directly from the N=960 computations.
