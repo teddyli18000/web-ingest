@@ -1,0 +1,55 @@
+name: Temp Science Boundary C7 decomposed exact k8 killer <=3
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-k8-killer3-decomposed.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-k8-killer3-decomposed
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned source and install SAT backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          python3 -m pip install --disable-pip-version-check python-sat
+          mkdir -p "$RUNNER_TEMP/result"
+      - name: Build unrestricted exact-k8 support-union CNF once
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_irreducible_support_sat.py build \
+            "$RUNNER_TEMP/tan" 8 "$RUNNER_TEMP/k8.cnf" "$RUNNER_TEMP/k8.meta.json" \
+            > "$RUNNER_TEMP/result/build.stdout" 2> "$RUNNER_TEMP/result/build.stderr"
+          cat "$RUNNER_TEMP/result/build.stdout"
+      - name: Exact 56-triple killer-color decomposition on four cores
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_k8_killer3_decompose.py \
+            "$RUNNER_TEMP/k8.cnf" "$RUNNER_TEMP/k8.meta.json" "$RUNNER_TEMP/result/decomposition.json" \
+            --workers 4 --solver cadical195 \
+            | tee "$RUNNER_TEMP/result/decomposition.stdout"
+          cat "$RUNNER_TEMP/result/decomposition.json"
+      - name: Upload exact result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-k8-killer3-decomposed
+          path: ${{ runner.temp }}/result
+          retention-days: 14
