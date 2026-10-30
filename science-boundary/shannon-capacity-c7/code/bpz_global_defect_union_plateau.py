@@ -4,10 +4,10 @@
 Primary objective: maximize true net gain = selected_new - deleted_old.
 Secondary objective: among primary optima, maximize selected_new.
 
-This uses the same complete five-defect factor-union candidate universe and exact
-blocker/new-new constraints as bpz_global_defect_union_prize.py.  A large gain-0
-solution is a distant verifier-valid 134753 mother state for a fresh unrestricted
-local search; a positive solution is already a breakthrough candidate.
+Each terminal scenario independently reconstructs UxU minus its own baseline,
+its exact old-point blockers, and all new-new conflicts.  A large gain-0 optimum
+is a distant verifier-valid 134753 mother state for fresh unrestricted search;
+a positive optimum is already a breakthrough candidate.
 """
 from __future__ import annotations
 import argparse,json,multiprocessing as mp,os
@@ -15,15 +15,26 @@ from pathlib import Path
 from pysat.formula import WCNF
 from pysat.examples.rc2 import RC2
 from bpz_joint_row_defects_maxsat import load_geometry,terminal_periphery,validate_defects
-
 G={}
 def init_worker(s):
     global G;G=s
 
 def solve_task(t):
-    q,r,o=t;ring,B,fam,U,candidates,losses,baseline=G["ring"],G["B"],G["fam"],G["U"],G["candidates"],G["losses"][(q,r,o)],G["baseline"][(q,r,o)]
-    idx={p:i for i,p in enumerate(candidates)};n=len(candidates);touched=sorted(set().union(*losses));bi={p:i for i,p in enumerate(touched)}
-    w=WCNF()
+    q,r,o=t;ring,B,fam,U,Uv,core=G["ring"],G["B"],G["fam"],G["U"],G["Uv"],G["core"]
+    P=terminal_periphery(fam,q,r,o);baseline=core|P
+    if len(baseline)!=134753:raise RuntimeError(("baseline",len(baseline)))
+    candidates=sorted((x,y) for x in Uv for y in Uv if (x,y) not in baseline);idx={p:i for i,p in enumerate(candidates)}
+    byfirst={}
+    for p in P:byfirst.setdefault(p[0],[]).append(p)
+    fk=set(byfirst);losses=[]
+    for x,y in candidates:
+        L={(u,v) for u in ring.NB[x]&B for v in ring.NB[y]&B}
+        for u in ring.NB[x]&fk:
+            for p in byfirst[u]:
+                if p[1] in ring.NB[y]:L.add(p)
+        if not L<=baseline:raise RuntimeError(("blocker outside baseline",len(L-baseline)))
+        losses.append(L)
+    n=len(candidates);touched=sorted(set().union(*losses));bi={p:i for i,p in enumerate(touched)};w=WCNF()
     for i,L in enumerate(losses):
         for p in L:w.append([-(i+1),n+bi[p]+1])
     conflicts=0
@@ -54,31 +65,12 @@ def main():
     for d in defs:
         C=d["C"];P={z for z in range(ring.n) if (ring.NB[z]&B)<=C};pools.append(P);U.update(P)
     if [len(x) for x in pools] != [37,40,39,39,39]:raise RuntimeError("pool drift")
-    U=set(U);Uv=sorted(U);tasks=[(q,r,o) for q in ("O","H","V") for r in ("O","H","V") for o in (0,1)]
-    baselines={};lossmap={};candidates=None
-    core={(x,y) for x in B for y in B}
-    for q,r,o in tasks:
-        P=terminal_periphery(fam,q,r,o);base=core|P
-        if len(base)!=134753:raise RuntimeError(("baseline",len(base)))
-        cand=sorted((x,y) for x in Uv for y in Uv if (x,y) not in base)
-        if candidates is None:candidates=cand
-        elif candidates!=cand:raise RuntimeError("candidate universe depends on terminal")
-        byfirst={}
-        for p in P:byfirst.setdefault(p[0],[]).append(p)
-        fk=set(byfirst);Ls=[]
-        for x,y in cand:
-            L={(u,v) for u in ring.NB[x]&B for v in ring.NB[y]&B}
-            for u in ring.NB[x]&fk:
-                for p in byfirst[u]:
-                    if p[1] in ring.NB[y]:L.add(p)
-            if not L<=base:raise RuntimeError("blocker outside baseline")
-            Ls.append(L)
-        baselines[(q,r,o)]=base;lossmap[(q,r,o)]=Ls
-    state={"ring":ring,"B":B,"fam":fam,"U":U,"candidates":candidates,"losses":lossmap,"baseline":baselines};workers=max(1,min(a.workers,4,len(tasks)));ctx=mp.get_context("fork")
+    U=set(U);Uv=sorted(U);core={(x,y) for x in B for y in B};tasks=[(q,r,o) for q in ("O","H","V") for r in ("O","H","V") for o in (0,1)]
+    state={"ring":ring,"B":B,"fam":fam,"U":U,"Uv":Uv,"core":core};workers=max(1,min(a.workers,4,len(tasks)));ctx=mp.get_context("fork")
     with ctx.Pool(workers,initializer=init_worker,initargs=(state,)) as p:rows=list(p.imap_unordered(solve_task,tasks,chunksize=1))
     rows.sort(key=lambda z:(z["gain"],z["selected"],-z["deleted"]),reverse=True);best=rows[0]
     if best["selected"]<=0:raise RuntimeError(("no nonempty primary optimum",best))
-    base=baselines[(best["q"],best["r"],best["terminal_orientation"])];sel={tuple(p) for p in best["selected_points"]};lost={tuple(p) for p in best["deleted_points"]};cand=(base-lost)|sel
+    P=terminal_periphery(fam,best["q"],best["r"],best["terminal_orientation"]);baseline=core|P;sel={tuple(p) for p in best["selected_points"]};lost={tuple(p) for p in best["deleted_points"]};cand=(baseline-lost)|sel
     if len(cand)!=134753+best["gain"]:raise RuntimeError(("score",len(cand),best["gain"]))
     def enc(p):return "".join(str(z) for z in ring.decode(p[0])+ring.decode(p[1]))
     pts=sorted(enc(p) for p in cand);a.certificate.parent.mkdir(parents=True,exist_ok=True);a.certificate.write_text(json.dumps({"points":pts},separators=(",",":"))+"\n")
