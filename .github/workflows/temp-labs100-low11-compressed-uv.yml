@@ -1,0 +1,86 @@
+name: temp labs100 low11 compressed homometric search
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-low11-compressed-uv.yml'
+
+concurrency:
+  group: temp-labs100-low11-compressed-uv
+  cancel-in-progress: false
+
+jobs:
+  compressed-low11:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact projection and fibre tools
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h20_w129_w131_order10_profiles.cpp -o "$RUNNER_TEMP/profiles"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_order25_fibre_mitm.cpp -o "$RUNNER_TEMP/fibre"
+      - name: Generate exact low11 order10 table with every runner CPU
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "runner_cpus=$(nproc)"
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/profiles" "$RUNNER_TEMP/w" 2>&1 | tee "$RUNNER_TEMP/profile-summary.txt"
+          test "$(wc -l < "$RUNNER_TEMP/w_low11.txt")" -eq 95420
+      - name: Install OR-Tools
+        run: python -m pip install --disable-pip-version-check 'ortools>=9.14,<10'
+      - name: Search kp12 and kp14 compressed homometric spaces using all CPUs
+        shell: bash
+        run: |
+          set -uo pipefail
+          cpus="$(nproc)"
+          : > "$RUNNER_TEMP/compressed-status.txt"
+          for k in 12 14; do
+            set +e
+            python science-boundary/labs-100/code/oddperfect_low11_compressed_uv_cpsat.py \
+              --kp "$k" --profiles "$RUNNER_TEMP/w_low11.txt" \
+              --seconds 180 --workers "$cpus" --seed $((301030+k)) \
+              > "$RUNNER_TEMP/k${k}.json" 2>&1
+            rc=$?
+            set -e
+            echo "kp${k} rc=${rc}" | tee -a "$RUNNER_TEMP/compressed-status.txt"
+            cat "$RUNNER_TEMP/k${k}.json"
+          done
+      - name: Exact fibre test for every compressed candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > "$RUNNER_TEMP/fibre.log"
+          for k in 12 14; do
+            src="$RUNNER_TEMP/k${k}.json"
+            if ! grep -q '"independent_check": true' "$src"; then
+              echo "kp${k}: no verified compressed candidate in this solve" | tee -a "$RUNNER_TEMP/fibre.log"
+              continue
+            fi
+            python - "$src" "$RUNNER_TEMP/candidate.txt" <<'PY'
+          import json,sys
+          z=json.load(open(sys.argv[1]))
+          with open(sys.argv[2],'w') as f:
+              f.write(' '.join(map(str,z['p']))+'\n')
+              f.write(' '.join(map(str,z['c']))+'\n')
+          PY
+            for d in 1 2; do
+              echo "kp${k} defect${d}" | tee -a "$RUNNER_TEMP/fibre.log"
+              OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/fibre" --defect "$d" < "$RUNNER_TEMP/candidate.txt" | tee -a "$RUNNER_TEMP/fibre.log"
+            done
+          done
+          if grep -E 'compatible_probe_lifts=[1-9][0-9]*' "$RUNNER_TEMP/fibre.log"; then
+            echo COMPRESSED_CANDIDATE_HAS_TARGET_FIBRE_LIFT
+          fi
+      - name: Upload transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-low11-compressed-uv
+          path: |
+            ${{ runner.temp }}/profile-summary.txt
+            ${{ runner.temp }}/compressed-status.txt
+            ${{ runner.temp }}/k12.json
+            ${{ runner.temp }}/k14.json
+            ${{ runner.temp }}/fibre.log
+          if-no-files-found: warn
