@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-"""Exact SAT for outside-only positive BPZ support defects with exact support union.
+"""Exact SAT for outside-only positive BPZ support defects.
 
 For the pinned BPZ/Tan core B (|B|=359), every five-dimensional candidate z
-has support S(z)=N[z] intersect B. For an integer k, this model chooses at
-least k+1 pairwise nonconfusable candidates outside B and requires that the
-union of their nonempty supports has size exactly k.
+has support S(z)=N[z] intersect B. For integer k this model selects at least
+k+1 pairwise nonconfusable candidates outside B and requires their exact support
+union to contain exactly k owners.
 
-Owner variables are tied in both directions to the selected candidates, so SAT
-means an actual k-owner positive support defect. Optional --killer-free removes
-candidates that simultaneously conflict with both endpoints of any pinned BPZ
-private pair; such a witness is the most direct row-defect route to positive
-10D score without paying a terminal private-pair loss.
+Optional killer controls use the eight pinned BPZ private-pair colors. A point
+kills color j when it conflicts with both endpoints of private pair j.
+--killer-free filters all killer points. --max-killer-colors h keeps all points
+but constrains the union of killed colors to size at most h.
 """
 from __future__ import annotations
 import argparse,itertools,json,time,sys
@@ -35,12 +34,12 @@ def conflict5(a:int,b:int)->bool:
         if (x-y)%7 not in (0,1,6):return False
     return True
 
-def killer_mask(z:int,private_pairs)->int:
-    mask=0
-    for i,p in enumerate(private_pairs):
+def killer_mask(z:int,pairs)->int:
+    m=0
+    for i,p in enumerate(pairs):
         a,b=int(p[0]),int(p[1])
-        if conflict5(z,a) and conflict5(z,b):mask|=1<<i
-    return mask
+        if conflict5(z,a) and conflict5(z,b):m|=1<<i
+    return m
 
 def load_geometry(root:Path,k:int,killer_free:bool):
     root=root.resolve();sys.path.insert(0,str(root))
@@ -60,12 +59,14 @@ def load_geometry(root:Path,k:int,killer_free:bool):
         candidates.append(z);supports.append(tuple(oid[x] for x in S));kmasks.append(km)
     return ring,raw,B,owners,candidates,supports,kmasks
 
-def build(root:Path,k:int,cnf_path:Path,meta_path:Path,killer_free:bool=False):
+def build(root:Path,k:int,cnf_path:Path,meta_path:Path,killer_free:bool=False,max_killer_colors:int|None=None):
     from pysat.card import CardEnc,EncType
     from pysat.formula import CNF
-    ring,raw,B,owners,cands,supp,kmasks=load_geometry(root,k,killer_free);n=len(cands);m=len(owners)
-    xvar={v:i+1 for i,v in enumerate(cands)};y0=n+1
-    cnf=CNF();edges=0;impl=0;reverse=0
+    if killer_free and max_killer_colors not in (None,0):raise ValueError('killer-free conflicts with positive max-killer-colors')
+    if max_killer_colors is not None and not 0<=max_killer_colors<=8:raise ValueError(max_killer_colors)
+    ring,raw,B,owners,cands,supp,kmasks=load_geometry(root,k,killer_free);n=len(cands);m=len(owners);nc=len(raw['private_pairs'])
+    xvar={v:i+1 for i,v in enumerate(cands)};y0=n+1;c0=y0+m
+    cnf=CNF();edges=0;impl=0;reverse=0;kimpl=0
     for v in cands:
         iv=xvar[v];d=dec(v)
         for off in OFFSETS:
@@ -78,17 +79,23 @@ def build(root:Path,k:int,cnf_path:Path,meta_path:Path,killer_free:bool=False):
     for i,S in enumerate(supp):
         xv=i+1
         for oi in S:
-            cnf.append([-xv,y0+oi]);impl+=1
-            incident[oi].append(xv)
+            cnf.append([-xv,y0+oi]);impl+=1;incident[oi].append(xv)
+        if max_killer_colors is not None:
+            km=kmasks[i]
+            for j in range(nc):
+                if km>>j&1:cnf.append([-xv,c0+j]);kimpl+=1
     for oi,xs in enumerate(incident):
         cnf.append([-(y0+oi),*xs] if xs else [-(y0+oi)]);reverse+=1
-    top=y0+m-1
+    top=c0+nc-1 if max_killer_colors is not None else y0+m-1
     exact=CardEnc.equals(lits=list(range(y0,y0+m)),bound=k,top_id=top,encoding=EncType.cardnetwrk)
     cnf.extend(exact.clauses);top=max(top,exact.nv)
     atleast=CardEnc.atleast(lits=list(range(1,n+1)),bound=k+1,top_id=top,encoding=EncType.cardnetwrk)
-    cnf.extend(atleast.clauses)
+    cnf.extend(atleast.clauses);top=max(top,atleast.nv)
+    if max_killer_colors is not None:
+        kc=CardEnc.atmost(lits=list(range(c0,c0+nc)),bound=max_killer_colors,top_id=top,encoding=EncType.cardnetwrk)
+        cnf.extend(kc.clauses)
     cnf.to_file(cnf_path)
-    meta={'method':'exact-outside-only-exact-support-defect-sat','k':k,'target':k+1,'killer_free':killer_free,'B_size':len(B),'candidate_count':n,'conflict_edges':edges,'support_implications':impl,'support_reverse_clauses':reverse,'cnf_vars':cnf.nv,'cnf_clauses':len(cnf.clauses),'owners':owners,'candidates':cands,'supports':[list(s) for s in supp],'killer_masks':kmasks,'private_pairs':raw['private_pairs']}
+    meta={'method':'exact-outside-only-exact-support-defect-sat','k':k,'target':k+1,'killer_free':killer_free,'max_killer_colors':max_killer_colors,'B_size':len(B),'candidate_count':n,'conflict_edges':edges,'support_implications':impl,'support_reverse_clauses':reverse,'killer_implications':kimpl,'cnf_vars':cnf.nv,'cnf_clauses':len(cnf.clauses),'owners':owners,'candidates':cands,'supports':[list(s) for s in supp],'killer_masks':kmasks,'private_pairs':raw['private_pairs']}
     meta_path.parent.mkdir(parents=True,exist_ok=True);meta_path.write_text(json.dumps(meta,separators=(',',':'))+'\n')
     print(json.dumps({q:v for q,v in meta.items() if q not in ('owners','candidates','supports','killer_masks','private_pairs')},sort_keys=True))
 
@@ -108,7 +115,7 @@ def worker(cnf_path:Path,solver:str,out:Path):
 
 def replay(meta_path:Path,res_path:Path,out_path:Path):
     d=json.loads(meta_path.read_text());r=json.loads(res_path.read_text());k=int(d['k']);n=len(d['candidates'])
-    out={'method':'exact-outside-only-exact-support-defect-replay','k':k,'target':k+1,'killer_free':bool(d.get('killer_free')),'solver':r.get('solver'),'solver_status':r.get('status')}
+    out={'method':'exact-outside-only-exact-support-defect-replay','k':k,'target':k+1,'killer_free':bool(d.get('killer_free')),'max_killer_colors':d.get('max_killer_colors'),'solver':r.get('solver'),'solver_status':r.get('status')}
     if r.get('status')=='unsat':
         out.update(candidate=False);out_path.write_text(json.dumps(out,indent=2,sort_keys=True)+'\n');print(json.dumps(out,sort_keys=True));return
     if r.get('status')!='sat':raise RuntimeError(r)
@@ -123,19 +130,21 @@ def replay(meta_path:Path,res_path:Path,out_path:Path):
     for i in chosen_idx:
         supp_union.update(int(x) for x in d['supports'][i]);killer_union|=int(d['killer_masks'][i])
     if len(supp_union)!=k:raise RuntimeError(('support-union',len(supp_union),k))
+    kc=killer_union.bit_count();mk=d.get('max_killer_colors')
     if d.get('killer_free') and killer_union:raise RuntimeError(('killer-free-violation',killer_union))
+    if mk is not None and kc>int(mk):raise RuntimeError(('killer-bound',kc,mk))
     owner_words=[int(d['owners'][i]) for i in sorted(supp_union)]
     killed=[i for i in range(len(d['private_pairs'])) if killer_union>>i&1]
-    out.update(candidate=True,witness=sorted(chosen),owners=owner_words,support_union_size=len(supp_union),witness_size=len(chosen),killed_private_pair_colors=killed,killed_private_pair_count=len(killed))
+    out.update(candidate=True,witness=sorted(chosen),owners=owner_words,support_union_size=len(supp_union),witness_size=len(chosen),killed_private_pair_colors=killed,killed_private_pair_count=kc)
     out_path.write_text(json.dumps(out,indent=2,sort_keys=True)+'\n');print(json.dumps(out,sort_keys=True))
 
 def main():
     ap=argparse.ArgumentParser();sub=ap.add_subparsers(dest='mode',required=True)
-    b=sub.add_parser('build');b.add_argument('tan_root',type=Path);b.add_argument('k',type=int);b.add_argument('cnf',type=Path);b.add_argument('meta',type=Path);b.add_argument('--killer-free',action='store_true')
+    b=sub.add_parser('build');b.add_argument('tan_root',type=Path);b.add_argument('k',type=int);b.add_argument('cnf',type=Path);b.add_argument('meta',type=Path);b.add_argument('--killer-free',action='store_true');b.add_argument('--max-killer-colors',type=int)
     w=sub.add_parser('worker');w.add_argument('cnf',type=Path);w.add_argument('solver');w.add_argument('output',type=Path)
     r=sub.add_parser('replay');r.add_argument('meta',type=Path);r.add_argument('result',type=Path);r.add_argument('output',type=Path)
     a=ap.parse_args()
-    if a.mode=='build':build(a.tan_root,a.k,a.cnf,a.meta,a.killer_free)
+    if a.mode=='build':build(a.tan_root,a.k,a.cnf,a.meta,a.killer_free,a.max_killer_colors)
     elif a.mode=='worker':worker(a.cnf,a.solver,a.output)
     else:replay(a.meta,a.result,a.output)
 if __name__=='__main__':main()
