@@ -1,0 +1,66 @@
+name: temp Thomson 960 e432-B clean transverse
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-e432-b-clean-transverse.yml'
+
+jobs:
+  transverse:
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [1, 2, 3, 4, 5, 6, 7, 8]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    permissions:
+      actions: read
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e432-B-tracked-refined
+          path: ${{ runner.temp }}/saddle
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41046665591
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Scan one clean-saddle transverse mode
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          for s in -1 1; do
+            python3 science-boundary/thomson-960/code/search_saddle_transverse.py \
+              "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/saddle/tracked.json" \
+              --transverse-mode '${{ matrix.mode }}' --sign "$s" \
+              --transverse-amps 0.0008,0.0015,0.0028,0.0048,0.0075,0.0115,0.017 \
+              --reaction-amps=-0.0012,0,0.0012 \
+              --out "$RUNNER_TEMP/out/m${{ matrix.mode }}-s${s}.json"
+          done
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import glob,json,os
+          best=(1e300,None); seen=[]
+          for p in glob.glob(os.path.join(os.environ['RUNNER_TEMP'],'out','*.json')):
+              d=json.load(open(p)); print(os.path.basename(p),'BEST',d['best_float_energy'],'DELTA',d['best_delta_vs_live'])
+              for r in d['rows']:
+                  e=r['float_energy']
+                  if e<444368.65 and all(abs(e-z[0])>2e-6 for z in seen):
+                      seen.append((e,r.get('transverse_amp'),r.get('reaction_amp'),os.path.basename(p)))
+              if d['best_float_energy']<best[0]: best=(d['best_float_energy'],p)
+          print('MODE_BEST',best)
+          print('DISTINCT_LOW',sorted(seen)[:20])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e432-B-clean-transverse-m${{ matrix.mode }}
+          path: ${{ runner.temp }}/out
+          retention-days: 10
