@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Census structurally distinct high-quality AES S-box circuit seeds.
 
-This script intentionally treats architecture/seed choice as a search variable.  It
-parses NIST NCFF SLP circuits and Few Shots certificates, verifies all 256 AES
-inputs independently, then compares exact intermediate functions and nonlinear
-(AND) function sets.  Exact-function overlap is not an equivalence test, but low
-nonlinear overlap is useful evidence that two seeds expose different rewrite
-opportunities.
+Seed choice is a first-class search variable.  This script parses public NIST
+NCFF SLP circuits, Few Shots certificates, and Jain/gf2m-circuits numeric JSON,
+independently verifies all 256 AES inputs, and compares both exact intermediate
+functions and nonlinear dependency skeletons.
+
+Exact-function overlap is deliberately not treated as an equivalence test: a
+semilinear coordinate change can destroy exact overlap while preserving a broad
+architecture.  The recursive AND-dependency fingerprint therefore complements
+truth-table overlap and helps distinguish genuinely different nonlinear DAGs.
 """
 import argparse, collections, hashlib, json, pathlib, re, urllib.request
 
@@ -14,8 +17,13 @@ MASK=(1<<256)-1
 OPS=("AND","XOR","XNOR")
 
 DEFAULTS={
-  "nist-g103":"https://raw.githubusercontent.com/usnistgov/Circuits/master/data/slp/aes/aes-sbox/aes-sbox-a32-ad7-g103-gd32-xx71-10.circ.txt",
-  "nist-g104":"https://raw.githubusercontent.com/usnistgov/Circuits/master/data/slp/aes/aes-sbox/aes-sbox-a32-ad5-g104-gd30-xx72-5.circ.txt",
+  "nist-a32-g103":"https://raw.githubusercontent.com/usnistgov/Circuits/master/data/slp/aes/aes-sbox/aes-sbox-a32-ad7-g103-gd32-xx71-10.circ.txt",
+  "nist-a32-g104":"https://raw.githubusercontent.com/usnistgov/Circuits/master/data/slp/aes/aes-sbox/aes-sbox-a32-ad5-g104-gd30-xx72-5.circ.txt",
+  "nist-a32-g105":"https://raw.githubusercontent.com/usnistgov/Circuits/master/data/slp/aes/aes-sbox/aes-sbox-a32-ad5-g105-gd26-xx73-5.circ.txt",
+  "nist-a33-g105":"https://raw.githubusercontent.com/usnistgov/Circuits/master/data/slp/aes/aes-sbox/aes-sbox-a33-ad4-g105-gd25-xx72-6.circ.txt",
+  "nist-a28-g124":"https://raw.githubusercontent.com/usnistgov/Circuits/master/data/slp/aes/aes-sbox/aes-sbox-a28-ad5-g124-gd27-xx96-26.circ.txt",
+  "jain-106-d24":"https://raw.githubusercontent.com/ahrazzle/gf2m-circuits/main/sbox/circuits/sbox106_d24.json",
+  "jain-106-d34":"https://raw.githubusercontent.com/ahrazzle/gf2m-circuits/main/sbox/circuits/sbox106_d34.json",
   "fs-101":"https://raw.githubusercontent.com/few-shots/few-shots/main/problems/p008-aes-sbox-circuit/shots/chunfeng11221/aes101-nist-interface-resub/certificate.json",
   "fs-102":"https://raw.githubusercontent.com/few-shots/few-shots/main/problems/p008-aes-sbox-circuit/shots/huangxin-design/aes102-field-plane-offsets/certificate.json",
   "fs-103":"https://raw.githubusercontent.com/few-shots/few-shots/main/problems/p008-aes-sbox-circuit/shots/fancify/aes103-joint-plane-orientations/certificate.json",
@@ -79,6 +87,16 @@ def parse_nist(text):
     if not gates or len(outputs)!=8:raise ValueError("failed to parse NIST SLP")
     return {"gates":gates,"outputs":outputs}
 
+def parse_numeric_json(raw):
+    # Jain/gf2m-circuits: input wires are 0..7 and gate k outputs wire 8+k.
+    def w(i): return f"x{i}" if i<8 else f"n{i}"
+    gates=[]
+    for k,g in enumerate(raw["gates"]):
+        if len(g)!=3 or g[0] not in OPS:raise ValueError(g)
+        op,a,b=g
+        gates.append({"op":op,"a":w(a),"b":w(b),"out":w(8+k)})
+    return {"gates":gates,"outputs":[w(o) for o in raw["outputs"]]}
+
 def eval_circuit(c, reverse_inputs=False):
     vals=input_tables(reverse_inputs)
     depth={k:0 for k in vals}; and_depth={k:0 for k in vals}; and_anc={k:frozenset() for k in vals}
@@ -94,10 +112,8 @@ def eval_circuit(c, reverse_inputs=False):
         and_anc[g["out"]]=frozenset(anc)
     return vals,depth,and_depth,and_anc,and_nodes
 
-def identify_nist_mapping(c):
-    # NIST files have named y0..y7 but bit direction differs across ecosystems.
-    # Exhaust the two natural input and output bit-order conventions and require
-    # an exact AES match on all 256 bytes.
+def identify_mapping(c):
+    # Exhaust the natural input/output bit-order conventions and demand exact AES.
     for rin in (False,True):
         vals,*_=eval_circuit(c,rin)
         for rout in (False,True):
@@ -108,27 +124,58 @@ def identify_nist_mapping(c):
                 y=sum(((vals[w]>>x)&1)<<i for i,w in enumerate(outs))
                 if y!=aes_sbox(x):ok=False;break
             if ok:return rin,rout
-    raise AssertionError("NIST circuit did not match AES under natural bit orders")
+    raise AssertionError("circuit did not match AES under natural bit orders")
 
-def normalize_nist(c):
-    rin,rout=identify_nist_mapping(c)
+def normalize_mapping(c):
+    rin,rout=identify_mapping(c)
     mp={f"x{i}":f"x{7-i}" if rin else f"x{i}" for i in range(8)}
     gates=[]
-    for i,g in enumerate(c["gates"]):
-        ng={"op":g["op"],"a":mp.get(g["a"],g["a"]),"b":mp.get(g["b"],g["b"]),"out":g["out"]}
-        gates.append(ng)
+    for g in c["gates"]:
+        gates.append({"op":g["op"],"a":mp.get(g["a"],g["a"]),"b":mp.get(g["b"],g["b"]),"out":g["out"]})
     outs=list(c["outputs"])
     if rout:outs.reverse()
     return {"gates":gates,"outputs":outs},{"reverse_inputs":rin,"reverse_outputs":rout}
 
+# Compatibility aliases for search_arch_seed.py retained after broadening parser names.
+identify_nist_mapping=identify_mapping
+normalize_nist=normalize_mapping
+
+def recursive_and_shape(c):
+    """Fingerprint nonlinear dependency structure while ignoring linear signal names.
+
+    Each AND receives a color determined by the multisets of colored nonlinear
+    ancestors feeding its two operands.  The final fingerprint includes the
+    multiset of AND colors and the nonlinear-ancestor multisets visible at the
+    eight outputs.  It is intentionally coarse: equal fingerprints do not prove
+    equivalence, while different fingerprints certify a different dependency
+    skeleton under this representation.
+    """
+    anc={f"x{i}":frozenset() for i in range(8)}
+    colors=[]
+    for g in c["gates"]:
+        au=set(anc[g["a"]]); av=set(anc[g["b"]])
+        merged=au|av
+        if g["op"]=="AND":
+            def side(ids): return sorted(colors[j] for j in ids)
+            sides=sorted([side(au),side(av)],key=lambda z:json.dumps(z,separators=(",",":")))
+            color=hashlib.sha256(json.dumps(sides,separators=(",",":")).encode()).hexdigest()[:24]
+            idx=len(colors); colors.append(color); merged.add(idx)
+        anc[g["out"]]=frozenset(merged)
+    out_sigs=[sorted(colors[j] for j in anc[o]) for o in c["outputs"]]
+    payload={"and_colors":sorted(colors),"outputs":sorted(out_sigs,key=lambda z:json.dumps(z,separators=(",",":")))}
+    return hashlib.sha256(json.dumps(payload,separators=(",",":"),sort_keys=True).encode()).hexdigest()
+
 def load(name,url):
     text=get(url)
     if text.lstrip().startswith("{"):
-        c=json.loads(text); mapping={"format":"few-shots-json"}
+        raw=json.loads(text)
+        if raw.get("gates") and isinstance(raw["gates"][0],list):
+            c,m=normalize_mapping(parse_numeric_json(raw)); mapping={"format":"numeric-json",**m}
+        else:
+            c=raw; mapping={"format":"few-shots-json"}
     else:
-        c,m=normalize_nist(parse_nist(text)); mapping={"format":"nist-ncff",**m}
+        c,m=normalize_mapping(parse_nist(text)); mapping={"format":"nist-ncff",**m}
     vals,depth,ad,anc,and_nodes=eval_circuit(c,False)
-    # all normalized circuits must now use p008 bit order
     for x in range(256):
         y=sum(((vals[w]>>x)&1)<<i for i,w in enumerate(c["outputs"]))
         assert y==aes_sbox(x),(name,x,y,aes_sbox(x))
@@ -136,7 +183,6 @@ def load(name,url):
     wire_functions={vals[g["out"]] for g in c["gates"]}
     and_functions={vals[g["out"]] for g in c["gates"] if g["op"]=="AND"}
     adprof=collections.Counter(ad[g["out"]] for g in c["gates"] if g["op"]=="AND")
-    # Compact shape fingerprint: AND-depth plus number of prior AND ancestors in each operand.
     shape=sorted((ad[g["out"]],len(anc[g["a"]]),len(anc[g["b"]])) for g in c["gates"] if g["op"]=="AND")
     shape_hash=hashlib.sha256(json.dumps(shape,separators=(",",":")).encode()).hexdigest()
     return {
@@ -144,7 +190,8 @@ def load(name,url):
       "wire_functions":wire_functions,"and_functions":and_functions,
       "summary":{"gates":len(c["gates"]),"ops":dict(ops),"gate_depth":max(depth[o] for o in c["outputs"]),
                  "and_depth":max(ad[o] for o in c["outputs"]),"and_depth_profile":dict(sorted(adprof.items())),
-                 "and_shape_hash":shape_hash,"mapping":mapping,"verified_all_256":True}
+                 "and_shape_hash":shape_hash,"recursive_and_shape_hash":recursive_and_shape(c),
+                 "mapping":mapping,"verified_all_256":True}
     }
 
 def main():
@@ -160,7 +207,8 @@ def main():
               "shared_wire_functions":len(wa&wb),"wire_union":len(wa|wb),
               "shared_and_functions":len(aa&ab),"and_union":len(aa|ab),
               "and_jaccard":round(len(aa&ab)/len(aa|ab),6),
-              "same_and_shape_hash":a["summary"]["and_shape_hash"]==b["summary"]["and_shape_hash"]}
+              "same_and_shape_hash":a["summary"]["and_shape_hash"]==b["summary"]["and_shape_hash"],
+              "same_recursive_and_shape_hash":a["summary"]["recursive_and_shape_hash"]==b["summary"]["recursive_and_shape_hash"]}
     pathlib.Path(args.out).write_text(json.dumps(out,indent=2,sort_keys=True)+"\n")
     print(json.dumps(out,indent=2,sort_keys=True))
 
