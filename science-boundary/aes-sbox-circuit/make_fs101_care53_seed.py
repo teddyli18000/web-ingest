@@ -3,7 +3,7 @@
 
 At gate index 53 (zero-based in the normalized merged certificate), the second
 AND operand g52 may be replaced by g50 because the two functions agree on all
-states where the other AND operand is 1.  This preserves 101 gates but changes
+states where the other AND operand is 1. This preserves 101 gates but changes
 the dependency graph and is therefore a distinct structural seed for later
 full-circuit search.
 """
@@ -21,12 +21,11 @@ def main():
     c=ras.load_circuit('fs-101')
     assert len(c['gates'])==101
     g=c['gates'][53]
-    assert g['op']=='AND' and g['b']=='w52', g
-    # ras.load_circuit prunes/renumbers the upstream g* circuit to w* names.
+    assert g['op']=='AND' and g['b']=='g52', g
     vals=census.input_tables(False)
     for q in c['gates']:
         vals[q['out']]=census.op_eval(q['op'],vals[q['a']],vals[q['b']])
-    old=g['b']; new='w50'; care=vals[g['a']]
+    old=g['b']; new='g50'; care=vals[g['a']]
     assert ((vals[old]^vals[new]) & care)==0
     c['gates'][53]['b']=new
     c=ras.prune(c)
