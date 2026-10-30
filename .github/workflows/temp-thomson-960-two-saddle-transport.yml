@@ -1,0 +1,73 @@
+name: temp Thomson 960 two saddle transport
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-two-saddle-transport.yml'
+
+jobs:
+  transport:
+    strategy:
+      fail-fast: false
+      matrix:
+        sign: ['-1','1']
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      actions: read
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-saddle-hybrid
+          path: ${{ runner.temp }}/ra
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 40633736125
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e432-B-refined-saddle
+          path: ${{ runner.temp }}/eb
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41045248541
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e432-seed
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41043461011
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Transport interface field to certified R-A saddle
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          echo "nproc=$(nproc) sign=${{ matrix.sign }}"
+          python3 science-boundary/thomson-960/code/search_two_saddle_transport.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/ra/hybrid.json" "$RUNNER_TEMP/eb/refined.json" "$RUNNER_TEMP/seed/A-natural.json" \
+            --sign '${{ matrix.sign }}' \
+            --transverse-amps '0.001,0.0025,0.0045,0.007,0.0105,0.015,0.022' \
+            --reaction-amps=-0.0015,0,0.0015 --maxiter 3000 \
+            --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('SIGN',d['sign'],'BEST',d['best_energy'],'DELTA',d['best_delta_vs_live'])
+          for b in d['distinct_low_basins'][:20]:
+              print('BASIN',b['energy'],b['delta_vs_live'],b['coord_counts'],'t',b['transverse_amp'],'r',b['reaction_amp'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-two-saddle-transport-${{ matrix.sign }}
+          path: ${{ runner.temp }}/out
+          retention-days: 10
