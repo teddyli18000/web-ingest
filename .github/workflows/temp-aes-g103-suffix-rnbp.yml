@@ -16,7 +16,8 @@ jobs:
       fail-fast: false
       matrix:
         budget: [19, 20, 21]
-        seed: [1, 2, 3, 4, 5, 6, 7, 8]
+        policy: [classic, hard, guide]
+        seed: [1, 2, 3, 4]
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -27,7 +28,7 @@ jobs:
           python -m py_compile science-boundary/aes-sbox-circuit/g103_suffix_linear_rnbp.py
           python science-boundary/aes-sbox-circuit/g103_suffix_linear_rnbp.py \
             --family nist-g103 --budget '${{ matrix.budget }}' --seed '${{ matrix.seed }}' \
-            --max-support 8 --elite 24 --out result | tee run.log
+            --max-support 10 --elite 32 --policy '${{ matrix.policy }}' --out result | tee run.log
           cat result/summary.json
       - name: Official verifier if original-prefix recombination reaches <=100
         run: |
@@ -41,7 +42,7 @@ jobs:
           fi
       - uses: actions/upload-artifact@v4
         with:
-          name: aes-g103-suffix-b${{ matrix.budget }}-s${{ matrix.seed }}
+          name: aes-g103-suffix-${{ matrix.policy }}-b${{ matrix.budget }}-s${{ matrix.seed }}
           path: |
             result
             run.log
