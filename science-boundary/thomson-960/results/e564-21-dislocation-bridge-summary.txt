@@ -39,9 +39,19 @@ starting from the distinct C3-derived global arrangement.
 The nine flips form three distinct C3 orbits. A balanced spherical perturbation that moves
 the new-diagonal endpoints together and old-diagonal endpoints apart crosses the actual
 convex-hull flip boundary at amplitudes about 0.0179668, 0.0180433, and 0.0184463 rad for
-the three orbits. Two local pilot relaxations started at 1.05 times the boundary healed back
-to e564, so merely crossing the boundary is insufficient; larger and geometrically
-different overshoots remain scientifically open.
+the three orbits.
+
+Direct-flip exclusion
+---------------------
+Actions runs 40991088178 and 40991269145 together cover all three non-equivalent C3 flip
+orbits. For every orbit they tested three crossing parameterizations (balanced four-point,
+new-diagonal-only, old-diagonal-only) and boundary overshoots 1.02, 1.08, 1.18, 1.35, 1.60,
+and 2.00. This is 54 full unconstrained stable relaxations.
+
+Result: **54/54 heal back to e564**. Every endpoint has coordination 33/906/21 and energy
+444368.564539191... within numerical summation spread. No 20-dislocation endpoint survives,
+even at twice the local flip threshold. This is strong evidence against a nearby 20-
+dislocation basin accessible by a purely local single-scar shortening coordinate.
 
 Soft-mode / topology coupling
 -----------------------------
@@ -62,25 +72,43 @@ balanced Delaunay-flip threshold is lowest, about 0.0179668 rad. Hence the Hessi
 representation and the explicit Delaunay topology representation independently identify the
 same easiest scar-shortening channel.
 
-Active compute
---------------
-Run 40990733845: one-runner, internally parallel e564 multimode basin map (72 relaxations)
-followed by eight upward eigenfollow trajectories from modes 0..3, both signs. BLAS threads
-are fixed to one per process and independent workers are sized from nproc.
+Projection of an infinitesimal local balanced flip onto the soft pair is small in absolute
+norm because the Delaunay move is highly localized: roughly 1.8e-4 of squared displacement
+for the easiest orbit, 7.5e-5 for the hardest, and 7.2e-6 for the middle orbit. Even the
+first eight Hessian modes explain less than about 1e-3 of the local flip field. Thus the
+mechanistic picture is two-scale: the soft global doublet selects which scar family is most
+susceptible, while the actual topology change requires high-curvature localized degrees of
+freedom. This explains why pure soft-mode and pure local-flip coordinates can each miss the
+coupled reaction path.
 
-Run 40991088178: one-runner, internally parallel targeted defect-flip search over two of the
-three C3 flip orbits, three geometric crossing directions and multiple boundary overshoots.
-An initial 1e-4 threshold de-duplication tolerance accidentally merged the two closest orbit
-thresholds; the numerical search itself remains valid for the two retained orbits.
+Compute strategy / active experiments
+-------------------------------------
+The current hosted ubuntu-latest runners report nproc=1. Therefore multiprocessing inside a
+single runner gives no speedup. Current campaigns instead use independent scientifically
+distinct matrix shards, each single-threaded (BLAS/OMP/MKL threads fixed to one), so total
+Actions compute is used without oversubscribing a runner.
 
-Run 40991269145: one-runner internally parallel completion of the omitted middle-threshold
-orbit, after tightening orbit de-duplication to 3e-5. Together the two runs cover all three
-non-equivalent C3 scar orbits without rerunning the already active cases.
+- Run 40990733845: legacy one-runner e564 multimode map, 72 relaxations followed by eight
+  upward eigenfollow trajectories. It started before the 1-core runner fact was known and is
+  still useful but serial.
+- Run 40991679399: six parallel shards = 3 scar families x 2 soft-doublet signs. Each
+  pre-deforms globally along the projection of the local flip onto the soft C3 doublet,
+  recomputes the shifted flip boundary, crosses it at four overshoots, and fully relaxes.
+- Run 40991766111: four independent e564(21) <-> merged-D2(20) global morph alignments,
+  testing whether e564 is a genuine intermediate layer between the 24- and 20-dislocation
+  families and whether new 20/21 minima appear along that interface.
+- Scaffolded-flip matrix: three scar-family shards first hold the four post-flip vertices
+  fixed while the other 956 points reorganize, then release all points. This tests whether
+  immediate healing hides a coordinated 20-dislocation basin that requires the surrounding
+  lattice to adapt first.
 
 Interpretation
 --------------
-This is the first project state that gives a direct, one-local-topology-event bridge from a
+e564 is the first project state that gives a direct, one-local-topology-event bridge from a
 C3-derived minimum to the exact defect composition of the known D2 20-dislocation family.
-The key question is no longer whether a 20-dislocation topology can be manufactured, but
-whether breaking C3 at one of the nine full scars can stabilize a different low-energy
-20-dislocation global arrangement instead of healing to e564 or the known D2 basin.
+The direct local route is now strongly excluded, not merely weakly sampled. The frontier has
+therefore shifted to coupled coordinates and coordinated relaxation: global C3-breaking
+shear plus localized scar shortening, scaffolded environment repair, and the global e564-D2
+basin interface. If these all close without a new 20-dislocation minimum, the evidence will
+support a stronger conclusion that the 21->20 transition is intrinsically collective rather
+than a local edge-flip event.
