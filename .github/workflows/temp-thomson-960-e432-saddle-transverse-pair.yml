@@ -1,0 +1,70 @@
+name: temp Thomson 960 e432 saddle transverse pair
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-e432-saddle-transverse-pair.yml'
+
+jobs:
+  pair:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tag: mm
+            sa: '-1'
+            sb: '-1'
+          - tag: mp
+            sa: '-1'
+            sb: '1'
+          - tag: pm
+            sa: '1'
+            sb: '-1'
+          - tag: pp
+            sa: '1'
+            sb: '1'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      actions: read
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e432-B-refined-saddle
+          path: ${{ runner.temp }}/saddle
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41045248541
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Search mode1 x mode5 transverse plane
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          echo "nproc=$(nproc) signs=${{ matrix.sa }},${{ matrix.sb }}"
+          python3 science-boundary/thomson-960/code/search_saddle_transverse_pair.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/saddle/refined.json" \
+            --mode-a 1 --mode-b 5 --sign-a '${{ matrix.sa }}' --sign-b '${{ matrix.sb }}' \
+            --amps-a '0.006,0.010,0.015' --amps-b '0.004,0.0065,0.010' \
+            --reaction-amps=-0.0012,0,0.0012 --maxiter 2600 \
+            --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('BEST',d['best_energy'],'DELTA',d['best_delta_vs_live'],'SIGNS',d['sign_a'],d['sign_b'])
+          for b in d['distinct_low_basins'][:20]: print('BASIN',b['energy'],b['delta_vs_live'],b['coord_counts'],'a',b['amp_a'],'b',b['amp_b'],'r',b['reaction_amp'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e432-transverse-pair-${{ matrix.tag }}
+          path: ${{ runner.temp }}/out
+          retention-days: 10
