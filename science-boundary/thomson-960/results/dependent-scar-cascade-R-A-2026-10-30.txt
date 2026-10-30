@@ -1,0 +1,44 @@
+Thomson N=960 — cross-scar cascade inside the dependent R->A path — 2026-10-30
+
+Direct Delaunay comparison in the natural labels shows that the free q1->q2->q3 endpoint from run 41098021516 is exactly the known A triangulation, not merely energy-degenerate with it.
+
+R -> A net edge difference
+--------------------------
+Deleted R edges (4):
+- (21,230)
+- (79,134)
+- (108,282)
+- (108,511)
+
+Added A edges (4):
+- (35,323)
+- (74,363)
+- (282,502)
+- (502,599)
+
+The dependent local chain q1->q2->q3 on support {108,282,511,599,502} accounts for the net replacements
+- delete (108,282), delete (108,511)
+- add (282,502), add (502,599)
+(the transient q1 bridge (511,599) is created and later removed by q3).
+
+Two additional live-record glide orbits are therefore required to obtain the final A triangulation:
+- orbit2: delete (79,134), add (35,323)
+- orbit3: delete (21,230), add (74,363)
+
+These two changes are not explicitly imposed by the q1/q2/q3 restraint signature. They occur spontaneously during the free-release continuation after the dependent local chain has prepared the crystal. The final q3 artifact has symmetric edge difference zero relative to A.
+
+Interpretation
+--------------
+The R->A mechanism is not only a local five-vertex retriangulation. It is a two-level event:
+1. a history-dependent local scar walk q1->q2->q3, where each connectivity change creates the next legal move;
+2. a global cross-scar cascade in which orbit2 and orbit3 become favorable and occur spontaneously as the restraint is removed.
+
+Thus a useful search representation must preserve local paths that can act as triggers even when their intermediate free release returns R. Candidate quality cannot be judged only by the immediate local endpoint. The local path may reorganize the elastic field enough to trigger remote follower glides during subsequent release.
+
+Search consequence
+------------------
+The dynamic scar-walk beam should:
+- rank history-created local moves, but always perform full free release and classify the complete final triangulation;
+- retain paths with low fixed elastic cost even when early releases return R, because a deeper local completion can activate remote flips;
+- deduplicate by the final full edge set / basin rather than only the active local signature;
+- treat q1->q2->q3 followed by spontaneous orbit2+orbit3 -> A as the positive control.
