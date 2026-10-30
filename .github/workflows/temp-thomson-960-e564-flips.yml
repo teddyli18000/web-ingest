@@ -1,0 +1,59 @@
+name: temp Thomson 960 e564 defect flips
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-e564-flips.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  flips:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Download e564 seed
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-c3-portal-e564
+          path: ${{ runner.temp }}/e564
+          github-token: ${{ github.token }}
+          run-id: 40796920780
+      - name: Run parallel targeted 21-to-20 defect flips
+        shell: bash
+        run: |
+          c=$(nproc); w=$c; if [ "$w" -gt 8 ]; then w=8; fi; if [ "$w" -lt 1 ]; then w=1; fi
+          echo "runner nproc=$c workers=$w"
+          python3 science-boundary/thomson-960/code/search_e564_defect_flip_parallel.py \
+            "$RUNNER_TEMP/e564/portal-e564.json" \
+            --workers "$w" --patterns balanced,newdiag,olddiag \
+            --multipliers 1.02,1.08,1.18,1.35,1.60,2.00 \
+            --maxiter 1800 --out "$RUNNER_TEMP/e564-flips.json"
+          python3 - <<'PY'
+          import json,os
+          p=os.path.join(os.environ['RUNNER_TEMP'],'e564-flips.json'); d=json.load(open(p))
+          print('BEST',d['best_energy'])
+          for b in d['lowest_distinct_basins']:
+              print('BASIN',b['energy'],b['coord'],b['quad'],b['pattern'],b['multiplier'])
+          PY
+      - name: Upload targeted flip results
+        uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e564-defect-flips
+          path: ${{ runner.temp }}/e564-flips.json
+          retention-days: 7
+          compression-level: 6
