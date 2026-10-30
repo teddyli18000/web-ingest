@@ -70,25 +70,37 @@ def op_eval(op,a,b):
     if op=="XNOR":return (~(a^b))&MASK
     raise ValueError(op)
 
+def expand_wire_range(spec):
+    left,right=spec.strip().split(":")
+    ml=re.fullmatch(r"(.*?)(\d+)",left); mr=re.fullmatch(r"(.*?)(\d+)",right)
+    if not ml or not mr or ml.group(1)!=mr.group(1): raise ValueError(spec)
+    p=ml.group(1); a=int(ml.group(2)); b=int(mr.group(2))
+    step=1 if b>=a else -1
+    return [f"{p}{i}" for i in range(a,b+step,step)]
+
 def parse_nist(text):
-    in_slp=False; gates=[]; outputs=[]
+    in_slp=False; gates=[]; outputs=[]; inputs=[]
     for raw in text.splitlines():
         s=raw.strip()
+        if s.startswith("Inputs:"):
+            inputs=expand_wire_range(s.split(":",1)[1].strip())
         if s.startswith("Outputs:"):
-            a,b=s.split(":",1)[1].strip().split(":")
-            ai=int(re.search(r"\d+",a).group()); bi=int(re.search(r"\d+",b).group())
-            outputs=[f"y{i}" for i in range(ai,bi+1)]
+            outputs=expand_wire_range(s.split(":",1)[1].strip())
         if s=="begin SLP":in_slp=True; continue
         if s=="end SLP":break
         if not in_slp or not s or s.startswith("%"):continue
         p=s.split()
         if len(p)==4 and p[0] in OPS:
             gates.append({"op":p[0],"out":p[1],"a":p[2],"b":p[3]})
-    if not gates or len(outputs)!=8:raise ValueError("failed to parse NIST SLP")
+    if not gates or len(inputs)!=8 or len(outputs)!=8:raise ValueError("failed to parse NIST SLP")
+    # Normalize arbitrary NCFF primary-input names (x0..x7, U0..U7, etc.)
+    # to the internal x0..x7 convention before determining bit direction.
+    imap={w:f"x{i}" for i,w in enumerate(inputs)}
+    for g in gates:
+        g["a"]=imap.get(g["a"],g["a"]); g["b"]=imap.get(g["b"],g["b"])
     return {"gates":gates,"outputs":outputs}
 
 def parse_numeric_json(raw):
-    # Jain/gf2m-circuits: input wires are 0..7 and gate k outputs wire 8+k.
     def w(i): return f"x{i}" if i<8 else f"n{i}"
     gates=[]
     for k,g in enumerate(raw["gates"]):
@@ -113,7 +125,6 @@ def eval_circuit(c, reverse_inputs=False):
     return vals,depth,and_depth,and_anc,and_nodes
 
 def identify_mapping(c):
-    # Exhaust the natural input/output bit-order conventions and demand exact AES.
     for rin in (False,True):
         vals,*_=eval_circuit(c,rin)
         for rout in (False,True):
@@ -136,20 +147,10 @@ def normalize_mapping(c):
     if rout:outs.reverse()
     return {"gates":gates,"outputs":outs},{"reverse_inputs":rin,"reverse_outputs":rout}
 
-# Compatibility aliases for search_arch_seed.py retained after broadening parser names.
 identify_nist_mapping=identify_mapping
 normalize_nist=normalize_mapping
 
 def recursive_and_shape(c):
-    """Fingerprint nonlinear dependency structure while ignoring linear signal names.
-
-    Each AND receives a color determined by the multisets of colored nonlinear
-    ancestors feeding its two operands.  The final fingerprint includes the
-    multiset of AND colors and the nonlinear-ancestor multisets visible at the
-    eight outputs.  It is intentionally coarse: equal fingerprints do not prove
-    equivalence, while different fingerprints certify a different dependency
-    skeleton under this representation.
-    """
     anc={f"x{i}":frozenset() for i in range(8)}
     colors=[]
     for g in c["gates"]:
