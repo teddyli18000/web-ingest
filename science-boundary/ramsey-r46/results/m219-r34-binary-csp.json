@@ -1,0 +1,32 @@
+{
+  "all_unsat": true,
+  "campaign": "m219-r34-binary-row-csp",
+  "catalog_counts": {"A25": 6, "A26": 2, "B116": 9, "B117": 90},
+  "crosschecks": {
+    "clang_O2": {"all_unsat": true, "max_depth": 2, "max_nodes": 1964, "total_pairs": 252},
+    "gcc_O0": {"all_unsat": true, "max_depth": 2, "max_nodes": 1964, "total_pairs": 252},
+    "gcc_O3": {"all_unsat": true, "max_depth": 2, "max_nodes": 1964, "total_pairs": 252}
+  },
+  "families": {
+    "r3_A26_B116": {"pairs": 18, "status": "UNSAT", "total_nodes": 1165, "max_nodes": 244, "max_depth": 2},
+    "r4_A25_B116": {"pairs": 54, "status": "UNSAT", "total_nodes": 17673, "max_nodes": 1964, "max_depth": 2},
+    "r4_A26_B117": {"pairs": 180, "status": "UNSAT", "total_nodes": 10239, "max_nodes": 235, "max_depth": 2}
+  },
+  "provenance": {
+    "catalog_artifact_digest": "sha256:65364f9627669b383e7066ffa3b9d664765a98c32b4a695b4dc21db611c735da",
+    "catalog_artifact_id": 12836028066,
+    "catalog_artifact_run_id": 40734696339,
+    "embedded_catalog_sha256": {
+      "A25.g6": "b607d1214f90833056232942b72a970faa96985cab699bd9154bdeed4ee9851d",
+      "A26.g6": "8b44f85056847ef10824ed74ba92038a17a4054a35ce88698e7a5ea84e3df96d",
+      "B116.g6": "cab14e7485549dc5a0143b72c18b88dedd285f552d4a8f60418124c3c5efbf40",
+      "B117.g6": "a6678c477bcbce41f475f2295d7e8da05acd92255d328b14c40830a2233a42a1"
+    },
+    "r36_11_source_sha256": "628c53df90910b2aae9a9559a62605593ff6fcdac66e9f23f95a134a4a696f36",
+    "r45_24_source_sha256": "83ca4028f206b2fa4315ef219b8c2c57c7835209673dd8183d8fb4353bd4fdd0"
+  },
+  "representation": "Relaxed binary row-domain CSP. For each A vertex, the cross-neighbour row has size 10-deg_A through 12-deg_A. Each row is triangle-free in B; for an A-edge the two-row intersection is independent in B; for an A-nonedge the two-row union hits every independent 4-set of B. B-column degrees, global degree-class counts, total cross-edge count, and all constraints involving 3 or more A rows are deliberately omitted. Therefore this is a strict superfamily of the real gluing problem, and UNSAT is a rigorous exclusion.",
+  "source": "science-boundary/ramsey-r46/m219_r34_binary_csp.cpp",
+  "total_nodes": 29077,
+  "total_pairs": 252
+}
