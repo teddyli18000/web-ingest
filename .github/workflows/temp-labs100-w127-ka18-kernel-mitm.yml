@@ -1,0 +1,38 @@
+name: temp labs100 W127 ka18 kernel MITM
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-w127-ka18-kernel-mitm.yml'
+
+concurrency:
+  group: temp-labs100-w127-ka18-kernel-mitm
+  cancel-in-progress: false
+
+jobs:
+  exact-ka18:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact kernel/MITM search
+        run: |
+          g++ -O3 -march=native -fopenmp \
+            science-boundary/labs-100/code/oddperfect_w127_ka18_kernel_mitm.cpp \
+            -o /tmp/ka18
+      - name: Exhaust ka18 using all runner CPUs
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          echo "runner_cpus=$OMP_NUM_THREADS"
+          /tmp/ka18 2>&1 | tee "$RUNNER_TEMP/ka18.log"
+          grep -q '^SUMMARY supports=2191 c_reps=75987 cross=3675345 target=0 ' "$RUNNER_TEMP/ka18.log"
+      - name: Upload exact transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-w127-ka18-kernel-mitm
+          path: ${{ runner.temp }}/ka18.log
+          if-no-files-found: warn
