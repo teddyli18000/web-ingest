@@ -1,0 +1,70 @@
+name: temp labs100 low11 symmetric-difference t10
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-low11-symdiff-t10.yml'
+
+concurrency:
+  group: temp-labs100-low11-symdiff-t10
+  cancel-in-progress: false
+
+jobs:
+  exact-t10:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact symmetric-difference enumerator
+        run: g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_low11_symdiff_exact.cpp -o "$RUNNER_TEMP/symdiff"
+      - name: Exhaust all 366 t10 difference orbits for both kp splits using all CPUs
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "runner_cpus=$(nproc)"
+          mkdir -p "$RUNNER_TEMP/out"
+          export RUNNER_TEMP
+          : > "$RUNNER_TEMP/tasks.txt"
+          for k in 12 14; do
+            b=0
+            while [ "$b" -lt 366 ]; do
+              e=$((b+31)); [ "$e" -gt 366 ] && e=366
+              echo "$k $b $e" >> "$RUNNER_TEMP/tasks.txt"
+              b="$e"
+            done
+          done
+          cat "$RUNNER_TEMP/tasks.txt"
+          cat "$RUNNER_TEMP/tasks.txt" | xargs -P"$(nproc)" -n3 bash -c '
+            k="$1"; b="$2"; e="$3"
+            OMP_NUM_THREADS=1 "$RUNNER_TEMP/symdiff" --overlap 10 --kp "$k" --begin "$b" --end "$e" \
+              >"$RUNNER_TEMP/out/k${k}-${b}-${e}.log" 2>&1
+          ' _
+          cat "$RUNNER_TEMP"/out/*.log | tee "$RUNNER_TEMP/summary.log"
+          test "$(grep -c '^SUMMARY overlap=10' "$RUNNER_TEMP/summary.log")" -eq 24
+          python - "$RUNNER_TEMP/summary.log" <<'PY'
+          import re,sys
+          text=open(sys.argv[1]).read().splitlines()
+          for k in (12,14):
+              spans=[]
+              for line in text:
+                  if not line.startswith(f'SUMMARY overlap=10 kp={k} '): continue
+                  m=re.search(r'range_begin=(\d+) range_end=(\d+)',line)
+                  assert m,line
+                  spans.append(tuple(map(int,m.groups())))
+              spans.sort()
+              assert spans and spans[0][0]==0 and spans[-1][1]==366,spans
+              assert all(spans[i][1]==spans[i+1][0] for i in range(len(spans)-1)),spans
+              print('COVERAGE',k,spans)
+          PY
+          echo "target_hit_shards=$(grep -vc 'compressed_hits=0' "$RUNNER_TEMP/summary.log" || true)"
+      - name: Upload exact transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-low11-symdiff-t10
+          path: |
+            ${{ runner.temp }}/tasks.txt
+            ${{ runner.temp }}/summary.log
+            ${{ runner.temp }}/out/*.log
+          if-no-files-found: warn
