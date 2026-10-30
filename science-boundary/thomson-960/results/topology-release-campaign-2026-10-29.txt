@@ -1,0 +1,88 @@
+Thomson N=960 — 21->20 topology-release campaign
+Date: 2026-10-29 (America/Los_Angeles)
+
+Live Few Shots record
+---------------------
+444368.3924061973 (Ronnie2025/c3-replica-exchange-scars), epsilon 1e-6.
+
+Current 21-dislocation frontier
+-------------------------------
+The lowest durable 21-dislocation minimum is e545:
+  E = 444368.54540130566
+  coordination = 33 five / 906 six / 21 seven.
+It descends from the e564/e558 nonlinear-event family, not from a direct
+single Hessian-mode escape from the live record.
+
+Retired local searches
+----------------------
+1. e564 direct 21->20 Delaunay flip campaign: 54/54 defect-reducing starts heal
+   back to 21 dislocations after unconstrained relaxation.
+2. e545 full-space Hessian modes 0..5, both signs and multiple amplitudes:
+   no endpoint below e545. Modes 4/5 only reveal higher 21-dislocation minima
+   such as 444368.5482653, .5488785, .5489239, .5500847, .5518615, .5523871.
+3. e545 scaffold families 0/1: with all four flip-quad vertices fixed, relaxation
+   reaches 32/908/20 states; abrupt release always heals to 21 dislocations.
+
+Mechanism hypothesis
+--------------------
+The bottleneck is not crossing the local Delaunay flip boundary. The search can
+already stabilize the nominal 20-dislocation side while the four local scaffold
+vertices are restrained. The unresolved problem is global elastic adaptation:
+when the local restraint is removed the sphere coherently reconstructs a 21st
+dislocation. Therefore the active representation couples a finite global scar
+rearrangement coordinate to a local topology coordinate instead of extending
+ordinary low-mode search.
+
+Active campaigns
+----------------
+A. Mixed finite-event grammar — run 40995204572
+   Four distinct single-worker runner shards: same-site, cross-site, difference,
+   support3. Learn e564->e553 and e564->e558 finite nonlinear events, compose
+   unlike event families, relax, then automatically apply dynamically discovered
+   21->20 scaffold families to the best new 21-dislocation descendants. If a
+   20-dislocation endpoint survives full release, the same acquired runner
+   immediately scans its lowest modes.
+
+B. Staged discrete scaffold release — run 40995321510
+   Four shards: e545 flip families 0/1 x multipliers 1.05/1.20. Start from the
+   adapted all-four-fixed 20-dislocation state, then release one scaffold vertex
+   at a time and fully relax at each depth, branching over release order. This
+   tests whether abrupt simultaneous release is the cause of healing.
+
+C. Continuous harmonic-restraint homotopy — run 40995548846
+   Four shards over the same e545 families/multipliers. Replace hard fixed
+   vertices by spherical harmonic restraints to the adapted 20 state and lower
+   kappa continuously from 3000 to 0. Records the last kappa where the 20
+   topology exists and the first healing point. This tests whether a genuine
+   20-topology branch persists to the unconstrained limit.
+
+D. Healing-field cancellation — run 40995627226
+   Four queued/starting shards: families 0/1 x full/outside-quad reversal.
+   Measure the finite global displacement field from the adapted fixed 20 state
+   back to e545, then extrapolate opposite that field before unconstrained
+   release. The outside-quad variant leaves the local four-vertex scaffold shape
+   unchanged and reverses only the global elastic response. This directly tests
+   whether a coherent global restoring field is responsible for topology healing.
+
+Compute policy
+--------------
+Empirically these hosted runners expose nproc=1 even when os.cpu_count() reports
+4. All current numerical workflows therefore use one Python numerical worker per
+runner with OPENBLAS/OMP/MKL/NUMEXPR threads fixed to 1. Parallelism is across
+scientifically distinct Actions matrix jobs, not oversubscribed processes inside
+a single-core runner. Once a runner is acquired, dependent stages (event search,
+scaffold, conditional soft modes) execute sequentially on that same runner to
+avoid another queue round.
+
+Decision rule
+-------------
+Priority event 1: any relaxed 21-dislocation endpoint below 444368.54540130566.
+Freeze it and expand its event/scaffold neighborhood.
+Priority event 2: any fully unconstrained 20-dislocation survivor.
+Freeze it, independently polish/classify it, then expand low modes / finite-event
+neighbors. If its energy approaches the live record, switch immediately to the
+rationalization and official verifier pipeline.
+If all four release representations heal to 21 dislocations, treat that as
+strong evidence that a single local 21->20 defect removal is incompatible with
+the surrounding e545 elastic scaffold. Reformulate to a jointly optimized
+multi-scar/twin-boundary topology change rather than increasing flip amplitude.
