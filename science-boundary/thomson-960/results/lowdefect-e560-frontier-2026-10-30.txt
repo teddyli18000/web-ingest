@@ -1,0 +1,21 @@
+Thomson N=960 low-defect frontier update — 2026-10-30
+
+Current live score at discovery: 444368.3924061973.
+
+New node E18:
+- energy 444368.56093335064
+- delta vs live +0.16852715332061052
+- Delaunay coordination 30 five / 912 six / 18 seven = 18 dislocations
+- parent node e569: 444368.569890198298, 31/910/19
+- reproducible transition from e569 under physical tangent Hessian mode 5, sign +, RMS amplitude 0.020 followed by stable unconstrained relaxation
+- the same E18 basin is reached independently from several e569 low/high modes (including modes 0/1/3/4/5/6/7/8/9 at tested amplitudes), so it is not a one-shot numerical artifact
+- e569 MOTO seed 9301 also produced an index-1-like branch whose two relaxed sides are E18 and e569 (final saddle gradient still too large for certification), giving transition-network evidence that E18 is genuinely adjacent to e569
+
+Interpretation:
+The low-defect search now contains a descending topology chain 20 -> 19 -> 18. Defect count itself is not a monotone reaction coordinate globally, but lowering the dislocation count has exposed qualitatively new basins. E18 supersedes the earlier 18-dislocation basin near 444369.1322280594 by about 0.5712947088 energy units.
+
+Next active search:
+1. Expand E18 modes 0..11 and MOTO-like mixed-mode transition states.
+2. Learn a collective E18 -> live event and continue it through the live basin.
+3. In parallel, direct D2 -> live collective-event continuation is higher priority than further D2 fixed-mode scans because D2 is only +0.0116743333 above live and D2 modes/MOTO mostly close back on D2.
+4. Any endpoint below live-2e-7 triggers stable repolish and upstream re-check; only a verified >=1e-6 improvement enters the submission pipeline.
