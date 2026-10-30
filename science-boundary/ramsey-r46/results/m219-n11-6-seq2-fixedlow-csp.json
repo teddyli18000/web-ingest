@@ -1,0 +1,37 @@
+{
+  "campaign": "m219-n11-6-seq2-fixedlow-column-csp",
+  "complete": true,
+  "degree_sequence": {"11":6,"12":20,"13":8,"14":2},
+  "logical_scope": "the third and final m=219,n11=6 degree sequence, using the complete pair/low-graph cover in m219-n11-6-seq2-cover.json and m219-n11-6-lowgraph-cover.json",
+  "representation": "fixed degree-3 low anchor; fixed A26/B116 local strata; all 38 unordered B-low pairs are expanded to all 76 ordered pairs; each B vertex is an 11-bit A-neighborhood domain; exact row sums, exact B degree-class counts, all mixed K4/I6 constraints, low-vertex endpoint caps w<=deg_L-3, and the necessary at-least-four-r3 condition are propagated",
+  "dependencies": {
+    "class_and_pair_cover": "results/m219-n11-6-seq2-cover.json: 54 exact class matrices, max sum_r=20, at least four r3 vertices, 38 unordered / 76 ordered B-low pairs",
+    "low_graph_cover": "results/m219-n11-6-lowgraph-cover.json: five surviving non-K222 low types / six degree-3 anchor orbits",
+    "K222": "results/m219-n11-6-k222-scan.json",
+    "A26": "complete authenticated McKay e(A)=26 stratum: 2 graphs",
+    "B116": "complete authenticated McKay e(B)=116 stratum: 9 graphs"
+  },
+  "ordered_B_low_pairs": 76,
+  "fixed_low_branches": 9272,
+  "unsat": 9272,
+  "sat": 0,
+  "timeout": 0,
+  "exact_search_nodes": 3719,
+  "recomputation": {
+    "compiler": "g++ -O3 -march=native -fopenmp -std=c++17",
+    "command": "./m219_n11_6_seq2_fixedlow_csp 1 5",
+    "container_available_cpu_count": 5,
+    "observed_wall_seconds_total": 2.71,
+    "observed_search_seconds": 0.0259938,
+    "exit_code": 20,
+    "stdout_non_unsat_rows": 0,
+    "stderr_summary": "branches=9272 ordered_pairs=76 threads=5 sec=1; nodes=3719 UNSAT=9272"
+  },
+  "diagnostic_before_endpoint_propagation": {
+    "time_limit_per_branch_seconds": 0.05,
+    "unsat": 3434,
+    "timeout": 226,
+    "interpretation": "timeouts vanished after enforcing the already-proved low-vertex endpoint cap r(v)>=3; they were formulation artifacts, not evidence of feasible branches"
+  },
+  "conclusion": "Degree sequence 11^6 12^20 13^8 14^2 is impossible. Together with results/m219-n11-6-fixedlow-csp.json, all three m=219,n11=6 degree sequences are excluded."
+}
