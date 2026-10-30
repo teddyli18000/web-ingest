@@ -1,0 +1,46 @@
+name: temp Thomson 960 freeze e432
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-freeze-e432.yml'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  freeze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e432-seed
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41043461011
+      - name: Persist e432 minimum on latest main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'boundary-science-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git pull --rebase origin main
+          dst=science-boundary/thomson-960/data/basin-23-e432249.json
+          if [[ -f "$dst" ]]; then
+            echo "$dst already exists; leaving concurrent durable copy untouched."
+            exit 0
+          fi
+          cp "$RUNNER_TEMP/seed/e432.json" "$dst"
+          git add "$dst"
+          git commit -m 'thomson: freeze e432 23-dislocation minimum'
+          for i in 1 2 3; do
+            if git push origin HEAD:main; then exit 0; fi
+            git pull --rebase origin main
+          done
+          exit 1
