@@ -1,0 +1,33 @@
+name: temp-aes-care53-seed-verify
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/make_fs101_care53_seed.py'
+      - '.github/workflows/temp-aes-care53-seed-verify.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construct and independently verify seed
+        run: |
+          set -euxo pipefail
+          python science-boundary/aes-sbox-circuit/make_fs101_care53_seed.py --out care53-certificate.json | tee care53-summary.jsonl
+      - name: Official Few Shots verifier
+        run: |
+          set -euxo pipefail
+          git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+          mkdir -p /tmp/shot
+          cp care53-certificate.json /tmp/shot/certificate.json
+          python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-care53-neutral-seed
+          path: |
+            care53-certificate.json
+            care53-summary.jsonl
+            official-verifier.jsonl
