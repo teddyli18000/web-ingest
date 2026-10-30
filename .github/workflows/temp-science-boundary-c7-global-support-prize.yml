@@ -1,0 +1,66 @@
+name: Temp Science Boundary C7 global all-k support prize
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-global-support-prize.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-global-support-prize
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned source and install MaxSAT backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          python3 -m pip install --disable-pip-version-check python-sat
+          mkdir -p "$RUNNER_TEMP/result"
+      - name: Race exact all-k weak-prize optimizers on four cores
+        shell: bash
+        run: |
+          set -euo pipefail
+          solvers=(g4 g3 cadical195 maplechrono)
+          pids=()
+          for s in "${solvers[@]}";do
+            (/usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_global_support_killer_prize.py \
+              "$RUNNER_TEMP/tan" "$RUNNER_TEMP/$s.json" --solver "$s" \
+              > "$RUNNER_TEMP/result/$s.stdout" 2> "$RUNNER_TEMP/result/$s.stderr") &
+            pids+=("$!")
+          done
+          winner=""
+          while [[ -z "$winner" ]];do
+            alive=0
+            for s in "${solvers[@]}";do
+              f="$RUNNER_TEMP/$s.json"
+              if [[ -s "$f" ]] && python3 -c 'import json,sys; r=json.load(open(sys.argv[1])); assert "objective" in r' "$f" 2>/dev/null;then winner="$f";break;fi
+            done
+            [[ -n "$winner" ]] && break
+            for p in "${pids[@]}";do kill -0 "$p" 2>/dev/null && alive=$((alive+1)) || true;done
+            if [[ "$alive" -eq 0 ]];then echo 'all prize backends failed' >&2; for s in "${solvers[@]}";do tail -n 40 "$RUNNER_TEMP/result/$s.stderr" || true;done; exit 1;fi
+            sleep 3
+          done
+          cp "$winner" "$RUNNER_TEMP/result/winner.json"
+          for p in "${pids[@]}";do kill "$p" 2>/dev/null || true;done
+          wait || true
+          cat "$RUNNER_TEMP/result/winner.json"
+      - name: Upload exact result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-global-all-k-support-prize
+          path: ${{ runner.temp }}/result
+          retention-days: 14
