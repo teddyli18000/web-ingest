@@ -1,0 +1,63 @@
+name: temp Thomson 960 e564 coupled soft flip
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-e564-coupled.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  coupled:
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        family: [0, 1, 2]
+        sign: [-1, 1]
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Download e564 seed
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-c3-portal-e564
+          path: ${{ runner.temp }}/e564
+          github-token: ${{ github.token }}
+          run-id: 40796920780
+      - name: Coupled global-soft and local-flip scan
+        shell: bash
+        run: |
+          echo "runner nproc=$(nproc), family=${{ matrix.family }}, sign=${{ matrix.sign }}"
+          python3 science-boundary/thomson-960/code/search_e564_coupled_soft_flip.py \
+            "$RUNNER_TEMP/e564/portal-e564.json" \
+            --family "${{ matrix.family }}" --soft-sign "${{ matrix.sign }}" \
+            --soft-amps 0.002,0.004,0.008,0.014 \
+            --flip-mults 1.02,1.15,1.40,1.80 --maxiter 1800 \
+            --out "$RUNNER_TEMP/coupled-f${{ matrix.family }}-s${{ matrix.sign }}.json"
+          python3 - <<'PY'
+          import glob,json
+          p=glob.glob('/home/runner/work/_temp/coupled-*.json')[0]
+          d=json.load(open(p)); print('BEST',d['best_energy'],'pairfrac',d['flip_pair_fraction'])
+          for b in d['lowest_distinct_basins']:
+              print('BASIN',b['energy'],b['coord'],b['soft_amp'],b['flip_mult'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e564-coupled-f${{ matrix.family }}-s${{ matrix.sign }}
+          path: ${{ runner.temp }}/coupled-f${{ matrix.family }}-s${{ matrix.sign }}.json
+          retention-days: 7
