@@ -1,0 +1,48 @@
+name: temp-aes-g103-hard-output
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/g103_hard_output_search.py'
+      - '.github/workflows/temp-aes-g103-hard-output.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [hard, guide, cone6]
+        seed: [1, 2, 3, 4]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Search the 32-AND skeleton with hard-output intervention
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/g103_hard_output_search.py
+          python science-boundary/aes-sbox-circuit/g103_hard_output_search.py \
+            --family nist-g103 --policy '${{ matrix.policy }}' --seed '${{ matrix.seed }}' \
+            --max-linear 68 --max-support 8 --elite 10 --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier if <=100
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ] && [ "$(python -c "import json; print(len(json.load(open('result/candidate.json'))['gates']))")" -le 100 ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot; cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-hard-${{ matrix.policy }}-s${{ matrix.seed }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
