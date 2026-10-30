@@ -23,7 +23,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
-      - name: Fetch pinned sources, Few Shots, and completed neutral5 audit artifact
+      - name: Fetch pinned sources, Few Shots, dependencies, and completed neutral5 audit artifact
         shell: bash
         run: |
           set -euo pipefail
@@ -33,6 +33,7 @@ jobs:
           git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
           git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
           git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          python3 -m pip install --disable-pip-version-check python-sat
           mkdir -p "$RUNNER_TEMP/audit" "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
           gh run download 40994810518 -R teddyli18000/web-ingest -n c7-neutral5-killer-audit -D "$RUNNER_TEMP/audit"
           test -f "$RUNNER_TEMP/audit/audit.json"
