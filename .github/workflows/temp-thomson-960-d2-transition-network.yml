@@ -1,0 +1,102 @@
+name: temp Thomson 960 D2 transition network
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-d2-transition-network.yml'
+
+jobs:
+  d2-search:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - kind: modes-low
+            tag: modes-0-5
+            seed: 0
+          - kind: modes-high
+            tag: modes-6-11
+            seed: 0
+          - kind: moto
+            tag: moto-9101
+            seed: 9101
+          - kind: moto
+            tag: moto-9102
+            seed: 9102
+          - kind: moto
+            tag: moto-9103
+            seed: 9103
+          - kind: moto
+            tag: moto-9104
+            seed: 9104
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone current Few Shots
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Materialize D2 float seed
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, sys, os
+          sys.path.insert(0,'science-boundary/thomson-960/code')
+          import search_topology_morph as tm
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'few-shots'
+          x=tm.cert_xyz(root/tm.D2_REL)
+          e=tm.raw_energy(x)
+          p=pathlib.Path(os.environ['RUNNER_TEMP'])/'d2-seed.json'
+          p.write_text(json.dumps({'name':'Few-Shots-D2-record','energy':e,'coord_counts':tm.coord_counts(x),'points':x.tolist()},separators=(',',':'))+'\n')
+          print('D2',e,tm.coord_counts(x),'nproc',os.cpu_count())
+          PY
+      - name: Search D2 landscape
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/out"
+          echo "actual_nproc=$(nproc) kind=${{ matrix.kind }} seed=${{ matrix.seed }}"
+          if [[ '${{ matrix.kind }}' == 'modes-low' ]]; then
+            python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+              "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/d2-seed.json" \
+              --modes 0,1,2,3,4,5 --amps 0.002,0.004,0.008,0.015,0.028,0.050 \
+              --k 14 --workers "$(nproc)" --maxiter 2400 --keep-basins 20 \
+              --out "$RUNNER_TEMP/out/result.json"
+          elif [[ '${{ matrix.kind }}' == 'modes-high' ]]; then
+            python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+              "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/d2-seed.json" \
+              --modes 6,7,8,9,10,11 --amps 0.002,0.004,0.008,0.015,0.028,0.050 \
+              --k 14 --workers "$(nproc)" --maxiter 2400 --keep-basins 20 \
+              --out "$RUNNER_TEMP/out/result.json"
+          else
+            python3 science-boundary/thomson-960/code/moto_like_saddle_explorer.py \
+              "$RUNNER_TEMP/few-shots" --seed-json "$RUNNER_TEMP/d2-seed.json" \
+              --seed '${{ matrix.seed }}' --population 10 --select 3 --basis-k 12 \
+              --scales 0.005,0.009,0.015,0.024,0.036 \
+              --mmf-cycles 7 --mmf-steps 60 --mmf-eta 0.00025 --mmf-max-rms 0.000012 \
+              --certify-amp 0.002 --out "$RUNNER_TEMP/out/result.json"
+          fi
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('BEST',d.get('best_energy',d.get('best_certified_endpoint_energy')),
+                'DELTA_LIVE',d.get('best_delta_vs_live'))
+          for b in d.get('lowest_distinct_basins',[])[:12]:
+              print('BASIN',b['energy'],'mode',b['mode'],'sign',b['sign'],'amp',b['amp'])
+          for r in d.get('results',[]):
+              print('SADDLE',r['saddle_energy'],'grad',r['saddle_gradient_rms'],'neg',r['negative_modes'])
+              for z in r.get('certified_endpoints',[]): print('END',z['energy'],z['delta_vs_live'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-d2-network-${{ matrix.tag }}
+          path: ${{ runner.temp }}/out
+          retention-days: 7
