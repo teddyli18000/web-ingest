@@ -1,0 +1,92 @@
+name: temp Thomson 960 e558 low-mode search
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-e558-modes.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  modes:
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        include:
+          - variant: a
+            artifact: thomson-e564-coupled-f0-s-1
+            modes: "0,1"
+          - variant: a
+            artifact: thomson-e564-coupled-f0-s-1
+            modes: "2,3"
+          - variant: a
+            artifact: thomson-e564-coupled-f0-s-1
+            modes: "4,5"
+          - variant: b
+            artifact: thomson-e564-coupled-f2-s-1
+            modes: "0,1"
+          - variant: b
+            artifact: thomson-e564-coupled-f2-s-1
+            modes: "2,3"
+          - variant: b
+            artifact: thomson-e564-coupled-f2-s-1
+            modes: "4,5"
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Download e558 source artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ runner.temp }}/source
+          github-token: ${{ github.token }}
+          run-id: 40991679399
+      - name: Extract lowest e558 basin
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob,json,os
+          p=glob.glob(os.path.join(os.environ['RUNNER_TEMP'],'source','*.json'))[0]; d=json.load(open(p))
+          b=min(d['lowest_distinct_basins'],key=lambda z:z['energy'])
+          out={'energy':b['energy'],'coord_counts':b['coord'],'points':b['points']}
+          json.dump(out,open(os.path.join(os.environ['RUNNER_TEMP'],'seed.json'),'w'),separators=(',',':'))
+          print('seed',b['energy'],b['coord'])
+          PY
+      - name: Recompute Hessian and scan assigned modes
+        shell: bash
+        run: |
+          echo "runner nproc=$(nproc), variant=${{ matrix.variant }}, modes=${{ matrix.modes }}"
+          python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/seed.json" \
+            --modes "${{ matrix.modes }}" --amps 0.003,0.006,0.012,0.022,0.038,0.060 \
+            --k 10 --workers 1 --maxiter 2000 --keep-basins 12 \
+            --out "$RUNNER_TEMP/e558-${{ matrix.variant }}-${{ strategy.job-index }}.json"
+          python3 - <<'PY'
+          import glob,json
+          p=glob.glob('/home/runner/work/_temp/e558-*.json')[0]; d=json.load(open(p))
+          print('LAMBDA',d['eigenvalues'][:8]); print('BEST',d['best_energy'],d['best_delta_vs_live'])
+          for b in d['lowest_distinct_basins']:
+              print('BASIN',b['energy'],b['mode'],b['sign'],b['amp'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e558-${{ matrix.variant }}-modes-${{ strategy.job-index }}
+          path: ${{ runner.temp }}/e558-${{ matrix.variant }}-${{ strategy.job-index }}.json
+          retention-days: 7
