@@ -1,0 +1,83 @@
+name: temp Thomson 960 incoming neighboring-size batch
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-incoming-size-batch.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  batch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Static-check search code
+        run: python3 -m py_compile science-boundary/thomson-960/code/search_incoming_size_batch.py
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Fetch nearby public CCD parents
+        run: |
+          mkdir -p "$RUNNER_TEMP/ccd"
+          for n in 956 957 958 959 961 962 963 964; do
+            ok=0
+            for family in Thomson Thomson2; do
+              url="https://www-wales.ch.cam.ac.uk/~wales/CCD/${family}/xyz/${n}.xyz"
+              if curl --fail --silent --show-error --location --retry 2 "$url" -o "$RUNNER_TEMP/ccd/${n}.xyz.tmp"; then
+                if [ "$(wc -l < "$RUNNER_TEMP/ccd/${n}.xyz.tmp")" -gt 100 ]; then
+                  mv "$RUNNER_TEMP/ccd/${n}.xyz.tmp" "$RUNNER_TEMP/ccd/${n}.xyz"
+                  echo "N=$n source=$url"
+                  ok=1
+                  break
+                fi
+              fi
+            done
+            rm -f "$RUNNER_TEMP/ccd/${n}.xyz.tmp"
+            if [ "$ok" -eq 0 ]; then echo "N=$n unavailable"; fi
+          done
+          ls -lh "$RUNNER_TEMP/ccd"
+      - name: Report runner capacity
+        run: |
+          echo "nproc=$(nproc)"
+          free -h || true
+      - name: Parallel incoming propagation
+        run: |
+          python3 science-boundary/thomson-960/code/search_incoming_size_batch.py \
+            "$RUNNER_TEMP/ccd" "$RUNNER_TEMP/few-shots" \
+            --branch 3 --beam 2 \
+            --out "$RUNNER_TEMP/incoming-size.json"
+      - name: Print compact scientific summary
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/incoming-size.json" ]; then
+            python3 - <<'PY'
+          import json, os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'incoming-size.json')))
+          print('LIVE',d['live_score'],'PARENTS',d['parents'],'WORKERS',d['workers'])
+          print('BEST',d['best_float_energy'],d['best_delta_vs_live'],d['best_source_n'],d['best_policy'])
+          for r in sorted([q for q in d['results'] if q.get('status')=='ok'], key=lambda q:q['best_float_energy']):
+              print('ROW',r['source_n'],r['policy'],r['best_float_energy'],r['delta_vs_live'],r['source_signature']['twins'],'->',r['best_signature']['twins'],r['best_signature']['coord'])
+          PY
+          else
+            echo "No result JSON produced"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-incoming-size-batch
+          retention-days: 7
+          path: ${{ runner.temp }}/incoming-size.json
+          if-no-files-found: warn
