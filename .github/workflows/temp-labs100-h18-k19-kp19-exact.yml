@@ -1,0 +1,56 @@
+name: temp labs100 h18 K19 kp19 exact exclusion
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k19-kp19-exact.yml'
+      - 'science-boundary/labs-100/code/oddperfect_h18_k19_kp19_enum.cpp'
+      - 'science-boundary/labs-100/code/oddperfect_h18_k19_q0_fibre.cpp'
+
+concurrency:
+  group: temp-labs100-h18-k19-kp19-exact
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact programs
+        run: |
+          g++ -O3 -march=native science-boundary/labs-100/code/oddperfect_h18_k19_kp19_enum.cpp -o "$RUNNER_TEMP/enum"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k19_q0_fibre.cpp -o "$RUNNER_TEMP/fibre"
+      - name: Boundary-aware fibre self-test
+        run: "$RUNNER_TEMP/fibre --selftest | tee $RUNNER_TEMP/selftest.txt"
+      - name: Exhaust compressed kp19 kc0 layer
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/enum" > "$RUNNER_TEMP/hits.txt" 2> "$RUNNER_TEMP/enum.err"
+          cat "$RUNNER_TEMP/enum.err"
+          test "$(grep -c '^HIT ' "$RUNNER_TEMP/hits.txt")" -eq 96
+          grep -F 'SUMMARY support_orbits=366 sign_tests=4255848 spectral_hits=96 base_hits=5 hit_support_orbits=73' "$RUNNER_TEMP/enum.err"
+      - name: Exhaust all affine images and q0 binary fibres
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          "$RUNNER_TEMP/fibre" "$RUNNER_TEMP/hits.txt" > "$RUNNER_TEMP/fibre.out" 2> "$RUNNER_TEMP/fibre.err"
+          cat "$RUNNER_TEMP/fibre.err"
+          cat "$RUNNER_TEMP/fibre.out"
+          grep -E '^KP19_UNIVERSAL_FIBRE_SUMMARY reps=96 images=47500 hit0=0 hit1=0 hit2=0 .* qkeys=8390620$' "$RUNNER_TEMP/fibre.out"
+          test "$(grep -c '^FIBRE_HIT ' "$RUNNER_TEMP/fibre.out" || true)" -eq 0
+      - name: Upload exact transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k19-kp19-exact
+          path: |
+            ${{ runner.temp }}/selftest.txt
+            ${{ runner.temp }}/hits.txt
+            ${{ runner.temp }}/enum.err
+            ${{ runner.temp }}/fibre.out
+            ${{ runner.temp }}/fibre.err
+          if-no-files-found: warn
