@@ -1,0 +1,65 @@
+Thomson N=960 — soft live-record glide interface — 2026-10-30
+
+Record R
+--------
+E = 444368.3924061973, C3, coordination 36/900/24.
+The complete same-count one-flip census contains 78 legal Delaunay glides = 26 C3 orbits.
+
+Soft single-glide interfaces
+----------------------------
+Direct full release of every completed soft single glide returns to R, but hard-fixed scaffold energies reveal unusually low topology interfaces.
+
+orbit0 (novel relative to A/B):
+- representative delete (217,559), add (551,308)
+- balanced threshold 0.004996994 rad
+- fixed scaffold at multiplier 1.003: E = 444368.397249536, only +0.004843339 above live
+- full release -> R
+
+orbit3 (points along known A direction):
+- representative delete (21,230), add (74,363)
+- balanced threshold 0.006112343 rad
+- fixed scaffold around E = 444368.401030609
+- full release -> R
+
+orbit4 (novel relative to A/B):
+- representative delete (108,282), add (511,599)
+- balanced threshold 0.007035118 rad
+- fixed scaffold around E = 444368.404102223
+- full release -> R
+
+C3-coordinated triple glides
+----------------------------
+Runs 41055622500 and 41055971097 crossed all three symmetry copies together for orbits 0,1,2,3,4. Every tested pattern/amplitude fully relaxed back to R. Restoring C3 symmetry alone therefore does not stabilize the displaced topology.
+
+For orbit0 the balanced triple fixed scaffold is E~444368.407094745, substantially higher than the single-glide scaffold 444368.397249536. Thus orbit0's softness is specifically a local one-scar interface, not a hidden low C3 collective minimum.
+
+Orbit0 restraint homotopy
+-------------------------
+Run 41056185398 continues the single orbit0 glide under decreasing spherical harmonic restraint on its four quad vertices.
+
+Hard-fixed: E = 444368.397249536, flipped diagonal alive.
+kappa=3000: E = 444368.394594725, flipped diagonal still alive.
+kappa=1000: E = 444368.393890714, flipped diagonal already healed.
+Then the energy approaches R smoothly as kappa decreases; kappa=0 returns R.
+
+Therefore the orbit0 topology branch terminates between kappa 1000 and 3000; it is not a free metastable minimum. At the last-flipped kappa=3000 state, the inverse Delaunay crossing threshold is only ~3.6e-6 rad, so the state lies extremely close to the healing boundary.
+
+Minimal same-scar continuation
+------------------------------
+At the last-flipped orbit0 state, enumerate all same-count one-flip moves touching its defect component. The softest non-healing successor is uniquely:
+- delete (319,699), add (283,615), threshold ~0.00738267 rad.
+The next alternative on the same defect component is already ~0.0139027 rad.
+This successor is a symmetry copy of live orbit1 and acts on the same 5-7-5-7-5 scar component as the chosen orbit0 representative.
+
+Interpretation
+--------------
+Single glide fails; C3-synchronous glide fails; and the single-glide branch terminates under substantial restraint. The smallest remaining topology representation supported by the data is therefore a sequential two-glide chain along one scar, introduced while the first glide is still alive.
+
+Active test
+-----------
+Run 41056915565 starts from the kappa=3000 last-flipped orbit0 state, crosses the unique soft same-scar orbit1 successor, adapts with both quads fixed, then jointly releases both events through a common restraint homotopy. Three just-over-threshold depths are tested independently.
+
+Decision rule:
+- If both glides survive to much smaller restraint than orbit0 alone, the second event stabilizes the branch and the next step is to continue the scar glide chain rather than broaden the one-flip census.
+- If the two-event branch also collapses at high restraint, retire sequential glides on this scar and reformulate around coupled changes between different scar triplets / grain-boundary rearrangement.
+- Any fully free state below live by >2e-7 triggers immediate independent verification; ~1e-10 score differences are numerical noise.
