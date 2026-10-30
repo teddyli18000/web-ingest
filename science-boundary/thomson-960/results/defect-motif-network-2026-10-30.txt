@@ -1,0 +1,33 @@
+Thomson N=960 defect-motif network diagnostic — 2026-10-30
+
+States and exact Delaunay defect-component decompositions:
+
+D2, E=444368.4040805306, 32/908/20, 12 components:
+- 8 full 5-7-5-7-5 scars (component degree multiset 5,5,5,7,7)
+- 4 short 5-7-5 scars (5,5,7)
+
+E19/e569, E=444368.5698901983, 31/910/19, 12 components:
+- 7 full 5-7-5-7-5 scars
+- 5 short 5-7-5 scars
+
+E18/e560, E=444368.5609333512, 30/912/18, 13 components:
+- 6 full 5-7-5-7-5 scars
+- 5 short 5-7-5 scars
+- 1 isolated 5-7 pair
+- 1 isolated fivefold defect
+
+Live R, E=444368.3924061973, 36/900/24, 12 components:
+- 12 full 5-7-5-7-5 scars exactly.
+
+Aligned defect matching / particle displacement:
+- D2 -> e569: particle NN RMS ~0.015615; one source 5 and one source 7 have no target counterpart. Same-type defect matching RMS: 5 ~0.12356, 7 ~0.10485.
+- e569 -> e560: particle NN RMS only ~0.003653; again exactly one source 5 and one source 7 disappear. Same-type defect RMS ~0.0374. This is a genuinely localized one-dislocation healing event.
+- D2 -> live: particle NN RMS ~0.03924. Live has four unmatched target 5s and four unmatched target 7s after same-type assignment; same-type defect matching RMS ~0.295. Thus reaching the live topology from D2 requires four new dislocation cores plus substantial scar relocation/reorganization, not merely extending four existing scars in place.
+- e560 -> live: live has six unmatched target 5s and six unmatched target 7s; same-type defect matching RMS ~0.23. The low-defect branch and the live C3 record occupy structurally distinct scar organizations.
+
+Scientific interpretation:
+1. The descending low-defect branch D2/high20 -> e569 -> e560 proceeds through localized single-dislocation healing, but the e560 component graph shows splitting (5-7 pair + isolated 5) rather than simple monotone scar shortening.
+2. Live is a highly regular 12-full-scar state. Direct D2->live moves should therefore be treated as coordinated nucleation/reconnection of four new 5-7 pairs, not generic whole-configuration interpolation.
+3. Active search now includes defect-core-aware D2<->live moves that independently activate the four unmatched live 5-7 cores and their joint combination; component splitting/merging should be allowed in future event grammars.
+
+Authoritative diagnostic run: 41041302013, artifact thomson-defect-motif-diagnostic, ID 12970192628.
