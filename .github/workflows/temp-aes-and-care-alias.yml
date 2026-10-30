@@ -1,0 +1,68 @@
+name: temp-aes-and-care-alias
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/mine_and_care_aliases.py'
+      - '.github/workflows/temp-aes-and-care-alias.yml'
+permissions:
+  contents: read
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        family: [fs-101, nist-g103, nist-a34-g110]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exhaust AND-care substitutions in four CPU shards
+        run: |
+          set -euxo pipefail
+          mkdir -p results
+          pids=()
+          for shard in 0 1 2 3; do
+            python science-boundary/aes-sbox-circuit/mine_and_care_aliases.py \
+              --seed-family '${{ matrix.family }}' --shard "$shard" --shards 4 \
+              --out "results/shard-$shard" > "results/shard-$shard.log" 2>&1 &
+            pids+=("$!")
+          done
+          rc=0; for p in "${pids[@]}"; do wait "$p" || rc=1; done
+          cat results/shard-*.log
+          exit "$rc"
+      - name: Aggregate and recheck best
+        run: |
+          python - <<'PY'
+          import glob,json,sys,shutil
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          rows=[]
+          for f in glob.glob('results/shard-*/summary.json'):
+              x=json.load(open(f));rows.append((x['best_gates'],f,x))
+          assert len(rows)==4;rows.sort(key=lambda z:z[0])
+          n,f,x=rows[0];c=json.load(open(f.replace('summary.json','best.json')))
+          assert ras.independent_check(c)[0]
+          json.dump(c,open('best.json','w'),indent=2)
+          json.dump({'family':'${{ matrix.family }}','best_gates':n,'shards':[r[2] for r in rows]},open('aggregate.json','w'),indent=2)
+          print(json.dumps({'family':'${{ matrix.family }}','best_gates':n,'strict_reductions':sum(len(r[2]['strict_reductions']) for r in rows)}))
+          PY
+      - name: Official verifier for any record-competitive result
+        run: |
+          set -euxo pipefail
+          gates=$(python -c "import json; print(len(json.load(open('best.json'))['gates']))")
+          if [ "$gates" -le 101 ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot; cp best.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee verifier.jsonl
+          else
+            echo '{"skipped":true}' | tee verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-and-care-${{ matrix.family }}
+          path: |
+            aggregate.json
+            best.json
+            verifier.jsonl
+            results
