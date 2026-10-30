@@ -6,7 +6,7 @@ Pinned geometry: Tandon/BPZ commit `c753408492dde92a239708986d16c15dbf6c3235`, w
 
 ## Context
 
-All outside factors with nonempty support `S(z)=N[z]∩B` of size at most two admit an owner assignment `f(z)∈S(z)` whose owner fibers are cliques.  The resulting product injection closes every outside×outside construction in which both factor supports have size at most two at nonpositive raw core gain; see `outside-outside-support2-closure.md`.
+All outside factors with nonempty support `S(z)=N[z]∩B` of size at most two admit an owner assignment `f(z)∈S(z)` whose owner fibers are cliques. The resulting product injection closes every outside×outside construction in which both factor supports have size at most two at nonpositive raw core gain; see `outside-outside-support2-closure.md`.
 
 The natural next question is whether the same assignment exists for all factors with support size at most three.
 
@@ -35,7 +35,7 @@ The solver returned an assumption core of **64 factors**.
 
 ## Independently minimized obstruction
 
-An independent exact finite-domain replay of the returned core removes one redundant factor, `z=13015` with singleton support `{12672}`.  The remaining **63 factors** are inclusion-minimal under single-factor deletion: deleting any one of them makes the owner-clique assignment feasible.
+An independent exact finite-domain replay of the returned core removes one redundant factor, `z=13015` with singleton support `{12672}`. The remaining **63 factors** are inclusion-minimal under single-factor deletion: deleting any one of them makes the owner-clique assignment feasible.
 
 Composition of the 63-factor obstruction:
 
@@ -48,14 +48,28 @@ The exact 63-factor list is frozen in `code/bpz_support3_core_product_prize.py`.
 
 ## Stronger diagnostic: no branching is needed
 
-The 63-factor obstruction is not a difficult SAT artifact.  Unit propagation from the nine singleton-support factors forces assignments through the entire obstruction.  It assigns 62 factors and finally empties the domain of
+The 63-factor obstruction is not a difficult SAT artifact. Unit propagation from the nine singleton-support factors forces assignments through the entire obstruction. It assigns 62 factors and finally empties the domain of
 
 - `z=1620`, support `{1577,2053,4014}`.
 
-The final three exclusions are forced by the propagated assignments of factors `z=1528`, `z=2046`, and `z=3965` to owners `1577`, `2053`, and `4014`, respectively.  Thus support size three is the first layer where the simple product-injection mechanism genuinely fails.
+The final three exclusions are forced by the propagated assignments of factors `z=1528`, `z=2046`, and `z=3965` to owners `1577`, `2053`, and `4014`, respectively. Thus support size three is the first layer where the simple product-injection mechanism genuinely fails.
 
-## What this does and does not prove
+## Exact ten-dimensional prize on the minimal obstruction
 
-UNSAT of the owner assignment does **not** imply a positive ten-dimensional construction.  It only proves that the support≤2 injection argument cannot extend globally to support≤3.
+GitHub Actions run **`41047120091`**, job **`124033813178`**, completed successfully. It used all ordered pairs from the 63 factors, so each terminal scenario had exactly
 
-The immediate exact experiment is therefore the real prize problem on the obstruction itself: optimize all `63×63=3,969` outside×outside factor pairs against complete `B×B` and terminal-periphery deletion costs, including all new-new strong-product conflicts.  `code/bpz_support3_core_product_prize.py` implements this calculation over all 18 BPZ terminal scenarios; workflow `temp-science-boundary-c7-support3-core-product.yml` materializes and verifies any positive-gain result.
+- **3,969** outside×outside candidate points.
+
+For each of the 18 BPZ terminal scenarios, `code/bpz_support3_core_product_prize.py` computed the complete conflict set of every candidate against both the `B×B` core and the 5,872-point terminal periphery. Shared old-point deletions were charged only once.
+
+Before adding any new-new strong-product conflict constraints, a maximum-closure relaxation optimized
+
+`selected new points - distinct forced old-point deletions`.
+
+**All 18 scenarios had exact closure optimum 0.** The best closure selects the empty set. Therefore this finite product universe is closed even under the strictly easier relaxation that ignores every conflict among new points; weighted MaxSAT is unnecessary and no verifier candidate is produced.
+
+The packed calculation used four worker processes, about 370% CPU, and finished in about 52 seconds wall time with peak RSS about 0.35 GiB.
+
+## Consequence / next step
+
+The first failure of the owner-clique injection is real, but the inclusion-minimal 63-factor obstruction itself has no positive ten-dimensional prize. The useful next enlargement is not support size four immediately. It is to keep the same 59 obstruction owners and add **all** support≤3 outside factors whose exact support lies completely inside those owners. This tests whether nearby factors can exploit the same deletion region and turn the frustration obstruction into genuine shared-deletion synergy.
