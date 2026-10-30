@@ -1,0 +1,93 @@
+name: temp-aes-fs101-z3-67linear
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/synthesize_fixed_and_schedule_z3.py'
+      - '.github/workflows/temp-aes-fs101-z3-67linear.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Z3
+        run: python -m pip install --quiet z3-solver
+      - name: Solve nonempty schedule deletions with four CPUs
+        env:
+          SHARD: ${{ matrix.shard }}
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p results
+          python - <<'PY' > intervals.txt
+          import os,sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          import synthesize_fixed_and_schedule_z3 as z
+          shard=int(os.environ['SHARD'])
+          c=ras.load_circuit('fs-101'); s=z.original_schedule(c)
+          print('# schedule',s,file=sys.stderr)
+          for i,n in enumerate(s):
+              if n and i%8==shard: print(i)
+          PY
+          cat intervals.txt
+          run_one() {
+            i="$1"
+            mkdir -p "results/i-$i"
+            python science-boundary/aes-sbox-circuit/synthesize_fixed_and_schedule_z3.py \
+              --family fs-101 --remove-interval "$i" --timeout-ms 300000 \
+              --out "results/i-$i" > "results/i-$i.log" 2>&1
+          }
+          export -f run_one
+          if [ -s intervals.txt ]; then
+            xargs -r -n1 -P4 bash -c 'run_one "$0"' < intervals.txt
+          fi
+          cat results/*.log 2>/dev/null || true
+      - name: Aggregate and validate any SAT result
+        run: |
+          python - <<'PY'
+          import glob,json,os,shutil,sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          rows=[]
+          for f in glob.glob('results/i-*/summary.json'):
+              x=json.load(open(f)); rows.append(x)
+              if x['status']=='sat':
+                  cpath=os.path.join(os.path.dirname(f),'candidate.json')
+                  c=json.load(open(cpath)); assert ras.independent_check(c)[0]
+                  if len(c['gates'])<=100 and not os.path.exists('candidate-100.json'):
+                      shutil.copy(cpath,'candidate-100.json')
+          json.dump({'shard':${{ matrix.shard }},'results':rows},open('aggregate.json','w'),indent=2)
+          print(json.dumps({'shard':${{ matrix.shard }},'sat':sum(x['status']=='sat' for x in rows),'unknown':sum(x['status']=='unknown' for x in rows),'unsat':sum(x['status']=='unsat' for x in rows),'tested':len(rows)}))
+          PY
+      - name: Official verifier if 100 found
+        run: |
+          set -euxo pipefail
+          if [ -f candidate-100.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp candidate-100.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-fs101-z3-67linear-${{ matrix.shard }}
+          path: |
+            intervals.txt
+            aggregate.json
+            official-verifier.jsonl
+            candidate-100.json
+            results
+          if-no-files-found: warn
