@@ -23,6 +23,14 @@ jobs:
             seed: 9702
           - direction: e569-to-live
             seed: 9703
+          - direction: d2-to-live
+            seed: 9801
+          - direction: d2-to-live
+            seed: 9802
+          - direction: d2-to-live
+            seed: 9803
+          - direction: d2-to-live
+            seed: 9804
     runs-on: ubuntu-24.04
     timeout-minutes: 150
     env:
@@ -68,15 +76,19 @@ jobs:
             src="$RUNNER_TEMP/out/d2.json"; dst="$RUNNER_TEMP/out/e569.json"
             ts='-0.25,0.25,0.55,0.80,1.05,1.12,1.22,1.35,1.55,1.80,2.10'
             alphas='-0.6,-0.3,0.18,0.35,0.55,0.80,1.10,1.45'
-          else
+          elif [[ '${{ matrix.direction }}' == 'e569-to-live' ]]; then
             src="$RUNNER_TEMP/out/e569.json"; dst="$RUNNER_TEMP/out/live.json"
             ts='-0.20,0.25,0.55,0.80,1.03,1.07,1.12,1.20,1.32,1.50'
             alphas='-0.5,-0.25,0.10,0.20,0.35,0.55,0.80,1.10'
+          else
+            src="$RUNNER_TEMP/out/d2.json"; dst="$RUNNER_TEMP/out/live.json"
+            ts='-0.15,0.20,0.45,0.65,0.80,0.90,0.96,1.02,1.05,1.08,1.12,1.18,1.28,1.42'
+            alphas='-0.45,-0.22,0.08,0.16,0.28,0.42,0.62,0.88,1.18'
           fi
           echo "nproc=$(nproc) direction=${{ matrix.direction }} seed=${{ matrix.seed }} live=$live"
           python3 science-boundary/thomson-960/code/search_pair_event_transfer.py \
             "$src" "$dst" --seed '${{ matrix.seed }}' --starts 18 --maxiter 2600 \
-            --ts "$ts" --fracs 0.10,0.18,0.30,0.50,0.75,1.0 --alphas "$alphas" \
+            --ts="$ts" --fracs 0.08,0.12,0.18,0.30,0.50,0.75,1.0 --alphas="$alphas" \
             --live-score "$live" --out "$RUNNER_TEMP/out/result.json"
       - name: Summarize
         run: |
