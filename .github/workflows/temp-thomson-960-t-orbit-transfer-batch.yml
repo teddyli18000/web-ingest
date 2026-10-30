@@ -25,6 +25,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install numerical dependencies
         run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Static-check search code
+        run: |
+          python3 -m py_compile \
+            science-boundary/thomson-960/code/search_t_orbit_transfer_batch.py \
+            science-boundary/thomson-960/code/search_t_orbit_transfer_batch_v2.py
       - name: Clone live Few Shots main
         run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
       - name: Fetch historical N972 parent
@@ -38,7 +43,7 @@ jobs:
           free -h || true
       - name: Exhaustive orbit transfer, classification, and portal release
         run: |
-          python3 science-boundary/thomson-960/code/search_t_orbit_transfer_batch.py \
+          python3 science-boundary/thomson-960/code/search_t_orbit_transfer_batch_v2.py \
             "$RUNNER_TEMP/972.xyz" "$RUNNER_TEMP/few-shots" \
             --classify 16 --hessian-k 12 \
             --out "$RUNNER_TEMP/t-orbit-transfer.json"
