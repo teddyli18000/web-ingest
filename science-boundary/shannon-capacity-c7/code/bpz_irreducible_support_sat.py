@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""Exact SAT for outside-only positive BPZ support defects.
+"""Exact SAT for outside-only positive BPZ support defects with exact support union.
 
 For the pinned BPZ/Tan core B (|B|=359), every five-dimensional candidate z
-has support S(z)=N[z] cap B.  This model simultaneously chooses at most k owners
-and at least k+1 pairwise nonconfusable candidates outside B, requiring every
-chosen candidate's full nonempty support to be contained in the selected owner
-set.  Thus SAT is exactly an outside-only positive support defect with support
-union <= k; UNSAT excludes the whole family without enumerating owner subsets.
+has support S(z)=N[z] intersect B.  For an integer k, this model chooses at
+least k+1 pairwise nonconfusable candidates outside B and requires that the
+union of their nonempty supports has size exactly k.
 
-The k=7,target=8 instance is a self-check: prior exact census found 12 genuine
-outside-only irreducible 7->8 defects.  The active frontier is k=8,target=9.
+The owner variables are not merely an arbitrary superset: they are tied in both
+directions to the selected candidates.  Hence SAT is exactly an outside-only
+positive k-owner support defect.  The k=7,target=8 instance is a self-check
+against the previously audited genuine 7->8 defects; k=8,target=9 is the next
+support-gap frontier.
 """
 from __future__ import annotations
 import argparse,itertools,json,time,sys
@@ -55,8 +56,7 @@ def build(root:Path,k:int,cnf_path:Path,meta_path:Path):
     from pysat.formula import CNF
     ring,raw,B,owners,cands,supp=load_geometry(root,k);n=len(cands);m=len(owners)
     xvar={v:i+1 for i,v in enumerate(cands)};y0=n+1
-    cnf=CNF();edges=0;impl=0
-    cset=set(cands)
+    cnf=CNF();edges=0;impl=0;reverse=0
     # Exact induced conflict graph using the 3^5 closed neighborhood.
     for v in cands:
         iv=xvar[v];d=dec(v)
@@ -66,17 +66,25 @@ def build(root:Path,k:int,cnf_path:Path,meta_path:Path):
             iw=xvar.get(w)
             if iw is not None and iw>iv:
                 cnf.append([-iv,-iw]);edges+=1
+    # Owner variables are exact support-union indicators.
+    incident=[[] for _ in range(m)]
     for i,S in enumerate(supp):
         xv=i+1
         for oi in S:
             cnf.append([-xv,y0+oi]);impl+=1
+            incident[oi].append(xv)
+    for oi,xs in enumerate(incident):
+        if xs:
+            cnf.append([-(y0+oi),*xs]);reverse+=1
+        else:
+            cnf.append([-(y0+oi)]);reverse+=1
     top=y0+m-1
-    atmost=CardEnc.atmost(lits=list(range(y0,y0+m)),bound=k,top_id=top,encoding=EncType.cardnetwrk)
-    cnf.extend(atmost.clauses);top=max(top,atmost.nv)
+    exact=CardEnc.equals(lits=list(range(y0,y0+m)),bound=k,top_id=top,encoding=EncType.cardnetwrk)
+    cnf.extend(exact.clauses);top=max(top,exact.nv)
     atleast=CardEnc.atleast(lits=list(range(1,n+1)),bound=k+1,top_id=top,encoding=EncType.cardnetwrk)
     cnf.extend(atleast.clauses)
     cnf.to_file(cnf_path)
-    meta={'method':'exact-outside-only-support-defect-sat','k':k,'target':k+1,'B_size':len(B),'candidate_count':n,'conflict_edges':edges,'support_implications':impl,'cnf_vars':cnf.nv,'cnf_clauses':len(cnf.clauses),'owners':owners,'candidates':cands,'supports':[list(s) for s in supp],'private_pairs':raw['private_pairs']}
+    meta={'method':'exact-outside-only-exact-support-defect-sat','k':k,'target':k+1,'B_size':len(B),'candidate_count':n,'conflict_edges':edges,'support_implications':impl,'support_reverse_clauses':reverse,'cnf_vars':cnf.nv,'cnf_clauses':len(cnf.clauses),'owners':owners,'candidates':cands,'supports':[list(s) for s in supp],'private_pairs':raw['private_pairs']}
     meta_path.parent.mkdir(parents=True,exist_ok=True);meta_path.write_text(json.dumps(meta,separators=(',',':'))+'\n')
     print(json.dumps({q:v for q,v in meta.items() if q not in ('owners','candidates','supports','private_pairs')},sort_keys=True))
 
@@ -96,22 +104,21 @@ def worker(cnf_path:Path,solver:str,out:Path):
 
 def replay(meta_path:Path,res_path:Path,out_path:Path):
     d=json.loads(meta_path.read_text());r=json.loads(res_path.read_text());k=int(d['k']);n=len(d['candidates'])
-    out={'method':'exact-outside-only-support-defect-replay','k':k,'target':k+1,'solver':r.get('solver'),'solver_status':r.get('status')}
+    out={'method':'exact-outside-only-exact-support-defect-replay','k':k,'target':k+1,'solver':r.get('solver'),'solver_status':r.get('status')}
     if r.get('status')=='unsat':
         out.update(candidate=False);out_path.write_text(json.dumps(out,indent=2,sort_keys=True)+'\n');print(json.dumps(out,sort_keys=True));return
     if r.get('status')!='sat':raise RuntimeError(r)
     pos=set(map(int,r['model_positive']));chosen=[int(d['candidates'][i]) for i in range(n) if i+1 in pos]
-    # Solver may select more than target; retain all and replay exactly.
     if len(chosen)<k+1:raise RuntimeError(('cardinality',len(chosen)))
     for i,a in enumerate(chosen):
         for b in chosen[i+1:]:
             if conflict5(a,b):raise RuntimeError(('conflict',a,b))
-    B=set(map(int,d['owners']));
+    B=set(map(int,d['owners']))
     if any(x in B for x in chosen):raise RuntimeError('owner reused')
     supp_union=set()
     for i in range(n):
         if i+1 in pos:supp_union.update(int(x) for x in d['supports'][i])
-    if len(supp_union)>k:raise RuntimeError(('support-union',len(supp_union)))
+    if len(supp_union)!=k:raise RuntimeError(('support-union',len(supp_union),k))
     owner_words=[int(d['owners'][i]) for i in sorted(supp_union)]
     out.update(candidate=True,witness=sorted(chosen),owners=owner_words,support_union_size=len(supp_union),witness_size=len(chosen))
     out_path.write_text(json.dumps(out,indent=2,sort_keys=True)+'\n');print(json.dumps(out,sort_keys=True))
