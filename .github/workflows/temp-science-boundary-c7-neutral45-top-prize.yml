@@ -1,4 +1,4 @@
-name: Temp Science Boundary C7 neutral4x5 top-prize search
+name: Temp Science Boundary C7 neutral4x5 exact-prize exhaustion
 
 on:
   push:
@@ -31,7 +31,7 @@ jobs:
           git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
           git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
           python3 -m pip install --disable-pip-version-check python-sat
-      - name: Rank family and solve top exact prize cases
+      - name: Exhaust exact prize family
         id: solve
         shell: bash
         run: |
@@ -39,7 +39,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
           /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_neutral45_top_prize.py \
             "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/status.json" "$RUNNER_TEMP/shot" \
-            --top 1000 --workers "$(nproc)" \
+            --top 136204 --workers "$(nproc)" \
             > "$RUNNER_TEMP/result/stdout" 2> "$RUNNER_TEMP/result/stderr"
           cat "$RUNNER_TEMP/result/stdout"
           tail -n 120 "$RUNNER_TEMP/result/stderr"
@@ -63,6 +63,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: c7-neutral45-top-prize
+          name: c7-neutral45-full-prize
           path: ${{ runner.temp }}/result
           retention-days: 14
