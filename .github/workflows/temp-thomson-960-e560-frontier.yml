@@ -1,0 +1,142 @@
+name: temp Thomson 960 e560 frontier
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-e560-frontier.yml'
+
+jobs:
+  expand:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - kind: modes-low
+            seed: 0
+            tag: modes-0-5
+          - kind: modes-high
+            seed: 0
+            tag: modes-6-11
+          - kind: moto
+            seed: 9901
+            tag: moto-9901
+          - kind: moto
+            seed: 9902
+            tag: moto-9902
+          - kind: event-live
+            seed: 9951
+            tag: event-live-9951
+          - kind: event-live
+            seed: 9952
+            tag: event-live-9952
+    runs-on: ubuntu-24.04
+    timeout-minutes: 170
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone current Few Shots
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Reproduce e569 parent
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 science-boundary/thomson-960/code/harvest_20_string_image.py \
+            "$RUNNER_TEMP/few-shots" science-boundary/thomson-960/data/basin-20-morph-9136.json \
+            --seed 7301 --starts 18 --images 11 --iterations 260 --eta 0.00022 --max-step 0.0006 \
+            --image-index 7 --expected 444368.5698901982 --tol 0.00005 --quench-maxiter 2800 \
+            --out "$RUNNER_TEMP/out/e569.json"
+      - name: Reproduce e560 18-dislocation child
+        run: |
+          python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/out/e569.json" \
+            --modes 5 --amps 0.020 --k 8 --workers "$(nproc)" --maxiter 2600 --keep-basins 4 \
+            --out "$RUNNER_TEMP/out/e560-step.json"
+          python3 - <<'PY'
+          import json, pathlib, os, sys, numpy as np
+          sys.path.insert(0,'science-boundary/thomson-960/code')
+          import search_topology_morph as tm
+          out=pathlib.Path(os.environ['RUNNER_TEMP'])/'out'
+          d=json.loads((out/'e560-step.json').read_text())
+          target=444368.56093335064
+          b=min(d['lowest_distinct_basins'], key=lambda z: abs(z['energy']-target))
+          if abs(b['energy']-target)>5e-5:
+              raise RuntimeError(f'e560 reproduction miss: {b["energy"]}')
+          x=np.asarray(b['points'],float); x/=np.linalg.norm(x,axis=1)[:,None]
+          cc=tm.coord_counts(x)
+          if cc!={'5':30,'6':912,'7':18}:
+              raise RuntimeError(f'e560 topology mismatch: {cc}')
+          seed={'name':'basin-18-e560933','energy':float(b['energy']),'coord_counts':cc,
+                'source':{'parent':'e569','mode':5,'sign':1,'amp':0.020},'points':x.tolist()}
+          (out/'e560.json').write_text(json.dumps(seed,separators=(',',':'))+'\n')
+          print('E560',b['energy'],cc)
+          PY
+      - name: Materialize live seed
+        run: |
+          python3 - <<'PY'
+          import json,pathlib,os,sys
+          sys.path.insert(0,'science-boundary/thomson-960/code')
+          import search_topology_morph as tm
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'few-shots'; out=pathlib.Path(os.environ['RUNNER_TEMP'])/'out'
+          score,live_dir=tm.find_live(root); x=tm.cert_xyz(live_dir/'certificate.json')
+          (out/'live.json').write_text(json.dumps({'name':'live','energy':tm.raw_energy(x),'score':score,'coord_counts':tm.coord_counts(x),'points':x.tolist()},separators=(',',':'))+'\n')
+          (out/'live-score.txt').write_text(str(score))
+          print('LIVE',score,tm.coord_counts(x))
+          PY
+      - name: Expand e560
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "nproc=$(nproc) kind=${{ matrix.kind }} tag=${{ matrix.tag }}"
+          if [[ '${{ matrix.kind }}' == 'modes-low' ]]; then
+            python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+              "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/out/e560.json" \
+              --modes 0,1,2,3,4,5 --amps 0.0015,0.003,0.006,0.012,0.024,0.045,0.070 \
+              --k 14 --workers "$(nproc)" --maxiter 2600 --keep-basins 28 \
+              --out "$RUNNER_TEMP/out/result.json"
+          elif [[ '${{ matrix.kind }}' == 'modes-high' ]]; then
+            python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+              "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/out/e560.json" \
+              --modes 6,7,8,9,10,11 --amps 0.0015,0.003,0.006,0.012,0.024,0.045,0.070 \
+              --k 14 --workers "$(nproc)" --maxiter 2600 --keep-basins 28 \
+              --out "$RUNNER_TEMP/out/result.json"
+          elif [[ '${{ matrix.kind }}' == 'moto' ]]; then
+            python3 science-boundary/thomson-960/code/moto_like_saddle_explorer.py \
+              "$RUNNER_TEMP/few-shots" --seed-json "$RUNNER_TEMP/out/e560.json" \
+              --seed '${{ matrix.seed }}' --population 14 --select 4 --basis-k 14 \
+              --scales 0.003,0.0055,0.009,0.015,0.024,0.036 \
+              --mmf-cycles 8 --mmf-steps 65 --mmf-eta 0.00022 --mmf-max-rms 0.000010 \
+              --certify-amp 0.0015 --out "$RUNNER_TEMP/out/result.json"
+          else
+            live=$(cat "$RUNNER_TEMP/out/live-score.txt")
+            ts='-0.18,0.20,0.45,0.65,0.80,0.90,0.96,1.02,1.05,1.08,1.12,1.18,1.28,1.42,1.60'
+            alphas='-0.45,-0.22,0.08,0.16,0.28,0.42,0.62,0.88,1.18,1.50'
+            python3 science-boundary/thomson-960/code/search_pair_event_transfer.py \
+              "$RUNNER_TEMP/out/e560.json" "$RUNNER_TEMP/out/live.json" \
+              --seed '${{ matrix.seed }}' --starts 20 --maxiter 2800 \
+              --ts="$ts" --fracs 0.06,0.10,0.15,0.22,0.35,0.50,0.75,1.0 --alphas="$alphas" \
+              --live-score "$live" --out "$RUNNER_TEMP/out/result.json"
+          fi
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('BEST',d.get('best_energy',d.get('best_certified_endpoint_energy')),
+                'DELTA_LIVE',d.get('best_delta_vs_live',d.get('best_delta_live')))
+          for b in d.get('lowest_distinct_basins',[])[:18]: print('BASIN',b['energy'],b.get('mode'),b.get('sign'),b.get('amp'))
+          for b in d.get('distinct_low_basins',[])[:18]: print('BASIN',b['energy'],b.get('coord_counts'),b.get('label'))
+          for r in d.get('results',[]):
+              print('SADDLE',r['saddle_energy'],'grad',r['saddle_gradient_rms'],'neg',r['negative_modes'])
+              for z in r.get('certified_endpoints',[]): print('END',z['energy'],z['delta_vs_live'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e560-${{ matrix.tag }}
+          path: ${{ runner.temp }}/out
+          retention-days: 7
