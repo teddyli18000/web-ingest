@@ -81,24 +81,36 @@ Run `41043609832` measured their output geometry. Each prefix has 97 available a
 
 Thus minimizing the number of helpers required to release all ANDs is badly misaligned with minimizing total circuit size. The relevant coupled objective is the AND-interface cost plus the support-distance geometry of future operands and outputs.
 
-## Exact tail exclusions for the 56-linear prefixes
+## Exact / bounded tail results for the 56-linear prefixes
 
 `rnbp_tail_precondition_z3.py`, Run `41044055885`, first tested the restricted family with H anonymous helpers followed by 8 terminal output gates. Both prefixes are UNSAT for H=2 (99 total gates) and H=3 (100 total gates).
 
-A stronger complete formulation is in `rnbp_tail_ordered_exact_z3.py`. Because every output is farther than two gates from either 56-prefix:
+A stronger formulation is in `rnbp_tail_ordered_exact_z3.py`. Because every output is farther than two gates from either 56-prefix:
 
 1. The first two tail gates cannot be AES outputs; they must be non-output helpers.
 2. Eight distinct AES outputs require at least eight output-producing gates.
 3. Therefore any <=11-gate tail has exactly two or three non-output helpers.
 4. For the three-helper case, after fixing the first two helper slots, only the third helper position (2..10) remains to enumerate; every other slot produces a permutation of the exact eight AES outputs, and earlier outputs may feed later slots.
 
-Run `41044306752` is the exact H=2/H=3 matrix over both known 56-prefixes. Confirmed UNSAT examples so far include:
+Run `41044306752` evaluated all 20 H=2/H=3 instances over the two known 56-prefixes. Artifact aggregation Run `41046041704` gives the authoritative solver-status count:
 
-- both H=2 / 10-slot tails (99 total): d1/r4 UNSAT in 233.177s; d3/r2 UNSAT in 283.038s;
-- d1/r4 H=3 third-helper position 8: UNSAT;
-- d3/r2 H=3 positions 3, 9, 10: UNSAT.
+- **10 UNSAT**;
+- **10 timeout/unknown**;
+- **0 SAT**.
 
-The remaining H=3 positions were still running when this note was written. If all complete UNSAT, the result excludes **every <=100 linear tail for these two fixed 56-linear prefixes**, not merely a heuristic tail family.
+Each prefix contributes 5 UNSAT and 5 unknown instances. In particular, both H=2 / 10-slot tails (99 total gates) are exactly UNSAT: d1/r4 in 233.177s and d3/r2 in 283.038s. The H=3 / 100-gate schedule matrix is only partially resolved; timeout/unknown must not be treated as exclusion evidence.
+
+Concrete H=3 UNSAT instances:
+
+- d1/r4: third helper positions 6, 8, 9, 10;
+- d3/r2: positions 3, 8, 9, 10.
+
+Concrete H=3 timeout/unknown instances:
+
+- d1/r4: positions 2, 3, 4, 5, 7;
+- d3/r2: positions 2, 4, 5, 6, 7.
+
+Therefore the two 56-linear prefixes are not yet exactly excluded from all 100-gate completions, but no SAT tail has been found and half of the full ordered H=3 schedule family is proved impossible.
 
 ## Current highest-value reformulation: true support-distance RNBP
 
@@ -113,4 +125,11 @@ The public Extended-BP RNBP implementation (`lemontrr/Extended-BP-Framework`, TC
 - finite support distances are updated incrementally exactly as a new pair helper can reduce distance by at most one;
 - completed candidates are independently checked on all 256 AES inputs.
 
-The first optimized smoke run is `41045312828`. This is currently the primary constructive search line because it optimizes the long-range basis geometry that the 56-linear-prefix experiments show is missing from shallow/local search.
+The public Extended-BP code also implies a useful exact acceleration: if a target has distance `d`, a new helper can reduce it only when `target XOR helper` is representable by `d-1` old signals. `released_rnbp_support_fast.py` uses the cached 0..4 support-XOR sets to generate such reducer helpers directly for low distances, falling back to recursive checks only at higher support. This removes the need to test every pair helper against every target without changing the represented search semantics.
+
+Active constructive runs:
+
+- FS101 (33 AND, <=67 linear target): original optimized support-distance Run `41045312828` and faster target-generated Run `41045875882`.
+- NIST G103 (32 AND + 71 linear public seed; <=68 linear would give 100 total): Run `41045542990` and the fast G103 jobs inside `41045875882`.
+
+These are currently the primary constructive search lines because they optimize the long-range basis geometry that the 56-linear-prefix experiments show is missing from shallow/local search. The 32-AND G103 skeleton is particularly important: it needs only three global linear savings relative to its 103-gate seed, and earlier local joint-factor failures do not exclude a globally re-synthesized 68-linear realization.
