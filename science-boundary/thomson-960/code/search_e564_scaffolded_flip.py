@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Scaffold a 21->20 e564 flip before releasing it.
+"""Scaffold a 21->20 Thomson defect flip before releasing it.
 
 A direct post-flip configuration may heal before the surrounding 956 points can
-cooperatively reorganize.  This search crosses one defect-reducing Delaunay
+cooperatively reorganize. This search crosses one defect-reducing Delaunay
 boundary, temporarily holds the four quadrilateral vertices fixed while all
-other points minimize, then releases all 960 points.  Persistence after release
+other points minimize, then releases all 960 points. Persistence after release
 would demonstrate a nearby 20-dislocation basin missed by immediate relaxation.
 """
 from __future__ import annotations
@@ -25,7 +25,11 @@ def families(x):
     reps=[]
     for t,q in rows:
         if t is None: continue
-        if any(abs(t-s)<3e-5 for s,_ in reps): continue
+        # Descendant 21-dislocation minima can have distinct C3-derived scar
+        # families with thresholds separated by only ~2.3e-5 rad. Keep the
+        # clustering tolerance well below that while still merging numerical
+        # copies of symmetry-equivalent edges (~1e-8 spread).
+        if any(abs(t-s)<1e-5 for s,_ in reps): continue
         reps.append((t,q))
     if len(reps)!=3: raise RuntimeError(f'expected 3 families, got {reps}')
     return reps
