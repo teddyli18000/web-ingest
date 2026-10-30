@@ -2,306 +2,165 @@
 
 ## Question
 
-Can the AES S-box be implemented with at most **101** two-input gates over the exact Few Shots basis `{AND, XOR, XNOR}`? Depth is unscored; constants and NOT gates are unavailable except as absorbed by XNOR.
+Can the AES S-box be implemented with at most **100** two-input gates over the exact Few Shots basis `{AND, XOR, XNOR}`? Depth is unscored; constants and NOT gates are unavailable except as absorbed by XNOR.
 
 ## Upstream-first rule
 
-Before launching any substantial p008 experiment, re-check:
+Before substantial p008 work, re-check the live Few Shots board, recent/open p008 PRs, and every newer record's complete `SHOT.md` including dead ends. Do not extrapolate a restricted exact exclusion into a global lower bound.
 
-1. live `few-shots/few-shots` `data/board.json`;
-2. open/recent p008 or AES PRs;
-3. every newer record's complete `SHOT.md` and dead ends;
-4. recent commits touching p008;
-5. public follow-up branches of the latest breakthrough author when readily available.
+## Current state — resynced 2026-10-29 PDT
 
-Do not spend compute on a family already covered upstream unless the experiment is materially broader or a later outer construction changes the accounting.
+- **Live verified record: 101 gates**, `chunfeng11221/aes101-nist-interface-resub`, merged PR #31.
+- Official board: score 101, verified `2026-10-29T10:51:03Z`, recorded `2026-10-29T10:52:38Z`.
+- Circuit: **33 AND + 40 XOR + 28 XNOR = 101**, depth 44.
+- Canonical hash reported by the shot/verifier: `9371891b3eb422ac1514f067212a5c42d6f07d0a378deb37dad0941de7220093`.
+- Record chain: 106 → 105 → 104 → 103 → 102 → **101**.
+- Next valid breakthrough: **100 gates or fewer**.
 
-## Current state — resynced 2026-10-28 UTC
+## Main lesson from 101
 
-- **Live record: 102 gates**, `huangxin-design/aes102-field-plane-offsets`, merged PR #25.
-- Board updated `2026-10-28T03:02:21Z`; verifier score 102, canonical hash `b47351b8c602d712efc00ec5cebbd6bdb284e1784ac732f5599bb99f985a0b68`.
-- Record chain: 106 baseline → 105 → 104 → 103 → **102**.
-- Re-checks after the 102 merge found no open p008/101 PR. The record author's public fork exposed only `main` and the already-merged `codex/aes102-field-plane-offsets` branch at the scan time.
-- The next valid breakthrough is **101 gates or fewer**.
+The 101 breakthrough invalidates our previous search prioritization, not our old exact calculations.
 
-## Upstream record chain
+Our recent work fixed the merged 102 architecture too aggressively: the four-wire core interface, the nine fixed tail factors, the old inversion-core family, and the separation between middle/core/final multiplication. Exact screens around that representation remain valid **only for that represented family**.
 
-### 106 → 105 — `csbo98/aes105-nonlinear-resub`
+The successful work first moved to a different high-quality seed lineage and only then used full-circuit observability:
 
-ODC/resubstitution replaced the central inversion region by a six-AND construction. The first nine and final eighteen AND functions stayed unchanged.
-
-Important dead end: the published five-AND alternative core was spliced through all `20160` invertible four-bit linear maps. `60` compatible maps and six 106-gate circuits were found, but no improvement in that old baseline family. Do not repeat this fixed-core/old-outer enumeration.
-
-### 105 → 104 — `HeiGeAi/aes104-odc-resub`
-
-An algebraic sharing identity removed one XOR with 33 ANDs unchanged. Follow-up local ODC and one fixed-template exact instance did not improve further; those are local/template-specific negatives.
-
-### 104 → 103 — `fancify/aes103-joint-plane-orientations`
-
-The successful step jointly changed the surrounding GF(16) representation and the operand bases of nine rank-two norm-product planes while retaining an 18-gate inversion core. Separate field-only or plane-only optimization had failed in restricted models.
-
-Scored decomposition:
+1. Start from the public NIST `aes-sbox-a32-ad5-g104-gd30-xx72-5` circuit, with 32 ANDs and a 19-gate five-AND inversion core exposing a different set of native output forms.
+2. Native-core ODC/resub gives an 18-gate six-AND core and a 103-gate full circuit.
+3. Joint field/product-plane optimization uses field map `P(x)=0x3f*x^32`, chooses the nine product-plane orientations, and resynthesizes surrounding linear maps with offset injections. This creates an **independent 102 seed**:
 
 ```text
-17 prelinear + 9 norm AND + 16 middle + 18 core + 18 final AND + 25 output = 103.
+17 prelinear + 9 norm AND + 15 middle + 18 core + 18 final AND + 25 output = 102.
 ```
 
-A supplementary independent 103 had `19 + 9 + 14 + 18 + 18 + 25`. Exact truth-table comparison showed that the two four-wire core input interfaces span the same four-dimensional linear space.
-
-### 103 → 102 — `huangxin-design/aes102-field-plane-offsets`
-
-This is the current base for all new work.
-
-The shot **retains the same 18-gate inversion core** and jointly changes:
-
-- semilinear input coordinates using `P(x) = 0x1b * x^16`;
-- orientations of the nine quadratic product planes;
-- prelinear, middle and output linear networks.
-
-Product-plane orientations:
+4. Full-circuit observability/resubstitution then finds 101 after 92,027 root-rewrite iterations. The saving crosses a boundary the earlier decomposition treated as separate. In the final circuit:
 
 ```text
-[1,2,0,0,2,2,2,1,1]
+g29 = g23 AND g28
+g30 = XNOR(g12, g29)
+g29 AND g55 = 0  on all 256 inputs
 ```
 
-The middle map uses five prelinear offset injections. Scored decomposition:
+Hence `g30 AND g55 = (1 XOR g12) AND g55`; `g30`, already needed by the core-side logic, can also feed the final multiplication side and one linear gate disappears.
 
-```text
-18 prelinear + 9 norm AND + 15 middle + 18 core + 18 final AND + 24 output = 102.
-```
+The durable research principle is now: **seed architecture and interface placement are optimization variables**. ODC/resub is a second-stage operator after producing a structurally useful seed, not the primary search space by itself.
 
-Recorded dead ends from the 102 shot:
+## PR #31 dead ends — preserve their scope
 
-- `1,171,086` local root-rewrite attempts on the two 103 circuits, including temporary increases and up to three-gate replacements: no reduction.
-- Generic 17-gate core synthesis with exactly six ANDs: 300 s timeout, undecided.
-- Randomized product-plane changes at the fixed starting field representation: no qualifying five-offset middle map in tested candidates.
-- Most arbitrary semilinear input transforms made the outer linear maps too expensive.
+The complete 101 shot records these negatives:
 
-These are not global lower bounds.
+- extensive local rewriting/function-space enumeration/gate-level synthesis around the earlier 102 core did not find the breakthrough;
+- reducing AND count alone was insufficient: a five-AND abstract core materialized into a larger full circuit after XOR cost was charged;
+- keeping the old nine core outputs made the NIST core expensive to substitute directly;
+- for the new native output forms, fixed-core search over **2,040 semilinear input transforms × all `3^9` product-plane orientations** did not construct 101 under the bounded linear-network synthesis used, although it did construct the independent 102 seed;
+- small exact core windows excluded restricted replacements; larger windows and fixed-AND-position problems timed out;
+- two bounded beam searches in selected nonlinear function spaces found no 17-gate core.
 
-## Direct 101 opportunity: replace only the 18-gate core
+None is a global lower bound for 100.
 
-The merged 102 certificate keeps the same abstract 18-gate inversion core topology as the 103 record. Its four independent core inputs are
+## Scope of our pre-101 exact exclusions
 
-```text
-q34, q36, q39, q41
-```
+The existing documents in this directory remain useful evidence, but they are explicitly scoped to old represented families:
 
-and the final AND layer consumes nine distinct core factors:
+- `EXACT-SCREENS-2026-10-28.md` and the `JOINT-DECOUPLED-*` notes: fixed/transported interfaces around the old 102 decomposition;
+- `AFFINE-CORE5.md`, `CORE6-*`, `RANK3-SUPPORT5.md`: restricted old-interface core families and their exact screens;
+- old ODC/window runs: neighborhoods of the previous 103/102 lineages.
 
-```text
-q45, q59, q52, q57, q53, q49, q58, q55, q56.
-```
+In particular, the old merged-102 fixed-tail results remain true for that architecture: complete zero-state ODC (`0xfffe` care), the five-AND lower bound for that partial target, no free nontrivial GL(4,2) core-basis wire in that prefix, and the limited factor coverage of published 15–17 gate GF(16) inverter networks. They do **not** rule out a 100-gate circuit whose interfaces, nonlinear forms, or seed lineage differ.
 
-Therefore any 17-gate network producing observationally valid versions of these nine factors from the same four inputs yields a full 101-gate S-box immediately:
+## Seed-family census
 
-```text
-18 + 9 + 15 + 17 + 18 + 24 = 101.
-```
+`seed_family_census.py` independently parses NIST NCFF circuits and Few Shots JSON certificates, normalizes bit order, checks all 256 AES inputs, and compares exact intermediate truth functions plus nonlinear dependency shapes.
 
-This is the cleanest current route.
+First validated census (Action run `40991160742`):
 
-### Structure of the nine required factors
+- NIST A32/G103: 103 gates = 32 AND + 61 XOR + 10 XNOR, AND depth 7;
+- NIST A32/G104: 104 gates = 32 AND + 67 XOR + 5 XNOR, AND depth 5;
+- Few Shots 101: 33 AND + 40 XOR + 28 XNOR, AND depth 8;
+- old Few Shots 102/103: 33 AND with identical AND-shape hash in this census.
 
-Exact 16-state truth-table analysis shows that the nine factors have ordinary linear rank four. Taking `q45,q59,q52,q57` as a basis,
+Exact-function overlap gives a useful calibration:
 
-```text
-q53 = q45 XOR q57
-q49 = q45 XOR q52 XOR q57
-q58 = q59 XOR q52
-q55 = q45 XOR q59
-q56 = q59 XOR q52 XOR q57.
-```
+- NIST G103 vs G104 share **30/32 AND functions** (Jaccard `0.882353`) but have different dependency shapes. G103 is therefore a strongly re-interleaved sibling of the NIST lineage, not a wholly independent nonlinear family.
+- Few Shots 101 vs NIST G103: **0 shared AND functions**.
+- Few Shots 101 vs NIST G104: **0 shared AND functions**.
+- old Few Shots 102 vs 103: 15 shared AND functions and the same AND-shape hash.
 
-They are all distinct, and none equals a core input. Consequently any 17-gate direct replacement must expose nine distinct target gate outputs on the care set and has room for **at most eight non-target intermediate wires**. The live 18-gate core has nine non-target intermediates. A 101 core must eliminate one internal helper, not merely rename outputs.
+So the successful field/representation change in PR #31 genuinely moved the full circuit into a different nonlinear function basis. This is exactly the kind of architecture shift future search should seek.
 
-### Complete fixed-tail observability relation
+`seed_family_census_extended.py` expands this comparison to near-best NIST A32/A33/A34 circuits plus an A28 remote control family.
 
-`analyze_102_factor_odc.py` reconstructs the full merged-102 certificate, independently checks all 256 AES bytes, and then treats the nine core factors as a boundary into the fixed `q60..q101` tail.
+## Current hypotheses toward 100
 
-The four-bit core state `(q34,q36,q39,q41)` occurs with this distribution over the 256 AES inputs:
+### H1 — alternate near-best seed families can expose a different cross-boundary saving
 
-```text
-0000: 1 preimage
-all 15 nonzero states: 17 preimages each
-```
+A seed need not already beat 101. A 102–105 circuit with a different nonlinear dependency skeleton can be more valuable than another neutral mutation of the record if full-circuit rewriting can cross boundaries unavailable in the current representation.
 
-For each core state the script flips each of the nine boundary factors, re-evaluates all eight final outputs, and forms the linear error map from nine factor-error bits to observable tail-output errors. The exact joint result is:
+The first active branch is NIST A32/G103. It is only one gate smaller than the G104 seed used by PR #31, retains 32 ANDs, but changes two AND functions and reorganizes the nonlinear depth from 5 to 7. It is close enough to the frontier to be useful while exposing different observability paths.
 
-```text
-core state 0000: error-map rank 0, kernel dimension 9
-core states 0001..1111: error-map rank 9, kernel dimension 0
-```
+### H2 — search architecture diversity before local depth
 
-So at `0000` **all 511 nonzero coordinated factor-error patterns are unobservable**; at every nonzero state no nonzero coordinated factor error is hidden. The complete fixed-tail relation is therefore exactly:
+For each candidate family, measure:
 
-- all nine factors arbitrary at core state `0000`;
-- all nine factors exact on the other 15 core states.
+- exact AND-function overlap with known records;
+- nonlinear dependency/AND-depth profile;
+- intermediate-function overlap with the 101 circuit;
+- where affine/nonlinear boundaries occur and whether factors consumed downstream are already available elsewhere;
+- full-circuit observability masks, especially identities involving signals on opposite sides of an apparent decomposition boundary.
 
-Equivalently, every target has care mask `0xfffe`. This is a complete joint ODC characterization, not a one-factor heuristic.
+Only then spend large local-search compute.
 
-### ODC does not reduce the multiplicative-complexity lower bound below five
+### H3 — the current 101 itself is a new architecture and still deserves full-circuit search, but not as the only seed
 
-`prove_102_odc_mc5.py` gives a solver-free lower bound. Take the independent factor basis `(q45,q59,q52,q57)`. Each of its four outputs may independently choose its value at `0000`, giving 16 possible completions of the four-output partial function.
+The 101 shot's successful basin was reached only after the new NIST-derived 102 construction. Further full-circuit neutral/+1 walks from 101 are legitimate, but they are run in parallel with alternate seed families rather than treated as evidence that the old fixed-core frontier is globally saturated.
 
-The script exhausts all 16 completions and verifies:
+## Active experiments
 
-- nonlinear quotient rank modulo affine functions is always 4;
-- every nonzero scalar combination has algebraic degree at least 3.
+### Alternate-seed full-circuit resubstitution
 
-A function computable modulo affine terms with at most one AND has degree at most 2. Therefore every nonzero class in the four-dimensional target nonlinear space needs at least two ANDs. In a minimal `r`-AND XAG, the first AND-output class cannot lie in that target subspace; packing that independent one-dimensional class together with the four-dimensional target space gives
+`search_arch_seed.py` is boundary-free: it accepts a complete verified seed, computes exact 256-bit observability masks, allows neutral moves and bounded temporary `+1` expansions, keeps searching after intermediate improvements, and stops only at target 100.
 
-```text
-r >= 4 + 1 = 5.
-```
+Workflow `.github/workflows/temp-aes-arch-seed-resub.yml` runs four CPU workers per runner over both NIST G103 and the merged 101. Every job independently rechecks all 256 AES inputs and invokes the official Few Shots verifier on its best certificate. Initial run: `40991271507`.
 
-Thus even with the complete zero-state don't-care, **at least five AND gates are necessary**. The interesting minimal 17-gate case is consequently `5 AND + at most 12 XOR/XNOR`. A `6 AND + 11 linear` 17-gate solution remains possible as well.
+This experiment is intentionally different from extending the old fixed-core ODC campaign: the primary new branch begins from a different complete circuit representation and does not preserve any core/tail boundary.
 
-### The current interface is rigid if the outer 102 circuit is fixed
+### Extended seed census
 
-`check_102_free_core_basis.py` evaluates every input and every wire before `q42` in the merged 102 certificate. Among all pre-core wires, the only functions lying in `span(q34,q36,q39,q41)` are exactly
+`.github/workflows/temp-aes-seed-census-extended.yml` classifies the near-best NIST A32/A33/A34 circuits and an A28 control by exact nonlinear-function overlap and dependency shape. The goal is to select subsequent seed-construction campaigns by structural diversity, not merely gate count.
 
-```text
-q34, q36, q39, q41.
-```
+## What not to do next
 
-No nontrivial GL(4,2) combination of the core inputs is already available for free. Therefore a direct 101 replacement must use the current interface basis (up to wire permutation). Any nontrivial basis change must be paid for by a jointly resynthesized middle layer and cannot be counted as a free core transformation.
+- Do not extend old fixed-102 core SAT/ODC merely because a timeout was inconclusive.
+- Do not treat growing exact-exclusion coverage around one interface as progress toward a global 100 lower bound.
+- Do not optimize AND count independently of linear/interface cost.
+- Do not preserve `prelinear | middle | core | final multipliers | output` as a hard partition when searching for rewrites.
+- Do not call NIST G103 a wholly independent family: the census shows 30/32 AND functions shared with G104.
 
-## Known GF(16) inverter families checked against the 102 tail
+## Verification protocol for any ≤100 candidate
 
-### Tay et al. 15-gate inverter — strongest fixed published total-size baseline found
-
-Tay et al., *Construction of a Low Multiplicative Complexity GF(2^4) Inversion Circuit for Compact AES S-Box* (TENCON 2018), publish the full inversion equations `M23..M37`. Reconstructed directly from the paper, the inverter uses
-
-```text
-5 AND + 10 XOR = 15 gates.
-```
-
-`check_tay15_against_102.py` exhausts all `20160` GL(4,2) input maps. Exactly `60` maps have inverter-output span compatible with the merged-102 inverse-output space. Across those maps:
-
-- maximum exact coverage of the nine fixed-tail factors by existing Tay15 wires: **4/9**;
-- maximum coverage under the complete `0xfffe` care projection: **4/9**.
-
-Therefore the **fixed published Tay15 network plus only two appended gates cannot be a direct 17-gate replacement**: two extra gates can expose at most two additional distinct factor functions, for at most six of nine. The value of Tay15 is structural: inversion itself needs only 15 total gates in this representation, so a 17-gate solution—if it exists—has only two gates of overhead for exposing the special AES-tail factor set. It likely requires a different member of the multiplicatively optimal inverter family, not post-processing this fixed network.
-
-### Fixed classic Boyar-Peralta 16-gate inverter
-
-The classic inverter has `5 AND + 11 XOR = 16` gates. `check_bp5_against_102.py` exhausts all `20160` GL(4,2) input maps. There are `60` maps whose four outputs span the required inverse-output space, matching the old 105-shot compatibility count exactly. Across all of them, at most **4 of the 9** required 102 tail factors occur as existing wires; the complete ODC projection does not improve this maximum.
-
-Thus the known 16-gate inverter plus one appended XOR/XNOR is not a direct 17-gate replacement. This fixed-core family is already close to the upstream 105-shot search and should not be rerun blindly.
-
-### Known low-depth 17-gate inverter
-
-Boyar-Find-Peralta describe a depth-4 GF(16) inverter with `7 AND + 10 XOR = 17` gates. `check_lowdepth17_against_102.py` reconstructs the AND/XOR realization from their 15-gate NAND circuit and exhausts GL(4,2). Again there are `60` compatible inverse-output maps and the maximum direct factor coverage is only **4/9**, exact or care-projected. It is therefore not a direct fixed-tail 101 drop-in.
-
-### Jain five-AND relation
-
-Jain's verified `sbox106_d34` has 32 ANDs and contains a 17-gate inversion region with exactly five ANDs and twelve XORs. Its nominal five incoming functions have rank four. Relative to the abstract live-core basis `(a,b,c,d)`, one independent Jain input basis is
-
-```text
-b XOR c
-a XOR d
-a XOR b XOR d
-c XOR d
-```
-
-with the fifth nominal input dependent. An independent enumeration reproduced the predecessor's `20160 → 60` compatible-map count, validating basis/bit ordering. Fixed Jain/BP splice enumeration is upstream-covered; only materially broader free-topology synthesis is worth pursuing.
-
-### 2026 five-product multiplicative-complexity construction
-
-A 2026 public exact-MC result supplies another explicit five-product GF(16) inversion decomposition. It was independently checked on all 16 field elements. Its named product/affine signals do not expose more of the nine 102 tail factors under compatible linear maps than the older families, and realizing its multi-input affine forms with the allowed two-input gates carries substantial linear cost. Retain it only as an alternative multiplicative skeleton if future joint linear synthesis makes it relevant.
-
-## Experiments completed here
-
-### Historical 103 ODC and window searches
-
-Before the 102 merge:
-
-- one-gate ODC: `1,349,114` attempts, `1,414` accepted 103 states, no deletion;
-- two-gate boundary ODC: `651,871` attempts, `2,771` accepted 103 states, no reduction;
-- eight 1200-second movable-window SMT instances over `15+18`, `16+17`, and `14+19`: all `unknown / timeout`;
-- old-cut linear-interface searches.
-
-The 102 shot reports an even larger local-rewrite failure and escaped structurally. These 103-specific routes are superseded; do not add runtime to them.
-
-### Fixed five-AND position templates
-
-Four 600-second Z3 instances using the Jain five-AND gate-position pattern with rewired operands all returned `unknown / timeout`. In light of the upstream fixed-core GL(4,2) work, this template family is secondary; do not extend it merely with more seeds.
-
-### Focused strict 17-gate search
-
-The first strict current-interface `6 AND + XOR-only` focused instance was extended to 900 seconds and returned `unknown / timeout`, not UNSAT. This confirms the upstream six-AND 300-second case remains difficult rather than ruled out. Do not simply lengthen the same encoding again.
-
-## Current route toward 101
-
-### Priority 1 — focused free-topology 17-gate core search on the merged 102
-
-Search exact 16-state / complete-ODC truth tables from the **current** interface `q34,q36,q39,q41` for a 17-gate DAG exposing all nine required care-restricted factors.
-
-The main live cases are:
-
-- `5 AND + 12 XOR/XNOR` — five ANDs is the proven nonlinear minimum;
-- `6 AND + 11 XOR/XNOR` — logically possible; upstream and one local strict instance timed out, not disproved.
-
-`synth_core17_array_z3.py` uses an Array/Select truth-table encoding, explicit distinct target-wire selectors, no duplicate wire functions and no dead gates. `--odc-zero` enforces the complete fixed-tail relation by comparing target truth tables only on care mask `0xfffe`. Any SAT model is passed to `splice_core_into_102.py`, which constructs a 101-gate full certificate and independently checks all 256 AES bytes before the official Few Shots verifier runs.
-
-The key structural interpretation from the prior-art survey is now sharper: Tay15 proves ordinary inversion can be done in 15 gates, so the open problem is not “find a small inverter.” It is **jointly synthesize a near-minimum inverter while exposing nine specific AES-tail factors as internal wires with only two gates of total overhead**.
-
-### Exact-synthesis tooling cross-check
-
-Alan Mishchenko's current `resub` repository exposes ABC `twoexact`, a true multi-output exact XAIG synthesizer that accepts Boolean relations. `make_102_core_relation.py` generates both the exact 4-input/9-output relation and the complete zero-state ODC relation. A 17-node `twoexact` cross-check is running as a topology hint.
-
-Caution: ABC XAIG/AIG nodes allow complemented AND edges for free, which is a strictly wider gate model than p008. A `twoexact` 17-node SAT result is therefore only a candidate/topology generator; it must be translated and re-costed in `{AND,XOR,XNOR}` before it can count.
-
-### Priority 2 — extend the 102 field/plane-offset search only if needed
-
-If the direct current-interface core route stalls, broaden the 102 joint search over:
-
-- semilinear input transforms;
-- nine product-plane orientations;
-- prelinear cost;
-- middle offset count;
-- transposed output cost;
-- and, if justified, a different core input basis together with its actual middle-layer cost.
-
-Target a net one-gate saving from `18 prelinear + 15 middle + 24 output`, or a joint middle/core saving. Do not retry random plane changes at a fixed field representation; upstream already recorded that as a dead end.
-
-## Verification protocol for any 101 candidate
-
-1. Start from merged `huangxin-design/aes102-field-plane-offsets/certificate.json`.
+1. Re-sync live Few Shots main/board/open p008 PRs.
 2. Independently evaluate all 256 bytes against arithmetic AES inversion modulo `0x11b` plus the affine map.
 3. Run the unchanged Few Shots p008 verifier.
-4. Re-sync live main, board, recent commits and open p008 PRs immediately before claiming.
-5. Run `tools/check.py` under the Few Shots submission rules.
-6. Only then prepare/publish a shot.
+4. Freeze the exact certificate and search seed/provenance.
+5. Run the repository submission checks required by Few Shots.
+6. Only then prepare/publish the shot.
 
 ## Sources
 
-- Few Shots live `data/board.json`.
-- Merged p008 105/104/103/102 `SHOT.md` files and certificates.
-- Few Shots PR #25 and verification/referee discussion.
-- Jain public `ahrazzle/gf2m-circuits`, especially `sbox106_d34.json`.
-- Tay et al., *Construction of a Low Multiplicative Complexity GF(2^4) Inversion Circuit for Compact AES S-Box*, TENCON 2018; full published M23–M37 equations were independently reconstructed and checked.
-- Boyar-Peralta, *Logic Minimization Techniques with Applications to Cryptology*.
-- Boyar-Find-Peralta, *Small Low-Depth Circuits for Cryptographic Applications*.
-- 2026 public exact multiplicative-complexity work on GF(16) inversion, used after independent truth-table verification.
-- Alan Mishchenko et al. `resub` / ABC `twoexact` exact-synthesis resources.
-- NIST Circuit Complexity / `usnistgov/Circuits` AES resources.
-- FIPS-197.
+- Few Shots live `data/board.json` and merged PR #31.
+- `aes101-nist-interface-resub/SHOT.md` and certificate.
+- Earlier Few Shots 105/104/103/102 shots and certificates.
+- NIST `usnistgov/Circuits` AES S-box NCFF files and README.
+- Existing topic-local exact-screen notes, retained with their represented-family scope.
 
 ## Work log
 
-### 2026-10-27 PDT
+### 2026-10-29 PDT
 
-- Synced through the 103 record; ran ODC and movable-window experiments with no reduction.
-- Re-synced upstream during the work and found merged PR #25 at 102 gates. Immediately changed target to 101 and marked 103-specific search routes as superseded.
-- Read the full 102 shot, certificate structure, PR verifier result, and old 105 five-AND dead end.
-- Confirmed the 102 certificate retains the same 18-gate inversion core and nine abstract tail factors, so a 17-gate core replacement is a direct 101 route.
-- Proved the nine factors have rank four with explicit XOR relations; a 17-gate direct replacement has at most eight non-target intermediates.
-- Proved no alternate nontrivial core-basis wire is already free in the 102 prefix.
-- Exhausted classic BP16, low-depth BFP17, Jain-related and newer five-product inverter families where concrete equations were available; none is a direct fixed-tail replacement.
-- Recovered the full Tay et al. 15-gate `5 AND + 10 XOR` GF(16) inverter from the published paper. Exhaustive GL(4,2) checking found 60 compatible maps but at most 4/9 tail factors exposed, exact or ODC.
-- Proved the complete merged-102 boundary ODC: all nine factors arbitrary only at core state `0000`, exact jointly at all 15 nonzero states.
-- Proved solver-free that the partial/ODC inversion target still needs at least five AND gates; 4-AND search is theoretically redundant.
-- Launched focused strict and ODC current-interface 17-gate searches for 5-AND and 6-AND cases, with automatic 101 splicing and official verification on SAT.
-- Launched ABC `twoexact` exact/ODC relation cross-check only as a wider-gate-model topology hint.
+- Re-synced after PR #31 merged; board confirms verified live score 101.
+- Read the complete 101 shot and recorded its dead ends and the cross-boundary identity responsible for the final saving.
+- Reclassified all old fixed-interface/core exact results as family-scoped negatives, not global evidence against 100.
+- Added `seed_family_census.py`; Action `40991160742` independently verified NIST G103/G104 and Few Shots 101/102/103 on all 256 inputs and measured nonlinear-function overlap.
+- Found that NIST G103/G104 are close siblings (30/32 AND functions shared) while the 101 field-transformed circuit shares zero AND functions with either NIST seed.
+- Added extended census across near-best NIST families.
+- Added boundary-free `search_arch_seed.py` and launched run `40991271507` with 4 CPU workers per runner, using NIST G103 and the merged 101 as separate complete seeds, target 100.
