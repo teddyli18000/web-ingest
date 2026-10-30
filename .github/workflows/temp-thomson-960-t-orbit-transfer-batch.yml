@@ -7,6 +7,10 @@ on:
       - ".github/workflows/temp-thomson-960-t-orbit-transfer-batch.yml"
   workflow_dispatch:
 
+concurrency:
+  group: temp-thomson-960-t-orbit-transfer-batch
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -45,7 +49,7 @@ jobs:
         run: |
           python3 science-boundary/thomson-960/code/search_t_orbit_transfer_batch_v2.py \
             "$RUNNER_TEMP/972.xyz" "$RUNNER_TEMP/few-shots" \
-            --classify 16 --hessian-k 12 \
+            --workers "$(nproc)" --classify 16 --hessian-k 12 \
             --out "$RUNNER_TEMP/t-orbit-transfer.json"
       - name: Print compact scientific summary
         if: always()
