@@ -3,7 +3,7 @@
 
 Previous size-beam campaigns started from the N=960 record and moved outward.
 This search reverses the interface: start from public low-energy configurations
-at nearby N and propagate each *into* N=960.  Each source is tried with two
+at nearby N and propagate each *into* N=960. Each source is tried with two
 selection policies:
 
   energy  - ordinary Amore-Wales-style low-energy beam;
@@ -11,11 +11,11 @@ selection policies:
             source's non-sixfold defect-component organization / 7-7 pattern.
 
 All independent source/policy paths run as single-threaded worker processes on
-one Actions runner.  BLAS thread limiting belongs in the workflow.
+one Actions runner. BLAS thread limiting belongs in the workflow.
 """
 from __future__ import annotations
 
-import argparse, concurrent.futures as cf, json, math, os, pathlib
+import argparse, concurrent.futures as cf, json, os, pathlib
 from collections import Counter
 import numpy as np
 from scipy.spatial import ConvexHull
@@ -117,7 +117,7 @@ def keep(states, beam, source_sig, policy, tol=2e-7):
     rows.sort(key=(lambda t:(t[1],t[0])) if policy=='energy' else (lambda t:(t[0],t[1])))
     ans=[]
     for sd,E,s,sg in rows:
-        if any(abs(E=q[0])<=tol and sig_compact(q[1])==sg for q in ans):continue
+        if any(abs(E-q[0])<=tol and sig_compact(q[1])==sg for q in ans):continue
         ans.append(s)
         if len(ans)>=beam:break
     return ans
