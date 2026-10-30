@@ -1,0 +1,82 @@
+name: temp labs100 low11 kp12 kp14 exact search
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-low11-ka12-ka14.yml'
+
+concurrency:
+  group: temp-labs100-low11-ka12-ka14
+  cancel-in-progress: false
+
+jobs:
+  exact-low11-remainder:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact structural tools
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_order25_fibre_mitm.cpp -o "$RUNNER_TEMP/fibre"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h20_w129_w131_order10_profiles.cpp -o "$RUNNER_TEMP/profiles"
+      - name: Independently exclude all four kp16 low11 compressed survivors for defect one and two
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "runner_cpus=$(nproc)"
+          grep -v '^#' science-boundary/labs-100/data/w127-ka16-order25-survivors.txt | grep -v '^$' > "$RUNNER_TEMP/survivors.txt"
+          test "$(wc -l < "$RUNNER_TEMP/survivors.txt")" -eq 4
+          : > "$RUNNER_TEMP/fibre.log"
+          n=0
+          while IFS= read -r row; do
+            n=$((n+1))
+            printf '%s\n' "$row" | tr '|' ' ' > "$RUNNER_TEMP/one.txt"
+            for d in 1 2; do
+              OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/fibre" --defect "$d" < "$RUNNER_TEMP/one.txt" | tee -a "$RUNNER_TEMP/fibre.log"
+            done
+          done < "$RUNNER_TEMP/survivors.txt"
+          test "$(grep -c 'compatible_probe_lifts=0' "$RUNNER_TEMP/fibre.log")" -eq 8
+      - name: Generate exact low11 order10 quotient table with every runner CPU
+        shell: bash
+        run: |
+          set -euo pipefail
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/profiles" "$RUNNER_TEMP/w" 2>&1 | tee "$RUNNER_TEMP/profile-summary.txt"
+          test "$(wc -l < "$RUNNER_TEMP/w_low11.txt")" -eq 95420
+      - name: Install OR-Tools
+        run: python -m pip install --disable-pip-version-check 'ortools>=9.14,<10'
+      - name: Search all six exact kp12 kp14 full-sequence shards using all CPUs
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p "$RUNNER_TEMP/labs"
+          export RUNNER_TEMP
+          printf '%s\n' 'W129-A 12' 'W129-A 14' 'W131-A2 12' 'W131-A2 14' 'W131-B1 12' 'W131-B1 14' | \
+          xargs -P"$(nproc)" -I{} bash -c '
+            set -- $1
+            c="$1"; k="$2"
+            set +e
+            python science-boundary/labs-100/code/oddperfect_h20_low11_ka_order10_cpsat.py \
+              --case "$c" --ka "$k" --profiles "$RUNNER_TEMP/w_low11.txt" \
+              --seconds 240 --workers 1 --seed 301030 \
+              >"$RUNNER_TEMP/labs/${c}-k${k}.log" 2>&1
+            rc=$?
+            echo "$c k$k $rc" >"$RUNNER_TEMP/labs/${c}-k${k}.status"
+            exit 0
+          ' _ '{}'
+          cat "$RUNNER_TEMP"/labs/*.log | tee "$RUNNER_TEMP/summary.log"
+          cat "$RUNNER_TEMP"/labs/*.status | sort | tee "$RUNNER_TEMP/status.txt"
+          if grep -q '"independent_check": true' "$RUNNER_TEMP"/labs/*.log; then echo FOUND_VERIFIED_RECORD_CANDIDATE; fi
+      - name: Upload exact transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-low11-kp12-kp14
+          path: |
+            ${{ runner.temp }}/fibre.log
+            ${{ runner.temp }}/profile-summary.txt
+            ${{ runner.temp }}/summary.log
+            ${{ runner.temp }}/status.txt
+            ${{ runner.temp }}/labs/*.log
+            ${{ runner.temp }}/labs/*.status
+          if-no-files-found: warn
