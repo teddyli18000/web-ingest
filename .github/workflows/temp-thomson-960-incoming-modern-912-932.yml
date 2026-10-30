@@ -1,0 +1,74 @@
+name: temp Thomson 960 incoming modern N912 N932
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-incoming-modern-912-932.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: temp-thomson-960-incoming-modern-912-932
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  batch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Static-check search code
+        run: python3 -m py_compile science-boundary/thomson-960/code/search_incoming_size_batch.py
+      - name: Clone live Few Shots main
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Fetch modern Riesz N912 and N932 parents
+        run: |
+          mkdir -p "$RUNNER_TEMP/ccd"
+          for n in 912 932; do
+            curl --fail --location --retry 3 \
+              "https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/site/s_1/dat/points_${n}_1.dat" \
+              -o "$RUNNER_TEMP/ccd/${n}.xyz"
+            test "$(wc -l < "$RUNNER_TEMP/ccd/${n}.xyz")" -ge 900
+          done
+      - name: Report runner capacity
+        run: |
+          echo "nproc=$(nproc)"
+          free -h || true
+      - name: Propagate both modern parents to N960
+        run: |
+          python3 science-boundary/thomson-960/code/search_incoming_size_batch.py \
+            "$RUNNER_TEMP/ccd" "$RUNNER_TEMP/few-shots" \
+            --workers "$(nproc)" --branch 2 --beam 1 \
+            --out "$RUNNER_TEMP/incoming-modern-912-932.json"
+      - name: Print compact scientific summary
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/incoming-modern-912-932.json" ]; then
+            python3 - <<'PY'
+          import json, os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'incoming-modern-912-932.json')))
+          print('LIVE',d['live_score'],'WORKERS',d['workers'],'PARENTS',d['parents'])
+          print('BEST',d['best_float_energy'],d['best_delta_vs_live'],d['best_source_n'],d['best_policy'])
+          for r in sorted([q for q in d['results'] if q.get('status')=='ok'], key=lambda q:q['best_float_energy']):
+              print('ROW',r['source_n'],r['policy'],r['source_energy'],r['source_signature']['twins'],'->',r['best_float_energy'],r['delta_vs_live'],r['best_signature']['twins'],r['best_signature']['coord'])
+          PY
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-incoming-modern-912-932
+          retention-days: 7
+          path: ${{ runner.temp }}/incoming-modern-912-932.json
+          if-no-files-found: warn
