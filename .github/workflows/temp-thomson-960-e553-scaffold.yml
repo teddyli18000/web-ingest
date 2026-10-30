@@ -1,0 +1,70 @@
+name: temp Thomson 960 e553 scaffolded flips
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-e553-scaffold.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  scaffold:
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        family: [0, 1, 2]
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Download e553 source artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-e564-scaffold-f0
+          path: ${{ runner.temp }}/source
+          github-token: ${{ github.token }}
+          run-id: 40991851757
+      - name: Extract e553 seed
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob,json,os
+          p=glob.glob(os.path.join(os.environ['RUNNER_TEMP'],'source','*.json'))[0]
+          d=json.load(open(p)); b=min(d['lowest_distinct_release_basins'],key=lambda z:z['release_energy'])
+          json.dump({'energy':b['release_energy'],'coord_counts':b['release_coord'],'points':b['points']},open(os.path.join(os.environ['RUNNER_TEMP'],'seed.json'),'w'),separators=(',',':'))
+          print('seed',b['release_energy'],b['release_coord'])
+          PY
+      - name: Scaffold current e553 flip family then release
+        shell: bash
+        run: |
+          python3 science-boundary/thomson-960/code/search_e564_scaffolded_flip.py \
+            "$RUNNER_TEMP/seed.json" --family "${{ matrix.family }}" \
+            --multipliers 1.05,1.20,1.50,2.00,2.50 \
+            --fixed-maxiter 1600 --release-maxiter 2400 \
+            --out "$RUNNER_TEMP/e553-scaffold-f${{ matrix.family }}.json"
+          python3 - <<'PY'
+          import glob,json
+          p=glob.glob('/home/runner/work/_temp/e553-scaffold-*.json')[0]; d=json.load(open(p))
+          print('BEST',d['best_release_energy'])
+          for r in d['rows']:
+              print('ROW',r['multiplier'],r['fixed_energy'],r['fixed_coord'],r['release_energy'],r['release_coord'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e553-scaffold-f${{ matrix.family }}
+          path: ${{ runner.temp }}/e553-scaffold-f${{ matrix.family }}.json
+          retention-days: 7
