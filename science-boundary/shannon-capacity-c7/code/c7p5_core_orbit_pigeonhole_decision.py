@@ -3,8 +3,8 @@
 
 After translating one selected word to 00000, the remaining 367 selected words
 fall into 50 nonconfusable orbits under the zero stabilizer (coordinate
-permutations and independent sign reversals).  Therefore at least one orbit
-contains >= ceil(367/50) = 8 selected words.  For such an orbit, map one of its
+permutations and independent sign reversals). Therefore at least one orbit
+contains >= ceil(367/50) = 8 selected words. For such an orbit, map one of its
 selected words to the canonical representative using the same stabilizer.
 
 Thus every 368-set has an automorphic image satisfying one of 50 branches:
@@ -12,15 +12,16 @@ Thus every 368-set has an automorphic image satisfying one of 50 branches:
   * the branch's canonical representative selected;
   * at least 8 selected words from that entire orbit.
 
-All 50 conditional cardinality encodings live in one MiniCard instance behind
-selector literals.  An at-most-one selector constraint means an assumption on
-one selector disables every other orbit encoding, while learned clauses remain
-reusable across branch solves.
+All 50 occupancy constraints live natively in one MiniCard instance.  Each is
+gated by eight tiny proxy literals equal to NOT(selector): when the selector is
+false the eight proxies satisfy the >=8 constraint automatically; when true all
+proxies are false and MiniCard enforces >=8 actual orbit selections.  An
+at-most-one selector constraint means an assumption on one selector disables
+every other orbit constraint while learned clauses remain reusable.
 """
 from __future__ import annotations
 import argparse,gzip,itertools,json
 from pathlib import Path
-from pysat.card import CardEnc,EncType
 from pysat.solvers import Minicard
 Q=7;D=5;U=Q**D;CORE=315;TARGET=368;OCC=8;POW=tuple(Q**i for i in range(D))
 def dec(v):return tuple((v//POW[i])%Q for i in range(D))
@@ -61,20 +62,23 @@ def main():
   t=dtype(v)
   if t in by:by[t].append(v)
  if sum(map(len,by.values()))!=U-243:raise RuntimeError(('orbit partition',sum(map(len,by.values()))))
- # Build all conditional orbit occupancy constraints.  Selectors are positive
- # fresh variables; only one is permitted true.
- top=bb+len(core)-1;selectors=[];reps=[];clause_count=0
+ # Native conditional occupancy: q_j == not selector.  With selector off the
+ # eight q_j make the >=8 native constraint tautological; with selector on they
+ # are all false and the orbit itself must supply eight selected literals.
+ top=bb+len(core)-1;selectors=[];reps=[];gate_clauses=0
  for t in types:
   rep=enc(t)
   if dtype(rep)!=t or rep not in by[t]:raise RuntimeError(('rep',t,rep))
-  top+=1;sv=top;selectors.append(sv);reps.append(rep)
-  cnf=CardEnc.atleast(lits=[sel_lit(v) for v in by[t]],bound=OCC,top_id=top,encoding=EncType.seqcounter);top=cnf.nv
-  for cl in cnf.clauses:s.add_clause([-sv]+cl);clause_count+=1
-  s.add_clause([-sv,sel_lit(rep)]);clause_count+=1
+  top+=1;sv=top;selectors.append(sv);reps.append(rep);gates=[]
+  for _ in range(OCC):
+   top+=1;q=top;gates.append(q)
+   s.add_clause([q,sv]);s.add_clause([-q,-sv]);gate_clauses+=2
+  s.add_atleast([sel_lit(v) for v in by[t]]+gates,OCC)
+  s.add_clause([-sv,sel_lit(rep)]);gate_clauses+=1
  for i in range(len(selectors)):
-  for j in range(i+1,len(selectors)):s.add_clause([-selectors[i],-selectors[j]]);clause_count+=1
+  for j in range(i+1,len(selectors)):s.add_clause([-selectors[i],-selectors[j]]);gate_clauses+=1
  assigned=[i for i in range(50) if i%a.shards==a.shard]
- setup={'method':'exact-c7p5-368-core-prize-orbit-pigeonhole','ambient':U,'core_size':CORE,'outside':len(outside),'outside_conflict_edges':edges,'support_implications':impl,'support_histogram':{str(k):v for k,v in sorted(hist.items())},'orbit_count':50,'occupancy_lower_bound':OCC,'conditional_orbit_clauses':clause_count,'shard':a.shard,'shards':a.shards,'assigned':len(assigned),'certified_min_core_blockers':4,'core_source_commit':'ae81e0d24b356aef3d388238f6fb4d02c4aa32a5'}
+ setup={'method':'exact-c7p5-368-core-prize-orbit-pigeonhole-native','ambient':U,'core_size':CORE,'outside':len(outside),'outside_conflict_edges':edges,'support_implications':impl,'support_histogram':{str(k):v for k,v in sorted(hist.items())},'orbit_count':50,'occupancy_lower_bound':OCC,'gate_and_selector_clauses':gate_clauses,'shard':a.shard,'shards':a.shards,'assigned':len(assigned),'certified_min_core_blockers':4,'core_source_commit':'ae81e0d24b356aef3d388238f6fb4d02c4aa32a5'}
  print('SETUP',json.dumps(setup,sort_keys=True),flush=True)
  rows=[];model=None;hit=None
  for k,i in enumerate(assigned):
