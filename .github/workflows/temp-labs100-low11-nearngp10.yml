@@ -1,0 +1,44 @@
+name: temp labs100 low11 near-NGP order10 filter
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-low11-nearngp10.yml'
+
+concurrency:
+  group: temp-labs100-low11-nearngp10
+  cancel-in-progress: false
+
+jobs:
+  exact-nearngp10:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact generators
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h20_w129_w131_order10_profiles.cpp -o "$RUNNER_TEMP/profiles"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h20_low11_nearngp10.cpp -o "$RUNNER_TEMP/nearngp10"
+      - name: Generate low11 profiles and apply exact defect projections with all CPUs
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "runner_cpus=$(nproc)"
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/profiles" "$RUNNER_TEMP/w" 2>&1 | tee "$RUNNER_TEMP/profile-summary.txt"
+          test "$(wc -l < "$RUNNER_TEMP/w_low11.txt")" -eq 95420
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/nearngp10" "$RUNNER_TEMP/w_low11.txt" "$RUNNER_TEMP/near" 2>&1 | tee "$RUNNER_TEMP/near-summary.txt"
+          test -s "$RUNNER_TEMP/near_d1.txt"
+          test -s "$RUNNER_TEMP/near_d2.txt"
+          echo "d1_rows=$(wc -l < "$RUNNER_TEMP/near_d1.txt")"
+          echo "d2_rows=$(wc -l < "$RUNNER_TEMP/near_d2.txt")"
+      - name: Upload exact filtered profile tables
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-low11-nearngp10
+          path: |
+            ${{ runner.temp }}/profile-summary.txt
+            ${{ runner.temp }}/near-summary.txt
+            ${{ runner.temp }}/near_d1.txt
+            ${{ runner.temp }}/near_d2.txt
+          if-no-files-found: error
