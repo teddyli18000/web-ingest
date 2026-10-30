@@ -1,0 +1,45 @@
+name: temp-aes-rnbp-fast-equivalence
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-rnbp-fast-equivalence.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install --quiet z3-solver
+      - name: Compare target-generated reducers with brute-force exact predicate
+        run: |
+          set -euxo pipefail
+          python - <<'PY'
+          import json,sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          import rnbp_prefix_variant_tail as pv
+          import released_rnbp_support_synth as rr
+          import released_rnbp_support_fast as rf
+          base=ras.load_circuit('fs-101')
+          sk,S,names,gates,lin,stage,soft,applied,trace=pv.build_variant(base,0.24,1,4,67)
+          assert applied and lin==56 and stage==33
+          C=1<<sk['const_bit']; targets=list(sk['outputs']); sx=rr.init_sx(set(S))
+          Dist=[rr.min_distance(set(S),sx,t,C,6) for t in targets]
+          WD=rr.pair_candidates(set(S),C)
+          fast,_=rf.reducer_map(Dist,targets,WD,set(S),sx,C)
+          brute={}
+          for w in WD:
+              inds={i for i,d in enumerate(Dist) if 0<d<rr.INF and rr.candidate_reduces(set(S),sx,targets[i],C,d,w)}
+              if inds: brute[w]=inds
+          fast={w:set(v) for w,v in fast.items() if v}
+          assert fast==brute,(len(fast),len(brute),set(fast)^set(brute))
+          print(json.dumps({'equivalent':True,'signals':len(S),'pairs':len(WD),
+                            'finite_distances':[d for d in Dist if d<rr.INF],
+                            'reducing_helpers':len(fast)}))
+          PY
