@@ -1,0 +1,82 @@
+name: temp labs100 kp16 affine fibre audit
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-kp16-affine-fibre-audit.yml'
+
+concurrency:
+  group: temp-labs100-kp16-affine-fibre-audit
+  cancel-in-progress: false
+
+jobs:
+  exact-affine-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build committed exact fibre oracle
+        run: g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_order25_fibre_mitm.cpp -o "$RUNNER_TEMP/fibre"
+      - name: Expand all four order25 orbit representatives to every affine image
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/cands" "$RUNNER_TEMP/out"
+          python - "$RUNNER_TEMP/cands" <<'PY'
+          import math,re,sys
+          from pathlib import Path
+          out=Path(sys.argv[1])
+          rows=[x for x in Path('science-boundary/labs-100/data/w127-ka16-order25-survivors.txt').read_text().splitlines() if x.strip() and not x.startswith('#')]
+          assert len(rows)==4
+          units=[a for a in range(25) if math.gcd(a,25)==1]
+          seen={}
+          def tr(x,a,b):
+              y=[0]*25
+              for i,v in enumerate(x): y[(a*i+b)%25]=v
+              return y
+          meta=[]
+          for si,row in enumerate(rows,1):
+              # durable rows contain p=...|c=...
+              pm=re.search(r'p=([^| ]+)',row)
+              cm=re.search(r'c=([^| ]+)',row)
+              assert pm and cm,row
+              p=list(map(int,pm.group(1).split(','))); c=list(map(int,cm.group(1).split(',')))
+              assert len(p)==len(c)==25
+              for a in units:
+                  for b in range(25):
+                      pp=tr(p,a,b); cc=tr(c,a,b); key=(tuple(pp),tuple(cc))
+                      if key in seen: continue
+                      n=len(meta); seen[key]=n; meta.append((si,a,b))
+                      (out/f'{n:04d}.txt').write_text(' '.join(map(str,pp))+'\n'+' '.join(map(str,cc))+'\n')
+          assert len(meta)==2000,len(meta)
+          Path(sys.argv[1]).parent.joinpath('meta.txt').write_text('\n'.join(f'{i} {s} {a} {b}' for i,(s,a,b) in enumerate(meta))+'\n')
+          print('AFFINE_IMAGES',len(meta))
+          PY
+          test "$(find "$RUNNER_TEMP/cands" -name '*.txt' | wc -l)" -eq 2000
+      - name: Test defect1 and defect2 for all images using every runner CPU
+        shell: bash
+        run: |
+          set -euo pipefail
+          export RUNNER_TEMP
+          find "$RUNNER_TEMP/cands" -name '*.txt' -print0 | \
+            xargs -0 -P"$(nproc)" -I{} bash -c '
+              f="$1"; n=$(basename "$f" .txt)
+              h1=$(OMP_NUM_THREADS=1 "$RUNNER_TEMP/fibre" --defect 1 < "$f" | sed -n "s/.*compatible_probe_lifts=\([0-9][0-9]*\).*/\1/p")
+              h2=$(OMP_NUM_THREADS=1 "$RUNNER_TEMP/fibre" --defect 2 < "$f" | sed -n "s/.*compatible_probe_lifts=\([0-9][0-9]*\).*/\1/p")
+              test -n "$h1"; test -n "$h2"
+              echo "$n $h1 $h2" > "$RUNNER_TEMP/out/$n.txt"
+            ' _ {}
+          cat "$RUNNER_TEMP"/out/*.txt | sort -n > "$RUNNER_TEMP/affine-fibre.tsv"
+          test "$(wc -l < "$RUNNER_TEMP/affine-fibre.tsv")" -eq 2000
+          awk '{s1+=$2;s2+=$3;if($2||$3)h++} END{print "AFFINE_FIBRE_SUMMARY images="NR,"hit_images="h+0,"sum_defect1="s1+0,"sum_defect2="s2+0; if(h||s1||s2) exit 1}' "$RUNNER_TEMP/affine-fibre.tsv" | tee "$RUNNER_TEMP/summary.txt"
+      - name: Upload exact transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-kp16-affine-fibre-audit
+          path: |
+            ${{ runner.temp }}/summary.txt
+            ${{ runner.temp }}/affine-fibre.tsv
+            ${{ runner.temp }}/meta.txt
+          if-no-files-found: warn
