@@ -1,0 +1,93 @@
+name: temp Thomson 960 harvest 19-20 descendants
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-harvest-19-20-descendants.yml'
+
+jobs:
+  harvest-expand:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tag: basin20-e9134
+            kind: corridor
+            t: '0.15'
+            frac: '0'
+            alpha: '0'
+            expected: '444369.1343831994'
+          - tag: basin19-e8732
+            kind: mask
+            t: '0'
+            frac: '0.15'
+            alpha: '-0.8'
+            expected: '444368.7324885398'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone current Few Shots
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Reproduce descendant
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/out"
+          extra=()
+          if [[ '${{ matrix.kind }}' == corridor ]]; then
+            extra=(--t '${{ matrix.t }}')
+          else
+            extra=(--frac '${{ matrix.frac }}' --alpha '${{ matrix.alpha }}')
+          fi
+          python3 science-boundary/thomson-960/code/harvest_20_event_basin.py \
+            "$RUNNER_TEMP/few-shots" science-boundary/thomson-960/data/basin-20-morph-9136.json \
+            --seed 7203 --starts 20 --kind '${{ matrix.kind }}' "${extra[@]}" \
+            --expected '${{ matrix.expected }}' --tol 0.00005 --maxiter 2800 \
+            --out "$RUNNER_TEMP/out/seed.json"
+      - name: Expand descendant low-mode network
+        run: |
+          echo "nproc=$(nproc) tag=${{ matrix.tag }}"
+          python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/out/seed.json" \
+            --modes 0,1,2,3,4,5,6,7 \
+            --amps 0.003,0.006,0.012,0.022,0.040,0.070 \
+            --k 12 --workers "$(nproc)" --maxiter 2400 --keep-basins 24 \
+            --out "$RUNNER_TEMP/out/modes.json"
+      - name: MOTO transition exploration
+        run: |
+          python3 science-boundary/thomson-960/code/moto_like_saddle_explorer.py \
+            "$RUNNER_TEMP/few-shots" --seed-json "$RUNNER_TEMP/out/seed.json" \
+            --seed $([[ '${{ matrix.kind }}' == mask ]] && echo 9201 || echo 9202) \
+            --population 8 --select 2 --basis-k 10 --scales 0.005,0.010,0.018,0.030 \
+            --mmf-cycles 6 --mmf-steps 55 --certify-amp 0.002 \
+            --out "$RUNNER_TEMP/out/moto.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json, os
+          r=os.path.join(os.environ['RUNNER_TEMP'],'out')
+          s=json.load(open(os.path.join(r,'seed.json')))
+          m=json.load(open(os.path.join(r,'modes.json')))
+          q=json.load(open(os.path.join(r,'moto.json')))
+          print('SEED',s['energy'],s['coord_counts'])
+          print('MODEBEST',m['best_energy'],m['best_delta_vs_live'])
+          for b in m.get('lowest_distinct_basins',[])[:15]: print('BASIN',b['energy'],b['mode'],b['sign'],b['amp'])
+          print('MOTOBEST',q['best_certified_endpoint_energy'],q['best_delta_vs_live'])
+          for z in q.get('results',[]):
+              print('SADDLE',z['saddle_energy'],'grad',z['saddle_gradient_rms'],'neg',z['negative_modes'])
+              for e in z.get('certified_endpoints',[]): print('END',e['energy'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-${{ matrix.tag }}
+          path: ${{ runner.temp }}/out
+          retention-days: 7
