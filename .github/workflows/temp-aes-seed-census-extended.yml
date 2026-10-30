@@ -1,0 +1,20 @@
+name: temp-aes-seed-census-extended
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/seed_family_census_extended.py'
+      - '.github/workflows/temp-aes-seed-census-extended.yml'
+permissions:
+  contents: read
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python science-boundary/aes-sbox-circuit/seed_family_census_extended.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-seed-census-extended
+          path: seed-family-census-extended.json
