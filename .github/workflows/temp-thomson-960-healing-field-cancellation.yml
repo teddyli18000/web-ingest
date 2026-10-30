@@ -1,0 +1,88 @@
+name: temp Thomson 960 healing-field cancellation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-healing-field-cancellation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  cancel-healing:
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - family: 0
+            field: full
+            tag: f0-full
+          - family: 0
+            field: outside-quad
+            tag: f0-outside
+          - family: 1
+            field: full
+            tag: f1-full
+          - family: 1
+            field: outside-quad
+            tag: f1-outside
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Reverse observed global healing field
+        shell: bash
+        run: |
+          echo "nproc=$(nproc), one numerical worker; family=${{ matrix.family }} field=${{ matrix.field }}"
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 science-boundary/thomson-960/code/search_healing_field_cancellation.py \
+            science-boundary/thomson-960/data/basin-e545-21.json \
+            --family ${{ matrix.family }} --multiplier 1.05 --field "${{ matrix.field }}" \
+            --alphas 0.15,0.30,0.50,0.80,1.20,1.80,2.50,3.50 \
+            --fixed-maxiter 1200 --release-maxiter 2600 \
+            --out "$RUNNER_TEMP/out/cancel.json"
+      - name: Conditional modes from surviving 20 topology
+        shell: bash
+        run: |
+          p="$RUNNER_TEMP/out/cancel.best20.json"
+          if [ ! -f "$p" ]; then
+            echo "No unrestrained 20-dislocation survivor."
+            exit 0
+          fi
+          git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+            "$RUNNER_TEMP/few-shots" "$p" \
+            --modes 0,1,2 --amps 0.003,0.008,0.016,0.030 \
+            --k 10 --workers 1 --maxiter 2400 --keep-basins 12 \
+            --out "$RUNNER_TEMP/out/survivor-modes.json"
+      - name: Summarize
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,os
+          root=os.path.join(os.environ['RUNNER_TEMP'],'out'); d=json.load(open(os.path.join(root,'cancel.json')))
+          print('family',d['family'],'field',d['field'],'fixed20',d['fixed20_energy'],d['fixed20_coord'],'heal_rms',d['healing_rms_used'])
+          for r in d['rows']: print('A',r['alpha'],r['start_energy'],r['start_coord'],'->',r['energy'],r['coord_counts'])
+          print('best20',None if d['best_20_basin'] is None else (d['best_20_basin']['energy'],d['best_20_basin']['coord_counts']))
+          p=os.path.join(root,'survivor-modes.json')
+          if os.path.exists(p):
+              m=json.load(open(p)); print('MODEBEST',m['best_energy'],m['best_delta_vs_live'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-healing-cancel-${{ matrix.tag }}
+          path: ${{ runner.temp }}/out
+          retention-days: 7
+          compression-level: 6
