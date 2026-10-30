@@ -1,0 +1,53 @@
+name: temp Thomson 960 follower threshold diagnostic
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-follower-threshold-diagnostic.yml'
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      actions: read
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-dependent-orbit4-1.04
+          path: ${{ runner.temp }}/two
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41058090920
+      - name: Replay q3 and measure remote follower thresholds
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          echo "nproc=$(nproc)"
+          python3 science-boundary/thomson-960/code/diagnose_remote_follower_thresholds.py \
+            "$RUNNER_TEMP/two/result.json" \
+            --third-multiplier 1.04 \
+            --schedule '100,70,50,30,20,10,5,3,1,0.3,0.1,0.03,0.01,0.003,0.001,0' \
+            --live-score 444368.3924061973 \
+            --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('SUMMARY',d['summary'])
+          print('FINAL',{k:v for k,v in d['final'].items() if k!='points'})
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-follower-threshold-diagnostic
+          path: ${{ runner.temp }}/out
+          retention-days: 10
