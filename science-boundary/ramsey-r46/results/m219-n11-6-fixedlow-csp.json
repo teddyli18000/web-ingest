@@ -1,0 +1,40 @@
+{
+  "campaign": "m219-n11-6-fixedlow-column-csp",
+  "complete": true,
+  "degree_sequences": [
+    {"11":6,"12":18,"13":12},
+    {"11":6,"12":19,"13":10,"14":1}
+  ],
+  "logical_scope": "the first two m=219,n11=6 degree sequences, excluding K_{2,2,2} by the separately certified K222 obstruction and using the complete low-graph cover in m219-n11-6-lowgraph-cover.json",
+  "representation": "fixed degree-3 low anchor; fixed A26/B116 local strata; each of 24 B vertices is one 11-bit A-neighborhood domain; exact row sums, exact B degree-class counts, and all mixed K4/I6 constraints are propagated as a finite-domain CSP",
+  "dependencies": {
+    "A26": "complete authenticated McKay e(A)=26 stratum: 2 graphs",
+    "B116": "complete authenticated McKay e(B)=116 stratum: 9 graphs; the weak-label cover forces ordinal 1 and low pair {0,3} for both sequences",
+    "low_graph_cover": "results/m219-n11-6-lowgraph-cover.json: 9 unlabeled low types -> 3 excluded by the forced adjacent B low pair, K222 separately excluded, 5 types / 6 anchor orbits remain",
+    "K222": "results/m219-n11-6-k222-scan.json"
+  },
+  "A26_automorphism_group_sizes": [288,1152],
+  "branch_count_per_sequence": 244,
+  "branches": 488,
+  "unsat": 488,
+  "sat": 0,
+  "timeout": 0,
+  "exact_search_nodes": 8487529,
+  "recomputation": {
+    "compiler": "g++ -O3 -march=native -fopenmp -std=c++17",
+    "command": "./m219_n11_6_fixedlow_csp 300 16",
+    "container_available_cpu_count": 5,
+    "observed_wall_seconds": 17.8116,
+    "exit_code": 20,
+    "stdout_non_unsat_rows": 0,
+    "stderr_summary": "branches=488 autA=288,1152 threads=16 sec=300; nodes=8487529 UNSAT=488"
+  },
+  "independent_repeat": {
+    "time_limit_per_branch_seconds": 60,
+    "exact_search_nodes": 8487529,
+    "unsat": 488,
+    "timeout": 0,
+    "exit_code": 20
+  },
+  "conclusion": "Both degree sequences 11^6 12^18 13^12 and 11^6 12^19 13^10 14 are impossible for an m=219 (4,6)-Ramsey graph."
+}
