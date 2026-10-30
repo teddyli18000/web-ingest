@@ -43,7 +43,9 @@ def dedup_events(events,tol=0.99999):
     out=[]
     for name,v in events:
         u=v/max(np.linalg.norm(v),1e-300)
-        if any(float(u@w)>tol for _,_,w in out): continue
+        # Event fields are (N,3) arrays.  Treat them as one 3N-dimensional
+        # tangent vector; matrix multiplication would contract the wrong axes.
+        if any(float(np.sum(u*w))>tol for _,_,w in out): continue
         out.append((name,v,u))
     return [(n,v) for n,v,_ in out]
 
