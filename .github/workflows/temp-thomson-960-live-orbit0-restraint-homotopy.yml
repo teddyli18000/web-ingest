@@ -1,0 +1,57 @@
+name: temp Thomson 960 live orbit0 restraint homotopy
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-live-orbit0-restraint-homotopy.yml'
+
+jobs:
+  search:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      actions: read
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e432-seed
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41043461011
+      - name: Continue orbit0 glide under decreasing restraint
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          live=$(cat "$RUNNER_TEMP/seed/live-score.txt")
+          echo "nproc=$(nproc) live=$live"
+          python3 science-boundary/thomson-960/code/search_samecount_flip_restraint_homotopy.py \
+            "$RUNNER_TEMP/seed/live.json" --quad '217,559,551,308' \
+            --pattern balanced --multiplier 1.003 \
+            --schedule '3000,1000,300,100,30,10,3,1,0.3,0.1,0.03,0.01,0.003,0.001,0' \
+            --fixed-maxiter 1800 --stage-maxiter 1800 --final-maxiter 3800 \
+            --live-score "$live" --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('FIXED',d['fixed_energy'],d['fixed_flipped'],d['fixed_coord'])
+          print('LAST_FLIPPED',None if d['last_flipped_state'] is None else {k:v for k,v in d['last_flipped_state'].items() if k!='points'})
+          print('FIRST_HEALED',d['first_healed_state'])
+          print('FINAL',{k:v for k,v in d['final'].items() if k!='points'})
+          for r in d['rows']: print('ROW',r['kappa'],r['energy'],r['delta_live'],r['flipped'],r['anchor_rms'],r['coord_counts'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-live-orbit0-restraint
+          path: ${{ runner.temp }}/out
+          retention-days: 10
