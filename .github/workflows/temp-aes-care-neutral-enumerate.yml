@@ -1,0 +1,50 @@
+name: temp-aes-care-neutral-enumerate
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/enumerate_and_care_neutral.py'
+      - '.github/workflows/temp-aes-care-neutral-enumerate.yml'
+permissions:
+  contents: read
+jobs:
+  enumerate:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [original, care53]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exhaust neutral AND-care neighbors in four CPU shards
+        run: |
+          set -euxo pipefail
+          mkdir -p results
+          pids=()
+          for shard in 0 1 2 3; do
+            python science-boundary/aes-sbox-circuit/enumerate_and_care_neutral.py \
+              --seed '${{ matrix.seed }}' --shard "$shard" --shards 4 --out "results/shard-$shard" \
+              > "results/shard-$shard.log" 2>&1 &
+            pids+=("$!")
+          done
+          rc=0; for p in "${pids[@]}"; do wait "$p" || rc=1; done
+          cat results/shard-*.log
+          exit "$rc"
+      - name: Aggregate
+        run: |
+          python - <<'PY'
+          import glob,json
+          rows=[json.load(open(f)) for f in glob.glob('results/shard-*/summary.json')]
+          assert len(rows)==4
+          out={'seed':'${{ matrix.seed }}','tested_helper_expressions':sum(x['tested_helper_expressions'] for x in rows),
+               'care_matches':sum(x['care_matches'] for x in rows),'kept_neighbors':sum(x['kept_neighbors'] for x in rows),
+               'reducing':sum(x['reducing'] for x in rows),'neutral':sum(x['neutral'] for x in rows)}
+          json.dump(out,open('aggregate.json','w'),indent=2);print(json.dumps(out))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-care-neutral-${{ matrix.seed }}
+          path: |
+            aggregate.json
+            results
