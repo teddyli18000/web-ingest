@@ -1,0 +1,25 @@
+name: temp-aes-hybrid-and-pool
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/hybrid_and_pool.py'
+      - '.github/workflows/temp-aes-hybrid-and-pool.yml'
+permissions:
+  contents: read
+jobs:
+  hybrid:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enumerate G103/G104 pooled 32-AND skeletons
+        run: |
+          set -euxo pipefail
+          python science-boundary/aes-sbox-circuit/hybrid_and_pool.py --sources g103,g104 --and-count 32 --out hybrid.json | tee hybrid.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-hybrid-and-pool
+          path: |
+            hybrid.json
+            hybrid.log
