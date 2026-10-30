@@ -1,0 +1,36 @@
+name: temp-aes-g103-cut-basis-census
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/g103_cut_basis_census.py'
+      - 'science-boundary/aes-sbox-circuit/g103_cut_basis_census_shard.py'
+      - '.github/workflows/temp-aes-g103-cut-basis-census.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  census:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Search this GL(3,2) cut-basis shard
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/g103_cut_basis_census.py science-boundary/aes-sbox-circuit/g103_cut_basis_census_shard.py
+          python science-boundary/aes-sbox-circuit/g103_cut_basis_census_shard.py \
+            --shard '${{ matrix.shard }}' --shards 8 --seeds 6 \
+            --max-gates 22 --max-support 10 --elite 24 --out result | tee run.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-cut-basis-${{ matrix.shard }}
+          path: |
+            result
+            run.log
