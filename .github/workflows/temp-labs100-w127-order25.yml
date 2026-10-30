@@ -1,0 +1,65 @@
+name: temp labs100 W127 order25 exact projection
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-w127-order25.yml'
+
+concurrency:
+  group: temp-labs100-w127-order25
+  cancel-in-progress: false
+
+jobs:
+  exact-order25:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install exact solver
+        run: python -m pip install --disable-pip-version-check 'ortools>=9.10,<10'
+      - name: Exhaust eight support layers using all runner CPUs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/w127-order25"
+          workers="$(nproc)"
+          echo "runner_cpus=$workers"
+          export SCRIPT='science-boundary/labs-100/code/oddperfect_w127_order25_cpsat.py'
+          export OUTDIR="$RUNNER_TEMP/w127-order25"
+          printf '%s\n' 10 12 14 16 18 20 22 24 \
+            | xargs -n1 -P "$workers" bash -c '
+                ka="$0"
+                echo "START ka=$ka"
+                python "$SCRIPT" --ka "$ka" --workers 1 --seconds 600 --seed "$((1000 + ka))" \
+                  > "$OUTDIR/ka-${ka}.json"
+                rc=$?
+                cat "$OUTDIR/ka-${ka}.json"
+                echo "DONE ka=$ka rc=$rc"
+                exit "$rc"
+              '
+      - name: Classify exact outcome
+        shell: bash
+        run: |
+          python - <<'PY'
+          import glob, json, os, sys
+          root = os.environ['RUNNER_TEMP'] + '/w127-order25'
+          rows = [json.load(open(p)) for p in sorted(glob.glob(root + '/ka-*.json'))]
+          print('SUMMARY', json.dumps(rows, sort_keys=True))
+          if len(rows) != 8:
+              raise SystemExit('missing shard output')
+          states = {r['status'] for r in rows}
+          if states == {'INFEASIBLE'}:
+              print('EXACT_RESULT W127_ORDER25_INFEASIBLE_ALL_8_SHARDS')
+          elif states <= {'INFEASIBLE', 'FEASIBLE', 'OPTIMAL'}:
+              print('EXACT_RESULT W127_ORDER25_SURVIVOR_EXISTS')
+          else:
+              raise SystemExit('incomplete exact search: ' + repr(states))
+          PY
+      - name: Upload shard evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-w127-order25
+          path: ${{ runner.temp }}/w127-order25/*.json
+          if-no-files-found: warn
