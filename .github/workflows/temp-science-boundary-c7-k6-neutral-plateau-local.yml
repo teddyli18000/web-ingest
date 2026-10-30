@@ -1,0 +1,141 @@
+name: Temp Science Boundary C7 k6 neutral plateau local
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-k6-neutral-plateau-local.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_k6_neutral_plateau.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-k6-neutral-plateau-local
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch sources and dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          python3 -m pip install --disable-pip-version-check python-sat
+          mkdir -p "$RUNNER_TEMP/base" "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+      - name: Exact largest neutral k6 rectangle plateau
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_k6_neutral_plateau.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/plateau.json" "$RUNNER_TEMP/base/certificate.json" \
+            --workers "$(nproc)" > "$RUNNER_TEMP/result/plateau.stdout" 2> "$RUNNER_TEMP/result/plateau.stderr"
+          cat "$RUNNER_TEMP/result/plateau.stdout"
+          tail -n 120 "$RUNNER_TEMP/result/plateau.stderr"
+          test -f "$RUNNER_TEMP/base/certificate.json"
+      - name: Verify plateau and prepare exact-search IDs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/base" | tee "$RUNNER_TEMP/result/base-verify.json"
+          cd "$GITHUB_WORKSPACE"
+          python3 - "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/result/base-verify.json" "$RUNNER_TEMP/base/ids.txt" <<'PY'
+          import json,sys
+          pts=json.load(open(sys.argv[1],encoding='utf-8'))['points']
+          v=json.load(open(sys.argv[2],encoding='utf-8'))
+          if not v.get('valid') or int(v.get('score',-1))!=len(pts) or len(pts)<134753: raise SystemExit((v,len(pts)))
+          open(sys.argv[3],'w').write(''.join(f'{int(p,7)}\n' for p in pts))
+          print('verified plateau score',len(pts))
+          PY
+      - name: Exact unrestricted net1 through radius4
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/patch_search_net1_r4_compile.py \
+            science-boundary/shannon-capacity-c7/code/search_net1_r4_complete.cpp "$RUNNER_TEMP/net1-r4.cpp"
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp "$RUNNER_TEMP/net1-r4.cpp" -o "$RUNNER_TEMP/net1-r4"
+          export OMP_NUM_THREADS="$(nproc)"
+          /usr/bin/time -v "$RUNNER_TEMP/net1-r4" "$RUNNER_TEMP/base/ids.txt" > "$RUNNER_TEMP/result/r4.json" 2> "$RUNNER_TEMP/result/r4.stderr"
+          cat "$RUNNER_TEMP/result/r4.json"
+      - name: Build and run exact radius5 strata
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/patch_r5_net2_to_net1.py direct \
+            science-boundary/shannon-capacity-c7/code/search_net2_r5_direct.cpp "$RUNNER_TEMP/net1-r5-direct.cpp"
+          python3 science-boundary/shannon-capacity-c7/code/patch_r5_net2_to_net1.py lower \
+            science-boundary/shannon-capacity-c7/code/search_net2_r5_lower.cpp "$RUNNER_TEMP/net1-r5-lower.cpp"
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp "$RUNNER_TEMP/net1-r5-direct.cpp" -o "$RUNNER_TEMP/net1-r5-direct"
+          g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp "$RUNNER_TEMP/net1-r5-lower.cpp" -o "$RUNNER_TEMP/net1-r5-lower"
+          export OMP_NUM_THREADS="$(nproc)"
+          /usr/bin/time -v "$RUNNER_TEMP/net1-r5-direct" "$RUNNER_TEMP/base/ids.txt" > "$RUNNER_TEMP/result/r5-direct.json" 2> "$RUNNER_TEMP/result/r5-direct.stderr"
+          /usr/bin/time -v "$RUNNER_TEMP/net1-r5-lower" "$RUNNER_TEMP/base/ids.txt" > "$RUNNER_TEMP/result/r5-lower.json" 2> "$RUNNER_TEMP/result/r5-lower.stderr"
+          cat "$RUNNER_TEMP/result/r5-direct.json"
+          cat "$RUNNER_TEMP/result/r5-lower.json"
+      - name: Materialize any local improvement
+        id: materialize
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/result/r4.json" "$RUNNER_TEMP/result/r5-direct.json" "$RUNNER_TEMP/result/r5-lower.json" "$RUNNER_TEMP/shot/certificate.json" "$RUNNER_TEMP/result/local-status.json" <<'PY'
+          import json,sys
+          bp,*rest=sys.argv[1:]
+          r4p,dp,lp,outp,stp=rest
+          pts=set(json.load(open(bp,encoding='utf-8'))['points']); base_n=len(pts)
+          rows=[json.load(open(x,encoding='utf-8')) for x in (r4p,dp,lp)]
+          hit=next((r for r in rows if r.get('kind') not in (None,'none')),None)
+          def dec(z):
+              d=[]
+              for _ in range(10): d.append(str(z%7)); z//=7
+              return ''.join(reversed(d))
+          st={'candidate':False,'base_score':base_n,'searches':rows}
+          if hit:
+              rem=[dec(int(z)) for z in hit.get('remove',[])]; add=[dec(int(z)) for z in hit.get('add',[])]
+              if any(x not in pts for x in rem): raise SystemExit(('bad removals',rem))
+              for x in rem: pts.remove(x)
+              if any(x in pts for x in add): raise SystemExit(('bad additions',add))
+              pts.update(add)
+              if len(pts)<=base_n: raise SystemExit(('not improvement',base_n,len(pts),hit))
+              json.dump({'points':sorted(pts)},open(outp,'w',encoding='utf-8'),separators=(',',':'));open(outp,'a').write('\n')
+              st.update(candidate=True,score=len(pts),search=hit)
+          json.dump(st,open(stp,'w',encoding='utf-8'),indent=2,sort_keys=True);open(stp,'a').write('\n')
+          PY
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+      - name: Verify local breakthrough
+        if: steps.materialize.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1))<134754: raise SystemExit(r)
+          PY
+      - name: Upload plateau and exact local results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-k6-neutral-plateau-local
+          path: |
+            ${{ runner.temp }}/result
+            ${{ runner.temp }}/base/certificate.json
+            ${{ runner.temp }}/shot
+          retention-days: 14
