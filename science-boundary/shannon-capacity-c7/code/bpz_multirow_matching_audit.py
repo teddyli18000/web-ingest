@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Replay the pinned B-to-X saturating matching used by the multi-row reduction.
+"""Replay finite pinned facts used by the multi-row/column reductions.
 
 The bipartite graph has left side B (359 core rows), right side X=N disjoint A
 disjoint D (367 points), and an edge a--x when a and x are confusable in C7^5.
-A deterministic augmenting-path matcher is sufficient at this size and avoids
-external graph libraries.  The script verifies a matching saturating all B,
-the N/A/D partition, the O/H/V 367 transversals, and all 18 terminal wirings.
+A deterministic augmenting-path matcher verifies an injection saturating B.
+The script also checks the O/H/V transversals, exact terminal wiring, and the
+crucial disjointness X cap Q = empty used to separate row and column charges.
 """
 from __future__ import annotations
 import argparse,json
@@ -36,13 +36,13 @@ def main():
     _base,ring,B,fam=J.load_geometry(root);B=set(B);N=set(fam['N']);A=set(fam['A']);D=set(fam['D']);X=N|A|D
     if len(B)!=359 or (len(N),len(A),len(D),len(X))!=(322,19,26,367):raise RuntimeError(('profile',len(B),len(N),len(A),len(D),len(X)))
     if N&A or N&D or A&D:raise RuntimeError('N/A/D overlap')
+    trans={k:set(fam[k]) for k in ('O','H','V')};Q=set().union(*trans.values())
+    if len(Q)!=16 or X&Q:raise RuntimeError(('X-Q disjointness',len(Q),sorted(X&Q)))
     M=matching(B,X,ring)
     if len(set(M.values()))!=359 or any(x not in ring.NB[b] for b,x in M.items()):raise RuntimeError('matching replay')
     factor_hist=Counter('N' if x in N else ('A' if x in A else 'D') for x in M.values())
-    trans={k:set(fam[k]) for k in ('O','H','V')}
     for k,T in trans.items():
         if len(T)!=8 or not independent(ring,T) or not independent(ring,B|T):raise RuntimeError(('transversal',k))
-    # Verify the exact row-side factor/transversal wiring used by every terminal.
     checks=[]
     for q in ('O','H','V'):
         for r in ('O','H','V'):
@@ -53,13 +53,12 @@ def main():
                 required|={(x,t) for x in A for t in sA}
                 required|={(x,t) for x in D for t in sD}
                 if not required<=P:raise RuntimeError(('row wiring',q,r,orient,len(required-P)))
-                # Symmetric column wiring: r x N plus H/V x D/A according to orientation.
                 if orient==0:
                     reqc={(t,x) for t in trans[r] for x in N}|{(t,x) for t in trans['H'] for x in D}|{(t,x) for t in trans['V'] for x in A}
                 else:
                     reqc={(t,x) for t in trans[r] for x in N}|{(t,x) for t in trans['H'] for x in A}|{(t,x) for t in trans['V'] for x in D}
                 if not reqc<=P:raise RuntimeError(('column wiring',q,r,orient,len(reqc-P)))
                 checks.append((q,r,orient,len(required),len(reqc)))
-    out={'method':'pinned-bpz-multirow-matching-audit','B_size':len(B),'X_size':len(X),'N_size':len(N),'A_size':len(A),'D_size':len(D),'matching_size':len(M),'matching_saturates_B':True,'matching_factor_histogram':dict(sorted(factor_hist.items())),'transversal_sizes':{k:len(v) for k,v in trans.items()},'terminal_configurations_checked':len(checks),'matching':[[b,M[b]] for b in sorted(M)]}
+    out={'method':'pinned-bpz-multirow-matching-audit','B_size':len(B),'X_size':len(X),'Q_size':len(Q),'X_intersection_Q':0,'N_size':len(N),'A_size':len(A),'D_size':len(D),'matching_size':len(M),'matching_saturates_B':True,'matching_factor_histogram':dict(sorted(factor_hist.items())),'transversal_sizes':{k:len(v) for k,v in trans.items()},'terminal_configurations_checked':len(checks),'matching':[[b,M[b]] for b in sorted(M)]}
     a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(out,indent=2,sort_keys=True)+'\n');print(json.dumps({k:v for k,v in out.items() if k!='matching'},sort_keys=True))
 if __name__=='__main__':main()
