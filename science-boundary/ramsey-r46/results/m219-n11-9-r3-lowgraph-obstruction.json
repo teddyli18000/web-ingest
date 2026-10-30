@@ -1,0 +1,18 @@
+{
+  "A26_transversal_numbers":[2,2],
+  "campaign":"m219-n11-9-r3-lowgraph-obstruction",
+  "class_relaxation_count":173,
+  "conclusion":"degree sequence 11^9 12^12 13^15 is impossible for an m=219 (4,6)-Ramsey graph",
+  "degree_sequence":{"11":9,"12":12,"13":15},
+  "dependencies":{"A26":"complete authenticated McKay stratum, 2 graphs; both I5 transversal number 2","B116":"complete authenticated McKay stratum, 9 graphs","no_lucky_d12":"certified closure implies S(v)<=146 for degree 12 in class relaxation"},
+  "max_sum_r":33,
+  "minimum_forced_r3_vertices":3,
+  "r3_local_cases":[
+    {"t":3,"B_counts":[5,4,15,0],"survivors":[]},
+    {"t":4,"B_counts":[4,6,14,0],"survivors":[]},
+    {"t":5,"B_counts":[3,8,13,0],"survivors":[]},
+    {"t":6,"B_counts":[2,10,12,0],"survivors":[{"b_ordinal":1,"possible_low_sets":[[0,3]],"B_internal_degrees":[8,9],"pair_is_edge":true}]},
+    {"t":7,"B_counts":[1,12,11,0],"survivors":[{"b_ordinal":1,"possible_low_sets":[[0]],"B_internal_degree":8}]}
+  ],
+  "structural_obstruction":"three r3 vertices are independent in the low complement; alpha<=3 forces six R-U complement edges, saturating all three marked degrees at2 and assigning each U to exactly one marked vertex. Each marked pair of low non-neighbours is an L-edge, so the other marked pair plus that owner-pair forms K4."
+}
