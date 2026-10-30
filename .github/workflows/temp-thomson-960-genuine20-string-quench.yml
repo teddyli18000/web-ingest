@@ -1,0 +1,67 @@
+name: temp Thomson 960 genuine20 string quench
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-genuine20-string-quench.yml'
+
+jobs:
+  string-quench:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [7301, 7302, 7303, 7304]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Clone current Few Shots
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Relax string and quench images
+        run: |
+          echo "nproc=$(nproc) seed=${{ matrix.seed }}"
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 science-boundary/thomson-960/code/search_20_string_quench.py \
+            "$RUNNER_TEMP/few-shots" science-boundary/thomson-960/data/basin-20-morph-9136.json \
+            --seed '${{ matrix.seed }}' --starts 18 --images 11 --iterations 260 \
+            --eta 0.00022 --max-step 0.0006 --quench-maxiter 2400 \
+            --out "$RUNNER_TEMP/out/string-quench.json"
+      - name: Conditional local exits from a novel 20 basin
+        shell: bash
+        run: |
+          set -euo pipefail
+          p="$RUNNER_TEMP/out/string-quench.json.best20.json"
+          if [[ ! -f "$p" ]]; then
+            echo 'No novel 20-dislocation basin on this string.'
+            exit 0
+          fi
+          python3 science-boundary/thomson-960/code/search_seed_multimode_parallel.py \
+            "$RUNNER_TEMP/few-shots" "$p" \
+            --modes 0,1,2,3 --amps 0.004,0.010,0.022,0.045 \
+            --k 10 --workers "$(nproc)" --maxiter 2200 --keep-basins 12 \
+            --out "$RUNNER_TEMP/out/novel20-modes.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json, os
+          r=os.path.join(os.environ['RUNNER_TEMP'],'out')
+          d=json.load(open(os.path.join(r,'string-quench.json')))
+          print('max_path_perp',d['max_path_perp'],'best_novel20',d['best_novel_20_energy'],'delta_live',d['best_delta_live'])
+          for b in d['novel_20_basins'][:10]: print('NOVEL20',b['energy'],'image',b['image'])
+          p=os.path.join(r,'novel20-modes.json')
+          if os.path.exists(p):
+              m=json.load(open(p)); print('MODEBEST',m['best_energy'],m['best_delta_vs_live'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-genuine20-string-${{ matrix.seed }}
+          path: ${{ runner.temp }}/out
+          retention-days: 7
