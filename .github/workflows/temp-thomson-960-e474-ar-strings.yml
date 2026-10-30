@@ -1,0 +1,99 @@
+name: temp Thomson 960 e474 A-R strings
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-e474-ar-strings.yml'
+
+jobs:
+  harvest:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 70
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Materialize D2 live A and reproduce e474
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 - <<'PY'
+          import json,pathlib,os,sys
+          sys.path.insert(0,'science-boundary/thomson-960/code')
+          import search_topology_morph as tm
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'few-shots'; out=pathlib.Path(os.environ['RUNNER_TEMP'])/'out'
+          d2=tm.cert_xyz(root/tm.D2_REL)
+          (out/'d2.json').write_text(json.dumps({'energy':tm.raw_energy(d2),'points':d2.tolist()},separators=(',',':'))+'\n')
+          score,live_dir=tm.find_live(root); live=tm.cert_xyz(live_dir/'certificate.json')
+          (out/'live.json').write_text(json.dumps({'energy':score,'points':live.tolist()},separators=(',',':'))+'\n')
+          a=json.loads(pathlib.Path('science-boundary/thomson-960/data/neighbor-soft-003280.json').read_text())
+          (out/'A.json').write_text(json.dumps({'energy':a.get('neighbor_double_energy',444368.395686226),'points':a['points']},separators=(',',':'))+'\n')
+          print('D2',tm.raw_energy(d2),'LIVE',score,'A',a.get('neighbor_double_energy'))
+          PY
+          python3 science-boundary/thomson-960/code/harvest_pair_string_image.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/out/d2.json" "$RUNNER_TEMP/out/live.json" \
+            --seed 9852 --starts 20 --images 13 --iterations 340 --eta 0.00020 --max-step 0.00050 \
+            --image-index 10 --quench-maxiter 3000 --expected 444368.47436229355 --tol 0.00005 \
+            --expected-five 35 --expected-six 902 --expected-seven 23 \
+            --out "$RUNNER_TEMP/out/e474.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e474-ar-seeds
+          path: ${{ runner.temp }}/out
+          retention-days: 3
+
+  strings:
+    needs: harvest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: A
+            seed: 9931
+          - target: A
+            seed: 9932
+          - target: R
+            seed: 9941
+          - target: R
+            seed: 9942
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e474-ar-seeds
+          path: ${{ runner.temp }}/out
+      - run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Relax string and quench images
+        run: |
+          if [[ '${{ matrix.target }}' == 'A' ]]; then dst="$RUNNER_TEMP/out/A.json"; else dst="$RUNNER_TEMP/out/live.json"; fi
+          echo "target=${{ matrix.target }} seed=${{ matrix.seed }} nproc=$(nproc)"
+          python3 science-boundary/thomson-960/code/search_pair_string_quench.py \
+            "$RUNNER_TEMP/few-shots" "$RUNNER_TEMP/out/e474.json" "$dst" \
+            --seed '${{ matrix.seed }}' --starts 22 --images 13 --iterations 420 \
+            --eta 0.00018 --max-step 0.00042 --quench-maxiter 3200 --retain-window 0.22 \
+            --out "$RUNNER_TEMP/out/result-${{ matrix.target }}-${{ matrix.seed }}.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,glob
+          p=glob.glob('/home/runner/work/_temp/out/result-*.json')[0]; d=json.load(open(p))
+          print('BEST',d['best_energy'],'DELTA_LIVE',d['best_delta_live'],'MAX_PERP',d['max_path_perp'])
+          for b in d['novel_low_basins'][:20]: print('NOVEL',b['energy'],b['delta_live'],b['coord_counts'],'image',b['image'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e474-${{ matrix.target }}-string-${{ matrix.seed }}
+          path: ${{ runner.temp }}/out/result-${{ matrix.target }}-${{ matrix.seed }}.json*
+          retention-days: 7
