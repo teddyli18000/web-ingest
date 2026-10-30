@@ -1,0 +1,73 @@
+name: temp Thomson 960 e553 event composition
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-thomson-960-e553-event-compose.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  OPENBLAS_NUM_THREADS: "1"
+  OMP_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  NUMEXPR_NUM_THREADS: "1"
+  VECLIB_MAXIMUM_THREADS: "1"
+
+jobs:
+  compose:
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        coeffs: ["1,1,0", "1,-1,0", "1,1,1", "1,1,-1"]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install numerical dependencies
+        run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Download e564 base
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-c3-portal-e564
+          path: ${{ runner.temp }}/e564
+          github-token: ${{ github.token }}
+          run-id: 40796920780
+      - name: Download e553 source
+        uses: actions/download-artifact@v4
+        with:
+          name: thomson-e564-scaffold-f0
+          path: ${{ runner.temp }}/source
+          github-token: ${{ github.token }}
+          run-id: 40991851757
+      - name: Extract e553 and compose C3-equivalent events
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob,json,os
+          p=glob.glob(os.path.join(os.environ['RUNNER_TEMP'],'source','*.json'))[0]
+          d=json.load(open(p)); b=min(d['lowest_distinct_release_basins'],key=lambda z:z['release_energy'])
+          json.dump({'energy':b['release_energy'],'coord_counts':b['release_coord'],'points':b['points']},open(os.path.join(os.environ['RUNNER_TEMP'],'e553.json'),'w'),separators=(',',':'))
+          PY
+          tag=$(echo '${{ matrix.coeffs }}' | tr ',-' '__')
+          python3 science-boundary/thomson-960/code/search_e553_event_composition.py \
+            "$RUNNER_TEMP/e564/portal-e564.json" "$RUNNER_TEMP/e553.json" \
+            --coeffs '${{ matrix.coeffs }}' --scales 0.6,0.8,1.0,1.2,1.5 \
+            --maxiter 2400 --out "$RUNNER_TEMP/compose-${tag}.json"
+          python3 - <<'PY'
+          import glob,json
+          p=glob.glob('/home/runner/work/_temp/compose-*.json')[0]; d=json.load(open(p))
+          print('COEFF',d['coeffs'],'event_rms',d['single_event_rms'],'combo_rms',d['combo_rms'],'BEST',d['best_energy'])
+          for b in d['lowest_distinct_basins']:
+              print('BASIN',b['energy'],b['scale'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-e553-compose-${{ strategy.job-index }}
+          path: ${{ runner.temp }}/compose-*.json
+          retention-days: 7
