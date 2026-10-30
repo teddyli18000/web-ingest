@@ -1,0 +1,57 @@
+Thomson N=960 — complete same-count one-flip census around live record — 2026-10-30
+
+Record R
+--------
+E = 444368.3924061973
+coordination = 36/900/24
+symmetry = C3
+12 full 5-7-5-7-5 scars.
+
+Complete one-flip neighborhood
+------------------------------
+Enumerating every legal Delaunay bistellar flip whose combinatorial degree counts remain exactly 36/900/24 gives 78 moves. Their balanced geometric flip thresholds partition exactly into 26 groups of three, consistent with the C3 symmetry of R. Thus one representative per group spans the complete symmetry-inequivalent one-flip topology neighborhood.
+
+These moves are predominantly dislocation glides. A typical local degree pattern is (7,6,5,6): deleting the old diagonal and adding the opposite diagonal translates the 5-7 defect pair without changing the total number of five- or seven-coordinated vertices.
+
+Softest C3 orbit representatives, ranked by balanced crossing threshold (radians):
+  0  0.004996994  delete (217,559) add (551,308)  degrees (7,6,5,6)
+  1  0.005546013  delete (59,639)  add (935,603)  degrees (6,7,6,5)
+  2  0.006065758  delete (79,134)  add (323,35)   degrees (6,7,5,6)
+  3  0.006112343  delete (21,230)  add (363,74)   degrees (7,6,6,5)
+  4  0.007035118  delete (108,282) add (511,599)  degrees (7,6,6,5)
+  5  0.007795792  delete (126,522) add (886,306)  degrees (6,7,5,6)
+  6  0.009151536  delete (12,139)  add (958,286)  degrees (7,6,6,5)
+  7  0.011265581  delete (13,819)  add (778,99)   degrees (6,7,6,5)
+  8  0.011384771  delete (108,511) add (502,282)  degrees (7,6,5,6)
+  9  0.011782400  delete (12,958)  add (60,139)   degrees (7,6,5,6)
+ 10  0.012117695  delete (179,920) add (881,419)  degrees (7,6,6,5)
+ 11  0.012322217  delete (12,81)   add (286,805)  degrees (7,6,5,6)
+ 12  0.012412847  delete (21,363)  add (251,230)  degrees (7,6,5,6)
+ 13  0.012941972  delete (202,804) add (784,566)  degrees (7,6,6,5)
+ 14  0.013058965  delete (138,179) add (251,333)  degrees (6,7,5,6)
+ 15  0.013304381  delete (202,946) add (766,182)  degrees (7,6,6,5)
+ 16  0.013383206  delete (35,134)  add (380,79)   degrees (6,7,5,6)
+ 17  0.013611157  delete (217,308) add (559,841)  degrees (7,6,6,5)
+ 18  0.013888261  delete (104,428) add (919,464)  degrees (6,7,5,6)
+ 19  0.013891543  delete (134,876) add (165,323)  degrees (7,6,6,5)
+ 20  0.014015808  delete (127,639) add (603,669)  degrees (6,7,5,6)
+ 21  0.014199474  delete (145,857) add (231,29)   degrees (6,7,5,6)
+ 22  0.014485991  delete (295,959) add (379,521)  degrees (6,7,6,5)
+ 23  0.015870256  delete (21,352)  add (74,750)   degrees (7,6,5,6)
+ 24  0.019075771  delete (21,897)  add (251,750)  degrees (7,6,5,6)
+ 25  0.019277336  delete (43,819)  add (561,891)  degrees (6,7,6,5)
+
+Relation to known e432->B/A/R history
+------------------------------------
+The softest orbit 0 is NOT an observed flip or inverse flip on the known e432->B/A/R geodesics, so it is a genuinely new live-local topology direction.
+Orbit 1 is the inverse of the late (603,935)->(59,639) event shared by B/A/R.
+Orbit 2 is the inverse of (35,323)->(79,134), seen on B and R paths.
+Orbit 3 is the inverse of R-specific early neutral event (74,363)->(21,230); two representatives from this orbit were already selected independently by the event-history analysis because of C3 symmetry.
+Orbit 4 is not a direct known path event and is another new live-local direction.
+Orbit 8 is the inverse of R event (282,502)->(108,511).
+
+Search policy
+-------------
+Do not brute-force all 78 copies. Search one representative per C3 orbit; if a representative gives a new basin, the other two copies are symmetry-equivalent starts. First prioritize soft orbits 0,1,2,4,5,6. Run 41055002167 performs scaffolded crossing/release of those six representatives. Run 41054769012 separately tests four event-history neighbors, including orbit 3 and harder D10/C3 reversals.
+
+If the first soft orbits all heal back to R, inspect their fixed-scaffold energies and topology persistence. Low fixed scaffold + healing should trigger staged/harmonic release, not larger overshoot. If several distinct one-glide orbits survive as nearby minima, construct two-glide combinations from those surviving descendants rather than enumerating all 26^2 pairs blindly.
