@@ -11,7 +11,6 @@ URLS={
  "nist-a33-g105":"https://raw.githubusercontent.com/usnistgov/Circuits/master/data/slp/aes/aes-sbox/aes-sbox-a33-ad4-g105-gd25-xx72-6.circ.txt",
  "nist-a33-g108":"https://raw.githubusercontent.com/usnistgov/Circuits/master/data/slp/aes/aes-sbox/aes-sbox-a33-ad4-g108-gd20-xx75-5.circ.txt",
  "nist-a34-g110":"https://raw.githubusercontent.com/usnistgov/Circuits/master/data/slp/aes/aes-sbox/aes-sbox-a34-ad4-g110-gd22-xx76-3.circ.txt",
- "nist-a28-g124":"https://raw.githubusercontent.com/usnistgov/Circuits/master/data/slp/aes/aes-sbox/aes-sbox-a28-ad5-g124-gd27-xx96-26.circ.txt",
  "fs-101":c.DEFAULTS["fs-101"],
  "fs-102":c.DEFAULTS["fs-102"],
  "fs-103":c.DEFAULTS["fs-103"],
