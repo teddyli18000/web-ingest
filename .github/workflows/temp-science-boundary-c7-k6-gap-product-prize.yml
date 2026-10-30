@@ -1,0 +1,82 @@
+name: Temp Science Boundary C7 k6 product terminal prize
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-k6-gap-product-prize.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_k6_gap_product_prize.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-k6-gap-product-prize
+  cancel-in-progress: false
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned sources and dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          python3 -m pip install --disable-pip-version-check python-sat networkx
+          mkdir -p "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+      - name: Rebuild exact k6 gaps and rooted product survivors
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/bpz_support_clique_cover_gap_census.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/k6.json" --k 6 --workers "$(nproc)" \
+            > "$RUNNER_TEMP/result/k6.stdout" 2> "$RUNNER_TEMP/result/k6.stderr"
+          python3 science-boundary/shannon-capacity-c7/code/bpz_k6_gap_irreducibility_audit.py \
+            "$RUNNER_TEMP/result/k6.json" "$RUNNER_TEMP/result/audit.json" \
+            > "$RUNNER_TEMP/result/audit.stdout" 2> "$RUNNER_TEMP/result/audit.stderr"
+          python3 science-boundary/shannon-capacity-c7/code/bpz_k6_gap_product37.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/audit.json" "$RUNNER_TEMP/result/product37.json" \
+            --workers "$(nproc)" > "$RUNNER_TEMP/result/product37.stdout" 2> "$RUNNER_TEMP/result/product37.stderr"
+          cat "$RUNNER_TEMP/result/audit.stdout"
+          cat "$RUNNER_TEMP/result/product37.stdout"
+      - name: Exact terminal-prize replay on every raw survivor
+        id: prize
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_k6_gap_product_prize.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/audit.json" "$RUNNER_TEMP/result/product37.json" \
+            "$RUNNER_TEMP/result/prize.json" "$RUNNER_TEMP/shot/certificate.json" \
+            --workers "$(nproc)" > "$RUNNER_TEMP/result/prize.stdout" 2> "$RUNNER_TEMP/result/prize.stderr"
+          cat "$RUNNER_TEMP/result/prize.stdout"
+          tail -n 160 "$RUNNER_TEMP/result/prize.stderr"
+          if [[ -f "$RUNNER_TEMP/shot/certificate.json" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+      - name: Verify breakthrough with Few Shots verifier
+        if: steps.prize.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1],encoding='utf-8'))
+          if not r.get('valid') or int(r.get('score',-1)) < 134754: raise SystemExit(r)
+          PY
+      - name: Upload exact replay
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-k6-gap-product-prize
+          path: |
+            ${{ runner.temp }}/result
+            ${{ runner.temp }}/shot
+          retention-days: 14
