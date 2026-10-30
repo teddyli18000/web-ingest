@@ -1,0 +1,119 @@
+name: Temp Science Boundary C7 neutral mother packed net1 r6
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-k6-neutral-r6-packed.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-k6-neutral-r6-packed
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild and verify pinned neutral mother
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+          git -C "$RUNNER_TEMP/few-shots" sparse-checkout set problems/p004-shannon-capacity-c7
+          mkdir -p "$RUNNER_TEMP/base" "$RUNNER_TEMP/result" "$RUNNER_TEMP/shot"
+          python3 science-boundary/shannon-capacity-c7/code/bpz_k6_neutral_best_seed.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/result/seed.json"
+          python3 - "$RUNNER_TEMP/base/certificate.json" "$RUNNER_TEMP/base/ids.txt" <<'PY'
+          import json,sys
+          pts=json.load(open(sys.argv[1]))['points']
+          if len(pts)!=134753 or len(set(pts))!=134753: raise SystemExit(('seed',len(pts),len(set(pts))))
+          open(sys.argv[2],'w').write(''.join(f'{int(p,7)}\n' for p in pts))
+          PY
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/base" | tee "$RUNNER_TEMP/result/seed-verify.json"
+          python3 - "$RUNNER_TEMP/result/seed-verify.json" <<'PY'
+          import json,sys;r=json.load(open(sys.argv[1]));
+          if not r.get('valid') or int(r.get('score',-1))!=134753 or r.get('canonical_hash')!='636cbc9a3368fccd6bac3155aa0a73eaf9ddd5d9f053ba74ca00f748437b9d94': raise SystemExit(r)
+          PY
+      - name: Compile all exact r6 strata once
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/shannon-capacity-c7/code/patch_r6_direct_net2_to_net1.py science-boundary/shannon-capacity-c7/code/search_net2_r6_direct.cpp "$RUNNER_TEMP/c6.cpp"
+          python3 science-boundary/shannon-capacity-c7/code/patch_r6_c5_anchor_net2_to_net1.py science-boundary/shannon-capacity-c7/code/search_net2_r6_c5_anchor.cpp "$RUNNER_TEMP/c5a.cpp"
+          python3 science-boundary/shannon-capacity-c7/code/patch_r6_c5_anchor_shard.py "$RUNNER_TEMP/c5a.cpp" "$RUNNER_TEMP/c5.cpp"
+          python3 science-boundary/shannon-capacity-c7/code/patch_r6_c4_extensions_net2_to_net1.py science-boundary/shannon-capacity-c7/code/search_net2_r6_c4_extensions.cpp "$RUNNER_TEMP/c4.cpp"
+          python3 science-boundary/shannon-capacity-c7/code/patch_r6_c3_extensions_net2_to_net1.py science-boundary/shannon-capacity-c7/code/search_net2_r6_c3_extensions.cpp "$RUNNER_TEMP/c3.cpp"
+          python3 science-boundary/shannon-capacity-c7/code/patch_r6_c2_graph_net2_to_net1.py science-boundary/shannon-capacity-c7/code/search_net2_r6_c2_graph.cpp "$RUNNER_TEMP/c2.cpp"
+          for k in c6 c5 c4 c3 c2; do g++ -O3 -DNDEBUG -march=native -std=c++20 -fopenmp "$RUNNER_TEMP/$k.cpp" -o "$RUNNER_TEMP/$k"; done
+      - name: Run packed exact r6 support strata
+        id: packed
+        shell: bash
+        env:
+          OMP_PROC_BIND: "true"
+          OMP_PLACES: cores
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          run_one() {
+            local name="$1"; shift
+            echo "=== exact r6 $name ==="
+            /usr/bin/time -v "$@" > "$RUNNER_TEMP/result/$name.json" 2> "$RUNNER_TEMP/result/$name.stderr"
+            cat "$RUNNER_TEMP/result/$name.json"
+            tail -n 80 "$RUNNER_TEMP/result/$name.stderr"
+            python3 - "$RUNNER_TEMP/result/$name.json" "$RUNNER_TEMP/found" <<'PY'
+          import json,sys,pathlib
+          r=json.load(open(sys.argv[1]));
+          if r.get('kind')=='replace6add7': pathlib.Path(sys.argv[2]).write_text(sys.argv[1])
+          elif r.get('kind')!='none': raise SystemExit(('unexpected kind',r.get('kind')))
+          PY
+          }
+          run_one c6 "$RUNNER_TEMP/c6" "$RUNNER_TEMP/base/ids.txt"
+          if [[ ! -f "$RUNNER_TEMP/found" ]]; then run_one c5 "$RUNNER_TEMP/c5" "$RUNNER_TEMP/base/ids.txt" 0 1; fi
+          if [[ ! -f "$RUNNER_TEMP/found" ]]; then run_one c4 "$RUNNER_TEMP/c4" "$RUNNER_TEMP/base/ids.txt" 0 1; fi
+          if [[ ! -f "$RUNNER_TEMP/found" ]]; then run_one c3 "$RUNNER_TEMP/c3" "$RUNNER_TEMP/base/ids.txt" 0 1; fi
+          if [[ ! -f "$RUNNER_TEMP/found" ]]; then run_one c2 "$RUNNER_TEMP/c2" "$RUNNER_TEMP/base/ids.txt" 0 1; fi
+          if [[ -f "$RUNNER_TEMP/found" ]]; then echo found=true >> "$GITHUB_OUTPUT"; else echo found=false >> "$GITHUB_OUTPUT"; fi
+      - name: Materialize candidate
+        if: steps.packed.outputs.found == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "$RUNNER_TEMP/base/certificate.json" "$(cat "$RUNNER_TEMP/found")" "$RUNNER_TEMP/shot/certificate.json" <<'PY'
+          import json,sys
+          bp,sp,out=sys.argv[1:];pts=set(json.load(open(bp))['points']);s=json.load(open(sp))
+          def dec(z):
+              d=[]
+              for _ in range(10):d.append(str(z%7));z//=7
+              return ''.join(reversed(d))
+          rem=[dec(int(z)) for z in s['remove']];add=[dec(int(z)) for z in s['add']]
+          if len(rem)!=6 or len(set(rem))!=6 or any(p not in pts for p in rem):raise SystemExit(('rem',rem))
+          for p in rem:pts.remove(p)
+          if len(add)!=7 or len(set(add))!=7 or any(p in pts for p in add):raise SystemExit(('add',add))
+          pts.update(add)
+          if len(pts)!=134754:raise SystemExit(('score',len(pts)))
+          json.dump({'points':sorted(pts)},open(out,'w'),separators=(',',':'));open(out,'a').write('\n')
+          PY
+          cd "$RUNNER_TEMP/few-shots"
+          python3 problems/p004-shannon-capacity-c7/verify/verify.py "$RUNNER_TEMP/shot" | tee "$RUNNER_TEMP/result/verify.json"
+          python3 - "$RUNNER_TEMP/result/verify.json" <<'PY'
+          import json,sys;r=json.load(open(sys.argv[1]));
+          if not r.get('valid') or int(r.get('score',-1))<134754:raise SystemExit(r)
+          print('VERIFIED BREAKTHROUGH',r)
+          PY
+      - name: Upload packed result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-k6-neutral-net1-r6-packed
+          path: ${{ runner.temp }}/result
+          retention-days: 14
