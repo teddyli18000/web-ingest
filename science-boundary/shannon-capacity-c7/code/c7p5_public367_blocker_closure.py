@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
-"""Exact fixed-blocker closure of every validated public 367 basin in C7^5.
+"""Exact support-subset prize closure of every validated public 367 basin in C7^5.
 
-Let C be the certified independent 315-core.  Completing a public 367-set S
-relative to C yields outside set Y and blocker footprint B=N_C(Y), with
+Let C be the certified independent 315-core. Completing a public 367-set S
+relative to C yields outside set Y and source blocker footprint B=N_C(Y).
+For that source basin, permit every ambient outside vertex v with
+N_C(v) subseteq B.  Crucially, an optimized outside set Y' need not activate all
+of B; the correct objective is therefore the exact prize
 
-    367 = |C|-|B|+|Y|.
+    315 + |Y'| - |N_C(Y')|,
 
-Now freeze only the blocker footprint constraint, not the selected outside
-vertices: permit every ambient outside vertex v with N_C(v) subseteq B and find
-an exact maximum independent set in that entire candidate pool.  The resulting
-completed score is
+not `315-|B|+alpha(pool_B)`.  This script encodes one blocker variable per core
+point and charges only actually activated blockers.  Thus each job exactly
+closes the entire support-subset basin under the 315-core prize identity.
 
-    |C|-|B| + alpha(pool_B).
-
-Thus each job closes a large, radius-free basin containing its source 367-set.
-Distinct public seeds with identical B are deduplicated.  The searches are
-independent and run in parallel worker processes.  Any score >=368 is a global
-valid witness; a miss is an exact exclusion only for the tested blocker basins.
+Distinct public seeds with identical source B are deduplicated. Searches run in
+parallel worker processes. Any score >=368 is a global valid witness; a miss is
+an exact exclusion only for the tested support-subset basins.
 """
 from __future__ import annotations
 
@@ -38,19 +37,24 @@ def independent(S):
 
 _G_OUTSIDE=None;_G_SUPPORT=None;_G_CORE=None
 def solve_one(job):
- idx,blockers,sources=job;B=set(blockers);pool=tuple(v for v in _G_OUTSIDE if _G_SUPPORT[v].issubset(B));P=set(pool);var={v:i+1 for i,v in enumerate(pool)};w=WCNF();edges=0
+ idx,blockers,sources=job;B=set(blockers);pool=tuple(v for v in _G_OUTSIDE if _G_SUPPORT[v].issubset(B));P=set(pool);var={v:i+1 for i,v in enumerate(pool)};bb=len(pool)+1;bvar={c:bb+i for i,c in enumerate(_G_CORE)};w=WCNF();edges=imp=0
  for v in pool:
   for u in neigh(v):
    if u in P and u>v:w.append([-var[v],-var[u]]);edges+=1
- for i in range(1,len(pool)+1):w.append([i],weight=1)
+  for c in _G_SUPPORT[v]:w.append([-var[v],bvar[c]]);imp+=1
+ for v in pool:w.append([var[v]],weight=1)
+ for c in _G_CORE:w.append([-bvar[c]],weight=1)
  with RC2(w,solver='g4',adapt=True,exhaust=True,verbose=0) as rc2:
   model=rc2.compute();cost=int(rc2.cost)
  if model is None:raise RuntimeError(('no model',idx))
- pos={z for z in model if z>0};Y={v for v in pool if var[v] in pos};alpha=len(pool)-cost
- if len(Y)!=alpha or not independent(Y):raise RuntimeError(('MIS replay',idx,len(Y),alpha))
- C=set(_G_CORE);completed=Y|(C-B);score=len(completed)
- if score!=CORE-len(B)+alpha or not independent(completed):raise RuntimeError(('completion replay',idx,score))
- return {'basin_index':idx,'blockers':list(blockers),'blocker_count':len(B),'source_sha256':sources,'pool_size':len(pool),'conflict_edges':edges,'alpha_pool':alpha,'score':score,'points5':sorted(completed)}
+ pos={z for z in model if z>0};Y={v for v in pool if var[v] in pos};blocked=set()
+ for v in Y:blocked.update(_G_SUPPORT[v])
+ C=set(_G_CORE);completed=Y|(C-blocked);score=len(completed)
+ if not independent(Y) or not independent(completed):raise RuntimeError(('independence replay',idx))
+ if not blocked.issubset(B):raise RuntimeError(('escaped basin',idx,len(blocked),len(B)))
+ soft_total=len(pool)+CORE
+ if score!=soft_total-cost:raise RuntimeError(('objective replay',idx,score,soft_total-cost))
+ return {'basin_index':idx,'source_blockers':list(blockers),'source_blocker_count':len(B),'source_sha256':sources,'pool_size':len(pool),'conflict_edges':edges,'support_implications':imp,'selected_outside':len(Y),'activated_core_blockers':len(blocked),'score':score,'prize':score-CORE,'points5':sorted(completed)}
 
 def main():
  global _G_OUTSIDE,_G_SUPPORT,_G_CORE
@@ -71,14 +75,14 @@ def main():
  jobs=[(i,k,groups[k]) for i,k in enumerate(sorted(groups,key=lambda q:(len(q),q)))]
  _G_OUTSIDE=outside;_G_SUPPORT=support;_G_CORE=core
  workers=max(1,min(int(a.workers),len(jobs)))
- print('SETUP',json.dumps({'public_sets':len(corpus['sets']),'distinct_blocker_basins':len(jobs),'workers':workers,'blocker_histogram':{str(k):sum(len(q)==k for q in groups) for k in sorted({len(q) for q in groups})}},sort_keys=True),flush=True)
+ print('SETUP',json.dumps({'method':'exact-public367-support-subset-core-prize-closure','public_sets':len(corpus['sets']),'distinct_blocker_basins':len(jobs),'workers':workers,'blocker_histogram':{str(k):sum(len(q)==k for q in groups) for k in sorted({len(q) for q in groups})}},sort_keys=True),flush=True)
  if workers==1:results=[solve_one(j) for j in jobs]
  else:
   with mp.get_context('fork').Pool(workers) as p:
    results=[]
-   for r in p.imap_unordered(solve_one,jobs,chunksize=1):results.append(r);print('BASIN',json.dumps({k:v for k,v in r.items() if k not in ('points5','blockers')},sort_keys=True),flush=True)
+   for r in p.imap_unordered(solve_one,jobs,chunksize=1):results.append(r);print('BASIN',json.dumps({k:v for k,v in r.items() if k not in ('points5','source_blockers')},sort_keys=True),flush=True)
  results.sort(key=lambda r:r['basin_index']);best=max(results,key=lambda r:r['score'])
- out={'method':'exact-public367-fixed-core-blocker-basin-closure','public_sets':len(corpus['sets']),'distinct_blocker_basins':len(jobs),'workers':workers,'seed_stats':seed_stats,'results':results,'best_score':best['score'],'candidate_368':best['score']>=TARGET}
+ out={'method':'exact-public367-support-subset-core-prize-closure','public_sets':len(corpus['sets']),'distinct_blocker_basins':len(jobs),'workers':workers,'seed_stats':seed_stats,'results':results,'best_score':best['score'],'candidate_368':best['score']>=TARGET}
  a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(out,indent=2,sort_keys=True)+'\n')
  if best['score']>=TARGET:
   S=best['points5'][:TARGET]
