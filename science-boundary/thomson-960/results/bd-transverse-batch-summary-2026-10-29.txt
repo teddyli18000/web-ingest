@@ -1,0 +1,66 @@
+Thomson N=960 — certified B<->D saddle transverse batch summary
+Date: 2026-10-29
+
+Source
+------
+Actions run: 40815162725
+Artifact: thomson-bd-saddle-transverse-batch (id 12875824764)
+Parent: certified B<->D index-1 saddle from run 40740593797,
+  E = 444368.411086411099,
+  gradient RMS = 4.8339504e-6,
+  lambda0 = -1.0121103405.
+
+Search
+------
+Positive full-space saddle modes 1..8, both signs, transverse amplitudes
+  0.002, 0.004, 0.007, 0.011, 0.017, 0.026, 0.040 RMS rad
+were combined with reaction-coordinate biases -0.00015, 0, +0.00015 and fully
+unconstrained-relaxed. Basin representatives were deduplicated by energy plus
+full Delaunay coordination/component signature. The two lowest unknown minima
+were then automatically second-hopped along their own modes 0..3, both signs.
+
+Result
+------
+The batch found all four known low minima R/A/B/D and 19 distinct previously
+unlabelled basin representatives. No endpoint improved R.
+
+Lowest endpoints:
+  R  444368.3924061973
+  A  444368.3956862259
+  B  444368.4029728613
+  D  444368.4109930845
+  NEW0 444368.4216212402 = R + 0.0292150429
+       source: saddle mode6 +, transverse amp 0.040, reaction bias 0
+       coordination 36/900/24, twin count 9
+  NEW1 444368.5468983959 = R + 0.1544921986
+       source: mode7 -, amp 0.040, reaction bias -0.00015
+       coordination 36/900/24, twin count 8
+  next representatives begin near R+0.16567, R+0.18864, R+0.18981, R+0.27346.
+
+Automatic second hop
+--------------------
+NEW0 modes0..3 x both signs:
+- best descendants are only R/A/B;
+- examples: mode1- and mode3- -> R, mode0+ / mode2± / mode3+ -> A,
+  mode0- / mode1+ -> B.
+Thus the R+0.029215 basin is connected back into the known low network and does
+not expose a lower descendant through its four softest modes.
+
+NEW1 modes0..3 x both signs:
+- all eight searches return NEW1 itself at ~444368.5468983955--3957.
+Thus the R+0.154492 basin is locally stable under these low-mode probes.
+
+Interpretation
+--------------
+The certified B<->D saddle is a genuine multi-basin junction: mixed transverse
+coordinates expose substantially more basin diversity than one-mode slices.
+However the sampled positive-mode box through 0.040 RMS and small reaction
+biases contains no new minimum below A and no record candidate. Its lowest
+unknown minimum closes immediately back into R/A/B under minimum-centered
+second-hop search.
+
+This is a scientifically useful saturation result for this finite transverse
+box, not a proof that the full B<->D saddle interface is exhausted. Do not repeat
+the same mode1..8 / amplitude / reaction-bias grid. A future revisit should use
+a materially different boundary-following representation, e.g. adaptive mixed
+(mode1,mode2,mode6) basin-boundary refinement, not denser uniform enumeration.
