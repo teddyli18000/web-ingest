@@ -140,6 +140,24 @@ One best pair is
 
 This closes nonperfect-connected-type `4 x 4` products only. It does not by itself classify every disconnected four-owner support graph or every higher-order nonrectangular core deletion.
 
+## k=6 cover-gap products and terminal replay
+
+An exact census of all 1,009,430 connected six-owner support sets found 32 clique-cover-gap cases, all with `alpha=7`. An exact lexicographic irreducibility audit showed that exactly four of the 32 have a maximum 7-set disjoint from the deleted owners; these are exactly the four genuine k=6 defects listed above. The other 28 necessarily reuse at least one deleted owner in every maximum 7-set.
+
+The four irreducible cases give four distinct rooted support-graph types. Exact SAT over all ten unordered rooted-type products found **all ten** have product independence at least 37, so the raw core layer by itself can beat the 36 deleted cells in every k6-by-k6 type pairing.
+
+That raw gain does not survive the real terminal. Run `40993551935` replayed every raw survivor against all 18 terminal configurations with exact blocker pricing and RC2: 16 concrete ordered pairs x 18 terminals = 288 exact tasks. All 288 closure relaxations remained open, but **none** reached the required terminal prize of 37. The best exact terminal gain was only 17, corresponding to final score 134,734 after the 36 core deletions. Few Shots verification was therefore correctly skipped.
+
+Reusable code: `bpz_support_clique_cover_gap_census.py`, `bpz_k6_gap_irreducibility_audit.py`, `bpz_k6_gap_product37.py`, and `bpz_k6_gap_product_prize.py`.
+
+## Global union of the five irreducible defect pools
+
+To test nonrectangular shared-deletion synergy, `bpz_global_defect_union_prize.py` unions the complete factor pools of the unique k=5 defect and four irreducible k=6 defects, then optimizes arbitrary independent subsets of the resulting `U x U` candidate universe. Core and peripheral blockers are explicit deletion variables and shared blockers are paid only once, so this strictly contains solving the 25 defect rectangles separately and permits non-Cartesian mixtures.
+
+The union has 52 five-dimensional factor vertices. Across the 18 terminal configurations there are 2,604 ten-dimensional candidates per scenario. Run `40993459789` solved all 18 scenarios exactly by weighted MaxSAT. The maximum-closure relaxation was extremely loose (best reported `+1435`), but after enforcing exact new-new conflicts the optimum was **exactly zero in every scenario**. The best exact solution was the empty exchange; no score above 134,753 was materialized.
+
+This is an exact negative result for the complete five-defect factor-union universe, not for arbitrary core deletions. The next active extension is to enlarge the factor universe (for example all 32 k=6 cover-gap supports) and/or use a lexicographic secondary objective to extract large neutral 134,753 mother states for fresh unrestricted local search.
+
 ## Current search principle
 
 Pure replacement count is no longer the right objective. The ten-dimensional score directly pays for
