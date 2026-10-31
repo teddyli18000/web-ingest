@@ -1,0 +1,64 @@
+name: temp labs100 h18 K23 kp15 exact
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k23-kp15-exact.yml'
+      - 'science-boundary/labs-100/code/oddperfect_h18_k_signedc_exact.cpp'
+      - 'science-boundary/labs-100/code/oddperfect_h18_k_qgroup_affine.cpp'
+      - 'science-boundary/labs-100/code/oddperfect_h18_k_affine_witness.cpp'
+
+concurrency:
+  group: temp-labs100-h18-k23-kp15-exact
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact solvers
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k_signedc_exact.cpp -o "$RUNNER_TEMP/comp"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k_qgroup_affine.cpp -o "$RUNNER_TEMP/qgroup"
+          g++ -O3 -march=native science-boundary/labs-100/code/oddperfect_h18_k_affine_witness.cpp -o "$RUNNER_TEMP/witness"
+      - name: Exhaust kp15 kc8 compressed layer
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          : > "$RUNNER_TEMP/kp15.all"
+          for t in 0 2 4 6 8; do "$RUNNER_TEMP/comp" 23 15 "$t" | tee -a "$RUNNER_TEMP/kp15.all"; done
+          test "$(grep -c '^H18K_SIGNEDC K=23 budget=63 kp=15 kc=8 ' "$RUNNER_TEMP/kp15.all")" -eq 5
+          grep '^HIT ' "$RUNNER_TEMP/kp15.all" > "$RUNNER_TEMP/kp15.hits" || true
+          echo "KP15_HITS $(wc -l < "$RUNNER_TEMP/kp15.hits")"
+      - name: Exhaust affine-canonical fibre-Q groups
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          "$RUNNER_TEMP/qgroup" 23 "$RUNNER_TEMP/kp15.hits" | tee "$RUNNER_TEMP/kp15.qgroup"
+          grep '^H18K_AFFINE_QGROUP_SUMMARY ' "$RUNNER_TEMP/kp15.qgroup"
+          echo "KP15_QHITS $(grep -c '^QHIT ' "$RUNNER_TEMP/kp15.qgroup" || true)"
+      - name: Directly rescore every surviving fibre
+        shell: bash
+        run: |
+          set -uo pipefail
+          "$RUNNER_TEMP/witness" 23 "$RUNNER_TEMP/kp15.hits" "$RUNNER_TEMP/kp15.qgroup" | tee "$RUNNER_TEMP/kp15.witness"
+          rc=${PIPESTATUS[0]}
+          grep '^H18K_AFFINE_WITNESS_SUMMARY ' "$RUNNER_TEMP/kp15.witness"
+          echo "KP15_CANDIDATES $(grep -c '^CANDIDATE ' "$RUNNER_TEMP/kp15.witness" || true)"
+          exit "$rc"
+      - name: Upload exact transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k23-kp15-exact
+          path: |
+            ${{ runner.temp }}/kp15.all
+            ${{ runner.temp }}/kp15.hits
+            ${{ runner.temp }}/kp15.qgroup
+            ${{ runner.temp }}/kp15.witness
+          if-no-files-found: warn
