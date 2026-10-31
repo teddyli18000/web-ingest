@@ -1,0 +1,61 @@
+name: temp Thomson 960 shared N961 fractional exits
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-n961-fractional-exit.yml'
+
+jobs:
+  fade:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tag: A-side-label960
+            fade: 960
+          - tag: R-side-label886
+            fade: 886
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - run: python3 -m py_compile science-boundary/thomson-960/code/search_n961_fractional_exit.py
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e432-seed
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41043461011
+      - name: Fade selected N961 occupancy
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          live=$(cat "$RUNNER_TEMP/seed/live-score.txt")
+          echo "nproc=$(nproc) tag=${{ matrix.tag }} fade=${{ matrix.fade }} live=$live"
+          python3 science-boundary/thomson-960/code/search_n961_fractional_exit.py \
+            "$RUNNER_TEMP/seed/A-natural.json" --rank 3 --fade-index '${{ matrix.fade }}' \
+            --live-score "$live" --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          f=d['final']
+          print('FADE',d['fade_index'],'FINAL',f['class'],f['energy'],'DELTA',f['delta_live'],f['coord_counts'])
+          print('TRACE',[(r['lambda'],r['active_signature']['twin_count'],r['active_signature']['coord'],r['active_rms_from_hub']) for r in d['rows']])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-n961-fractional-${{ matrix.tag }}
+          path: ${{ runner.temp }}/out
+          retention-days: 10
