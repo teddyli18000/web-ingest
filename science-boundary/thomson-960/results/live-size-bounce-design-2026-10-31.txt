@@ -1,0 +1,39 @@
+Thomson N=960 — live-centered neighbouring-size bounce design — 2026-10-31
+
+Current target
+--------------
+Few Shots live record remains E = 444368.3924061973 (Ronnie2025/c3-replica-exchange-scars).
+
+Motivation from latest literature
+---------------------------------
+Amore & Wales, J. Chem. Phys. 165, 164104 (2026), arXiv:2610.08122, introduce an Oscillating Size Hybrid Basin-Hopping (OSHBH) strategy.  At N->N+1 they add a charge at spherical Voronoi vertices, rank candidates by the individual Coulomb energy of the inserted charge, relax a small number of the best candidates, and propagate the best structures across neighbouring sizes.  At N->N-1 they rank point removals by the removed charge's individual energy contribution.  The search can bounce at the size limits.
+
+Their published N=960 value is 444368.43734798, well above the current Few Shots record, so their N=960 structure is not a competitive parent.  The scientifically interesting experiment is instead to start OSHBH-style size changes from the much stronger live record and use temporary changes in N as a barrier-crossing representation.
+
+Live-record candidate structure
+-------------------------------
+For R, the 1916 spherical Voronoi vertices (2N-4) were ranked by inserted-charge individual energy.  The leading candidates occur in C3 triplets.  Representative ranks are 0,3,6,9.
+
+The first twelve insertion candidates all lie on Delaunay triangles containing exactly one degree-7 vertex (the other two vertices are degree 6).  Examples:
+- rank 0 triangle (428,602,831), degrees 7/6/6, individual energy ~944.239724392;
+- rank 1 triangle (282,108,511), degrees 6/7/6, ~944.239724487.  This is the local q1 R->A scar-walk core;
+- rank 4 triangle (230,363,21), degrees 6/6/7, ~944.240357622, near the known orbit3 follower;
+- rank 9 triangle (35,79,134), degrees 6/6/7, ~944.364874514, near the known orbit2 follower.
+
+Conversely, the highest individual-energy particles selected for deletion are degree-5 vertices, again in C3 triplets.  The first twelve removal ranks are all degree 5.
+
+Interpretation
+--------------
+The greedy neighbouring-size move is therefore not spatially random around the current record:
+- N->N+1 preferentially inserts near 7-fold defect environments;
+- N->N-1 preferentially removes 5-fold defect vertices.
+
+A temporary size change can thus screen/reconstruct one end of a scar and alter its elastic/topological compatibility before returning to N=960.  This is qualitatively different from the fixed-N Delaunay glide/scaffold searches, where local scar changes repeatedly heal unless a sufficiently long history-dependent and remote-follower cascade is organised.
+
+Active scout
+------------
+Run 41183326339 tests eight independent one-bounce representatives:
+- add ranks 0,3,6,9: 960->961, relax, then four nontrivial high-contribution deletions and relax back to 960;
+- remove ranks 0,3,6,9: 960->959, relax, then four lowest-energy Voronoi insertions and relax back to 960.
+
+Only one representative from each leading C3 triplet is used to avoid spending hosted-runner slots on symmetry copies.  Any returned N=960 endpoint below live by >2e-7 enters independent verification immediately.  If the scout only returns known R/A/B basins, the next justified size-space expansion is a deeper bounce (e.g. 960->959->960->961->960 or N+/-2), not merely more symmetry copies of the same first move.
