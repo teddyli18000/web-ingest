@@ -1,0 +1,81 @@
+name: temp labs100 h18 K23 lower compressed and qgroup
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k23-lower-qgroup.yml'
+      - 'science-boundary/labs-100/code/oddperfect_h18_k_compressed.cpp'
+      - 'science-boundary/labs-100/code/oddperfect_h18_k_qgroup_affine.cpp'
+
+concurrency:
+  group: temp-labs100-h18-k23-lower-qgroup
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact compressed and fibre-Q solvers
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k_compressed.cpp -o "$RUNNER_TEMP/comp"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k_qgroup_affine.cpp -o "$RUNNER_TEMP/qgroup"
+      - name: Exhaust kp13 kp11 kp9 compressed layers using all CPUs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/logs"
+          cat > "$RUNNER_TEMP/cases.txt" <<'EOF'
+          13 0
+          13 2
+          13 4
+          13 6
+          13 8
+          13 10
+          11 0
+          11 2
+          11 4
+          11 6
+          11 8
+          11 10
+          9 0
+          9 2
+          9 4
+          9 6
+          9 8
+          EOF
+          export RUNNER_TEMP
+          cat "$RUNNER_TEMP/cases.txt" | xargs -n2 -P"$(nproc)" bash -c '
+            kp="$1"; t="$2"
+            OMP_NUM_THREADS=1 "$RUNNER_TEMP/comp" 23 "$kp" "$t" > "$RUNNER_TEMP/logs/kp${kp}-t${t}.log" 2> "$RUNNER_TEMP/logs/kp${kp}-t${t}.err"
+            test "$(grep -c "^H18K_COMPRESSED K=23 budget=63 kp=${kp} " "$RUNNER_TEMP/logs/kp${kp}-t${t}.log")" -eq 1
+          ' _
+          for kp in 13 11 9; do
+            cat "$RUNNER_TEMP"/logs/kp${kp}-t*.log > "$RUNNER_TEMP/kp${kp}.all"
+            grep '^HIT ' "$RUNNER_TEMP/kp${kp}.all" > "$RUNNER_TEMP/kp${kp}.hits" || true
+            echo "KP${kp}_HITS $(wc -l < "$RUNNER_TEMP/kp${kp}.hits")"
+            grep '^H18K_COMPRESSED ' "$RUNNER_TEMP/kp${kp}.all"
+          done
+      - name: Exhaust affine-canonical fibre-Q support groups
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          for kp in 13 11 9; do
+            "$RUNNER_TEMP/qgroup" 23 "$RUNNER_TEMP/kp${kp}.hits" | tee "$RUNNER_TEMP/kp${kp}.qgroup"
+            grep '^H18K_AFFINE_QGROUP_SUMMARY ' "$RUNNER_TEMP/kp${kp}.qgroup"
+            echo "KP${kp}_QHITS $(grep -c '^QHIT ' "$RUNNER_TEMP/kp${kp}.qgroup" || true)"
+          done
+      - name: Upload exact transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k23-lower-qgroup
+          path: |
+            ${{ runner.temp }}/logs/
+            ${{ runner.temp }}/kp*.all
+            ${{ runner.temp }}/kp*.hits
+            ${{ runner.temp }}/kp*.qgroup
+          if-no-files-found: warn
