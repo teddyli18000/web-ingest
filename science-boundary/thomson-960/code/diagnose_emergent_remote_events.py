@@ -2,7 +2,7 @@
 """Audit whether the known q1->q2->q3 R->A scar walk creates new remote glides.
 
 Compares the complete same-count legal Delaunay event catalog at live R against
-q3-fixed and a modest-restraint q3 probe.  Persistent root glides, inverses of
+q3-fixed and a modest-restraint q3 probe. Persistent root glides, inverses of
 already-flipped root glides, and genuinely emergent remote events are separated.
 """
 from __future__ import annotations
@@ -65,11 +65,11 @@ def main():
     start=perturb(x0,Q3,float(t3)*args.third_multiplier,'balanced')
     Efix,raw,qfix,xfix,nfix,okfix,msgfix=fixed_relax(sm.xyz_to_vars(start),sorted(SUPPORT),args.fixed_maxiter)
     q3cat=catalog('q3-fixed',xfix,SUPPORT,root_rows,args.remote_distance)
-    Ep,rawp,qp,xp,np,okp,msgp,arms,pen=restraint_relax(qfix.copy(),xfix.copy(),sorted(SUPPORT),args.probe_kappa,args.probe_maxiter)
+    Ep,rawp,qp,xp,nprobe,okp,msgp,arms,pen=restraint_relax(qfix.copy(),xfix.copy(),sorted(SUPPORT),args.probe_kappa,args.probe_maxiter)
     probecat=catalog('probe',xp,SUPPORT,root_rows,args.remote_distance)
     out={'q3_threshold':float(t3),'q3_fixed_energy':float(Efix),'q3_fixed_ok':bool(okfix),
          'probe_kappa':args.probe_kappa,'probe_energy':float(Ep),'probe_anchor_rms':float(arms),
-         'q3_fixed':q3cat,'probe':probecat}
+         'probe_nit':int(nprobe),'probe_ok':bool(okp),'q3_fixed':q3cat,'probe':probecat}
     pathlib.Path(args.out).write_text(json.dumps(out,separators=(',',':'))+'\n')
 
 if __name__=='__main__': main()
