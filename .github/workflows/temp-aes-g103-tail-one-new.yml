@@ -1,0 +1,48 @@
+name: temp-aes-g103-tail-one-new
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/g103_tail_one_new.py'
+      - '.github/workflows/temp-aes-g103-tail-one-new.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exhaust this one-new-helper tail shard
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet python-sat
+          python -m py_compile science-boundary/aes-sbox-circuit/g103_tail_one_new.py
+          python science-boundary/aes-sbox-circuit/g103_tail_one_new.py \
+            --shard '${{ matrix.shard }}' --shards 8 --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier if <=100 candidate appears
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-tail-one-new-${{ matrix.shard }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
