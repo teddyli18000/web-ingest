@@ -1,0 +1,55 @@
+name: temp labs100 h18 K21 high splits
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k21-high-splits.yml'
+
+concurrency:
+  group: temp-labs100-h18-k21-high-splits
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact K21 compressed and Q-invariant fibre tools
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k21_compressed.cpp -o "$RUNNER_TEMP/comp"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k21_fullgamma.cpp -o "$RUNNER_TEMP/fibre"
+      - name: Exactly exclude kp19 kc2 at compressed level
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > "$RUNNER_TEMP/kp19.log"
+          for t in 0 2; do OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/comp" 19 "$t" | tee -a "$RUNNER_TEMP/kp19.log"; done
+          grep -F 'K21_COMPRESSED kp=19 kc=2 t=0 diff_orbits=30 support_orbits=66 ptests=767448 rankfull=765060 rankproj=2388 ranklo=0 Hmatches_halfC=2388 spectral=0' "$RUNNER_TEMP/kp19.log"
+          grep -F 'K21_COMPRESSED kp=19 kc=2 t=2 diff_orbits=2191 support_orbits=206 ptests=2395368 rankfull=2388148 rankproj=7220 ranklo=0 Hmatches_halfC=7220 spectral=0' "$RUNNER_TEMP/kp19.log"
+          test "$(grep -c '^HIT ' "$RUNNER_TEMP/kp19.log" || true)" -eq 0
+      - name: Exhaust kp17 kc4 compressed layer and all full-gamma fibres
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > "$RUNNER_TEMP/kp17.log"
+          for t in 0 2 4; do OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/comp" 17 "$t" | tee -a "$RUNNER_TEMP/kp17.log"; done
+          grep -F 'K21_COMPRESSED kp=17 kc=4 t=0 diff_orbits=30 support_orbits=356 ptests=847280 rankfull=838791 rankproj=89 ranklo=8400 Hmatches_halfC=16837 spectral=14' "$RUNNER_TEMP/kp17.log"
+          grep -F 'K21_COMPRESSED kp=17 kc=4 t=2 diff_orbits=2191 support_orbits=5784 ptests=13765920 rankfull=13717966 rankproj=3546 ranklo=44408 Hmatches_halfC=92091 spectral=121' "$RUNNER_TEMP/kp17.log"
+          grep -F 'K21_COMPRESSED kp=17 kc=4 t=4 diff_orbits=10452 support_orbits=4068 ptests=9681840 rankfull=9640556 rankproj=2228 ranklo=39056 Hmatches_halfC=79886 spectral=158' "$RUNNER_TEMP/kp17.log"
+          grep '^HIT ' "$RUNNER_TEMP/kp17.log" > "$RUNNER_TEMP/kp17.hits"
+          test "$(wc -l < "$RUNNER_TEMP/kp17.hits")" -eq 293
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/fibre" "$RUNNER_TEMP/kp17.hits" | tee "$RUNNER_TEMP/kp17.fibre"
+          grep -F 'K21_FULLGAMMA_SUMMARY reps=293 alphas=75008 half_gamma_solutions=4033322 full_gamma_solutions=8066644 Q_le_57=0 affine_transforms=0 Vbudget_pass=0 oddperfect_pass=0 E_le_570=0 best=-1' "$RUNNER_TEMP/kp17.fibre"
+      - name: Upload exact transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k21-high-splits
+          path: |
+            ${{ runner.temp }}/kp19.log
+            ${{ runner.temp }}/kp17.log
+            ${{ runner.temp }}/kp17.hits
+            ${{ runner.temp }}/kp17.fibre
+          if-no-files-found: warn
