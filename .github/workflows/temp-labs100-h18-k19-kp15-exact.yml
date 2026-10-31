@@ -1,0 +1,34 @@
+name: temp labs100 h18 K19 kp15 exact
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k19-kp15-exact.yml'
+
+concurrency:
+  group: temp-labs100-h18-k19-kp15-exact
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and exhaust kp15 compressed and fibre branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k19_kp15_exact.cpp -o "$RUNNER_TEMP/kp15"
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/kp15" | tee "$RUNNER_TEMP/kp15.log"
+          grep -F 'K19_KP15_COMPRESSED orbits=88 rank11=8 rank13=80 tested=80779032 exactvalid=92501 spectral=1 base=0 alt=1' "$RUNNER_TEMP/kp15.log"
+          grep -F 'K19_KP15_LIFTS alphas=1024 cyclic_lifts_halfB=32780 affine_transforms_halfB=16390000 implied_full_lifts=65560 implied_full_transforms=32780000 V0_pass=0' "$RUNNER_TEMP/kp15.log"
+          grep -F 'EXACT_EXCLUSION h18_K19_kp15_kc4_Wle130' "$RUNNER_TEMP/kp15.log"
+      - name: Upload exact transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k19-kp15-exact
+          path: ${{ runner.temp }}/kp15.log
+          if-no-files-found: warn
