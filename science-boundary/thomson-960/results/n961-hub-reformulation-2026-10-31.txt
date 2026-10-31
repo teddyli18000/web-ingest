@@ -1,0 +1,97 @@
+Thomson N=960 — shared N961 hub reformulation frontier — 2026-10-31
+
+Accepted target
+---------------
+Few Shots accepted R remains 444368.3924061973. A valid replacement must score
+<= 444368.3924051973 under the official verifier. Internal ~1e-10 differences
+are summation noise.
+
+What is now excluded around the fixed-N R->A cascade
+----------------------------------------------------
+The known dependent local chain q1->q2->q3 predicts and triggers remote orbit3
+then orbit2 followers and lands in A.  Remote threshold softening is a real
+precursor, but simply forcing alternative softened followers does not open a
+new branch.
+
+Run 41184656961 tested six order interventions using the strongest extra
+softened follower 'alt'.  Every intervention self-corrected and ended at A.
+Run 41185083770 then forced f4 and f5 separately.  Both flips were already
+undone by the first kappa=100 restraint stage; the natural o3/o2 sequence then
+completed and the final state was A.  Thus alt/f4/f5 are soft responses, not
+independently persistent branch coordinates.  Do not spend more compute on
+single-follower ordering absent new evidence.
+
+Fixed N972 ghost continuation retired
+-------------------------------------
+Run 41184513082 continuously faded a selected N972 tetrahedral 12-orbit while
+holding the 12 ghost coordinates fixed and optimizing the other 960 points.
+All four orbit/schedule tests remained far above record.  In particular
+orbit25-linear preserved 12 twin motifs down to lambda~0.4 but collapsed by
+lambda~0.3 and finished at 444370.8494314636 (+2.457025266), with zero twins.
+Orbit5 variants finished around +1.51 to +1.63.  Fixed ghost charge can delay
+scar collapse but cannot transport the parent scar network into a competitive
+N960 basin.  This formulation is retired.
+
+Mobile N972 fractional occupancy
+--------------------------------
+Run 41185026302 is active for representative orbits 5 and 25.  Unlike fixed
+ghosts, all 972 coordinates are mobile while the selected 12 charges fade from
+1 to 0.  This directly tests whether the failed fixed-ghost branch was caused by
+pinning the disappearing particles.  Do not expand beyond these two mechanism
+controls until they finish.
+
+Why the shared N961 hub is now the sharper interface
+----------------------------------------------------
+A and R independently reach the same relaxed N961 minimum at
+445303.247369582 (coordination 35/903/23).  The A-side insertion is at Voronoi
+triangle (599,282,502), exactly the local q3 scar-junction region.  At the hub,
+remote orbit2/orbit3 follower edges have already switched toward their R states.
+Hard deletion of point 886, which belongs to a distinct remote live scar,
+returns R; the ordinary reverse deletion of the inserted label 960 is the
+natural A-side exit.  Most other hub deletions fall to a much higher
+23-dislocation layer.  Therefore the scientifically relevant object is the
+high-dimensional return map around the shared hub, not a longer list of raw
+deletion indices.
+
+Two orthogonal N961 hub reformulations are active
+-------------------------------------------------
+1. Soft-mode return map — run 41185151883
+   Code: search_n961_hub_mode_return.py
+   Reproduce the shared hub, compute its lowest physical tangent Hessian modes,
+   deform the hub along modes 0..5 on both signs and several RMS amplitudes,
+   then immediately take the special deletion 886 and fully relax in N960.
+   This asks whether the R-producing exit has nearby side branches in the true
+   local geometry of the N961 interface.  The deformation is *not* first fully
+   relaxed back in N961, which would erase the interface perturbation.
+
+2. Fractional occupancy exits — run 41185322121
+   Code: search_n961_fractional_exit.py
+   Start from exactly the same N961 minimum and continuously fade one particle's
+   charge from 1 to 0 while allowing all 961 coordinates to move.
+   - fade label960: continuous A-side control;
+   - fade label886: continuous R-side control.
+   At lambda=0 the faded point decouples exactly, is removed, and the remaining
+   N960 state is repolished.  Because the starting minimum is identical and only
+   the selected occupancy field differs, any third low endpoint would expose a
+   genuine bifurcation of the shared A/R size-space interface.
+
+Current fixed-N searches
+------------------------
+R-centered cascade-aware beam run 41182508587 and A-centered cascade-aware run
+41184659984 remain active.  They are expensive because each candidate includes
+a finite-restraint remote-follower probe.  Do not widen/deepen them globally
+while these runs remain unresolved.
+
+Decision rules
+--------------
+- Any endpoint below R by >2e-7: stop exploratory branching, independently
+  repolish, recheck upstream record, and enter official verifier/submission path.
+- If N961 soft modes reveal a novel low return basin, expand only the responsible
+  mode/sign/amplitude neighborhood and compare its topology to R/A.
+- If label960 and label886 fractional fades simply end A and R respectively
+  without side bifurcation, retire one-dimensional occupancy fading; a next
+  size-space formulation should jointly vary occupancy and a hub geometric mode
+  rather than merely refining lambda steps.
+- If mobile N972 occupancy still collapses to high families, retire N972 as a
+  direct structural teacher for this record neighborhood rather than trying more
+  tetrahedral orbits.
