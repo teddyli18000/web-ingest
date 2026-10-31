@@ -1,0 +1,71 @@
+Thomson N=960 — follower-order exclusion and mobile cross-size pivot — 2026-10-31
+
+Live record
+-----------
+R = 444368.3924061973.
+A = 444368.3956862258 (approximately), delta live +0.0032800285.
+
+Forced remote-follower order after the validated q1->q2->q3 trigger
+-------------------------------------------------------------------
+Run 41184656961 tested six explicit follower sequences around the strongest additional softened persistent root glide
+  alt: delete (379,959), add (295,923)
+together with the robust natural followers
+  o3: delete (21,230), add (74,363)
+  o2: delete (79,134), add (35,323).
+
+Sequences:
+  alt
+  alt,o3
+  alt,o2
+  alt,o3,o2
+  o3,alt,o2
+  o3,o2,alt
+
+All six final free endpoints are A, at numerical scores around 444368.395686226.
+In every tested order, alt can be crossed and held in the hard-fixed state but heals immediately by the first finite release stage kappa=100. The robust natural follower o3 remains flipped; o2 either heals if forced too early or flips later at its own lower-restraint scale. The system therefore reconstitutes the natural o3->o2 cascade and lands in A regardless of where alt is inserted.
+
+Conclusion: alt is a strongly softened but non-persistent spectator under this support/release representation. Do not enumerate more permutations involving this same alt follower. The meaningful state variable is not simply threshold softening; persistence under collective release matters separately.
+
+Fixed-ghost N972->960 fractional-charge continuation
+----------------------------------------------------
+Run 41184513082 fades a selected 12-particle T orbit from charge lambda=1 to 0 while keeping those 12 ghost positions fixed and optimizing the other 960 positions.
+
+Orbit5 linear schedule:
+- active twin count stays 24 through lambda=0.6;
+- falls to 12 at lambda=0.5 and 0 at lambda=0.4;
+- final E960 = 444370.0229668725, delta live +1.630560675.
+
+Orbit5 geometric schedule:
+- active twin count stays 24 through lambda=0.55;
+- falls to 0 at lambda=0.4;
+- final E960 = 444369.9041687182, delta live +1.511762521.
+
+Orbit25 geometric schedule:
+- active twin count 24 at lambda=1, 12 by lambda=0.75, remains 12 through lambda=0.4;
+- falls to 0 by lambda=0.3;
+- final E960 = 444370.0989424885, delta live +1.706536291.
+
+The consistent finite-lambda topological collapse across two orbit families and two schedules shows that smoothing charge alone is not enough when the fading particles are pinned spatially. This excludes the fixed-ghost representation, not fractional occupancy itself.
+
+Reformulation
+-------------
+The next cross-size representation lets all 972 coordinates move while the selected 12-particle orbit carries charge lambda and the remaining 960 carry unit charge. Pair energy is q_i q_j/r_ij. At lambda=0 the 12 fractional particles decouple exactly; the active 960 are then independently polished.
+
+Code:
+  science-boundary/thomson-960/code/search_n972_mobile_fractional_homotopy.py
+Workflow:
+  .github/workflows/temp-thomson-960-mobile-fractional-occupancy.yml
+Run:
+  41185026302
+Jobs:
+  orbit5
+  orbit25
+
+Decision rule:
+- If mobile ghosts preserve the organized scar state to substantially smaller lambda and produce a much lower N960 endpoint than the fixed-ghost branches, exploit that continuation family.
+- If both mobile orbit families still undergo a finite-lambda collective collapse and end high, retire this N972 fractional-occupancy formulation rather than refining the lambda schedule.
+- Any endpoint below live by >2e-7 triggers immediate independent repolish and official verification; ~1e-10 differences are numerical noise.
+
+Concurrent fixed-N search
+-------------------------
+Cascade-aware dynamic scar-walk run 41182508587 remains active. Its positive-control requirement is unchanged: orbit4 must reproduce q1->q2->q3->A with the expected remote follower softening signal before negative results from other shards are considered informative.
