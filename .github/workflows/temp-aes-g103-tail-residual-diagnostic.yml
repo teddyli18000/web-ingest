@@ -1,0 +1,26 @@
+name: temp-aes-g103-tail-residual-diagnostic
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/g103_tail_residual_diagnostic.py'
+      - '.github/workflows/temp-aes-g103-tail-residual-diagnostic.yml'
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Explain the repeated one-output residual
+        working-directory: science-boundary/aes-sbox-circuit
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet python-sat
+          python -m py_compile g103_tail_residual_diagnostic.py
+          python g103_tail_residual_diagnostic.py | tee residual.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-tail-residual-diagnostic
+          path: science-boundary/aes-sbox-circuit/residual.json
