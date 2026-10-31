@@ -1,0 +1,59 @@
+name: temp Thomson 960 emergent remote events
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-emergent-remote-events.yml'
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    permissions:
+      actions: read
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e432-seed
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41043461011
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-dependent-orbit4-1.04
+          path: ${{ runner.temp }}/two
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41058090920
+      - name: Audit emergent remote events
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 science-boundary/thomson-960/code/diagnose_emergent_remote_events.py \
+            "$RUNNER_TEMP/seed/live.json" "$RUNNER_TEMP/two/result.json" \
+            --third-multiplier 1.04 --probe-kappa 100 --remote-distance 2 \
+            --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          for k in ('q3_fixed','probe'):
+              r=d[k]
+              print(k,'emergent',r['remote_emergent_count'],'<.002',r['emergent_below_0p002'],'<.005',r['emergent_below_0p005'])
+              print('top',[(z['delete'],z['add'],z['threshold'],z['graph_distance']) for z in r['top_emergent'][:10]])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-emergent-remote-events
+          path: ${{ runner.temp }}/out
+          retention-days: 10
