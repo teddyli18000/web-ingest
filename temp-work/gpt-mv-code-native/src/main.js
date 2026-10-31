@@ -1,8 +1,8 @@
 import {Draw} from './engine/draw.js';
 import {loadGPTArt} from './components/gpt_art.js';
 import {loadGPTPoses} from './components/gpt_poses.js';
-import {renderOpeningV10} from './scenes/opening_v10.js';
-import {renderDraftsV12} from './scenes/drafts_v12.js';
+import {renderOpeningV11} from './scenes/opening_v11.js';
+import {renderDraftsV13} from './scenes/drafts_v13.js';
 import {renderConstructV6} from './scenes/construct_v6.js';
 import {renderEndingV3} from './scenes/ending_v3.js';
 
@@ -12,7 +12,7 @@ const d=new Draw(g,canvas.width,canvas.height);
 const [gptArt,gptPoses]=await Promise.all([loadGPTArt(),loadGPTPoses()]);
 
 export const DURATION=60;
-const CAMERA_CUTS=[0,3.35,7.10,11.10,15,18.35,21.75,25.20,28.10,30,33.20,36.40,40.55,45];
+const CAMERA_CUTS=[0,3.40,7.15,11.10,15,18.35,21.80,25.20,28.15,30,33.20,36.40,40.55,45];
 
 function withShotCamera(t,fn){
   let i=-1;
@@ -28,8 +28,8 @@ export function renderFrame(t){
   g.setTransform(1,0,0,1,0,0);
   g.clearRect(0,0,canvas.width,canvas.height);
   const body=()=>{
-    if(t<15)renderOpeningV10(d,t,gptArt);
-    else if(t<30)renderDraftsV12(d,t,gptArt,gptPoses);
+    if(t<15)renderOpeningV11(d,t,gptArt);
+    else if(t<30)renderDraftsV13(d,t,gptArt,gptPoses);
     else renderConstructV6(d,t,gptArt,gptPoses);
   };
   if(t<45)withShotCamera(t,body);else renderEndingV3(d,t,gptArt,gptPoses);
