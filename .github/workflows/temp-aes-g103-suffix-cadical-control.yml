@@ -1,0 +1,30 @@
+name: temp-aes-g103-suffix-cadical-control
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/g103_suffix_cadical_control.py'
+      - '.github/workflows/temp-aes-g103-suffix-cadical-control.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  control:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install --quiet python-sat
+      - name: Run fixed known-22 positive and flipped-polarity negative controls
+        run: |
+          set -euxo pipefail
+          python -m py_compile \
+            science-boundary/aes-sbox-circuit/g103_suffix_cadical.py \
+            science-boundary/aes-sbox-circuit/g103_suffix_cadical_control.py
+          python science-boundary/aes-sbox-circuit/g103_suffix_cadical_control.py | tee controls.jsonl
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-suffix-cadical-controls
+          path: controls.jsonl
