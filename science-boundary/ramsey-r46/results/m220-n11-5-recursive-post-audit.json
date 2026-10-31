@@ -1,0 +1,34 @@
+{
+  "B116_degree_le9_A26_embedding_count": 0,
+  "B116_degree_le9_vertex_count": 72,
+  "all_unsat": true,
+  "campaign": "m220-n11-5-recursive-post-audit",
+  "catalog_counts": {"A25": 6, "A26": 2, "B116": 9},
+  "conclusion": "No 220-edge R(4,6,36) graph can have exactly five degree-11 vertices.",
+  "coverage": [
+    {"anchor": 0, "feasible_A26_low_pair_placements": 0, "g6": "Dhc", "method": "anchor_pair_recursive_degree5"},
+    {"B_low_degrees": [2, 2], "B_low_vertices": [2, 3], "B_vertices_dB_le9_checked": 72, "anchor": 0, "g6": "D`{", "method": "B_low_t2_recursive_A26_embedding"},
+    {"anchor": 1, "feasible_A26_low_pair_placements": 0, "g6": "Dlc", "method": "anchor_pair_recursive_degree5"},
+    {"anchor": 2, "feasible_A26_low_pair_placements": 0, "g6": "D]o", "method": "anchor_pair_recursive_degree5"},
+    {"B_low_degrees": [2, 2], "B_low_vertices": [1, 2], "B_vertices_dB_le9_checked": 72, "anchor": 0, "g6": "DF{", "method": "B_low_t2_recursive_A26_embedding"},
+    {"B_low_degrees": [2, 3], "B_low_vertices": [2, 3], "B_vertices_dB_le9_checked": 72, "anchor": 0, "g6": "Djs", "method": "B_low_t2_recursive_A26_embedding"},
+    {"anchor": 3, "feasible_A26_low_pair_placements": 0, "g6": "D]w", "method": "anchor_pair_recursive_degree5"},
+    {"A25_embedding_B_candidates": [[1, 0]], "A25_embeddings_checked": 45, "B_low": 2, "anchor": 0, "degree8_B_candidates": 9, "embeddings_with_t3_leaf_degree5": 45, "g6": "Dl{", "method": "unique_d8_A25_embedding_then_t3_degree5_capacity"}
+  ],
+  "degree5_recursive_profile_count": 63,
+  "edges": 220,
+  "low_graph_type_count": 8,
+  "low_graph_types": [
+    {"degrees": [2, 2, 2, 2, 2], "edges": 5, "g6": "Dhc"},
+    {"degrees": [2, 2, 2, 2, 4], "edges": 6, "g6": "D`{"},
+    {"degrees": [2, 2, 2, 3, 3], "edges": 6, "g6": "Dlc"},
+    {"degrees": [2, 2, 2, 3, 3], "edges": 6, "g6": "D]o"},
+    {"degrees": [2, 2, 2, 4, 4], "edges": 7, "g6": "DF{"},
+    {"degrees": [2, 2, 3, 3, 4], "edges": 7, "g6": "Djs"},
+    {"degrees": [2, 3, 3, 3, 3], "edges": 7, "g6": "D]w"},
+    {"degrees": [3, 3, 3, 3, 4], "edges": 8, "g6": "Dl{"}
+  ],
+  "min_degree5_profile_vertices_needing_capacity_ge5": 2,
+  "n11": 5,
+  "soundness": "Uses only m220 r>=2, complete A25/A26/B116 catalogues, recursive neighbourhood consistency, independent-5 hitting necessity, and induced-subgraph isomorphism; no withdrawn row-domain predicate."
+}
