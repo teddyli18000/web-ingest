@@ -1,0 +1,89 @@
+Thomson N=960 — A/R shared N=961 hub mechanism — 2026-10-31
+
+Endpoints
+---------
+R = 444368.3924061973, 36/900/24.
+A = 444368.3956862258, 36/900/24.
+A lies only ~0.0032800285 above R.
+
+A-centered one-bounce scout
+---------------------------
+Run 41183557055 tested only four structurally distinct first moves from A: add Voronoi ranks 0/3 and remove contribution ranks 0/3.
+
+add rank 0, triangle (428,602,831):
+- best return A = 444368.3956862259 (24 dislocations)
+- other returns are 23-dislocation minima, best 444368.5565089268.
+
+add rank 3, triangle (599,282,502):
+- N961 relaxed energy = 445303.2473695821;
+- deleting point 886 on return gives R = 444368.3924061976 within summation noise;
+- other greedy returns are 23-dislocation minima around 444368.5597--.5647.
+
+remove rank 0 (A point 739):
+- one return A = 444368.39568622585;
+- other returns are 23-dislocation minima.
+
+remove rank 3 (A point 419):
+- all four tested returns are 23-dislocation minima, best 444368.5753597926.
+
+Therefore temporary size change can directly cross the A/R basin boundary even though the softest 15 fixed-N one-glide moves from A all return to A.
+
+The common N961 hub
+-------------------
+A add-rank3 and R add-rank0 independently relax to the same N961 energy:
+- from A triangle (599,282,502): 445303.2473695819--5821;
+- from R triangle (428,602,831): 445303.2473695818.
+
+Independent local reproductions were compared without relying only on energy.  Their sorted pair-distance spectra agree to max ~7.5e-7 and RMS ~9.9e-8.  Matching per-point rotation-invariant distance fingerprints followed by Kabsch alignment gives coordinate RMS ~1.6e-7 and max point discrepancy ~4.2e-7.  Thus they are the same geometric N961 minimum to numerical polishing tolerance, reached through two different N=960 parent basins.
+
+The N961 hub has coordination 35/903/23.  The size excursion therefore temporarily annihilates one 5-7 pair relative to A/R (24 -> 23 dislocations).
+
+Topology of the A->N961 transition
+---------------------------------
+At the N961 hub, the remote orbit2/orbit3 follower edges have already reverted from their A states to their R states:
+- orbit2 old R edge (79,134) is present; A edge (35,323) is absent;
+- orbit3 old R edge (21,230) is present; A edge (74,363) is absent.
+
+In contrast, the q1/q2/q3 core around points 108/282/502/511/599 is neither the R nor A triangulation because the extra particle changes the local Delaunay complex.  The size-space route is therefore naturally interpreted as:
+1. insert a particle near the A q3 scar core;
+2. relax in N=961, annihilating one dislocation and allowing remote followers to switch toward R;
+3. delete an appropriate distant particle, recreating a 5-7 pair and completing the return to N=960.
+
+The key R-producing deletion point 886 is itself a degree-5 point in both A and R, with the same local neighbor set there.  It also belongs to the live orbit5 scar interface (representative quad contains 126,522,886,306).  Thus the size-space bridge couples the q3 core to a distinct remote scar, consistent with the broader long-range follower-cascade picture.
+
+Direct relocation control
+-------------------------
+A decisive control was run independently: remove A point 886 and directly insert one point at the A rank3 Voronoi vertex, keeping N=960 throughout, then fully relax.  This returns A at 444368.39568622597, not R.
+
+Therefore the A->961->R result is not equivalent to a simple particle relocation.  The intermediate 961-body relaxation is essential; temporary change of system size creates an elastic/topological environment not available in the direct fixed-N move.
+
+Return deletion census
+----------------------
+Run 41183700932 tested the top 32 nontrivial high-contribution deletions from the common A-derived N961 hub.
+- 30/32 return to 35/902/23 minima;
+- only two return to 36/900/24:
+  * delete 886 -> R, 444368.3924061974 (noise-equivalent to live);
+  * delete 380 -> high basin 444368.6474273098.
+No third low 24-dislocation side exit appears in this greedy deletion set.
+
+All of those top 32 deletion candidates are degree 5 in the N961 hub, exposing a strong topology bias in the standard greedy contribution ranking.
+
+Topology-stratified return
+--------------------------
+Run 41184042713 deliberately changed the return representation instead of expanding the same greedy list.  From the same N961 hub it tested the ten highest-contribution degree-6 deletion points and the ten highest-contribution degree-7 deletion points.
+
+Degree 6:
+- 10/10 return to 35/902/23;
+- best 444368.5621747491.
+
+Degree 7:
+- 10/10 return to 35/902/23;
+- best 444368.5621747489.
+
+Thus the hub has a strong 23-dislocation return funnel even when the deletion class is changed.  The low-energy 24-dislocation R exit is special rather than a generic consequence of deleting a particular coordination class.
+
+Decision
+--------
+Do not enumerate all 961 deletions or simply increase OSHBH p.  That would mostly enlarge an already identified 23-dislocation return region.
+
+Retain the shared N961 hub as mechanistic evidence and as a possible future high-dimensional interface, but current priority remains the fixed-N cascade-aware scar-walk search (run 41182508587), because it works directly at the record and explicitly scores remote scar activation.  If the fixed-N cascade-aware search saturates, a justified future size-space reformulation would perturb/reorganize the N961 hub before returning to N=960, rather than merely trying more deletion indices from the same hub.
