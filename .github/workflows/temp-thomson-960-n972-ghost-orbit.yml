@@ -1,0 +1,70 @@
+name: temp Thomson 960 N972 ghost-orbit homotopy
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-n972-ghost-orbit.yml'
+
+jobs:
+  ghost:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tag: orbit25-linear
+            orbit: 25
+            schedule: '1,.9,.8,.7,.6,.5,.4,.3,.2,.1,.05,.02,0'
+          - tag: orbit25-geometric
+            orbit: 25
+            schedule: '1,.75,.55,.4,.3,.22,.16,.11,.07,.04,.02,.008,0'
+          - tag: orbit5-linear
+            orbit: 5
+            schedule: '1,.9,.8,.7,.6,.5,.4,.3,.2,.1,.05,.02,0'
+          - tag: orbit5-geometric
+            orbit: 5
+            schedule: '1,.75,.55,.4,.3,.22,.16,.11,.07,.04,.02,.008,0'
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Static check
+        run: python3 -m py_compile science-boundary/thomson-960/code/search_n972_ghost_orbit_homotopy.py
+      - name: Clone live Few Shots
+        run: git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+      - name: Fetch N972 parent
+        run: |
+          curl --fail --location --retry 3 \
+            https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/xyz/972.xyz \
+            -o "$RUNNER_TEMP/972.xyz"
+          test "$(wc -l < "$RUNNER_TEMP/972.xyz")" -ge 972
+      - name: Run ghost-charge continuation
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          echo "nproc=$(nproc) tag=${{ matrix.tag }}"
+          python3 science-boundary/thomson-960/code/search_n972_ghost_orbit_homotopy.py \
+            "$RUNNER_TEMP/972.xyz" "$RUNNER_TEMP/few-shots" \
+            --orbit-index '${{ matrix.orbit }}' --schedule '${{ matrix.schedule }}' \
+            --maxiter 1800 --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('ORBIT',d['orbit_index'],'FINAL',d['final_energy'],'DELTA',d['delta_live'],
+                'TWINS',d['final_signature']['twin_count'],'COORD',d['final_signature']['coord'])
+          print('TRACE',[(r['lambda'],r['signature']['twin_count'],r['gradient_rms']) for r in d['rows']])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-n972-ghost-${{ matrix.tag }}
+          path: ${{ runner.temp }}/out
+          retention-days: 10
