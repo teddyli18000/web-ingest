@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-10-30** | **4,405** | **2,558** |
+| **2014-08-09** | **2026-10-31** | **4,406** | **2,559** |
 
-### Latest All-Languages snapshot — 2026-10-30
+### Latest All-Languages snapshot — 2026-10-31
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor) | Python | 1,930 |
-| 2 | [obra/superpowers](https://github.com/obra/superpowers) | Shell | 1,034 |
-| 3 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Rust | 2,870 |
-| 4 | [JetBrains/thinkrail](https://github.com/JetBrains/thinkrail) | TypeScript | 1,117 |
-| 5 | [milind-soni/OpenMausBot](https://github.com/milind-soni/OpenMausBot) | TypeScript | 1,199 |
-| 6 | [nightly-labs/openbot](https://github.com/nightly-labs/openbot) | TypeScript | 709 |
-| 7 | [elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills) | — | 1,187 |
-| 8 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 336 |
-| 9 | [CopilotKit/OpenBot](https://github.com/CopilotKit/OpenBot) | TypeScript | 247 |
-| 10 | [togg53192-cmd/jailbreaks](https://github.com/togg53192-cmd/jailbreaks) | — | 1,594 |
+| 1 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 1,140 |
+| 2 | [milind-soni/OpenMausBot](https://github.com/milind-soni/OpenMausBot) | TypeScript | 895 |
+| 3 | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Rust | 2,300 |
+| 4 | [CopilotKit/OpenBot](https://github.com/CopilotKit/OpenBot) | TypeScript | 706 |
+| 5 | [Renhuai123/ziwei-doushu](https://github.com/Renhuai123/ziwei-doushu) | TypeScript | 1,126 |
+| 6 | [expo/skills](https://github.com/expo/skills) | Shell | 38 |
+| 7 | [macro-inc/macro](https://github.com/macro-inc/macro) | Rust | 57 |
+| 8 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 876 |
+| 9 | [pingdotgg/t3code](https://github.com/pingdotgg/t3code) | TypeScript | 930 |
+| 10 | [HKUDS/DeepTutor](https://github.com/HKUDS/DeepTutor) | Python | 2,282 |
 
-[Open full snapshot →](data/2026/10/30/trending.json)
+[Open full snapshot →](data/2026/10/31/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 303 days  
+[`2026`](data/2026/) · 304 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
