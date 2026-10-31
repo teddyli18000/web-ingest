@@ -3,7 +3,9 @@
 
 Cut immediately after the last AND (a32).  The original circuit has 49 linear
 helpers before/on that cut and a 22-gate pure-linear suffix.  The suffix boundary
-contains many AND outputs plus only three non-atomic linear values (t47,t48,t49).
+contains many AND outputs plus exactly three non-atomic linear values.  Normalized
+circuits rename wires, so those values are identified semantically rather than by
+historical source names.
 
 This search uses strict released-AND Boyar-Peralta support distance on all exact
 AND operands plus the non-atomic boundary values, targeting 47 prefix-linear
@@ -17,7 +19,6 @@ on all 256 AES inputs; this gives a 101-gate intermediate certificate if the
 from __future__ import annotations
 
 import argparse
-import collections
 import json
 import pathlib
 import random
@@ -72,14 +73,14 @@ def synthesize(c,seed,budget=47,max_support=8,elite=12,extra_weight=3,guide=True
     last,orig_prefix,suffix,boundary=split(c)
     atoms={1<<i for i in range(8+sk['n_and'])}
     extras=[w for w in boundary if vals[w] not in atoms]
-    assert extras==['t47','t48','t49'],extras
+    assert len(extras)==3,(boundary,extras)
 
     targets=[];labels=[]
     for i,ab in enumerate(sk['ands']):
         targets += [ab['a'],ab['b']];labels += [f'a{i}',f'b{i}']
-    for w in extras:
+    for j,w in enumerate(extras):
         for k in range(extra_weight):
-            targets.append(vals[w]);labels.append(f'{w}#{k}')
+            targets.append(vals[w]);labels.append(f'extra{j}#{k}')
 
     rng=random.Random(seed);S={1<<i for i in range(8)};sx=rr.init_sx(S)
     names={1<<i:f'x{i}' for i in range(8)};gates=[];released=set();trace=[]
@@ -94,8 +95,8 @@ def synthesize(c,seed,budget=47,max_support=8,elite=12,extra_weight=3,guide=True
         if ones:
             choices=[i for i in ones if targets[i] in WD]
             if not choices:raise AssertionError(('distance1 without witness',ones))
-            # Prefer required boundary values when they become ready.
-            choices.sort(key=lambda i:(0 if labels[i].startswith('t') else 1,i))
+            # Prefer required cut-basis values when they become ready.
+            choices.sort(key=lambda i:(0 if labels[i].startswith('extra') else 1,i))
             i=choices[0];w=targets[i]
             reductions=sorted(reducers.get(w,set()))
             if i not in reductions:reductions.append(i);reductions.sort()
@@ -108,10 +109,9 @@ def synthesize(c,seed,budget=47,max_support=8,elite=12,extra_weight=3,guide=True
             for w,inds0 in reducers.items():
                 inds=sorted(inds0);count=len(inds);penalty=sum(2*Dist[i]-1 for i in inds)
                 isguide=1 if (guide and w in linear_vecs) else 0
-                # Boundary-target reductions are a tertiary preference after the
-                # exact BP sum/norm criteria; duplication via extra_weight is the
-                # primary explicit coupling pressure.
-                bcount=sum(labels[i].startswith('t') for i in inds)
+                # Cut-basis reductions are a tertiary preference after the exact
+                # BP sum/norm criteria; duplication via extra_weight is primary.
+                bcount=sum(labels[i].startswith('extra') for i in inds)
                 scored.append((-count,penalty,-bcount,-isguide,w,inds))
             scored.sort(key=lambda z:z[:-1]);best=scored[0][:-2]
             pool=[z for z in scored if z[:-2]==best][:max(1,elite)]
