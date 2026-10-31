@@ -17,7 +17,7 @@ def main():
     c=ras.load_circuit('nist-g103');assert ras.independent_check(c)[0]
     last,prefix,suffix,boundary=suf.split(c)
     m,C,vals,aff_targets,qtargets,orig_guide=suf.formal_suffix(suffix,boundary,c['outputs'])
-    extras=['t47','t48','t49'];extra_idx=[boundary.index(w) for w in extras]
+    extras,_=cb.semantic_cut_extras(c,boundary);extra_idx=[boundary.index(w) for w in extras]
     qvals={w:1<<i for i,w in enumerate(boundary)};guide=[]
     for g in suffix:
         q=qvals[g['a']]^qvals[g['b']];qvals[g['out']]=q;guide.append(q)
@@ -36,13 +36,15 @@ def main():
                     best=cost;best_cfg={'policy':policy,'seed':seed}
                 if best_dist is None or sum(dist)<sum(best_dist):best_dist=list(dist)
         row={'matrix_index':mi,'matrix_rows':list(mat),'coeff_map':[cmap[i] for i in range(8)],
-             'identity':list(mat)==[1,2,4],'initial_supports':[t.bit_count() for t in ts],
+             'identity':list(mat)==[1,2,4],'extras':extras,
+             'initial_supports':[t.bit_count() for t in ts],
              'initial_bp_sum':sum(t.bit_count()-1 for t in ts),'best_suffix_gates':best,
              'best_config':best_cfg,'best_residual_sum':sum(best_dist),'best_residual':best_dist}
         rows.append(row);print(json.dumps(row,sort_keys=True),flush=True)
     rows.sort(key=lambda r:(999 if r['best_suffix_gates'] is None else r['best_suffix_gates'],r['initial_bp_sum'],r['matrix_rows']))
     summary={'shard':args.shard,'shards':args.shards,'matrices':len(rows),'seeds':args.seeds,
-             'max_gates':args.max_gates,'found_le_19':sum(r['best_suffix_gates'] is not None and r['best_suffix_gates']<=19 for r in rows),
+             'extras':extras,'extra_indices':extra_idx,'max_gates':args.max_gates,
+             'found_le_19':sum(r['best_suffix_gates'] is not None and r['best_suffix_gates']<=19 for r in rows),
              'found_le_20':sum(r['best_suffix_gates'] is not None and r['best_suffix_gates']<=20 for r in rows),
              'found_le_21':sum(r['best_suffix_gates'] is not None and r['best_suffix_gates']<=21 for r in rows),
              'found_le_22':sum(r['best_suffix_gates'] is not None and r['best_suffix_gates']<=22 for r in rows),'rows':rows}
