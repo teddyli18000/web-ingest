@@ -1,0 +1,79 @@
+Thomson N=960 — dynamic scar-walk + remote follower softening — 2026-10-31
+
+Record
+------
+Live R: E = 444368.3924061973, coordination 36/900/24.
+A:      E ~= 444368.3956862258.
+
+1. Dynamic scar-walk beam is validated by a positive control
+-------------------------------------------------------------
+Run 41099606592 searched history-dependent same-count Delaunay paths with depth=4, beam=3, branch=4 and local graph distance <=1. The search re-enumerated legal moves after every topology change, so later moves could depend on edges created by earlier moves.
+
+The orbit4 positive-control shard automatically recovered the known dependent R->A chain:
+q1: delete (108,282), add (511,599)
+q2: delete (108,511), add (502,599)
+q3: delete (511,599), add (282,502)
+
+At depth 3 the q1->q2->q3 node had fixed energy 444368.453199130134 and fully released to A at 444368.395686225966. Thus the beam did not prune the known useful path even though the q1->q2 intermediate fixed state is relatively expensive (~444368.47675).
+
+The five non-control shards produced no novel free basin:
+- orbit0: 23 nodes, all free endpoints R.
+- orbit2: 22 nodes, all R.
+- orbit6: 23 nodes, all R.
+- orbit5: 22 nodes, 21 R + 1 A.
+- orbit1: 22 nodes, 21 R + 1 B.
+No endpoint improved R; ~1e-10 apparent score changes are summation noise.
+
+Scientific scope of this negative result: it excludes one layer of the dependent-walk representation only for the tested first orbits and search controls (depth 4, beam 3, branch 4, graph distance <=1). It does not exclude deeper paths or alternative pruning criteria.
+
+2. Remote follower activation is predictable before the cascade
+---------------------------------------------------------------
+Run 41101441646 replayed the known q1->q2->q3 R->A path and measured the Delaunay crossing thresholds of the two remote follower glides that complete the A triangulation:
+- orbit2: delete (79,134), add (35,323)
+- orbit3: delete (21,230), add (74,363)
+
+Before q3 (q1+q2, kappa=100 source):
+- orbit2 threshold 0.004401557922
+- orbit3 threshold 0.003185363770
+
+After q3 fixed adaptation:
+- orbit2 threshold 0.003643875122
+- orbit3 threshold 0.001594779968
+
+During restraint release of the completed local chain:
+- orbit3 flips spontaneously already at kappa=100.
+- orbit2 threshold then softens monotonically:
+  kappa 100: 0.002348190308
+  kappa  70: 0.001691665649
+  kappa  50: 0.001148864746
+  kappa  30: 0.000524108887
+  kappa  20: 0.000182617188
+  and orbit2 flips spontaneously by kappa=10.
+
+Thus the remote cross-scar cascade is not merely a post-hoc interpretation. A local history-dependent topology path produces a measurable pre-transition softening of distant glides. This is a usable predictor of cascade potential.
+
+3. A-centered one-step neighborhood is deep
+-------------------------------------------
+Run 41101889863 enumerated 78 same-count legal glides around A and tested the 15 softest by fixed adaptation + full release. Every tested move returned to A. The softest inverse follower, delete (35,323) add (79,134), has threshold only 0.000543426514 but still releases to A.
+
+Therefore A is not escaped by a single soft glide either. Any useful A-side search should also use history-dependent paths, not a larger one-flip census.
+
+4. Reformulation
+----------------
+The next search should not merely increase the old beam width/depth. Add a cascade-aware state variable:
+- retain the evolving active edge signature;
+- after fixed adaptation, perform a modest common-restraint probe of the active support;
+- measure remote root-glide states and threshold ratios relative to the root minimum;
+- reward paths that trigger remote glides or strongly reduce their crossing thresholds;
+- use Pareto beam retention so intermediate fixed energy and remote-cascade potential are separate objectives, rather than collapsing both into one scalar fixed-energy score.
+
+Positive-control requirement: the cascade-aware search must still recover q1->q2->q3->A from orbit4.
+
+If the new representation still only reaches R/A/B for several independent first orbits, the next reformulation should move from individual dependent flips to scar-component / grain-boundary state variables rather than only increasing depth.
+
+Literature context checked 2026-10-31
+-------------------------------------
+- Amore & Wales, J. Chem. Phys. 165, 164104 (2026), DOI 10.1063/5.0355867: propagating known low-energy structures across neighboring N improves large-N Thomson searches; defect pattern information is a key search resource.
+- Qiu & Ji, Soft Matter 22, 1171-1182 (2026), DOI 10.1039/D5SM00834D: spherical ordering transitions can proceed through multi-step metastable intermediates rather than a single collective step.
+- García-Aguilar, Fonda & Giomi, Phys. Rev. E 101, 063005 (2020), DOI 10.1103/PhysRevE.101.063005: scars screen long-range elastic stress from spherical topological defects, supporting the interpretation that local rearrangements can change remote defect stability.
+- 'Controlling clouds-to-scars dislocations transitions on spherical crystal shells', Phys. Rev. Research 6, 043098 (2024), DOI 10.1103/PhysRevResearch.6.043098: defect-core energetics can materially alter scar organization.
