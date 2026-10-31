@@ -8,6 +8,12 @@ The value equations are guarded by the conjunction of the two selectors.
 Compared with `g103_suffix_linear_cadical.py`, this keeps only O(t) selector
 variables per gate while representing the same straight-line programs.
 
+For a minimum-size candidate every gate must be live: it either feeds a later
+gate or directly realizes one of the requested outputs.  We encode that sound
+minimal-circuit condition explicitly; in particular the final gate must be a
+target.  Target matches are also one-hot, which is redundant with the no-value-
+duplicate constraints but substantially improves SAT propagation.
+
 Affine XNOR polarities are recovered after the linear DAG is found, exactly as
 in `g103_suffix_linear_cadical.py`.  Any candidate is attached to the explicit
 G103 cut prefix and checked on all 256 AES inputs before being written.
@@ -36,7 +42,8 @@ def build(targets,n,k):
     for i in range(n):
         for j in range(n):cls.append([val(i,j)] if i==j else [-val(i,j)])
 
-    for t in range(n,n+k):
+    total=n+k
+    for t in range(n,total):
         preds=list(range(t))
         cls.extend(CardEnc.equals(lits=[sa(t,p) for p in preds],bound=1,
                                   vpool=pool,encoding=EncType.pairwise).clauses)
@@ -61,13 +68,26 @@ def build(targets,n,k):
                 diffs.append(d)
             cls.append(diffs)
 
-    total=n+k
+    # Every target has exactly one witness.  Because all target vectors here have
+    # weight >1, inputs cannot satisfy them, but keeping input match literals makes
+    # the encoding generic and lets their fixed value clauses eliminate them.
     for r,tgt in enumerate(targets):
-        cls.append([match(r,s) for s in range(total)])
+        ms=[match(r,s) for s in range(total)]
+        cls.extend(CardEnc.equals(lits=ms,bound=1,vpool=pool,
+                                  encoding=EncType.seqcounter).clauses)
         for s in range(total):
             for j in range(n):
                 lit=val(s,j) if ((tgt>>j)&1) else -val(s,j)
                 cls.append([-match(r,s),lit])
+
+    # Sound for a minimum-size SLP: a dead gate can be deleted.  Each gate must
+    # therefore either be selected as an operand later or realize an output.
+    for t in range(n,total):
+        users=[match(r,t) for r in range(len(targets))]
+        for u in range(t+1,total):
+            users.extend((sa(u,t),sb(u,t)))
+        cls.append(users)
+
     return pool,cls,(sa,sb,val,match)
 
 
@@ -95,7 +115,7 @@ def solve(linear_targets,affine_targets,n,k,conf_budget=0):
     outs=[]
     for r,tgt in enumerate(linear_targets):
         choices=[s for s in range(n+k) if match(r,s) in pos]
-        if not choices:raise AssertionError(('missing target match',r))
+        if len(choices)!=1:raise AssertionError(('target witness count',r,choices))
         s=choices[0];assert vals[s]==tgt,(r,s,vals[s],tgt);outs.append(s)
 
     constants=[0]*(n+k);req={}
