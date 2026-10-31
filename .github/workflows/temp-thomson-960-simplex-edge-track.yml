@@ -30,7 +30,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: teddyli18000/web-ingest
           run-id: 41198272370
-      - name: Edge-track fixed-occupancy A/H sheets
+      - name: Edge-track fixed-occupancy A/H sheets with tangent gradient
         run: |
           mkdir -p "$RUNNER_TEMP/out"
           python3 science-boundary/thomson-960/code/edge_track_n961_simplex_sheets.py \
@@ -52,6 +52,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: thomson-simplex-edge-track
+          name: thomson-simplex-edge-track-tangent
           path: ${{ runner.temp }}/out
           retention-days: 10
