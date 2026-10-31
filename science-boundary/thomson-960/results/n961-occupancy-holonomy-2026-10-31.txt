@@ -1,0 +1,69 @@
+Thomson N=960 — two-occupancy closed-loop holonomy — 2026-10-31
+
+run = 41197844226
+live_score = 444368.3924061973
+base auxiliary endpoint = (q886,q960)=(1,0), obtained by adiabatically fading label960 from the common N961 hub
+base genuine-N960 projections = R for both tested deletions (within ordinary ~1e-10 floating noise)
+
+Question
+--------
+Does a closed path in the independent two-occupancy plane return to the same
+endpoint charges on a different relaxed geometric branch?  Four rectangular
+loops were tested, two scales and both traversal orders.  All 961 coordinates
+were mobile at every occupancy step.  At each corner the state was projected
+to genuine unit-charge N960 by deleting label886 or label960 and fully relaxing.
+
+Results
+-------
+1. small loop, 886-first:
+   q960 peak = 0.35, q886 floor = 0.65
+   final active RMS vs base = 4.23e-7 rad
+   final endpoint projections = R / R
+   Interpretation: essentially closes back onto the R branch.
+
+2. small loop, 960-first:
+   same rectangle, reverse traversal order
+   final active RMS vs base = 0.0038687711 rad
+   final endpoint projections = A / A
+   Interpretation: same start, same closed rectangle, same endpoint charges,
+   but reversing operation order transports R -> A.
+
+3. large loop, 886-first:
+   q960 peak = 0.65, q886 floor = 0.35
+   final active RMS vs base = 0.0038687027 rad
+   final endpoint projections = A / A
+   Interpretation: the larger loop crosses onto the A sheet even in the
+   886-first orientation.
+
+4. large loop, 960-first:
+   same large rectangle, reverse traversal order
+   final active RMS vs base = 0.0038687722 rad
+   final endpoint projections = A / A
+
+No loop produced a basin below R.  Best apparent values were ~5.8e-11 below the
+accepted score and are ordinary floating-point noise.
+
+Key scientific result
+---------------------
+The auxiliary fractional-occupancy relaxation has a genuine nontrivial holonomy:
+a closed parameter loop can return to exactly the same endpoint occupancy while
+changing the relaxed genuine-N960 basin from R to A.  For the small rectangle,
+this transport is order-dependent: 886-first returns R, while 960-first returns
+A.  Thus the two occupancy operations are not effectively commutative after
+adiabatic geometry relaxation.
+
+This is stronger than the earlier one-dimensional endpoint hysteresis.  It
+establishes a reproducible path-dependent basin-transport operator in an enlarged
+search space, although the tested two-label loops only connect already-known R
+and A.
+
+Caveat / next reformulation
+---------------------------
+These rectangular loops do not conserve total fractional charge away from the
+base point, so they are mechanism evidence rather than a clean constant-total
+control.  The next experiment uses three distinguished deletion labels
+886 (R), 960 (A), and 380 (higher 24-dislocation H380) with deficiencies summing
+to one, hence total charge fixed exactly at 960 throughout.  Separate R/A/H
+sheets are continued to a common occupancy-simplex center and projected back to
+N960.  This tests whether the holonomy/multistability survives without a global
+total-charge excursion and whether a third basin sheet gives a new exit.
