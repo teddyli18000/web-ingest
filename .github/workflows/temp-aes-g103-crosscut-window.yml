@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - 'science-boundary/aes-sbox-circuit/g103_crosscut_window_resynth.py'
+      - 'science-boundary/aes-sbox-circuit/g103_explicit_cut_basis.py'
       - '.github/workflows/temp-aes-g103-crosscut-window.yml'
 
 permissions:
@@ -58,6 +59,7 @@ jobs:
           set -euxo pipefail
           python -m py_compile \
             science-boundary/aes-sbox-circuit/g103_crosscut_window_resynth.py \
+            science-boundary/aes-sbox-circuit/g103_explicit_cut_basis.py \
             science-boundary/aes-sbox-circuit/temporal_window_resynth.py
           python science-boundary/aes-sbox-circuit/g103_crosscut_window_resynth.py \
             --basis-rows '${{ matrix.basis }}' --start '${{ matrix.start }}' \
