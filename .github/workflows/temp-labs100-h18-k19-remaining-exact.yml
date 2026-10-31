@@ -1,0 +1,82 @@
+name: temp labs100 h18 K19 remaining exact
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k19-remaining-exact.yml'
+
+concurrency:
+  group: temp-labs100-h18-k19-remaining-exact
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact compressed and full-gamma programs
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k19_remaining_compressed.cpp -o "$RUNNER_TEMP/comp"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k19_fullgamma.cpp -o "$RUNNER_TEMP/fibre"
+      - name: Exhaust kp13 kc6 and all fibres
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > "$RUNNER_TEMP/kp13.log"
+          for t in 0 2 4 6; do OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/comp" 13 "$t" | tee -a "$RUNNER_TEMP/kp13.log"; done
+          grep -F 'SUMMARY kp=13 kc=6 t=0 diff_orbits=366 support_orbits=7160 ptests=558480 rankfull=545871 rankproj=1461 ranklo=11148 Hmatches_halfC=45370 spectral=1 base=0 alt=1' "$RUNNER_TEMP/kp13.log"
+          grep -F 'SUMMARY kp=13 kc=6 t=2 diff_orbits=6578 support_orbits=236164 ptests=18420792 rankfull=18343003 rankproj=25910 ranklo=51879 Hmatches_halfC=224484 spectral=5 base=1 alt=5' "$RUNNER_TEMP/kp13.log"
+          grep -F 'SUMMARY kp=13 kc=6 t=4 diff_orbits=8956 support_orbits=285602 ptests=22276956 rankfull=22194420 rankproj=30045 ranklo=52491 Hmatches_halfC=228577 spectral=4 base=0 alt=4' "$RUNNER_TEMP/kp13.log"
+          grep -F 'SUMMARY kp=13 kc=6 t=6 diff_orbits=974 support_orbits=12114 ptests=944892 rankfull=932290 rankproj=1288 ranklo=11314 Hmatches_halfC=45625 spectral=3 base=0 alt=3' "$RUNNER_TEMP/kp13.log"
+          grep '^HIT ' "$RUNNER_TEMP/kp13.log" > "$RUNNER_TEMP/kp13.hits"
+          test "$(wc -l < "$RUNNER_TEMP/kp13.hits")" -eq 13
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/fibre" "$RUNNER_TEMP/kp13.hits" | tee "$RUNNER_TEMP/kp13.fibre"
+          grep -F 'K19_FULLGAMMA_SUMMARY reps=13 alphas=53248 half_gamma_solutions=440968 full_gamma_solutions=881936 affine_transforms=440968000 Vbudget_pass=0 oddperfect_pass=0 E_le_570=0 best=-1' "$RUNNER_TEMP/kp13.fibre"
+      - name: Exhaust kp11 kc8 and all fibres
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > "$RUNNER_TEMP/kp11.log"
+          for t in 0 2 4 6 8; do OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/comp" 11 "$t" | tee -a "$RUNNER_TEMP/kp11.log"; done
+          grep -F 'SUMMARY kp=11 kc=8 t=0 diff_orbits=366 support_orbits=17614 ptests=193754 rankfull=188044 rankproj=2863 ranklo=2847 Hmatches_halfC=23568 spectral=0 base=0 alt=0' "$RUNNER_TEMP/kp11.log"
+          grep -F 'SUMMARY kp=11 kc=8 t=2 diff_orbits=6578 support_orbits=855854 ptests=9414394 rankfull=9336938 rankproj=61883 ranklo=15573 Hmatches_halfC=153741 spectral=6 base=0 alt=6' "$RUNNER_TEMP/kp11.log"
+          grep -F 'SUMMARY kp=11 kc=8 t=4 diff_orbits=8956 support_orbits=1695044 ptests=18645484 rankfull=18507297 rankproj=117909 ranklo=20278 Hmatches_halfC=212907 spectral=6 base=2 alt=6' "$RUNNER_TEMP/kp11.log"
+          grep -F 'SUMMARY kp=11 kc=8 t=6 diff_orbits=974 support_orbits=219230 ptests=2411530 rankfull=2390089 rankproj=15193 ranklo=6248 Hmatches_halfC=54817 spectral=2 base=0 alt=2' "$RUNNER_TEMP/kp11.log"
+          grep -F 'SUMMARY kp=11 kc=8 t=8 diff_orbits=6 support_orbits=1006 ptests=11066 rankfull=10597 rankproj=72 ranklo=397 Hmatches_halfC=3185 spectral=0 base=0 alt=0' "$RUNNER_TEMP/kp11.log"
+          grep '^HIT ' "$RUNNER_TEMP/kp11.log" > "$RUNNER_TEMP/kp11.hits"
+          test "$(wc -l < "$RUNNER_TEMP/kp11.hits")" -eq 14
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/fibre" "$RUNNER_TEMP/kp11.hits" | tee "$RUNNER_TEMP/kp11.fibre"
+          grep -F 'K19_FULLGAMMA_SUMMARY reps=14 alphas=229376 half_gamma_solutions=164692 full_gamma_solutions=329384 affine_transforms=164692000 Vbudget_pass=0 oddperfect_pass=0 E_le_570=0 best=-1' "$RUNNER_TEMP/kp11.fibre"
+      - name: Exhaust kp9 kc10 and all fibres
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > "$RUNNER_TEMP/kp9.log"
+          for t in 0 2 4 6 8; do OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/comp" 9 "$t" | tee -a "$RUNNER_TEMP/kp9.log"; done
+          grep -F 'SUMMARY kp=9 kc=10 t=0 diff_orbits=366 support_orbits=21432 ptests=21432 rankfull=16797 rankproj=1763 ranklo=2872 Hmatches_halfC=45144 spectral=0 base=0 alt=0' "$RUNNER_TEMP/kp9.log"
+          grep -F 'SUMMARY kp=9 kc=10 t=2 diff_orbits=6578 support_orbits=1113548 ptests=1113548 rankfull=1048281 rankproj=48136 ranklo=17131 Hmatches_halfC=250090 spectral=2 base=0 alt=2' "$RUNNER_TEMP/kp9.log"
+          grep -F 'SUMMARY kp=9 kc=10 t=4 diff_orbits=8956 support_orbits=2404542 ptests=2404542 rankfull=2279886 rankproj=99247 ranklo=25409 Hmatches_halfC=320867 spectral=6 base=0 alt=6' "$RUNNER_TEMP/kp9.log"
+          grep -F 'SUMMARY kp=9 kc=10 t=6 diff_orbits=974 support_orbits=367652 ptests=367652 rankfull=344868 rankproj=14966 ranklo=7818 Hmatches_halfC=97256 spectral=8 base=1 alt=8' "$RUNNER_TEMP/kp9.log"
+          grep -F 'SUMMARY kp=9 kc=10 t=8 diff_orbits=6 support_orbits=2262 ptests=2262 rankfull=1777 rankproj=83 ranklo=402 Hmatches_halfC=6381 spectral=0 base=0 alt=0' "$RUNNER_TEMP/kp9.log"
+          grep '^HIT ' "$RUNNER_TEMP/kp9.log" > "$RUNNER_TEMP/kp9.hits"
+          test "$(wc -l < "$RUNNER_TEMP/kp9.hits")" -eq 16
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/fibre" "$RUNNER_TEMP/kp9.hits" | tee "$RUNNER_TEMP/kp9.fibre"
+          grep -F 'K19_FULLGAMMA_SUMMARY reps=16 alphas=1048576 half_gamma_solutions=428062 full_gamma_solutions=856124 affine_transforms=428062000 Vbudget_pass=0 oddperfect_pass=0 E_le_570=0 best=-1' "$RUNNER_TEMP/kp9.fibre"
+      - name: Upload exact transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k19-remaining-exact
+          path: |
+            ${{ runner.temp }}/kp13.log
+            ${{ runner.temp }}/kp13.hits
+            ${{ runner.temp }}/kp13.fibre
+            ${{ runner.temp }}/kp11.log
+            ${{ runner.temp }}/kp11.hits
+            ${{ runner.temp }}/kp11.fibre
+            ${{ runner.temp }}/kp9.log
+            ${{ runner.temp }}/kp9.hits
+            ${{ runner.temp }}/kp9.fibre
+          if-no-files-found: warn
