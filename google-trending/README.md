@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-30** | **687** | **687** | **687** | **687** | **686** |
+| **2024-11-28** | **2026-10-31** | **688** | **688** | **688** | **688** | **687** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 184 |
+| `google_trending_now` | 188 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-30
+### Latest SG snapshot — 2026-10-31
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | patrick stewart | 20000+ |
-| 2 | binance | 5000+ |
-| 3 | dawson hdb record price singapore | 2000+ |
-| 4 | new zealand vs india | 5000+ |
-| 5 | mta coe car length proposal | 2000+ |
-| 6 | tampines ave 12 | 1000+ |
-| 7 | halloween 2026 | 2000+ |
-| 8 | singapore private hire vehicle financing restrictions | 5000+ |
-| 9 | alexandra eala | 1000+ |
-| 10 | bus | 500+ |
+| 1 | airport check-in | 2000+ |
+| 2 | muhammad zulfiqar abdul aziz | 5000+ |
+| 3 | vietnam | 1000+ |
+| 4 | toa payoh west housing development | 1000+ |
+| 5 | lta goods vehicle enforcement singapore | 1000+ |
+| 6 | sri lanka vs pakistan | 500+ |
+| 7 | cisco | 1000+ |
+| 8 | jamie carragher | 500+ |
+| 9 | singapore private hire car loan limits | 1000+ |
+| 10 | micron | 500+ |
 
-### Latest US snapshot — 2026-10-30
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | patrick stewart | 5000000+ |
-| 2 | packers vs panthers | 500000+ |
-| 3 | jeffery simmons | 200000+ |
-| 4 | binance | 100000+ |
-| 5 | grizzlies vs trail blazers | 100000+ |
-| 6 | cavaliers vs hawks | 100000+ |
-| 7 | christian watson | 200000+ |
-| 8 | elke sommer | 20000+ |
-| 9 | dylan larkin | 50000+ |
-| 10 | corey heim | 50000+ |
-
-### Latest GB snapshot — 2026-10-30
+### Latest US snapshot — 2026-10-31
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | patrick stewart | 1000000+ |
-| 2 | everton vs newcastle | 200000+ |
-| 3 | tom jones | 20000+ |
-| 4 | binance | 20000+ |
-| 5 | james acaster | 50000+ |
-| 6 | joanna wietrzyk | 10000+ |
-| 7 | jack grealish | 20000+ |
-| 8 | celtic fc scottish fa appeal | 10000+ |
-| 9 | ticketmaster | 10000+ |
-| 10 | obr bbc licence fee projections | 2000+ |
+| 1 | lakers vs warriors | 200000+ |
+| 2 | poland | 100000+ |
+| 3 | richard norton peptides | 20000+ |
+| 4 | samsung news app discontinued 2026 | 20000+ |
+| 5 | nuggets vs suns | 50000+ |
+| 6 | bryce hall | 50000+ |
+| 7 | rockets vs mavericks | 100000+ |
+| 8 | baylor vs ucf | 100000+ |
+| 9 | clippers vs timberwolves | 50000+ |
+| 10 | pacers vs heat | 50000+ |
 
-### Latest HK snapshot — 2026-10-30
+### Latest GB snapshot — 2026-10-31
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | patrick stewart | 5000+ |
-| 2 | 林盛斌 | 2000+ |
-| 3 | 2027 | 1000+ |
-| 4 | binance | 2000+ |
-| 5 | halloween | 1000+ |
-| 6 | 萬聖節 | 1000+ |
-| 7 | 王至尊 | 500+ |
-| 8 | 蔣家旻 | 1000+ |
-| 9 | 幣安 | 500+ |
-| 10 | 利息 | 500+ |
+| 1 | nationwide uk property price drop | 50000+ |
+| 2 | dwp bank checks benefit eligibility | 50000+ |
+| 3 | super el niño november weather forecast | 20000+ |
+| 4 | asda coleraine petrol station issues | 50000+ |
+| 5 | who won traitors | 200000+ |
+| 6 | poland | 20000+ |
+| 7 | fallon sherrock | 50000+ |
+| 8 | keri jones | 20000+ |
+| 9 | sri lanka vs pakistan | 10000+ |
+| 10 | carragher aston villa | 10000+ |
 
-[Open full snapshot →](data/2026/10/30/trending.json)
+### Latest HK snapshot — 2026-10-31
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 蘇凌峰 | 2000+ |
+| 2 | 張曼玉 | 1000+ |
+| 3 | 吳兆麟 | 1000+ |
+| 4 | 陳山聰 | 2000+ |
+| 5 | trick or treat | 1000+ |
+| 6 | 蘭桂坊 | 1000+ |
+| 7 | 預測 | 200+ |
+| 8 | 啟德萬聖節 | 500+ |
+| 9 | 玫瑰戰爭 | 200+ |
+| 10 | 北都馬拉松 | 100+ |
+
+[Open full snapshot →](data/2026/10/31/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 289 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 290 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
