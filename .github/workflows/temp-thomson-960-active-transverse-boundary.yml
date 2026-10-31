@@ -30,7 +30,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: teddyli18000/web-ingest
           run-id: 41043461011
-      - name: Search active transverse exits
+      - name: Search validated active transverse exits
         run: |
           mkdir -p "$RUNNER_TEMP/out"
           live=$(cat "$RUNNER_TEMP/seed/live-score.txt")
@@ -41,7 +41,7 @@ jobs:
             --live-score "$live" \
             --modes '0,1,2,3,4,5' \
             --amps '.0015,.003,.006,.012,.02' \
-            --k 10 \
+            --k 10 --cs-step 1e-20 \
             --out "$RUNNER_TEMP/out/result.json"
       - name: Summarize
         if: always()
@@ -52,6 +52,7 @@ jobs:
           d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
           print('BRACKET',d['control_hi']['class'],d['baseline']['class'],d['control_lo']['class'])
           print('SECANT_RMS_DERIV',d['secant_derivative_rms'])
+          print('HVP',d['hvp_method'],d['complex_step'],'SYMMETRY',d['symmetry_abs'],d['symmetry_rel'])
           print('EIGENVALUES',d['eigenvalues'])
           print('MODE_DIAG',d['mode_diagnostics'])
           print('BEST',d['best_energy'],d['best_delta_live'])
@@ -61,6 +62,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: thomson-active-transverse-boundary
+          name: thomson-active-transverse-boundary-complex-step
           path: ${{ runner.temp }}/out
           retention-days: 10
