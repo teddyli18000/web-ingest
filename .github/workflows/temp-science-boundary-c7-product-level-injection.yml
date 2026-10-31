@@ -6,6 +6,7 @@ on:
       - .github/workflows/temp-science-boundary-c7-product-level-injection.yml
       - science-boundary/shannon-capacity-c7/code/bpz_product_level_injection_sat.py
       - science-boundary/shannon-capacity-c7/code/bpz_product_level_injection_core_diag.py
+      - science-boundary/shannon-capacity-c7/code/bpz_product_level_recolor.py
   workflow_dispatch:
 
 permissions:
@@ -38,7 +39,6 @@ jobs:
           /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_product_level_injection_sat.py \
             "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/result.json" \
             | tee "$RUNNER_TEMP/result/stdout.txt"
-          cat "$RUNNER_TEMP/result/result.json"
       - name: Diagnose the two-point UNSAT core
         shell: bash
         run: |
@@ -46,7 +46,13 @@ jobs:
           /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_product_level_injection_core_diag.py \
             "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/core-diagnostic.json" \
             | tee "$RUNNER_TEMP/result/core-diagnostic.stdout"
-          cat "$RUNNER_TEMP/result/core-diagnostic.json"
+      - name: Adaptive local RR recoloring
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_product_level_recolor.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/recolor.json" --max-rounds 100 --max-release 5000 \
+            | tee "$RUNNER_TEMP/result/recolor.stdout"
       - name: Upload result
         if: always()
         uses: actions/upload-artifact@v4
