@@ -170,7 +170,8 @@ def main():
              'prefix_le_49':sum(r.get('prefix_linear',999)<=49 for r in rows),
              'cost_hist':{},'rows':rows}
     from collections import Counter
-    summary['cost_hist']=dict(sorted(Counter(r.get('prefix_linear','gt49') for r in rows).items(),key=lambda kv:str(kv[0])))
+    hist=Counter(str(r.get('prefix_linear','gt49')) for r in rows)
+    summary['cost_hist']=dict(sorted(hist.items()))
     (out/'summary.json').write_text(json.dumps(summary,indent=2,sort_keys=True)+'\n')
     print(json.dumps({k:v for k,v in summary.items() if k!='rows'},sort_keys=True),flush=True)
 
