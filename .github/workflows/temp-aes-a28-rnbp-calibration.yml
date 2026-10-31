@@ -1,0 +1,36 @@
+name: temp-aes-a28-rnbp-calibration
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/a28_released_rnbp_calibration.py'
+      - '.github/workflows/temp-aes-a28-rnbp-calibration.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  calibrate:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [1,2,3,4]
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test whether released-RNBP can reproduce A28 within 96 linears
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/a28_released_rnbp_calibration.py
+          python science-boundary/aes-sbox-circuit/a28_released_rnbp_calibration.py \
+            --seed '${{ matrix.seed }}' --max-linear 96 --max-support 8 --elite 8 \
+            --out result | tee run.log
+          cat result/summary.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-a28-rnbp-calibration-${{ matrix.seed }}
+          path: |
+            result
+            run.log
