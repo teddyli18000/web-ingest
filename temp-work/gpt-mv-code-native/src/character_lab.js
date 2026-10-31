@@ -1,47 +1,41 @@
-import {loadGPTArt} from './components/gpt_art.js';
+import {loadGPTBustPlate} from './components/gpt_bust_plate.js';
 
 const canvas=document.getElementById('stage');
 const g=canvas.getContext('2d',{alpha:false});
 const W=canvas.width,H=canvas.height;
+const PAPER='#f3efe4',PAPER2='#fffaf0',INK='#172033',INK2='#5d6064',BLUE='#3157d5',GOLD='#e8b928';
 
 function rect(x,y,w,h,fill){g.fillStyle=fill;g.fillRect(x,y,w,h)}
-function line(x1,y1,x2,y2,color='#60708d',width=2,alpha=1){g.save();g.globalAlpha=alpha;g.strokeStyle=color;g.lineWidth=width;g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();g.restore()}
-function text(s,x,y,size,{color='#eef2f7',font='Inter,Arial,sans-serif',weight=500,align='left',alpha=1}={}){g.save();g.globalAlpha=alpha;g.fillStyle=color;g.font=`${weight} ${size}px ${font}`;g.textAlign=align;g.textBaseline='alphabetic';g.fillText(s,x,y);g.restore()}
-function panel(x,y,w,h,fill='rgba(246,242,233,.97)'){g.save();g.shadowColor='rgba(0,0,0,.18)';g.shadowBlur=30;g.shadowOffsetY=14;g.fillStyle=fill;g.beginPath();g.roundRect(x,y,w,h,28);g.fill();g.restore()}
-function cropMarks(x,y,w,h,c='#8391aa'){const m=18,l=24;line(x-m,y,x-m+l,y,c,2,.55);line(x,y-m,x,y-m+l,c,2,.55);line(x+w+m,y,x+w+m-l,y,c,2,.55);line(x+w,y-m,x+w,y-m+l,c,2,.55);line(x-m,y+h,x-m+l,y+h,c,2,.55);line(x,y+h+m,x,y+h+m-l,c,2,.55);line(x+w+m,y+h,x+w+m-l,y+h,c,2,.55);line(x+w,y+h+m,x+w,y+h+m-l,c,2,.55)}
-function paperNoise(){
-  rect(0,0,W,H,'#121927');
-  const gr=g.createRadialGradient(500,410,60,500,410,760);gr.addColorStop(0,'rgba(49,87,213,.18)');gr.addColorStop(1,'rgba(49,87,213,0)');g.fillStyle=gr;g.fillRect(0,0,W,H);
-  const warm=g.createRadialGradient(1540,260,20,1540,260,500);warm.addColorStop(0,'rgba(242,184,75,.12)');warm.addColorStop(1,'rgba(242,184,75,0)');g.fillStyle=warm;g.fillRect(0,0,W,H);
-  g.save();g.fillStyle='#f3efe4';g.globalAlpha=.035;for(let i=0;i<360;i++){const x=(i*137.7)%W,y=(i*83.3)%H;g.fillRect(x,y,1+(i%3===0),1)}g.restore();
-}
+function line(x1,y1,x2,y2,color=INK2,width=2,alpha=1){g.save();g.globalAlpha=alpha;g.strokeStyle=color;g.lineWidth=width;g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke();g.restore()}
+function text(s,x,y,size,{color=INK,font='Inter,Arial,sans-serif',weight=500,align='left',alpha=1}={}){g.save();g.globalAlpha=alpha;g.fillStyle=color;g.font=`${weight} ${size}px ${font}`;g.textAlign=align;g.textBaseline='alphabetic';g.fillText(s,x,y);g.restore()}
+function panel(x,y,w,h,fill=PAPER2){g.save();g.shadowColor='rgba(17,24,39,.15)';g.shadowBlur=28;g.shadowOffsetY=13;g.fillStyle=fill;g.beginPath();g.roundRect(x,y,w,h,24);g.fill();g.restore();g.strokeStyle='rgba(23,32,51,.13)';g.lineWidth=1.4;g.beginPath();g.roundRect(x,y,w,h,24);g.stroke()}
+function cropMarks(x,y,w,h,c='#8391aa'){const m=15,l=22;line(x-m,y,x-m+l,y,c,2,.48);line(x,y-m,x,y-m+l,c,2,.48);line(x+w+m,y,x+w+m-l,y,c,2,.48);line(x+w,y-m,x+w,y-m+l,c,2,.48);line(x-m,y+h,x-m+l,y+h,c,2,.48);line(x,y+h+m,x,y+h+m-l,c,2,.48);line(x+w+m,y+h,x+w+m-l,y+h,c,2,.48);line(x+w,y+h+m,x+w,y+h+m-l,c,2,.48)}
+function heading(x,y,label,sub,dark=false){text(label,x,y,19,{color:dark?'#f3efe4':INK2,weight:700,alpha:.58});text(sub,x,y+28,15,{color:dark?'#c4ccda':INK2,alpha:.35});}
 
-const art=await loadGPTArt();
-paperNoise();
+const plate=await loadGPTBustPlate();
+rect(0,0,W,H,'#d8d0c5');
+const glow=g.createRadialGradient(1480,180,40,1480,180,660);glow.addColorStop(0,'rgba(232,185,40,.16)');glow.addColorStop(1,'rgba(232,185,40,0)');g.fillStyle=glow;g.fillRect(0,0,W,H);
+text('GPT / CHARACTER PLATE LAB',62,66,23,{color:INK,weight:700,alpha:.62});
+text('bust-print-v2 · 4-colour plate · no scene pixels',62,101,18,{color:INK2,alpha:.38});
+line(62,124,760,124,BLUE,5,.60);
 
-text('GPT CHARACTER / MASTER 01',62,70,23,{color:'#9ba8be',weight:700});
-text('REACH',60,158,92,{font:'Georgia,serif',weight:700,color:'#f3efe4'});
-text('approved character art · code controls crop, registration and colour treatment',64,205,24,{color:'#b8c1d1',weight:400});
-line(64,238,800,238,'#3157d5',5,.86);
+panel(58,155,855,380);cropMarks(58,155,855,380);heading(90,198,'01 / RAW PRINT','paper field · intended working scale');
+plate.draw(g,{x:265,y:205,w:470,h:305},{alpha:1});
+line(215,507,760,507,GOLD,4,.28);
 
-// Character first. No interface and no redraw.
-art.plate(g,{x:45,y:285,w:900,h:750},{crop:'full',color:'#0d1422',alpha:.20});
-art.draw(g,{x:62,y:265,w:900,h:770},{crop:'full',alpha:1});
+panel(1007,155,855,380);cropMarks(1007,155,855,380);heading(1039,198,'02 / REGISTRATION','graphite + cobalt offsets around the same plate');
+plate.register(g,{x:1215,y:203,w:470,h:310},{spread:13,alpha:1,rot:.006});
+line(1175,507,1720,507,BLUE,4,.26);
 
-panel(1010,58,850,300);cropMarks(1010,58,850,300);
-text('FACE / SOURCE DETAIL',1044,104,22,{color:'#5d687b',weight:700});
-art.draw(g,{x:1030,y:116,w:810,h:222},{crop:'close',cover:true});
+panel(58,585,855,420);cropMarks(58,585,855,420);heading(90,628,'03 / FACE CROP','large crop · face and edge stress test');
+g.save();g.beginPath();g.roundRect(88,660,795,310,15);g.clip();plate.draw(g,{x:45,y:590,w:900,h:455},{crop:'face',cover:true});g.restore();
+line(100,958,862,958,GOLD,4,.28);
 
-panel(1010,394,395,610);cropMarks(1010,394,395,610);
-text('HAND / GESTURE',1044,440,22,{color:'#5d687b',weight:700});
-art.draw(g,{x:1030,y:457,w:355,h:523},{crop:'hand',cover:true});
+panel(1007,585,855,420,INK);cropMarks(1007,585,855,420,'#73809a');heading(1039,628,'04 / SILHOUETTE','alpha integrity · no rectangular residue',true);
+const gl=g.createRadialGradient(1440,810,40,1440,810,380);gl.addColorStop(0,'rgba(49,87,213,.19)');gl.addColorStop(1,'rgba(49,87,213,0)');g.fillStyle=gl;g.fillRect(1040,650,790,330);
+plate.silhouette(g,{x:1210,y:650,w:470,h:320},{color:BLUE,alpha:.95});
+plate.silhouette(g,{x:1220,y:656,w:470,h:320},{color:PAPER,alpha:.12});
+text(plate.source,1828,984,15,{color:'#aeb8ca',align:'right',alpha:.38});
 
-panel(1445,394,395,610);cropMarks(1445,394,395,610);
-text('REGISTER / SAME ART',1479,440,22,{color:'#5d687b',weight:700});
-art.register(g,{x:1465,y:462,w:355,h:510},{crop:'bust',spread:10});
-text('dark plate',1642,941,18,{color:'#697489',align:'center'});
-text('+ cobalt plate + original',1642,968,18,{color:'#697489',align:'center'});
-
-g.save();g.globalAlpha=.92;g.translate(640,1011);g.rotate(-.022);rect(-100,-27,1210,57,'#f3efe4');text('normal shots keep the original art · print treatments happen around it, never instead of it',-62,10,22,{color:'#273046',weight:650});g.restore();
-
+window.GPT_ART_SOURCE=plate.source;
 window.GPT_ART_READY=true;
