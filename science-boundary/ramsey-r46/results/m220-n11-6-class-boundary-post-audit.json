@@ -1,0 +1,71 @@
+{
+  "campaign": "m220-n11-6-class-boundary-post-audit",
+  "degree_sequences": [
+    {"degree_sequence":{"11":6,"12":16,"13":14},"index_1based":1,"simple_R_upper":44},
+    {"degree_sequence":{"11":6,"12":17,"13":12,"14":1},"index_1based":2,"simple_R_upper":39},
+    {"degree_sequence":{"11":6,"12":18,"13":10,"14":2},"index_1based":3,"simple_R_upper":34},
+    {"degree_sequence":{"11":6,"12":18,"13":11,"15":1},"index_1based":4,"simple_R_upper":29},
+    {"degree_sequence":{"11":6,"12":19,"13":8,"14":3},"index_1based":5,"simple_R_upper":29},
+    {"degree_sequence":{"11":6,"12":19,"13":9,"14":1,"15":1},"index_1based":6,"simple_R_upper":24},
+    {"degree_sequence":{"11":6,"12":19,"13":10,"16":1},"index_1based":7,"simple_R_upper":20},
+    {"degree_sequence":{"11":6,"12":20,"13":6,"14":4},"index_1based":8,"simple_R_upper":24},
+    {"degree_sequence":{"11":6,"12":20,"13":7,"14":2,"15":1},"index_1based":9,"simple_R_upper":19},
+    {"degree_sequence":{"11":6,"12":20,"13":8,"15":2},"index_1based":10,"simple_R_upper":14},
+    {"degree_sequence":{"11":6,"12":20,"13":8,"14":1,"16":1},"index_1based":11,"simple_R_upper":15},
+    {"degree_sequence":{"11":6,"12":21,"13":4,"14":5},"index_1based":12,"simple_R_upper":19},
+    {"degree_sequence":{"11":6,"12":21,"13":5,"14":3,"15":1},"index_1based":13,"simple_R_upper":14},
+    {"degree_sequence":{"11":6,"12":22,"13":2,"14":6},"index_1based":14,"simple_R_upper":14}
+  ],
+  "edges":220,
+  "n11":6,
+  "remaining_after_simple_bound":[1,2,3,4,5,6,8],
+  "seq6":{
+    "R22_class_matrix_count":6,
+    "R22_matrices":[
+      {"S12":2793,"S13":1475,"S14":177,"S15":189,"e12_12":50,"e12_13":73,"e12_14":5,"e12_15":6,"e13_13":13,"e13_14":9,"e13_15":9,"e14_15":0},
+      {"S12":2793,"S13":1476,"S14":177,"S15":188,"e12_12":51,"e12_13":70,"e12_14":5,"e12_15":7,"e13_13":15,"e13_14":9,"e13_15":8,"e14_15":0},
+      {"S12":2792,"S13":1475,"S14":178,"S15":189,"e12_12":52,"e12_13":67,"e12_14":6,"e12_15":7,"e13_13":18,"e13_14":7,"e13_15":7,"e14_15":1},
+      {"S12":2792,"S13":1476,"S14":178,"S15":188,"e12_12":53,"e12_13":64,"e12_14":6,"e12_15":8,"e13_13":20,"e13_14":7,"e13_15":6,"e14_15":1},
+      {"S12":2793,"S13":1475,"S14":177,"S15":189,"e12_12":52,"e12_13":66,"e12_14":7,"e12_15":7,"e13_13":19,"e13_14":6,"e13_15":7,"e14_15":1},
+      {"S12":2793,"S13":1476,"S14":177,"S15":188,"e12_12":53,"e12_13":63,"e12_14":7,"e12_15":8,"e13_13":21,"e13_14":6,"e13_15":6,"e14_15":1}
+    ],
+    "R24_class_matrix_count":0,
+    "degree_sequence":{"11":6,"12":19,"13":9,"14":1,"15":1},
+    "forced_min_d12_vertices_with_S147":18,
+    "interpretation":"R=24 is impossible already at integer class-edge level. At R=22 only six class matrices remain and at least 18/19 degree-12 vertices lie in the S=147 extreme local stratum."
+  },
+  "seq8":{
+    "R22":[
+      {"S12":2940,"S13":984,"S14":710,"e12_12":59,"e12_13":52,"e12_14":26,"e13_13":2,"e13_14":22,"e14_14":4,"reason":"survives these necessary K4/I6 filters","status":"SURVIVES"},
+      {"S12":2939,"S13":984,"S14":711,"e12_12":59,"e12_13":53,"e12_14":25,"e13_13":1,"e13_14":23,"e14_14":4,"reason":"with at most one missing 13-14 incidence, endpoints of a 13-13 edge have >=3 common degree-14 neighbours; every 3-subset of a 4-edge graph on 4 vertices contains an edge, forming K4","status":"UNSAT"},
+      {"S12":2938,"S13":984,"S14":712,"e12_12":59,"e12_13":54,"e12_14":24,"e13_13":0,"e13_14":24,"e14_14":4,"reason":"six degree-13 vertices would be an independent 6-set","status":"UNSAT"},
+      {"S12":2940,"S13":984,"S14":710,"e12_12":60,"e12_13":48,"e12_14":28,"e13_13":6,"e13_14":18,"e14_14":5,"reason":"survives these necessary K4/I6 filters","status":"SURVIVES"},
+      {"S12":2939,"S13":984,"S14":711,"e12_12":60,"e12_13":49,"e12_14":27,"e13_13":5,"e13_14":19,"e14_14":5,"reason":"K4-e on the four degree-14 vertices lets each degree-13 vertex meet at most 3 of them, so e13_14<=18","status":"UNSAT"},
+      {"S12":2940,"S13":982,"S14":712,"e12_12":59,"e12_13":52,"e12_14":26,"e13_13":3,"e13_14":20,"e14_14":5,"reason":"K4-e on the four degree-14 vertices lets each degree-13 vertex meet at most 3 of them, so e13_14<=18","status":"UNSAT"},
+      {"S12":2938,"S13":984,"S14":712,"e12_12":60,"e12_13":50,"e12_14":26,"e13_13":4,"e13_14":20,"e14_14":5,"reason":"K4-e on the four degree-14 vertices lets each degree-13 vertex meet at most 3 of them, so e13_14<=18","status":"UNSAT"}
+    ],
+    "R22_survivor_count":2,
+    "R22_survivors":[
+      {"S12":2940,"S13":984,"S14":710,"e12_12":59,"e12_13":52,"e12_14":26,"e13_13":2,"e13_14":22,"e14_14":4,"reason":"survives these necessary K4/I6 filters","status":"SURVIVES"},
+      {"S12":2940,"S13":984,"S14":710,"e12_12":60,"e12_13":48,"e12_14":28,"e13_13":6,"e13_14":18,"e14_14":5,"reason":"survives these necessary K4/I6 filters","status":"SURVIVES"}
+    ],
+    "R24":[
+      {"S12":2940,"S13":984,"S14":712,"e12_12":60,"e12_13":54,"e12_14":24,"e13_13":0,"e13_14":24,"e14_14":4,"reason":"six degree-13 vertices would be an independent 6-set","status":"UNSAT"},
+      {"S12":2940,"S13":984,"S14":712,"e12_12":61,"e12_13":50,"e12_14":26,"e13_13":4,"e13_14":20,"e14_14":5,"reason":"K4-e on the four degree-14 vertices lets each degree-13 vertex meet at most 3 of them, so e13_14<=18","status":"UNSAT"}
+    ],
+    "degree_sequence":{"11":6,"12":20,"13":6,"14":4},
+    "forced_local_strata_in_R22_survivors":{"all_20_degree12_vertices":"S=147, hence (A28,B101) or (A29,B102)","all_6_degree13_vertices":"S=164, hence uniquely (A32,B88)"},
+    "interpretation":"R=24 is fully excluded by K4/I6. R=22 has exactly two class-edge patterns after sound K4/I6 filtering."
+  },
+  "simple_bound_exclusions":[
+    {"R_upper":20,"degree_sequence":{"11":6,"12":19,"13":10,"16":1},"index_1based":7},
+    {"R_upper":19,"degree_sequence":{"11":6,"12":20,"13":7,"14":2,"15":1},"index_1based":9},
+    {"R_upper":14,"degree_sequence":{"11":6,"12":20,"13":8,"15":2},"index_1based":10},
+    {"R_upper":15,"degree_sequence":{"11":6,"12":20,"13":8,"14":1,"16":1},"index_1based":11},
+    {"R_upper":19,"degree_sequence":{"11":6,"12":21,"13":4,"14":5},"index_1based":12},
+    {"R_upper":14,"degree_sequence":{"11":6,"12":21,"13":5,"14":3,"15":1},"index_1based":13},
+    {"R_upper":14,"degree_sequence":{"11":6,"12":22,"13":2,"14":6},"index_1based":14}
+  ],
+  "soundness":"Uses only endpoint edge extrema, degree-class handshakes, per-degree S caps, the post-audit universal n11=6 low-graph boundary, and direct K4/I6 necessities. No withdrawn row-domain predicate and no SAT/heuristic claim is used.",
+  "universal_inputs":{"R22_boundary":{"R":22,"e11_11":11,"e11_12":44,"g6":"Ep~o","r":[4,3,4,3,4,4]},"R23_impossible":true,"R24_boundary":{"R":24,"e11_11":12,"e11_12":42,"g6":"EznW","r":[4,4,4,4,4,4]},"R_lower":22}
+}
