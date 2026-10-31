@@ -1,0 +1,57 @@
+name: temp Thomson 960 A961 stratified return
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-A961-stratified-return.yml'
+
+jobs:
+  search:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        degree: [6,7]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e432-seed
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41043461011
+      - name: Search topology-stratified return exits
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          live=$(cat "$RUNNER_TEMP/seed/live-score.txt")
+          echo "nproc=$(nproc) degree=${{ matrix.degree }} live=$live"
+          python3 science-boundary/thomson-960/code/search_A961_stratified_return.py \
+            "$RUNNER_TEMP/seed/A-natural.json" --target-degree '${{ matrix.degree }}' \
+            --branches 10 --insert-rank 3 --first-maxiter 3000 --return-maxiter 3400 \
+            --live-score "$live" --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('DEG',d['target_degree'],'N961',d['N961_energy'],d['N961_coord'],'BEST',d['best_energy'],'DELTA',d['best_delta_live'])
+          for r in d['returns']:
+              print('RETURN',{k:v for k,v in r.items() if k!='points'})
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-A961-stratified-degree-${{ matrix.degree }}
+          path: ${{ runner.temp }}/out
+          retention-days: 10
