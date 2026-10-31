@@ -7,10 +7,11 @@ functions close, but exactly one AES output is absent.  This script makes that
 state explicit for the best deletion core [7,10,23] and the best focused
 one-new record [0,7,10,23] + helper 17188257792.
 
-It reports guide indices/wires/functions, the missing output, its minimum support
-size over the final available affine set, and exact low-support witnesses.  This
-is intended to define a targeted two-new-helper search rather than blindly add
-another helper dimension.
+It reports guide indices/wires/functions, the missing output, and both exact
+affine XOR support and XOR/XNOR-relevant quotient support over the final available
+set.  The quotient support minimizes over target and target^C because the final
+XNOR gate may flip the affine constant at unit cost.  This is intended to define
+a targeted multi-helper search rather than blindly add another helper dimension.
 """
 from __future__ import annotations
 import itertools,json
@@ -24,16 +25,22 @@ CORE=[7,10,23]
 FOCUS_DROP=[0,7,10,23]
 FOCUS_HELPER=17188257792
 
-def support_witness(S,target,C,maxk=5):
+def support_witness(S,target,maxk=5):
     xs=sorted(S)
-    # XOR/XNOR polarity is represented by constant coordinate already, so this
-    # is exact affine XOR support in the released-AND vector space.
     for k in range(1,maxk+1):
         for comb in itertools.combinations(xs,k):
             v=0
             for x in comb:v^=x
             if v==target:return list(comb)
     return None
+
+def quotient_support(S,target,C,maxk=5):
+    w0=support_witness(S,target,maxk)
+    w1=support_witness(S,target^C,maxk)
+    ws=[(len(w),pol,w) for pol,w in ((0,w0),(1,w1)) if w is not None]
+    if not ws:return None,None,None
+    k,pol,w=min(ws,key=lambda z:(z[0],z[1]))
+    return k,pol,w
 
 def state(c,guides,dropped,helper=None):
     sk=ras.extract_skeleton(c);C=1<<sk['const_bit'];vals,_o,_cb=tw.vectorize(c)
@@ -65,10 +72,16 @@ def main():
         st=state(c,guides,dropped,helper)
         misses=[]
         for oi,v in st['missing']:
-            wit=support_witness(st['S'],v,C,5)
-            misses.append({'output_index':oi,'vector':v,'support_witness':wit,
-                           'support_size':None if wit is None else len(wit),
-                           'one_gate':wit is not None and len(wit)<=2})
+            exact=support_witness(st['S'],v,5)
+            qk,qpol,qwit=quotient_support(st['S'],v,C,5)
+            misses.append({'output_index':oi,'vector':v,
+                           'exact_support_witness':exact,
+                           'exact_support_size':None if exact is None else len(exact),
+                           'quotient_support_size':qk,
+                           'quotient_uses_constant_flip':qpol,
+                           'quotient_support_witness':qwit,
+                           'one_gate_possible':qk is not None and qk<=2,
+                           'two_gate_possible':qk is not None and qk<=3})
         cases.append({'label':label,'dropped':dropped,'helper':helper,
                       'released_ands':st['ai']-START,'remaining_guides':len(st['rem']),
                       'available_count':len(st['S']),'missing_outputs':misses,
