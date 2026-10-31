@@ -1,0 +1,67 @@
+Thomson N=960 — live-centered neighbouring-size bounce scout — 2026-10-31
+
+Target
+------
+Live R = 444368.3924061973, coordination 36/900/24.
+Run 41183326339 tested eight one-bounce OSHBH-style representatives from R:
+- 960->961->960: insertion Voronoi ranks 0,3,6,9;
+- 960->959->960: deletion-contribution ranks 0,3,6,9;
+with four greedy nontrivial return branches per first move.
+The first ranks were chosen as distinct representatives rather than wasting jobs on obvious C3 copies.
+
+Headline result
+---------------
+No returned N=960 configuration improves R.  Apparent changes of order 1e-10 on returns to R are summation noise.
+
+The important structural result is that temporary N+/-1 changes do not simply undo themselves.  Most nontrivial return branches land in unconstrained 23-dislocation minima (35 fivefold / 902 sixfold / 23 sevenfold), while a small number return exactly to R.  Thus neighbouring-size moves are a genuine topology-changing barrier-crossing representation around the record, but this one-step scout reaches the wrong energy layer.
+
+Best results by first move
+--------------------------
+add rank 0, triangle (428,602,831), N961 E=445303.2473695818:
+- return to R: 444368.3924061973 (36/900/24)
+- best novel: 444368.5597414209 (35/902/23)
+- other novel: 444368.5625929215, 444368.5646774949 (23 dislocations)
+
+add rank 3, triangle (683,341,550), N961 E=445303.2690725268:
+- best 444368.5801843961 (35/902/23)
+- others 444368.5909475367, 444368.5909978750, 444368.6724491909
+
+add rank 6, triangle (537,879,628), N961 E=445303.2615170547:
+- best 444368.5745365179 (35/902/23)
+- others 444368.5767673365, 444368.5772303857, 444368.6774305599
+
+add rank 9, triangle (35,79,134), N961 E=445303.2582779590:
+- one return to R within ~3e-10 summation noise
+- best novel 444368.5711129360 (35/902/23)
+- others 444368.5726055644, 444368.5759333563
+
+remove rank 0, delete live point 419, N959 E=443434.6962075190:
+- one return to R within ~1e-10 summation noise
+- best novel 444368.5597414213 (35/902/23)
+- others 444368.5646774948, 444368.5909475366
+
+remove rank 3, delete live point 926, N959 E=443434.7149393094:
+- best 444368.5824333339 (35/902/23)
+- others 444368.5874633711, 444368.5934718215, 444368.5998182538
+
+remove rank 6, delete live point 886, N959 E=443434.7051028060:
+- best 444368.5693024586 (35/902/23)
+- others 444368.5709151393, 444368.5801843957, 444368.5837903891
+
+remove rank 9, delete live point 74, N959 E=443434.6929925603:
+- best 444368.5635473797 (35/902/23)
+- others 444368.5682610618, 444368.5723338235, 444368.5908456374
+
+Interpretation
+--------------
+The best novel one-bounce return is E=444368.5597414209/4213.  It is lower than some previously encountered 23-dislocation descendants, but it is still far above the much better known e432 23-dislocation basin (~444368.4322496275).  Therefore expanding more symmetry copies or nearby greedy ranks from R is not justified.
+
+The topology selectivity is nevertheless strong: the greedy N+1 insertion candidates sit near degree-7 scar environments, while N-1 deletion candidates are degree-5 vertices.  Temporary size changes therefore act like topological-charge screening/reconstruction and can cross barriers that fixed-N single-glide release cannot.
+
+Decision
+--------
+Retire broader one-bounce expansion from R.  Do not spend runners on more C3 copies or adjacent ranks.
+
+A more informative neighbouring-size test is to start from A (E~444368.3956862258), which is only ~0.003280 above R and whose 15 softest fixed-N one-glide moves all return to A.  A small A-centered N+/-1 scout is therefore justified as a qualitatively different escape mechanism near the record.  Workflow temp-thomson-960-A-size-bounce.yml tests only add ranks 0/3 and remove ranks 0/3 initially.
+
+If A-centered one-bounce also only returns A/R or high 23-dislocation basins, deeper size sequences (e.g. alternating +/-1 or excursions by two particles) are only justified if they use a structurally distinct intermediate rather than simply increasing the number of first-rank trials.
