@@ -1,0 +1,65 @@
+name: temp labs100 h18 K23 high splits
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k23-high-splits.yml'
+      - 'science-boundary/labs-100/code/oddperfect_h18_k_compressed.cpp'
+      - 'science-boundary/labs-100/code/oddperfect_h18_k_qgroup_affine.cpp'
+
+concurrency:
+  group: temp-labs100-h18-k23-high-splits
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build generic exact solvers
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k_compressed.cpp -o "$RUNNER_TEMP/comp"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k_qgroup_affine.cpp -o "$RUNNER_TEMP/qgroup"
+      - name: Reproduce complete K23 high-support splits
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          : > "$RUNNER_TEMP/kp23.all"
+          "$RUNNER_TEMP/comp" 23 23 0 | tee -a "$RUNNER_TEMP/kp23.all"
+          grep -F 'H18K_COMPRESSED K=23 budget=63 kp=23 kc=0 t=0 diff_orbits=2 support_orbits=2 ptests=490314 rankfull=0 rankproj=490314 ranklo=0 Hmatches_halfC=490314 spectral=2930' "$RUNNER_TEMP/kp23.all"
+          grep '^HIT ' "$RUNNER_TEMP/kp23.all" > "$RUNNER_TEMP/kp23.hits"
+          test "$(wc -l < "$RUNNER_TEMP/kp23.hits")" -eq 2930
+          "$RUNNER_TEMP/qgroup" 23 "$RUNNER_TEMP/kp23.hits" | tee "$RUNNER_TEMP/kp23.qgroup"
+          grep -F 'H18K_AFFINE_QGROUP_SUMMARY K=23 budget=63 canonical_groups=2 outer_states=4 half_second_solutions=9349 Q_feasible_halfpairs=0 minSH=67 min_margin=32' "$RUNNER_TEMP/kp23.qgroup"
+
+          : > "$RUNNER_TEMP/kp21.all"
+          for t in 0 2; do "$RUNNER_TEMP/comp" 23 21 "$t" | tee -a "$RUNNER_TEMP/kp21.all"; done
+          grep -F 'H18K_COMPRESSED K=23 budget=63 kp=21 kc=2 t=0 diff_orbits=2 support_orbits=14 ptests=759696 rankfull=758008 rankproj=1688 ranklo=0 Hmatches_halfC=1688 spectral=0' "$RUNNER_TEMP/kp21.all"
+          grep -F 'H18K_COMPRESSED K=23 budget=63 kp=21 kc=2 t=2 diff_orbits=366 support_orbits=66 ptests=3581424 rankfull=3573492 rankproj=7932 ranklo=0 Hmatches_halfC=7932 spectral=1' "$RUNNER_TEMP/kp21.all"
+          grep '^HIT ' "$RUNNER_TEMP/kp21.all" > "$RUNNER_TEMP/kp21.hits"
+          test "$(wc -l < "$RUNNER_TEMP/kp21.hits")" -eq 1
+          "$RUNNER_TEMP/qgroup" 23 "$RUNNER_TEMP/kp21.hits" | tee "$RUNNER_TEMP/kp21.qgroup"
+          grep -F 'H18K_AFFINE_QGROUP_SUMMARY K=23 budget=63 canonical_groups=1 outer_states=8 half_second_solutions=4098 Q_feasible_halfpairs=0 minSH=73 min_margin=64' "$RUNNER_TEMP/kp21.qgroup"
+
+          : > "$RUNNER_TEMP/kp19.all"
+          for t in 0 2 4; do "$RUNNER_TEMP/comp" 23 19 "$t" | tee -a "$RUNNER_TEMP/kp19.all"; done
+          grep -F 'H18K_COMPRESSED K=23 budget=63 kp=19 kc=4 t=0 diff_orbits=2 support_orbits=66 ptests=767448 rankfull=765020 rankproj=50 ranklo=2378 Hmatches_halfC=4776 spectral=11' "$RUNNER_TEMP/kp19.all"
+          grep -F 'H18K_COMPRESSED K=23 budget=63 kp=19 kc=4 t=2 diff_orbits=366 support_orbits=1032 ptests=12000096 rankfull=11977398 rankproj=1306 ranklo=21392 Hmatches_halfC=43722 spectral=126' "$RUNNER_TEMP/kp19.all"
+          grep -F 'H18K_COMPRESSED K=23 budget=63 kp=19 kc=4 t=4 diff_orbits=6578 support_orbits=1514 ptests=17604792 rankfull=17574298 rankproj=1940 ranklo=28554 Hmatches_halfC=58271 spectral=186' "$RUNNER_TEMP/kp19.all"
+          grep '^HIT ' "$RUNNER_TEMP/kp19.all" > "$RUNNER_TEMP/kp19.hits"
+          test "$(wc -l < "$RUNNER_TEMP/kp19.hits")" -eq 323
+          "$RUNNER_TEMP/qgroup" 23 "$RUNNER_TEMP/kp19.hits" | tee "$RUNNER_TEMP/kp19.qgroup"
+          grep -F 'H18K_AFFINE_QGROUP_SUMMARY K=23 budget=63 canonical_groups=270 outer_states=8640 half_second_solutions=1083337 Q_feasible_halfpairs=0 minSH=25 min_margin=8' "$RUNNER_TEMP/kp19.qgroup"
+      - name: Upload exact high-split transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k23-high-splits
+          path: |
+            ${{ runner.temp }}/kp*.all
+            ${{ runner.temp }}/kp*.hits
+            ${{ runner.temp }}/kp*.qgroup
+          if-no-files-found: warn
