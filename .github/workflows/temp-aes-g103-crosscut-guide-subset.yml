@@ -1,0 +1,49 @@
+name: temp-aes-g103-crosscut-guide-subset
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/g103_crosscut_guide_subset.py'
+      - '.github/workflows/temp-aes-g103-crosscut-guide-subset.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  census:
+    strategy:
+      fail-fast: false
+      matrix:
+        scope: [all, live]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exhaust 22-of-25 cross-cut guide family
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet z3-solver
+          python -m py_compile science-boundary/aes-sbox-circuit/g103_crosscut_guide_subset.py
+          python science-boundary/aes-sbox-circuit/g103_crosscut_guide_subset.py \
+            --start 31 --keep 22 --source-scope '${{ matrix.scope }}' \
+            --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier if <=100 found
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ] && [ "$(python -c "import json; print(len(json.load(open('result/candidate.json'))['gates']))")" -le 100 ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-crosscut-guide-subset-${{ matrix.scope }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
