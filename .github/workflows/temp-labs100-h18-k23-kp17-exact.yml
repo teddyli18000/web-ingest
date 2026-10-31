@@ -1,0 +1,65 @@
+name: temp labs100 h18 K23 kp17 exact
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k23-kp17-exact.yml'
+      - 'science-boundary/labs-100/code/oddperfect_h18_k_signedc_exact.cpp'
+      - 'science-boundary/labs-100/code/oddperfect_h18_k_qgroup_affine.cpp'
+      - 'science-boundary/labs-100/code/oddperfect_h18_k_affine_witness.cpp'
+
+concurrency:
+  group: temp-labs100-h18-k23-kp17-exact
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact signed-c, fibre-Q, and witness solvers
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k_signedc_exact.cpp -o "$RUNNER_TEMP/comp"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k_qgroup_affine.cpp -o "$RUNNER_TEMP/qgroup"
+          g++ -O3 -march=native science-boundary/labs-100/code/oddperfect_h18_k_affine_witness.cpp -o "$RUNNER_TEMP/witness"
+      - name: Exhaust kp17 kc6 compressed layer using signed-c reformulation
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          : > "$RUNNER_TEMP/kp17.all"
+          for t in 0 2 4 6; do "$RUNNER_TEMP/comp" 23 17 "$t" | tee -a "$RUNNER_TEMP/kp17.all"; done
+          grep -F 'H18K_SIGNEDC K=23 budget=63 kp=17 kc=6 t=0 diff_orbits=2 support_orbits=206 c_sign_systems=2060 exact_p_solutions=22192 spectral=81' "$RUNNER_TEMP/kp17.all"
+          grep -F 'H18K_SIGNEDC K=23 budget=63 kp=17 kc=6 t=2 diff_orbits=366 support_orbits=13508 c_sign_systems=135080 exact_p_solutions=272283 spectral=1517' "$RUNNER_TEMP/kp17.all"
+          grep -F 'H18K_SIGNEDC K=23 budget=63 kp=17 kc=6 t=4 diff_orbits=6578 support_orbits=85906 c_sign_systems=859060 exact_p_solutions=659963 spectral=4840' "$RUNNER_TEMP/kp17.all"
+          grep -F 'H18K_SIGNEDC K=23 budget=63 kp=17 kc=6 t=6 diff_orbits=8956 support_orbits=17614 c_sign_systems=176140 exact_p_solutions=319042 spectral=2843' "$RUNNER_TEMP/kp17.all"
+          grep '^HIT ' "$RUNNER_TEMP/kp17.all" > "$RUNNER_TEMP/kp17.hits"
+          test "$(wc -l < "$RUNNER_TEMP/kp17.hits")" -eq 9281
+      - name: Exhaust exact fibre-Q support orbits
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          "$RUNNER_TEMP/qgroup" 23 "$RUNNER_TEMP/kp17.hits" | tee "$RUNNER_TEMP/kp17.qgroup"
+          grep -F 'H18K_AFFINE_QGROUP_SUMMARY K=23 budget=63 canonical_groups=6169 outer_states=789632 half_second_solutions=22272301 Q_feasible_halfpairs=64 minSH=9 min_margin=-28' "$RUNNER_TEMP/kp17.qgroup"
+          test "$(grep -c '^QHIT ' "$RUNNER_TEMP/kp17.qgroup")" -eq 64
+      - name: Expand every Q survivor and directly rescore length-100 sequences
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/witness" 23 "$RUNNER_TEMP/kp17.hits" "$RUNNER_TEMP/kp17.qgroup" | tee "$RUNNER_TEMP/kp17.witness"
+          grep -F 'H18K_AFFINE_WITNESS_SUMMARY K=23 budget=63 qhits=64 mapped_compressed_candidates=152 fibre_orientations=608 affine_transforms=304000 Vbudget_pass=0 oddperfect_pass=10560 E_le_570=0 minV=22 minOddEnergy=50 minEnergy=1106' "$RUNNER_TEMP/kp17.witness"
+          test "$(grep -c '^CANDIDATE ' "$RUNNER_TEMP/kp17.witness" || true)" -eq 0
+      - name: Upload exact transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k23-kp17-exact
+          path: |
+            ${{ runner.temp }}/kp17.all
+            ${{ runner.temp }}/kp17.hits
+            ${{ runner.temp }}/kp17.qgroup
+            ${{ runner.temp }}/kp17.witness
+          if-no-files-found: warn
