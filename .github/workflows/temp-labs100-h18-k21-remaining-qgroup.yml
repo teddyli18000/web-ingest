@@ -1,0 +1,51 @@
+name: temp labs100 h18 K21 remaining affine qgroup
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k21-remaining-qgroup.yml'
+      - 'science-boundary/labs-100/code/oddperfect_h18_k21_qgroup_affine.cpp'
+
+concurrency:
+  group: temp-labs100-h18-k21-remaining-qgroup
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact affine-canonical fibre-Q solver
+        run: g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k21_qgroup_affine.cpp -o "$RUNNER_TEMP/qgroup"
+      - name: Download frozen complete remaining compressed census
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/input"
+          gh run download 41185379285 -n labs100-h18-k21-remaining-compressed -D "$RUNNER_TEMP/input"
+          test "$(wc -l < "$RUNNER_TEMP/input/kp13.hits")" -eq 12160
+          test "$(wc -l < "$RUNNER_TEMP/input/kp11.hits")" -eq 6846
+          test "$(wc -l < "$RUNNER_TEMP/input/kp9.hits")" -eq 3644
+      - name: Exhaust exact fibre-Q support orbits using all CPUs
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          for kp in 13 11 9; do
+            echo "=== kp${kp} ==="
+            "$RUNNER_TEMP/qgroup" "$RUNNER_TEMP/input/kp${kp}.hits" | tee "$RUNNER_TEMP/kp${kp}.qgroup"
+            grep '^K21_AFFINE_QGROUP_SUMMARY ' "$RUNNER_TEMP/kp${kp}.qgroup"
+            echo "QHITS kp=${kp} $(grep -c '^QHIT ' "$RUNNER_TEMP/kp${kp}.qgroup" || true)"
+          done
+      - name: Upload exact Q transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k21-remaining-qgroup
+          path: ${{ runner.temp }}/kp*.qgroup
+          if-no-files-found: warn
