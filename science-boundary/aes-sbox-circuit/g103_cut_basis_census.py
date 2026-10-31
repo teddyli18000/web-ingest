@@ -2,10 +2,14 @@
 """Enumerate all 168 invertible bases of the three non-atomic G103 cut signals.
 
 Cut immediately after the last AND a32.  The pure-linear suffix consumes 17
-boundary signals, of which exactly t47,t48,t49 are non-atomic linear values.  A
-prefix does not intrinsically need to expose those three named functions: any
-ordered basis of their 3-dimensional GF(2) span is an equally valid interface if
-the suffix is synthesized in the transformed coordinates.
+boundary signals, of which exactly three are non-atomic linear values.  A prefix
+does not intrinsically need to expose those three named functions: any ordered
+basis of their 3-dimensional GF(2) span is an equally valid interface if the
+suffix is synthesized in the transformed coordinates.
+
+The normalized/released circuit representation renames wires, so the three
+non-atomic cut values are discovered from their affine semantics rather than
+from historical source names such as t47/t48/t49.
 
 This script enumerates GL(3,2), rewrites the eight suffix output linear forms and
 all original suffix guide functions into each transformed cut basis, and runs a
@@ -65,6 +69,30 @@ def transform_mask(mask,extra_idx,cmap):
     for k,idx in enumerate(extra_idx):
         if (d>>k)&1:out|=1<<idx
     return out
+
+
+def semantic_cut_extras(c,boundary):
+    """Return the three non-atomic boundary wires and their affine vectors.
+
+    In the released-AND representation each primary input and AND output is an
+    atom.  Linear boundary values are exactly the crossing wires whose affine
+    vectors are not one of those atoms.  This survives normalization/renaming.
+    """
+    sk=ras.extract_skeleton(c);C=1<<sk['const_bit']
+    vals={f'x{i}':1<<i for i in range(8)};and_no=0
+    for g in c['gates']:
+        a,b=vals[g['a']],vals[g['b']]
+        if g['op']=='XOR':v=a^b
+        elif g['op']=='XNOR':v=a^b^C
+        elif g['op']=='AND':
+            v=1<<(8+and_no);and_no+=1
+        else:raise ValueError(g['op'])
+        vals[g['out']]=v
+    assert and_no==sk['n_and']
+    atoms={1<<i for i in range(8+sk['n_and'])}
+    extras=[w for w in boundary if vals[w] not in atoms]
+    assert len(extras)==3,(boundary,extras)
+    return extras,vals
 
 
 def init_sx(S,K):
@@ -146,7 +174,7 @@ def main():
     c=ras.load_circuit(args.family);assert ras.independent_check(c)[0]
     last,prefix,suffix,boundary=suf.split(c)
     m,C,vals,aff_targets,qtargets,orig_guide=suf.formal_suffix(suffix,boundary,c['outputs'])
-    extras=['t47','t48','t49'];extra_idx=[boundary.index(w) for w in extras]
+    extras,_=semantic_cut_extras(c,boundary);extra_idx=[boundary.index(w) for w in extras]
     # Recreate every original suffix intermediate quotient as a guide vector.
     qvals={w:1<<i for i,w in enumerate(boundary)};guide=[]
     for g in suffix:
