@@ -1,0 +1,32 @@
+{
+  "R22_class_patterns": 7,
+  "R22_pattern_exclusions": [
+    {
+      "class_matrix": {"S12":2940,"S13":984,"S14":710,"e12_12":59,"e12_13":52,"e12_14":26,"e13_13":2,"e13_14":22,"e14_14":4},
+      "high_independent4":[0,3,4,5],
+      "low_independent_pair":[0,3],
+      "reason":"fixed independent 6 = low nonedge + {P3 center, three H isolates}",
+      "status":"UNSAT"
+    },
+    {
+      "class_matrix": {"S12":2940,"S13":984,"S14":710,"e12_12":60,"e12_13":48,"e12_14":28,"e13_13":6,"e13_14":18,"e14_14":5},
+      "color_split_cases":[
+        {"color_split":[2,4],"cross_edge_capacity":8,"high_independent4":"four H vertices in the larger color class"},
+        {"color_split":[3,3],"cross_edge_capacity":9,"high_independent4":"three H vertices in one color class plus the opposite Q third vertex"},
+        {"color_split":[4,2],"cross_edge_capacity":8,"high_independent4":"four H vertices in the larger color class"}
+      ],
+      "low_independent_pair":[0,3],
+      "reason":"every feasible H color split contains a fixed independent 4; combine with a low nonedge",
+      "status":"UNSAT"
+    }
+  ],
+  "R22_survivors_before_independent6":2,
+  "R24_all_unsat":true,
+  "R24_class_patterns":2,
+  "all_unsat":true,
+  "campaign":"m220-n11-6-seq8-independent6-post-audit",
+  "conclusion":"No 220-edge R(4,6,36) graph has degree sequence 11^6 12^20 13^6 14^4.",
+  "degree_sequence":{"11":6,"12":20,"13":6,"14":4},
+  "edges":220,
+  "soundness":"Uses only the post-audit universal R=22 low graph, exact class handshakes, and direct K4/I6 implications. No withdrawn row-domain predicate, SAT result, or external high-stratum catalogue is used."
+}
