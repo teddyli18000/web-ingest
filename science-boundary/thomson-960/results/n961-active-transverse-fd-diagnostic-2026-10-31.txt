@@ -1,0 +1,45 @@
+Thomson N=960 — active-only transverse fractional-boundary diagnostic — 2026-10-31
+
+run = 41197569521
+live_score = 444368.3924061973
+
+Representation
+--------------
+At the N961 fractional label960 branch, lambda=0.15 projects to A and lambda=0.10 projects to R.  The probe used lambda=0.125, removed the fading particle's tangent coordinates from the search space, and projected out both active rigid-rotation fields and the empirical active geometry secant between the lambda=0.15 and 0.10 fractional states.
+
+Controls
+--------
+lambda=0.15 -> A, E960 = 444368.395686225733
+lambda=0.125 -> A, E960 = 444368.395686225675
+lambda=0.10 -> R, E960 = 444368.392406197672
+empirical branch-secant RMS derivative = 0.00285369673746416 rad / lambda
+
+Exploratory perturbation outcomes
+---------------------------------
+The finite-difference ARPACK operator reported nominal low values
+  4.65974419, 4.91725320, 5.54282394, 6.15056310, 6.73177083,
+  8.91983170, 10.53477707, 11.82721875, 12.25691128, 13.53916287.
+Scanning nominal modes 0..5 in both signs at RMS amplitudes
+0.0015, 0.003, 0.006, 0.012, 0.02 returned only known low basins R/A/B,
+plus higher same-topology minima around 444368.42162124, 444368.43442666,
+and one much higher ~444369.14482373.
+The best apparent value was 444368.392406197265, only ~5.8e-11 below live and therefore floating-point noise.
+
+Critical numerical diagnosis
+-----------------------------
+This run is NOT a trustworthy Hessian-spectrum exclusion.  The recorded Ritz
+residuals for nominal modes 0..5 were approximately
+  8.87, 4.43, 8.02, 2.62, 1.24, 26.9,
+which are comparable to or larger than the reported eigenvalues themselves.
+Consequently ARPACK was being supplied with an operator that was insufficiently
+linear/symmetric at the required accuracy (the matrix-free centered-difference
+HVP normalizes each input direction before differencing, so the finite-step
+operator is only approximately linear).
+
+Scientific conclusion
+---------------------
+The concrete perturbations tried in this run did not improve R, but their
+association with true Hessian eigenmodes is not established.  Do not cite this
+run as excluding transverse soft modes.  A corrected complex-step analytic-gradient
+HVP with explicit symmetry and Ritz-residual checks is required before that
+question is closed.
