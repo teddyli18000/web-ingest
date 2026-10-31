@@ -1,0 +1,53 @@
+name: temp labs100 h18 K21 final witness
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k21-final-witness.yml'
+      - 'science-boundary/labs-100/code/oddperfect_h18_k21_affine_witness.cpp'
+
+concurrency:
+  group: temp-labs100-h18-k21-final-witness
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact final witness verifier
+        run: g++ -O3 -march=native science-boundary/labs-100/code/oddperfect_h18_k21_affine_witness.cpp -o "$RUNNER_TEMP/witness"
+      - name: Download frozen complete compressed and fibre-Q artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/compressed" "$RUNNER_TEMP/qgroup"
+          gh run download 41185379285 -n labs100-h18-k21-remaining-compressed -D "$RUNNER_TEMP/compressed"
+          gh run download 41185885170 -n labs100-h18-k21-remaining-qgroup -D "$RUNNER_TEMP/qgroup"
+          test "$(wc -l < "$RUNNER_TEMP/compressed/kp13.hits")" -eq 12160
+          test "$(wc -l < "$RUNNER_TEMP/compressed/kp9.hits")" -eq 3644
+          test "$(grep -c '^QHIT ' "$RUNNER_TEMP/qgroup/kp13.qgroup")" -eq 3
+          test "$(grep -c '^QHIT ' "$RUNNER_TEMP/qgroup/kp9.qgroup")" -eq 1
+      - name: Expand and directly rescore every remaining K21 fibre
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/witness" "$RUNNER_TEMP/compressed/kp13.hits" "$RUNNER_TEMP/qgroup/kp13.qgroup" | tee "$RUNNER_TEMP/kp13.witness"
+          grep -F 'K21_AFFINE_WITNESS_SUMMARY qhits=3 mapped_compressed_candidates=7 fibre_orientations=28 affine_transforms=14000 Vbudget_pass=0 oddperfect_pass=480 E_le_570=0 minV=23 minOddEnergy=50 minEnergy=1386' "$RUNNER_TEMP/kp13.witness"
+          test "$(grep -c '^CANDIDATE ' "$RUNNER_TEMP/kp13.witness" || true)" -eq 0
+
+          "$RUNNER_TEMP/witness" "$RUNNER_TEMP/compressed/kp9.hits" "$RUNNER_TEMP/qgroup/kp9.qgroup" | tee "$RUNNER_TEMP/kp9.witness"
+          grep -F 'K21_AFFINE_WITNESS_SUMMARY qhits=1 mapped_compressed_candidates=2 fibre_orientations=8 affine_transforms=4000 Vbudget_pass=0 oddperfect_pass=160 E_le_570=0 minV=30 minOddEnergy=50 minEnergy=1314' "$RUNNER_TEMP/kp9.witness"
+          test "$(grep -c '^CANDIDATE ' "$RUNNER_TEMP/kp9.witness" || true)" -eq 0
+      - name: Upload exact final transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k21-final-witness
+          path: ${{ runner.temp }}/kp*.witness
+          if-no-files-found: warn
