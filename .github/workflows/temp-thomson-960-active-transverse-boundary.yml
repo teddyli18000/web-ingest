@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
       - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
       - name: Static check
-        run: python3 -m py_compile science-boundary/thomson-960/code/search_n961_active_transverse_modes.py
+        run: python3 -m py_compile science-boundary/thomson-960/code/search_n961_active_transverse_projected.py
       - uses: actions/download-artifact@v4
         with:
           name: thomson-e432-seed
@@ -30,29 +30,25 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: teddyli18000/web-ingest
           run-id: 41043461011
-      - name: Search validated active transverse exits
+      - name: Search projected active transverse exits
         run: |
           mkdir -p "$RUNNER_TEMP/out"
           live=$(cat "$RUNNER_TEMP/seed/live-score.txt")
-          echo "live=$live nproc=$(nproc)"
-          python3 science-boundary/thomson-960/code/search_n961_active_transverse_modes.py \
+          python3 science-boundary/thomson-960/code/search_n961_active_transverse_projected.py \
             "$RUNNER_TEMP/seed/A-natural.json" \
             --lambda-hi 0.15 --lambda-value 0.125 --lambda-lo 0.10 \
-            --live-score "$live" \
-            --modes '0,1,2,3,4,5' \
-            --amps '.0015,.003,.006,.012,.02' \
-            --k 10 --cs-step 1e-20 \
+            --live-score "$live" --modes '0,1,2,3,4,5' \
+            --amps '.0015,.003,.006,.012,.02' --k 10 --cs-step 1e-20 \
             --out "$RUNNER_TEMP/out/result.json"
       - name: Summarize
         if: always()
         run: |
           if [ ! -f "$RUNNER_TEMP/out/result.json" ]; then exit 0; fi
           python3 - <<'PY'
-          import json, os
+          import json,os
           d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
           print('BRACKET',d['control_hi']['class'],d['baseline']['class'],d['control_lo']['class'])
-          print('SECANT_RMS_DERIV',d['secant_derivative_rms'])
-          print('HVP',d['hvp_method'],d['complex_step'],'SYMMETRY',d['symmetry_abs'],d['symmetry_rel'])
+          print('OPERATOR',d['operator'],'HVP',d['hvp'],'SYMMETRY',d['symmetry_abs'],d['symmetry_rel'])
           print('EIGENVALUES',d['eigenvalues'])
           print('MODE_DIAG',d['mode_diagnostics'])
           print('BEST',d['best_energy'],d['best_delta_live'])
@@ -62,6 +58,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: thomson-active-transverse-boundary-complex-step
+          name: thomson-active-transverse-boundary-projected
           path: ${{ runner.temp }}/out
           retention-days: 10
