@@ -1,0 +1,32 @@
+name: temp-aes-g103-tail-cadical-control
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/g103_tail_cadical_control.py'
+      - '.github/workflows/temp-aes-g103-tail-cadical-control.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  control:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install --quiet python-sat
+      - name: Fix the original G103 tail inside the same CNF
+        working-directory: science-boundary/aes-sbox-circuit
+        run: |
+          set -euxo pipefail
+          python -m py_compile g103_tail_cadical.py g103_tail_cadical_control.py
+          python g103_tail_cadical_control.py | tee control.log
+          cat result/summary.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-tail-cadical-control
+          path: |
+            science-boundary/aes-sbox-circuit/result
+            science-boundary/aes-sbox-circuit/control.log
