@@ -1,0 +1,70 @@
+name: temp Thomson 960 constant-total three-occupancy simplex
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-three-occupancy-simplex.yml'
+
+jobs:
+  branch:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - zero_label: 886
+            tag: R886
+          - zero_label: 960
+            tag: A960
+          - zero_label: 380
+            tag: H380
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      actions: read
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Static check
+        run: python3 -m py_compile science-boundary/thomson-960/code/search_n961_three_occupancy_simplex.py
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e432-seed
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41043461011
+      - name: Continue basin sheet to common simplex center
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          live=$(cat "$RUNNER_TEMP/seed/live-score.txt")
+          python3 science-boundary/thomson-960/code/search_n961_three_occupancy_simplex.py \
+            "$RUNNER_TEMP/seed/A-natural.json" \
+            --zero-label '${{ matrix.zero_label }}' \
+            --live-score "$live" \
+            --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        if: always()
+        run: |
+          if [ ! -f "$RUNNER_TEMP/out/result.json" ]; then exit 0; fi
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('ZERO_LABEL',d['zero_label'],'VERTEX',d['vertex_endpoint'])
+          print('CENTER_EW',d['center_weighted_energy'],'GRMS',d['center_weighted_grms'])
+          print('BEST',d['best_projection'])
+          for p in d['projections']:
+              print('PROJECT',p['delete_index'],p['class'],p['energy'],p['delta_live'],p['signature']['coord'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-three-occupancy-simplex-${{ matrix.tag }}
+          path: ${{ runner.temp }}/out
+          retention-days: 10
