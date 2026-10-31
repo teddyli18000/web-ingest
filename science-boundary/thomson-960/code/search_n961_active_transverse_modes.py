@@ -12,13 +12,21 @@ weighted-Hessian probe:
      fading label 960 are excluded because that particle is deleted before the
      genuine N960 return; soft modes localized on it would otherwise disappear.
   2. Project out the active component of the A/R branch secant in addition to
-     rigid rotations, so the eigensolver returns directions transverse to the
-     known occupancy-induced crossing rather than more of the same 1-D motion.
+     active rigid rotations, so the eigensolver returns directions transverse
+     to the known occupancy-induced crossing rather than more of the same 1-D
+     motion.  Active rigid rotations are irrelevant after label960 is deleted,
+     because they become a global rotation of the genuine N960 configuration.
+
+The Hessian-vector product uses complex-step differentiation of the analytic
+weighted angular gradient.  This is deliberately different from the earlier
+normalized finite-difference HVP, whose finite-step nonlinearity produced large
+Ritz residuals and therefore did not support a trustworthy spectrum claim.
+Explicit random-bilinear symmetry and Ritz-residual diagnostics are mandatory.
 
 At the midpoint fractional state we diagonalize the principal active block of
 the weighted N961 Hessian with label960 held at its relaxed position, perturb
-the retained 960 points along the lowest transverse modes, then delete label960
-and fully repolish under the ordinary N960 Thomson objective.
+the retained 960 points along the lowest validated transverse modes, then delete
+label960 and fully repolish under the ordinary N960 Thomson objective.
 """
 from __future__ import annotations
 
@@ -33,7 +41,7 @@ from scipy.sparse.linalg import LinearOperator, eigsh
 import diagnose_soft_modes as sm
 import search_soft_pair as sp
 from search_live_size_bounce import load_points, voronoi_candidates, relax as size_relax
-from search_n972_mobile_fractional_homotopy import stable_weighted_relax, weighted_terms_grad
+from search_n972_mobile_fractional_homotopy import stable_weighted_relax
 from search_from_seed_modes import stable_relax_q
 from search_n961_fractional_boundary_modes import classify, counts, parse_schedule
 
@@ -70,9 +78,31 @@ def tangent_log(ref: np.ndarray, other: np.ndarray) -> np.ndarray:
     return np.column_stack([np.sum(dx * eth, axis=1), np.sum(dx * eph, axis=1)]).ravel()
 
 
-def active_weighted_hessian(q0_full, charges, fade_index, fd_step, rot_penalty,
+def weighted_angular_grad_complex(v: np.ndarray, charges: np.ndarray) -> np.ndarray:
+    """Complex-analytic weighted angular gradient, without nonanalytic clipping.
+
+    The real configurations are safely separated, so off-diagonal r^2 values
+    stay far from zero under an infinitesimal imaginary complex-step.  The
+    radial term in the Cartesian gradient is unnecessary because it is exactly
+    orthogonal to both angular tangent basis vectors.
+    """
+    x, dth, dph = sm.vars_to_xyz(v)
+    dots = x @ x.T
+    r2 = 2.0 - 2.0 * dots
+    np.fill_diagonal(r2, np.inf + 0j)
+    inv = 1.0 / np.sqrt(r2)
+    w = inv / r2
+    np.fill_diagonal(w, 0.0)
+    qq = np.multiply.outer(charges, charges)
+    ga = (qq * w) @ x
+    gt = np.sum(ga * dth, axis=1)
+    gp = np.sum(ga * dph, axis=1)
+    return np.column_stack([gt, gp]).ravel()
+
+
+def active_weighted_hessian(q0_full, charges, fade_index, cs_step, rot_penalty,
                             secant, secant_penalty):
-    """Principal active block of weighted N961 Hessian, with nuisance directions lifted."""
+    """Linear complex-step principal active Hessian block with nuisance lifts."""
     nfull = len(q0_full) // 2
     if fade_index != nfull - 1:
         raise ValueError('this search currently requires the faded particle to be the final label')
@@ -88,24 +118,20 @@ def active_weighted_hessian(q0_full, charges, fade_index, fd_step, rot_penalty,
         raise RuntimeError(f'branch secant vanished after rotation projection: {sn}')
     sec /= sn
     calls = {'n': 0}
-
-    def grad(q):
-        return weighted_terms_grad(q, charges)[1]
+    q0c = np.asarray(q0_full, dtype=np.complex128)
 
     def raw_active(ya):
         ya = np.asarray(ya, float)
-        yn = float(np.linalg.norm(ya))
-        if yn == 0.0:
+        if not np.any(ya):
             return np.zeros_like(ya)
         yf = np.zeros(2 * nfull, float)
-        yf[:2 * nact] = ya / yn
+        yf[:2 * nact] = ya
         dq = invs * yf
-        gp = grad(q0_full + fd_step * dq)
-        gm = grad(q0_full - fd_step * dq)
-        calls['n'] += 2
-        hq = (gp - gm) * (yn / (2.0 * fd_step))
+        gc = weighted_angular_grad_complex(q0c + 1j * cs_step * dq, charges)
+        calls['n'] += 1
+        hq = np.imag(gc) / cs_step
         hy = invs * hq
-        return hy[:2 * nact]
+        return np.asarray(hy[:2 * nact], float)
 
     def mv(ya):
         ya = np.asarray(ya, float)
@@ -114,7 +140,8 @@ def active_weighted_hessian(q0_full, charges, fade_index, fd_step, rot_penalty,
         z += secant_penalty * sec * float(sec @ ya)
         return z
 
-    return LinearOperator((2 * nact, 2 * nact), matvec=mv, dtype=float), raw_active, Qrot, sec, calls
+    H = LinearOperator((2 * nact, 2 * nact), matvec=mv, dtype=float)
+    return H, raw_active, Qrot, sec, calls
 
 
 def project_return(x961: np.ndarray, live_score: float, maxiter: int):
@@ -137,7 +164,7 @@ def main():
     ap.add_argument('--modes', default='0,1,2,3,4,5')
     ap.add_argument('--amps', default='.0015,.003,.006,.012,.02')
     ap.add_argument('--k', type=int, default=10)
-    ap.add_argument('--fd-step', type=float, default=3e-6)
+    ap.add_argument('--cs-step', type=float, default=1e-20)
     ap.add_argument('--rot-penalty', type=float, default=1e6)
     ap.add_argument('--secant-penalty', type=float, default=1e6)
     ap.add_argument('--weighted-maxiter', type=int, default=1800)
@@ -149,6 +176,8 @@ def main():
     hi, lam, lo = map(float, (args.lambda_hi, args.lambda_value, args.lambda_lo))
     if not (0.0 <= lo < lam < hi <= 1.0):
         raise ValueError(f'require 0 <= lo < lambda < hi <= 1, got {lo}, {lam}, {hi}')
+    if not (0 < args.cs_step < 1e-6):
+        raise ValueError('complex-step must be positive and tiny')
 
     _, a = load_points(pathlib.Path(args.a_json))
     sel = voronoi_candidates(a)[3]
@@ -194,22 +223,38 @@ def main():
     q0 = sm.xyz_to_vars(x_mid)
     charges = np.ones(961, float); charges[FADE] = lam
     H, raw_active, Qrot, sec, calls = active_weighted_hessian(
-        q0, charges, FADE, args.fd_step, args.rot_penalty, secant, args.secant_penalty)
+        q0, charges, FADE, args.cs_step, args.rot_penalty, secant, args.secant_penalty)
+
+    # Verify symmetry of the *unpenalized* active block before asking eigsh to use it.
+    rng = np.random.default_rng(1961000 + int(round(lam * 1e6)))
+    aa = rng.normal(size=1920); bb = rng.normal(size=1920)
+    for z in (aa, bb):
+        z -= Qrot @ (Qrot.T @ z)
+        z -= sec * float(sec @ z)
+        z /= np.linalg.norm(z)
+    Haa = raw_active(aa); Hbb = raw_active(bb)
+    sym_lhs = float(aa @ Hbb); sym_rhs = float(bb @ Haa)
+    sym_abs = abs(sym_lhs - sym_rhs)
+    sym_rel = sym_abs / max(1.0, abs(sym_lhs), abs(sym_rhs))
+    print('SYMMETRY', 'lhs', f'{sym_lhs:.12g}', 'rhs', f'{sym_rhs:.12g}',
+          'abs', f'{sym_abs:.3e}', 'rel', f'{sym_rel:.3e}', flush=True)
+    if sym_rel > 2e-7:
+        raise RuntimeError(f'complex-step active Hessian failed symmetry check: {sym_rel}')
 
     modes = [int(z) for z in args.modes.split(',') if z.strip()]
     amps = [float(z) for z in args.amps.split(',') if z.strip()]
     k = max(args.k, max(modes) + 1)
-    rng = np.random.default_rng(1961000 + int(round(lam * 1e6)))
     v0 = rng.normal(size=1920)
     v0 -= Qrot @ (Qrot.T @ v0)
     v0 -= sec * float(sec @ v0)
-    vals, V = eigsh(H, k=k, which='SA', tol=2e-5, maxiter=900, ncv=max(40, 3*k), v0=v0)
+    vals, V = eigsh(H, k=k, which='SA', tol=2e-8, maxiter=1200, ncv=max(50, 4*k), v0=v0)
     order = np.argsort(vals); vals = vals[order]; V = V[:, order]
     print('ACTIVE_TRANSVERSE_EIGENVALUES', [float(v) for v in vals], flush=True)
 
     mode_diag = []
     rows = []
     qact = sm.xyz_to_vars(x_mid[:-1])
+    max_resid = 0.0
     for m in modes:
         d = V[:, m].copy()
         d -= Qrot @ (Qrot.T @ d)
@@ -217,11 +262,21 @@ def main():
         d /= np.linalg.norm(d)
         Hy = raw_active(d) + args.rot_penalty * (Qrot @ (Qrot.T @ d)) + args.secant_penalty * sec * float(sec @ d)
         resid = float(np.linalg.norm(Hy - vals[m] * d))
+        max_resid = max(max_resid, resid)
         diag = {'mode': m, 'eigenvalue': float(vals[m]), 'rotation_overlap': float(np.sum((Qrot.T @ d)**2)),
                 'secant_overlap': float((sec @ d)**2), 'residual': resid}
         mode_diag.append(diag)
-        print('MODE', m, 'eig', f'{vals[m]:.9g}', 'rot', f"{diag['rotation_overlap']:.3g}",
-              'sec', f"{diag['secant_overlap']:.3g}", 'resid', f'{resid:.3g}', flush=True)
+        print('MODE', m, 'eig', f'{vals[m]:.12g}', 'rot', f"{diag['rotation_overlap']:.3g}",
+              'sec', f"{diag['secant_overlap']:.3g}", 'resid', f'{resid:.3e}', flush=True)
+    if max_resid > 2e-5:
+        raise RuntimeError(f'eigenpair residual too large for scientific use: {max_resid}')
+
+    # Only perturb after the eigensystem has passed numerical validation.
+    for m in modes:
+        d = V[:, m].copy()
+        d -= Qrot @ (Qrot.T @ d)
+        d -= sec * float(sec @ d)
+        d /= np.linalg.norm(d)
         for sign in (-1, 1):
             for amp in amps:
                 qp = sp.exp_perturb(qact, d * sign, amp)
@@ -242,13 +297,15 @@ def main():
         'control_hi': control_hi, 'baseline': baseline, 'control_lo': control_lo,
         'alignment': {'hi_rms': hi_rms, 'hi_max': hi_max, 'lo_rms': lo_rms, 'lo_max': lo_max},
         'secant_derivative_rms': secant_deriv_rms,
+        'hvp_method': 'complex-step', 'complex_step': float(args.cs_step),
+        'symmetry_abs': float(sym_abs), 'symmetry_rel': float(sym_rel),
         'eigenvalues': [float(v) for v in vals], 'mode_diagnostics': mode_diag,
         'modes': modes, 'amps': amps, 'hessian_gradient_calls': calls['n'], 'rows': rows,
         'best_energy': float(best), 'best_delta_live': float(best - args.live_score),
     }
     pathlib.Path(args.out).write_text(json.dumps(out, separators=(',', ':')) + '\n')
     if best < args.live_score - 2e-7:
-        pathlib.Path(str(args.out) + '.BREAKTHROUGH').write_text('active transverse candidate below live; verify independently\n')
+        pathlib.Path(str(args.out) + '.BREAKTHROUGH').write_text('validated active transverse candidate below live; verify independently\n')
 
 
 if __name__ == '__main__':
