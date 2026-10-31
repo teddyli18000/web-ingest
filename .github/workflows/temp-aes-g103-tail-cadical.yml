@@ -1,0 +1,62 @@
+name: temp-aes-g103-tail-cadical
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/g103_tail_cadical.py'
+      - '.github/workflows/temp-aes-g103-tail-cadical.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: baseline24
+            slots: '0,0,2,0,22'
+            budget: 1000000
+          - label: target21-a
+            slots: '0,0,2,0,19'
+            budget: 4000000
+          - label: target21-b
+            slots: '0,0,1,0,20'
+            budget: 4000000
+          - label: target21-c
+            slots: '0,0,0,0,21'
+            budget: 4000000
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install CaDiCaL Python bindings
+        run: python -m pip install --quiet python-sat
+      - name: Solve exact late-tail schedule
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/g103_tail_cadical.py
+          python science-boundary/aes-sbox-circuit/g103_tail_cadical.py \
+            --start 28 --slots '${{ matrix.slots }}' --conf-budget '${{ matrix.budget }}' \
+            --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier for any <=100 candidate
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ] && [ "$(python -c "import json; print(len(json.load(open('result/candidate.json'))['gates']))")" -le 100 ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-tail-cadical-${{ matrix.label }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
