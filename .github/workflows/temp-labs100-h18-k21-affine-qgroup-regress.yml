@@ -1,0 +1,49 @@
+name: temp labs100 h18 K21 affine qgroup regression
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k21-affine-qgroup-regress.yml'
+      - 'science-boundary/labs-100/code/oddperfect_h18_k21_qgroup_affine.cpp'
+
+concurrency:
+  group: temp-labs100-h18-k21-affine-qgroup-regress
+  cancel-in-progress: false
+
+jobs:
+  regress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build affine-canonical qgroup
+        run: g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k21_qgroup_affine.cpp -o "$RUNNER_TEMP/qgroup"
+      - name: Download independently frozen kp15 and kp21 exact artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/kp15" "$RUNNER_TEMP/kp21"
+          gh run download 41185066943 -n labs100-h18-k21-kp15-exact -D "$RUNNER_TEMP/kp15"
+          gh run download 41184237885 -n labs100-h18-k21-kp21-grouped -D "$RUNNER_TEMP/kp21"
+          test -s "$RUNNER_TEMP/kp15/kp15.hits"
+          test -s "$RUNNER_TEMP/kp21/kp21.hits"
+      - name: Regress exact Q feasibility after affine support quotient
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          "$RUNNER_TEMP/qgroup" "$RUNNER_TEMP/kp15/kp15.hits" | tee "$RUNNER_TEMP/kp15-affine-qgroup.log"
+          "$RUNNER_TEMP/qgroup" "$RUNNER_TEMP/kp21/kp21.hits" | tee "$RUNNER_TEMP/kp21-affine-qgroup.log"
+          grep -E '^K21_AFFINE_QGROUP_SUMMARY .*Q_feasible_halfpairs=1 .*min_margin=-6$' "$RUNNER_TEMP/kp15-affine-qgroup.log"
+          grep -E '^K21_AFFINE_QGROUP_SUMMARY .*Q_feasible_halfpairs=0 .*min_margin=26$' "$RUNNER_TEMP/kp21-affine-qgroup.log"
+      - name: Upload regression transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k21-affine-qgroup-regress
+          path: ${{ runner.temp }}/*-affine-qgroup.log
+          if-no-files-found: warn
