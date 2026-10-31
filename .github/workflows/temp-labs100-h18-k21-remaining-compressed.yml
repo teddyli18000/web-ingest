@@ -1,0 +1,65 @@
+name: temp labs100 h18 K21 remaining compressed
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k21-remaining-compressed.yml'
+
+concurrency:
+  group: temp-labs100-h18-k21-remaining-compressed
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact compressed enumerator
+        run: g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k21_compressed.cpp -o "$RUNNER_TEMP/k21"
+      - name: Exhaust kp13 kp11 kp9 overlap layers using all CPUs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/logs"
+          cat > "$RUNNER_TEMP/cases.txt" <<'EOF'
+          13 0
+          13 2
+          13 4
+          13 6
+          13 8
+          11 0
+          11 2
+          11 4
+          11 6
+          11 8
+          11 10
+          9 0
+          9 2
+          9 4
+          9 6
+          9 8
+          EOF
+          export RUNNER_TEMP
+          cat "$RUNNER_TEMP/cases.txt" | xargs -n2 -P"$(nproc)" bash -c '
+            kp="$1"; t="$2"
+            OMP_NUM_THREADS=1 "$RUNNER_TEMP/k21" "$kp" "$t" > "$RUNNER_TEMP/logs/kp${kp}-t${t}.log" 2> "$RUNNER_TEMP/logs/kp${kp}-t${t}.err"
+            test "$(grep -c "^K21_COMPRESSED kp=${kp} " "$RUNNER_TEMP/logs/kp${kp}-t${t}.log")" -eq 1
+          ' _
+          for kp in 13 11 9; do
+            cat "$RUNNER_TEMP"/logs/kp${kp}-t*.log > "$RUNNER_TEMP/kp${kp}.all"
+            grep '^HIT ' "$RUNNER_TEMP/kp${kp}.all" > "$RUNNER_TEMP/kp${kp}.hits" || true
+            echo "KP${kp}_CASES $(grep -c '^K21_COMPRESSED ' "$RUNNER_TEMP/kp${kp}.all") HITS $(grep -c '^HIT ' "$RUNNER_TEMP/kp${kp}.all" || true)"
+            grep '^K21_COMPRESSED ' "$RUNNER_TEMP/kp${kp}.all"
+          done
+      - name: Upload exact transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k21-remaining-compressed
+          path: |
+            ${{ runner.temp }}/logs/
+            ${{ runner.temp }}/kp*.all
+            ${{ runner.temp }}/kp*.hits
+          if-no-files-found: warn
