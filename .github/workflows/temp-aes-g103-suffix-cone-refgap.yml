@@ -1,0 +1,65 @@
+name: temp-aes-g103-suffix-cone-refgap
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/g103_suffix_cone_refgap.py'
+      - '.github/workflows/temp-aes-g103-suffix-cone-refgap.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  shave:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7]
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install CaDiCaL bindings and clone pinned refutation-gap
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet python-sat
+          git clone https://github.com/Rohan-Pandey1729/refutation-gap.git /tmp/refgap
+          cd /tmp/refgap
+          git checkout 01349f1b0ee39aef4d9bcf9d75233df6f859eab8
+      - name: Exact-shave this non-contiguous output-cone shard
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/g103_suffix_cone_refgap.py
+          python science-boundary/aes-sbox-circuit/g103_suffix_cone_refgap.py \
+            --refgap /tmp/refgap --min-outputs 2 --max-outputs 5 --max-cone 18 \
+            --shard '${{ matrix.shard }}' --shards 8 --conf-budget 500000 \
+            --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier if a <=100 candidate appears
+        run: |
+          set -euxo pipefail
+          cand="$(python - <<'PY'
+          import glob,json
+          xs=[]
+          for f in glob.glob('result/candidate-*.json'):
+              try: xs.append((len(json.load(open(f))['gates']),f))
+              except Exception: pass
+          xs.sort(); print(xs[0][1] if xs and xs[0][0] <= 100 else '')
+          PY
+          )"
+          if [ -n "$cand" ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp "$cand" /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-suffix-cone-refgap-${{ matrix.shard }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
