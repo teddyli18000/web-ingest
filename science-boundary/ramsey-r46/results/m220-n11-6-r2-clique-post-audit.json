@@ -1,0 +1,18 @@
+{
+  "R_lower": 15,
+  "all_unsat_for_listed_sequences": true,
+  "campaign": "m220-n11-6-r2-clique-post-audit",
+  "conclusion": "Four of the fourteen m=220,n11=6 structural degree sequences are impossible.",
+  "edges": 220,
+  "excluded": [
+    {"R_upper":14,"degree_sequence":{"11":6,"12":20,"13":8,"15":2},"low_S_lower":778,"other_S_upper_sum":4630,"status":"UNSAT_by_R_bounds","sum_d2":5408,"upper_method":"global S-sum bound"},
+    {"R_upper":14,"degree_sequence":{"11":6,"12":21,"13":5,"14":3,"15":1},"low_S_lower":778,"other_S_upper_sum":4630,"status":"UNSAT_by_R_bounds","sum_d2":5408,"upper_method":"global S-sum bound"},
+    {"R_upper":14,"degree_sequence":{"11":6,"12":22,"13":2,"14":6},"low_S_lower":778,"other_S_upper_sum":4630,"status":"UNSAT_by_R_bounds","sum_d2":5408,"upper_method":"global S-sum bound"},
+    {"R_upper":14,"degree_sequence":{"11":6,"12":20,"13":8,"14":1,"16":1},"identity_certificate":{"R_upper":14,"handshake_zero_combination":"D11-12D12-13D13-14D14-4D16","identity":"14-R=(2940-S12)+(1312-S13)+(178-S14)+e11_16+(8-e13_16)+2*(1-e14_16)-8e16_16, with e16_16=0","nonnegative_slacks":["2940-S12","1312-S13","178-S14","e11_16","8-e13_16","1-e14_16"]},"status":"UNSAT_by_R_bounds","upper_method":"explicit nonnegative-slack identity"}
+  ],
+  "excluded_degree_sequence_count": 4,
+  "lemma": "Any two r=2 degree-11 vertices are adjacent; hence the r=2 set is a clique and has size at most 3 in a K4-free graph.",
+  "n11": 6,
+  "r2_recursive_certificate": {"A26_min_independent5_hitting_size":[2,2],"B116_vertices_degree_le9_checked":72,"induced_A26_embedding_count":0},
+  "soundness": "Uses only the complete A26/B116 catalogues, independent-5 column hitting, induced-neighbourhood consistency, endpoint S bounds, the already-certified d12 cap S<=147, degree-class handshake identities, and K4-freeness. It does not use the withdrawn row-domain predicate."
+}
