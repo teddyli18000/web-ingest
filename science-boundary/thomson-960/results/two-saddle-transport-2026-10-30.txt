@@ -1,0 +1,39 @@
+Thomson N=960 — completed two-saddle transport outcome — 2026-10-30
+
+run = 41048513864
+live_score = 444368.3924061973
+
+Purpose
+-------
+At A, the incoming e432/B -> A collective field is almost orthogonal to the A -> R direction.  The experiment parallel-transported that incoming field from A to the certified R<->A first-order saddle, removed rigid rotations and the certified reaction mode, and scanned both signs with small reaction-coordinate biases.
+
+Certified R<->A saddle used
+---------------------------
+E = 444368.40394898446
+gradient RMS = 6.310208277709283e-06
+lowest eigenvalue = -5.865579689356803
+
+Transport geometry
+------------------
+A -> R/A saddle RMS = 0.0018275167754421263 rad
+e432/B incoming field at A RMS = 0.00940864213934443 rad
+reaction overlap after projection was numerically zero (~5e-18).
+
+Sign +1
+-------
+Transverse amplitudes 0.001, 0.0025, 0.0045, 0.007, 0.0105, 0.015, 0.022 were combined with reaction amplitudes -0.0015, 0, +0.0015.
+Returned basins included:
+- R, best ordinary-double value ~444368.3924061973;
+- A ~444368.3956862258;
+- B ~444368.4029728616;
+- e432 ~444368.4322496275;
+- a nearby higher 23-dislocation basin ~444368.4342907408.
+No verifier-relevant improvement occurred.
+
+Sign -1
+-------
+The same transverse/reaction grid returned only R, A, and at the largest amplitude a higher 23-dislocation basin ~444368.591381773.  Best apparent sub-live value was ~5.8e-11, ordinary floating-point noise.
+
+Conclusion
+----------
+The approximately orthogonal e432/B->A interface field does not open a fourth low basin when transported linearly to the certified R/A saddle.  Together with the direct positive-mode transverse map of that saddle, this saturates the obvious fixed-N local R/A interface directions.  Do not restart R/A DNEB or simply add more isolated saddle modes without a changed representation.
