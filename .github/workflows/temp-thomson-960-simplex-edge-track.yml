@@ -1,0 +1,57 @@
+name: temp Thomson 960 simplex sheet edge track
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-simplex-edge-track.yml'
+
+jobs:
+  track:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      actions: read
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Static check
+        run: python3 -m py_compile science-boundary/thomson-960/code/edge_track_n961_simplex_sheets.py
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: thomson-three-occupancy-simplex-*
+          path: ${{ runner.temp }}/simplex
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41198272370
+      - name: Edge-track fixed-occupancy A/H sheets
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          python3 science-boundary/thomson-960/code/edge_track_n961_simplex_sheets.py \
+            "$RUNNER_TEMP/simplex/thomson-three-occupancy-simplex-A960/result.json" \
+            "$RUNNER_TEMP/simplex/thomson-three-occupancy-simplex-H380/result.json" \
+            --live-score 444368.3924061973 --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        if: always()
+        run: |
+          if [ ! -f "$RUNNER_TEMP/out/result.json" ]; then exit 0; fi
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('BOUNDARY',d['boundary_bracket'],d['boundary_t'])
+          print('EDGE_BEST',d['best'])
+          print('BEST_PROJECTION',d['best_projection'])
+          for p in d['projections']: print('PROJECT',p['delete_index'],p['class'],p['energy'],p['delta_live'],p['signature']['coord'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-simplex-edge-track
+          path: ${{ runner.temp }}/out
+          retention-days: 10
