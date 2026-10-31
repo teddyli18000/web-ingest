@@ -1,0 +1,135 @@
+Thomson N=960 — cascade and soft cross-size frontier — 2026-10-31
+
+Record
+------
+Upstream Few Shots accepted score rechecked during this campaign:
+R = 444368.3924061973.  A verifier-relevant improvement still requires at
+least 1e-6 below the accepted score; internal ~1e-10 differences are numerical
+summation noise.
+
+History-dependent scar-walk representation
+------------------------------------------
+The first dynamic scar-walk beam (run 41099606592) passed its orbit4 positive
+control exactly.  Starting from live R it automatically recovered
+
+  q1: (108,282) -> (511,599)
+  q2: (108,511) -> (502,599), newly legal after q1
+  q3: (511,599) -> (282,502), newly legal after q2
+
+and q1->q2->q3 released to A = 444368.3956862259.  Thus the evolving-Delaunay
+representation is validated on a known nontrivial R->A route.  The other first
+orbits tested at depth=4, beam=3, branch=4, local graph distance <=1 produced
+only R/A/B and no new free basin.  This excludes only that structured search
+space, not longer or nonlocal dependent chains.
+
+Remote follower softening is predictive
+----------------------------------------
+The q1->q2->q3 route does not finish locally.  It changes the global elastic
+field until remote live-root glides become soft and flip spontaneously.
+Dedicated run 41101441646 measured this before the flips:
+
+  orbit3 (21,230)->(74,363): threshold 0.00318536 at the two-flip source,
+    0.00159478 after q3-fixed, then spontaneously flipped already at kappa=100.
+
+  orbit2 (79,134)->(35,323): threshold 0.00440156 at source,
+    0.00364388 after q3-fixed, 0.00234819 at kappa=100,
+    0.00169167 at 70, 0.00114886 at 50, 0.000524109 at 30,
+    0.000182617 at 20, then spontaneously flipped by kappa=10.
+
+Therefore remote-follower threshold softening is a measurable precursor of a
+nonlocal cascade, not a post-hoc description.
+
+Emergent remote events are not needed for the known cascade
+------------------------------------------------------------
+Run 41184396199 compared the complete remote same-count Delaunay event catalog
+at live R against q3-fixed and a kappa=100 q3 probe.
+
+q3-fixed:
+  persistent root remote events = 72
+  genuinely emergent remote events = 0
+
+kappa=100 probe:
+  persistent root remote events = 67
+  inverse root event = 1
+  genuinely emergent remote events = 2
+  emergent thresholds ~0.01528 and ~0.01563; none below 0.01.
+
+Meanwhile root followers were strongly softened: orbit3 by ~74% at q3-fixed
+and orbit2 by ~61% at the kappa=100 probe.  Hence the known R->A cascade is
+well represented by softening/triggering of already-live root followers; adding
+all newly-created remote events would mostly enlarge the state space without
+explaining the positive control.
+
+Cascade-aware beam v2
+---------------------
+Run 41182508587 is active with first orbits 0,1,2,3,4-positive-control,5,6.
+Unlike v1 it evaluates each candidate through a modest restraint probe and uses
+remote-root follower trigger/softening signals plus fixed cost / event threshold
+in a Pareto-style beam.  Search depth=5, beam=4, branch=5, graph distance <=2.
+Do not interpret negative results until orbit4 positive control both reaches A
+and shows the expected cascade signal.
+
+A-side single-step control
+--------------------------
+A has 78 legal same-count glides.  Run 41101889863 fixed-adapted and fully
+released the 15 softest; every one returned to A.  Thus A-side exploration also
+requires dependent chains rather than independent one-flip moves.
+
+Cross-size campaigns: what they actually ruled out
+--------------------------------------------------
+Amore-Wales neighboring-N propagation motivates cross-size transfer, but prior
+local campaigns here used hard particle insertion/deletion followed by full
+relaxation.  Their failures should not be generalized to all cross-size
+representations.
+
+N932 -> N960, run 40991011714:
+  historical N932 source had 8 twin motifs.
+  one-particle-at-a-time insertion with tiny beam progressively erased them.
+  best motif-policy endpoint = 444369.0425244513, live +0.650118254,
+  final twin count 0.
+
+N920 -> N960, run 40991204788:
+  source itself had twin count 0.
+  best motif-policy endpoint = 444370.1206861578, live +1.728279960.
+  This is structurally a poor teacher for the live 12-scar regime.
+
+N972 -> N960 hard 12-point T-orbit deletion, run 40991054819:
+  N972 source had 24 dislocations / 12 twin edges.
+  all 81 generic size-12 T orbits were deleted in one event and fully relaxed.
+  best direct child orbit25 = 444369.7544781622, live +1.362071965,
+  with only 2 twin motifs remaining.  Several other hard deletions retained
+  more twins but remained high energy.
+
+Common failure mode: the discrete particle-count jump plus immediate free
+relaxation destroys global scar organization before it can be transferred.
+
+Soft cross-size reformulation
+-----------------------------
+Run 41184513082 tests a different representation.  For one selected N972
+12-point T orbit, the 12 would-be-deleted particles are held fixed at their
+parent positions as external Coulomb sources with charge lambda.  The other
+960 particles are optimized while lambda is continued smoothly from 1 to 0.
+At lambda=0 the ghosts decouple exactly and the active particles are a genuine
+N960 Thomson configuration, followed by ordinary stable repolish.
+
+Only two informative orbit families are tested initially:
+  orbit25: lowest-energy old hard deletion, far from defect cores;
+  orbit5: old hard deletion retained all 12 twins.
+Each uses linear-like and geometric lambda schedules.  This is a mechanism test,
+not an exhaustive 81-orbit scan.
+
+Decision rules
+--------------
+1. Any float endpoint below R by >2e-7: stop exploratory branching and enter
+   independent stable repolish + upstream record recheck + official verifier.
+2. If cascade-aware v2 produces a novel low basin or a high-cascade R-returning
+   state, expand only that branch; do not blindly deepen all first orbits.
+3. If v2 only returns R/A/B despite a valid orbit4 positive control, the next
+   topology representation should change a held-fixed assumption (for example
+   multi-scale restraint probes or A-centered dependent chains), not merely
+   increase beam width/depth.
+4. If soft N972 transfer preserves scar/twin organization much longer and beats
+   old hard deletion materially, exploit soft occupancy continuation.  If it
+   collapses to the same high families, retire fixed-ghost fading and consider
+   a richer collective occupancy/strain-field transfer rather than more lambda
+   schedules.
