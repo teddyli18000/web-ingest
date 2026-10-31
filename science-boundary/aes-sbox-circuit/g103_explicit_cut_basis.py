@@ -129,7 +129,11 @@ def synthesize_at_cut(c,rows):
     na=sum(g['op']=='AND' for g in pruned['gates'])
     nl=len(pruned['gates'])-na
     assert na==32,(rows,na,nl)
-    return {'prefix':pruned,'interface':interface,'targets':targets,'extras':extras}, {
+    # ras.prune canonically renames every kept gate, including cut-basis producers.
+    # The durable interface must therefore use the *post-prune* output names.
+    # Keep raw_interface only for debugging/provenance.
+    return {'prefix':pruned,'interface':list(pruned['outputs']),
+            'raw_interface':interface,'targets':targets,'extras':extras}, {
         'rows':list(rows),'status':'found','added_basis_gates':added,
         'prefix_gates':len(pruned['gates']),'prefix_and':na,'prefix_linear':nl,
         'basis_order':list(order),'basis_names':[names[i] for i in range(3)],
@@ -138,7 +142,12 @@ def synthesize_at_cut(c,rows):
 
 
 def attach_suffix(c,prefix_rec,suffix_net):
-    interface=prefix_rec['interface']
+    # Use post-prune interface names.  Older records may lack the corrected
+    # interface field, so prefix.outputs is the authoritative fallback.
+    interface=prefix_rec.get('interface') or prefix_rec['prefix']['outputs']
+    if len(interface)!=len(prefix_rec['prefix']['outputs']):
+        raise AssertionError(('cut interface length mismatch',len(interface),
+                              len(prefix_rec['prefix']['outputs'])))
     mp={f'b{i}':w for i,w in enumerate(interface)}
     gates=[dict(g) for g in prefix_rec['prefix']['gates']]
     for j,g in enumerate(suffix_net['gates']):
