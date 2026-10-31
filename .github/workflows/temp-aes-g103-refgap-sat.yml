@@ -1,0 +1,64 @@
+name: temp-aes-g103-refgap-sat
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/g103_suffix_refgap_sat.py'
+      - '.github/workflows/temp-aes-g103-refgap-sat.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - k: 22
+            budget: 3000000
+          - k: 21
+            budget: 6000000
+          - k: 20
+            budget: 6000000
+          - k: 19
+            budget: 6000000
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install CaDiCaL Python bindings and clone pinned refutation-gap
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet python-sat
+          git clone https://github.com/Rohan-Pandey1729/refutation-gap.git /tmp/refgap
+          cd /tmp/refgap
+          git checkout 01349f1b0ee39aef4d9bcf9d75233df6f859eab8
+          git rev-parse HEAD
+      - name: Solve exact K-gate G103 suffix instance
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/g103_suffix_refgap_sat.py
+          python science-boundary/aes-sbox-circuit/g103_suffix_refgap_sat.py \
+            --refgap /tmp/refgap --k '${{ matrix.k }}' \
+            --conf-budget '${{ matrix.budget }}' --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier for any <=100 candidate
+        run: |
+          set -euxo pipefail
+          if [ -f result/full.json ] && [ "$(python -c "import json; print(len(json.load(open('result/full.json'))['gates']))")" -le 100 ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp result/full.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-refgap-k${{ matrix.k }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
