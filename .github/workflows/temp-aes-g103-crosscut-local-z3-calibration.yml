@@ -1,0 +1,97 @@
+name: temp-aes-g103-crosscut-local-z3-calibration
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-g103-crosscut-local-z3-calibration.yml'
+      - 'science-boundary/aes-sbox-circuit/g103_crosscut_local_z3.py'
+
+permissions:
+  contents: read
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      matrix:
+        delta: [0, 1, 2]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Z3
+        run: python -m pip install --quiet z3-solver
+      - name: Solve every local schedule split at this delta
+        env:
+          DELTA: ${{ matrix.delta }}
+        run: |
+          set -euxo pipefail
+          mkdir -p results
+          python - <<'PY' > plans.txt
+          import os,sys,itertools
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          import temporal_window_resynth as tw
+          c=ras.load_circuit('nist-g103')
+          local=tw.original_schedule(c)[31:]
+          d=int(os.environ['DELTA'])
+          print('# local',local,'delta',d,file=sys.stderr)
+          def rec(i,left,cur):
+              if i==len(local):
+                  if left==0: print(','.join(map(str,cur)))
+                  return
+              for r in range(min(local[i],left)+1): rec(i+1,left-r,cur+[r])
+          rec(0,d,[])
+          PY
+          cat plans.txt
+          run_one() {
+            p="$1"; tag="${p//,/-}"; mkdir -p "results/$tag"
+            python science-boundary/aes-sbox-circuit/g103_crosscut_local_z3.py \
+              --start 31 --removals "$p" --timeout-ms 150000 \
+              --out "results/$tag" > "results/$tag.log" 2>&1
+          }
+          export -f run_one
+          xargs -r -n1 -P4 bash -c 'run_one "$0"' < plans.txt
+          cat results/*.log || true
+      - name: Aggregate and validate
+        run: |
+          python - <<'PY'
+          import glob,json,os,shutil,sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          rows=[]
+          for f in glob.glob('results/*/summary.json'):
+              x=json.load(open(f)); rows.append(x)
+              if x.get('status')=='sat':
+                  cp=os.path.join(os.path.dirname(f),'candidate.json')
+                  c=json.load(open(cp)); assert ras.independent_check(c)[0]
+                  if len(c['gates'])<=100 and not os.path.exists('candidate-100.json'): shutil.copy(cp,'candidate-100.json')
+                  if len(c['gates'])==101 and not os.path.exists('candidate-101.json'): shutil.copy(cp,'candidate-101.json')
+          rows.sort(key=lambda x:x.get('removals',[]))
+          agg={'delta':${{ matrix.delta }},'results':rows,'sat':sum(x.get('status')=='sat' for x in rows),'unsat':sum(x.get('status')=='unsat' for x in rows),'unknown':sum(x.get('status')=='unknown' for x in rows)}
+          json.dump(agg,open('aggregate.json','w'),indent=2)
+          print(json.dumps({k:v for k,v in agg.items() if k!='results'}))
+          PY
+      - name: Official verifier if <=100 found
+        run: |
+          set -euxo pipefail
+          if [ -f candidate-100.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp candidate-100.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-crosscut-local-z3-calibration-d${{ matrix.delta }}
+          path: |
+            plans.txt
+            aggregate.json
+            candidate-100.json
+            candidate-101.json
+            official-verifier.jsonl
+            results
+          if-no-files-found: warn
