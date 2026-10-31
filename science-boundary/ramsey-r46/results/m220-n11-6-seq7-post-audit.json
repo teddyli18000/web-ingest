@@ -1,0 +1,13 @@
+{
+  "R17":{"all_unsat":true,"pattern_count":4,"rows":[{"A_side_survives":false,"g6":"Ehfw","r":[3,3,3,3,3,2]},{"A_side_survives":false,"g6":"E}^G","r":[2,2,3,3,4,3]},{"A_side_survives":false,"g6":"E}^G","r":[3,2,3,3,3,3]},{"A_side_survives":false,"g6":"E}^G","r":[4,2,3,3,2,3]}]},
+  "R18":{"after_r3_nonneighbor_capacity":27,"all_unsat":true,"low_graph":"EznW = K6 minus a perfect matching","orbit_count":4,"orbits":[{"r":[2,2,2,4,4,4],"reason":"A26 local high-incidence compatibility","status":"UNSAT"},{"r":[2,2,3,4,4,3],"reason":"r3-r3 nonedge has four common low neighbours but unique B116 A25-compatible position has cross degree 3","status":"UNSAT"},{"r":[2,3,3,4,3,3],"reason":"r3-r3 nonedge has four common low neighbours but unique B116 A25-compatible position has cross degree 3","status":"UNSAT"},{"r":[3,3,3,3,3,3],"reason":"r3-r3 nonedge has four common low neighbours but unique B116 A25-compatible position has cross degree 3","status":"UNSAT"}],"raw_pattern_count":43},
+  "R_lower_from_r23_adjacency":17,
+  "R_upper_certificate":{"R_integer_upper":18,"R_lp_upper":19,"equality_parity_contradiction":"R=19 forces S12=2793, e11_16=0, e13_16=10, e12_16=6; d12 handshake makes e11_12+e12_13 even but S12 parity makes it odd.","handshake_zero_combination":"D11-12D12-13D13-4D16","identity":"19-R=(2793-S12)+(1640-S13)+e11_16+(10-e13_16)-8e16_16, with e16_16=0"},
+  "all_unsat":true,
+  "campaign":"m220-n11-6-seq7-post-audit",
+  "catalog_compatibility":{"embedding_stats":{"B116":{"A25_embeddings":1,"A26_embeddings":0,"max_A25_positions_per_B":1,"positions":72},"B117":{"A25_embeddings":27,"A26_embeddings":0,"max_A25_positions_per_B":3,"positions":653}},"hitting_minima":{"A25":[2,2,2,2,2,2],"A26":[2,2]},"unique_B116_A25_position":{"A25":true,"A26":false,"B":1,"dB":8,"q":0}},
+  "conclusion":"No 220-edge R(4,6,36) graph has degree sequence 11^6 12^19 13^10 16.",
+  "degree_sequence":{"11":6,"12":19,"13":10,"16":1},
+  "edges":220,
+  "soundness":"All catalogue checks are complete for the frozen A25/A26/B116/B117 strata. Local A tests omit high-high constraints and all B-side constraints except the explicitly proved induced-neighbourhood compatibility, so they are relaxations. No withdrawn row-domain predicate is used."
+}
