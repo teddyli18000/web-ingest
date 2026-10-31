@@ -1,0 +1,31 @@
+Thomson N=960 — N961 fractional-boundary full weighted modes — 2026-10-31
+
+run = 41197100187
+live_score = 444368.3924061973
+accepted_improvement_threshold = 1e-6
+
+lambda = 0.15
+baseline_projection = A, 444368.395686225733
+lowest_eigenvalues = [3.294199853533905, 4.803011720976509, 5.119648335124974, 5.662566955625899, 5.901528711610986, 6.761543814783742, 9.824158855220405, 10.9146453751304]
+observed_returns = R / A / B
+best = 444368.392406197207 approximately, delta_live about -1.16e-10 (floating summation noise)
+
+lambda = 0.125
+baseline_projection = A, 444368.395686225733
+lowest_eigenvalues = [3.281262949281469, 4.804122713090899, 5.103232445103916, 5.663393168604707, 5.893331709233381, 6.7318722890902905, 9.827535692378511, 10.90670761862171]
+observed_returns = R / A / B
+best = 444368.392406197265 approximately, delta_live about -5.82e-11 (floating summation noise)
+
+lambda = 0.10
+baseline_projection = R, 444368.392406197265
+lowest_eigenvalues = [3.264956227444499, 4.80412870815948, 5.0694379160760885, 5.662657314305842, 5.879940482354117, 6.672526638621209, 9.836516589591723, 10.882279881733176]
+observed_returns = R / A / B
+best = 444368.392406197265 approximately, delta_live about -5.82e-11 (floating summation noise)
+
+Interpretation
+--------------
+The lowest full weighted N961 modes near the fractional projection boundary repeatedly traverse the already-known A/R interface and sometimes enter B.  No third lower basin was found.  In particular, the same low modes produce sign- and amplitude-dependent A<->R switching while the N960 coordination count remains 36/900/24.
+
+This is a useful negative result but not an exhaustion statement.  It argues against simply widening the same full-mode amplitude scan.  The representation is changed next: exclude the fading particle's tangent coordinates and explicitly project out the empirical A/R branch secant before asking for low active transverse modes.
+
+Any apparent values about 1e-10 below the accepted score are ordinary floating-point summation/relaxation noise and are not record candidates.
