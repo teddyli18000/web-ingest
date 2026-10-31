@@ -11,13 +11,13 @@ C_k = sum_i s_i s_{i+k},
 E = sum_{k=1}^{99} C_k^2.
 ```
 
-Length-100 energies are `2 (mod 4)`, so the first nominal improvement is `574`, followed by `570, 566, ...`.
+Length-100 energies are `2 (mod 4)`, so the first nominal improvement is `574`.
 
 Few Shots problem: `few-shots/few-shots`, `problems/p006-labs-100`.
 
 ## Current state
 
-**Active; no unrestricted breakthrough yet. Current best verified energy remains 578.**
+**Active; no unrestricted breakthrough yet. Current best verified energy remains `578`.**
 
 Public incumbent:
 
@@ -25,11 +25,25 @@ Public incumbent:
 ++++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-
 ```
 
-The strongest exact progress is now on the minimum odd-energy (`odd-perfect`) layer. The sharp `(20,0), W=127` corner has been reduced to an order-25 ternary projection with eight support splits; the four high-support splits `ka=18,20,22,24` are now exactly excluded, leaving only `ka=10,12,14,16` in that branch.
+The strongest exact progress is on the minimum odd-energy (`odd-perfect`) layer, where every odd-lag correlation has magnitude one and the odd energy is `50`.
 
-### Exact near-skew result
+Current exact frontier:
 
-The entire standard N=100 near-skew manifold has exact minimum energy `578`.
+- the entire standard N=100 near-skew manifold has exact minimum `578`;
+- odd-perfect endpoint defect classes `d=0,1,2,3,4,5` contain no `E<=574` sequence;
+- the sharp `(a,b)=(20,0), W=127` branch is completely excluded;
+- the three remaining low11 `(20,0)` sparse near-NGP branches `W129-A`, `W131-A2`, `W131-B1` are closed after a full all-affine fibre audit;
+- for `(a,b)=(18,0)`, the complete order-25 compression layers `K=19` and `K=21` are exactly excluded for `E<=570`;
+- the active next layer is `K=23`.
+
+The latest complete records are:
+
+- [`results/2026-10-31-h18-k19-complete-exclusion.md`](results/2026-10-31-h18-k19-complete-exclusion.md)
+- [`results/2026-10-31-h18-k21-complete-exclusion.md`](results/2026-10-31-h18-k21-complete-exclusion.md)
+- [`results/2026-10-30-low11-affine-fibre-closure.md`](results/2026-10-30-low11-affine-fibre-closure.md)
+- [`results/2026-10-29-w127-complete-exclusion.md`](results/2026-10-29-w127-complete-exclusion.md)
+
+## Exact near-skew result
 
 For canonical near-skew `s`, deleting one endpoint gives a skew-symmetric length-99 sequence `t`, while appending the matching endpoint gives a skew-symmetric length-101 sequence `u`. Exact correlation algebra gives
 
@@ -37,226 +51,196 @@ For canonical near-skew `s`, deleting one endpoint gives a skew-symmetric length
 E99(t) + E101(u) = 2 E100(s) - 1.
 ```
 
-Packebusch-Mertens exhaustively proved the skew-symmetric optima through N=119; `E_skew(99)=577` and `E_skew(101)=578`. Hence `E100(s)>=578`, and the public incumbent attains equality.
+Packebusch-Mertens proved the skew-symmetric optima through N=119; `E_skew(99)=577` and `E_skew(101)=578`. Hence every N=100 near-skew sequence has `E>=578`, and the public incumbent attains equality.
 
 Proof: [`results/2026-10-29-nearskew-optimum-proof.md`](results/2026-10-29-nearskew-optimum-proof.md).
 
-### Exact odd-perfect endpoint exclusions
+## Odd-perfect global formulation
 
-Every odd-lag correlation of a length-100 sequence is odd. The minimum possible odd-lag energy is therefore 50. Call a sequence **odd-perfect** when every odd `|C_k|=1`.
-
-For the two length-99 endpoint deletions, let `d_L,d_R` be the number of nonzero odd deletion correlations, and define the invariant endpoint defect
+Split the sequence into parity halves
 
 ```text
-d = min(d_L,d_R).
-```
-
-The current exact picture for an odd-perfect `E<=574` candidate is
-
-```text
-d=0   near-skew manifold: exact minimum E=578
-d=1   no E<=574
-d=2   no E<=574
-d=3   no E<=574
-d=4   no E<=574
-d=5   no E<=574
-```
-
-Thus any surviving odd-perfect breakthrough must satisfy
-
-```text
-d >= 6.
-```
-
-Durable endpoint records:
-
-- [`results/2026-10-29-endpoint-support-reflection-inversion.md`](results/2026-10-29-endpoint-support-reflection-inversion.md)
-- [`results/2026-10-29-endpoint-support-linearization.md`](results/2026-10-29-endpoint-support-linearization.md)
-- [`results/2026-10-29-endpoint-support-path.md`](results/2026-10-29-endpoint-support-path.md)
-- [`results/2026-10-29-endpoint-defect-class-coverage.md`](results/2026-10-29-endpoint-defect-class-coverage.md)
-- [`results/2026-10-29-endpoint-defect2-modular-exhaustion.md`](results/2026-10-29-endpoint-defect2-modular-exhaustion.md)
-- [`results/2026-10-29-endpoint-defect3-modular-exhaustion.md`](results/2026-10-29-endpoint-defect3-modular-exhaustion.md)
-- [`results/2026-10-29-endpoint-defect4-modular-exhaustion.md`](results/2026-10-29-endpoint-defect4-modular-exhaustion.md)
-- [`results/2026-10-29-endpoint-defect5-mod4-exhaustion.md`](results/2026-10-29-endpoint-defect5-mod4-exhaustion.md)
-
-The final defect-5 computation covers all `C(49,5)=1,906,884` supports. A new mod-4/GF(2) representation reduced the old `666,348,057` anchor-system formulation to `4,498,643,306` affine assignments, of which `1,190,683,248` satisfy every original integer odd-perfect equation exactly. No target had even energy `<=520`.
-
-Implementation: [`code/oddperfect_endpoint_mod4.cpp`](code/oddperfect_endpoint_mod4.cpp).
-
-## Global odd-perfect polynomial reformulation
-
-The endpoint hierarchy is useful evidence, but it should not be extended mechanically. A more global representation has now been derived.
-
-Split the sequence into parity halves and form Littlewood polynomials
-
-```text
-A(x) = sum_{i=0}^{49} s_{2i} x^i,
-B(x) = sum_{i=0}^{49} s_{2i+1} x^i.
-```
-
-Let `A^R(x)=x^49 A(x^-1)` and similarly for `B`. Odd-perfectness is equivalent to the exact cross factorization
-
-```text
-A B^R + x B A^R = (x^50 - 1) Q,                 (1)
-```
-
-where `Q` is a length-50 Littlewood polynomial satisfying
-
-```text
-Q_j = -Q_{49-j}.
-```
-
-So `Q` has only 25 independent signs.
-
-Define
-
-```text
-D(x) = A(x)^2 - x B(x)^2.
-```
-
-A Lagrange identity plus Parseval gives the exact objective identity on the odd-perfect layer
-
-```text
-||D||_2^2 = 9900 + 2 V,
-V = sum_{r=1}^{49} C_{2r}^2.
-```
-
-Therefore
-
-```text
-E<=574  <=>  ||D||_2^2 <= 10948,
-E<=570  <=>  ||D||_2^2 <= 10940.
-```
-
-The E578 incumbent has `||D||_2^2=10956`, only 8 above the nominal E574 threshold.
-
-Moreover every coefficient `d_n` of `D` lies in a fixed residue lattice:
-
-```text
-d_n == +1 (mod 4),   n=0,...,49,
-d_n == -1 (mod 4),   n=50,...,99,
-```
-
-and
-
-```text
-D(x^2) = S(x) S(-x)
-```
-
-for the original length-100 Littlewood polynomial `S`.
-
-Full derivation: [`results/2026-10-29-oddperfect-polynomial-factorization.md`](results/2026-10-29-oddperfect-polynomial-factorization.md).
-
-This factorization/norm-gap formulation is now the preferred first-principles route to the whole odd-perfect layer.
-
-### Sharp `(20,0), W=127` order-25 branch
-
-For half sums `(20,0)`, integer convexity gives `W>=127`. At equality the even-correlation multiset is forced, and the parity halves form an NGP50 subject to the additional odd-perfect cross condition. Compressing opposite positions gives ternary length-25 sequences `p,c` with
-
-```text
-sum p = 10,
-sum c = 0,
-||p||^2+||c||^2 = 26,
-p c* + c p* = 0  in Z[x]/(x^25-1),
-PAF_p(r)+PAF_c(r) in {2,3,4},
-sum_{r=1}^{12}[PAF_p(r)+PAF_c(r)] = 37.
-```
-
-Writing `ka=||p||^2`, the only possible splits are
-
-```text
-ka = 10,12,14,16,18,20,22,24.
-```
-
-Exact non-CP-SAT computations now give
-
-```text
-ka=18  impossible
-ka=20  impossible
-ka=22  impossible
-ka=24  impossible
-```
-
-so W127 survives only at
-
-```text
-ka = 10,12,14,16.
-```
-
-The `ka=18` computation is the strongest new representation step: for fixed `c`, write `p=1-z-2n`. The cross equation becomes `Mz+2Mn=0`; reducing modulo 2 restricts the 7-zero mask `z` to a small GF(2) kernel before an exact base-17 integer MITM. It exhausts 2,191 support orbits and 75,987 signed `c` orbits, finds 3,675,345 exact cross-compatible pairs, and no W127 target. An independent four-core GitHub Actions reproduction returned the same counts.
-
-Durable records:
-
-- [`results/2026-10-29-h20-ngp50-paley-exclusion.md`](results/2026-10-29-h20-ngp50-paley-exclusion.md)
-- [`results/2026-10-29-h20-w127-order10-ngp-projection.md`](results/2026-10-29-h20-w127-order10-ngp-projection.md)
-- [`results/2026-10-29-w127-order25-ka24-exclusion.md`](results/2026-10-29-w127-order25-ka24-exclusion.md)
-- [`results/2026-10-29-w127-order25-ka20-ka22-exclusion.md`](results/2026-10-29-w127-order25-ka20-ka22-exclusion.md)
-- [`results/2026-10-29-w127-order25-ka18-kernel-mitm-exclusion.md`](results/2026-10-29-w127-order25-ka18-kernel-mitm-exclusion.md)
-
-## Target arithmetic
-
-Split by parity:
-
-```text
-A_i=s_{2i}, B_i=s_{2i+1},
+A_i=s_(2i), B_i=s_(2i+1),
 a=sum A_i, b=sum B_i.
-```
-
-Then
-
-```text
-C_{2r} = C_A(r)+C_B(r),
-sum_{k odd} C_k = ab,
-sum_{r=1}^{49} C_{2r} = (a^2+b^2-100)/2.
 ```
 
 Odd-perfectness plus the opposite-lag congruence forces `ab=0`.
 
-The global product controls energy mod 8:
+With Littlewood polynomials
 
 ```text
-global product +1 => E == 6 (mod 8),
-global product -1 => E == 2 (mod 8).
+A(x)=sum A_i x^i,
+B(x)=sum B_i x^i,
 ```
 
-Thus exact E574 and E570 belong to different product classes; never use the E574 product condition to exclude lower energies.
+odd-perfectness is equivalent to
 
-Target-specific records:
+```text
+A B^R + x B A^R = (x^50-1) Q,
+```
 
-- [`results/2026-10-28-exact574-arithmetic.md`](results/2026-10-28-exact574-arithmetic.md)
-- [`results/2026-10-28-exact570-structure.md`](results/2026-10-28-exact570-structure.md)
+where `Q_j=-Q_(49-j)`. Defining
+
+```text
+D(x)=A(x)^2-x B(x)^2
+```
+
+gives the exact objective identity
+
+```text
+||D||_2^2 = 9900 + 2 V,
+V = sum_{r=1}^{49} C_(2r)^2.
+```
+
+Thus
+
+```text
+E<=574  <=>  ||D||_2^2<=10948,
+E<=570  <=>  ||D||_2^2<=10940.
+```
+
+Full derivation: [`results/2026-10-29-oddperfect-polynomial-factorization.md`](results/2026-10-29-oddperfect-polynomial-factorization.md).
+
+## Order-25 compression / fibre interface
+
+For the current `(18,0)` line write
+
+```text
+d_r = C_(2r)/2,
+U_r = (d_r+d_(50-r))/2,
+V_r = (d_r-d_(50-r))/2,
+m=d_25,
+K=25+m.
+```
+
+Decompose the parity halves as
+
+```text
+A=(1+x^25)p+(1-x^25)alpha,
+B=(1+x^25)q+(1-x^25)beta,
+c=x^13 q,
+gamma=x^13 beta.
+```
+
+The odd-perfect cyclic cross equation splits exactly into two independent order-25 equations:
+
+```text
+p c* + c p* = 0                    mod x^25-1,
+alpha gamma* - gamma alpha* = 0    mod x^25+1.
+```
+
+For
+
+```text
+G_j = PAF_p(j)+PAF_c(j) = U_j+U_(25-j),
+```
+
+the sharp compressed lower bound is
+
+```text
+qmin(G)=sum_j ceil(G_j^2/2) <= sum U_r^2.
+```
+
+If
+
+```text
+SG=sum G_j^2,
+H_j=NPAF_alpha(j)+NPAF_gamma(j),
+SH=sum H_j^2,
+```
+
+then the full fibre identity is
+
+```text
+2 sum U_r^2 = SG+SH.
+```
+
+This is now the preferred representation for the `(18,0)` center layers. The simultaneous `AGL(1,Z_25)` action on the two fibre supports is quotiented exactly before sign enumeration; any final survivors are reconstructed to binary length-100 sequences and rescored in the original LABS objective.
+
+### `K=19`
+
+Here `m=-6` and `E<=570` forces an extremely sparse near-NGP spectrum. All six possible splits
+
+```text
+(kp,kc)=(19,0),(17,2),(15,4),(13,6),(11,8),(9,10)
+```
+
+are exactly empty.
+
+Record: [`results/2026-10-31-h18-k19-complete-exclusion.md`](results/2026-10-31-h18-k19-complete-exclusion.md).
+
+### `K=21`
+
+Here
+
+```text
+m=-4,
+W=16+2(Q+R),
+E<=570 iff Q+R<=57.
+```
+
+All seven possible norm splits `kp=9,11,13,15,17,19,21` are exactly empty. The last four fibre-Q survivors were expanded through every matching compressed affine image, both independent fibre signs, and all 500 induced full-length affine transforms; none even met the residual `V` budget.
+
+Record: [`results/2026-10-31-h18-k21-complete-exclusion.md`](results/2026-10-31-h18-k21-complete-exclusion.md).
+
+### Active `K=23` layer
+
+For `K=23`,
+
+```text
+m=-2,
+sum U=29,
+W=4+2(Q+R),
+E<=570 iff Q+R<=63.
+```
+
+The same `qmin` and fibre-Q identities apply unchanged. A generic exact compressed solver, [`code/oddperfect_h18_k_compressed.cpp`](code/oddperfect_h18_k_compressed.cpp), is regression-checked against frozen `K=21` counts before use on the new layer.
+
+## Endpoint exclusions
+
+For the two length-99 endpoint deletions let `d_L,d_R` count nonzero odd deletion correlations and define `d=min(d_L,d_R)`. Exact computations give
+
+```text
+d=0  near-skew: minimum E=578
+d=1  no E<=574
+d=2  no E<=574
+d=3  no E<=574
+d=4  no E<=574
+d=5  no E<=574
+```
+
+So any surviving odd-perfect breakthrough has `d>=6`. This hierarchy should not be extended mechanically; the compression/factorization route is currently stronger.
+
+Durable endpoint records are under [`results/`](results/), including [`results/2026-10-29-endpoint-defect5-mod4-exhaustion.md`](results/2026-10-29-endpoint-defect5-mod4-exhaustion.md).
 
 ## Other exact / high-value evidence
 
-- Ordinary Hamming radii **1 through 7** around the incumbent are completely exhausted: `17,278,988,695` non-center sequences, no improvement. Radius-6 minimum `978`; radius-7 minimum `974`. See [`results/2026-10-27-incumbent-shells.md`](results/2026-10-27-incumbent-shells.md).
-- The calibrated odd-perfect walk repeatedly rediscovers the near-skew E578 basin. Outside every near-skew symmetry orientation, 1,024 starts reproducibly reached the same E1162 orbit, a `3-bit boundary + skew97` structure. See [`results/2026-10-28-oddperfect-outside-nearskew.md`](results/2026-10-28-oddperfect-outside-nearskew.md).
+- Ordinary Hamming radii **1 through 7** around the incumbent are completely exhausted: `17,278,988,695` non-center sequences, no improvement. See [`results/2026-10-27-incumbent-shells.md`](results/2026-10-27-incumbent-shells.md).
 - Exact boundary+skew-core target searches exclude broad structured classes; see [`results/2026-10-28-skewcore-hierarchy.md`](results/2026-10-28-skewcore-hierarchy.md).
-- Pairwise crossover among eight near-skew elites exhausted `265,814,016` recombination states with no synergy; parity-block descent exhausted `1,258,291,200` states and stalled far above the record. Historical near-skew evidence is preserved under [`results/`](results/), but the exact near-skew proof supersedes it as a target route.
-- Neighboring-length transfer and the tested Golay-52 deletion family are weak: see [`results/2026-10-27-cross-length.md`](results/2026-10-27-cross-length.md) and [`results/2026-10-28-golay52-deletion.md`](results/2026-10-28-golay52-deletion.md).
+- Pairwise crossover among eight near-skew elites and parity-block descent were strongly negative; the exact near-skew proof supersedes those heuristics as a target route.
+- Neighboring-length transfer and the tested Golay-52 deletion family were weak; see [`results/2026-10-27-cross-length.md`](results/2026-10-27-cross-length.md) and [`results/2026-10-28-golay52-deletion.md`](results/2026-10-28-golay52-deletion.md).
 
 ## Dead ends / constraints learned
 
 - Do not spend further compute inside near-skew to beat 578; it is rigorously impossible.
 - Do not repeat small ordinary incumbent edits; radius 7 is exact and strongly negative.
-- Do not treat CP-SAT `UNKNOWN`, process timeout, or killed jobs as exclusions.
-- The generic order-25 CP-SAT W127 model timed out with `UNKNOWN` in every `ka` shard; the exact high-`ka` exclusions came only after changing representation to orbit/MITM and GF(2)-kernel/MITM.
-- Do not scale the old endpoint anchor/RREF formulation to higher defect; defect 5 required a representation change to mod-4 affine linearization.
-- Do not mechanically continue defect-by-defect merely because d=0..5 are now closed. Candidate quality has not improved; the global factorization (1) is a better search space.
-- The failed d4 `[150000,172000)` SIGKILL run is not evidence; that interval was later fully rerun in four successful subranges, as recorded in the clean d4 transcript.
+- Do not treat CP-SAT `UNKNOWN`, timeouts, SIGKILL, or unfinished Actions as exclusions.
+- Do not mechanically extend the endpoint-defect hierarchy; candidate quality stayed flat while only the excluded region grew.
+- Generic full-sequence and order-25 CP-SAT repeatedly timed out. The successful exact progress came from changing representation: GF(2) support kernels, modular sign solving, periodic/negacyclic fibre splitting, `qmin`, and affine support quotients.
+- A compressed affine orbit representative is not automatically sufficient for aperiodic fibre properties. All relevant affine images must be covered or an invariant must be proved; this issue was explicitly repaired in the low11 and K19/K21 work.
 
 ## Next steps
 
-1. **Close the four remaining W127 order-25 splits `ka=10,12,14,16`.** Prefer a joint representation over four unrelated enumerations. The identity `X=p+c`, `Y=p-c` turns the cross equation into periodic homometry `PAF_X=PAF_Y`; every W127 candidate has `sum X=sum Y=10`, `||X||^2=||Y||^2=26`, and nonzero autocorrelations in `{2,3,4}` with independent-lag sum 37.
-2. If the homometric route does not close W127, extend the GF(2)-kernel/MITM only where its kernel/support counts remain demonstrably small; do not return to the timed-out generic CP-SAT model.
-3. Then use the already-derived sparse near-NGP classification for W129/W131 rather than restarting from generic LABS search.
-4. In parallel, continue attacking the global odd-perfect factorization and the norm threshold `||A^2-xB^2||_2^2 >= 10956`, which would eliminate the whole `O=50` layer at once.
-5. Continue higher odd-energy target layers (`O=58`, `O=66`, ...) only with target-specific arithmetic and exact verification; keep E574 and E570 product classes separate.
-6. Re-check Few Shots/public record immediately before any claim. If `E<=574` is found, freeze the sequence, independently rescore with `code/verify.py`, verify with the Few Shots verifier, create only `certificate.json` and `SHOT.md`, run `tools/check.py`, then publish under `teddyli18000` as authorized.
+1. **Complete the `(18,0), K=23` exact census** with the generic compressed solver and the affine-canonical fibre-Q solver. Any surviving Q-level fibres must be reconstructed and directly rescored at length 100.
+2. If K23 closes, continue the same representation through the remaining convex-feasible center layers `K=25,27,29,31,33`, reassessing the search space if compressed/fibre survivor counts stop shrinking effectively.
+3. In parallel, seek a global lower bound on `||A^2-xB^2||_2^2` or an algebraic classification of the periodic/negacyclic pair that would eliminate the whole odd-perfect layer at once.
+4. Only after the odd-perfect frontier is materially exhausted should higher odd-energy layers (`O=58,66,...`) receive major exact compute; derive their own target arithmetic first.
+5. Re-check Few Shots/public records immediately before any record claim. If `E<=574` is found, freeze the exact sequence, independently rescore it, run the Few Shots verifier/check, create the required certificate/SHOT, and publish as authorized.
 
 ## Durable artifacts
 
-- [`code/`](code/) — independent scorer; exact shell scanners; endpoint modular solvers; odd-perfect search kernels; target arithmetic models; skew-core and neighboring-length tools.
-- [`results/`](results/) — exact exclusions, proof transcripts, negative searches and structural derivations.
+- [`code/`](code/) — exact scorers, compression/fibre solvers, endpoint solvers, target arithmetic and witness verifiers.
+- [`results/`](results/) — exact exclusions, proofs, transcripts and structural derivations.
 - [`notes/literature-and-methods.md`](notes/literature-and-methods.md) — literature and method decisions.
 
 ## Sources
@@ -274,6 +258,8 @@ Target-specific records:
 
 ## Work log
 
-- **2026-10-27:** Reproduced the baseline; added independent scoring/search kernels; exhausted incumbent Hamming radii through 6; surveyed current solver literature and neighboring-length records.
-- **2026-10-28:** Exhausted incumbent radius 7. Derived/corrected near-skew representation. Calibrated odd-perfect search; found reproducible outside-near-skew E1162 boundary+skew97 basin. Built exact skew-core and target-arithmetic decompositions. Exhausted large near-skew local, crossover and block neighborhoods.
-- **2026-10-29:** Proved the exact N100 near-skew optimum 578. Developed reflection-support endpoint linearization and exactly excluded odd-perfect endpoint defects 1 through 5. Defect 5 required a new mod-4/GF(2) affine reformulation and a 1.9-million-support exhaustive search. Derived the global parity-polynomial factorization `A B^R+x B A^R=(x^50-1)Q` and exact norm identity `||A^2-xB^2||^2=9900+2V`. In the sharp `(20,0),W127` branch, reduced to an order-25 ternary projection, exactly excluded `ka=18,20,22,24`, and independently reproduced the `ka=18` GF(2)-kernel/MITM count on a four-core GitHub runner.
+- **2026-10-27:** Reproduced the baseline; added independent scoring/search kernels; exhausted incumbent Hamming radii through 6; surveyed solver literature and neighboring-length records.
+- **2026-10-28:** Exhausted radius 7; calibrated odd-perfect search; built exact skew-core and target-arithmetic decompositions; exhausted large near-skew local/crossover/block neighborhoods.
+- **2026-10-29:** Proved exact N100 near-skew optimum 578; excluded endpoint defects 1 through 5; derived the global parity-polynomial factorization and norm identity; developed the order-25 compression program and closed W127.
+- **2026-10-30:** Repaired affine-fibre coverage rigor; exactly closed the remaining low11 W129/W131 branches; derived and regression-tested the periodic/negacyclic fibre split; began the `(18,0)` center-layer program.
+- **2026-10-31:** Completely excluded `(18,0)` `K=19` and `K=21` through `E<=570`, including direct final rescoring of all Q-level fibre survivors; generalized the compressed solver and moved to `K=23`.
