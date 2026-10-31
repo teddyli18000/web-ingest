@@ -120,16 +120,96 @@ Live/most-recent compute at this log point:
 Any <=100 `full.json` produced by these workflows is automatically passed to the
 Few Shots official p008 verifier before it is treated as a breakthrough.
 
+## Exact local suffix neighborhoods around the 22-gate seed
+
+Three increasingly permissive but still family-scoped exact censuses were added
+after the unrestricted 19/20-gate SAT encodings remained hard.
+
+### Retained-guide deletion family
+
+`g103_suffix_guide_subset.py`, Run `41192419395`, keeps only a subset of the 22
+transformed original suffix functions, but allows each retained function to be
+regenerated from any two currently available retained functions or cut inputs.
+Monotone closure makes the reachability test exact for that family.
+
+No 19/20/21-gate circuit exists in the represented retained-guide-only family for
+any of the three cheap bases.  On identity `[1,2,4]`, the closest cases were:
+
+- K19: 364 subsets, best drop `[0,5,8]`, 2 retained functions still unreachable;
+- K20: 91 subsets, best drop `[5,8]`, 1 unreachable;
+- K21: 14 subsets, best drop `[8]`, 1 unreachable.
+
+The transformed bases are not better enough to close the network; this is an
+exact local exclusion, not a general 19/20/21 lower bound.
+
+### Exactly one new helper at K20
+
+`g103_suffix_one_new.py`, Run `41192474792`, exhaustively tests 20-gate suffixes
+with 19 transformed original guide functions plus exactly one genuinely new
+pair-XOR helper.
+
+- `[1,2,4]`: 1,092 deletion sets and 101,368 helper cases; best residual is
+  1 missing retained function + 1 missing output;
+- `[1,3,4]`: 1,092 / 85,787; best residual 2+2;
+- `[2,3,4]`: 1,092 / 80,026; best residual 2+2.
+
+All three independently identify the same weak original-guide deletion core
+`[0,5,8]`.  That agreement motivated one focused two-new-helper census rather
+than a blind expansion of the whole neighborhood.
+
+### Two new helpers around the common weak core
+
+`g103_suffix_two_new_focus.py`, Run `41192652797`, exactly enumerates K19/K20
+suffixes whose deleted original-guide set contains `{0,5,8}` and that use exactly
+two new helpers.  No candidate closes.
+
+For identity `[1,2,4]`:
+
+- K19: 171 deletion sets, 39,179 first-helper and 65,075 second-helper cases;
+  best residual 2 missing outputs/functions at the final closure;
+- K20: 19 deletion sets, 6,684 first-helper and 16,815 second-helper cases;
+  best residual remains 1+1.
+
+The other two bases are no better (K19 residual 2+2 or 3+3; K20 residual 1+1 or
+2+2).  Because candidate quality stopped improving while the excluded local
+region grew, this particular `{0,5,8}` replacement family is now deprioritized.
+
+## Diversity beam for a 48-linear nonlinear prefix
+
+`g103_prefix_beam.py` was run as a diversity-preserving 48-linear search over the
+three cheap cut bases (Run `41192308275`).  Width-8 and width-20 jobs completed;
+width-40 jobs were cancelled before scientific completion and are not evidence.
+No completed job produced a 48-linear prefix.
+
+For identity `[1,2,4]`, both width 8 and width 20 ended with the same qualitative
+frontier: 30/32 AND atoms released after 48 linear gates, every remaining operand
+distance finite, but none of the three required cut-basis outputs materialized.
+The width-8 final positive support-distance sum was 5.  This is a useful failure:
+the global beam objective is still over-rewarding AND release relative to the
+cut interface.  Simply increasing beam width is therefore not the next move.
+
+## Cut-interface attachment bug
+
+A later whole-circuit transformed-basis experiment exposed a latent plumbing bug
+in `g103_explicit_cut_basis.attach_suffix()`: `ras.prune()` canonically renames
+prefix gates, but the stored interface names still referred to the pre-prune
+`__cut_basis_*` wires.  The first cross-cut Action therefore failed with a
+`KeyError`; it was infrastructure failure, not a search miss.  The helper now
+stores/uses the post-prune output names while retaining the raw names only as
+provenance.  Any transformed-basis full-circuit run after this fix rechecks all
+256 AES inputs before search.
+
 ## Search-space interpretation / next decisions
 
 1. Do not scale the 168-basis RNBP census: it has already shown a systematic
    final-closure bottleneck rather than improving candidate quality.
-2. A 19-gate suffix on any of the 18 explicit 49-linear bases is an immediate
-   100-gate certificate.
-3. A 20-gate suffix is useful only if a non-fixed prefix can be synthesized at
-   48 linear gates; hence the separate joint prefix48 sweep.
-4. If exact 19/20 SAT remains inconclusive, move to topology-guided/local SAT
-   around a concrete 20/21/22-gate suffix rather than spending indefinitely on
-   unconstrained CNF.
+2. Do not keep extending the `{0,5,8}` suffix replacement neighborhood merely
+   by adding more new helpers; one- and two-helper exact censuses plateau at the
+   same residual geometry.
+3. Do not just widen the 48-linear prefix beam; completed widths 8 and 20 converge
+   to the same 30/32-AND state while neglecting all three cut outputs.
+4. The highest-value reformulation is to remove the last-AND cut itself: jointly
+   resynthesize a window containing late nonlinear releases and the output logic,
+   targeting all three missing linear gates in one coupled move.
 5. Every claimed candidate must pass both `released_and_skeleton.independent_check`
    on all 256 inputs and the Few Shots official verifier.
