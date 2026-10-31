@@ -1,0 +1,30 @@
+name: temp-aes-low-and-family-census
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/low_and_family_census.py'
+      - '.github/workflows/temp-aes-low-and-family-census.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and compare low-AND seed families
+        working-directory: science-boundary/aes-sbox-circuit
+        run: |
+          set -euxo pipefail
+          python -m py_compile low_and_family_census.py seed_family_census.py
+          python low_and_family_census.py | tee run.log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-low-and-family-census
+          path: |
+            science-boundary/aes-sbox-circuit/low-and-family-census.json
+            science-boundary/aes-sbox-circuit/run.log
