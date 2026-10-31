@@ -1,0 +1,46 @@
+name: Temp Science Boundary C7 joint injection MUS census
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7-joint-mus-census.yml
+      - science-boundary/shannon-capacity-c7/code/bpz_joint_mus_census.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-science-boundary-c7-joint-mus-census
+  cancel-in-progress: false
+
+jobs:
+  solve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned BPZ source and SAT backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init "$RUNNER_TEMP/tan"
+          git -C "$RUNNER_TEMP/tan" remote add origin https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git
+          git -C "$RUNNER_TEMP/tan" fetch --depth 1 origin c753408492dde92a239708986d16c15dbf6c3235
+          git -C "$RUNNER_TEMP/tan" checkout FETCH_HEAD
+          python3 -m pip install --disable-pip-version-check python-sat
+          mkdir -p "$RUNNER_TEMP/result"
+      - name: Bounded exact MUS census
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v python3 science-boundary/shannon-capacity-c7/code/bpz_joint_mus_census.py \
+            "$RUNNER_TEMP/tan" "$RUNNER_TEMP/result/mus.json" --max-cores 200 --max-states 2000 --max-disabled 3 \
+            | tee "$RUNNER_TEMP/result/stdout.txt"
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c7-joint-injection-mus-census
+          path: ${{ runner.temp }}/result
+          retention-days: 14
