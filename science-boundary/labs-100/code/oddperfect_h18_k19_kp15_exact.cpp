@@ -1,34 +1,16 @@
-// Exact exclusion for odd-perfect (a,b)=(18,0), K=19, kp=15,kc=4.
-// Enumerates all signed c orbits under AGL(1,Z25) and c->-c, solves the
-// periodic cross equation exactly through an augmented GF(3) RREF, checks
-// sum/norm and the complete integer cross equations, then tests the exact K19
-// spectral types.  The unique compressed survivor is alt-only (W130,V=0).
-// Its binary fibres are then exhausted through the exact negacyclic split
-// alpha gamma* - gamma alpha*=0; all 500 compressed affine images are scored
-// via corresponding length-50 odd multipliers.  Global B->-B is quotiented.
-#include <bits/stdc++.h>
-#include <omp.h>
-using namespace std;static constexpr int N=25;using A=array<int,N>;using Vec=array<int16_t,N>;
-vector<int> units(){vector<int>u;for(int a=0;a<N;a++)if(gcd(a,N)==1)u.push_back(a);return u;}
-A aff(const A&x,int a,int b){A y{};for(int i=0;i<N;i++)y[(a*i+b)%N]=x[i];return y;}
-string key(const A&x){string s(N,' ');for(int i=0;i<N;i++)s[i]=char(x[i]+1);return s;}
-bool crossok(const A&p,const A&c){for(int r=0;r<N;r++){int h=0;for(int i=0;i<N;i++)h+=p[i]*c[(i-r+N)%N]+c[i]*p[(i-r+N)%N];if(h)return false;}return true;}
-int paf(const A&x,int r){int s=0;for(int i=0;i<N;i++)s+=x[i]*x[(i+r)%N];return s;}
-struct RREF{int rank;vector<int>piv,fr;vector<A>row;};
-RREF rref3(const A&c){vector<A>a(14);for(auto&r:a)r.fill(0);for(int r=0;r<13;r++)for(int j=0;j<N;j++){int v=(c[(j-r+N)%N]+c[(j+r)%N])%3;if(v<0)v+=3;a[r][j]=v;}for(int j=0;j<N;j++)a[13][j]=1;int rr=0;vector<int>piv;for(int col=0;col<N&&rr<14;col++){int q=-1;for(int i=rr;i<14;i++)if(a[i][col]){q=i;break;}if(q<0)continue;swap(a[rr],a[q]);if(a[rr][col]==2)for(int j=0;j<N;j++)a[rr][j]=(2*a[rr][j])%3;for(int i=0;i<14;i++)if(i!=rr&&a[i][col]){int z=a[i][col];for(int j=0;j<N;j++){a[i][j]=(a[i][j]-z*a[rr][j])%3;if(a[i][j]<0)a[i][j]+=3;}}piv.push_back(col);rr++;}vector<char>isp(N);for(int x:piv)isp[x]=1;vector<int>fr;for(int j=0;j<N;j++)if(!isp[j])fr.push_back(j);return{rr,piv,fr,a};}
-int tern(int z){return z==2?-1:z;}
-vector<A> c_orbits(){vector<A>reps;unordered_set<string>seen;auto U=units();for(int a0=0;a0<N;a0++)for(int a1=a0+1;a1<N;a1++)for(int a2=a1+1;a2<N;a2++)for(int a3=a2+1;a3<N;a3++){int s[4]={a0,a1,a2,a3};for(int m=0;m<16;m++)if(__builtin_popcount((unsigned)m)==2){A c{};for(int k=0;k<4;k++)c[s[k]]=(m>>k&1)?1:-1;if(seen.count(key(c)))continue;A best=c;string bk=key(c);for(int u:U)for(int b=0;b<N;b++){A y=aff(c,u,b),z=y;for(int&i:z)i=-i;for(auto&w:{y,z}){string kk=key(w);seen.insert(kk);if(kk<bk){bk=kk;best=w;}}}reps.push_back(best);}}return reps;}
-const set<vector<int>> BASE={{2,2,2,2,2,2,2,2,3,4,4,4},{2,2,2,2,2,2,2,3,3,3,4,4},{2,2,2,2,2,2,3,3,3,3,3,4},{2,2,2,2,2,3,3,3,3,3,3,3}};
-const set<vector<int>> ALT={{1,2,2,2,2,2,2,2,4,4,4,4},{1,2,2,2,2,2,2,3,3,4,4,4},{1,2,2,2,2,2,3,3,3,3,4,4},{1,2,2,2,2,3,3,3,3,3,3,4},{1,2,2,2,3,3,3,3,3,3,3,3},{2,2,2,2,2,2,2,2,2,4,4,5},{2,2,2,2,2,2,2,2,3,3,4,5},{2,2,2,2,2,2,2,2,3,4,4,4},{2,2,2,2,2,2,2,3,3,3,3,5},{2,2,2,2,2,2,2,3,3,3,4,4},{2,2,2,2,2,2,3,3,3,3,3,4},{2,2,2,2,2,3,3,3,3,3,3,3}};
-struct Hit{A p,c;bool base,alt;};
-struct VH{size_t operator()(Vec const&v)const noexcept{uint64_t h=1469598103934665603ULL;for(auto x:v){h^=(uint16_t)(x+64);h*=1099511628211ULL;}return h;}};
-Vec comm(const A&a,const A&g){Vec f{};auto add=[&](int e,int v){if(e>=0)f[e]+=v;else f[e+N]-=v;};for(int i=0;i<N;i++)if(a[i])for(int j=0;j<N;j++)if(g[j]){add(i-j,a[i]*g[j]);add(j-i,-g[j]*a[i]);}return f;}
-vector<uint32_t> solve_gamma(const A&alpha,const vector<int>&supp){int fix=supp[0];vector<int>v(supp.begin()+1,supp.end());int n1=v.size()/2,n2=v.size()-n1;array<Vec,N>col{};for(int j:supp){A e{};e[j]=1;col[j]=comm(alpha,e);}unordered_map<Vec,vector<uint16_t>,VH>mp;mp.reserve(2048);for(uint32_t m=0;m<(1u<<n1);m++){Vec z=col[fix];for(int t=0;t<n1;t++){int s=(m>>t&1)?1:-1;for(int r=0;r<N;r++)z[r]+=s*col[v[t]][r];}mp[z].push_back((uint16_t)m);}vector<uint32_t>sol;for(uint32_t m=0;m<(1u<<n2);m++){Vec z{};for(int t=0;t<n2;t++){int s=(m>>t&1)?1:-1;for(int r=0;r<N;r++)z[r]+=s*col[v[n1+t]][r];}for(auto&x:z)x=-x;auto it=mp.find(z);if(it==mp.end())continue;for(uint16_t lm:it->second){uint32_t mask=1u<<fix;for(int t=0;t<n1;t++)if(lm>>t&1)mask|=1u<<v[t];for(int t=0;t<n2;t++)if(m>>t&1)mask|=1u<<v[n1+t];sol.push_back(mask);}}return sol;}
-A q_from_c(const A&c){A q{};for(int j=0;j<N;j++)q[j]=c[(j+13)%N];return q;}A beta_from_gamma(const A&g){A b{};for(int i=0;i<N;i++){int j=i-13;if(j>=0)b[j]=g[i];else b[j+N]=-g[i];}return b;}
-inline uint64_t masklo(int n){return n?((1ULL<<n)-1):0ULL;}inline int corr(uint64_t x,int r){int n=50-r;return n-2*__builtin_popcountll((x^(x>>r))&masklo(n));}inline int xcorr(uint64_t x,uint64_t y,int r){int n=50-r;return n-2*__builtin_popcountll((x^(y>>r))&masklo(n));}inline uint64_t rot50(uint64_t x,int k){const uint64_t M=(1ULL<<50)-1;k%=50;if(!k)return x&M;return((x<<k)|(x>>(50-k)))&M;}uint64_t multperm(uint64_t x,int ah){uint64_t y=0;for(int i=0;i<50;i++)if(x>>i&1)y|=1ULL<<((ah*i)%50);return y;}inline int oddcorr(uint64_t A0,uint64_t B0,int r){return xcorr(A0,B0,r)+(r<49?xcorr(B0,A0,r+1):0);}bool cyclic0(uint64_t A0,uint64_t B0){for(int r=0;r<25;r++)if(oddcorr(A0,B0,r)+oddcorr(A0,B0,49-r)!=0)return false;return true;}
-int main(){auto reps=c_orbits();cerr<<"C_ORBITS "<<reps.size()<<"\n";if(reps.size()!=88)return 2;atomic<long long>tested{0},valid{0},spectral{0},bh{0},ah{0};atomic<int>r11{0},r13{0};vector<Hit>hits;mutex hm;
-#pragma omp parallel for schedule(dynamic,1)
- for(int ri=0;ri<(int)reps.size();ri++){A c=reps[ri];auto R=rref3(c);if(R.rank==11)r11++;else if(R.rank==13)r13++;else abort();int d=R.fr.size();uint64_t tot=1;for(int i=0;i<d;i++)tot*=3;tested+=tot;long long lv=0,ls=0;vector<Hit>lh;for(uint64_t code=0;code<tot;code++){uint64_t q=code;array<int,N>z{};for(int k=0;k<d;k++){z[R.fr[k]]=q%3;q/=3;}for(int rr=R.rank-1;rr>=0;rr--){int s=0;for(int fc:R.fr)s=(s+R.row[rr][fc]*z[fc])%3;z[R.piv[rr]]=(3-s)%3;}A p{};int sm=0,nm=0;for(int i=0;i<N;i++){p[i]=tern(z[i]);sm+=p[i];nm+=p[i]*p[i];}if(sm!=9||nm!=15||!crossok(p,c))continue;lv++;vector<int>g;for(int r=1;r<=12;r++)g.push_back(paf(p,r)+paf(c,r));sort(g.begin(),g.end());bool b=BASE.count(g),a=ALT.count(g);if(b||a){ls++;lh.push_back({p,c,b,a});bh+=b;ah+=a;}}valid+=lv;spectral+=ls;if(!lh.empty()){lock_guard<mutex>g(hm);hits.insert(hits.end(),lh.begin(),lh.end());}}
- cout<<"K19_KP15_COMPRESSED orbits="<<reps.size()<<" rank11="<<r11<<" rank13="<<r13<<" tested="<<tested<<" exactvalid="<<valid<<" spectral="<<spectral<<" base="<<bh<<" alt="<<ah<<"\n";if(tested!=80779032||valid!=92501||spectral!=1||bh!=0||ah!=1||hits.size()!=1)return 3;
- long long alphas=0,lifts=0,trans=0,vpass=0;auto U=units();for(auto&H:hits){vector<int>az,gs;for(int i=0;i<N;i++){if(!H.p[i])az.push_back(i);if(!H.c[i])gs.push_back(i);}A q=q_from_c(H.c);for(uint32_t am=0;am<(1u<<az.size());am++){alphas++;A alpha{};for(int t=0;t<(int)az.size();t++)alpha[az[t]]=(am>>t&1)?1:-1;auto G=solve_gamma(alpha,gs);lifts+=G.size();for(uint32_t gm:G){A gamma{};for(int j:gs)gamma[j]=(gm>>j&1)?1:-1;A beta=beta_from_gamma(gamma);uint64_t Ab=0,Bb=0;for(int i=0;i<N;i++){int A1=H.p[i]+alpha[i],A2=H.p[i]-alpha[i],B1=q[i]+beta[i],B2=q[i]-beta[i];if(abs(A1)!=1||abs(A2)!=1||abs(B1)!=1||abs(B2)!=1)return 4;if(A1==1)Ab|=1ULL<<i;if(A2==1)Ab|=1ULL<<(i+25);if(B1==1)Bb|=1ULL<<i;if(B2==1)Bb|=1ULL<<(i+25);}if(!cyclic0(Ab,Bb))return 5;for(int aa:U){int ahat=(aa&1)?aa:aa+25,h=(ahat-1)/2;uint64_t TA=multperm(Ab,ahat),TB=multperm(Bb,ahat);for(int b=0;b<25;b++){trans++;uint64_t X=rot50(TA,b),Y=rot50(TB,b+h);int vsq=0;for(int r=1;r<=24;r++){int num=(corr(X,r)-corr(X,50-r))+(corr(Y,r)-corr(Y,50-r));if(num%4)return 6;int v=num/4;vsq+=v*v;if(vsq)break;}if(vsq==0)vpass++;}}}}}
- cout<<"K19_KP15_LIFTS alphas="<<alphas<<" cyclic_lifts_halfB="<<lifts<<" affine_transforms_halfB="<<trans<<" implied_full_lifts="<<(2*lifts)<<" implied_full_transforms="<<(2*trans)<<" V0_pass="<<vpass<<"\n";if(alphas!=1024||lifts!=32780||trans!=16390000||vpass!=0)return 7;cout<<"EXACT_EXCLUSION h18_K19_kp15_kc4_Wle130\n";}
+// RETIRED 2026-10-31.
+//
+// The first version of this one-file kp15 checker incorrectly reused the
+// gamma -> -gamma quotient that is valid only when c=0.  For kc>0, fixing the
+// compressed sign representative c means both gamma orientations must be
+// scored explicitly: global B->-B sends (c,gamma) to (-c,-gamma), not to
+// (c,-gamma).
+//
+// Use the corrected split implementation instead:
+//   oddperfect_h18_k19_kp15_compressed.cpp
+//   oddperfect_h18_k19_kp15_fullgamma.cpp
+//
+// Git history retains the retired implementation as evidence of the audited
+// dead end.  This source intentionally fails to compile so it cannot be used
+// accidentally as an exclusion certificate.
+#error "retired: use kp15_compressed.cpp + kp15_fullgamma.cpp"
