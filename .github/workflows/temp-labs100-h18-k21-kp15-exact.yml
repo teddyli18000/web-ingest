@@ -1,0 +1,69 @@
+name: temp labs100 h18 K21 kp15 exact
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k21-kp15-exact.yml'
+
+concurrency:
+  group: temp-labs100-h18-k21-kp15-exact
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact compressed, grouped-Q and witness tools
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k21_kp15_triple.cpp -o "$RUNNER_TEMP/triple"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k21_qgroup.cpp -o "$RUNNER_TEMP/qgroup"
+          g++ -O3 -march=native science-boundary/labs-100/code/oddperfect_h18_k21_kp15_witness.cpp -o "$RUNNER_TEMP/witness"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k21_fullgamma.cpp -o "$RUNNER_TEMP/mitm"
+      - name: Exhaust all four kp15 compressed overlap layers
+        shell: bash
+        run: |
+          set -euo pipefail
+          : > "$RUNNER_TEMP/kp15.log"
+          for t in 0 2 4 6; do OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/triple" "$t" | tee -a "$RUNNER_TEMP/kp15.log"; done
+          grep -F 'K21_KP15_TRIPLE t=0 diff_orbits=30 support_orbits=1514 cpatterns=15140 evenbase=15140 exact_pairs=22484 spectral=43' "$RUNNER_TEMP/kp15.log"
+          grep -F 'K21_KP15_TRIPLE t=2 diff_orbits=2191 support_orbits=85906 cpatterns=859060 evenbase=859060 exact_pairs=174526 spectral=475' "$RUNNER_TEMP/kp15.log"
+          grep -F 'K21_KP15_TRIPLE t=4 diff_orbits=10452 support_orbits=236164 cpatterns=2361640 evenbase=2361640 exact_pairs=284662 spectral=948' "$RUNNER_TEMP/kp15.log"
+          grep -F 'K21_KP15_TRIPLE t=6 diff_orbits=4113 support_orbits=21432 cpatterns=214320 evenbase=214320 exact_pairs=82659 spectral=374' "$RUNNER_TEMP/kp15.log"
+          grep '^HIT ' "$RUNNER_TEMP/kp15.log" > "$RUNNER_TEMP/kp15.hits"
+          test "$(wc -l < "$RUNNER_TEMP/kp15.hits")" -eq 1840
+      - name: Regress modular grouped fibre enumeration against independent MITM
+        shell: bash
+        run: |
+          set -euo pipefail
+          head -10 "$RUNNER_TEMP/kp15.hits" > "$RUNNER_TEMP/first10.hits"
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/mitm" "$RUNNER_TEMP/first10.hits" --count-only | tee "$RUNNER_TEMP/first10.mitm"
+          grep -F 'K21_FULLGAMMA_SUMMARY reps=10 alphas=10240 half_gamma_solutions=163868 full_gamma_solutions=327736 Q_le_57=0 affine_transforms=0 Vbudget_pass=0 oddperfect_pass=0 E_le_570=0 best=-1' "$RUNNER_TEMP/first10.mitm"
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/qgroup" "$RUNNER_TEMP/first10.hits" | tee "$RUNNER_TEMP/first10.qgroup"
+          grep -F 'K21_QGROUP_SUMMARY groups=10 alphas=5120 half_gamma_solutions=81934 Q_feasible_halfgamma=0 minSH=22 min_margin=10' "$RUNNER_TEMP/first10.qgroup"
+      - name: Exhaust grouped fibre Q relaxation and the unique survivor
+        shell: bash
+        run: |
+          set -euo pipefail
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/qgroup" "$RUNNER_TEMP/kp15.hits" | tee "$RUNNER_TEMP/kp15.qgroup"
+          grep -F 'QHIT as=1598307 gs=31977147 minSG=88 sh=20 Q=54 amask=1074019 gmask=17254537' "$RUNNER_TEMP/kp15.qgroup"
+          test "$(grep -c '^QHIT ' "$RUNNER_TEMP/kp15.qgroup")" -eq 1
+          grep -F 'K21_QGROUP_SUMMARY groups=1747 alphas=894464 half_gamma_solutions=11358884 Q_feasible_halfgamma=1 minSH=14 min_margin=-6' "$RUNNER_TEMP/kp15.qgroup"
+          "$RUNNER_TEMP/witness" "$RUNNER_TEMP/kp15.hits" "$RUNNER_TEMP/kp15.qgroup" | tee "$RUNNER_TEMP/kp15.witness"
+          grep -F 'K21_KP15_WITNESS_SUMMARY qhits=1 compressed_candidates=1 fibre_orientations=4 affine_transforms=2000 Vbudget_pass=0 oddperfect_pass=80 E_le_570=0 minV=39 minOddEnergy=50 minEnergy=1434' "$RUNNER_TEMP/kp15.witness"
+          grep -F 'EXACT_EXCLUSION h18_K21_kp15_kc6_Ele570' "$RUNNER_TEMP/kp15.witness"
+      - name: Upload exact transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k21-kp15-exact
+          path: |
+            ${{ runner.temp }}/kp15.log
+            ${{ runner.temp }}/kp15.hits
+            ${{ runner.temp }}/first10.mitm
+            ${{ runner.temp }}/first10.qgroup
+            ${{ runner.temp }}/kp15.qgroup
+            ${{ runner.temp }}/kp15.witness
+          if-no-files-found: warn
