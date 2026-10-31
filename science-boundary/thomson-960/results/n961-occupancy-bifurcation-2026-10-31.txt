@@ -1,0 +1,91 @@
+Thomson N=960 — N961 occupancy-induced A/R bifurcation — 2026-10-31
+
+Live record
+-----------
+R = 444368.3924061973.
+A = 444368.3956862258 approximately, delta live +0.0032800285.
+Current Few Shots main was rechecked on 2026-10-31 and still lists R as the accepted p007 score.
+
+Common N961 hub
+---------------
+Starting from A, insert the rank-3 Voronoi candidate at triangle (599,282,502) and fully relax N=961.
+The resulting hub has
+  E961 = 445303.24736958207
+  coordination 35/903/23.
+It is the same N961 minimum reached independently from the live-R neighboring-size campaign.
+
+Exact hard-delete audit
+-----------------------
+Run 41185588503 reconstructs the *unmodified* common hub and independently repolishes two exact N=960 deletions:
+- delete label 886 -> R, E = 444368.392406197614 (numerical noise above live)
+- delete label 960 -> A, E = 444368.395686225733
+Thus the shared hub genuinely has distinct label-specific R- and A-side hard-delete exits. Label 960 is not merely a bookkeeping artifact.
+
+Single-particle fractional fade
+-------------------------------
+Run 41185322121 continuously reduces one selected particle charge lambda from 1 to 0 while all 961 coordinates remain mobile, then deletes the decoupled particle and repolishes the remaining 960 unit charges.
+
+Fade label 886:
+- final N960 -> R, E about 444368.3924061973.
+
+Fade label 960:
+- active N960 topology remains 36/900/24 throughout the recorded trajectory;
+- final N960 -> R, E = 444368.392406197265 (noise below live).
+
+This is the central bifurcation observation:
+  hard delete label960 at the unmodified hub -> A,
+  adiabatically fade the same label960 -> R.
+The continuous occupancy change deforms the 961-body geometry enough to switch the eventual genuine-N960 basin without an obvious defect-count change.
+
+Two-label occupancy exchange
+----------------------------
+Run 41185253741 uses q_886=t, q_960=1-t, all other charges 1, with all 961 coordinates mobile. Total charge is exactly 960. Both t=1->0 and t=0->1 continuation directions are tested, and at selected t each fractional state is projected to genuine N960 by deleting 886 or 960 and fully relaxing.
+
+A-to-R schedule (t=1 -> 0):
+- t=1,.8,.65,.5: delete886/delete960 projections are A;
+- t=.35,.2: delete886 -> R while delete960 -> A;
+- t=0: delete886 -> R; delete960 -> a high 23-dislocation basin around 444368.589107438.
+
+R-to-A schedule (t=0 -> 1):
+- t=0: delete886 -> R; delete960 -> the same high 23-dislocation basin;
+- t=.2,.35: delete886 -> R, delete960 -> A;
+- t=.5,.65,.8: both -> A;
+- t=1 reached adiabatically from the R side: both projections -> R.
+
+Therefore the exact same endpoint occupancy (q886,q960)=(1,0) can retain different N960 basin history depending on continuation direction. The weighted fractional branch has genuine endpoint hysteresis/path dependence. No third lower basin was found on the coarse one-dimensional exchange line; best apparent sub-live values are ~1e-10 summation noise.
+
+Shared-hub low-mode side exits
+------------------------------
+Run 41185151883 computed the first six physical N961 Hessian modes at the unmodified hub, perturbed both signs over amplitudes .004,.008,.014,.022,.035, deleted the special label886, and fully relaxed N960.
+Returns span R, A, B, a novel e421 ~444368.42162124, and a higher 23-dislocation basin, but no value below R beyond numerical noise.
+Conclusion: do not simply extend the unmodified-hub low-mode amplitude scan. Geometry matters specifically near the occupancy bifurcation.
+
+N972 structural-teacher continuation — retired
+-----------------------------------------------
+Fixed and mobile 12-particle fractional-charge continuations from symmetric N972 both undergo finite-lambda scar reorganization and end far above R. Representative mobile endpoints:
+- orbit5: 444369.8525863527
+- orbit25: 444370.3983272160
+This formulation is retired; do not refine lambda schedules or enumerate more N972 orbits absent a new mechanism.
+
+Current experiment
+------------------
+Fractional projection-boundary scan:
+  code: science-boundary/thomson-960/code/scan_n961_fractional_projection_boundary.py
+  workflow: .github/workflows/temp-thomson-960-n961-fractional-projection-boundary.yml
+  run: 41185718113
+
+It follows the label960 fade from lambda=1 to 0 and, at every lambda, deletes 960 and independently repolishes genuine N960. The purpose is to locate the A->R projection switch interval and save nearby fractional states.
+
+Next representation
+-------------------
+The next search is explicitly two-dimensional: occupancy x transverse geometry.
+Code already prepared:
+  science-boundary/thomson-960/code/search_n961_fractional_boundary_modes.py
+
+Once lambda_c is bracketed, reproduce fractional minima immediately on both sides of the projection switch, compute the true weighted 961-body physical Hessian at those lambda values, perturb along the lowest non-rigid modes, delete960, and fully repolish N960.
+
+Do not replace this with a denser one-dimensional lambda grid. The scientific question is whether the occupancy-induced A/R bifurcation has a transverse side exit to a third, lower N960 basin.
+
+Verification rule
+-----------------
+Any internally stable candidate below R by >2e-7 stops exploratory branching and triggers independent long-double repolish and current Few Shots verifier checks. A valid accepted improvement ultimately needs >=1e-6 over the current accepted score; ~1e-10 differences are numerical noise.
