@@ -1,0 +1,45 @@
+name: temp-aes-g103-tail-one-new-focus
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/g103_tail_one_new_focus.py'
+      - '.github/workflows/temp-aes-g103-tail-one-new-focus.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exact-repair the best [7,10,23] tail deletion core
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet python-sat
+          cd science-boundary/aes-sbox-circuit
+          python -m py_compile g103_tail_one_new_focus.py g103_tail_one_new.py
+          python g103_tail_one_new_focus.py | tee run.log
+          cat result/summary.json
+      - name: Official verifier if <=100 candidate appears
+        run: |
+          set -euxo pipefail
+          cand='science-boundary/aes-sbox-circuit/result/candidate.json'
+          if [ -f "$cand" ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp "$cand" /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-tail-one-new-focus
+          path: |
+            science-boundary/aes-sbox-circuit/result
+            science-boundary/aes-sbox-circuit/run.log
+            official-verifier.jsonl
