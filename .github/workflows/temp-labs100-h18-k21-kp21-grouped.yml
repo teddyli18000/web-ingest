@@ -1,0 +1,43 @@
+name: temp labs100 h18 K21 kp21 grouped
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k21-kp21-grouped.yml'
+
+concurrency:
+  group: temp-labs100-h18-k21-kp21-grouped
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact K21 compressed and grouped-Q tools
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k21_compressed.cpp -o "$RUNNER_TEMP/comp"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k21_kp21_grouped.cpp -o "$RUNNER_TEMP/grouped"
+      - name: Exhaust kp21 compressed targets and grouped fibres
+        shell: bash
+        run: |
+          set -euo pipefail
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/comp" 21 0 | tee "$RUNNER_TEMP/kp21.log"
+          grep -F 'K21_COMPRESSED kp=21 kc=0 t=0 diff_orbits=30 support_orbits=30 ptests=1627920 rankfull=0 rankproj=1627920 ranklo=0 Hmatches_halfC=1627920 spectral=3933' "$RUNNER_TEMP/kp21.log"
+          grep '^HIT ' "$RUNNER_TEMP/kp21.log" > "$RUNNER_TEMP/kp21.hits"
+          test "$(wc -l < "$RUNNER_TEMP/kp21.hits")" -eq 3933
+          OMP_NUM_THREADS="$(nproc)" "$RUNNER_TEMP/grouped" "$RUNNER_TEMP/kp21.hits" | tee "$RUNNER_TEMP/kp21.grouped"
+          grep -F 'KP21_KP21_QSUMMARY supports=30 alphas=480 half_gamma_solutions=149828 Q_feasible_halfgamma=0 minSH=50 min_margin=26' "$RUNNER_TEMP/kp21.grouped"
+          grep -F 'EXACT_EXCLUSION h18_K21_kp21_kc0_Ele570' "$RUNNER_TEMP/kp21.grouped"
+      - name: Upload exact transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k21-kp21-grouped
+          path: |
+            ${{ runner.temp }}/kp21.log
+            ${{ runner.temp }}/kp21.hits
+            ${{ runner.temp }}/kp21.grouped
+          if-no-files-found: warn
