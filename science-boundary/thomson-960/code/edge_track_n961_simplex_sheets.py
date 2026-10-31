@@ -18,7 +18,8 @@ fixed-parameter bistable landscape:
 
 This mirrors the successful fixed-N edge-tracking method used elsewhere in the
 topic, but the objective here is the enlarged constant-total fractional-charge
-landscape rather than the ordinary Thomson objective.
+landscape rather than the ordinary Thomson objective.  Both the flow and the
+reported gradient norm use the true sphere-tangent weighted force.
 """
 from __future__ import annotations
 import argparse,json,pathlib
@@ -39,14 +40,16 @@ def weighted_cart_energy_grad(x: np.ndarray, q: np.ndarray):
     qq=np.multiply.outer(q,q)
     W=qq*inv/r2
     np.fill_diagonal(W,0.0)
-    E=float(np.sum(np.triu(qq*inv,1)))
+    E=float(np.sum(np.triu(qq*inv,1),dtype=np.longdouble))
     g=W@x-np.sum(W,axis=1)[:,None]*x
+    # Riemannian gradient on (S^2)^N: remove each point's radial component.
+    g-=np.sum(g*x,axis=1)[:,None]*x
     return E,g
 
 
 def capped_descent(x,g,eta,max_step):
     step=-eta*g
-    # g is already tangent up to roundoff.
+    # Protect against roundoff: the input g is already tangent analytically.
     step-=np.sum(step*x,axis=1)[:,None]*x
     n=np.linalg.norm(step,axis=1)
     scale=np.ones_like(n); mask=n>max_step; scale[mask]=max_step/n[mask]
