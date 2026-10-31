@@ -1,0 +1,47 @@
+name: temp-aes-g103-crosscut-calibration
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-g103-crosscut-calibration.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  calibrate:
+    strategy:
+      fail-fast: false
+      matrix:
+        delta: [0, 1, 2]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Calibrate final-AND/output joint search
+        run: |
+          set -euxo pipefail
+          python science-boundary/aes-sbox-circuit/g103_crosscut_window_resynth.py \
+            --basis-rows '1,2,4' --start 31 \
+            --beam 240 --max-candidates 48 --restarts 4 \
+            --delta '${{ matrix.delta }}' --seed 29 --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier for any <=100 candidate
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ] && [ "$(python -c "import json; print(len(json.load(open('result/candidate.json'))['gates']))")" -le 100 ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-crosscut-calibration-d${{ matrix.delta }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
