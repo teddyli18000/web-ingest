@@ -1,0 +1,50 @@
+name: temp-aes-g103-suffix-cadical
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/g103_suffix_cadical.py'
+      - '.github/workflows/temp-aes-g103-suffix-cadical.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      matrix:
+        gates: [19, 20]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PySAT CaDiCaL
+        run: python -m pip install --quiet python-sat
+      - name: Bounded affine CNF synthesis
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/g103_suffix_cadical.py
+          python science-boundary/aes-sbox-circuit/g103_suffix_cadical.py \
+            --basis-rows '1,2,4' --gates '${{ matrix.gates }}' \
+            --conf-budget 10000000 --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier for any <=100 identity-basis candidate
+        run: |
+          set -euxo pipefail
+          if [ -f result/full.json ] && [ "$(python -c "import json; print(len(json.load(open('result/full.json'))['gates']))")" -le 100 ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp result/full.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-suffix-cadical-${{ matrix.gates }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
