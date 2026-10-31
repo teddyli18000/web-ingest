@@ -1,0 +1,64 @@
+name: temp Thomson 960 N961 occupancy exchange
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-n961-occupancy-exchange.yml'
+
+jobs:
+  exchange:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tag: R-to-A
+            schedule: '0,.1,.2,.35,.5,.65,.8,.9,1'
+          - tag: A-to-R
+            schedule: '1,.9,.8,.65,.5,.35,.2,.1,0'
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Static check
+        run: python3 -m py_compile science-boundary/thomson-960/code/search_n961_occupancy_exchange.py science-boundary/thomson-960/code/search_n972_mobile_fractional_homotopy.py
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e432-seed
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41043461011
+      - name: Run common-hub occupancy exchange
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          live=$(cat "$RUNNER_TEMP/seed/live-score.txt")
+          echo "nproc=$(nproc) tag=${{ matrix.tag }} live=$live"
+          python3 science-boundary/thomson-960/code/search_n961_occupancy_exchange.py \
+            "$RUNNER_TEMP/seed/A-natural.json" --schedule '${{ matrix.schedule }}' \
+            --live-score "$live" --hub-maxiter 3200 --weighted-maxiter 1800 --project-maxiter 3000 \
+            --project-values '0,.2,.35,.5,.65,.8,1' --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('HUB',d['hub_energy'])
+          b=d['best_projection']; print('BEST',None if b is None else (b['t'],b['delete_index'],b['class'],b['energy'],b['delta_live'],b['signature']['coord']))
+          for p in sorted(d['projections'],key=lambda z:(z['t'],z['delete_index'])):
+              print('P',p['t'],p['delete_index'],p['class'],p['energy'],p['delta_live'],p['signature']['coord'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-n961-occupancy-${{ matrix.tag }}
+          path: ${{ runner.temp }}/out
+          retention-days: 10
