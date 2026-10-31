@@ -1,0 +1,30 @@
+name: temp-aes-g103-explicit-cut-prefix
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/g103_explicit_cut_basis.py'
+      - '.github/workflows/temp-aes-g103-explicit-cut-prefix.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  census:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Enumerate all 168 explicit cut bases
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/g103_explicit_cut_basis.py
+          python science-boundary/aes-sbox-circuit/g103_explicit_cut_basis.py --out result | tee run.log
+          cat result/summary.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-g103-explicit-cut-prefix
+          path: |
+            result
+            run.log
