@@ -1,0 +1,16 @@
+Thomson N=960 — cascade-aware scar-walk v2 summary — 2026-10-31
+
+run = 41182508587
+live_score = 444368.3924061973
+
+tag  best_free_energy  delta_live  best_cascade_effective  nodes  max_triggered  free_classes
+orbit0  444368.392406197264791  -5.82076609135e-11  0.701914265  50  2  {'R': 50}
+orbit1  444368.392406197206583  -1.16415321827e-10  2.04131914  52  6  {'R': 38, 'A': 2, 'B': 12}
+orbit2  444368.392406197264791  -5.82076609135e-11  1.59489131  51  4  {'R': 46, 'A': 5}
+orbit3  444368.392406197206583  -1.16415321827e-10  1.85180627  52  6  {'R': 49, 'A': 3}
+orbit4-positive-control  444368.392406197264791  -5.82076609135e-11  2.26804966  50  2  {'R': 34, 'A': 16}
+orbit5  444368.392406197264791  -5.82076609135e-11  0.704858893  49  1  {'R': 49}
+orbit6  444368.392406197206583  -1.16415321827e-10  0.558690472  56  1  {'R': 56}
+
+best overall = orbit1 444368.392406197206583 delta -1.16415321827e-10
+Interpretation: this v2 search validated cascade-aware ranking on the known orbit4 R->A route but produced no verifier-relevant improvement. Values ~1e-10 below live are floating summation noise.
