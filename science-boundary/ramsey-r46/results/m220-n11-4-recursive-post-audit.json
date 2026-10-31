@@ -1,0 +1,51 @@
+{
+  "all_unsat": true,
+  "anchor_A26_non5_pairs": [{"A26_type": 0, "degrees": [3, 4], "edge": true, "pair": [0, 1]}],
+  "campaign": "m220-n11-4-recursive-post-audit",
+  "catalog_counts": {"A25": 6, "A26": 2, "B116": 9},
+  "conclusion": "No 220-edge R(4,6,36) graph can have exactly four degree-11 vertices.",
+  "degree5_recursive_profile_histogram": [
+    {"count": 2, "family": "A25", "needs": [2, 4, 5, 5, 5]},
+    {"count": 2, "family": "A25", "needs": [2, 4, 5, 5, 6]},
+    {"count": 3, "family": "A25", "needs": [2, 4, 5, 6, 6]},
+    {"count": 4, "family": "A25", "needs": [2, 4, 6, 6, 6]},
+    {"count": 2, "family": "A25", "needs": [2, 5, 5, 5, 5]},
+    {"count": 6, "family": "A25", "needs": [2, 5, 5, 5, 6]},
+    {"count": 9, "family": "A25", "needs": [2, 5, 5, 6, 6]},
+    {"count": 4, "family": "A25", "needs": [3, 3, 6, 6, 6]},
+    {"count": 6, "family": "A25", "needs": [3, 4, 4, 6, 6]},
+    {"count": 6, "family": "A25", "needs": [3, 4, 5, 6, 6]},
+    {"count": 2, "family": "A26", "needs": [2, 5, 5, 5, 5]},
+    {"count": 2, "family": "A26", "needs": [2, 5, 5, 5, 6]},
+    {"count": 3, "family": "A26", "needs": [2, 5, 5, 6, 6]},
+    {"count": 8, "family": "A26", "needs": [2, 5, 6, 6, 6]},
+    {"count": 4, "family": "A26", "needs": [3, 4, 6, 6, 6]}
+  ],
+  "edges": 220,
+  "exceptional_diamond": {
+    "A26_induced8_type_count": 15,
+    "A26_type": 0,
+    "degree8_q_candidates": 9,
+    "degrees": [3, 4],
+    "forced_q_B_degree": 8,
+    "forced_q_cross_degree": 3,
+    "low_edge": [0, 1],
+    "pair_hits_all_I5": false,
+    "q_checks": [
+      {"A26_induced8_matches": 0, "B116_type": 1, "neighbor_degree_sequence": [2, 2, 3, 3, 3, 3, 4, 4], "neighbor_edges": 12, "q": 0},
+      {"A26_induced8_matches": 0, "B116_type": 4, "neighbor_degree_sequence": [2, 2, 3, 3, 3, 3, 4, 4], "neighbor_edges": 12, "q": 0},
+      {"A26_induced8_matches": 0, "B116_type": 4, "neighbor_degree_sequence": [2, 2, 3, 3, 3, 3, 4, 4], "neighbor_edges": 12, "q": 1},
+      {"A26_induced8_matches": 0, "B116_type": 4, "neighbor_degree_sequence": [2, 2, 3, 3, 3, 3, 4, 4], "neighbor_edges": 12, "q": 2},
+      {"A26_induced8_matches": 0, "B116_type": 4, "neighbor_degree_sequence": [2, 2, 3, 3, 3, 3, 4, 4], "neighbor_edges": 12, "q": 3},
+      {"A26_induced8_matches": 0, "B116_type": 4, "neighbor_degree_sequence": [2, 2, 3, 3, 3, 3, 4, 4], "neighbor_edges": 12, "q": 4},
+      {"A26_induced8_matches": 0, "B116_type": 4, "neighbor_degree_sequence": [2, 2, 3, 3, 3, 3, 4, 4], "neighbor_edges": 12, "q": 5},
+      {"A26_induced8_matches": 0, "B116_type": 4, "neighbor_degree_sequence": [2, 2, 3, 3, 3, 3, 4, 4], "neighbor_edges": 12, "q": 6},
+      {"A26_induced8_matches": 0, "B116_type": 4, "neighbor_degree_sequence": [2, 2, 3, 3, 3, 3, 4, 4], "neighbor_edges": 12, "q": 7}
+    ],
+    "third_vertices_that_complete_I5_hitting": [2, 3, 4, 5, 6]
+  },
+  "low_graph_types": [[4, [2, 2, 2, 2]], [5, [2, 2, 3, 3]]],
+  "min_degree5_rows_requiring_capacity_ge5": 2,
+  "n11": 4,
+  "soundness": "Uses endpoint r>=2, complete A25/A26/B116 catalogues, recursive neighbourhood consistency, exact I5 hitting, and induced-subgraph isomorphism only; no withdrawn row-domain predicate."
+}
