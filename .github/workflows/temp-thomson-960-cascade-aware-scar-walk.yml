@@ -1,0 +1,76 @@
+name: temp Thomson 960 cascade-aware scar-walk
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-cascade-aware-scar-walk.yml'
+
+jobs:
+  search:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tag: orbit0
+            quad: '217,559,551,308'
+          - tag: orbit1
+            quad: '59,639,935,603'
+          - tag: orbit2
+            quad: '79,134,323,35'
+          - tag: orbit3
+            quad: '21,230,74,363'
+          - tag: orbit4-positive-control
+            quad: '108,282,511,599'
+          - tag: orbit5
+            quad: '126,522,886,306'
+          - tag: orbit6
+            quad: '12,139,958,286'
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-e432-seed
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41043461011
+      - name: Search cascade-aware history-dependent topology paths
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          live=$(cat "$RUNNER_TEMP/seed/live-score.txt")
+          echo "nproc=$(nproc) tag=${{ matrix.tag }} live=$live"
+          python3 science-boundary/thomson-960/code/search_cascade_aware_scar_walk_beam.py \
+            "$RUNNER_TEMP/seed/live.json" --first-quad '${{ matrix.quad }}' --tag '${{ matrix.tag }}' \
+            --live-score "$live" --depth 5 --beam 4 --branch 5 --max-graph-distance 2 --remote-distance 2 \
+            --probe-kappa 100 --first-multiplier 1.003 --step-multiplier 1.01 \
+            --fixed-maxiter 1300 --probe-maxiter 900 --release-maxiter 2600 \
+            --out "$RUNNER_TEMP/out/result.json"
+      - name: Summarize
+        run: |
+          python3 - <<'PY'
+          import json,os
+          d=json.load(open(os.path.join(os.environ['RUNNER_TEMP'],'out','result.json')))
+          print('TAG',d['tag'],'BEST',d['best_free_energy'],'DELTA',d['best_delta_live'],'BEST_CASCADE',d['best_cascade_effective'],'NODES',len(d['nodes']))
+          for r in sorted(d['nodes'],key=lambda z:(z['free_energy'],-z['cascade_effective']))[:20]:
+              print('END','d',r['depth'],'fix',r['fixed_energy'],'cascade',r['cascade_effective'],
+                    'trig',r['cascade']['triggered_count'],'chain',r['probe_chain_ok'],
+                    'free',r['free_energy'],r['free_class'],r['coord_counts'],
+                    'path',[(m['delete'],m['add'],m['threshold'],m['newly_legal']) for m in r['path']])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: thomson-cascade-aware-scar-walk-${{ matrix.tag }}
+          path: ${{ runner.temp }}/out
+          retention-days: 10
