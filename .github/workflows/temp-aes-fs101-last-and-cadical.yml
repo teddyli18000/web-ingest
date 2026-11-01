@@ -1,0 +1,55 @@
+name: temp-aes-fs101-last-and-cadical
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/fs101_tail_cadical.py'
+      - '.github/workflows/temp-aes-fs101-last-and-cadical.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      matrix:
+        slots: ['2,1','0,2','1,1','2,0']
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Solve exact last-AND tail
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet python-sat
+          python -m py_compile science-boundary/aes-sbox-circuit/fs101_tail_cadical.py
+          tag="$(echo '${{ matrix.slots }}' | tr ',' '-')"
+          python science-boundary/aes-sbox-circuit/fs101_tail_cadical.py \
+            --start 32 --slots '${{ matrix.slots }}' --conf-budget 1000000 \
+            --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier if <=100 candidate appears
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            n="$(python -c "import json; print(len(json.load(open('result/candidate.json'))['gates']))")"
+            if [ "$n" -le 100 ]; then
+              git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+              mkdir -p /tmp/shot
+              cp result/candidate.json /tmp/shot/certificate.json
+              python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+            else
+              echo '{"candidate":"baseline-or-oversize"}' | tee official-verifier.jsonl
+            fi
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-fs101-last-and-${{ strategy.job-index }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
