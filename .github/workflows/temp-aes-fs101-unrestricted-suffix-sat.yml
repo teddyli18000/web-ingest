@@ -1,0 +1,67 @@
+name: temp-aes-fs101-unrestricted-suffix-sat
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/fs101_unrestricted_suffix_sat.py'
+      - '.github/workflows/temp-aes-fs101-unrestricted-suffix-sat.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - tag: control10
+            k: 10
+            force: '--force-original'
+            budget: 200000
+          - tag: free10
+            k: 10
+            force: ''
+            budget: 1000000
+          - tag: target9
+            k: 9
+            force: ''
+            budget: 3000000
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SAT bindings
+        run: python -m pip install --quiet python-sat
+      - name: Solve unrestricted multi-output suffix
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/fs101_unrestricted_suffix_sat.py
+          python science-boundary/aes-sbox-circuit/fs101_unrestricted_suffix_sat.py \
+            --k '${{ matrix.k }}' ${{ matrix.force }} --conf-budget '${{ matrix.budget }}' \
+            --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier if <=100 candidate appears
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            n="$(python -c "import json; print(len(json.load(open('result/candidate.json'))['gates']))")"
+            if [ "$n" -le 100 ]; then
+              git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+              mkdir -p /tmp/shot
+              cp result/candidate.json /tmp/shot/certificate.json
+              python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+            else
+              echo '{"candidate":"oversize"}' | tee official-verifier.jsonl
+            fi
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-fs101-unrestricted-suffix-${{ matrix.tag }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
