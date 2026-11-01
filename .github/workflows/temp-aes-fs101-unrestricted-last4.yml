@@ -1,0 +1,47 @@
+name: temp-aes-fs101-unrestricted-last4
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/fs101_unrestricted_last4.py'
+      - '.github/workflows/temp-aes-fs101-unrestricted-last4.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exhaust unrestricted <=3-gate suffix after g96
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/fs101_unrestricted_last4.py
+          python science-boundary/aes-sbox-circuit/fs101_unrestricted_last4.py --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier if <=100 candidate appears
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            n="$(python -c "import json; print(len(json.load(open('result/candidate.json'))['gates']))")"
+            if [ "$n" -le 100 ]; then
+              git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+              mkdir -p /tmp/shot
+              cp result/candidate.json /tmp/shot/certificate.json
+              python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+            else
+              echo '{"candidate":"oversize"}' | tee official-verifier.jsonl
+            fi
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-fs101-unrestricted-last4
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
