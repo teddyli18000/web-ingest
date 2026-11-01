@@ -1,0 +1,49 @@
+name: temp-aes-fs101-suffix-pair-sat
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/fs101_suffix_pair_sat.py'
+      - '.github/workflows/temp-aes-fs101-suffix-pair-sat.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        pair: ['3,4','3,5','3,6','3,7','4,5','4,6','4,7','5,6','5,7','6,7']
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SAT bindings
+        run: python -m pip install --quiet python-sat
+      - name: Jointly replace this output-cone pair with one fewer gate
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/fs101_suffix_pair_sat.py
+          python science-boundary/aes-sbox-circuit/fs101_suffix_pair_sat.py \
+            --pair '${{ matrix.pair }}' --conf-budget 1000000 --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier if <=100 candidate appears
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-fs101-suffix-pair-${{ strategy.job-index }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
