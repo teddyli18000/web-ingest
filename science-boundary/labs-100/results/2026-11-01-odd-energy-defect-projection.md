@@ -4,9 +4,9 @@ Date: 2026-11-01
 
 ## Purpose
 
-The exact `(18,0)` program has now closed three consecutive odd-perfect center layers `K=19,21,23` without producing a better candidate.  Rather than mechanically extend the same slice, this note changes the search space: it derives the first non-odd-perfect odd-energy layer `O=58` from first principles.
+The exact `(18,0)` program has now closed three consecutive odd-perfect center layers `K=19,21,23` without producing a better candidate. Rather than mechanically extend the same slice, this note changes the search space: it derives the first non-odd-perfect odd-energy layer `O=58` from first principles.
 
-The main result is that `O=58` is not a generic relaxation.  It has a **one-sparse cyclic cross defect**, forces the parity-half sums to `(2,2)` up to energy-preserving sign symmetries, and turns the existing periodic/negacyclic zero equations into the even/odd parts of that same one-sparse defect.
+The main result is that `O=58` is not a generic relaxation. It has a **one-sparse cyclic cross defect**, forces the parity-half sums to `(2,2)` up to energy-preserving sign symmetries, and turns the existing periodic/negacyclic zero equations into two sparse projections of that same one-sparse defect.
 
 ## Paired odd correlations
 
@@ -17,7 +17,7 @@ D_r = C_(2r+1),   r=0,...,49,
 O = sum_r D_r^2.
 ```
 
-Every `D_r` is odd.  Pair opposite odd lags and define
+Every `D_r` is odd. Pair opposite odd lags and define
 
 ```text
 z_r = (D_r + D_(49-r))/4,   r=0,...,24.       (1)
@@ -31,20 +31,20 @@ Split the length-100 sequence into parity halves `A,B` of length 50, and let
 T_r = sum_i A_i B_(i+r mod 50)
 ```
 
-be their cyclic cross-correlation.  Directly separating wrapped and non-wrapped terms gives
+be their cyclic cross-correlation. Directly separating wrapped and non-wrapped terms gives
 
 ```text
 D_r + D_(49-r) = T_r + T_(49-r).              (2)
 ```
 
-For any shift `r`, write `T_r=50-2h_r`, where `h_r` is the number of negative products in that cyclic cross-correlation.  The parity of `h_r` is independent of `r`, because
+For any shift `r`, write `T_r=50-2h_r`, where `h_r` is the number of negative products in that cyclic cross-correlation. The parity of `h_r` is independent of `r`, because
 
 ```text
 (-1)^h_r = product_i A_i B_(i+r)
           = (product_i A_i)(product_i B_i).
 ```
 
-Hence all `T_r` are congruent modulo four.  Equation (2) therefore implies
+Hence all `T_r` are congruent modulo four. Equation (2) therefore implies
 
 ```text
 D_r + D_(49-r) == 0 (mod 4),
@@ -61,7 +61,7 @@ D_r       = 2 z_r + e_r,
 D_(49-r)  = 2 z_r - e_r,
 ```
 
-where `e_r` is odd.  Then
+where `e_r` is odd. Then
 
 ```text
 D_r^2 + D_(49-r)^2
@@ -106,7 +106,7 @@ If `O=58`, equation (3) and the mod-16 remainder force
 ||z||_2^2 = 1,
 ```
 
-with equality in every paired bound.  Therefore exactly one coordinate of `z` is `+1` or `-1`, all others are zero, and every `|e_r|=1`.
+with equality in every paired bound. Therefore exactly one coordinate of `z` is `+1` or `-1`, all others are zero, and every `|e_r|=1`.
 
 Equivalently, exactly one opposite odd-lag pair is
 
@@ -155,7 +155,7 @@ Let `P_s` be the coefficient of
 p c* + c p*            mod x^25-1
 ```
 
-and `M_s` the coefficient of
+and `M_s` the coefficient produced by the repository's reduced negacyclic commutator convention
 
 ```text
 alpha gamma* - gamma alpha*   mod x^25+1.
@@ -168,21 +168,21 @@ P_0 = 2 z_12,
 M_0 = 0,
 ```
 
-and for `s=1,...,12`,
+and for the independent range `s=1,...,12`,
 
 ```text
 P_s = z_(12+s) + z_(12-s),                    (6)
 M_s = z_(12+s) - z_(12-s).                    (7)
 ```
 
-Indices are ordinary integers in `0,...,24` in (6)-(7).  The remaining coefficients satisfy
+Indices are ordinary integers in `0,...,24` in (6)-(7). In the reduced coefficient convention used by the exact fibre code, the remaining stored coefficients satisfy
 
 ```text
-P_(25-s)= P_s,
-M_(25-s)=-M_s.
+P_(25-s)=P_s,
+M_(25-s)=M_s.
 ```
 
-Thus the two order-25 channels are exactly the even and odd parts of the same vector `z` about the center index 12.
+The sign distinguishing the two coordinates `z_(12+s)` and `z_(12-s)` is already carried by the independent coefficient `M_s` in (7); it is not introduced again at coefficient `25-s`.
 
 The old odd-perfect equations
 
@@ -195,7 +195,7 @@ are simply the special case `z=0`.
 
 ### `O=58` defect shapes
 
-Under normalization (5), only two forms occur.
+Under normalization (5), only two forms occur in the independent channel coordinates.
 
 If the nonzero `z` entry is the center `z_12=1`, then
 
@@ -211,14 +211,14 @@ P_s=1,
 M_s=1,
 ```
 
-with all other independent coefficients zero.  If instead the nonzero entry is `z_(12-s)=1`, then
+with all other independent coefficients zero. If instead the nonzero entry is `z_(12-s)=1`, then
 
 ```text
 P_s=1,
 M_s=-1.
 ```
 
-So the first odd-energy defect remains one-sparse in both channels.  Among nonzero lag locations, multiplication by units modulo 25 has only the `gcd(s,25)=1` and `gcd(s,25)=5` location classes; the sign/orientation of the negacyclic defect should be retained until the corresponding full-sequence symmetry is explicitly proved.
+So the first odd-energy defect remains one-sparse in both independent channel projections. Among nonzero lag locations, multiplication by units modulo 25 has only the `gcd(s,25)=1` and `gcd(s,25)=5` location classes; the sign/orientation of the negacyclic defect should be retained until the corresponding full-sequence symmetry is explicitly proved.
 
 ## Even-energy target arithmetic for `O=58`
 
@@ -228,7 +228,7 @@ After normalizing `(a,b)=(2,2)`,
 sum_r d_r = (a^2+b^2-100)/4 = -23,
 ```
 
-where `d_r=C_(2r)/2`.  As before let
+where `d_r=C_(2r)/2`. As before let
 
 ```text
 m=d_25=K-25,
@@ -236,7 +236,7 @@ U_r=(d_r+d_(50-r))/2,
 V_r=(d_r-d_(50-r))/2.
 ```
 
-Because each half has 24 negative signs, the global product is `+1`.  Hence `m` is odd, `K` is even, and `E==6 (mod 8)`.  The target `E<=574` is therefore exact at 574, giving
+Because each half has 24 negative signs, the global product is `+1`. Hence `m` is odd, `K` is even, and `E==6 (mod 8)`. The target `E<=574` is therefore exact at 574, giving
 
 ```text
 4W <= 516,
@@ -282,13 +282,13 @@ The existing compressed even-correlation lower bound `qmin(G)` and the `SG+SH` f
 
 ## Regression
 
-`code/odd_energy_defect_projection.py` independently computes the original length-100 odd correlations, both parity-half channel decompositions, and checks equations (1)-(7), the energy lower bound, and `ab=4 sum z` on the public E578 incumbent plus 500 deterministic pseudo-random binary sequences.
+`code/odd_energy_defect_projection.py` independently computes the original length-100 odd correlations, both parity-half channel decompositions, and checks equations (1)-(7), the energy lower bound, `ab=4 sum z`, and the reduced coefficient symmetry on the public E578 incumbent plus 500 deterministic pseudo-random binary sequences.
 
-This regression is an index/sign audit; the proof is the algebra above.
+An initial regression deliberately exposed a sign mistake in the non-independent stored negacyclic coefficients; this note records the corrected convention above. The proof-relevant independent identities (6)-(7) were unchanged.
 
 ## Consequence for the research program
 
-The next exact search should **not** simply continue `(18,0)` odd-perfect center layers by default.  The first non-odd-perfect layer has unexpectedly strong structure:
+The next exact search should **not** simply continue `(18,0)` odd-perfect center layers by default. The first non-odd-perfect layer has unexpectedly strong structure:
 
 ```text
 O=58
@@ -298,4 +298,4 @@ O=58
 => only ten convex-feasible even center values K=16,18,...,34.
 ```
 
-This gives a qualitatively new candidate family while retaining the successful order-25 compression/fibre interface.  It is the preferred next representation to test against the remaining odd-perfect `K>=25` route.
+This gives a qualitatively new candidate family while retaining the successful order-25 compression/fibre interface. It is the preferred next representation to test against the remaining odd-perfect `K>=25` route.
