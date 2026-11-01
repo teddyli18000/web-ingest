@@ -1,0 +1,29 @@
+name: temp-aes-fs101-tail-residual-diagnostic
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/fs101_tail_residual_diagnostic.py'
+      - '.github/workflows/temp-aes-fs101-tail-residual-diagnostic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Diagnose repeated residual
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet python-sat
+          cd science-boundary/aes-sbox-circuit
+          python -m py_compile fs101_tail_residual_diagnostic.py
+          python fs101_tail_residual_diagnostic.py | tee residual.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-fs101-tail-residual-diagnostic
+          path: science-boundary/aes-sbox-circuit/residual.json
