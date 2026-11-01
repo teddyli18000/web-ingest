@@ -1,0 +1,29 @@
+name: temp labs100 odd defect projection regression
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-odd-defect-projection-regression.yml'
+      - 'science-boundary/labs-100/code/odd_energy_defect_projection.py'
+      - 'science-boundary/labs-100/results/2026-11-01-odd-energy-defect-projection.md'
+
+concurrency:
+  group: temp-labs100-odd-defect-projection-regression
+  cancel-in-progress: false
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check paired odd-defect and periodic-negacyclic identities
+        run: |
+          python science-boundary/labs-100/code/odd_energy_defect_projection.py | tee "$RUNNER_TEMP/odd-defect.log"
+          grep -F 'ODD_DEFECT_PROJECTION_REGRESSION_OK samples=501 incumbent_odd_energy=50' "$RUNNER_TEMP/odd-defect.log"
+      - name: Upload transcript
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-odd-defect-projection-regression
+          path: ${{ runner.temp }}/odd-defect.log
