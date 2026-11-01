@@ -1,0 +1,63 @@
+name: temp labs100 h18 K23 high splits
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k23-highsplits.yml'
+
+concurrency:
+  group: temp-labs100-h18-k23-highsplits
+  cancel-in-progress: false
+
+jobs:
+  exact-high-splits:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact generic K-layer tools
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k_compressed.cpp -o "$RUNNER_TEMP/compressed"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k_signedc_exact.cpp -o "$RUNNER_TEMP/signedc"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k_qgroup_affine.cpp -o "$RUNNER_TEMP/qgroup"
+      - name: Exact compressed census for K23 high-kp splits
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/k23"
+          export OMP_NUM_THREADS="$(nproc)"
+          # kc=0: generic p-sign enumeration; cross is automatic.
+          "$RUNNER_TEMP/compressed" 23 23 0 > "$RUNNER_TEMP/k23/kp23-t0.log"
+          # Small positive kc: enumerate balanced c signs first and solve p exactly.
+          for spec in '21 0' '21 2' '19 0' '19 2' '19 4' '17 0' '17 2' '17 4' '17 6'; do
+            set -- $spec
+            kp="$1"; t="$2"
+            "$RUNNER_TEMP/signedc" 23 "$kp" "$t" > "$RUNNER_TEMP/k23/kp${kp}-t${t}.log"
+          done
+          cat "$RUNNER_TEMP"/k23/kp23-t0.log > "$RUNNER_TEMP/k23/kp23.hits"
+          cat "$RUNNER_TEMP"/k23/kp21-t*.log > "$RUNNER_TEMP/k23/kp21.hits"
+          cat "$RUNNER_TEMP"/k23/kp19-t*.log > "$RUNNER_TEMP/k23/kp19.hits"
+          cat "$RUNNER_TEMP"/k23/kp17-t*.log > "$RUNNER_TEMP/k23/kp17.hits"
+          for kp in 23 21 19 17; do
+            echo "=== KP $kp COMPRESSED ==="
+            grep -E '^(H18K_COMPRESSED|H18K_SIGNEDC)' "$RUNNER_TEMP/k23/kp${kp}.hits"
+            echo "HITS $(grep -c '^HIT ' "$RUNNER_TEMP/k23/kp${kp}.hits" || true)"
+          done
+      - name: Exact affine-canonical fibre-Q census
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          for kp in 23 21 19 17; do
+            "$RUNNER_TEMP/qgroup" 23 "$RUNNER_TEMP/k23/kp${kp}.hits" | tee "$RUNNER_TEMP/k23/kp${kp}.qgroup"
+          done
+          echo '=== K23 HIGH SPLIT Q SUMMARY ==='
+          grep -h '^H18K_AFFINE_QGROUP_SUMMARY' "$RUNNER_TEMP"/k23/*.qgroup
+      - name: Upload exact transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k23-highsplits
+          path: ${{ runner.temp }}/k23/
+          if-no-files-found: warn
