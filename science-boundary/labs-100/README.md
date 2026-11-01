@@ -25,7 +25,7 @@ Public incumbent:
 ++++++--+++++-----++-++--+--++++++++++---+-++--++++-+--++----+--+-+-+-+-++---++---++-+-++-+-++--+-+-
 ```
 
-The strongest exact progress is on the minimum odd-energy (`odd-perfect`) layer, where every odd-lag correlation has magnitude one and the odd energy is `50`.
+The strongest exact progress is on the minimum odd-energy (`odd-perfect`) layer and on the newly derived first non-odd-perfect layer `O=58`.
 
 Current exact frontier:
 
@@ -33,13 +33,15 @@ Current exact frontier:
 - odd-perfect endpoint defect classes `d=0,1,2,3,4,5` contain no `E<=574` sequence;
 - the sharp `(a,b)=(20,0), W=127` branch is completely excluded;
 - the three remaining low11 `(20,0)` sparse near-NGP branches `W129-A`, `W131-A2`, `W131-B1` are closed after a full all-affine fibre audit;
-- for `(a,b)=(18,0)`, the complete order-25 compression layers `K=19` and `K=21` are exactly excluded for `E<=570`;
-- the active next layer is `K=23`.
+- for normalized odd-perfect `(a,b)=(18,0)`, the complete order-25 compression layers `K=19`, `K=21`, and `K=23` are exactly excluded for `E<=570`; hence any surviving candidate on that line has `K>=25`;
+- the first non-odd-perfect odd-energy layer `O=58` has been reduced exactly to canonical half sums `(a,b)=(2,2)`, a one-sparse paired odd-correlation defect, and only ten even center values `K=16,18,...,34`.
 
 The latest complete records are:
 
-- [`results/2026-10-31-h18-k19-complete-exclusion.md`](results/2026-10-31-h18-k19-complete-exclusion.md)
+- [`results/2026-11-01-h18-k23-complete-exclusion.md`](results/2026-11-01-h18-k23-complete-exclusion.md)
+- [`results/2026-11-01-odd-energy-defect-projection.md`](results/2026-11-01-odd-energy-defect-projection.md)
 - [`results/2026-10-31-h18-k21-complete-exclusion.md`](results/2026-10-31-h18-k21-complete-exclusion.md)
+- [`results/2026-10-31-h18-k19-complete-exclusion.md`](results/2026-10-31-h18-k19-complete-exclusion.md)
 - [`results/2026-10-30-low11-affine-fibre-closure.md`](results/2026-10-30-low11-affine-fibre-closure.md)
 - [`results/2026-10-29-w127-complete-exclusion.md`](results/2026-10-29-w127-complete-exclusion.md)
 
@@ -103,7 +105,7 @@ Full derivation: [`results/2026-10-29-oddperfect-polynomial-factorization.md`](r
 
 ## Order-25 compression / fibre interface
 
-For the current `(18,0)` line write
+Write
 
 ```text
 d_r = C_(2r)/2,
@@ -122,7 +124,7 @@ c=x^13 q,
 gamma=x^13 beta.
 ```
 
-The odd-perfect cyclic cross equation splits exactly into two independent order-25 equations:
+On the odd-perfect layer the cyclic cross equation splits exactly into
 
 ```text
 p c* + c p* = 0                    mod x^25-1,
@@ -155,21 +157,21 @@ then the full fibre identity is
 2 sum U_r^2 = SG+SH.
 ```
 
-This is now the preferred representation for the `(18,0)` center layers. The simultaneous `AGL(1,Z_25)` action on the two fibre supports is quotiented exactly before sign enumeration; any final survivors are reconstructed to binary length-100 sequences and rescored in the original LABS objective.
+The simultaneous `AGL(1,Z_25)` action on the two fibre supports is quotiented exactly before sign enumeration; final survivors are reconstructed to binary length-100 sequences and rescored in the original LABS objective. A compressed orbit representative alone is never treated as sufficient for aperiodic claims.
 
-### `K=19`
+### `(18,0), K=19`
 
-Here `m=-6` and `E<=570` forces an extremely sparse near-NGP spectrum. All six possible splits
+All six splits
 
 ```text
-(kp,kc)=(19,0),(17,2),(15,4),(13,6),(11,8),(9,10)
+(19,0),(17,2),(15,4),(13,6),(11,8),(9,10)
 ```
 
-are exactly empty.
+are exactly empty through `E<=570`.
 
 Record: [`results/2026-10-31-h18-k19-complete-exclusion.md`](results/2026-10-31-h18-k19-complete-exclusion.md).
 
-### `K=21`
+### `(18,0), K=21`
 
 Here
 
@@ -179,22 +181,98 @@ W=16+2(Q+R),
 E<=570 iff Q+R<=57.
 ```
 
-All seven possible norm splits `kp=9,11,13,15,17,19,21` are exactly empty. The last four fibre-Q survivors were expanded through every matching compressed affine image, both independent fibre signs, and all 500 induced full-length affine transforms; none even met the residual `V` budget.
+All seven possible norm splits are exactly empty. Every Q-level survivor was expanded through matching compressed affine images, both required fibre signs, and all induced full-length affine transforms.
 
 Record: [`results/2026-10-31-h18-k21-complete-exclusion.md`](results/2026-10-31-h18-k21-complete-exclusion.md).
 
-### Active `K=23` layer
+### `(18,0), K=23`
 
-For `K=23`,
+Here
 
 ```text
 m=-2,
-sum U=29,
 W=4+2(Q+R),
-E<=570 iff Q+R<=63.
+E<=570 iff Q+R<=63,
+SG+SH<=126.
 ```
 
-The same `qmin` and fibre-Q identities apply unchanged. A generic exact compressed solver, [`code/oddperfect_h18_k_compressed.cpp`](code/oddperfect_h18_k_compressed.cpp), is regression-checked against frozen `K=21` counts before use on the new layer.
+All eight norm splits
+
+```text
+(23,0),(21,2),(19,4),(17,6),
+(15,8),(13,10),(11,12),(9,14)
+```
+
+are exactly empty. The final three lower splits were verified by a support-orbit sharder that first reproduced the frozen `(15,8)` full-witness summary exactly and then performed independent final length-100 rescoring. Across the remaining Q-level survivors, no transform even met the residual `V` budget.
+
+Record: [`results/2026-11-01-h18-k23-complete-exclusion.md`](results/2026-11-01-h18-k23-complete-exclusion.md).
+
+Therefore
+
+```text
+odd-perfect (18,0), K in {19,21,23}, E<=570: impossible,
+```
+
+and the surviving odd-perfect frontier on this line is `K>=25`.
+
+## First non-odd-perfect layer: `O=58`
+
+Let
+
+```text
+D_r=C_(2r+1), r=0,...,49,
+z_r=(D_r+D_(49-r))/4, r=0,...,24.
+```
+
+For every length-100 binary sequence, `z_r` is integral and
+
+```text
+O = sum_r D_r^2 >= 50 + 8 ||z||_2^2,
+ab = 4 sum_r z_r.
+```
+
+Moreover `O-(50+8||z||^2)` is a nonnegative multiple of 16. Hence the first non-odd-perfect layer `O=58` forces
+
+```text
+||z||^2=1,
+ab=+/-4.
+```
+
+Because the length-50 half sums are even, the only absolute half-sum class is `(2,2)`. Energy-preserving sign symmetries normalize this to
+
+```text
+(a,b)=(2,2),
+z = one positive unit vector.
+```
+
+In the same order-25 decomposition the independent periodic/negacyclic cross coefficients become
+
+```text
+P_0=2 z_12,
+M_0=0,
+P_s=z_(12+s)+z_(12-s),
+M_s=z_(12+s)-z_(12-s),  s=1,...,12.
+```
+
+Thus `O=58` is a one-sparse coupled cross-defect problem, not a generic relaxation of odd-perfectness.
+
+The even-energy target gives
+
+```text
+W<=129,
+K in {16,18,20,22,24,26,28,30,32,34}.
+```
+
+Exact per-center budgets `sum(U^2+V^2)<=B_K` are
+
+```text
+K:    16 18 20 22 24 26 28 30 32 34
+B_K:  24 40 52 60 64 64 60 52 40 24
+```
+
+The existing `qmin(G)` and `SG+SH` even-energy machinery remains applicable; the new search must use the sparse nonzero cross right-hand sides above.
+
+Derivation and sign/index audit: [`results/2026-11-01-odd-energy-defect-projection.md`](results/2026-11-01-odd-energy-defect-projection.md).
 
 ## Endpoint exclusions
 
@@ -209,15 +287,13 @@ d=4  no E<=574
 d=5  no E<=574
 ```
 
-So any surviving odd-perfect breakthrough has `d>=6`. This hierarchy should not be extended mechanically; the compression/factorization route is currently stronger.
-
-Durable endpoint records are under [`results/`](results/), including [`results/2026-10-29-endpoint-defect5-mod4-exhaustion.md`](results/2026-10-29-endpoint-defect5-mod4-exhaustion.md).
+So any surviving odd-perfect breakthrough has `d>=6`. This hierarchy should not be extended mechanically; the compression/factorization route is stronger.
 
 ## Other exact / high-value evidence
 
 - Ordinary Hamming radii **1 through 7** around the incumbent are completely exhausted: `17,278,988,695` non-center sequences, no improvement. See [`results/2026-10-27-incumbent-shells.md`](results/2026-10-27-incumbent-shells.md).
 - Exact boundary+skew-core target searches exclude broad structured classes; see [`results/2026-10-28-skewcore-hierarchy.md`](results/2026-10-28-skewcore-hierarchy.md).
-- Pairwise crossover among eight near-skew elites and parity-block descent were strongly negative; the exact near-skew proof supersedes those heuristics as a target route.
+- Pairwise crossover among near-skew elites and parity-block descent were strongly negative; the exact near-skew proof supersedes those heuristics as a target route.
 - Neighboring-length transfer and the tested Golay-52 deletion family were weak; see [`results/2026-10-27-cross-length.md`](results/2026-10-27-cross-length.md) and [`results/2026-10-28-golay52-deletion.md`](results/2026-10-28-golay52-deletion.md).
 
 ## Dead ends / constraints learned
@@ -225,16 +301,17 @@ Durable endpoint records are under [`results/`](results/), including [`results/2
 - Do not spend further compute inside near-skew to beat 578; it is rigorously impossible.
 - Do not repeat small ordinary incumbent edits; radius 7 is exact and strongly negative.
 - Do not treat CP-SAT `UNKNOWN`, timeouts, SIGKILL, or unfinished Actions as exclusions.
-- Do not mechanically extend the endpoint-defect hierarchy; candidate quality stayed flat while only the excluded region grew.
-- Generic full-sequence and order-25 CP-SAT repeatedly timed out. The successful exact progress came from changing representation: GF(2) support kernels, modular sign solving, periodic/negacyclic fibre splitting, `qmin`, and affine support quotients.
-- A compressed affine orbit representative is not automatically sufficient for aperiodic fibre properties. All relevant affine images must be covered or an invariant must be proved; this issue was explicitly repaired in the low11 and K19/K21 work.
+- Do not mechanically extend the endpoint-defect hierarchy.
+- Generic full-sequence and order-25 CP-SAT repeatedly timed out. Exact progress came from changing representation: GF(2) support kernels, modular sign solving, periodic/negacyclic splitting, `qmin`, affine support quotients, and final all-affine witness rescoring.
+- For `kc>0`, fixing the compressed sign of `c` means `gamma -> -gamma` cannot be quotiented; both orientations must be scored.
+- Three consecutive `(18,0)` center layers are now excluded with no candidate-quality improvement. Further K-layer scaling should be compared against the qualitatively different `O=58` defect family rather than treated as the default objective.
 
 ## Next steps
 
-1. **Complete the `(18,0), K=23` exact census** with the generic compressed solver and the affine-canonical fibre-Q solver. Any surviving Q-level fibres must be reconstructed and directly rescored at length 100.
-2. If K23 closes, continue the same representation through the remaining convex-feasible center layers `K=25,27,29,31,33`, reassessing the search space if compressed/fibre survivor counts stop shrinking effectively.
-3. In parallel, seek a global lower bound on `||A^2-xB^2||_2^2` or an algebraic classification of the periodic/negacyclic pair that would eliminate the whole odd-perfect layer at once.
-4. Only after the odd-perfect frontier is materially exhausted should higher odd-energy layers (`O=58,66,...`) receive major exact compute; derive their own target arithmetic first.
+1. **Build the exact `O=58` compressed solver** for canonical `(a,b)=(2,2)`, using the one-sparse periodic right-hand side and the ten feasible even center values `K=16,18,...,34`.
+2. Couple each periodic defect location to its required negacyclic sign `M_s=+/-1`; reuse `qmin(G)` and `SG+SH` as early exact energy filters and reconstruct every final survivor at length 100.
+3. In parallel, use `K=25` on the old odd-perfect `(18,0)` line only as a comparison frontier. If its survivor geometry is substantially worse than `O=58`, do not mechanically continue `K=27,29,...`.
+4. Continue seeking a global lower bound on `||A^2-xB^2||_2^2` or an algebraic classification of the periodic/negacyclic pair that could eliminate a whole layer at once.
 5. Re-check Few Shots/public records immediately before any record claim. If `E<=574` is found, freeze the exact sequence, independently rescore it, run the Few Shots verifier/check, create the required certificate/SHOT, and publish as authorized.
 
 ## Durable artifacts
@@ -254,6 +331,7 @@ Durable endpoint records are under [`results/`](results/), including [`results/2
 - Bošković, Brglez & Brest, heuristic LABS search: <https://arxiv.org/abs/1406.5301>
 - Zhang et al., massively parallel memetic tabu (2025): <https://arxiv.org/abs/2504.00987>
 - Pšeničnik et al., search-space region prioritization (2026): <https://arxiv.org/abs/2607.09688>
+- Lau & Gangat, small-subsystem LABS heuristic scaling (2026): <https://arxiv.org/abs/2610.14361>
 - Wang & Zhu, base/normal/near-normal sequences (2025/2026): <https://arxiv.org/abs/2506.20296>
 
 ## Work log
@@ -263,3 +341,4 @@ Durable endpoint records are under [`results/`](results/), including [`results/2
 - **2026-10-29:** Proved exact N100 near-skew optimum 578; excluded endpoint defects 1 through 5; derived the global parity-polynomial factorization and norm identity; developed the order-25 compression program and closed W127.
 - **2026-10-30:** Repaired affine-fibre coverage rigor; exactly closed the remaining low11 W129/W131 branches; derived and regression-tested the periodic/negacyclic fibre split; began the `(18,0)` center-layer program.
 - **2026-10-31:** Completely excluded `(18,0)` `K=19` and `K=21` through `E<=570`, including direct final rescoring of all Q-level fibre survivors; generalized the compressed solver and moved to `K=23`.
+- **2026-11-01:** Exactly closed the full `(18,0),K=23` layer, including independent sharded final witness rescoring of all lower-split Q survivors. Reassessed the search space and derived the first non-odd-perfect layer `O=58` as a one-sparse coupled periodic/negacyclic defect problem with canonical half sums `(2,2)`.
