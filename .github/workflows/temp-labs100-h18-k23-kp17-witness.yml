@@ -1,0 +1,58 @@
+name: temp labs100 h18 K23 kp17 witness
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k23-kp17-witness.yml'
+
+concurrency:
+  group: temp-labs100-h18-k23-kp17-witness
+  cancel-in-progress: false
+
+jobs:
+  exact-kp17-witness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact generic tools
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k_signedc_exact.cpp -o "$RUNNER_TEMP/signedc"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k_qgroup_affine.cpp -o "$RUNNER_TEMP/qgroup"
+          g++ -O3 -march=native science-boundary/labs-100/code/oddperfect_h18_k_affine_witness.cpp -o "$RUNNER_TEMP/witness"
+      - name: Rebuild complete K23 kp17 compressed hit stream
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/k23"
+          export OMP_NUM_THREADS="$(nproc)"
+          for t in 0 2 4 6; do
+            "$RUNNER_TEMP/signedc" 23 17 "$t" > "$RUNNER_TEMP/k23/t${t}.log"
+          done
+          cat "$RUNNER_TEMP"/k23/t*.log > "$RUNNER_TEMP/k23/kp17.hits"
+          test "$(grep -c '^HIT ' "$RUNNER_TEMP/k23/kp17.hits")" -eq 9281
+      - name: Rebuild affine-canonical Q survivors
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS="$(nproc)"
+          "$RUNNER_TEMP/qgroup" 23 "$RUNNER_TEMP/k23/kp17.hits" | tee "$RUNNER_TEMP/k23/kp17.qgroup"
+          grep -F 'H18K_AFFINE_QGROUP_SUMMARY K=23 budget=63 canonical_groups=6169 outer_states=789632 half_second_solutions=22272301 Q_feasible_halfpairs=64 minSH=9 min_margin=-28' "$RUNNER_TEMP/k23/kp17.qgroup"
+          test "$(grep -c '^QHIT ' "$RUNNER_TEMP/k23/kp17.qgroup")" -eq 64
+      - name: Expand every Q survivor and rescore original LABS objective
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/witness" 23 "$RUNNER_TEMP/k23/kp17.hits" "$RUNNER_TEMP/k23/kp17.qgroup" | tee "$RUNNER_TEMP/k23/kp17.witness"
+          if grep -q '^CANDIDATE ' "$RUNNER_TEMP/k23/kp17.witness"; then
+            echo 'K23 candidate found; preserve transcript and fail for immediate review'
+            exit 20
+          fi
+      - name: Upload exact transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k23-kp17-witness
+          path: ${{ runner.temp }}/k23/
+          if-no-files-found: warn
