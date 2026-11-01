@@ -67,10 +67,12 @@ def check(s):
     for r in range(1,13):
         assert P[r]==z[12+r]+z[12-r]
         assert M[r]==z[12+r]-z[12-r]
-    # The remaining coefficients are forced by cyclic/negacyclic symmetry.
+    # In this reduced coefficient convention both channels repeat under
+    # r -> 25-r.  The sign distinguishing the two z coordinates is already
+    # carried by M_r in the independent range r=1..12.
     for r in range(1,13):
         assert P[25-r]==P[r]
-        assert M[25-r]==-M[r]
+        assert M[25-r]==M[r]
     return O,z,P,M
 
 def main():
