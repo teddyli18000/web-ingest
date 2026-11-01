@@ -1,0 +1,55 @@
+name: temp-aes-fs101-tail-one-new
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/fs101_tail_one_new.py'
+      - '.github/workflows/temp-aes-fs101-tail-one-new.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        start: [24,27,30,32]
+        shard: [0,1,2,3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exhaust this direct-100 FS101 tail shard
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet python-sat
+          python -m py_compile science-boundary/aes-sbox-circuit/fs101_tail_one_new.py
+          python science-boundary/aes-sbox-circuit/fs101_tail_one_new.py \
+            --start '${{ matrix.start }}' --shard '${{ matrix.shard }}' --shards 4 \
+            --out result | tee run.log
+          cat result/summary.json
+      - name: Official verifier if <=100 candidate appears
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            n="$(python -c "import json; print(len(json.load(open('result/candidate.json'))['gates']))")"
+            if [ "$n" -le 100 ]; then
+              git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+              mkdir -p /tmp/shot
+              cp result/candidate.json /tmp/shot/certificate.json
+              python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+            else
+              echo '{"candidate":"oversize"}' | tee official-verifier.jsonl
+            fi
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-fs101-tail-one-new-${{ matrix.start }}-${{ matrix.shard }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
