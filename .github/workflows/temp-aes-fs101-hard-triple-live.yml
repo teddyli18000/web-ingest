@@ -1,0 +1,65 @@
+name: temp-aes-fs101-hard-triple-live
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/fs101_suffix_group_sat_live.py'
+      - '.github/workflows/temp-aes-fs101-hard-triple-live.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  solve:
+    strategy:
+      fail-fast: false
+      matrix:
+        group: ['3,4,6','3,6,7','4,6,7']
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SAT bindings
+        run: python -m pip install --quiet python-sat
+      - name: Prove <=5 impossible, then exact-live search at 6
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/fs101_suffix_group_sat_live.py
+          mkdir -p k5 k6
+          python science-boundary/aes-sbox-circuit/fs101_suffix_group_sat_live.py \
+            --group '${{ matrix.group }}' --k 5 --conf-budget 1000000 --out k5 | tee k5.log
+          status="$(python -c "import json; d=json.load(open('k5/summary.json')); print('unsat' if d['unsat'] else ('sat' if d['sat'] else 'timeout'))")"
+          if [ "$status" = unsat ]; then
+            python science-boundary/aes-sbox-circuit/fs101_suffix_group_sat_live.py \
+              --group '${{ matrix.group }}' --k 6 --require-live --conf-budget 1000000 --out k6 | tee k6.log
+          else
+            echo "skip live-k6 because k5 status=$status" | tee k6.log
+          fi
+      - name: Official verifier if <=100 candidate appears
+        run: |
+          set -euxo pipefail
+          cand=''
+          for f in k5/candidate.json k6/candidate.json; do
+            if [ -f "$f" ]; then
+              n="$(python -c "import json,sys; print(len(json.load(open(sys.argv[1]))['gates']))" "$f")"
+              if [ "$n" -le 100 ]; then cand="$f"; break; fi
+            fi
+          done
+          if [ -n "$cand" ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp "$cand" /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-fs101-hard-triple-${{ strategy.job-index }}
+          path: |
+            k5
+            k6
+            k5.log
+            k6.log
+            official-verifier.jsonl
