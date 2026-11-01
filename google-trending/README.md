@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-10-31** | **688** | **688** | **688** | **688** | **687** |
+| **2024-11-28** | **2026-11-01** | **689** | **689** | **689** | **689** | **688** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 188 |
+| `google_trending_now` | 192 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-10-31
+### Latest SG snapshot — 2026-11-01
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | airport check-in | 2000+ |
-| 2 | muhammad zulfiqar abdul aziz | 5000+ |
-| 3 | vietnam | 1000+ |
-| 4 | toa payoh west housing development | 1000+ |
-| 5 | lta goods vehicle enforcement singapore | 1000+ |
-| 6 | sri lanka vs pakistan | 500+ |
-| 7 | cisco | 1000+ |
-| 8 | jamie carragher | 500+ |
-| 9 | singapore private hire car loan limits | 1000+ |
-| 10 | micron | 500+ |
+| 1 | india vs new zealand | 5000+ |
+| 2 | traffic | 2000+ |
+| 3 | singapore government scam prevention caller id | 5000+ |
+| 4 | inheritance | 2000+ |
+| 5 | heidi klum | 1000+ |
+| 6 | oil | 1000+ |
+| 7 | malaysia airlines | 1000+ |
+| 8 | ranking | 1000+ |
+| 9 | 诈骗 | 1000+ |
+| 10 | como vs venezia | 200+ |
 
-### Latest US snapshot — 2026-10-31
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | lakers vs warriors | 200000+ |
-| 2 | poland | 100000+ |
-| 3 | richard norton peptides | 20000+ |
-| 4 | samsung news app discontinued 2026 | 20000+ |
-| 5 | nuggets vs suns | 50000+ |
-| 6 | bryce hall | 50000+ |
-| 7 | rockets vs mavericks | 100000+ |
-| 8 | baylor vs ucf | 100000+ |
-| 9 | clippers vs timberwolves | 50000+ |
-| 10 | pacers vs heat | 50000+ |
-
-### Latest GB snapshot — 2026-10-31
+### Latest US snapshot — 2026-11-01
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | nationwide uk property price drop | 50000+ |
-| 2 | dwp bank checks benefit eligibility | 50000+ |
-| 3 | super el niño november weather forecast | 20000+ |
-| 4 | asda coleraine petrol station issues | 50000+ |
-| 5 | who won traitors | 200000+ |
-| 6 | poland | 20000+ |
-| 7 | fallon sherrock | 50000+ |
-| 8 | keri jones | 20000+ |
-| 9 | sri lanka vs pakistan | 10000+ |
-| 10 | carragher aston villa | 10000+ |
+| 1 | daylight savings | 1000000+ |
+| 2 | ohio state vs usc | 1000000+ |
+| 3 | florida vs georgia | 500000+ |
+| 4 | miami fl vs unc | 200000+ |
+| 5 | ms state vs texas | 200000+ |
+| 6 | clemson vs florida state | 100000+ |
+| 7 | timberwolves vs spurs | 100000+ |
+| 8 | minnesota vs indiana | 500000+ |
+| 9 | 76ers vs hornets | 100000+ |
+| 10 | américa - toluca | 100000+ |
 
-### Latest HK snapshot — 2026-10-31
+### Latest GB snapshot — 2026-11-01
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 蘇凌峰 | 2000+ |
-| 2 | 張曼玉 | 1000+ |
-| 3 | 吳兆麟 | 1000+ |
-| 4 | 陳山聰 | 2000+ |
-| 5 | trick or treat | 1000+ |
-| 6 | 蘭桂坊 | 1000+ |
-| 7 | 預測 | 200+ |
-| 8 | 啟德萬聖節 | 500+ |
-| 9 | 玫瑰戰爭 | 200+ |
-| 10 | 北都馬拉松 | 100+ |
+| 1 | spurs vs palace | 200000+ |
+| 2 | aston villa vs fulham | 100000+ |
+| 3 | barcelona vs alavés | 50000+ |
+| 4 | india vs new zealand | 20000+ |
+| 5 | rangers vs aberdeen | 100000+ |
+| 6 | heidi klum halloween | 20000+ |
+| 7 | ciara mageean | 10000+ |
+| 8 | prince harry meghan uk visits | 10000+ |
+| 9 | bournemouth vs leeds | 50000+ |
+| 10 | eng vs sa | 10000+ |
 
-[Open full snapshot →](data/2026/10/31/trending.json)
+### Latest HK snapshot — 2026-11-01
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | 濱崎真緒香港 | 2000+ |
+| 2 | heidi klum | 500+ |
+| 3 | 医生 | 1000+ |
+| 4 | 張劍虹 | 500+ |
+| 5 | 熱刺對水晶宮 | 1000+ |
+| 6 | 袁偉豪 | 200+ |
+| 7 | 徐子淇 | 200+ |
+| 8 | 玫瑰戰爭 | 200+ |
+| 9 | india vs new zealand | 200+ |
+| 10 | coleman wong | 2000+ |
+
+[Open full snapshot →](data/2026/11/01/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 290 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 291 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
