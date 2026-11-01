@@ -1,0 +1,70 @@
+name: temp labs100 O58 K18 kp3 center exact
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-o58-k18-kp3-center.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: temp-labs100-o58-k18-kp3-center
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact generic and final solvers
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/o58_k_compressed_groups_dp.cpp -o "$RUNNER_TEMP/comp"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/o58_k_qgroup_groups.cpp -o "$RUNNER_TEMP/qgroup"
+          g++ -O3 -march=native science-boundary/labs-100/code/o58_k18_kp3_center_final.cpp -o "$RUNNER_TEMP/final"
+      - name: Reproduce complete kp3 center compressed groups
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/o58"
+          export OMP_NUM_THREADS=4
+          "$RUNNER_TEMP/comp" 18 3 1 center | tee "$RUNNER_TEMP/o58/t1.log"
+          "$RUNNER_TEMP/comp" 18 3 3 center | tee "$RUNNER_TEMP/o58/t3.log"
+          grep -F 'O58_K_GROUPS K=18 budget=40 kp=3 kc=15 t=1 cls=center diff_reps=4113 support_orbits=2262 fixedtests=6786 Hmatches=8355 qhits=819 groups=341 emitted=0' "$RUNNER_TEMP/o58/t1.log"
+          grep -F 'O58_K_GROUPS K=18 budget=40 kp=3 kc=15 t=3 cls=center diff_reps=10452 support_orbits=1826 fixedtests=5478 Hmatches=6849 qhits=826 groups=220 emitted=0' "$RUNNER_TEMP/o58/t3.log"
+          grep '^GROUP ' "$RUNNER_TEMP/o58/t1.log" > "$RUNNER_TEMP/o58/center.groups"
+          grep '^GROUP ' "$RUNNER_TEMP/o58/t3.log" >> "$RUNNER_TEMP/o58/center.groups"
+          test "$(wc -l < "$RUNNER_TEMP/o58/center.groups")" -eq 561
+      - name: Exact centre fibre Q census
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS=4
+          "$RUNNER_TEMP/qgroup" 18 0 "$RUNNER_TEMP/o58/center.groups" | tee "$RUNNER_TEMP/o58/q.log"
+          grep -F 'O58_K_GROUP_INPUT K=18 budget=40 lag=0 qhits=1645 rawgroups=561 canonical_groups=561' "$RUNNER_TEMP/o58/q.log"
+          grep -F 'O58_K_GROUP_FIBRE_SUMMARY K=18 budget=40 lag=0 canonical_groups=561 outer=287232 half=8220680 Qfeasible=2 minSH=30 minmargin=0' "$RUNNER_TEMP/o58/q.log"
+          test "$(grep -c '^QHIT ' "$RUNNER_TEMP/o58/q.log")" -eq 2
+          grep -F 'QHIT lag=0 orient=0 as=4194303 gs=1195794 minSG=50 sh=30 amask=3402252 gmask=2834' "$RUNNER_TEMP/o58/q.log"
+          grep -F 'QHIT lag=0 orient=0 as=4194303 gs=1195794 minSG=50 sh=30 amask=792051 gmask=2834' "$RUNNER_TEMP/o58/q.log"
+      - name: Targeted signed compressed recovery
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS=4
+          "$RUNNER_TEMP/comp" 18 3 1 center 4194303 1195794 50 | tee "$RUNNER_TEMP/o58/recover-t1.log"
+          "$RUNNER_TEMP/comp" 18 3 3 center 4194303 1195794 50 | tee "$RUNNER_TEMP/o58/recover-t3.log"
+          grep -F 't=1 cls=center' "$RUNNER_TEMP/o58/recover-t1.log" | grep -F 'emitted=0'
+          grep -F 't=3 cls=center' "$RUNNER_TEMP/o58/recover-t3.log" | grep -F 'emitted=2'
+          test "$(grep -h -c '^SIGNEDHIT ' "$RUNNER_TEMP/o58/recover-t1.log" "$RUNNER_TEMP/o58/recover-t3.log" | awk '{s+=$1} END{print s}')" -eq 2
+      - name: Direct length-100 affine audit of both norm-split sides
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/final" | tee "$RUNNER_TEMP/o58/final.log"
+          grep -F 'O58_K18_KP3_CENTER_FINAL side=low base=16 transforms=8000 O58=0 E_le_574=0 minE=1438 minOdd=282' "$RUNNER_TEMP/o58/final.log"
+          grep -F 'O58_K18_KP3_CENTER_FINAL side=swap base=16 transforms=8000 O58=0 E_le_574=0 minE=1438 minOdd=282' "$RUNNER_TEMP/o58/final.log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: labs100-o58-k18-kp3-center-exact
+          path: ${{ runner.temp }}/o58
+          if-no-files-found: error
