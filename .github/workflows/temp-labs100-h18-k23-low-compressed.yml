@@ -1,0 +1,70 @@
+name: temp labs100 h18 K23 low compressed
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k23-low-compressed.yml'
+
+concurrency:
+  group: temp-labs100-h18-k23-low-compressed
+  cancel-in-progress: false
+
+jobs:
+  exact-low-compressed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build exact generic compressed solver
+        run: g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/oddperfect_h18_k_compressed.cpp -o "$RUNNER_TEMP/compressed"
+      - name: Exhaust K23 low-kp compressed splits
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/k23"
+          export OMP_NUM_THREADS="$(nproc)"
+          for kp in 15 13 11 9; do
+            kc=$((23-kp))
+            : > "$RUNNER_TEMP/k23/kp${kp}.hits"
+            for ((t=0;t<=kc && t<=kp;t+=2)); do
+              "$RUNNER_TEMP/compressed" 23 "$kp" "$t" | tee "$RUNNER_TEMP/k23/kp${kp}-t${t}.log" >> "$RUNNER_TEMP/k23/kp${kp}.hits"
+            done
+            echo "KP=$kp KC=$kc HITS=$(grep -c '^HIT ' "$RUNNER_TEMP/k23/kp${kp}.hits" || true)"
+          done
+      - name: Count affine-canonical fibre-support groups without solving fibres
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - "$RUNNER_TEMP/k23" <<'PY'
+          import math,sys,re
+          from pathlib import Path
+          root=Path(sys.argv[1]); units=[a for a in range(25) if math.gcd(a,25)==1]
+          def aff(mask,a,b):
+              y=0
+              for i in range(25):
+                  if mask>>i&1:y|=1<<((a*i+b)%25)
+              return y
+          def canon(x,y):
+              return min((aff(x,a,b),aff(y,a,b)) for a in units for b in range(25))
+          for kp in (15,13,11,9):
+              groups=set(); hits=0
+              for line in (root/f'kp{kp}.hits').read_text().splitlines():
+                  if not line.startswith('HIT '): continue
+                  hits+=1
+                  ps=line.split('p=',1)[1].split('|c=',1)[0].replace(',',' ').split()
+                  cs=line.split('|c=',1)[1].replace(',',' ').split()
+                  p=list(map(int,ps)); c=list(map(int,cs))
+                  assert len(p)==len(c)==25
+                  az=sum((1<<i) for i,v in enumerate(p) if v==0)
+                  gz=sum((1<<i) for i,v in enumerate(c) if v==0)
+                  groups.add(canon(az,gz))
+              print(f'K23_LOW_GROUPS kp={kp} hits={hits} canonical_groups={len(groups)}')
+          PY
+      - name: Upload compressed transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k23-low-compressed
+          path: ${{ runner.temp }}/k23/
+          if-no-files-found: warn
