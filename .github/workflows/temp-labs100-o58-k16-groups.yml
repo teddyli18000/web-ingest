@@ -1,0 +1,91 @@
+name: temp labs100 O58 K16 grouped exact
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-o58-k16-groups.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: temp-labs100-o58-k16-grouped-exact
+  cancel-in-progress: false
+
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build old and grouped exact solvers
+        run: |
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/o58_k16_compressed_exact.cpp -o "$RUNNER_TEMP/oldc"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/o58_k16_qgroup_exact.cpp -o "$RUNNER_TEMP/oldq"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/o58_k16_compressed_groups.cpp -o "$RUNNER_TEMP/groupc"
+          g++ -O3 -march=native -fopenmp science-boundary/labs-100/code/o58_k16_qgroup_groups.cpp -o "$RUNNER_TEMP/groupq"
+      - name: Regression old versus grouped interface on three smallest-support branches
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/o58"
+          export OMP_NUM_THREADS=4
+          for spec in '1 1 center 0' '1 0 unit 1' '1 0 five 5'; do
+            read -r kp t cls lag <<<"$spec"
+            "$RUNNER_TEMP/oldc" 16 "$kp" "$t" "$cls" > "$RUNNER_TEMP/o58/reg-old-${cls}.log"
+            "$RUNNER_TEMP/groupc" 16 "$kp" "$t" "$cls" > "$RUNNER_TEMP/o58/reg-new-${cls}.log"
+            oldqh=$(sed -n 's/.* qhits=\([0-9][0-9]*\).*/\1/p' "$RUNNER_TEMP/o58/reg-old-${cls}.log" | tail -1)
+            newqh=$(sed -n 's/.* qhits=\([0-9][0-9]*\).*/\1/p' "$RUNNER_TEMP/o58/reg-new-${cls}.log" | tail -1)
+            test -n "$oldqh" && test "$oldqh" = "$newqh"
+            oldlines=$(grep -c '^HIT ' "$RUNNER_TEMP/o58/reg-old-${cls}.log" || true)
+            test "$oldlines" = "$oldqh"
+            grep '^HIT ' "$RUNNER_TEMP/o58/reg-old-${cls}.log" > "$RUNNER_TEMP/o58/reg-old-${cls}.hits" || true
+            grep '^GROUP ' "$RUNNER_TEMP/o58/reg-new-${cls}.log" > "$RUNNER_TEMP/o58/reg-new-${cls}.groups" || true
+            "$RUNNER_TEMP/oldq" "$lag" "$RUNNER_TEMP/o58/reg-old-${cls}.hits" > "$RUNNER_TEMP/o58/reg-oldq-${cls}.log"
+            "$RUNNER_TEMP/groupq" "$lag" "$RUNNER_TEMP/o58/reg-new-${cls}.groups" > "$RUNNER_TEMP/o58/reg-newq-${cls}.log"
+            oq=$(sed -n 's/.* qpass=\([0-9][0-9]*\).*/\1/p' "$RUNNER_TEMP/o58/reg-oldq-${cls}.log" | tail -1)
+            nq=$(sed -n 's/.* Qfeasible=\([0-9][0-9]*\).*/\1/p' "$RUNNER_TEMP/o58/reg-newq-${cls}.log" | tail -1)
+            om=$(sed -n 's/.* minmargin=\(-\{0,1\}[0-9][0-9]*\).*/\1/p' "$RUNNER_TEMP/o58/reg-oldq-${cls}.log" | tail -1)
+            nm=$(sed -n 's/.* minmargin=\(-\{0,1\}[0-9][0-9]*\).*/\1/p' "$RUNNER_TEMP/o58/reg-newq-${cls}.log" | tail -1)
+            test "$oq" = "$nq" && test "$om" = "$nm"
+            echo "REGRESSION_OK cls=$cls qhits=$oldqh qfeasible=$oq minmargin=$om"
+          done
+      - name: Exhaust all K16 compressed branches into canonical groups
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS=4
+          for cls in center unit five; do : > "$RUNNER_TEMP/o58/${cls}.groups"; done
+          for kp in 1 3 5 7; do
+            m=$kp
+            for ((t=1;t<=m;t+=2)); do
+              log="$RUNNER_TEMP/o58/g-kp${kp}-t${t}-center.log"
+              "$RUNNER_TEMP/groupc" 16 "$kp" "$t" center > "$log"
+              grep '^GROUP ' "$log" >> "$RUNNER_TEMP/o58/center.groups" || true
+              grep '^O58_K16_GROUPS ' "$log"
+            done
+            for ((t=0;t<=m;t+=2)); do
+              for cls in unit five; do
+                log="$RUNNER_TEMP/o58/g-kp${kp}-t${t}-${cls}.log"
+                "$RUNNER_TEMP/groupc" 16 "$kp" "$t" "$cls" > "$log"
+                grep '^GROUP ' "$log" >> "$RUNNER_TEMP/o58/${cls}.groups" || true
+                grep '^O58_K16_GROUPS ' "$log"
+              done
+            done
+          done
+          for cls in center unit five; do
+            echo "GROUP_LINES cls=$cls count=$(grep -c '^GROUP ' "$RUNNER_TEMP/o58/${cls}.groups" || true)"
+          done
+      - name: Exact fibre-Q audit on complete grouped streams
+        shell: bash
+        run: |
+          set -euo pipefail
+          export OMP_NUM_THREADS=4
+          "$RUNNER_TEMP/groupq" 0 "$RUNNER_TEMP/o58/center.groups" | tee "$RUNNER_TEMP/o58/q-center.log"
+          "$RUNNER_TEMP/groupq" 1 "$RUNNER_TEMP/o58/unit.groups"   | tee "$RUNNER_TEMP/o58/q-unit.log"
+          "$RUNNER_TEMP/groupq" 5 "$RUNNER_TEMP/o58/five.groups"   | tee "$RUNNER_TEMP/o58/q-five.log"
+      - name: Upload exact transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-o58-k16-grouped-exact
+          path: ${{ runner.temp }}/o58
+          if-no-files-found: error
