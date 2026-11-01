@@ -1,0 +1,114 @@
+name: temp labs100 h18 K23 lower sharded witness
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-h18-k23-lower-witness-sharded.yml'
+      - 'science-boundary/labs-100/code/oddperfect_h18_k_witness_shard.py'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: temp-labs100-h18-k23-lower-witness-sharded
+  cancel-in-progress: false
+
+jobs:
+  exact-final-witness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download frozen producer artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/kp15src" "$RUNNER_TEMP/lower"
+          gh run download 41187521385 --repo "$GITHUB_REPOSITORY" -n labs100-h18-k23-kp15-exact -D "$RUNNER_TEMP/kp15src"
+          gh run download 41187536482 --repo "$GITHUB_REPOSITORY" -n labs100-h18-k23-lower-qgroup -D "$RUNNER_TEMP/lower"
+          test -s "$RUNNER_TEMP/kp15src/kp15.hits"
+          for kp in 13 11 9; do test -s "$RUNNER_TEMP/lower/kp${kp}.hits"; test -s "$RUNNER_TEMP/lower/kp${kp}.qgroup"; done
+      - name: Build final exact verifier
+        run: g++ -O3 -march=native science-boundary/labs-100/code/oddperfect_h18_k_affine_witness.cpp -o "$RUNNER_TEMP/witness"
+      - name: Shard only QHIT support orbits
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/shards"
+          python science-boundary/labs-100/code/oddperfect_h18_k_witness_shard.py "$RUNNER_TEMP/kp15src/kp15.hits" "$RUNNER_TEMP/kp15src/kp15.qgroup" "$RUNNER_TEMP/shards/kp15" | tee "$RUNNER_TEMP/kp15.shard.log"
+          for kp in 13 11 9; do
+            python science-boundary/labs-100/code/oddperfect_h18_k_witness_shard.py "$RUNNER_TEMP/lower/kp${kp}.hits" "$RUNNER_TEMP/lower/kp${kp}.qgroup" "$RUNNER_TEMP/shards/kp${kp}" | tee "$RUNNER_TEMP/kp${kp}.shard.log"
+          done
+          grep -F 'qhits=204 ' "$RUNNER_TEMP/kp15.shard.log"
+          grep -F 'qhits=976 ' "$RUNNER_TEMP/kp13.shard.log"
+          grep -F 'qhits=234 ' "$RUNNER_TEMP/kp11.shard.log"
+          grep -F 'qhits=86 ' "$RUNNER_TEMP/kp9.shard.log"
+      - name: Regression sharded join against frozen kp15 verifier
+        shell: bash
+        run: |
+          set -euo pipefail
+          export WITNESS="$RUNNER_TEMP/witness"
+          find "$RUNNER_TEMP/shards/kp15" -mindepth 1 -maxdepth 1 -type d -print0 | xargs -0 -P"$(nproc)" -I{} bash -c '
+            "$WITNESS" 23 "{}/hits.txt" "{}/qgroup.txt" > "{}/witness.log"
+          '
+          python - "$RUNNER_TEMP/shards/kp15" <<'PY'
+          import re,sys
+          from pathlib import Path
+          pat=re.compile(r'H18K_AFFINE_WITNESS_SUMMARY K=23 budget=63 qhits=(\d+) mapped_compressed_candidates=(\d+) fibre_orientations=(\d+) affine_transforms=(\d+) Vbudget_pass=(\d+) oddperfect_pass=(\d+) E_le_570=(\d+) minV=(\d+) minOddEnergy=(\d+) minEnergy=(\d+)')
+          sums=[0]*7; mins=[10**18]*3; n=0
+          for f in Path(sys.argv[1]).glob('*/witness.log'):
+              txt=f.read_text()
+              if '\nCANDIDATE ' in '\n'+txt: raise SystemExit('candidate in kp15 regression')
+              m=pat.search(txt)
+              if not m: raise SystemExit(f'missing summary {f}')
+              v=list(map(int,m.groups())); n+=1
+              for i in range(7): sums[i]+=v[i]
+              for i in range(3): mins[i]=min(mins[i],v[7+i])
+          got=(*sums,*mins)
+          exp=(204,416,1664,832000,0,30880,0,16,50,1098)
+          print('K23_SHARDED_WITNESS_SUMMARY kp=15 groups=',n,' values=',got,sep='')
+          if got!=exp: raise SystemExit(f'kp15 regression mismatch {got} != {exp}')
+          PY
+      - name: Exhaust kp13 kp11 kp9 sharded final witnesses on all CPUs
+        shell: bash
+        run: |
+          set -euo pipefail
+          export WITNESS="$RUNNER_TEMP/witness"
+          for kp in 13 11 9; do
+            find "$RUNNER_TEMP/shards/kp${kp}" -mindepth 1 -maxdepth 1 -type d -print0 | xargs -0 -P"$(nproc)" -I{} bash -c '
+              "$WITNESS" 23 "{}/hits.txt" "{}/qgroup.txt" > "{}/witness.log"
+            '
+          done
+      - name: Aggregate and assert no K23 lower candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - "$RUNNER_TEMP/shards" <<'PY'
+          import re,sys
+          from pathlib import Path
+          pat=re.compile(r'H18K_AFFINE_WITNESS_SUMMARY K=23 budget=63 qhits=(\d+) mapped_compressed_candidates=(\d+) fibre_orientations=(\d+) affine_transforms=(\d+) Vbudget_pass=(\d+) oddperfect_pass=(\d+) E_le_570=(\d+) minV=(\d+) minOddEnergy=(\d+) minEnergy=(\d+)')
+          expected={13:976,11:234,9:86}
+          for kp,eq in expected.items():
+              sums=[0]*7; mins=[10**18]*3; groups=0; cand=0
+              for f in (Path(sys.argv[1])/f'kp{kp}').glob('*/witness.log'):
+                  txt=f.read_text(); cand+=sum(x.startswith('CANDIDATE ') for x in txt.splitlines())
+                  m=pat.search(txt)
+                  if not m: raise SystemExit(f'missing summary {f}')
+                  v=list(map(int,m.groups())); groups+=1
+                  for i in range(7): sums[i]+=v[i]
+                  for i in range(3): mins[i]=min(mins[i],v[7+i])
+              print(f'K23_SHARDED_WITNESS_SUMMARY kp={kp} support_groups={groups} qhits={sums[0]} mapped={sums[1]} orientations={sums[2]} transforms={sums[3]} Vpass={sums[4]} oddperfect={sums[5]} E_le_570={sums[6]} minV={mins[0]} minOdd={mins[1]} minE={mins[2]} candidates={cand}')
+              if sums[0]!=eq or sums[6]!=0 or cand!=0: raise SystemExit(f'failed kp{kp} exact final audit')
+          PY
+      - name: Upload sharded final transcripts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-h18-k23-lower-sharded-witness
+          path: |
+            ${{ runner.temp }}/kp*.shard.log
+            ${{ runner.temp }}/shards/*/manifest.txt
+            ${{ runner.temp }}/shards/*/*/witness.log
+          if-no-files-found: warn
