@@ -4,6 +4,7 @@
 already certified lower bound R=sum_(deg11 v)(132-S(v))>=22.
 """
 import itertools
+import hashlib
 import json
 from collections import Counter, defaultdict
 import networkx as nx
@@ -48,6 +49,9 @@ def main():
     A=nx.from_graph6_bytes(A32.encode())
     Bs=[nx.from_graph6_bytes(line.encode()) for line in B88]
     validate(A,Bs)
+    # Verify the archived complete 3-line edge-88 member byte-for-byte.
+    raw=("\n".join(B88)+"\n").encode("ascii")
+    assert hashlib.sha256(raw).hexdigest()=="cdb6bbe20c73cd578590d57d896a343fceed76f5216d2a8524ccd1afd9559fb8"
     # Isomorphism test #1: enumerated induced A subgraphs, with invariant
     # prefilter only (never used to declare a match).
     buckets=defaultdict(list)
@@ -88,6 +92,7 @@ def main():
         "campaign":"m220-n11-6-seq4-b88-embedding-post-audit",
         "scope":"36 vertices, 220 edges, degree sequence 11^6 12^18 13^11 15",
         "catalogue_counts":{"A32":1,"B88":3},
+        "B88_member_sha256":"cdb6bbe20c73cd578590d57d896a343fceed76f5216d2a8524ccd1afd9559fb8",
         "B88_embedding_results":records,
         "S13_sum_lower_bound":s13min,
         "S13_deficit_upper_bound":deficit,
