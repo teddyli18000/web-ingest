@@ -14,7 +14,24 @@ var errDriveDestinationConflict = errors.New("Drive destination requires reconci
 const (
 	destinationAbsent  = "absent"
 	destinationAdopted = "adopted"
+
+	// Legacy names remain as compatibility aliases while relay-main and older
+	// tests migrate to the unified destination reconciliation terminology.
+	expiredSessionAbsent  = destinationAbsent
+	expiredSessionAdopted = destinationAdopted
 )
+
+// reconcileExpiredSession is the legacy entry point used by the current relay
+// command. Route it through the unified two-pass destination reconciliation so
+// expired sessions get the same absence/adoption guarantees as new sessions.
+func reconcileExpiredSession(
+	ctx context.Context,
+	source relayRangeSource,
+	drive *driveResumableHTTP,
+	input relayStepInput,
+) (relayStepOutput, string, error) {
+	return reconcileDestinationBeforeCreate(ctx, source, drive, input)
+}
 
 // expectedSourceMD5 returns source evidence strong enough to adopt an existing
 // Drive object. Prefer already verified source/hash evidence; only re-read the
