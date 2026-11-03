@@ -8,6 +8,11 @@ This directory is the durable research workspace for Few Shots `p003-ramsey-r46`
 
 ## Current state
 
+**Post-audit frontier (2026-11-04).** The older 2026-10-28 status bullets below are historical; current exact evidence excludes every 36-vertex edge count through 219. At 220 edges, the independently certified degree-11 low-graph and class-edge arguments exclude n11=1..5; among the fourteen n11=6 degree sequences, indices 6..14 are excluded, while **indices 1..5 remain open**. Other n11 layers are not covered by these n11=6 statements. See `notes/frontier-post-audit-2026-10-30.md` and `results/m220-n11-6-class-boundary-post-audit.json`.
+
+**New verified seq4 necessary condition.** For degree sequence `11^6 12^18 13^11 15`, at least four degree-13 vertices have `S(v)=164`; every nonadjacent pair of these extreme vertices forces the unique B88 graph type #0 at both endpoints, with exactly six common neighbors. The three complete B88 graphs give induced-neighborhood compatibility counts `[4,0,0]`, independently checked by two isomorphism routines. This **does not** eliminate seq4. Reproduce with `m220_n11_6_seq4_b88_embed_verify.py`; exact output: `results/m220-n11-6-seq4-b88-embedding-post-audit.json`. Do not use the withdrawn old row-domain `tf()` results.
+
+
 > **Post-audit frontier — 2026-11-04.** The 2026-10-28 Action/run-status bullets
 > below are historical, not the current queue status. A corrected row-domain
 > predicate was audited in commit `e99119c`; all proof claims depending on
