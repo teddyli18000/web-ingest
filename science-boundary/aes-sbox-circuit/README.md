@@ -8,7 +8,18 @@ Can the AES S-box be implemented with at most **100** two-input gates over the e
 
 Before substantial p008 work, re-check the live Few Shots board, recent/open p008 PRs, and every newer record's complete `SHOT.md` including dead ends. Do not extrapolate a restricted exact exclusion into a global lower bound.
 
-## Current state — resynced 2026-10-29 PDT
+## Current state — verified 2026-11-04
+
+- **Best verified public Few Shots score is still 101 gates** (PR #31), with no open p008 PR at this check.
+- The G103 32-AND late-tail two-new-helper direct-100 family completed all 16 shards: 4,368 guide deletion choices, ~3.47M second-helper checks, no candidate (run 41195582759).
+- The FS101 33-AND true *joint-cofactor* shared-root direct-100 family completed all 5,050 root pairs; just 48 pairs admit any Boolean shared replacement, and none has a realizable one-gate helper (run 41720513108).
+- A stronger compensation family deleted one gate via an earlier alias, allowed the circuit to become incorrect, and synthesized a different later gate to repair AES. It exhausted 5,858 deletions, 207,050 later positions and 32.33M concrete retarget candidates; no <=100 circuit (run 41721273255).
+- FS101 fixed-prefix last-two-AND 100-target exact CNF is UNSAT for all 36 seven-linear schedules; the last-three-AND expansion had 147 UNSAT and 139 timeout schedules, not a proof of optimality.
+- The one-/two-site and fixed-tail search families are saturated **without improving the best candidate**. Next work must change the representation: coordinated three-or-more-site nonlinear factorization and affine interface synthesis, using structurally different high-quality full-circuit seeds.
+
+Full evidence, exact scope and reproduction links: [2026-11-04 joint-cofactor and compensation note](notes/joint-cofactor-and-compensation-2026-11-04.md), [2026-11-02 FS101 tail checkpoint](notes/fs101-exact-tail-2026-11-02.md), [2026-10-31 G103 superopt checkpoint](notes/g103-superopt-2026-10-31.md).
+
+## Prior baseline — 2026-10-29 PDT
 
 - **Live verified record: 101 gates**, `chunfeng11221/aes101-nist-interface-resub`, merged PR #31.
 - Official board: score 101, verified `2026-10-29T10:51:03Z`, recorded `2026-10-29T10:52:38Z`.
