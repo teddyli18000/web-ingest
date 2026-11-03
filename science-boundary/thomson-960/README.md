@@ -6,20 +6,12 @@ Can we find a 960-point configuration on the unit sphere with Coulomb energy low
 
 ## Current state
 
-- Few Shots p007 is a minimization problem with absolute epsilon `1e-6`.
-- Accepted merged record rechecked on **2026-10-31**: `R = 444368.3924061973`, shot `Ronnie2025/c3-replica-exchange-scars`. No open p007 pull request was visible at that check.
-- Therefore an accepted replacement must score at most `444368.3924051973`, subject to another upstream check immediately before any claim or submission.
-- The record is C3-symmetric and has coordination `36/900/24`, i.e. 24 neutral dislocations. The previous merged D2 record has 20 dislocations.
-- Fixed-N local exploration around R is no longer the main frontier. The low same-topology network `R <-> A <-> B` has been mapped, an R/A first-order saddle has been certified, direct saddle-transverse searches have been run, and simple 20-dislocation D2 ↔ 24-dislocation morph/crossover routes have been tested without improvement.
-- The strongest current mechanism is a **shared N=961 hub** connecting R and the very close same-topology minimum `A ≈ 444368.3956862258` (`R + 0.0032800285`). At the same N961 minimum, deleting label 886 returns R while deleting inserted label 960 returns A.
-- Continuous fractional occupancy reveals genuine path dependence: hard deletion of label960 at the unmodified hub gives A, but adiabatically fading that same label to zero gives R. A two-label occupancy exchange also shows endpoint hysteresis.
-- Along the A-derived single-particle fade, the genuine-N960 projection switches from A at `lambda=0.15` to R at `lambda=0.10` while the N960 coordination count remains `36/900/24`.
-- Full weighted-N961 low Hessian modes at `lambda=0.15, 0.125, 0.10` only traverse the known R/A/B basins. This representation is retired rather than widened mechanically.
-- Two mechanism-changing experiments are active:
-  1. **active-only transverse boundary modes**, excluding the fading particle's tangent coordinates and projecting out the empirical A/R continuation secant — run `41197569521`;
-  2. **two-occupancy closed loops**, testing whether noncommuting paths in `(q886,q960)` return the same endpoint occupancy on a different geometric branch — run `41197844226`.
-
-No record improvement is currently claimed. Apparent differences of order `1e-10` around R are ordinary floating summation/relaxation noise.
+- Few Shots p007 accepted record, rechecked 2026-11-04: `R = 444368.3924061973` (Ronnie2025 C3); official absolute epsilon is `1e-6`, so a new accepted shot must reach at most `444368.3924051973`.
+- The fixed-N R/A/B basin network and certified fixed-N R/A first-order saddle were mapped earlier. Enlarging those low-mode scans did not improve R.
+- The shared weighted N961 hub exhibits occupancy-dependent projection and nontrivial path hysteresis. Three distinguishable labels, 886, 960 and 380, define a constant-total-charge simplex `q886+q960+q380=2`.
+- **New verified mechanism (2026-11-04):** at the common center `q886=q960=q380=2/3`, A and H weighted minima are connected by a genuine index-one saddle: `Ew=444373.852382868179`, physical gradient RMS `7.7574e-6`, lowest Hessian eigenvalues `[-10.160271,+2.616926,+4.307680]`. Complex-step Hessian has symmetry error `9.08e-15` and tiny Ritz residuals; five perturbation amplitudes for both signs descend reproducibly to H/A. All resulting real N960 deletions return known A/B/H380 configurations, best `A=444368.3956862257`, still above R. See `results/n961-weighted-ah-index1-2026-11-04.txt` and Action `41332447336`.
+- **New active search:** Newton-MINRES continuation of this exact weighted index-one saddle along three constant-total-charge occupancy rays (towards deleting labels 886, 960, 380), with explicit Hessian-index and N960 projection checks. Action `41719943255`, three matrix jobs. Goal: identify a low-curvature fold / change of projection branch, not presume one.
+- No new record is claimed. Numerical fluctuations `~1e-10` around the accepted score are not breakthroughs.
 
 ## Why this may be a frontier
 
@@ -182,14 +174,18 @@ Prior two-label exchange proves path dependence. The new experiment starts at th
 
 At every corner and at loop closure, both distinguished deletion projections are fully repolished as ordinary unit-charge N960 configurations. A nontrivial loop can therefore reveal whether occupancy operations are noncommutative at the level of the relaxed geometry and whether the same endpoint can acquire a new genuine-N960 exit.
 
+## Weighted A/H saddle and present experiment (2026-11-04)
+
+The 11-image spherical string approached the A/H interface but had a physical-gradient RMS of about 0.0052. Eigenvector-following subsequently produced a fixed-parameter stationary index-one geometry at `444373.852382868179`. Independent complex-step Hessian validation counted exactly one non-rigid negative mode (the next eigenvalue is positive `+2.6169256817`). Each of five signed perturbations relaxed to the expected A- or H-sheet. Genuine N960 deletions from the relaxed sides yielded only A/A/H380 or B/B/H380. This is a verified *auxiliary-landscape* transition state, not a p007 record. Details and run/artifact IDs are preserved in `results/n961-weighted-ah-index1-2026-11-04.txt`.
+
+The successor experiment `code/continue_n961_weighted_saddle_simplex.py` follows the stationary point along occupancy rays, starting with `s=0.01` and targeting `s=0.9`. Each step corrects the root of the physical tangent force with rotation-gauged complex-step Hessian Newton-MINRES, independently classifies the lowest Hessian modes, tests real N960 projections, and sometimes releases both unstable sides. A failed corrector is marked as a **numerical failure**, not proof of a fold. Three parallel runs are in Action `41719943255`; artifacts `thomson-weighted-saddle-ray-{886,960,380}` should contain complete coordinates for every accepted stationary step.
+
 ## Next decision
 
-1. Finish and preserve the active-only transverse run and occupancy-loop run.
-2. Any internally stable candidate below R by more than `2e-7` immediately stops exploratory branching and triggers independent high-precision repolish plus current Few Shots verification. An accepted result still needs at least `1e-6` improvement.
-3. If both active mechanisms return only known basins, do **not** scale the same searches indefinitely. Reassess the enlarged N961 interface itself:
-   - map the A/R/B basin-boundary preimage in occupancy × geometry space and locate genuine junction/fold regions, or
-   - retire this auxiliary family if closed loops show no useful branch transport and move to a structurally distinct parent/topology family.
-4. Immediately before any record claim, re-check Few Shots `main`, open p007 PRs, rationalize the candidate under the official constraints, run the p007 verifier, and run the repository/Few Shots checks required for submission.
+1. Read Action `41719943255` results for all three rays. Do not infer a fold from Newton nonconvergence alone. Prefer small-step restart, eigenvalue tracking, or pseudo-arclength continuation if a branch becomes ill-conditioned.
+2. Look for genuine spectral softening (negative eigenvalue approaching zero, or additional positive mode crossing zero) or a changed N960 deletion basin. If the index-one branch merely keeps yielding known A/B/H/R, stop extending this same three-ray family and change the auxiliary representation.
+3. Any N960 candidate below R by `2e-7` requires separate high-precision repolishing and official Few Shots rational-certificate verification. The accepted epsilon threshold is `1e-6`.
+4. Persist the numerical outcomes and update the topic handoff; do not leave key evidence solely in temporary Actions artifacts.
 
 ## Sources
 
@@ -222,3 +218,7 @@ Mapped the same-topology R/A/B basin graph, tested cross-topology D2/record oper
 Shifted from fixed-N local perturbations to mechanisms that change the search representation. Neighboring-size scouts revealed a common N961 A/R hub. Fractional occupancy exposed an A/R projection bifurcation and path hysteresis. Fixed-N cascade/follower searches were closed out after strong softening signals failed to translate into better candidates. The full weighted-mode boundary scan returned only R/A/B and was retired.
 
 Current takeover work preserved previously unfinished negative summaries, refreshed this handoff, and launched two changed-representation tests: active-only transverse modes at the N961 projection boundary and closed two-occupancy holonomy loops.
+
+### 2026-11-04
+
+Preserved the fixed-charge weighted A/H first-order saddle validation, including independent Hessian symmetry/Ritz checks and bidirectional descent; no better N960 projection. Started a new three-ray constant-total-charge Newton-MINRES occupancy continuation (run 41719943255), to investigate whether the saddle branch can expose genuine new basin exits or softening rather than repeating known A/H perturbations.
