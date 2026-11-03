@@ -56,6 +56,18 @@ Then the identity Q=16+2d gives the exact sparsity budget
 
 Consequently there are at most four indices where U is outside {-1,0}, and at most eight nonzero V coordinates (counting V_r^2). At d=0 the U multiset is exactly (-1)^16, 0^8.
 
+There are only **21 possible sorted 24-entry U-value multisets** under these constraints, before imposing the periodic cross equation. Indeed d<=4 forces each U into {-3,-2,-1,0,1,2}. Enumerating nonnegative counts n_v with sum n_v=24, sum v*n_v=-16 and sum [v(v+1)/2]*n_v=d gives:
+
+| d | possible U multisets | residual R budget |
+|---:|---:|---:|
+| 0 | 1 | 8 |
+| 1 | 2 | 6 |
+| 2 | 3 | 4 |
+| 3 | 6 | 2 |
+| 4 | 9 | 0 |
+
+For d=0 the unordered pairs (U_r,U_(25-r)) have G_r in {-2,-1,0}; if n2 is the count G=-2, then n2=4,5,6,7,8 and SG=2n2+16. By the exact fibre identity SH=2Q-SG, with Q=16, this restricts **SH to {8,6,4,2,0}**, much tighter than the global SG+SH<=48 condition. This remains a necessary condition only.
+
 This K34 formulation is *not* an exclusion. It suggests a non-mechanical next search: enumerate low-norm (16) negacyclic fibre pairs first under their coupled sparse commutator, then solve the high-norm periodic compression, instead of simply scaling the K16 compressed enumerator or continuing old odd-perfect K=25,27,... slices.
 
 A local necessary-condition probe found a 16-sparse negacyclic vector with SH=10, so a naive universal SH>24 bound would be false. Such a vector alone is not an O=58 or full LABS candidate.
