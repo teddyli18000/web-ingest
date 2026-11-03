@@ -1,0 +1,73 @@
+name: temp Thomson N961 weighted saddle occupancy rays
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-weighted-saddle-occupancy-rays.yml'
+
+jobs:
+  track:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        zero_label: [886, 960, 380]
+    permissions:
+      actions: read
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy
+      - name: Compile new continuation implementation
+        run: |
+          python3 -m py_compile \
+            science-boundary/thomson-960/code/continue_n961_weighted_saddle_simplex.py \
+            science-boundary/thomson-960/code/refine_n961_weighted_saddle.py \
+            science-boundary/thomson-960/code/validate_n961_weighted_edge.py
+      - uses: actions/download-artifact@v4
+        with:
+          name: thomson-weighted-ah-transition-state
+          path: ${{ runner.temp }}/seed
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: teddyli18000/web-ingest
+          run-id: 41332447336
+      - name: Continue center saddle towards a deletion vertex
+        run: |
+          python3 science-boundary/thomson-960/code/continue_n961_weighted_saddle_simplex.py \
+            "$RUNNER_TEMP/seed/refined.json" \
+            --zero-label ${{ matrix.zero_label }} \
+            --live-score 444368.3924061973 \
+            --out "$RUNNER_TEMP/out"
+      - name: Compact result summary
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json,os,pathlib
+          p=pathlib.Path(os.environ['RUNNER_TEMP'])/'out'/'branch.json'
+          if not p.exists():
+              print('branch.json missing')
+          else:
+              d=json.loads(p.read_text())
+              print('zero_label',d['zero_label'],'last_accepted_s',d['last_accepted_s'])
+              for r in d['rows']:
+                  print('STEP',r['s'],r['status'],r['gradient_rms'],r.get('hessian_lowest',[])[:3])
+                  for proj in r.get('projections',[]):
+                      print('DELETE',proj['delete_index'],proj['class'],proj['delta_live'])
+                  for side in r.get('unstable_sides',[]):
+                      print('SIDE',side['sign'],side['weighted_energy'],
+                            [(a['delete_index'],a['class'],a['delta_live'])
+                             for a in side['projections']])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-weighted-saddle-ray-${{ matrix.zero_label }}
+          path: ${{ runner.temp }}/out
+          retention-days: 10
