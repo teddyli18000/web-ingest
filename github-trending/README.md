@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-11-02** | **4,408** | **2,561** |
+| **2014-08-09** | **2026-11-03** | **4,409** | **2,562** |
 
-### Latest All-Languages snapshot — 2026-11-02
+### Latest All-Languages snapshot — 2026-11-03
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 1,526 |
-| 2 | [lightpanda-io/browser](https://github.com/lightpanda-io/browser) | Zig | 825 |
-| 3 | [shiyu-coder/Kronos](https://github.com/shiyu-coder/Kronos) | Python | 630 |
-| 4 | [pingdotgg/t3code](https://github.com/pingdotgg/t3code) | TypeScript | 3,094 |
-| 5 | [milind-soni/OpenMausBot](https://github.com/milind-soni/OpenMausBot) | TypeScript | 922 |
-| 6 | [public-apis/public-apis](https://github.com/public-apis/public-apis) | Python | 324 |
-| 7 | [cjpais/Handy](https://github.com/cjpais/Handy) | Rust | 339 |
-| 8 | [Donchitos/Claude-Code-Game-Studios](https://github.com/Donchitos/Claude-Code-Game-Studios) | Shell | 967 |
-| 9 | [kornia/kornia](https://github.com/kornia/kornia) | Python | 101 |
-| 10 | [beenuar/AiSOC](https://github.com/beenuar/AiSOC) | Python | 446 |
+| 1 | [vercel-labs/agent-desktop](https://github.com/vercel-labs/agent-desktop) | Rust | 2,275 |
+| 2 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 1,803 |
+| 3 | [D4Vinci/Scrapling](https://github.com/D4Vinci/Scrapling) | Python | 706 |
+| 4 | [hyprwm/Hyprland](https://github.com/hyprwm/Hyprland) | C++ | 509 |
+| 5 | [Donchitos/Claude-Code-Game-Studios](https://github.com/Donchitos/Claude-Code-Game-Studios) | Shell | 1,379 |
+| 6 | [FlashML-org/FreeToken](https://github.com/FlashML-org/FreeToken) | Python | 653 |
+| 7 | [pingdotgg/t3code](https://github.com/pingdotgg/t3code) | TypeScript | 3,229 |
+| 8 | [shiyu-coder/Kronos](https://github.com/shiyu-coder/Kronos) | Python | 857 |
+| 9 | [kornia/kornia](https://github.com/kornia/kornia) | Python | 412 |
+| 10 | [JustVugg/colibri](https://github.com/JustVugg/colibri) | C | 675 |
 
-[Open full snapshot →](data/2026/11/02/trending.json)
+[Open full snapshot →](data/2026/11/03/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 306 days  
+[`2026`](data/2026/) · 307 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
