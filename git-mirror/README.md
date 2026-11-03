@@ -1,6 +1,6 @@
 # Public Git Repository Mirror
 
-`git-mirror` stores **one-shot mirrors** of public Git repositories for later use.
+`git-mirror` stores **one-shot mirrors** of public Git repositories for later use, plus a small human-facing [`books/`](books/) shelf for book files the owner wants preserved alongside those mirrors.
 
 The repository owner supplies a public repository URL. An Agent creates a temporary GitHub Actions workflow from the retained template, the Action shallow-clones the requested source branch, captures the latest formal release when supported, commits the mirror to `main`, and removes the temporary workflow.
 
@@ -15,6 +15,12 @@ This task is **not** a synchronization service. There is no recurring schedule a
 | SDAutoLogin | Soochow Wi-Fi /Ethernet keeps ghosting you? This auto network guard & login buddy has your back. | [zqlan/SDAutoLogin](https://git.zqlhub.com/zqlan/SDAutoLogin) | [Mirror](data/git.zqlhub.com/zqlan/SDAutoLogin/) |
 
 Keep this table for people: one concise row per mirrored repository. Detailed provenance belongs inside that mirror, not here.
+
+## Books
+
+[`books/`](books/) is the durable bookshelf for readable book files. It has its own short human index and one directory per edition/translation, with the actual PDF/EPUB files plus source provenance.
+
+Keep Git repository mirrors under `data/` and books under `books/`; do not mix the two layouts.
 
 ## What is preserved
 
@@ -71,8 +77,11 @@ Assets over the limit are not downloaded; their upstream name/link remains in `r
 - `templates/one-shot-workflow.yml.tpl` — template copied into `.github/workflows/` only for one import.
 - `validate_snapshots.py` — validates stored mirrors.
 - `tests/` — deterministic task tests; they do not contact external repositories.
+- `books/` — human-facing bookshelf with its own local README and Agent rules.
 
 ## Agent procedure
+
+For Git repository imports:
 
 1. Read this README and `AGENTS.md`.
 2. Take the public repository URL supplied by the owner. Use the source default branch unless another branch is specified.
@@ -80,6 +89,8 @@ Assets over the limit are not downloaded; their upstream name/link remains in `r
 4. Render and commit a temporary one-shot workflow to `main`.
 5. The Action validates this task, imports `snapshot/`, captures the latest supported release, validates the result, removes its own workflow, and pushes the mirror to `main`.
 6. Verify the resulting mirror, then add one row to **Mirrored repositories** using the upstream repository name and original description. Link **Mirror** to the local mirror root so `snapshot/` and `release/` are both easy to reach.
+
+For books, read `books/README.md` and `books/AGENTS.md` instead of using the Git repository importer.
 
 ## Safety
 

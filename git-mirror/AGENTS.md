@@ -1,10 +1,11 @@
 # AGENTS.md — git-mirror
 
-`git-mirror` is the persistent task for one-shot mirrors of public Git repositories.
+`git-mirror` is the persistent task for one-shot mirrors of public Git repositories and the owner-facing `books/` shelf.
 
 ## Scope
 
 - Use this task when the repository owner provides a public Git repository URL and wants it preserved in `web-ingest`.
+- Use `git-mirror/books/` when the owner wants a book file preserved for later reading/use. Read `books/README.md` and `books/AGENTS.md` before adding one.
 - The default operation is a **single mirror**, not recurring synchronization.
 - Work directly on `main` unless the owner explicitly says otherwise.
 - Durable implementation stays under `git-mirror/`; each import workflow is temporary under `.github/workflows/`.
@@ -15,6 +16,7 @@
 - Never place credentials in a Git URL or mirror private repositories/private service contents.
 - Do not run code from the source repository. Cloning/copying files and downloading public release assets are the operation.
 - Do not initialize submodules or fetch Git LFS objects by default.
+- Book files follow the separate redistribution/source rules in `books/AGENTS.md`; do not feed books through the Git repository importer.
 
 ## Mirror behavior
 
@@ -30,7 +32,7 @@
 
 ## Human-facing asset index
 
-After a successful import, add exactly one concise row to `git-mirror/README.md` under **Mirrored repositories** with:
+After a successful Git repository import, add exactly one concise row to `git-mirror/README.md` under **Mirrored repositories** with:
 
 - repository name;
 - original upstream description;
@@ -39,7 +41,11 @@ After a successful import, add exactly one concise row to `git-mirror/README.md`
 
 Keep machine metadata out of the README. The mirror-root link is intentional: a person can open `snapshot/` for source files or `release/` for the latest release from one place.
 
+Books maintain their own separate human index in `git-mirror/books/README.md`; do not mix books into the repository table.
+
 ## Temporary workflow
+
+For Git repository mirrors:
 
 - Start from `templates/one-shot-workflow.yml.tpl` or `render_workflow.py`.
 - No recurring `schedule:` trigger.
@@ -51,7 +57,11 @@ Keep machine metadata out of the README. The mirror-root link is intentional: a 
 - Rebase on latest `main` before pushing.
 - Remove the temporary workflow after a successful validated import.
 
+Book imports may use a one-shot `temp-book-<slug>.yml` workflow when binary download is needed; follow `books/AGENTS.md` rather than the repository template.
+
 ## Destination layout
+
+Git repositories:
 
 ```text
 git-mirror/data/<host>/<source-path>/
@@ -60,7 +70,16 @@ git-mirror/data/<host>/<source-path>/
 └── release/        # optional; latest supported release only
 ```
 
-Do not place mirrored repositories at the repository root, under `tools/`, or under another ingestion task.
+Books:
+
+```text
+git-mirror/books/<book-slug>/
+├── README.md
+├── source.json
+└── files/
+```
+
+Do not place mirrored repositories at the repository root, under `tools/`, under `books/`, or under another ingestion task. Do not place books under `data/`.
 
 ## Public repository safety
 
