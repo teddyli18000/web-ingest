@@ -1,0 +1,44 @@
+name: temp-aes-joint-pair-cofactor
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/joint_pair_cofactor_search.py'
+      - '.github/workflows/temp-aes-joint-pair-cofactor.yml'
+permissions:
+  contents: read
+jobs:
+  joint-cofactor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exhaust assigned joint-cofactor root pairs
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/joint_pair_cofactor_search.py
+          python science-boundary/aes-sbox-circuit/joint_pair_cofactor_search.py \
+            --source fs-101 --shard '${{ matrix.shard }}' --shards 8 --out result | tee run.log
+          python -c "import json; d=json.load(open('result/summary.json')); assert d['status'] in ('exhausted','found'); print(d)"
+      - name: Official verifier if <=100 candidate appears
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/p008shot
+            cp result/candidate.json /tmp/p008shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/p008shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-joint-pair-cofactor-${{ matrix.shard }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
