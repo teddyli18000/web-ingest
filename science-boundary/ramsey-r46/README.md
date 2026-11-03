@@ -8,6 +8,22 @@ This directory is the durable research workspace for Few Shots `p003-ramsey-r46`
 
 ## Current state
 
+> **Post-audit frontier — 2026-11-04.** The 2026-10-28 Action/run-status bullets
+> below are historical, not the current queue status. A corrected row-domain
+> predicate was audited in commit `e99119c`; all proof claims depending on
+> the old predicate were withdrawn. Independent post-audit certificates restore
+> a complete **m <= 219** edge-count exclusion. For **m=220**, all sequences
+> with 1–5 degree-11 vertices have sound recursive exclusions. With exactly
+> six degree-11 vertices there are 14 structural degree sequences; exact
+> universal low-graph/class bounds plus separate sound proofs eliminate
+> seq6–14. **Seq1–5 remain unresolved.** New verifier
+> `m220_n11_6_seq4_high_anchor_verify.py` reduces seq4 from 32 class-edge
+> matrices to **four** without SAT or the withdrawn row predicate; see
+> `results/m220-n11-6-seq4-high-anchor-post-audit.json` and
+> `notes/m220-seq4-high-anchor-2026-11-04.md`. No verified 36-vertex
+> witness has been found. The topic still targets a *lower-bound construction*;
+> these exclusions only guide the search and are not a new upper bound.
+>
 - **Target:** first verified `(4,6)` graph on 36 vertices.
 - **Public state rechecked 2026-10-28:** `36 <= R(4,6) <= 40`; no public 36-vertex construction found. Radziszowski revision #18 (2026) and McKay's live collection still list Exoo's 35-vertex examples as the largest known.
 - **Few Shots record:** 35 vertices, epsilon +1; no merged p003 shot beyond the baseline.
