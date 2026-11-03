@@ -1,0 +1,20 @@
+Thomson N=960 — weighted N961 A/H fixed-occupancy transition-state validation — 2026-11-04
+
+Baseline (Few Shots main): R=444368.3924061973, accepted p007 C3 replica-exchange-scars; no verified improvement here.
+Experiment code: code/string_n961_weighted_simplex.py; code/refine_n961_weighted_saddle.py; code/validate_n961_weighted_edge.py.
+GitHub Actions: https://github.com/teddyli18000/web-ingest/actions/runs/41332447336 (success).
+Artifact: thomson-weighted-ah-transition-state, artifact ID 13094044137, expires 2026-11-11 UTC.
+Inputs: three-occupancy simplex run 41198272370 (A960/H380), 961 sphere points, q886=q960=q380=2/3, other 958 charges q=1, total q=960 exactly.
+Endpoint weighted minima: A Ew=444373.83608383121; H Ew=444373.84411735553; distinct geometries under labelled Kabsch alignment.
+
+String (11 images, 260 iterations): climbing image initially E=444373.85347017343, gradient RMS=0.0052053; not stationary and not a certificate by itself.
+Eigenvector-follow saddle refinement (8 cycles): E=444373.852382868179, projected physical gradient RMS=7.757407974e-6. Hessian eigenvalues lowest [-10.1602709900, 2.61692568175, 4.30768036032, 4.76690580869, 5.82823762369, 6.31064046710]; exactly one negative internal eigenvalue. Hessian computed with complex-step weighted analytic gradient, all rigid rotations projected out.
+Independent validation: Hessian random bilinear symmetry relative error 9.084e-15. 14 Ritz residuals <=3.19e-8, rotation overlap negligible. Five perturbation amplitudes [3e-5,6e-5,1.2e-4,2.5e-4,5e-4] along each sign of negative mode. Negative mode sign - -> H-sheet weighted minimum 444373.8441173555, sign + -> A-sheet minimum 444373.8360838312, reproducible across amplitudes. Genuine N960 deletion projections from both sides: H gives B/B/H380; A gives A/A/H380 (886/960/380 labels, respectively). Best 960 projection = A=444368.3956862257, delta R=+0.0032800284. No new N960 basin found.
+
+Conclusion: A/H weighted bistability is separated by a genuine geometrical index-1 saddle at fixed charge parameters. Previous geometric basin bisection t=0.53806899985 only identified a crossing, not a stationary point. This distinguishes two mechanisms and supports attempting a fixed-total-charge saddle branch in the occupancy simplex, looking for softening, folds, or an additional exit. The existence/location of any fold/cusp/third basin is NOT established by this experiment.
+
+Acceptance discipline: any N960 energy < R-2e-7 needs independent polish, rationalization, official p007 verifier. A successful new Few Shots shot needs >=1e-6 improvement. Numerical ~1e-10 changes around R are not improvements.
+
+Source references:
+https://arxiv.org/abs/2610.08122 (Amore & Wales, posted 2026-10-06; JCP published 2026-10-28).
+https://doi.org/10.1103/PhysRevLett.117.028301 (Thomson kinetic transition networks and first-order saddles).
