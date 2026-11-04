@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-11-03** | **4,409** | **2,562** |
+| **2014-08-09** | **2026-11-04** | **4,410** | **2,563** |
 
-### Latest All-Languages snapshot — 2026-11-03
+### Latest All-Languages snapshot — 2026-11-04
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [vercel-labs/agent-desktop](https://github.com/vercel-labs/agent-desktop) | Rust | 2,275 |
-| 2 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 1,803 |
-| 3 | [D4Vinci/Scrapling](https://github.com/D4Vinci/Scrapling) | Python | 706 |
-| 4 | [hyprwm/Hyprland](https://github.com/hyprwm/Hyprland) | C++ | 509 |
-| 5 | [Donchitos/Claude-Code-Game-Studios](https://github.com/Donchitos/Claude-Code-Game-Studios) | Shell | 1,379 |
-| 6 | [FlashML-org/FreeToken](https://github.com/FlashML-org/FreeToken) | Python | 653 |
-| 7 | [pingdotgg/t3code](https://github.com/pingdotgg/t3code) | TypeScript | 3,229 |
-| 8 | [shiyu-coder/Kronos](https://github.com/shiyu-coder/Kronos) | Python | 857 |
-| 9 | [kornia/kornia](https://github.com/kornia/kornia) | Python | 412 |
-| 10 | [JustVugg/colibri](https://github.com/JustVugg/colibri) | C | 675 |
+| 1 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 1,139 |
+| 2 | [vercel-labs/agent-desktop](https://github.com/vercel-labs/agent-desktop) | Rust | 3,791 |
+| 3 | [max-sixty/worktrunk](https://github.com/max-sixty/worktrunk) | Rust | 438 |
+| 4 | [JustVugg/colibri](https://github.com/JustVugg/colibri) | C | 802 |
+| 5 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 1,164 |
+| 6 | [p-e-w/heretic](https://github.com/p-e-w/heretic) | Python | 701 |
+| 7 | [spotify/portal-ai-plugins](https://github.com/spotify/portal-ai-plugins) | TypeScript | 91 |
+| 8 | [floci-io/floci](https://github.com/floci-io/floci) | Java | 482 |
+| 9 | [Usagi-org/ai-goofish-monitor](https://github.com/Usagi-org/ai-goofish-monitor) | Python | 228 |
+| 10 | [anomalyco/hex](https://github.com/anomalyco/hex) | Rust | 410 |
 
-[Open full snapshot →](data/2026/11/03/trending.json)
+[Open full snapshot →](data/2026/11/04/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 307 days  
+[`2026`](data/2026/) · 308 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
