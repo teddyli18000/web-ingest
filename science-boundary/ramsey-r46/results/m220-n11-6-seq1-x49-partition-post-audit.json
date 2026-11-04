@@ -1,0 +1,54 @@
+{
+  "campaign": "m220-n11-6-seq1-x49-partition-post-audit",
+  "degree_sequence": {
+    "11": 6,
+    "12": 16,
+    "13": 14
+  },
+  "edges": 220,
+  "eliminated_class_matrices": [
+    {
+      "R": 22,
+      "x": 49
+    },
+    {
+      "R": 24,
+      "x": 49
+    }
+  ],
+  "low_vertex_cover_and_capacity": {
+    "22": {
+      "low_middle_edges": 44,
+      "minimum_low_cover": 3
+    },
+    "24": {
+      "low_middle_edges": 42,
+      "minimum_low_cover": 3
+    }
+  },
+  "forced_middle_vertex_low_neighbors_max": 2,
+  "high_partition_size_range": [
+    6,
+    7,
+    8
+  ],
+  "q7_inequality": "eS<=10, eT>=11, regularity forces eS=eT",
+  "q8_inequality": "eS<=12, eT>=6, regularity forces eT=eS-7<=5",
+  "q6_forced": "S=K3,3, |S|=6, eS=9; T has 8 vertices and 16 edges",
+  "cubic_T_complement_catalogue": {
+    "labelled_trianglefree_cubic": 96,
+    "alpha_le3_isomorphism_classes": 1
+  },
+  "q6_exact_cross_gluing": {
+    "individual_cross_rows": 38,
+    "same_side_triples": 388,
+    "column_signatures": 62,
+    "complementary_triple_pairs_tested": 2372,
+    "surviving_cross_gluings": 0
+  },
+  "independent_milp_sanity_check": "Fixed cubic T complement, 48 cross-edge binary variables; HiGHS confirms infeasible in ~0.5s, but final exclusion uses exact row enumeration, not MILP.",
+  "soundness": "Finite exhaustive labelled cubic census plus K4/I4 cross-row cover; low degree-class handshakes; no SAT, MILP dependence or withdrawn tf() predicate.",
+  "status": "UNSAT_for_x49_only",
+  "x49_eliminated": true,
+  "conclusion": "The seq1 degree-class matrices with x=e(13,13)=49 and R=22 or24 cannot produce a 36-vertex (4,6)-graph. Seven remaining seq1 class matrices are not excluded."
+}
