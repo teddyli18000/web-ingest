@@ -20,12 +20,14 @@ A new isolated 1080p character lab now tests the existing approved visual-study 
 - character_lab.html + src/character_lab.js + export/character_lab.mjs — 1920×1080 review sheet with color, registration, face and dark-field silhouette views.
 - .github/workflows/temp-gpt-mv-character-lab.yml — temporary screenshot and alpha report gate.
 
-The older bust_plate.b64.0..3 payload was corrupt (five Base64 characters missing) and is no longer loaded. Remove the unused chunks after the new source passes.
+The older bust_plate.b64.0..3 payload was corrupt (five Base64 characters missing) and is no longer loaded. Remove the unused chunks after a clean replacement passes.
+
+**2026-11-04 handoff review:** Direct inspection of the committed `bust_v3.webp` shows large surviving blue/white horizontal background bands. It is **visually rejected as a clean character cutout**, despite having an alpha channel. The lab now reports corner/edge coverage and full-width visible rows; the temporary CI rejects likely rectangular leakage and uploads the review image even on gate failure. No change to the 60-second film is justified by this asset.
 
 This bust is **not yet an approved film master**. Inspect the navy silhouette residue, lower edge, hair detail and enlarged face. It cannot replace full-body or reaching poses.
 
 ## Next gate
 
-Review the actual 1080p character PNG and alpha statistics. If it passes, replace only suitable close/bust shots, inspect the composited scene and dense cut boundaries, then rerender section gates. Do not export a final 1080p30 film until the full visual review passes.
+Obtain the actual 1080p lab PNG/alpha report and confirm the source leak. Fix the cutout from existing approved art (no new image generation), then rerun the isolated visual gate. Only after a clean character plate passes should it replace suitable close/bust shots; inspect compositing and dense cut boundaries before rerendering section gates. Do not export a final 1080p30 film until the full visual review passes.
 
 Keep everything under this temporary workspace. Delete one-off workflows after review; retained old scenes are historical studies, not approved footage.
