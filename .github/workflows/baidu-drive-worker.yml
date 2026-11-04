@@ -67,13 +67,12 @@ jobs:
           go build -o "$RUNNER_TEMP/baidu-drive-prepare" ./cmd/baidu-drive-prepare
           echo "BAIDU_DRIVE_PREPARE_BIN=$RUNNER_TEMP/baidu-drive-prepare" >> "$GITHUB_ENV"
 
-      # Authentication provisioning intentionally remains absent in this phase.
-      # The final auth layer will create only ephemeral runner files and export:
-      #   BAIDU_DRIVE_BAIDU_AUTH_FILE
-      #   BAIDU_DRIVE_RCLONE_CONFIG_FILE
-      #   BAIDU_DRIVE_RCLONE_BIN
-      # No credential or capability URL may be written to Git, Release text,
-      # artifacts, summaries, or logs.
+      - name: Provision ephemeral Baidu and Google credentials
+        env:
+          BAIDU_DRIVE_BAIDU_COOKIES: ${{ secrets.BAIDU_DRIVE_BAIDU_COOKIES }}
+          BAIDU_DRIVE_RCLONE_CONFIG: ${{ secrets.BAIDU_DRIVE_RCLONE_CONFIG }}
+          BAIDU_DRIVE_STATE_KEY: ${{ secrets.BAIDU_DRIVE_STATE_KEY }}
+        run: python3 baidu-drive/auth_provision.py prepare
 
       - name: Prepare, reconcile and schedule relay work
         run: >-
