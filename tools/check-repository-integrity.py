@@ -25,6 +25,7 @@ TEMPORARY_NAME_PARTS = ("backfill", "repair", "migration", "probe", "diagnostic"
 # durable exceptions here when several workflow entry points belong to one task, or
 # when repository-wide maintenance is owned by a non-matching directory.
 SCHEDULED_WORKFLOW_READMES = {
+    "baidu-drive-auth-keepalive.yml": "baidu-drive/README.md",
     "ai-daily-warm.yml": "ai-daily/README.md",
     "ai-daily-warm.yaml": "ai-daily/README.md",
     "temp-work-cleanup.yml": "temp-work/README.md",
