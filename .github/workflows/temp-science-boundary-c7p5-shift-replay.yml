@@ -1,0 +1,50 @@
+name: temp C7p5 independent integer phase replay
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7p5-shift-replay.yml
+      - science-boundary/shannon-capacity-c7/code/c7p5_full_shift_replay_integer.py
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-c7p5-shift-replay
+  cancel-in-progress: false
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install NumPy for independent exact integer convolution
+        run: python -m pip install 'numpy>=1.26,<3'
+      - name: Pin both public data sources
+        run: |
+          git init --quiet /tmp/c7-tandon
+          git -C /tmp/c7-tandon fetch --quiet --depth 1 https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git c753408492dde92a239708986d16c15dbf6c3235
+          git -C /tmp/c7-tandon checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-tandon rev-parse HEAD)" = c753408492dde92a239708986d16c15dbf6c3235
+          git init --quiet /tmp/c7-five
+          git -C /tmp/c7-five fetch --quiet --depth 1 https://github.com/molind/c7-five.git ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+          git -C /tmp/c7-five checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-five rev-parse HEAD)" = ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+      - name: Independent exact all-axes validation
+        run: |
+          mkdir -p /tmp/c7-replay
+          python science-boundary/shannon-capacity-c7/code/c7p5_full_shift_replay_integer.py \
+            /tmp/c7-tandon/data/base_c7.json /tmp/c7-five/data/family-f.json \
+            /tmp/c7-replay/result.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c7p5-independent-phase-replay
+          path: /tmp/c7-replay/
+          retention-days: 14
