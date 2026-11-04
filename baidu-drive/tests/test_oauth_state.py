@@ -42,7 +42,7 @@ class OAuthStateTests(unittest.TestCase):
         repo = MemoryRepo()
         calls = []
         def opener(req, timeout):
-            args = urllib.parse.parse_qs(req.data.decode())
+            args = urllib.parse.parse_qs(urllib.parse.urlsplit(req.full_url).query)
             calls.append(args["refresh_token"][0])
             return io.BytesIO(json.dumps({
                 "access_token": "access-" + str(len(calls)),
