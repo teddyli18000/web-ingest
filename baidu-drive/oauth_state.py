@@ -14,7 +14,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 STATE_PATH = "baidu-drive/state/auth/baidu-oauth.json"
 TOKEN_URL = "https://openapi.baidu.com/oauth/2.0/token"
 AAD = b"web-ingest/baidu-drive/oauth/v1"
-REFRESH_MARGIN = 7 * 3600
+REFRESH_MARGIN = 8 * 24 * 3600
 
 
 class OAuthError(RuntimeError):
