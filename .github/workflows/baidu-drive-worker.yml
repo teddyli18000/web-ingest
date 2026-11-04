@@ -61,15 +61,19 @@ jobs:
         run: |
           mkdir -p .prepare-core/cmd/baidu-drive-prepare
           cp baidu-drive/mover/prepare-main.go .prepare-core/cmd/baidu-drive-prepare/main.go
+          cp baidu-drive/mover/oauth_baidu.go .prepare-core/cmd/baidu-drive-prepare/oauth_baidu.go
           cp baidu-drive/mover/action_relay.go .prepare-core/cmd/baidu-drive-prepare/action_relay.go
           cp baidu-drive/mover/action_recovery.go .prepare-core/internal/state/action_recovery.go
           cd .prepare-core
           go build -o "$RUNNER_TEMP/baidu-drive-prepare" ./cmd/baidu-drive-prepare
           echo "BAIDU_DRIVE_PREPARE_BIN=$RUNNER_TEMP/baidu-drive-prepare" >> "$GITHUB_ENV"
 
+      - name: Install pinned OAuth encryption dependency
+        run: python3 -m pip install "cryptography==46.0.4"
+
       - name: Provision ephemeral Baidu and Google credentials
         env:
-          BAIDU_DRIVE_BAIDU_COOKIES: ${{ secrets.BAIDU_DRIVE_BAIDU_COOKIES }}
+          BAIDU_DRIVE_BAIDU_OAUTH: ${{ secrets.BAIDU_DRIVE_BAIDU_OAUTH }}
           BAIDU_DRIVE_RCLONE_CONFIG: ${{ secrets.BAIDU_DRIVE_RCLONE_CONFIG }}
           BAIDU_DRIVE_STATE_KEY: ${{ secrets.BAIDU_DRIVE_STATE_KEY }}
         run: python3 baidu-drive/auth_provision.py prepare
