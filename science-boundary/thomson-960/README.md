@@ -10,7 +10,8 @@ Can we find a 960-point configuration on the unit sphere with Coulomb energy low
 - The fixed-N R/A/B basin network and certified fixed-N R/A first-order saddle were mapped earlier. Enlarging those low-mode scans did not improve R.
 - The shared weighted N961 hub exhibits occupancy-dependent projection and nontrivial path hysteresis. Three distinguishable labels, 886, 960 and 380, define a constant-total-charge simplex `q886+q960+q380=2`.
 - **New verified mechanism (2026-11-04):** at the common center `q886=q960=q380=2/3`, A and H weighted minima are connected by a genuine index-one saddle: `Ew=444373.852382868179`, physical gradient RMS `7.7574e-6`, lowest Hessian eigenvalues `[-10.160271,+2.616926,+4.307680]`. Complex-step Hessian has symmetry error `9.08e-15` and tiny Ritz residuals; five perturbation amplitudes for both signs descend reproducibly to H/A. All resulting real N960 deletions return known A/B/H380 configurations, best `A=444368.3956862257`, still above R. See `results/n961-weighted-ah-index1-2026-11-04.txt` and Action `41332447336`.
-- **New active search:** Newton-MINRES continuation of this exact weighted index-one saddle along three constant-total-charge occupancy rays (towards deleting labels 886, 960, 380), with explicit Hessian-index and N960 projection checks. Action `41719943255`, three matrix jobs. Goal: identify a low-curvature fold / change of projection branch, not presume one.
+- **Completed saddle-ray experiment (2026-11-04):** three charged-particle index-one branches successfully continued to s=0.78 (ray886) and s=0.90 (rays960/380); see `results/n961-weighted-saddle-occupancy-rays-2026-11-04.txt`, Action `41719943255`. Except for one failed root corrector at s=0.90 on ray886, checked Hessians retained exactly one negative internal mode. Projection basins exhibit nonmonotonic A/R/B returns: e.g. ray960 delete886 gives R only at s=0.48 before returning A. On ray380, delete380 at s=0.78 and 0.90 discovers a distinct, but much higher, real N960 minimum at energy ≈444368.616310059 (R+0.223904). Best projection remains R to numerical noise, not a new record. The original three jobs were red due solely to a JSON trailer bug in their final summary; computation and artifacts succeeded, and the trailer writer was fixed in commit `e2deae6`.
+- **Current changed-representation experiment:** use the existing s=0.48 and s=0.78 ray saddles as independent starts and continue two different paths to *identical* interior simplex charges. Compare Hessian-validated stationary roots, geometry, and N960 deletion/unstable-side returns. Six pairwise chord controls run in Action `41857433482`; code `code/compare_n961_saddle_chord_paths.py`. This asks whether the observed projection switching reflects genuine multiple saddle sheets, rather than assuming a cusp from an isolated Newton failure.
 - No new record is claimed. Numerical fluctuations `~1e-10` around the accepted score are not breakthroughs.
 
 ## Why this may be a frontier
@@ -180,12 +181,18 @@ The 11-image spherical string approached the A/H interface but had a physical-gr
 
 The successor experiment `code/continue_n961_weighted_saddle_simplex.py` follows the stationary point along occupancy rays, starting with `s=0.01` and targeting `s=0.9`. Each step corrects the root of the physical tangent force with rotation-gauged complex-step Hessian Newton-MINRES, independently classifies the lowest Hessian modes, tests real N960 projections, and sometimes releases both unstable sides. A failed corrector is marked as a **numerical failure**, not proof of a fold. Three parallel runs are in Action `41719943255`; artifacts `thomson-weighted-saddle-ray-{886,960,380}` should contain complete coordinates for every accepted stationary step.
 
+### Outcome of saddle-ray experiment and two-dimensional follow-up
+
+All three rays retained index one over their accepted parameter intervals. The projection-preimage boundaries are not monotonic functions of the ray parameter, and the tested ray380 path exposes a new higher-energy (non-record) N960 basin around s=0.78. This is evidence for complex projection geometry, not for a new N960 global minimum or for a fold in the smooth weighted saddle branch. Primary durable table: `results/n961-weighted-saddle-occupancy-rays-2026-11-04.txt`.
+
+We are testing two-way chord continuation from pairs (886,960), (886,380), and (960,380), at matched radii s=0.48 and s=0.78. At each common midpoint, two independent root corrections are compared after labelled rotation alignment and by Hessian-index checks. The paths intentionally do not linearly interpolate *geometry* between endpoints, because that would force an artificial connection. Positive tests would yield genuine saddle-sheet multistability at identical charges; negative controls constrain this representation only.
+
 ## Next decision
 
-1. Read Action `41719943255` results for all three rays. Do not infer a fold from Newton nonconvergence alone. Prefer small-step restart, eigenvalue tracking, or pseudo-arclength continuation if a branch becomes ill-conditioned.
-2. Look for genuine spectral softening (negative eigenvalue approaching zero, or additional positive mode crossing zero) or a changed N960 deletion basin. If the index-one branch merely keeps yielding known A/B/H/R, stop extending this same three-ray family and change the auxiliary representation.
-3. Any N960 candidate below R by `2e-7` requires separate high-precision repolishing and official Few Shots rational-certificate verification. The accepted epsilon threshold is `1e-6`.
-4. Persist the numerical outcomes and update the topic handoff; do not leave key evidence solely in temporary Actions artifacts.
+1. Inspect the six common-occupancy chord experiments (Action `41857433482`) and preserve compact per-pair results. Distinct saddles at identical charges require *both* small force residuals and a meaningful rotation-aligned geometric/energy gap; compare the two independent continuation histories.
+2. If different saddle sheets meet, follow their interface in the two-dimensional fixed-charge simplex and assess whether their unstable manifolds create new *low-energy* real N960 exits. If the same sheet is consistently recovered, retire the simple three-particle occupancy triangle and seek a structurally different geometry/topology family rather than saturating this sample.
+3. A p007 candidate below R by `2e-7` requires independent high-precision repolish and official Few Shots certificate verification; the accepted epsilon threshold is `1e-6`. Do not confuse high-energy `novel` projections with record progress.
+4. Persist mathematical and numeric outcomes under `results/`, update this handoff, and remove one-shot workflows once their artifacts have been validated.
 
 ## Sources
 
@@ -222,3 +229,7 @@ Current takeover work preserved previously unfinished negative summaries, refres
 ### 2026-11-04
 
 Preserved the fixed-charge weighted A/H first-order saddle validation, including independent Hessian symmetry/Ritz checks and bidirectional descent; no better N960 projection. Started a new three-ray constant-total-charge Newton-MINRES occupancy continuation (run 41719943255), to investigate whether the saddle branch can expose genuine new basin exits or softening rather than repeating known A/H perturbations.
+
+### 2026-11-04 (continued)
+
+Recovered all 3 prior occupancy-ray artifacts after discovering their numeric continuations succeeded but a literal backslash-newline broke the final JSON summary. Preserved all 184 compact evidence lines in `results/n961-weighted-saddle-occupancy-rays-2026-11-04.txt` and fixed the writer. The ray380 deletion at s>=0.78 reaches a new but high N960 minimum (~R+0.223904). Started 6 common-occupancy two-path saddle checks in Action `41857433482`, rather than extending 1D rays further.
