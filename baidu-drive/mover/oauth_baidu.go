@@ -6,7 +6,6 @@ package main
 import (
  "context"
  "encoding/json"
- "errors"
  "fmt"
  "io"
  "net/http"
@@ -31,7 +30,6 @@ type oauthBaidu struct {
  sekey string
  shareID string
  shareUK string
- ownerUK string
 }
 
 func newOAuthBaidu(token, appRoot string) (*oauthBaidu, error) {
@@ -39,7 +37,7 @@ func newOAuthBaidu(token, appRoot string) (*oauthBaidu, error) {
 }
 func newOAuthBaiduAt(token, appRoot, base string, client *http.Client) (*oauthBaidu, error) {
  appRoot = path.Clean(strings.TrimSpace(appRoot))
- if !strings.HasPrefix(appRoot, "/apps/") || appRoot == "/apps/" || strings.Contains(appRoot, "..") || strings.ContainsAny(appRoot, "\\x00\\\\") {
+ if !strings.HasPrefix(appRoot, "/apps/") || appRoot == "/apps/" || strings.Contains(appRoot, "..") || strings.ContainsRune(appRoot, 0) || strings.ContainsRune(appRoot, 92) || strings.Contains(appRoot[6:],"/") {
   return nil, fmt.Errorf("invalid OAuth application root")
  }
  if strings.TrimSpace(token)=="" { return nil, baidu.ErrAuthRequired }
@@ -282,4 +280,3 @@ var _ interface {
  DeleteStagingPath(context.Context,string)error
  OpenDownloadRange(context.Context,string,int64,int64)(*baidu.DownloadStream,error)
 } = (*oauthBaidu)(nil)
-var _ = errors.New
