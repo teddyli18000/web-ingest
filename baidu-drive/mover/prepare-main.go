@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"syscall"
 
@@ -280,6 +281,8 @@ func prepareCopyFile(source, target string, mode os.FileMode) error {
 	}
 	return closeErr
 }
+
+var prepareCredentialURL = regexp.MustCompile(`https?://[^\\s"\x27<>]+`)
 
 func prepareSafeMessage(err error) string {
 	if err == nil {
