@@ -8,6 +8,7 @@ import time
 import urllib.parse
 import urllib.request
 
+from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 STATE_PATH = "baidu-drive/state/auth/baidu-oauth.json"
@@ -43,7 +44,7 @@ def unseal(value: str, key: bytes) -> dict:
     try:
         blob = base64.urlsafe_b64decode(value[3:] + "=" * (-len(value[3:]) % 4))
         state = json.loads(AESGCM(key).decrypt(blob[:12], blob[12:], AAD))
-    except (ValueError, TypeError, KeyError) as exc:
+    except (ValueError, TypeError, KeyError, InvalidTag) as exc:
         raise OAuthError("invalid encrypted OAuth state") from exc
     if not isinstance(state, dict):
         raise OAuthError("invalid OAuth state document")
