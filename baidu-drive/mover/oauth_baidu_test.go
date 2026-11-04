@@ -48,6 +48,8 @@ func TestOAuthProviderShareStagingAndBoundedStream(t *testing.T){
     if r.URL.Query().Get("opera")!="delete" || r.FormValue("filelist")=="" {t.Error("unsafe cleanup request")}
     fmt.Fprint(w, `{"errno":0}`)
    }
+  case "/rest/2.0/xpan/nas":
+   fmt.Fprint(w, `{"errno":0,"uk":777}`)
   case "/rest/2.0/xpan/multimedia":
    fmt.Fprintf(w,`{"errno":0,"list":[{"fs_id":222,"size":11,"dlink":"%s/download"}]}`,server.URL)
   case "/download":
