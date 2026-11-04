@@ -271,10 +271,11 @@ def run_worker_loop(
 
 def subprocess_step(record: dict[str, Any]) -> tuple[int, dict[str, Any]]:
     binary = os.environ.get("BAIDU_DRIVE_RELAY_BIN", "").strip()
-    cookie = os.environ.get("BAIDU_DRIVE_BAIDU_AUTH_FILE", "").strip()
+    baidu_token = os.environ.get("BAIDU_DRIVE_BAIDU_OAUTH_TOKEN_FILE", "").strip()
+    app_root = os.environ.get("BAIDU_DRIVE_BAIDU_APP_ROOT", "").strip()
     token = os.environ.get("BAIDU_DRIVE_GOOGLE_ACCESS_TOKEN_FILE", "").strip()
     key = os.environ.get("BAIDU_DRIVE_STATE_KEY_FILE", "").strip()
-    if not all((binary, cookie, token, key)):
+    if not all((binary, baidu_token, app_root, token, key)):
         raise WorkerError("relay runtime authentication inputs are not configured")
     try:
         auth_provision.refresh_google_token(
@@ -301,7 +302,8 @@ def subprocess_step(record: dict[str, Any]) -> tuple[int, dict[str, Any]]:
             binary,
             "--input-json", str(input_path),
             "--output-json", str(output_path),
-            "--baidu-cookie-file", cookie,
+            "--baidu-access-token-file", baidu_token,
+            "--baidu-app-root", app_root,
             "--drive-access-token-file", token,
             "--state-key-file", key,
         ],
