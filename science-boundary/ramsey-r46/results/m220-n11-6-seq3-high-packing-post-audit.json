@@ -1,0 +1,75 @@
+{
+  "campaign": "m220-n11-6-seq3-high-packing-post-audit",
+  "degree_sequence": {
+    "11": 6,
+    "12": 18,
+    "13": 10,
+    "14": 2
+  },
+  "edges": 220,
+  "complete_B88_member_sha256": "cdb6bbe20c73cd578590d57d896a343fceed76f5216d2a8524ccd1afd9559fb8",
+  "B88_profile_scan": {
+    "0": {
+      "22": {
+        "anticomplete_histogram": {
+          "1": 8,
+          "2": 8,
+          "3": 12
+        },
+        "maximum_anticomplete": 3,
+        "three_vertex_clique_count": 12
+      },
+      "24": {
+        "anticomplete_histogram": {},
+        "maximum_anticomplete": -1,
+        "three_vertex_clique_count": 0
+      }
+    },
+    "1": {
+      "22": {
+        "anticomplete_histogram": {
+          "1": 11,
+          "2": 11
+        },
+        "maximum_anticomplete": 2,
+        "three_vertex_clique_count": 0
+      },
+      "24": {
+        "anticomplete_histogram": {},
+        "maximum_anticomplete": -1,
+        "three_vertex_clique_count": 0
+      }
+    },
+    "2": {
+      "22": {
+        "anticomplete_histogram": {
+          "1": 22,
+          "2": 22
+        },
+        "maximum_anticomplete": 2,
+        "three_vertex_clique_count": 0
+      },
+      "24": {
+        "anticomplete_histogram": {},
+        "maximum_anticomplete": -1,
+        "three_vertex_clique_count": 0
+      }
+    }
+  },
+  "class_matrices_before_new_constraints": 170,
+  "matrices_after_extreme_deficit": 10,
+  "matrices_after_high_graph_degree_constraints": 0,
+  "D_lower_bound": 10,
+  "D_even": true,
+  "inequality_lower": "y+4z >= R+D-14 >= 18",
+  "inequality_upper": "y+4z <= 17 (z=0: y<=16; z=1: y<=13)",
+  "soundness": "Complete B88 stratum; independent Python/C++ graph6 bitset decoders; post-audit low-graph boundary; degree handshakes; S12<=147, S13<=164; K4/I6; R(3,4)=9. No withdrawn row CSP.",
+  "independent_validation": {
+    "python_command": "python m220_n11_6_seq3_high_packing_verify.py",
+    "cpp_build": "g++ -std=c++17 -O2 -Wall -Wextra m220_n11_6_seq3_independent.cpp -o /tmp/r46seq3",
+    "cpp_run": "/tmp/r46seq3",
+    "cpp_local_output": "B88 qmax [3,2,2], q3 triangles [12,0,0], R24 no profile; class matrices 170 -> 10 -> 0. PASS"
+  },
+  "all_unsat": true,
+  "conclusion": "No 220-edge (4,6)-graph on 36 vertices has degree sequence 11^6 12^18 13^10 14^2."
+}
