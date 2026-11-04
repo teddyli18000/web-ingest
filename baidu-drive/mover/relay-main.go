@@ -15,25 +15,8 @@ import (
 	"github.com/teddyli18000/baidu-drive-mover/internal/baidu"
 )
 
-var canonicalMD5 = regexp.MustCompile(`^[0-9a-fA-F]{32}package main
-
-import (
-	"context"
-	"encoding/json"
-	"errors"
-	"flag"
-	"fmt"
-	"io"
-	"os"
-	"path/filepath"
-	"regexp"
-	"strings"
-
-	"github.com/teddyli18000/baidu-drive-mover/internal/baidu"
-)
-
-)
-var credentialURL = regexp.MustCompile(`https?://[^\\s"\x27<>]+`)
+var canonicalMD5 = regexp.MustCompile(`^[0-9a-fA-F]{32}$`)
+var credentialURL = regexp.MustCompile(`https?://[^\s"'<>]+`)
 
 type relayStepInput struct {
 	TaskID           string `json:"task_id"`
