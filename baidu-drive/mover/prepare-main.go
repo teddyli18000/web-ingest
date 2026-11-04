@@ -282,13 +282,13 @@ func prepareCopyFile(source, target string, mode os.FileMode) error {
 	return closeErr
 }
 
-var prepareCredentialURL = regexp.MustCompile(`https?://[^\\s"\x27<>]+`)
+var prepareCredentialURL = regexp.MustCompile(`https?://[^\\s"'<>]+`)
 
 func prepareSafeMessage(err error) string {
 	if err == nil {
 		return ""
 	}
-	text := strings.ReplaceAll(err.Error(), "\n", " ")
+	text := strings.ReplaceAll(prepareCredentialURL.ReplaceAllString(err.Error(), "[redacted URL]"), "\n", " ")
 	text = strings.ReplaceAll(text, "\r", " ")
 	if len(text) > 300 {
 		text = text[:300]
