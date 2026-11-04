@@ -164,6 +164,15 @@ func runRelayStep(ctx context.Context, input relayStepInput, baiduToken, baiduAp
 	sessionURI := ""
 	sealed := strings.TrimSpace(input.SessionSealed)
 	if sealed == "" {
+		reconciled, disposition, reconcileErr := reconcileDestinationBeforeCreate(ctx, source, drive, input)
+		if reconcileErr != nil {
+			kind := "retryable"
+			if errors.Is(reconcileErr, errDriveDestinationConflict) { kind = "reconcile_required" }
+			if errors.Is(reconcileErr, errDriveAuthRequired) || errors.Is(reconcileErr, baidu.ErrAuthRequired) { kind = "auth" }
+			return relayStepOutput{ErrorKind:kind}, reconcileErr
+		}
+		if disposition == destinationAdopted {return reconciled,nil}
+		if disposition != destinationAbsent {return relayStepOutput{},fmt.Errorf("unexpected Drive destination reconciliation")}
 		sessionURI, err = drive.StartSession(ctx, input.Name, input.DriveParentID, input.Size)
 		if err != nil {
 			return relayStepOutput{}, fmt.Errorf("start Drive resumable upload: %w", err)
