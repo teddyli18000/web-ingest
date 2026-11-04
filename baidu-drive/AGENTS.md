@@ -137,7 +137,7 @@ Interactive browsers are forbidden in Actions workers.
 
 Do not serialize all file payload transfer behind `baidu-drive-live-state`. Do not let file workers write task-global SQLite state.
 
-The legacy Cookie bridge is not an unattended authentication solution. The final Baidu provider must use OAuth share/file APIs and automatically refresh both access and rotating refresh tokens before live acceptance. Without valid credentials, remain at `BLOCKED_AUTH_SETUP`.
+The Actions prepare/relay binaries use task-local `mover/oauth_baidu.go` for official OAuth share/file APIs. Do not reintroduce Cookie auth. Entitlement for real share verification/list/transfer must be proven at live acceptance; missing provider permission must block safely. No credentials means `BLOCKED_AUTH_SETUP`.
 
 ## Authentication and public-repository safety
 
@@ -155,23 +155,23 @@ Never commit or expose:
 - private-source data;
 - secret-derived diagnostic dumps.
 
-Future prepare runner-local interfaces:
+OAuth prepare runner-local interfaces:
 
 ```text
-BAIDU_DRIVE_BAIDU_AUTH_FILE
+BAIDU_DRIVE_BAIDU_OAUTH_TOKEN_FILE
 BAIDU_DRIVE_RCLONE_CONFIG_FILE
 BAIDU_DRIVE_RCLONE_BIN
 ```
 
-Future file-relay runner-local interfaces:
+OAuth file-relay runner-local interfaces:
 
 ```text
-BAIDU_DRIVE_BAIDU_AUTH_FILE
+BAIDU_DRIVE_BAIDU_OAUTH_TOKEN_FILE
 BAIDU_DRIVE_GOOGLE_ACCESS_TOKEN_FILE
 BAIDU_DRIVE_STATE_KEY_FILE
 ```
 
-These are temporary compatibility interfaces. The final bootstrap is `BAIDU_DRIVE_BAIDU_OAUTH` JSON (`client_id`, `client_secret`, initial `refresh_token`), plus `BAIDU_DRIVE_RCLONE_CONFIG` and `BAIDU_DRIVE_STATE_KEY`. Only the serialized master may call `oauth_state.ensure_fresh()` and commit `state/auth/baidu-oauth.json`; file workers use `oauth_state.read_fresh()` to avoid refresh races. Never treat the bootstrap refresh token as the live token after rotation.
+These are ephemeral runner interfaces; there is no Cookie fallback. The final bootstrap is `BAIDU_DRIVE_BAIDU_OAUTH` JSON (`client_id`, `client_secret`, initial `refresh_token`, `app_root`), plus `BAIDU_DRIVE_RCLONE_CONFIG` and `BAIDU_DRIVE_STATE_KEY`. Only the serialized master may call `oauth_state.ensure_fresh()` and commit `state/auth/baidu-oauth.json`; file workers use `oauth_state.read_fresh()` to avoid refresh races. Never treat the bootstrap refresh token as the live token after rotation.
 
 ## Validation
 
