@@ -1,0 +1,107 @@
+name: temp labs100 O58 oneflip-nearskew exact audit
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-o58-oneflip-exact.yml'
+  workflow_dispatch:
+concurrency:
+  group: temp-labs100-o58-oneflip-exact
+  cancel-in-progress: false
+jobs:
+  oneflip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build generator and exact scanner
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p outputs
+          python3 science-boundary/labs-100/code/o58_oneflip_nearskew_cases.py \
+            > outputs/A_cases.tsv 2> outputs/generator.log
+          test "$(wc -l < outputs/A_cases.tsv)" -eq 9352
+          grep -q '^CASES 9352 ' outputs/generator.log
+          g++ -O3 -std=c++20 -fopenmp \
+            science-boundary/labs-100/code/o58_oneflip_even_exact.cpp \
+            -o "$RUNNER_TEMP/o58-oneflip"
+      - name: Exact Gray-code scan of all 971380424 encoded states
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > outputs/shards.txt <<'SHARDS'
+          f00to16 16 -1 0
+          f17to20 20 -1 17
+          f21 21 -1 21
+          f22 22 -1 22
+          f23j23 23 23 23
+          f23j24 23 24 23
+          f23j25 23 25 23
+          f23j26 23 26 23
+          f24 24 -1 24
+          SHARDS
+          export BINARY="$RUNNER_TEMP/o58-oneflip"
+          export CASES="$PWD/outputs/A_cases.tsv"
+          export OUTDIR="$PWD/outputs"
+          export OMP_NUM_THREADS=1
+          xargs -P "$(nproc)" -n 4 bash -c '
+            set -euo pipefail
+            label="$1"; maxf="$2"; j="$3"; minf="$4"
+            "$BINARY" "$maxf" "$j" "$minf" < "$CASES" \
+              > "$OUTDIR/$label.log" 2> "$OUTDIR/$label.stderr"
+            grep "^ONEFLIP_EXACT " "$OUTDIR/$label.log"
+          ' _ < outputs/shards.txt | tee outputs/progress.log
+      - name: Independently audit every shard and final LABS scorer
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, subprocess
+          d=Path('outputs')
+          expected={
+            'f00to16':(8980,39720648,1694),
+            'f17to20':(216,105381888,5310),
+            'f21':(42,88080384,5390),
+            'f22':(60,251658240,6270),
+            'f23j23':(1,8388608,34310),
+            'f23j24':(24,201326592,8278),
+            'f23j25':(24,201326592,8278),
+            'f23j26':(1,8388608,34310),
+            'f24':(4,67108864,14694),
+          }
+          N=0;T=0;best=1000000;bestseq=None
+          for label,(nc,nt,ne) in expected.items():
+            log=(d/f'{label}.log').read_text()
+            line=next(x for x in log.splitlines() if x.startswith('ONEFLIP_EXACT '))
+            got=dict(re.findall(r'(\w+)=([0-9]+)',line))
+            assert int(got['inputCases'])==9352,(label,got)
+            assert (int(got['scannedCases']),int(got['configurations']),int(got['minE']))==(nc,nt,ne),(label,got)
+            seq=next(x.split(' ',1)[1] for x in log.splitlines() if x.startswith('BEST_SEQUENCE '))
+            assert len(seq)==100 and set(seq)=={'+','-'}
+            s=[1 if c=='+' else -1 for c in seq]
+            assert (sum(s[::2]),sum(s[1::2]))==(2,2),label
+            corr=[sum(s[i]*s[i+k] for i in range(100-k)) for k in range(1,100)]
+            odd=sum(c*c for k,c in enumerate(corr,1) if k&1)
+            total=sum(c*c for c in corr)
+            assert odd==58 and total==ne,(label,odd,total)
+            external=subprocess.check_output(['python3','science-boundary/labs-100/code/verify.py',seq],text=True)
+            assert int(external.strip())==ne
+            N+=nc;T+=nt
+            if ne<best:best=ne;bestseq=seq
+          assert N==9352,N
+          assert T==971380424,T
+          assert best==1694,best
+          print('EXACT_ONEFLIP_AUDIT A_cases=',N,'encoded_configs=',T,'minimum_E=',best)
+          print('BEST_SEQ=',bestseq)
+          with open('outputs/independent-summary.txt','w') as out:
+            out.write(f'A_cases={N}\nencoded_configs={T}\nminimum_E={best}\nsequence={bestseq}\n')
+          PY
+          cat outputs/independent-summary.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Archive complete exact evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-o58-oneflip-exact-audit
+          path: outputs/
+          retention-days: 30
