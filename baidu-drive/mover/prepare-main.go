@@ -282,7 +282,7 @@ func prepareCopyFile(source, target string, mode os.FileMode) error {
 	return closeErr
 }
 
-var prepareCredentialURL = regexp.MustCompile(`https?://[^\\s"'<>]+`)
+var prepareCredentialURL = regexp.MustCompile(`https?://[^\s"'<>]+`)
 
 func prepareSafeMessage(err error) string {
 	if err == nil {
