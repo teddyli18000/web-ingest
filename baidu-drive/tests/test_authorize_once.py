@@ -24,7 +24,7 @@ class AuthorizeOnceTests(unittest.TestCase):
 
     def test_exchange_code_returns_only_bootstrap_refresh_token(self):
         def fake_open(req, timeout):
-            form = urllib.parse.parse_qs(req.data.decode())
+            form = urllib.parse.parse_qs(urllib.parse.urlsplit(req.full_url).query)
             self.assertEqual(form["grant_type"], ["authorization_code"])
             self.assertEqual(form["redirect_uri"], ["oob"])
             self.assertEqual(form["code"], ["code-value"])
