@@ -47,7 +47,24 @@ This exactly represents every replacement of the three released layers. A CP-SAT
 
 Code: `code/c7p5_three_layer_decision.py`.
 
-Active GitHub Actions run [41854602289](https://github.com/teddyli18000/web-ingest/actions/runs/41854602289), probing four windows with initial triple occupancy 155: `I0(axis0,start4)`, `I0(axis4,start5)`, `X(axis1,start2)`, `X(axis4,start4)`. Each solve gets up to 75 seconds with four CP-SAT workers. Results must be read before claiming any exclusion or breakthrough.
+GitHub Actions [run 41854602289](https://github.com/teddyli18000/web-ingest/actions/runs/41854602289) **completed** four 75-second CP-SAT probes:
+
+| Seed/window | Variables | Intra-layer edges | Cross-layer edges | Status |
+| --- | ---: | ---: | ---: | --- |
+| I0, axis 0, start 4 | 3,053 | 102,102 | 52,812 | **UNKNOWN** |
+| I0, axis 4, start 5 | 3,073 | 102,686 | 54,432 | **UNKNOWN** |
+| X, axis 1, start 2 | 3,058 | 102,342 | 53,217 | **UNKNOWN** |
+| X, axis 4, start 4 | 3,053 | 102,102 | 52,812 | **UNKNOWN** |
+
+All target triple scores were 156, improving the pinned incumbent triple size 155 by one; the remaining fixed layers contained 212 words. Each run's job completed technically successfully, but the CP-SAT status `UNKNOWN` means **no candidate and no mathematical negative result**. No Few Shots verifier was invoked. Extending the same monolithic triple decision merely scales time without evidence of improving candidates.
+
+## Shifted cyclic slice stitching: new search representation
+
+A different exact model selects *complete four-dimensional slice templates* from 38 pinned 367-word source sets (BPZ `I0`, BPZ `X`, and 36 Family-F states), allowing each slice to undergo any of 49 independently chosen 4D translations (zero, nonzero one-axis shifts, or signed unit shifts on a pair of axes). Every template is independently a legal 4D code.
+
+Two adjacent slices are compatible iff no selected projected words are confusable in `C7^4`; nonadjacent slices need no cross checks. Thus maximizing the five-dimensional point count among the templates is **exactly a maximum-weight 7-cycle dynamic program**, even though choosing shifts separately for each slice is not a global graph automorphism.
+
+Reproducer: `code/c7p5_slice_stitch_dp.py`, pinning `c753408492dde92a239708986d16c15dbf6c3235` for BPZ/Tandon and `ae81e0d24b356aef3d388238f6fb4d02c4aa32a5` for molind Family-F. All five axes launched in [Actions run 41855395790](https://github.com/teddyli18000/web-ingest/actions/runs/41855395790). At time of writing this update they are executing; record objective, patterns, and verifier output from the completed job logs before drawing any conclusion.
 
 ## Decision criteria
 
