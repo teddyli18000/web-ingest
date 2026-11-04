@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/teddyli18000/baidu-drive-mover/internal/app"
-	"github.com/teddyli18000/baidu-drive-mover/internal/baidu"
 	cleanupengine "github.com/teddyli18000/baidu-drive-mover/internal/cleanup"
 	"github.com/teddyli18000/baidu-drive-mover/internal/drive"
 	"github.com/teddyli18000/baidu-drive-mover/internal/drive/rclone"
@@ -33,6 +32,8 @@ type relayPrepareConfig struct {
 	RelayResultsPath  string
 	RelayManifestPath string
 	StageWindowBytes  int64
+	NewStagingClient func(string)(app.StagingBaiduAPI,error)
+	NewCleanupClient func(string)(app.CleanupBaiduAPI,error)
 }
 
 func runRelayPreparation(ctx context.Context, taskID string, cfg relayPrepareConfig) error {
@@ -56,9 +57,7 @@ func runRelayPreparation(ctx context.Context, taskID string, cfg relayPrepareCon
 		Logger:      cfg.Logger,
 		CookieStore: cfg.CookieStore,
 		MaxBatches:  32,
-		NewClient: func(cookieHeader string) (app.CleanupBaiduAPI, error) {
-			return baidu.NewClient(cookieHeader)
-		},
+		NewClient: cfg.NewCleanupClient,
 	}
 	if _, err := cleanupRunner.Run(ctx, taskID); err != nil {
 		return fmt.Errorf("relay cleanup pass: %w", err)
@@ -140,9 +139,7 @@ func runRelayPreparation(ctx context.Context, taskID string, cfg relayPrepareCon
 		MaxBatches:    1,
 		MaxCacheBytes: 0,
 		MaxBatchBytes: allowed,
-		NewClient: func(cookieHeader string) (app.StagingBaiduAPI, error) {
-			return baidu.NewClient(cookieHeader)
-		},
+		NewClient: cfg.NewStagingClient,
 	}
 	if _, err := stageRunner.Run(ctx, taskID); err != nil {
 		return fmt.Errorf("stage relay batch: %w", err)
