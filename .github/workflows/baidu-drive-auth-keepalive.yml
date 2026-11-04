@@ -2,8 +2,8 @@ name: Baidu Drive Auth Keepalive
 
 on:
   schedule:
-    # 01:17 Singapore time on the 2nd of each month (17:17 UTC on the 1st).
-    - cron: '17 17 1 * *'
+    # 01:17 Wednesday Singapore time; weekly refresh check, five-minute job.
+    - cron: '17 17 * * 2'
   workflow_dispatch:
 
 permissions:
