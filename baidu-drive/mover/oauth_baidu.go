@@ -33,7 +33,7 @@ type oauthBaidu struct {
 }
 
 func newOAuthBaidu(token, appRoot string) (*oauthBaidu, error) {
- return newOAuthBaiduAt(token, appRoot, "https://pan.baidu.com", &http.Client{Timeout: 90*time.Second})
+ return newOAuthBaiduAt(token, appRoot, "https://pan.baidu.com", &http.Client{Timeout: 45*time.Minute})
 }
 func newOAuthBaiduAt(token, appRoot, base string, client *http.Client) (*oauthBaidu, error) {
  appRoot = path.Clean(strings.TrimSpace(appRoot))
@@ -41,7 +41,7 @@ func newOAuthBaiduAt(token, appRoot, base string, client *http.Client) (*oauthBa
   return nil, fmt.Errorf("invalid OAuth application root")
  }
  if strings.TrimSpace(token)=="" { return nil, baidu.ErrAuthRequired }
- if client==nil { client=&http.Client{Timeout:90*time.Second} }
+ if client==nil { client=&http.Client{Timeout:45*time.Minute} }
  return &oauthBaidu{token: strings.TrimSpace(token), appRoot:appRoot, baseURL:base, client:client},nil
 }
 func (o *oauthBaidu) HasLoginCookies() bool { return o != nil && o.token!="" }
@@ -64,7 +64,9 @@ func (o *oauthBaidu) call(ctx context.Context,method,endpoint string,query,form 
  u.RawQuery=query.Encode()
  var body io.Reader
  if form!=nil {body=strings.NewReader(form.Encode())}
- req,err:=http.NewRequestWithContext(ctx,method,u.String(),body);if err!=nil{return err}
+ requestCtx,cancel:=context.WithTimeout(ctx,45*time.Second)
+ defer cancel()
+ req,err:=http.NewRequestWithContext(requestCtx,method,u.String(),body);if err!=nil{return err}
  req.Header.Set("User-Agent","BaiduDriveMover/1.0 pan.baidu.com")
  if form!=nil {req.Header.Set("Content-Type","application/x-www-form-urlencoded")}
  resp,err:=o.client.Do(req);if err!=nil{return fmt.Errorf("Baidu OAuth API connection failed: %w",err)}
@@ -72,7 +74,7 @@ func (o *oauthBaidu) call(ctx context.Context,method,endpoint string,query,form 
  if resp.StatusCode==http.StatusUnauthorized||resp.StatusCode==http.StatusForbidden{return baidu.ErrAuthRequired}
  if resp.StatusCode<200||resp.StatusCode>=300{return fmt.Errorf("Baidu OAuth API returned HTTP %d",resp.StatusCode)}
  data,err:=io.ReadAll(io.LimitReader(resp.Body,8<<20));if err!=nil{return err}
- var status struct {Errno int `json:"errno"`; ErrorCode int `json:"error_code"`}
+ var status struct {Errno int `json:"errno"`; ErrorCode int `json:"error_code"`; Info []struct {Errno int `json:"errno"`} `json:"info"`}
  if err=json.Unmarshal(data,&status);err!=nil{return fmt.Errorf("invalid Baidu OAuth API JSON: %w",err)}
  code:=status.Errno;if code==0 {code=status.ErrorCode}
  if code!=0{
@@ -84,6 +86,7 @@ func (o *oauthBaidu) call(ctx context.Context,method,endpoint string,query,form 
   }
   return fmt.Errorf("Baidu OAuth API errno %d",code)
  }
+ for _,item:=range status.Info {if item.Errno!=0{return fmt.Errorf("Baidu OAuth API item errno %d",item.Errno)}}
  if out!=nil {if err=json.Unmarshal(data,out);err!=nil{return fmt.Errorf("invalid Baidu OAuth API response: %w",err)}}
  return nil
 }
