@@ -21,12 +21,12 @@ Implemented:
 - expired-session reconciliation before any replay;
 - automatic master-scheduler wakeup whenever a file-worker workflow completes, including failed/cancelled runs.
 
-Still intentionally pending before live transfer:
+Still pending before live transfer:
 
-- final Baidu and Google authentication provisioning in Actions;
+- populate three repository Actions Secrets with actual account credentials;
 - live cross-VM acceptance against real provider accounts.
 
-Until authentication is configured, accepted tasks fail closed at `BLOCKED_AUTH_SETUP`.
+Without those Secrets, accepted tasks stop at `BLOCKED_AUTH_SETUP`.
 
 ## Fixed Release
 
@@ -157,27 +157,30 @@ The pin or bridge contract must not change without passing the repository integr
 
 ## Authentication boundary
 
-Authentication remains intentionally separate from public task state.
+The Actions workflows now call `auth_provision.py` to prepare all credentials only in the ephemeral VM. Configure exactly **three repository Actions Secrets**:
 
-Prepare/master path expects future runner-local inputs:
+| Secret name | Value |
+| --- | --- |
+| `BAIDU_DRIVE_BAIDU_COOKIES` | Baidu cookie header containing `BDUSS` and `STOKEN` |
+| `BAIDU_DRIVE_RCLONE_CONFIG` | Full rclone INI for remote `[bdm-drive]`, including `type = drive`, `scope = drive.file`, your own `client_id` / `client_secret`, and a `token` JSON with `refresh_token` |
+| `BAIDU_DRIVE_STATE_KEY` | Base64-encoded 32-byte AES key; generate once and keep unchanged while any resumable session exists |
+
+A key can be generated locally with `python -c "import base64,secrets; print(base64.b64encode(secrets.token_bytes(32)).decode())"`.
+
+The master fetches the **pinned rclone v1.74.4 Linux amd64** archive, verifies SHA-256 `fe435e0c36228e7c2f116a8701f01127bb1f694005fc11d1f27186c8bca4115d`, and uses it solely for Drive tree preparation. Each file worker obtains a fresh Google access token from the rclone config's refresh token and refreshes it again before further relay windows when near expiry. No token update is committed to the repo.
+
+Runtime paths are provisioned as:
 
 ```text
 BAIDU_DRIVE_BAIDU_AUTH_FILE
 BAIDU_DRIVE_RCLONE_CONFIG_FILE
-BAIDU_DRIVE_RCLONE_BIN
-```
-
-File-relay path expects future runner-local inputs:
-
-```text
-BAIDU_DRIVE_BAIDU_AUTH_FILE
-BAIDU_DRIVE_GOOGLE_ACCESS_TOKEN_FILE
+BAIDU_DRIVE_RCLONE_BIN          # master only
+BAIDU_DRIVE_GOOGLE_ACCESS_TOKEN_FILE  # file workers only
+BAIDU_DRIVE_GOOGLE_TOKEN_EXPIRY_FILE  # file workers only
 BAIDU_DRIVE_STATE_KEY_FILE
 ```
 
-The build itself supplies the prepare/relay binaries. These path interfaces do not prescribe the final OAuth/Secret provisioning mechanism.
-
-The final auth layer must provision credentials only inside the ephemeral runner, never echo them, and support non-interactive refresh/recovery suitable for unattended bot operation.
+Baidu currently uses the existing authenticated Cookie protocol; expiry or a login challenge requires refreshing the Cookie Secret. Google uses OAuth refresh without interactive browser login. The Secrets and their contents must not be entered in a public Release.
 
 ## Workflows
 
