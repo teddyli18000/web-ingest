@@ -1,110 +1,31 @@
-# GPT MV — code-native rebuild
+# GPT MV — code-native film in production
 
-This workspace builds an original GPT/ChatGPT personification film as authored code, not as a slideshow of finished illustrations.
+An original GPT/ChatGPT personification film, authored as deterministic Canvas scenes. The Claude lyric-MV repository is a **production-process benchmark only**; no source, imagery, music, timing, choreography, or character assets are reused from it.
 
-The public `Nyankomintsu/world-execute-me-lyric-mv` repository is a **production/process reference only**. Its directing discipline, staged review and deterministic render/QC define the quality bar. We do **not** copy or reuse its source, scene choreography, character art, compositions, timings, lyrics, audio or assets.
+## Status — 2026-11-04
 
-## Current status — 0–60 s visual structure complete
+**Technical pipeline works; visual film not yet approved.** A 60-second timeline exists and previous runs validated browser-per-frame rendering and encoding. The first 30 seconds still lack the reference's visual quality. A green CI is not artistic acceptance.
 
-The old technical prototype is rejected and retained only as history. The active 60-second film has four visually reviewed sections. Section gates are accepted from real rendered video, contact sheets and dense boundary frames rather than from code or green CI alone. The remaining gate is the final 1920×1080 / 30 fps full-film export and QC.
+Active scene routing is opening_v11 (0–15 s), drafts_v13 (15–30 s), construct_v6 (30–45 s), ending_v3 (45–60 s). The last complete engineering gate was GitHub run 41181931335 at 960×540 / 15 fps.
 
-### 0–15 s — opening v8
+## Character lab — isolated from the main film
 
-- hand extreme close-up gives the character an immediate visual anchor;
-- tangible context objects orbit/rearrange around GPT instead of generic HUD cards;
-- the prompt becomes a physical proof sheet;
-- send → nine paper strips → paper world is one continuous transformation;
-- character, paper and foreground occlusion are explicitly staged rather than cross-faded.
+The 60-second film still loads reach-hq (788×887), whose background-contaminated character crops are not suitable for closeups. The old SVG mascot, half-cut portrait experiments and hand-painted substitute body designs are rejected.
 
-### 15–30 s — revision v10
+A new isolated 1080p character lab now tests the existing approved visual-study cutout:
 
-- 15 s world → revision desk is hidden by a physical proof-sheet wipe;
-- the wrong route remains visible and receives one vermilion correction mark;
-- 18.3–21.8 s uses one integrated thinking pose, not a framed portrait card or a second simultaneous GPT;
-- corrected tracing proof is physically pulled from behind the wrong proof;
-- the thinking pose stays solid and the 21.8 s pose/scene change happens behind a composed near-lens revision plate;
-- 25.2–30 s turns the corrected proof into a handoff: its route leaves the page, reaches the user mark, then a proof-sheet wipe changes camera distance into a hand close-up from the **same** character master.
+- assets/gpt/bust_v3.webp — 550×640 transparent WebP derived from the approved new_conversation art; no new image generation.
+- SHA-256: 76164bf82a81c67b9efb795033e71972a6c8512d1fa73370026736028dd6b0eb.
+- src/components/gpt_bust_plate.js — binary loader with SHA-256 and dimension checks, silhouette and registration treatments.
+- character_lab.html + src/character_lab.js + export/character_lab.mjs — 1920×1080 review sheet with color, registration, face and dark-field silhouette views.
+- .github/workflows/temp-gpt-mv-character-lab.yml — temporary screenshot and alpha report gate.
 
-### 30–45 s — shared construction v5
+The older bust_plate.b64.0..3 payload was corrupt (five Base64 characters missing) and is no longer loaded. Remove the unused chunks after the new source passes.
 
-- the 30 s handoff is physically swallowed by a rising paper floor; the blue correction line continues across the boundary instead of restarting;
-- the map becomes the floor of a low-angle paper architecture space rather than a floating board/card;
-- arches, stairs, canopy, beacon and bridge have front/side/top faces, cast shadows and foreground occlusion;
-- the rejected rectangular hand/photo overlay is gone from the final join;
-- GPT and user are represented by cobalt/gold physical paper contributions inside the shared space;
-- small perspective-folded pieces from both sides complete the bridge gap together.
+This bust is **not yet an approved film master**. Inspect the navy silhouette residue, lower edge, hair detail and enlarged face. It cannot replace full-body or reaching poses.
 
-Locked 0–45 regression:
+## Next gate
 
-- GitHub Actions run: `40498732693`
-- 0–45 s, 960×540, 15 fps
-- full decode / duration / black-frame / freeze checks passed
-- dense 30 s inspection confirmed handoff → paper-floor entry remains one physical action;
-- dense 40.55 s inspection confirmed build → shared join is hidden by a near-lens paper wipe with no subject pop or opacity exit.
+Review the actual 1080p character PNG and alpha statistics. If it passes, replace only suitable close/bust shots, inspect the composited scene and dense cut boundaries, then rerender section gates. Do not export a final 1080p30 film until the full visual review passes.
 
-### 45–60 s — quiet continuation v1
-
-- the completed paper world is physically covered and collected by a near-lens working sheet, revealing a warm desk underneath;
-- three proof layers register into one shared working page instead of fading away;
-- the page retains blue/gold route history and visible construction residue;
-- user and GPT marks enter from opposite sides and meet near one deliberately unfinished corner;
-- the final frame does not say goodbye or fade to black: `from here.` and `SHARED DRAFT / STILL OPEN` remain with two live marks and a subtle warm-light breath.
-
-Ending gate:
-
-- GitHub Actions run: `40499859576`
-- 45–60 s, 960×540, 15 fps
-- full decode / duration / black-frame / freeze checks passed
-- dense 45–48 s review confirmed the paper-world → desk transition is a physical occlusion, not a crossfade;
-- dense 57.7–60 s review confirmed the quiet hold remains visually alive rather than becoming a dead frame.
-
-Engineering green checks alone do not count as visual approval; every locked section above passed rendered-frame review.
-
-## Character masters
-
-Primary reach character: `src/components/gpt_art.js`
-
-- `reach_hq.b64.0 … reach_hq.b64.10`
-- decoded WebP: **788×887**
-- SHA-256: `e44ef2e3a6d839f81104634c9d78dfdc3466ddfae909ac632da5b2cf0e8394ed`
-- runtime source name: `reach-hq`
-
-The old 420×473 master is an explicit fallback only. Review/final CI uses `--art-source reach-hq`, so silent fallback is rejected.
-
-Secondary thinking pose: `src/components/gpt_poses.js`
-
-- verified six-chunk WebP payload;
-- used only as an integrated editorial cutout during the revision comparison;
-- never presented as a framed screenshot/card in the active timeline.
-
-## Active timeline
-
-- `src/scenes/opening_v8.js` — 0–15 s
-- `src/scenes/drafts_v10.js` — 15–30 s
-- `src/scenes/construct_v5.js` — 30–45 s, with the immersive v3 space and refined v5 join
-- `src/scenes/ending_v1.js` — 45–60 s quiet continuation
-- `src/main.js` — 60 s active routing
-- `src/components/gpt_art.js` — primary character source/crops/registration
-- `src/components/gpt_poses.js` — secondary pose loader
-- `export/render.mjs` — deterministic Playwright frame capture + ffmpeg encode/contact-sheet generation with authored review marks through 60 s.
-
-## Production rules
-
-- every shot has backdrop / subject / foreground depth;
-- camera, subject and foreground do not move as one flat layer;
-- text performs a semantic role instead of acting as filler HUD;
-- the GPT character is never replaced by the rejected mascot path;
-- major transitions inherit physical geometry from the previous shot instead of cross-fading finished states;
-- opacity fade is not the main mechanism for important entrances/exits;
-- correction remains visible as residue instead of being magically erased;
-- a character source with an opaque background may not be pasted as a rectangular photo into a spatial scene;
-- each section is rendered and visually reviewed before the next section starts;
-- temporary CI workflows are removed immediately after their gate passes.
-
-## Final gate
-
-Render the full 0–60 s film at **1920×1080, 30 fps**, verify the HQ character source, decode the complete media, assert resolution/fps/duration, inspect black/freeze diagnostics and the full contact sheet, then remove the temporary export workflow.
-
-## Retained rejected material
-
-Old scenes/assets may remain temporarily for comparison or reusable low-level techniques. Earlier opening/revision/construction versions and the original mascot are **not** approved film content and must not be reintroduced into the active timeline.
+Keep everything under this temporary workspace. Delete one-off workflows after review; retained old scenes are historical studies, not approved footage.
