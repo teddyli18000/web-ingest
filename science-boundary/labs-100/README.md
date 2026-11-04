@@ -37,9 +37,11 @@ Current exact frontier:
 - the first non-odd-perfect odd-energy layer `O=58` has been reduced exactly to canonical half sums `(a,b)=(2,2)`, a one-sparse paired odd-correlation defect, and only ten even center values `K=16,18,...,34`.
 - on `O=58,K=16`, four extreme compression splits `(1,15),(3,13),(13,3),(15,1)` have been exactly excluded by exhaustive periodic-cross + negacyclic fibre-Q checks (run `41719753889`); the four central splits remain;
 - on `O=58,K=34`, both zero-fibre splits `(25,9)` and `(9,25)` are exactly excluded by the independent 4,113-support-orbit periodic spectral census (run `41853593511`), which proves `SG>=72` and hence `E>=670` in those two splits.
+- on `O=58,K=34`, the two-sparse fibre splits `(23,11)` and `(11,23)` are also exactly closed: 240 normalized negacyclic systems leave 1,912 low-SH fibres, and an exhaustive support-constrained periodic join of 952 groups finds `Qpass=0` (clean run `41855726843`); only the five central K34 splits remain.
 
 The latest complete records are:
 
+- [`results/2026-11-04-o58-k34-two-sparse-fibre-closure.md`](results/2026-11-04-o58-k34-two-sparse-fibre-closure.md)
 - [`results/2026-11-04-o58-k34-extreme-periodic-exclusion.md`](results/2026-11-04-o58-k34-extreme-periodic-exclusion.md)
 - [`results/2026-11-04-o58-k16-extreme-splits-exact.md`](results/2026-11-04-o58-k16-extreme-splits-exact.md)
 - [`results/2026-11-01-h18-k23-complete-exclusion.md`](results/2026-11-01-h18-k23-complete-exclusion.md)
