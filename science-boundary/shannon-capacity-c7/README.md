@@ -12,6 +12,9 @@ The 134,753-point construction is a highly structured record-scale object built 
 
 ## Current state
 
+**2026-11-04 new exact result:** A nine-factor support-3 kernel has a rigorously checked fractional owner-clique dual contradiction of **1/2**, yet its full `9×9` tensor candidate set has exact **zero** raw-core prize (MILP). All **38** nearest one-factor and **15** strongest two-factor expansions also have optimal gain zero, replayed on the pinned public BPZ/Tandon data in [Actions run 41849969593](https://github.com/teddyli18000/web-ingest/actions/runs/41849969593). See [fractional-nine-charge-2026-11-04.md](results/fractional-nine-charge-2026-11-04.md) and [reproducer](code/bpz_fractional_nine_charge.py). This rules out these restricted product families, not the global problem. **No improved p004 score.** Next formulation should alter the core jointly or attack the independent five-dimensional 368-point problem, not extend the same kernel by more one/two-factor cases.
+
+
 **2026-11-04 takeover update:** The rank-3 134,753 MaxSAT tie described below is historical rather than the latest research frontier. Later work has exact net+1 radius-six closure, a global product-injection exclusion for support≤2, and the first support-three assignment obstruction whose minimal 63-factor product still has zero prize. See [`results/takeover-2026-11-04.md`](results/takeover-2026-11-04.md) for the audited current evidence, unresolved statuses, and the next distinct support-three expansion experiment.
 
 
