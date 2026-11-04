@@ -12,7 +12,7 @@ All cron expressions are stored in UTC. Human-facing times below use Asia/Singap
 | `ai-daily.yml` | recovery 09:13 / 10:13 / 11:13 / 11:37 | 3 min | Short recovery opportunities before downstream retries, plus manual backfill |
 | `github-trending.yml` | 09:31 / 10:43 / 11:55 daily | 15 min | Three retry opportunities; first valid snapshot wins |
 | `google-trending.yml` | 12:37 / 13:49 daily | 15 min | Capture SG + US + GB + HK Trending Now; second slot is retry/no-op |
-| `temp-work-cleanup.yml` | 23:17 Sunday | 3 min | Delete first-level `temp-work/` workspaces untouched by meaningful commits for more than one month |
+| `baidu-drive-auth-keepalive.yml` | 01:17 on the 2nd, monthly | 5 min | Refresh encrypted Baidu OAuth state and validate Google OAuth without running transfer workers |\n| `temp-work-cleanup.yml` | 23:17 Sunday | 3 min | Delete first-level `temp-work/` workspaces untouched by meaningful commits for more than one month |
 
 AI Daily is intentionally different from the other collectors because punctuality around an external publication time matters. Its known downstream consumer checks the mirror at 08:15 and then hourly through 12:15.
 
@@ -59,7 +59,7 @@ The full integrity suite also deliberately ignores commits whose relevant change
 
 Ephemeral credential provisioning and Google access-token refresh are wired, but the current Baidu data bridge still requires legacy Cookie APIs. `baidu-drive/oauth_state.py` implements encrypted, rotating Baidu OAuth credentials; the official OAuth share/staging/Range/cleanup API migration is still required before unattended live use. The master is the only future OAuth refresh writer; workers only read tokens. Auth files remain ephemeral, and only AES-GCM ciphertext may be persisted.
 
-`temp-work-cleanup.yml` is the durable lifecycle manager for `temp-work/`. It is API-only, writes only when stale first-level workspaces actually need deletion, and records its audit trail in the Action Step Summary instead of committing status files.
+`baidu-drive-auth-keepalive.yml` is a minimal registered recurring workflow owned by `baidu-drive/README.md`. It shares the master state lock so token rotation has a single writer. It has no transfer, staging, or Release-control responsibilities.\n\n`temp-work-cleanup.yml` is the durable lifecycle manager for `temp-work/`. It is API-only, writes only when stale first-level workspaces actually need deletion, and records its audit trail in the Action Step Summary instead of committing status files.
 
 This is a public repository, so useful Actions execution is not treated as scarce private-runner budget. Reproduction, testing, validation, probes, and intentional warm-runner holding may use Actions time when that materially improves reliability. Public visibility is the hard constraint: workflows must not expose credentials, private data, private repository content, signed URLs, sensitive environment dumps, or secret-derived material.
 
