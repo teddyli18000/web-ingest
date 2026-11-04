@@ -12,6 +12,7 @@ import subprocess
 import time
 from typing import Any, Callable
 
+import auth_provision
 import relay_control
 import relay_state
 import scheduler
@@ -275,6 +276,14 @@ def subprocess_step(record: dict[str, Any]) -> tuple[int, dict[str, Any]]:
     key = os.environ.get("BAIDU_DRIVE_STATE_KEY_FILE", "").strip()
     if not all((binary, cookie, token, key)):
         raise WorkerError("relay runtime authentication inputs are not configured")
+    try:
+        auth_provision.refresh_google_token(
+            pathlib.Path(os.environ["BAIDU_DRIVE_RCLONE_CONFIG_FILE"]),
+            pathlib.Path(token),
+            pathlib.Path(os.environ["BAIDU_DRIVE_GOOGLE_TOKEN_EXPIRY_FILE"]),
+        )
+    except auth_provision.AuthError as exc:
+        raise WorkerError("Google Drive token refresh failed") from exc
 
     base = pathlib.Path(os.environ.get("RUNNER_TEMP") or ".") / "baidu-drive-relay"
     base.mkdir(parents=True, exist_ok=True)
