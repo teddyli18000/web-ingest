@@ -55,11 +55,13 @@ def parse_bootstrap(encoded: str) -> dict:
     try:
         source = json.loads(encoded)
         result = {name: str(source[name]).strip() for name in
-                  ("client_id", "client_secret", "refresh_token")}
+                  ("client_id", "client_secret", "refresh_token", "app_root")}
     except (ValueError, TypeError, KeyError) as exc:
         raise OAuthError("invalid OAuth bootstrap") from exc
     if not all(result.values()):
         raise OAuthError("incomplete OAuth bootstrap")
+    if not result["app_root"].startswith("/apps/") or "/" in result["app_root"][6:] or ".." in result["app_root"]:
+        raise OAuthError("Baidu application root must be /apps/<app-name>")
     return result
 
 
@@ -91,11 +93,14 @@ def ensure_fresh(repo, bootstrap_json: str, state_key: str,
     stored, _ = repo.read_json(STATE_PATH, default={})
     previous = unseal(stored["sealed"], key) if stored else {}
     current = int(time.time() if now is None else now)
+    if previous and previous.get("app_root") != bootstrap["app_root"]:
+        raise OAuthError("Baidu OAuth app root changed after initial authorization")
     if previous and int(previous["expires_at"]) > current + REFRESH_MARGIN:
         return previous
     result = refresh(bootstrap["client_id"], bootstrap["client_secret"],
                      str(previous.get("refresh_token") or bootstrap["refresh_token"]),
                      opener=opener, now=current)
+    result["app_root"] = bootstrap["app_root"]
     repo.write_json(STATE_PATH, {"schema": 1, "sealed": seal(result, key)},
                     "baidu-drive: persist rotated encrypted OAuth credentials")
     return result
