@@ -23,8 +23,8 @@ Implemented:
 
 Still pending before live transfer:
 
-- populate three repository Actions Secrets with actual account credentials;
-- live cross-VM acceptance against real provider accounts.
+- migrate all Baidu scan/stage/Range/cleanup calls from Cookie to official OAuth APIs;
+- configure the final one-time OAuth Secrets and run real-provider cross-VM acceptance.
 
 Without those Secrets, accepted tasks stop at `BLOCKED_AUTH_SETUP`.
 
@@ -155,32 +155,25 @@ That revision supplies the hardened scanner/stager/state/Drive-tree/cleanup logi
 
 The pin or bridge contract must not change without passing the repository integration gate and updating this documentation.
 
-## Authentication boundary
+## Authentication: one-time authorization target
 
-The Actions workflows now call `auth_provision.py` to prepare all credentials only in the ephemeral VM. Configure exactly **three repository Actions Secrets**:
+**Final interface:** the owner authorizes Baidu Netdisk and Google Drive once. Thereafter the master refreshes credentials automatically and workers only receive short-lived access tokens. Normal expiration must not require replacing a GitHub Secret.
 
-| Secret name | Value |
+Baidu's official OAuth refresh endpoint provides both a new access token and a refresh token; the newest refresh token must win. `oauth_state.py` now implements the master-owned refresh protocol and AES-256-GCM encrypted persisted state under `state/auth/baidu-oauth.json`. File workers are readers, not competing refresh writers. The master refreshes sufficiently ahead of the maximum file-worker lifetime.
+
+Target one-time GitHub Secrets:
+
+| Name | Value |
 | --- | --- |
-| `BAIDU_DRIVE_BAIDU_COOKIES` | Baidu cookie header containing `BDUSS` and `STOKEN` |
-| `BAIDU_DRIVE_RCLONE_CONFIG` | Full rclone INI for remote `[bdm-drive]`, including `type = drive`, `scope = drive.file`, your own `client_id` / `client_secret`, and a `token` JSON with `refresh_token` |
-| `BAIDU_DRIVE_STATE_KEY` | Base64-encoded 32-byte AES key; generate once and keep unchanged while any resumable session exists |
+| `BAIDU_DRIVE_BAIDU_OAUTH` | Bootstrap JSON with `client_id`, `client_secret`, initial `refresh_token` |
+| `BAIDU_DRIVE_RCLONE_CONFIG` | Google Drive rclone remote with dedicated OAuth client and refresh token |
+| `BAIDU_DRIVE_STATE_KEY` | Base64 of one randomly generated 32-byte AES key |
 
-A key can be generated locally with `python -c "import base64,secrets; print(base64.b64encode(secrets.token_bytes(32)).decode())"`.
+Once the first Baidu refresh succeeds, all subsequent rotations use encrypted repository state rather than repeatedly using the original bootstrap refresh token. Keep the encryption key stable across VM replacements.
 
-The master fetches the **pinned rclone v1.74.4 Linux amd64** archive, verifies SHA-256 `fe435e0c36228e7c2f116a8701f01127bb1f694005fc11d1f27186c8bca4115d`, and uses it solely for Drive tree preparation. Each file worker obtains a fresh Google access token from the rclone config's refresh token and refreshes it again before further relay windows when near expiry. No token update is committed to the repo.
+**Migration boundary:** the pinned mover's share scanning/staging/cleanup and Baidu byte-range client still use web Cookie APIs. The temporary `auth_provision.py`/workflow wiring is a compatibility implementation, **not** the final zero-maintenance Baidu authentication. Before any live unattended use, switch these Baidu calls to the official OAuth share/file APIs and stage only within the application's permitted directory. This requires provider acceptance tests; an OAuth refresh token cannot authenticate the legacy Cookie endpoints.
 
-Runtime paths are provisioned as:
-
-```text
-BAIDU_DRIVE_BAIDU_AUTH_FILE
-BAIDU_DRIVE_RCLONE_CONFIG_FILE
-BAIDU_DRIVE_RCLONE_BIN          # master only
-BAIDU_DRIVE_GOOGLE_ACCESS_TOKEN_FILE  # file workers only
-BAIDU_DRIVE_GOOGLE_TOKEN_EXPIRY_FILE  # file workers only
-BAIDU_DRIVE_STATE_KEY_FILE
-```
-
-Baidu currently uses the existing authenticated Cookie protocol; expiry or a login challenge requires refreshing the Cookie Secret. Google uses OAuth refresh without interactive browser login. The Secrets and their contents must not be entered in a public Release.
+Google access-token refresh is already wired for file workers; the temporary master uses a SHA-256-pinned rclone Linux binary. The credential layer never prints secrets, and plain OAuth tokens or capability URLs must never be committed.
 
 ## Workflows
 
