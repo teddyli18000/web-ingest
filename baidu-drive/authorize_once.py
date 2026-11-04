@@ -34,17 +34,14 @@ def authorization_url(client_id: str) -> str:
 
 
 def exchange_code(client_id: str, client_secret: str, code: str) -> dict[str, str]:
-    payload = urllib.parse.urlencode({
+    params = urllib.parse.urlencode({
         "grant_type": "authorization_code",
         "code": code,
         "client_id": client_id,
         "client_secret": client_secret,
         "redirect_uri": "oob",
-    }).encode()
-    req = urllib.request.Request(
-        BAIDU_TOKEN_URL, data=payload,
-        headers={"Content-Type": "application/x-www-form-urlencoded"}, method="POST",
-    )
+    })
+    req = urllib.request.Request(BAIDU_TOKEN_URL + "?" + params, method="GET")
     try:
         with urllib.request.urlopen(req, timeout=30) as response:
             result = json.loads(response.read(65536))
