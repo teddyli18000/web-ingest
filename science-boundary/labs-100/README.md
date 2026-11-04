@@ -314,11 +314,11 @@ So any surviving odd-perfect breakthrough has `d>=6`. This hierarchy should not 
 
 ## Next steps
 
-1. **Build the exact `O=58` compressed solver** for canonical `(a,b)=(2,2)`, using the one-sparse periodic right-hand side and the ten feasible even center values `K=16,18,...,34`.
-2. Couple each periodic defect location to its required negacyclic sign `M_s=+/-1`; reuse `qmin(G)` and `SG+SH` as early exact energy filters and reconstruct every final survivor at length 100.
-3. In parallel, use `K=25` on the old odd-perfect `(18,0)` line only as a comparison frontier. If its survivor geometry is substantially worse than `O=58`, do not mechanically continue `K=27,29,...`.
-4. Continue seeking a global lower bound on `||A^2-xB^2||_2^2` or an algebraic classification of the periodic/negacyclic pair that could eliminate a whole layer at once.
-5. Re-check Few Shots/public records immediately before any record claim. If `E<=574` is found, freeze the exact sequence, independently rescore it, run the Few Shots verifier/check, create the required certificate/SHOT, and publish as authorized.
+1. **Read the completed high-overlap `O=58,K=16` central-split run** `41851120769`. The uncapped compressed producer and exact fibre-Q oracle are running on `(5,11),(7,9)` at maximal overlap; do not infer a negative result until every branch finishes with complete HIT counts. By necessary-condition symmetry, the swapped splits need not be independently scanned unless actual full-length witnesses survive.
+2. **Reassess candidate quality before scaling more edge exclusions.** `O=58,K=34` now has four rigorously excluded edge splits, and `O=58,K=16` has four excluded extreme splits, but neither route has improved the unrestricted incumbent. Test whether the central centers `K=22,24,26,28` or the next odd-energy defect layer `O=66` have higher-value feasible candidate families. Prefer joint periodic/fibre support design over multiplying the old support census.
+3. Use the validated `K34` two-sparse method as a new mechanism, **not an instruction to enumerate every larger sparse-fibre class**: its exact GF(3) ternary negacyclic census yields 1,912 low-SH fibres and its support-wise periodic join proves 0 Q passes. For `(21,13)` or later, first characterize whether low-SH support orbits expose genuinely new candidates before investing in exhaustive computation.
+4. Retain odd-perfect `(18,0),K>=25` as a comparison only; three consecutive center layers are already rigorously excluded. Seek coupled/global constraints rather than one more automatic `K` increment.
+5. Re-check Few Shots/public records immediately before a record claim. Any `E<=574` candidate requires independent full LABS rescoring, the Few Shots verifier, the required certificate/SHOT and authorized publication.
 
 ## Durable artifacts
 
@@ -347,4 +347,5 @@ So any surviving odd-perfect breakthrough has `d>=6`. This hierarchy should not 
 - **2026-10-29:** Proved exact N100 near-skew optimum 578; excluded endpoint defects 1 through 5; derived the global parity-polynomial factorization and norm identity; developed the order-25 compression program and closed W127.
 - **2026-10-30:** Repaired affine-fibre coverage rigor; exactly closed the remaining low11 W129/W131 branches; derived and regression-tested the periodic/negacyclic fibre split; began the `(18,0)` center-layer program.
 - **2026-10-31:** Completely excluded `(18,0)` `K=19` and `K=21` through `E<=570`, including direct final rescoring of all Q-level fibre survivors; generalized the compressed solver and moved to `K=23`.
+- **2026-11-04:** In the first non-odd-perfect O58 layer, closed four K16 extreme norm splits by uncapped compressed/fibre Q enumeration and four K34 edge norm splits by two independent exact pipelines: a 4,113-support-orbit periodic spectrum proof and a 240-system ternary-fibre plus 952-support-group periodic join. Clean Actions runs 41719753889, 41853593511 and 41855726843 verify the frozen counts. K16 central high-overlap Action remains running; best unrestricted E remains 578.
 - **2026-11-01:** Exactly closed the full `(18,0),K=23` layer, including independent sharded final witness rescoring of all lower-split Q survivors. Reassessed the search space and derived the first non-odd-perfect layer `O=58` as a one-sparse coupled periodic/negacyclic defect problem with canonical half sums `(2,2)`.
