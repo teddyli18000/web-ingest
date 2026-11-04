@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-11-02** | **690** | **690** | **690** | **690** | **689** |
+| **2024-11-28** | **2026-11-04** | **691** | **691** | **691** | **691** | **690** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 196 |
+| `google_trending_now` | 200 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-11-02
+### Latest SG snapshot — 2026-11-04
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | boat noodles | 2000+ |
-| 2 | singapore money laundering seized properties auction | 2000+ |
-| 3 | snake | 2000+ |
-| 4 | learjet | 5000+ |
-| 5 | changi airport self service issue | 2000+ |
-| 6 | thomas ong japan ankle fracture | 1000+ |
-| 7 | beverage container return scheme | 1000+ |
-| 8 | kimi antonelli | 5000+ |
-| 9 | george russell | 500+ |
-| 10 | singapore airlines new cabin seats 2026 | 1000+ |
+| 1 | democratic party | 20000+ |
+| 2 | baey yam keng | 10000+ |
+| 3 | us election results | 10000+ |
+| 4 | abdul el-sayed | 10000+ |
+| 5 | midterm elections 2026 | 5000+ |
+| 6 | hdb bto nov 2026 | 5000+ |
+| 7 | sungei bedok mrt | 2000+ |
+| 8 | republican party | 2000+ |
+| 9 | goh boon kang singapore driving ban | 1000+ |
+| 10 | james talarico | 5000+ |
 
-### Latest US snapshot — 2026-11-02
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | jack campbell | 1000000+ |
-| 2 | learjet 60 | 1000000+ |
-| 3 | eagles vs commanders | 1000000+ |
-| 4 | cardinals vs cowboys | 1000000+ |
-| 5 | patriots vs dolphins | 500000+ |
-| 6 | browns vs steelers | 500000+ |
-| 7 | raiders vs jets | 200000+ |
-| 8 | clippers vs warriors | 200000+ |
-| 9 | chris murphy | 200000+ |
-| 10 | jason turkish | 200000+ |
-
-### Latest GB snapshot — 2026-11-02
+### Latest US snapshot — 2026-11-04
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | florida plane crash | 50000+ |
-| 2 | million pound shot | 20000+ |
-| 3 | haley stevens | 20000+ |
-| 4 | liverpool f.c. vs arsenal f.c. standings | 200000+ |
-| 5 | uk immigration rules | 5000+ |
-| 6 | martha stewart | 5000+ |
-| 7 | john leeson | 5000+ |
-| 8 | mexico gp results | 100000+ |
-| 9 | karl bushby | 5000+ |
-| 10 | lenny kravitz | 5000+ |
+| 1 | 2026 us election results | 10000000+ |
+| 2 | michigan election results | 2000000+ |
+| 3 | alaska senate race | 1000000+ |
+| 4 | texas voting results | 1000000+ |
+| 5 | mississippi senate race | 500000+ |
+| 6 | did abdul el sayed win | 1000000+ |
+| 7 | ohio governor race | 1000000+ |
+| 8 | ohio election results | 200000+ |
+| 9 | texas governor | 500000+ |
+| 10 | resultados de las elecciones de 2026 en estados unidos | 500000+ |
 
-### Latest HK snapshot — 2026-11-02
+### Latest GB snapshot — 2026-11-04
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | 明天的天氣 | 2000+ |
-| 2 | 李影 | 2000+ |
-| 3 | 诈骗 | 2000+ |
-| 4 | kimi antonelli | 5000+ |
-| 5 | weather tomorrow | 1000+ |
-| 6 | 黃智雯 | 1000+ |
-| 7 | 滙豐 | 500+ |
-| 8 | 佳 宝 食品 超級 市場 | 500+ |
-| 9 | 邱達根 | 200+ |
-| 10 | venus williams | 200+ |
+| 1 | man utd vs roma | 500000+ |
+| 2 | democratic party | 200000+ |
+| 3 | barcelona vs aston villa | 100000+ |
+| 4 | john frieda | 20000+ |
+| 5 | james talarico | 20000+ |
+| 6 | why is this morning not live today | 20000+ |
+| 7 | mississippi senate race | 20000+ |
+| 8 | torsten bell pension plans | 10000+ |
+| 9 | abdul el sayed | 20000+ |
+| 10 | nationwide | 20000+ |
 
-[Open full snapshot →](data/2026/11/02/trending.json)
+### Latest HK snapshot — 2026-11-04
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | us midterm elections | 20000+ |
+| 2 | 美國中期選舉結果 | 5000+ |
+| 3 | 周潤發 | 2000+ |
+| 4 | 長者日 | 2000+ |
+| 5 | 施 明 | 5000+ |
+| 6 | 劉彩玉 | 2000+ |
+| 7 | 再婚皇后 | 1000+ |
+| 8 | 羅鈞滿 | 500+ |
+| 9 | james talarico | 1000+ |
+| 10 | abdul el-sayed | 1000+ |
+
+[Open full snapshot →](data/2026/11/04/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 292 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 293 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
