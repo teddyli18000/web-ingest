@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/teddyli18000/baidu-drive-mover/internal/app"
+	"github.com/teddyli18000/baidu-drive-mover/internal/baidu"
 	cleanupengine "github.com/teddyli18000/baidu-drive-mover/internal/cleanup"
 	"github.com/teddyli18000/baidu-drive-mover/internal/drive"
 	"github.com/teddyli18000/baidu-drive-mover/internal/drive/rclone"
