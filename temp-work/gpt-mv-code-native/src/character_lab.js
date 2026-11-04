@@ -16,7 +16,7 @@ const plate=await loadGPTBustPlate();
 rect(0,0,W,H,'#d8d0c5');
 const glow=g.createRadialGradient(1480,180,40,1480,180,660);glow.addColorStop(0,'rgba(232,185,40,.16)');glow.addColorStop(1,'rgba(232,185,40,0)');g.fillStyle=glow;g.fillRect(0,0,W,H);
 text('GPT / CHARACTER PLATE LAB',62,66,23,{color:INK,weight:700,alpha:.62});
-text('bust-colour-v3 · transparent master · no scene pixels',62,101,18,{color:INK2,alpha:.38});
+text('bust-colour-v3 · cutout candidate · edge QA pending',62,101,18,{color:INK2,alpha:.38});
 line(62,124,760,124,BLUE,5,.60);
 
 panel(58,155,855,380);cropMarks(58,155,855,380);heading(90,198,'01 / RAW PRINT','paper field · intended working scale');
@@ -45,14 +45,43 @@ function inspectAlpha(img){
   const pixels=cg.getImageData(0,0,c.width,c.height).data;
   let transparent=0,opaque=0,partial=0;
   let left=c.width,top=c.height,right=0,bottom=0;
-  for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){
-    const a=pixels[(y*c.width+x)*4+3];
-    if(a===0)transparent++;
-    else if(a===255)opaque++;
-    else partial++;
-    if(a>16){left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x+1);bottom=Math.max(bottom,y+1);}
+  let fullWidthRows=0;
+  const fullWidthRowExamples=[];
+  let topVisible=0,bottomVisible=0;
+  for(let y=0;y<c.height;y++){
+    let rowVisible=0;
+    for(let x=0;x<c.width;x++){
+      const a=pixels[(y*c.width+x)*4+3];
+      if(a===0)transparent++;
+      else if(a===255)opaque++;
+      else partial++;
+      if(a>16){
+        rowVisible++;
+        left=Math.min(left,x);top=Math.min(top,y);
+        right=Math.max(right,x+1);bottom=Math.max(bottom,y+1);
+      }
+    }
+    if(y===0)topVisible=rowVisible;
+    if(y===c.height-1)bottomVisible=rowVisible;
+    if(rowVisible>=c.width*.96){
+      fullWidthRows++;
+      if(fullWidthRowExamples.length<12)fullWidthRowExamples.push(y);
+    }
   }
-  return {width:c.width,height:c.height,transparent,opaque,partial,bounds:[left,top,right,bottom]};
+  const alphaAt=(x,y)=>pixels[(y*c.width+x)*4+3];
+  const corners={
+    topLeft:alphaAt(0,0),topRight:alphaAt(c.width-1,0),
+    bottomLeft:alphaAt(0,c.height-1),bottomRight:alphaAt(c.width-1,c.height-1),
+  };
+  const edge={
+    topCoverage:topVisible/c.width,bottomCoverage:bottomVisible/c.width,
+    fullWidthRows,fullWidthRowExamples,corners,
+  };
+  // Full-width opaque rows are background remnants, not a character silhouette.
+  const edgeLeakLikely=fullWidthRows>12||
+    edge.topCoverage>.8||edge.bottomCoverage>.8||
+    Object.values(corners).filter(a=>a>16).length>=3;
+  return {width:c.width,height:c.height,transparent,opaque,partial,bounds:[left,top,right,bottom],edge,edgeLeakLikely};
 }
 window.GPT_ART_ALPHA=inspectAlpha(plate.img);
 
