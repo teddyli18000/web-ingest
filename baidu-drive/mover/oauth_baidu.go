@@ -280,7 +280,15 @@ func (o *oauthBaidu) OpenDownloadRange(ctx context.Context,virtual string,start,
  } `json:"list"`}
  if err:=o.call(ctx,"GET","/rest/2.0/xpan/multimedia",query,nil,&meta);err!=nil{return nil,err}
  if len(meta.List)!=1||meta.List[0].FsID!=id||meta.List[0].Dlink==""{return nil,fmt.Errorf("invalid Baidu download metadata")}
- link,err:=url.Parse(meta.List[0].Dlink);if err!=nil||link.Scheme!="https"{return nil,fmt.Errorf("invalid Baidu download URL")}
+ link,err:=url.Parse(meta.List[0].Dlink)
+ if err!=nil || link.Scheme!="https" || link.User!=nil {return nil,fmt.Errorf("invalid Baidu download URL")}
+ host:=strings.ToLower(link.Hostname())
+ trusted:=host=="baidu.com" || strings.HasSuffix(host,".baidu.com") || host=="baidupcs.com" || strings.HasSuffix(host,".baidupcs.com")
+ if o.baseURL!="https://pan.baidu.com" {
+  testBase,parseErr:=url.Parse(o.baseURL)
+  trusted=trusted || (parseErr==nil && host==strings.ToLower(testBase.Hostname()))
+ }
+ if !trusted{return nil,fmt.Errorf("Baidu download URL was not a trusted provider host")}
  values:=link.Query();values.Set("access_token",o.token);link.RawQuery=values.Encode()
  req,err:=http.NewRequestWithContext(ctx,"GET",link.String(),nil);if err!=nil{return nil,fmt.Errorf("invalid Baidu range download request")}
  req.Header.Set("User-Agent","pan.baidu.com")
