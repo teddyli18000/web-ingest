@@ -1,24 +1,19 @@
 const SOURCE={
-  name:'gpt-bust-print-v2', prefix:'bust_plate.b64.', chunks:4,
-  sha:'7220862191e495dccfae7a917f2d65713c4b6b7e8dcd06c68cf7f2d79e822e0a',
-  width:550, height:640,
+  name:'gpt-bust-color-v3',
+  url:'/assets/gpt/bust_v3.webp',
+  sha:'76164bf82a81c67b9efb795033e71972a6c8512d1fa73370026736028dd6b0eb',
+  width:550,height:640,
 };
 
 async function loadImage(){
-  const parts=await Promise.all(Array.from({length:SOURCE.chunks},async(_,i)=>{
-    const r=await fetch(`/assets/gpt/${SOURCE.prefix}${i}`,{cache:'no-store'});
-    if(!r.ok)throw new Error(`bust plate chunk ${i} HTTP ${r.status}`);
-    return (await r.text()).trim();
-  }));
-  const b64=parts.join('');
-  const raw=atob(b64),bytes=new Uint8Array(raw.length);
-  for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
-  const digest=await crypto.subtle.digest('SHA-256',bytes);
-  const sha=[...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
-  if(sha!==SOURCE.sha)throw new Error(`bust plate sha mismatch: ${sha}`);
-  const img=new Image(); img.src=`data:image/webp;base64,${b64}`; await img.decode();
+  const raw=await fetch(SOURCE.url,{cache:'no-store'}).then(r=>r.arrayBuffer());
+  const hash=await crypto.subtle.digest('SHA-256',raw);
+  const sha=[...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  if(sha!==SOURCE.sha)throw new Error('bust plate sha mismatch: '+sha);
+  const url=URL.createObjectURL(new Blob([raw],{type:'image/webp'}));
+  const img=new Image();img.src=url;await img.decode();URL.revokeObjectURL(url);
   if(img.naturalWidth!==SOURCE.width||img.naturalHeight!==SOURCE.height){
-    throw new Error(`bust plate size ${img.naturalWidth}x${img.naturalHeight}`);
+    throw new Error('bust plate dimension mismatch');
   }
   return img;
 }
