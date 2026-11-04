@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Provision ephemeral credentials for Baidu -> Drive Actions workers."""
+"""Prepare ephemeral OAuth and Drive credentials for the Actions data plane."""
 from __future__ import annotations
 
 import argparse
@@ -16,13 +16,15 @@ import urllib.parse
 import urllib.request
 import zipfile
 
+import controller
+import oauth_state
+
 RCLONE_ARCHIVE = "rclone-v1.74.4-linux-amd64.zip"
 RCLONE_SHA256 = "fe435e0c36228e7c2f116a8701f01127bb1f694005fc11d1f27186c8bca4115d"
 RCLONE_URL = "https://downloads.rclone.org/v1.74.4/" + RCLONE_ARCHIVE
 RCLONE_MEMBER = "rclone-v1.74.4-linux-amd64/rclone"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 REMOTE_NAME = "bdm-drive"
-REQUIRED_SECRETS = ("BAIDU_DRIVE_BAIDU_COOKIES", "BAIDU_DRIVE_RCLONE_CONFIG", "BAIDU_DRIVE_STATE_KEY")
 REFRESH_MARGIN_SECONDS = 300
 
 
@@ -30,27 +32,19 @@ class AuthError(RuntimeError):
     pass
 
 
-def validate_profile(cookie: str, config_text: str, state_key: str) -> configparser.SectionProxy:
-    parts = dict(item.strip().split("=", 1) for item in cookie.split(";") if "=" in item)
-    if not parts.get("BDUSS") or not parts.get("STOKEN"):
-        raise AuthError("Baidu login cookies are incomplete")
-    try:
-        decoded = base64.b64decode(state_key.strip() + "=" * (-len(state_key.strip()) % 4), validate=True)
-    except ValueError as exc:
-        raise AuthError("invalid relay encryption key") from exc
-    if len(decoded) != 32:
-        raise AuthError("relay encryption key must be 32 bytes")
+def validate_google(config_text: str, state_key: str) -> configparser.SectionProxy:
+    oauth_state.key_bytes(state_key)
     parser = configparser.ConfigParser(interpolation=None)
     try:
         parser.read_string(config_text)
         remote = parser[REMOTE_NAME]
         token = json.loads(remote["token"])
     except (configparser.Error, KeyError, ValueError) as exc:
-        raise AuthError("invalid Google rclone configuration") from exc
+        raise AuthError("invalid Google Drive rclone configuration") from exc
     if remote.get("type") != "drive" or remote.get("scope") != "drive.file":
-        raise AuthError("Google remote must use the drive.file scope")
+        raise AuthError("Google Drive remote must use the drive.file scope")
     if not remote.get("client_id") or not token.get("refresh_token"):
-        raise AuthError("Google remote requires its own OAuth client and refresh token")
+        raise AuthError("Google Drive remote requires a dedicated OAuth client and refresh token")
     return remote
 
 
@@ -59,7 +53,7 @@ def write_private(path: Path, value: str) -> None:
         handle.write(value)
 
 
-def export_paths(paths: dict[str, Path]) -> None:
+def export_paths(paths: dict[str, str | Path]) -> None:
     output = Path(os.environ["GITHUB_ENV"])
     with output.open("a", encoding="utf-8") as handle:
         for key, value in paths.items():
@@ -71,23 +65,20 @@ def refresh_google_token(config_path: Path, token_path: Path, freshness_path: Pa
         expiry = float(freshness_path.read_text(encoding="utf-8"))
         if time.time() + REFRESH_MARGIN_SECONDS < expiry:
             return
-    config_text = config_path.read_text(encoding="utf-8")
     parser = configparser.ConfigParser(interpolation=None)
-    parser.read_string(config_text)
+    parser.read_string(config_path.read_text(encoding="utf-8"))
     remote = parser[REMOTE_NAME]
-    refresh_token = json.loads(remote["token"])["refresh_token"]
+    original = json.loads(remote["token"])["refresh_token"]
     body = {
         "client_id": remote["client_id"],
-        "refresh_token": refresh_token,
+        "refresh_token": original,
         "grant_type": "refresh_token",
     }
     if remote.get("client_secret"):
         body["client_secret"] = remote["client_secret"]
     request = urllib.request.Request(
-        GOOGLE_TOKEN_URL,
-        data=urllib.parse.urlencode(body).encode("utf-8"),
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-        method="POST",
+        GOOGLE_TOKEN_URL, data=urllib.parse.urlencode(body).encode("utf-8"),
+        headers={"Content-Type": "application/x-www-form-urlencoded"}, method="POST",
     )
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
@@ -120,22 +111,30 @@ def install_rclone(destination: Path) -> None:
 
 
 def provision(mode: str) -> bool:
-    values = [os.environ.get(name, "") for name in REQUIRED_SECRETS]
-    if any(not value.strip() for value in values):
+    config_text = os.environ.get("BAIDU_DRIVE_RCLONE_CONFIG", "")
+    state_key = os.environ.get("BAIDU_DRIVE_STATE_KEY", "")
+    bootstrap = os.environ.get("BAIDU_DRIVE_BAIDU_OAUTH", "")
+    if not config_text.strip() or not state_key.strip() or (mode == "prepare" and not bootstrap.strip()):
         return False
-    cookie, config_text, state_key = values
-    validate_profile(cookie, config_text, state_key)
+    validate_google(config_text, state_key)
+    gh = controller.GitHub(os.environ["GITHUB_REPOSITORY"], os.environ["GITHUB_TOKEN"])
+    if mode == "prepare":
+        auth = oauth_state.ensure_fresh(gh, bootstrap, state_key)
+    elif mode == "relay":
+        auth = oauth_state.read_fresh(gh, state_key)
+    else:
+        raise AuthError("unknown provisioning mode")
     base = Path(os.environ["RUNNER_TEMP"]) / "baidu-drive-auth"
     base.mkdir(mode=0o700, parents=True, exist_ok=True)
-    cookie_path = base / "baidu.cookies"
+    baidu_path = base / "baidu.access-token"
     config_path = base / "rclone.conf"
     key_path = base / "state.key"
-    write_private(cookie_path, cookie.strip())
+    write_private(baidu_path, str(auth["access_token"]))
     write_private(config_path, config_text)
     write_private(key_path, state_key.strip())
-
-    paths = {
-        "BAIDU_DRIVE_BAIDU_AUTH_FILE": cookie_path,
+    paths: dict[str, str | Path] = {
+        "BAIDU_DRIVE_BAIDU_OAUTH_TOKEN_FILE": baidu_path,
+        "BAIDU_DRIVE_BAIDU_APP_ROOT": str(auth["app_root"]),
         "BAIDU_DRIVE_RCLONE_CONFIG_FILE": config_path,
         "BAIDU_DRIVE_STATE_KEY_FILE": key_path,
     }
@@ -143,14 +142,12 @@ def provision(mode: str) -> bool:
         rclone_path = base / "rclone"
         install_rclone(rclone_path)
         paths["BAIDU_DRIVE_RCLONE_BIN"] = rclone_path
-    elif mode == "relay":
-        token_path = base / "google.access-token"
-        freshness_path = base / "google.token-expiry"
-        refresh_google_token(config_path, token_path, freshness_path)
-        paths["BAIDU_DRIVE_GOOGLE_ACCESS_TOKEN_FILE"] = token_path
-        paths["BAIDU_DRIVE_GOOGLE_TOKEN_EXPIRY_FILE"] = freshness_path
     else:
-        raise AuthError("unknown provisioning mode")
+        token_path = base / "google.access-token"
+        expiry_path = base / "google.token-expiry"
+        refresh_google_token(config_path, token_path, expiry_path)
+        paths["BAIDU_DRIVE_GOOGLE_ACCESS_TOKEN_FILE"] = token_path
+        paths["BAIDU_DRIVE_GOOGLE_TOKEN_EXPIRY_FILE"] = expiry_path
     export_paths(paths)
     return True
 
@@ -161,13 +158,11 @@ def main() -> int:
     args = parser.parse_args()
     try:
         configured = provision(args.mode)
-    except AuthError:
-        print("Baidu Drive authentication provisioning failed.")
+    except (AuthError, oauth_state.OAuthError):
+        print("Baidu Drive OAuth provisioning failed.")
         return 1
-    if not configured:
-        print("Baidu Drive authentication inputs are not configured.")
-    else:
-        print("Baidu Drive ephemeral authentication inputs prepared.")
+    print("Baidu Drive ephemeral OAuth files ready." if configured
+          else "Baidu Drive OAuth Secrets not configured.")
     return 0
 
 
