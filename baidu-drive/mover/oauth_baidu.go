@@ -139,7 +139,7 @@ func (o *oauthBaidu) Scan(ctx context.Context,taskID string,link baidu.ShareLink
    response,err:=o.sharePage(ctx,link,folder.fsid,folder.root,page);if err!=nil{return err}
    dirs:=[]manifest.Directory{};files:=[]manifest.File{}
    for _,item:=range response.List {
-    if item.Name==""||item.Name=="."||item.Name==".."||strings.ContainsAny(item.Name,"/\\\\x00")||item.Size<0||item.FsID<=0{return fmt.Errorf("unsafe Baidu share item")}
+    if item.Name==""||item.Name=="."||item.Name==".."||strings.ContainsAny(item.Name,"/")||strings.ContainsRune(item.Name,92)||strings.ContainsRune(item.Name,0)||item.Size<0||item.FsID<=0{return fmt.Errorf("unsafe Baidu share item")}
     logical:=path.Join(folder.logical,item.Name)
     if !strings.HasPrefix(logical,"/"){logical="/"+logical}
     source:=item.Path
