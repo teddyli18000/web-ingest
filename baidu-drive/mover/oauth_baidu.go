@@ -66,10 +66,10 @@ func (o *oauthBaidu) call(ctx context.Context,method,endpoint string,query,form 
  if form!=nil {body=strings.NewReader(form.Encode())}
  requestCtx,cancel:=context.WithTimeout(ctx,45*time.Second)
  defer cancel()
- req,err:=http.NewRequestWithContext(requestCtx,method,u.String(),body);if err!=nil{return err}
+ req,err:=http.NewRequestWithContext(requestCtx,method,u.String(),body);if err!=nil{return fmt.Errorf("invalid Baidu OAuth API request")}
  req.Header.Set("User-Agent","BaiduDriveMover/1.0 pan.baidu.com")
  if form!=nil {req.Header.Set("Content-Type","application/x-www-form-urlencoded")}
- resp,err:=o.client.Do(req);if err!=nil{return fmt.Errorf("Baidu OAuth API connection failed: %w",err)}
+ resp,err:=o.client.Do(req);if err!=nil{return fmt.Errorf("Baidu OAuth API connection failed")}
  defer resp.Body.Close()
  if resp.StatusCode==http.StatusUnauthorized||resp.StatusCode==http.StatusForbidden{return baidu.ErrAuthRequired}
  if resp.StatusCode<200||resp.StatusCode>=300{return fmt.Errorf("Baidu OAuth API returned HTTP %d",resp.StatusCode)}
@@ -282,7 +282,7 @@ func (o *oauthBaidu) OpenDownloadRange(ctx context.Context,virtual string,start,
  if len(meta.List)!=1||meta.List[0].FsID!=id||meta.List[0].Dlink==""{return nil,fmt.Errorf("invalid Baidu download metadata")}
  link,err:=url.Parse(meta.List[0].Dlink);if err!=nil||link.Scheme!="https"{return nil,fmt.Errorf("invalid Baidu download URL")}
  values:=link.Query();values.Set("access_token",o.token);link.RawQuery=values.Encode()
- req,err:=http.NewRequestWithContext(ctx,"GET",link.String(),nil);if err!=nil{return nil,err}
+ req,err:=http.NewRequestWithContext(ctx,"GET",link.String(),nil);if err!=nil{return nil,fmt.Errorf("invalid Baidu range download request")}
  req.Header.Set("User-Agent","pan.baidu.com")
  req.Header.Set("Range",fmt.Sprintf("bytes=%d-%d",start,end))
  resp,err:=o.client.Do(req);if err!=nil{return nil,fmt.Errorf("Baidu range stream failed")}
