@@ -228,11 +228,41 @@ func (o *oauthBaidu) TransferFiles(ctx context.Context,link baidu.ShareLink,_ ba
   if _,err:=o.sharePage(ctx,link,0,true,1);err!=nil{return err}
  }
  if o.shareID==""||o.shareUK==""{return fmt.Errorf("share listing did not return share ID and owner UK")}
+ var account struct {UK int64 `json:"uk"`}
+ if err:=o.call(ctx,"GET","/rest/2.0/xpan/nas",url.Values{"method":{"uinfo"}},nil,&account);err!=nil{return err}
+ if account.UK==0{return fmt.Errorf("Baidu OAuth account did not return UK")}
+ if strconv.FormatInt(account.UK,10)==o.shareUK{
+  return o.copyOwnSharedFiles(ctx,link,ids,actual)
+ }
  idsJSON,_:=json.Marshal(ids)
  form:=url.Values{"fsidlist":{string(idsJSON)},"path":{actual}}
  if o.sekey!=""{form.Set("sekey",o.sekey)}
  query:=url.Values{"method":{"transfer"},"shareid":{o.shareID},"from":{o.shareUK}}
  return o.call(ctx,"POST","/rest/2.0/xpan/share",query,form,nil)
+}
+
+type oauthOwnedSources struct {requested map[string]bool; found map[string]manifest.File}
+func (r *oauthOwnedSources) UpsertManifestPage(_ context.Context,_ string,_ []manifest.Directory,files []manifest.File)error{
+ for _,file:=range files {if r.requested[file.SourceID] {r.found[file.SourceID]=file}}
+ return nil
+}
+func (o *oauthBaidu) copyOwnSharedFiles(ctx context.Context,link baidu.ShareLink,ids []int64,dest string)error{
+ if len(ids)>100 {return &baidu.TransferLimitError{Target:len(ids),Limit:100}}
+ receiver:=&oauthOwnedSources{requested:map[string]bool{},found:map[string]manifest.File{}}
+ for _,id:=range ids {receiver.requested[strconv.FormatInt(id,10)]=true}
+ if err:=o.Scan(ctx,"own-share-resolution",link,baidu.ShareContext{},receiver);err!=nil{return err}
+ items:=make([]map[string]string,0,len(ids))
+ for _,id:=range ids{
+  file,found:=receiver.found[strconv.FormatInt(id,10)]
+  if !found || !strings.HasPrefix(file.SourcePath,"/") || path.Clean(file.SourcePath)!=file.SourcePath {
+   return fmt.Errorf("owned Baidu share source could not be resolved safely")
+  }
+  items=append(items,map[string]string{"path":file.SourcePath,"dest":dest,"newname":file.Name,"ondup":"fail"})
+ }
+ body,_:=json.Marshal(items)
+ form:=url.Values{"async":{"0"},"ondup":{"fail"},"filelist":{string(body)}}
+ query:=url.Values{"method":{"filemanager"},"opera":{"copy"}}
+ return o.call(ctx,"POST","/rest/2.0/xpan/file",query,form,nil)
 }
 func (o *oauthBaidu) OpenDownloadRange(ctx context.Context,virtual string,start,end int64)(*baidu.DownloadStream,error){
  actual,err:=o.physical(virtual);if err!=nil{return nil,err}
