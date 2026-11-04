@@ -46,7 +46,15 @@ def prepare_binary() -> Path | None:
 
 def prepare_ready() -> bool:
     binary = prepare_binary()
-    return legacy_worker.auth_ready() and binary is not None and binary.is_file()
+    oauth = os.environ.get("BAIDU_DRIVE_BAIDU_OAUTH_TOKEN_FILE", "")
+    config = os.environ.get("BAIDU_DRIVE_RCLONE_CONFIG_FILE", "")
+    rclone = os.environ.get("BAIDU_DRIVE_RCLONE_BIN", "")
+    root = os.environ.get("BAIDU_DRIVE_BAIDU_APP_ROOT", "")
+    return (
+        binary is not None and binary.is_file()
+        and all(Path(item).is_file() for item in (oauth, config, rclone) if item)
+        and all((oauth, config, rclone, root))
+    )
 
 
 def parse_json_file(path: Path, default: Any) -> Any:
@@ -73,13 +81,15 @@ def prepare_command(
     manifest_path: Path,
     verified_path: Path,
 ) -> list[str]:
-    baidu_auth, rclone_config, rclone_bin = legacy_worker.auth_inputs()
-    assert baidu_auth is not None and rclone_config is not None and rclone_bin is not None
+    baidu_auth = Path(os.environ["BAIDU_DRIVE_BAIDU_OAUTH_TOKEN_FILE"])
+    rclone_config = Path(os.environ["BAIDU_DRIVE_RCLONE_CONFIG_FILE"])
+    rclone_bin = Path(os.environ["BAIDU_DRIVE_RCLONE_BIN"])
     command = [
         str(binary),
         "--runtime-base", str(work / "runtime"),
         "--state-db", str(checkpoint),
-        "--baidu-cookie-file", str(baidu_auth),
+        "--baidu-access-token-file", str(baidu_auth),
+        "--baidu-app-root", os.environ["BAIDU_DRIVE_BAIDU_APP_ROOT"],
         "--rclone-config-file", str(rclone_config),
         "--rclone-bin", str(rclone_bin),
         "--result-json", str(result_path),
