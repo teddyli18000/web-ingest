@@ -92,7 +92,7 @@ def project_n960(x, label, live, outdir, tag, maxiter):
     if energy < live - 2e-7:
         path = outdir / (tag + '-del' + str(label) + '-CANDIDATE.json')
         path.write_text(json.dumps({'energy': energy, 'points': y.tolist(),
-                                    'source': tag, 'delete_index': label}) + '\\n')
+                                    'source': tag, 'delete_index': label}) + '\n')
         row['candidate_file'] = path.name
     return row
 
@@ -190,14 +190,14 @@ def main():
         (outdir / 'branch.json').write_text(json.dumps({
             'zero_label': args.zero_label, 'baseline_energy': e0,
             'baseline_gradient_rms': r0, 'last_accepted_s': s0, 'rows': rows
-        }, separators=(',',':')) + '\\n')
+        }, separators=(',',':')) + '\n')
 
     output = {'zero_label': args.zero_label, 'baseline_energy': e0,
               'baseline_gradient_rms': r0, 'last_accepted_s': s0,
               'requested_steps': args.steps, 'gradient_tolerance': args.gradient_tol,
               'method': 'fixed-occupancy implicit saddle continuation by complex-step HVP Newton-MINRES',
               'rows': rows}
-    (outdir / 'branch.json').write_text(json.dumps(output, separators=(',', ':')) + '\\n')
+    (outdir / 'branch.json').write_text(json.dumps(output, separators=(',', ':')) + '\n')
     print('DONE',args.zero_label,'accepted_s',s0,'states',
           len([r for r in rows if r.get('status') == 'index_one']),flush=True)
 
