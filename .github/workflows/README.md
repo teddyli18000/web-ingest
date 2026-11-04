@@ -57,7 +57,7 @@ The full integrity suite also deliberately ignores commits whose relevant change
 
 `baidu-drive-file-worker.yml` is the data plane. Each run owns one persisted task/file lease and has a task+file concurrency key, so independent files may transfer concurrently while one Drive file never has two active writers. Its Go relay streams exact Baidu ranges into Drive resumable PUTs, checkpoints Drive-confirmed offsets plus streamed-MD5 state, seals session URIs, reconciles expired sessions before replay, and handles zero-byte files with a small idempotent create/adopt branch. File workers do not write the global SQLite checkpoint.
 
-Authentication provisioning remains intentionally absent. Both Baidu Drive paths fail closed until the owner chooses the final OAuth/secret layout. Auth files must remain ephemeral runner files and must never be committed or uploaded as artifacts.
+Ephemeral credential provisioning and Google access-token refresh are wired, but the current Baidu data bridge still requires legacy Cookie APIs. `baidu-drive/oauth_state.py` implements encrypted, rotating Baidu OAuth credentials; the official OAuth share/staging/Range/cleanup API migration is still required before unattended live use. The master is the only future OAuth refresh writer; workers only read tokens. Auth files remain ephemeral, and only AES-GCM ciphertext may be persisted.
 
 `temp-work-cleanup.yml` is the durable lifecycle manager for `temp-work/`. It is API-only, writes only when stale first-level workspaces actually need deletion, and records its audit trail in the Action Step Summary instead of committing status files.
 
