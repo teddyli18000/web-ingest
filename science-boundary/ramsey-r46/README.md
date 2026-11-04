@@ -8,6 +8,9 @@ This directory is the durable research workspace for Few Shots `p003-ramsey-r46`
 
 ## Current state
 
+**Latest exact progress (2026-11-04):** The m=220, n11=6 **seq3 is now fully excluded** by a short post-audit extreme B88 packing / high-subgraph capacity contradiction. Independent Python and C++ bitset verifiers agree (170 -> 10 -> 0 class matrices); see \`m220_n11_6_seq3_high_packing_verify.py\`, \`m220_n11_6_seq3_independent.cpp\`, \`results/m220-n11-6-seq3-high-packing-post-audit.json\`, and \`notes/m220-seq3-high-packing-2026-11-04.md\`. **Only seq1 and seq2 remain within the six-degree-11-vertex layer**; other m=220 layers remain open and there is no 36-vertex certificate.
+
+
 **Latest exact progress (2026-11-04):** m=220, n11=6 **seq5 is now fully excluded**, independently of the withdrawn row-domain CSP. The complete B88 low-set packing bound forces each extreme d13 vertex to have exactly one d14 neighbor, contradicting all 84 class-edge matrices (smallest gap 1). See `m220_n11_6_seq5_extreme_packing_verify.py`, `m220_n11_6_seq5_independent.cpp`, `results/m220-n11-6-seq5-extreme-packing-post-audit.json`, and `notes/m220-seq5-extreme-packing-2026-11-04.md`. **Only seq1, seq2, seq3 remain within the n11=6 layer.** Other m=220 layers remain open; there is no 36-vertex witness.
 
 
