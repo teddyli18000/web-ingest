@@ -1,0 +1,48 @@
+{
+  "campaign": "m220-n11-6-seq4-high-exact-post-audit",
+  "scope": "36 vertices, 220 edges, degree sequence 11^6 12^18 13^11 15",
+  "upstream_class_patterns": 4,
+  "distinct_high_cases": 3,
+  "patterns": [
+    {
+      "e13_13": 29,
+      "e13_15": 8,
+      "T_isomorphism_types": 3,
+      "degree_feasible_labelled": 770466,
+      "K4_alpha3_feasible": 13647,
+      "B88_extreme_pair_compatible": 0,
+      "excluded_class_patterns": 1
+    },
+    {
+      "e13_13": 30,
+      "e13_15": 8,
+      "T_isomorphism_types": 3,
+      "degree_feasible_labelled": 125628,
+      "K4_alpha3_feasible": 708,
+      "B88_extreme_pair_compatible": 0,
+      "excluded_class_patterns": 2
+    },
+    {
+      "e13_13": 31,
+      "e13_15": 7,
+      "T_isomorphism_types": 9,
+      "degree_feasible_labelled": 15577688,
+      "K4_alpha3_feasible": 2256,
+      "B88_extreme_pair_compatible": 0,
+      "excluded_class_patterns": 1
+    }
+  ],
+  "total_degree_feasible_labelled": 16473782,
+  "total_K4_alpha3_feasible": 16611,
+  "all_four_class_patterns_excluded": true,
+  "sources": {
+    "class_cover": "m220_n11_6_seq4_high_anchor_verify.py",
+    "B88_eligibility": "m220_n11_6_seq4_b88_embed_verify.py",
+    "T_catalogue_check": "m220_n11_6_seq4_t_catalog_verify.py",
+    "finite_enumerator": "m220_n11_6_seq4_high_exact.cpp",
+    "primary_R34_R45_catalogues": "https://users.cecs.anu.edu.au/~bdm/data/ramsey.html"
+  },
+  "proof": "For an extreme degree-13 vertex v (S(v)=164), nonadjacent extreme degree-13 vertices lie in the eligible B88 sites; their induced graph must be an induced subgraph of 2K2. Enumerate the complete triangle-free alpha<=3 T=N_H(z) catalogues for y=7,8, all U-U edges and all T-U edges respecting x and the per-vertex S caps; reject any K4 or independent four-set in the 12-vertex high graph, then enforce the 2K2 necessity. All three high cases have zero survivors.",
+  "soundness": "Complete exhaustive enumeration of a necessary-condition relaxation; no withdrawn row-domain tf(), no SAT or heuristic search.",
+  "conclusion": "The m=220, n11=6, seq4 degree sequence 11^6 12^18 13^11 15 is impossible. This is a partial edge-count exclusion, not a new Ramsey lower bound."
+}
