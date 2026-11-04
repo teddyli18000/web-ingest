@@ -16,7 +16,7 @@ const plate=await loadGPTBustPlate();
 rect(0,0,W,H,'#d8d0c5');
 const glow=g.createRadialGradient(1480,180,40,1480,180,660);glow.addColorStop(0,'rgba(232,185,40,.16)');glow.addColorStop(1,'rgba(232,185,40,0)');g.fillStyle=glow;g.fillRect(0,0,W,H);
 text('GPT / CHARACTER PLATE LAB',62,66,23,{color:INK,weight:700,alpha:.62});
-text('bust-print-v2 · 4-colour plate · no scene pixels',62,101,18,{color:INK2,alpha:.38});
+text('bust-colour-v3 · transparent master · no scene pixels',62,101,18,{color:INK2,alpha:.38});
 line(62,124,760,124,BLUE,5,.60);
 
 panel(58,155,855,380);cropMarks(58,155,855,380);heading(90,198,'01 / RAW PRINT','paper field · intended working scale');
