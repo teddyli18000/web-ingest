@@ -64,7 +64,8 @@ Task-level public state:
 
 - `state/runtime.json` — active/last task;
 - `state/tasks/<task-id>.json` — task status/progress;
-- `state/checkpoints/<task-id>.sqlite.zlib.b64` — mover checkpoint.
+- `state/checkpoints/<task-id>.sqlite.zlib.b64` — mover checkpoint;
+- `state/auth/baidu-oauth.json` — AES-GCM encrypted rotating Baidu OAuth credentials (never plaintext).
 
 File-level public state:
 
@@ -136,7 +137,7 @@ Interactive browsers are forbidden in Actions workers.
 
 Do not serialize all file payload transfer behind `baidu-drive-live-state`. Do not let file workers write task-global SQLite state.
 
-Until final authentication provisioning exists, live execution must remain fail-closed at `BLOCKED_AUTH_SETUP`; never add credentials merely to make a smoke test green.
+The legacy Cookie bridge is not an unattended authentication solution. The final Baidu provider must use OAuth share/file APIs and automatically refresh both access and rotating refresh tokens before live acceptance. Without valid credentials, remain at `BLOCKED_AUTH_SETUP`.
 
 ## Authentication and public-repository safety
 
@@ -170,7 +171,7 @@ BAIDU_DRIVE_GOOGLE_ACCESS_TOKEN_FILE
 BAIDU_DRIVE_STATE_KEY_FILE
 ```
 
-They are interfaces, not the final credential-provisioning decision.
+These are temporary compatibility interfaces. The final bootstrap is `BAIDU_DRIVE_BAIDU_OAUTH` JSON (`client_id`, `client_secret`, initial `refresh_token`), plus `BAIDU_DRIVE_RCLONE_CONFIG` and `BAIDU_DRIVE_STATE_KEY`. Only the serialized master may call `oauth_state.ensure_fresh()` and commit `state/auth/baidu-oauth.json`; file workers use `oauth_state.read_fresh()` to avoid refresh races. Never treat the bootstrap refresh token as the live token after rotation.
 
 ## Validation
 
