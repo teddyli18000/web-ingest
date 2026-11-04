@@ -51,7 +51,12 @@ func TestSealCapabilityRejectsWrongKeyAndTamper(t *testing.T) {
 		t.Fatal("expected wrong key failure")
 	}
 	parts := strings.Split(sealed, ".")
-	parts[2] = parts[2][:len(parts[2])-1] + "A"
+	ciphertext, err := rawURLBase64.DecodeString(parts[2])
+	if err != nil {
+		t.Fatal(err)
+	}
+	ciphertext[0] ^= 1
+	parts[2] = rawURLBase64.EncodeToString(ciphertext)
 	if _, err := openCapability(testStateKey('c'), "task", "file", strings.Join(parts, ".")); err == nil {
 		t.Fatal("expected tamper failure")
 	}
