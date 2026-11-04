@@ -313,7 +313,7 @@ func relaySafeMessage(err error) string {
 	if err == nil {
 		return ""
 	}
-	text := strings.ReplaceAll(err.Error(), "\n", " ")
+	text := strings.ReplaceAll(credentialURL.ReplaceAllString(err.Error(), "[redacted URL]"), "\n", " ")
 	text = strings.ReplaceAll(text, "\r", " ")
 	if len(text) > 300 {
 		text = text[:300]
