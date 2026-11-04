@@ -85,7 +85,7 @@ jobs:
             odd=sum(c*c for k,c in enumerate(corr,1) if k&1)
             total=sum(c*c for c in corr)
             assert odd==58 and total==ne,(label,odd,total)
-            external=subprocess.check_output(['python3','science-boundary/labs-100/code/verify.py',seq],text=True)
+            external=subprocess.check_output(['python3','science-boundary/labs-100/code/verify.py','--',seq],text=True)
             assert int(external.strip())==ne
             N+=nc;T+=nt
             if ne<best:best=ne;bestseq=seq
