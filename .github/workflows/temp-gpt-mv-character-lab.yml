@@ -52,6 +52,14 @@ jobs:
           w,h=struct.unpack('>II',sig[16:24])
           print('png_size',w,h)
           assert (w,h)==(1920,1080), (w,h)
+          import json
+          with open('out/gpt_character_lab.json') as f:
+              stats=json.load(f)['alpha']
+          assert stats['width']==550 and stats['height']==640
+          assert stats['transparent']>0 and stats['opaque']>0
+          left,top,right,bottom=stats['bounds']
+          assert 0<=left<right<=550 and 0<=top<bottom<=640
+          print('alpha',stats)
           PY
       - name: Upload visual gate
         uses: actions/upload-artifact@v4
