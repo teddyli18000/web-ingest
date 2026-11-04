@@ -35,7 +35,7 @@ def validate_profile(cookie: str, config_text: str, state_key: str) -> configpar
     if not parts.get("BDUSS") or not parts.get("STOKEN"):
         raise AuthError("Baidu login cookies are incomplete")
     try:
-        decoded = base64.b64decode(state_key.strip() + "==", validate=True)
+        decoded = base64.b64decode(state_key.strip() + "=" * (-len(state_key.strip()) % 4), validate=True)
     except ValueError as exc:
         raise AuthError("invalid relay encryption key") from exc
     if len(decoded) != 32:
@@ -55,8 +55,8 @@ def validate_profile(cookie: str, config_text: str, state_key: str) -> configpar
 
 
 def write_private(path: Path, value: str) -> None:
-    path.write_text(value, encoding="utf-8")
-    path.chmod(0o600)
+    with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w", encoding="utf-8") as handle:
+        handle.write(value)
 
 
 def export_paths(paths: dict[str, Path]) -> None:
