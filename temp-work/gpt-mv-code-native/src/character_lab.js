@@ -37,5 +37,24 @@ plate.silhouette(g,{x:1210,y:650,w:470,h:320},{color:BLUE,alpha:.95});
 plate.silhouette(g,{x:1220,y:656,w:470,h:320},{color:PAPER,alpha:.12});
 text(plate.source,1828,984,15,{color:'#aeb8ca',align:'right',alpha:.38});
 
+function inspectAlpha(img){
+  const c=document.createElement('canvas');
+  c.width=img.naturalWidth;c.height=img.naturalHeight;
+  const cg=c.getContext('2d',{willReadFrequently:true});
+  cg.drawImage(img,0,0);
+  const pixels=cg.getImageData(0,0,c.width,c.height).data;
+  let transparent=0,opaque=0,partial=0;
+  let left=c.width,top=c.height,right=0,bottom=0;
+  for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++){
+    const a=pixels[(y*c.width+x)*4+3];
+    if(a===0)transparent++;
+    else if(a===255)opaque++;
+    else partial++;
+    if(a>16){left=Math.min(left,x);top=Math.min(top,y);right=Math.max(right,x+1);bottom=Math.max(bottom,y+1);}
+  }
+  return {width:c.width,height:c.height,transparent,opaque,partial,bounds:[left,top,right,bottom]};
+}
+window.GPT_ART_ALPHA=inspectAlpha(plate.img);
+
 window.GPT_ART_SOURCE=plate.source;
 window.GPT_ART_READY=true;
