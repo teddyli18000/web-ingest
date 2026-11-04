@@ -26,7 +26,7 @@ try{
   const response=await page.goto(`http://127.0.0.1:${port}/character_lab.html`,{waitUntil:'networkidle',timeout:15000});
   console.log('page_status',response?.status());
   await page.waitForFunction(()=>window.GPT_ART_READY===true,null,{timeout:10000});
-  const meta=await page.evaluate(()=>({source:window.GPT_ART_SOURCE,w:document.querySelector('#stage').width,h:document.querySelector('#stage').height}));
+  const meta=await page.evaluate(()=>({source:window.GPT_ART_SOURCE,w:document.querySelector('#stage').width,h:document.querySelector('#stage').height,alpha:window.GPT_ART_ALPHA}));
   if(meta.source!=='gpt-bust-print-v2')throw new Error(`unexpected source ${meta.source}`);
   if(meta.w!==1920||meta.h!==1080)throw new Error(`unexpected canvas ${meta.w}x${meta.h}`);
   await page.locator('#stage').screenshot({path:OUT,timeout:10000});
