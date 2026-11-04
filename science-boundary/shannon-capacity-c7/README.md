@@ -12,6 +12,9 @@ The 134,753-point construction is a highly structured record-scale object built 
 
 ## Current state
 
+**2026-11-04 takeover update:** The rank-3 134,753 MaxSAT tie described below is historical rather than the latest research frontier. Later work has exact net+1 radius-six closure, a global product-injection exclusion for support≤2, and the first support-three assignment obstruction whose minimal 63-factor product still has zero prize. See [`results/takeover-2026-11-04.md`](results/takeover-2026-11-04.md) for the audited current evidence, unresolved statuses, and the next distinct support-three expansion experiment.
+
+
 **No verified improvement yet. Current public target: 134,754.**
 
 The strongest near-boundary result so far comes from an exact MaxSAT optimization of a neutral 2-for-2 perturbation of the 367-point parent together with a nine-port generalization. Of the ten eligible nine-center subsets in the only useful neutral2 parent state:
