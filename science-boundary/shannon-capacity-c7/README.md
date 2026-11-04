@@ -12,6 +12,11 @@ The 134,753-point construction is a highly structured record-scale object built 
 
 ## Current state
 
+**2026-11-04 exact computational closure:** The entire free-label/full-phase reconstruction family based on 38 pinned public 367-word `C7^5` codes has verified optimum **367** on every coordinate axis. It allows complete 4D slice templates from any original symbol label to be placed at any destination label and translated independently by any of the 2,401 four-dimensional shifts. Across **6,882** ordered template pairs, **6,174** have no compatible relative phase; **708** admit only the zero phase; no nonzero relative phase is compatible. The resulting 7-cycle DP optimum is exactly **367** on all five axes, independently replayed by 4D integer convolution. See [full theorem and two reproductions](results/c7p5-free-label-full-phase-closure-2026-11-04.md). **This is not a bound on all of `C7^5`; no p004 record improvement.**
+
+**New search-space decision:** Stop extending translations/relabelings of unchanged public slices. Search must introduce genuinely new **internal 4D slice shapes** or genuinely independent 5D parent basins, and jointly optimize them with neighboring layers. The exact two-layer MILP pilot found only 367, and the 3,000-variable full three-layer CP-SAT probes timed out as `UNKNOWN`; see [whole-layer block frontier](results/c7p5-whole-layer-blocks-2026-11-04.md).
+
+
 **2026-11-04 new exact result:** A nine-factor support-3 kernel has a rigorously checked fractional owner-clique dual contradiction of **1/2**, yet its full `9×9` tensor candidate set has exact **zero** raw-core prize (MILP). All **38** nearest one-factor and **15** strongest two-factor expansions also have optimal gain zero, replayed on the pinned public BPZ/Tandon data in [Actions run 41849969593](https://github.com/teddyli18000/web-ingest/actions/runs/41849969593). See [fractional-nine-charge-2026-11-04.md](results/fractional-nine-charge-2026-11-04.md) and [reproducer](code/bpz_fractional_nine_charge.py). This rules out these restricted product families, not the global problem. **No improved p004 score.** Next formulation should alter the core jointly or attack the independent five-dimensional 368-point problem, not extend the same kernel by more one/two-factor cases.
 
 
@@ -26,7 +31,7 @@ The strongest near-boundary result so far comes from an exact MaxSAT optimizatio
 - **rank 6 has exact optimum 134,752**;
 - rank 0 has exact optimum 134,738.
 
-This is the present frontier. The next work should modify the rank-3 structural model rather than repeat strict SAT or shallow local replacement searches.
+This was the 2026-10-27 frontier; it is preserved for historical context and has been superseded by later direct 5D and structural product investigations.
 
 ## What is known from our computation
 
@@ -38,7 +43,7 @@ This is the present frontier. The next work should modify the rank-3 structural 
 
 These are computational statements about the searched families, not general impossibility results for `C7^⊠10`.
 
-## Current hypothesis / route
+## Historical 2026-10-27 hypothesis / route (superseded)
 
 The best route is to start from the **rank-3 MaxSAT optimum at 134,753** and enlarge the model by one controlled structural degree of freedom. Candidate extensions, in priority order:
 
@@ -102,6 +107,13 @@ Exact source provenance and input conventions are recorded in [`data/README.md`]
 The original exploratory implementations remain historically available in `temp-work/few-shots-p004/` and in the `web-ingest` Git history, but this directory is the durable handoff.
 
 ## Next steps
+
+1. Build a **new 4D slice-template generation mechanism** that changes the internal selected words, not merely their translation or original symbol labels. Couple candidate validity across the 7-cycle before interpreting a high-scoring local layer as a global improvement.
+2. Seek structurally distinct 5D source basins, e.g. algebraic or circular-code constructions outside the pinned I0/X/Family-F corpus, before recombination.
+3. Any `C7^5` witness of 368 would square to 135,424 points; replay all pairs and run the upstream Few Shots p004 verifier before making a breakthrough claim.
+4. The public p004 target remains 134,754 points; keep negative results scoped to their precise family.
+
+## Historical next steps (2026-10-27)
 
 1. Freeze and materialize the exact **rank-3 134,753 MaxSAT model**, not just its score, so later extensions can diff against a concrete boundary state.
 2. Build a net-score MaxSAT/ILP that allows one extra square-block deletion/replacement and asks whether it can recover at least two additional port vertices.
