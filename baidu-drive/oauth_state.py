@@ -70,8 +70,8 @@ def refresh(client_id: str, client_secret: str, refresh_token: str,
     params = urllib.parse.urlencode({
         "grant_type": "refresh_token", "client_id": client_id,
         "client_secret": client_secret, "refresh_token": refresh_token,
-    }).encode()
-    req = urllib.request.Request(TOKEN_URL, params, {"Content-Type": "application/x-www-form-urlencoded"}, method="POST")
+    })
+    req = urllib.request.Request(TOKEN_URL + "?" + params, method="GET")
     try:
         with opener(req, timeout=30) as resp:
             payload = json.loads(resp.read(65536))
