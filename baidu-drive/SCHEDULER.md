@@ -181,6 +181,7 @@ Implemented:
 - exact bounded Baidu Range reads;
 - Drive resumable-session creation/status/upload;
 - direct stream relay;
+- OAuth-only Baidu share/stage/download/cleanup adapter with app-root isolation;
 - cross-VM MD5 checkpoints;
 - AES-GCM session sealing;
 - zero-byte create/adopt;
@@ -189,5 +190,5 @@ Implemented:
 
 Pending for live operation:
 
-- final non-interactive credential provisioning;
-- real-provider acceptance covering multi-VM resume, session refresh/expiry, parallel files, zero-byte files, and cleanup.
+- single local Baidu and Google OAuth authorization via `AUTHORIZATION.md`;
+- live API entitlement and real-provider acceptance covering cross-VM resume, session refresh/expiry, parallel files, zero-byte files and cleanup.
