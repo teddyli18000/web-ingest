@@ -8,7 +8,9 @@ This directory is the durable research workspace for Few Shots `p003-ramsey-r46`
 
 ## Current state
 
-**Post-audit frontier (2026-11-04).** The older 2026-10-28 status bullets below are historical; current exact evidence excludes every 36-vertex edge count through 219. At 220 edges, the independently certified degree-11 low-graph and class-edge arguments exclude n11=1..5; among the fourteen n11=6 degree sequences, indices 6..14 are excluded, while **indices 1..5 remain open**. Other n11 layers are not covered by these n11=6 statements. See `notes/frontier-post-audit-2026-10-30.md` and `results/m220-n11-6-class-boundary-post-audit.json`.
+**Post-audit frontier (2026-11-04).** The older 2026-10-28 status bullets below are historical; current exact evidence excludes every 36-vertex edge count through 219. At 220 edges, the independently certified degree-11 low-graph and class-edge arguments exclude n11=1..5; among the fourteen n11=6 degree sequences, indices **4 and 6–14 are excluded**; only **1, 2, 3, 5 remain open**. Other n11 layers are not covered by these n11=6 statements. See `notes/frontier-post-audit-2026-10-30.md` and `results/m220-n11-6-class-boundary-post-audit.json`.
+
+**Seq4 is now fully excluded (post-audit exact finite proof).** The prior high-anchor certificate left four degree-class matrices. The complete R(3,4,7/8) catalogue (9 and 3 types) plus exhaustive 12-high-vertex enumeration reduces these to three high-only cases. Their 13,647, 708 and 2,256 K4/independence-feasible labelled configurations have **zero** survivors under the independently audited B88 extreme-pair support constraint. The C++ verifier and independent Python catalogue checker were run locally and their byte-identical source files are committed: `m220_n11_6_seq4_high_exact.cpp`, `m220_n11_6_seq4_t_catalog_verify.py`; see `results/m220-n11-6-seq4-high-exact-post-audit.json` and `notes/m220-seq4-high-exact-2026-11-04.md`. This closes only seq4, **not** all 220-edge graphs. No new Few Shots witness.
 
 **New verified seq4 necessary condition.** For degree sequence `11^6 12^18 13^11 15`, at least four degree-13 vertices have `S(v)=164`; every nonadjacent pair of these extreme vertices forces the unique B88 graph type #0 at both endpoints, with exactly six common neighbors. The three complete B88 graphs give induced-neighborhood compatibility counts `[4,0,0]`, independently checked by two isomorphism routines. This **does not** eliminate seq4. Reproduce with `m220_n11_6_seq4_b88_embed_verify.py`; exact output: `results/m220-n11-6-seq4-b88-embedding-post-audit.json`. Do not use the withdrawn old row-domain `tf()` results.
 
@@ -21,7 +23,7 @@ This directory is the durable research workspace for Few Shots `p003-ramsey-r46`
 > with 1–5 degree-11 vertices have sound recursive exclusions. With exactly
 > six degree-11 vertices there are 14 structural degree sequences; exact
 > universal low-graph/class bounds plus separate sound proofs eliminate
-> seq6–14. **Seq1–5 remain unresolved.** New verifier
+> seq6–14 (historical snapshot). **The newer proof also excludes seq4; only seq1,2,3,5 remain unresolved.** New verifier
 > `m220_n11_6_seq4_high_anchor_verify.py` reduces seq4 from 32 class-edge
 > matrices to **four** without SAT or the withdrawn row predicate; see
 > `results/m220-n11-6-seq4-high-anchor-post-audit.json` and
