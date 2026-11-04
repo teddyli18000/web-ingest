@@ -9,6 +9,7 @@ The fixed Release is the human control/status surface. One serialized master sch
 Implemented:
 
 - fixed Release control plane and accepted-command dispatch;
+- OAuth-only Baidu share scan/verification, staging, sandboxed cleanup and bounded-range download;
 - durable task/SQLite checkpoints and file-scoped relay state;
 - scan, isolated Baidu staging, Drive tree creation, verified-result import, and guarded cleanup through the pinned mover core;
 - exact bounded Baidu byte ranges;
@@ -17,14 +18,16 @@ Implemented:
 - up to three independent file workers with file-scoped leases;
 - cross-VM Drive offset and streaming-MD5 recovery;
 - AES-256-GCM sealing of resumable-session URIs, bound to task + file identity;
+- encrypted rotating Baidu OAuth credentials with a weekly keepalive;
+- local one-time authorization helper using GitHub CLI Secrets;
 - zero-byte Drive file creation/adoption with exact destination reconciliation;
 - expired-session reconciliation before any replay;
 - automatic master-scheduler wakeup whenever a file-worker workflow completes, including failed/cancelled runs.
 
 Still pending before live transfer:
 
-- migrate all Baidu scan/stage/Range/cleanup calls from Cookie to official OAuth APIs;
-- configure the final one-time OAuth Secrets and run real-provider cross-VM acceptance.
+- one-time Baidu/Google OAuth authorization and app-entitlement verification;
+- real-provider acceptance of share transfer, ranged download, cross-VM resume and cleanup.
 
 Without those Secrets, accepted tasks stop at `BLOCKED_AUTH_SETUP`.
 
@@ -171,11 +174,11 @@ Target one-time GitHub Secrets:
 
 Once the first Baidu refresh succeeds, all subsequent rotations use encrypted repository state rather than repeatedly using the original bootstrap refresh token. Keep the encryption key stable across VM replacements.
 
-A small `baidu-drive-auth-keepalive.yml` runs on the 1st of each month at 17:17 UTC (and has manual dispatch). It only keeps Baidu/Google OAuth grants active; it does not start a transfer. It uses the master's serialized concurrency group, so the Baidu refresh-token rotation has exactly one writer.
+A small `baidu-drive-auth-keepalive.yml` runs weekly at 17:17 UTC on Tuesday (and has manual dispatch). It only keeps Baidu/Google OAuth grants active; it does not start a transfer. It uses the master's serialized concurrency group, so the Baidu refresh-token rotation has exactly one writer.
 
 For long-lived Google authorization, the OAuth consent screen must **not** remain in External/Testing status: Google issues a seven-day refresh token to such apps when using Drive scopes. Use a suitable In production OAuth client before the one-time setup.
 
-**Migration boundary:** the pinned mover's share scanning/staging/cleanup and Baidu byte-range client still use web Cookie APIs. The temporary `auth_provision.py`/workflow wiring is a compatibility implementation, **not** the final zero-maintenance Baidu authentication. Before any live unattended use, switch these Baidu calls to the official OAuth share/file APIs and stage only within the application's permitted directory. This requires provider acceptance tests; an OAuth refresh token cannot authenticate the legacy Cookie endpoints.
+**OAuth data plane:** Actions prepare and relay use `mover/oauth_baidu.go`, not the old Cookie client. The adapter maps the virtual `/BaiduDriveMover/` namespace to `/apps/<your-app>/BaiduDriveMover/` and calls the OAuth share/file APIs. The standalone mover Windows CLI remains unchanged. Your developer app must have the required share/API entitlements; see [`AUTHORIZATION.md`](AUTHORIZATION.md) for the one-time authorization and acceptance steps.
 
 Google access-token refresh is already wired for file workers; the temporary master uses a SHA-256-pinned rclone Linux binary. The credential layer never prints secrets, and plain OAuth tokens or capability URLs must never be committed.
 
@@ -191,7 +194,7 @@ The **single master scheduler**. It serializes SQLite/control mutations, imports
 
 ### `baidu-drive-auth-keepalive.yml`
 
-Monthly OAuth maintenance, independent of data-transfer scheduling. It refreshes the master-owned Baidu OAuth token when needed, commits only AES-GCM ciphertext, and validates Google refresh-token usability without storing its access token. Before the OAuth data-plane migration it exercises the credential layer only.
+Weekly OAuth maintenance, independent of data-transfer scheduling. It refreshes the master-owned Baidu OAuth token when needed, commits only AES-GCM ciphertext, and validates Google refresh-token usability without storing its access token. It only maintains credentials and never stages files.
 
 ### `baidu-drive-file-worker.yml`
 
