@@ -3,7 +3,7 @@ name: Temp GPT MV character lab
 on:
   push:
     paths:
-      - "temp-work/gpt-mv-code-native/assets/gpt/bust_plate.b64.*"
+      - "temp-work/gpt-mv-code-native/assets/gpt/bust_v3.webp"
       - "temp-work/gpt-mv-code-native/src/components/gpt_bust_plate.js"
       - "temp-work/gpt-mv-code-native/src/character_lab.js"
       - "temp-work/gpt-mv-code-native/character_lab.html"
@@ -60,8 +60,10 @@ jobs:
           left,top,right,bottom=stats['bounds']
           assert 0<=left<right<=550 and 0<=top<bottom<=640
           print('alpha',stats)
+          assert not stats['edgeLeakLikely'], 'character plate still contains rectangular background/edge contamination'
           PY
       - name: Upload visual gate
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: gpt-mv-character-lab-${{ github.run_id }}
