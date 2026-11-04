@@ -24,7 +24,7 @@ The helper asks for the Baidu App Key/Secret, application directory, opens Baidu
 
 The helper never prints the authorization token, refresh tokens, or Secret values.
 
-Then dispatch [Baidu Drive Auth Keepalive](https://github.com/teddyli18000/web-ingest/actions/workflows/baidu-drive-auth-keepalive.yml) once to bootstrap the bot's encrypted OAuth state. Subsequent Baidu refreshes use the **latest** encrypted refresh token, not the initial one stored in the Secret. Only the serialized master rotates it. The monthly keepalive independently checks both providers even when no transfer is running.
+Then dispatch [Baidu Drive Auth Keepalive](https://github.com/teddyli18000/web-ingest/actions/workflows/baidu-drive-auth-keepalive.yml) once to bootstrap the bot's encrypted OAuth state. Subsequent Baidu refreshes use the **latest** encrypted refresh token, not the initial one stored in the Secret. Only the serialized master rotates it. The weekly keepalive independently checks both providers even when no transfer is running.
 
 Finally, use the fixed [Baidu → Google Drive Release](https://github.com/teddyli18000/web-ingest/releases/tag/baidu-drive-live) to start a transfer. The public Release carries only public share information and commands. The bot scans, stages, streams, resumes, verifies, cleans up, and reports progress.
 
