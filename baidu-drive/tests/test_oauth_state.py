@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import oauth_state  # noqa: E402
 
 KEY = base64.b64encode(b"x" * 32).decode()
-BOOTSTRAP = json.dumps({"client_id": "app", "client_secret": "secret", "refresh_token": "initial"})
+BOOTSTRAP = json.dumps({"client_id": "app", "client_secret": "secret", "refresh_token": "initial", "app_root": "/apps/demo"})
 
 
 class MemoryRepo:
@@ -51,6 +51,7 @@ class OAuthStateTests(unittest.TestCase):
             }).encode())
         first = oauth_state.ensure_fresh(repo, BOOTSTRAP, KEY, now=1000, opener=opener)
         self.assertEqual(first["refresh_token"], "rotated-1")
+        self.assertEqual(first["app_root"], "/apps/demo")
         self.assertEqual(oauth_state.ensure_fresh(repo, BOOTSTRAP, KEY, now=1100, opener=opener), first)
         second = oauth_state.ensure_fresh(repo, BOOTSTRAP, KEY, now=1000 + 30*86400 - oauth_state.REFRESH_MARGIN, opener=opener)
         self.assertEqual(second["refresh_token"], "rotated-2")
