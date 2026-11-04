@@ -49,7 +49,8 @@ func runPrepare() int {
 	resumeTaskID := fs.String("resume", "", "existing mover task ID to resume")
 	runtimeBase := fs.String("runtime-base", "", "ephemeral runner directory owned by this invocation")
 	stateDBPath := fs.String("state-db", "", "checkpoint SQLite file copied in/out by the caller")
-	baiduCookieFile := fs.String("baidu-cookie-file", "", "prepared Baidu session file")
+	baiduTokenFile := fs.String("baidu-access-token-file", "", "runner-local Baidu OAuth access token")
+	baiduAppRoot := fs.String("baidu-app-root", "", "authorized Baidu /apps/<app> root")
 	rcloneConfigFile := fs.String("rclone-config-file", "", "prepared rclone config file")
 	rcloneBinary := fs.String("rclone-bin", "", "prepared platform rclone executable")
 	resultJSON := fs.String("result-json", "", "machine-readable result output path")
@@ -82,9 +83,12 @@ func runPrepare() int {
 	if err := prepareRestoreOptional(*stateDBPath, layout.StateDB, 0o600); err != nil {
 		return prepareFailBeforeStore(*resultJSON, fmt.Errorf("restore state checkpoint: %w", err))
 	}
-	if err := prepareRequireAndCopy(*baiduCookieFile, filepath.Join(layout.Auth, "baidu.cookies"), 0o600, "Baidu session"); err != nil {
-		return prepareFailBeforeStore(*resultJSON, err)
+	baiduToken, err := os.ReadFile(*baiduTokenFile)
+	if err != nil || len(baiduToken) == 0 || len(baiduToken)>1<<20 {
+		return prepareFailBeforeStore(*resultJSON, fmt.Errorf("Baidu OAuth access token is missing"))
 	}
+	oauthClient, err := newOAuthBaidu(strings.TrimSpace(string(baiduToken)), *baiduAppRoot)
+	if err != nil { return prepareFailBeforeStore(*resultJSON, fmt.Errorf("invalid Baidu OAuth app configuration")) }
 	if err := prepareRequireAndCopy(*rcloneConfigFile, layout.RcloneConfig, 0o600, "Google Drive rclone config"); err != nil {
 		return prepareFailBeforeStore(*resultJSON, err)
 	}
@@ -128,7 +132,7 @@ func runPrepare() int {
 		Logger:      logger,
 		CookieStore: cookieStore,
 		NewClient: func(cookieHeader string) (app.BaiduAPI, error) {
-			return baidu.NewClient(cookieHeader)
+			return oauthClient, nil
 		},
 	}
 	if moverTaskID == "" {
@@ -150,6 +154,8 @@ func runPrepare() int {
 			RelayResultsPath:  *relayResultsJSON,
 			RelayManifestPath: *relayManifestJSON,
 			StageWindowBytes:  *stageWindowBytes,
+			NewStagingClient: func(string)(app.StagingBaiduAPI,error){return oauthClient,nil},
+			NewCleanupClient: func(string)(app.CleanupBaiduAPI,error){return oauthClient,nil},
 		})
 	}
 	return prepareFinish(store, &closed, layout, *stateDBPath, *resultJSON, moverTaskID, err)
