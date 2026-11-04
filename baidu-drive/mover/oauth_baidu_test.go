@@ -2,10 +2,10 @@ package main
 
 import (
  "context"
+ "encoding/json"
  "fmt"
  "net/http"
  "net/http/httptest"
- "net/url"
  "strings"
  "testing"
 
@@ -88,4 +88,32 @@ func TestOAuthProviderRejectsOutOfSandboxMutations(t *testing.T){
  if _,err:=newOAuthBaidu("token","/apps/demo/another");err==nil{t.Fatal("nested app root accepted")}
  if _,err:=newOAuthBaidu("token","/BaiduDriveMover");err==nil{t.Fatal("non-app root accepted")}
 }
-var _ = url.Values{}
+
+func TestOAuthProviderCopiesOwnShareWithoutTransfer(t *testing.T) {
+ copied:=false
+ server:=httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter,r *http.Request){
+  switch r.URL.Path {
+  case "/rest/2.0/xpan/nas":
+   fmt.Fprint(w,"{\"errno\":0,\"uk\":999}")
+  case "/rest/2.0/xpan/share":
+   if r.URL.Query().Get("method")=="transfer"{t.Error("own share used transfer")}
+   fmt.Fprint(w,"{\"errno\":0,\"share_id\":888,\"uk\":999,\"list\":[{\"fs_id\":101,\"server_filename\":\"own.bin\",\"path\":\"/owned/own.bin\",\"size\":3,\"isdir\":0}]}")
+  case "/rest/2.0/xpan/file":
+   if r.URL.Query().Get("opera")!="copy"{t.Error("unexpected file operation")}
+   var items []map[string]string
+   if err:=json.Unmarshal([]byte(r.FormValue("filelist")),&items);err!=nil{t.Error(err)}
+   if len(items)!=1 || items[0]["path"]!="/owned/own.bin" ||
+     items[0]["dest"]!="/apps/demo/BaiduDriveMover/task/batch" || items[0]["newname"]!="own.bin" {
+    t.Errorf("unexpected copy %#v",items)
+   }
+   copied=true
+   fmt.Fprint(w,"{\"errno\":0,\"info\":[{\"errno\":0}]}")
+  }
+ }))
+ defer server.Close()
+ provider,err:=newOAuthBaiduAt("token","/apps/demo",server.URL,server.Client());if err!=nil{t.Fatal(err)}
+ link,err:=baidu.ParseShareLink("https://pan.baidu.com/s/1example");if err!=nil{t.Fatal(err)}
+ if err:=provider.TransferFiles(context.Background(),link,baidu.ShareContext{},[]int64{101},"/BaiduDriveMover/task/batch");err!=nil{t.Fatal(err)}
+ if !copied{t.Fatal("missing same-account copy")}
+}
+
