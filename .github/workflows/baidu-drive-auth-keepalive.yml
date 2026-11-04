@@ -1,0 +1,39 @@
+name: Baidu Drive Auth Keepalive
+
+on:
+  schedule:
+    # 01:17 Singapore time on the 2nd of each month (17:17 UTC on the 1st).
+    - cron: '17 17 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: baidu-drive-live-state
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      PYTHONDONTWRITEBYTECODE: '1'
+      BAIDU_DRIVE_BAIDU_OAUTH: ${{ secrets.BAIDU_DRIVE_BAIDU_OAUTH }}
+      BAIDU_DRIVE_RCLONE_CONFIG: ${{ secrets.BAIDU_DRIVE_RCLONE_CONFIG }}
+      BAIDU_DRIVE_STATE_KEY: ${{ secrets.BAIDU_DRIVE_STATE_KEY }}
+    steps:
+      - name: Checkout Baidu Drive authentication code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            baidu-drive
+
+      - name: Install pinned AES-GCM dependency
+        run: python3 -m pip install "cryptography==46.0.4"
+
+      - name: Renew Baidu and Google OAuth credentials
+        run: python3 baidu-drive/auth_keepalive.py
