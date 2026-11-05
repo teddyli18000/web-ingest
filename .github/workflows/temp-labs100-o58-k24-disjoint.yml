@@ -1,0 +1,64 @@
+name: temp labs100 O58 K24 disjoint exact fibre test
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-o58-k24-disjoint.yml'
+  workflow_dispatch:
+concurrency:
+  group: temp-labs100-o58-k24-disjoint
+  cancel-in-progress: false
+jobs:
+  compressed-fibre:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and independently check one-sparse projection
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-100
+          python3 code/odd_energy_defect_projection.py | tail -5
+          g++ -O3 -std=c++20 -DNDEBUG code/o58_k24_disjoint_compressed_exact.cpp -o "$RUNNER_TEMP/compressed"
+          g++ -O3 -std=c++20 -DNDEBUG -fopenmp code/o58_qgroup_budget_exact.cpp -o "$RUNNER_TEMP/fibre"
+      - name: Exhaust two disjoint noncenter defect orbits
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p outputs
+          export OMP_NUM_THREADS=2
+          export COMPRESSED="$RUNNER_TEMP/compressed"
+          export FIBRE="$RUNNER_TEMP/fibre"
+          export OUTROOT="$PWD/outputs"
+          printf '1\n5\n' | xargs -P 2 -n 1 bash -c '
+            set -euo pipefail
+            s="$1"
+            "$COMPRESSED" "$s" > "$OUTROOT/s${s}.compressed.log"
+            n=$(grep -c "^HIT " "$OUTROOT/s${s}.compressed.log" || true)
+            count=$(sed -n "s/.* qmin64=\([0-9]*\).*/\1/p" "$OUTROOT/s${s}.compressed.log" | tail -1)
+            [[ "$n" == "$count" ]]
+            "$FIBRE" "$s" "$OUTROOT/s${s}.compressed.log" 128 > "$OUTROOT/s${s}.fibre.log"
+            printf "DONE s=%s compressed_HIT=%s %s\n" "$s" "$n" "$(grep "^SUMMARY " "$OUTROOT/s${s}.fibre.log")"
+          ' _ | tee outputs/progress.txt
+          python3 - <<'PY'
+          import re
+          for s, num, ex in [(1,132,4024),(5,260,5590)]:
+              x=open(f'outputs/s{s}.compressed.log').read()
+              m=re.search(r'^SUMMARY s=(\d+) supports=(\d+) signed_p=(\d+) .* exact=(\d+) minSG=(\d+) minQ=(\d+) qmin64=(\d+)$',x,re.M)
+              assert m, (s,'summary missing')
+              assert int(m.group(1))==s
+              assert int(m.group(2))==924
+              assert int(m.group(3))==426888
+              assert int(m.group(4))==ex
+              assert int(m.group(7))==num
+              assert len(re.findall(r'^HIT ',x,re.M))==num
+              y=open(f'outputs/s{s}.fibre.log').read()
+              print(f's={s}',m.group(0),re.search(r'^SUMMARY .*$',y,re.M).group(0))
+          PY
+      - name: Archive complete exact evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-o58-k24-disjoint
+          path: outputs/
+          retention-days: 30
