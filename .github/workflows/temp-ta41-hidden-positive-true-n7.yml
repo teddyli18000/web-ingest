@@ -1,0 +1,51 @@
+name: temp-ta41-hidden-positive-true-n7
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-hidden-positive-true-n7.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-hidden-positive-true-n7
+  cancel-in-progress: false
+jobs:
+  true_n7:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch pinned genuine author's AGPLv3 N7 code and add init-only hook
+        run: |
+          git clone --depth=1 https://github.com/Qiming01/Job-Shop-Scheduling.git /tmp/n7
+          git -C /tmp/n7 fetch --depth=1 origin 7e120ebada21cb604c871e0657814bf6e32611f8
+          git -C /tmp/n7 checkout --detach 7e120ebada21cb604c871e0657814bf6e32611f8
+          python3 science-boundary/job-shop-ta41/patch_original_n7_warmstart.py /tmp/n7
+          g++ -std=c++20 -O3 -include climits -DN7_WARMSTART_SUPPORT -I/tmp/n7/include \
+            science-boundary/job-shop-ta41/original_n7_blind_driver.cpp \
+            /tmp/n7/src/graph.cpp /tmp/n7/src/instance.cpp /tmp/n7/src/schedule.cpp /tmp/n7/src/tabu_search.cpp \
+            -o /tmp/n7_true_blind
+      - name: Genuine published N7, all 24 starts, two seeds, 5s each, no oracle access
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_true_n7_positive.py \
+            --cases science-boundary/job-shop-ta41/positive-control-data \
+            --driver /tmp/n7_true_blind --seconds 5 --seeds 4107 4113 \
+            --out science-boundary/job-shop-ta41/results/positive-original-n7
+      - name: Persist independently validated actual published N7 outcomes
+        if: always()
+        run: |
+          set -euo pipefail
+          out='science-boundary/job-shop-ta41/results/positive-original-n7'
+          if ! test -d "$out"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$out"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): published source N7 against 24 hidden 30x20 improvements'
+          for attempt in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
