@@ -1,0 +1,78 @@
+name: temp-labs-ai4s-moving-donor-backbone
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-moving-donor-backbone.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-moving-donor-backbone
+  cancel-in-progress: false
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Compile exact reversible donor-backbone search and test all lock constraints
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search
+          g++ -O3 -std=c++17 -Wall -Wextra recombination_20261105/innovation/path_relinking/relink_exchange.cpp -o /tmp/labs_exchange
+          /tmp/labs_exchange --selftest
+      - name: Fully costed moving half-donor source-elite trial on nine frozen pairs and new seeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/path_relinking
+          mkdir -p results/exchange_v1
+          /tmp/labs_exchange ../../data/combined/combined10.tsv \
+            results/exchange_v1/sessions.tsv results/exchange_v1/new_offspring.tsv 12 400
+      - name: Independent integer O(N^2) LABS certificate check and source-pair clustering
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q --disable-pip-version-check numpy
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/path_relinking
+          python3 validate_exchange.py \
+            --parents ../../data/combined/combined10.tsv \
+            --sessions results/exchange_v1/sessions.tsv \
+            --certificates results/exchange_v1/new_offspring.tsv \
+            --out results/exchange_v1/analysis.json
+          python3 - <<'PY'
+          import pathlib,csv,json,hashlib,subprocess,platform
+          root=pathlib.Path('results/exchange_v1')
+          s=list(csv.DictReader((root/'sessions.tsv').open(),delimiter='\t'))
+          assert len(s)==9*12*8
+          assert all(float(x['elapsedMs'])>=400 for x in s)
+          v=json.loads((root/'analysis.json').read_text())
+          assert v['status']=='independently verified' and v['sessions']==864
+          assert set(v['by_length'])=={'46','47','50','59','60','92','99'}
+          m={'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+            'compiler':subprocess.check_output(['g++','--version'],text=True).splitlines()[0],
+            'platform':platform.platform(),'budget_ms':400,'source_pairs':9,'seeds_per_pair':12,'arms':8,
+            'frozen_source_sha256':hashlib.sha256(pathlib.Path('../../data/combined/combined10.tsv').read_bytes()).hexdigest(),
+            'data_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in root.glob('*.tsv')},
+            'no_neural_model_or_frontier_record_claim':True}
+          (root/'provenance.json').write_text(json.dumps(m,indent=2)+'\n')
+          print('VERIFIED 864 entire-budget moving-donor search sessions')
+          PY
+      - name: Persist exact audited moving-backbone original data
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/path_relinking/results/exchange_v1/
+          git commit -m 'research(labs-ai4s): certify moving donor-backbone exchange vs static locks, real B, virtual B and shuffled-lag controls'
+          for attempt in 1 2 3 4 5 6 7 8; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 3
+          done
+          exit 1
