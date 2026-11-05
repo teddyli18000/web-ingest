@@ -1,0 +1,96 @@
+name: temp-labs-ai4s-official-gomea-benchmark
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-official-gomea-benchmark.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  official:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Install unchanged upstream official discrete GOMEA 1.1.0
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q --disable-pip-version-check 'gomea==1.1.0'
+          python3 - <<'PY'
+          import gomea
+          assert callable(gomea.DiscreteGOMEA)
+          assert callable(gomea.linkage.LinkageTree)
+          assert callable(gomea.fitness.BBOFitnessFunctionDiscrete)
+          print('Official CWI GOMEA imported, discrete GOMEA + MI-linkage tree')
+          PY
+      - name: Smoke fixed runtime LABS objective and real published linkage implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          mkdir -p official_gomea/results
+          python3 official_gomea/benchmark.py \
+            --out official_gomea/results/smoke.tsv \
+            --lengths 46,47 --reps 1 --seconds 0.7 --seed-offset 53000
+      - name: Complete source-independent random-initialized true GOMEA benchmark
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 official_gomea/benchmark.py \
+            --out official_gomea/results/full_v1.tsv \
+            --lengths 46,47,50,59,60,92,99 --reps 4 --seconds 2.0 --seed-offset 54000
+      - name: Independent direct LABS E verifier and actual source library provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 - <<'PY'
+          import csv,json,pathlib,hashlib,platform,subprocess
+          d=pathlib.Path('official_gomea/results')
+          def energy(bs):
+            a=[2*int(x)-1 for x in bs];n=len(a)
+            return sum(sum(a[i]*a[i+k] for i in range(n-k))**2 for k in range(1,n))
+          def orbit(s):
+            neg=lambda t:''.join('1' if c=='0' else '0' for c in t)
+            alt=lambda t:''.join(c if i%2==0 else neg(c) for i,c in enumerate(t))
+            return min(y for b in (s,s[::-1]) for t in (b,alt(b)) for y in (t,neg(t)))
+          rows=list(csv.DictReader((d/'full_v1.tsv').open(),delimiter='\t'))
+          assert len(rows)==56
+          assert len({(r['N'],r['seed'],r['mode']) for r in rows})==56
+          for z in rows:
+            assert int(z['bestE'])==energy(z['best_bits'])
+            assert z['canonical']==orbit(z['best_bits'])
+            assert int(z['objective_evaluations'])>0
+            assert float(z['actual_wall_s'])>0
+            assert int(z['target_attained'])==int(int(z['bestE'])<=int(z['target']))
+            assert z['mode'] in ('univariate','MI_filtered_linkage_tree')
+          meta={'software':'gomea==1.1.0 from official CWI-EvolutionaryIntelligence repo',
+           'python_package_url':'https://pypi.org/project/gomea/1.1.0/',
+           'source_commit':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+           'platform':platform.platform(),
+           'run_type':'official full discrete GOMEA with random population, not seeded elite pair recombination',
+           'fitness':'exact black-box E callback, Python O(N^2); same 2sec internal clock per run',
+           'n_runs':56,
+           'file_hashes':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in d.glob('*.tsv')}}
+          (d/'official_provenance.json').write_text(json.dumps(meta,indent=2)+'\n')
+          print('VERIFIED all 56 full-GOMEA public-library LABS outputs with independent integer E and 8fold orbit')
+          PY
+      - name: Persist official classical full GOMEA source comparison
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/official_gomea/results
+          git commit -m 'research(labs-ai4s): verify 56 full official CWI discrete GOMEA LABS benchmark runs'
+          for attempt in 1 2 3 4 5 6 7 8; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
