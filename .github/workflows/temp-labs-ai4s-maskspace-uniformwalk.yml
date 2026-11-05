@@ -1,0 +1,53 @@
+name: temp-labs-ai4s-maskspace-uniformwalk
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-maskspace-uniformwalk.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  maskspace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Independent exact fixed-Hamming macro test including equal-cost uniform-walk null
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search
+          g++ -O3 -std=c++17 trajectory_20261104/mask_space.cpp -o /tmp/labs_maskgeometry
+          /tmp/labs_maskgeometry frontier_deformation/results/2026-10-29-frontier-elite-eval.tsv \
+            trajectory_20261104/results/mask_geometry_v2.tsv 20 50 12 3
+      - name: Paired seed bootstrap with direct LABS energy and valid Hamming distances
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q numpy
+          cd science-boundary/labs-ai4s-search
+          python3 trajectory_20261104/analyze_mask_space_v2.py \
+            trajectory_20261104/results/mask_geometry_v2.tsv trajectory_20261104/results/mask_geometry_v2.json
+          python3 - <<'PY'
+          import csv,pathlib,json
+          root=pathlib.Path('trajectory_20261104/results')
+          rows=list(csv.DictReader((root/'mask_geometry_v2.tsv').open(),delimiter='\t'))
+          assert len(rows)==360
+          assert len({(int(r['id']),int(r['rep'])) for r in rows})==120
+          for r in rows:
+            assert int(r['distFromSource'])==12
+            assert int(r['bestE'])==int(r['bestOdd'])+int(r['bestEven'])
+            assert float(r['seconds'])>=0.05
+          assert len(json.loads((root/'mask_geometry_v2.json').read_text())['results'])==6
+          print('VERIFIED 360 source-fixed macro generators')
+          PY
+      - name: Save exact and paired source-level evidence
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/trajectory_20261104/results/mask_geometry_v2.*
+          git commit -m 'research(labs-ai4s): verify coordinated mask swap against uniform random-walk operations'
+          git pull --rebase origin main
+          git push origin HEAD:main
