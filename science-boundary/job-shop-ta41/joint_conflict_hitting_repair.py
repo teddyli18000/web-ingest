@@ -112,13 +112,29 @@ def run(args):
     if args.root_ids:
         roots=args.root_ids
     rng=random.Random(args.seed)
+    # Root selection is entirely oracle-blind. Rank candidate seed
+    # reversals by the MINIMUM number of partial-order resource arcs
+    # needed to eliminate the counterfactual cycle and deadline
+    # obstructions; then by remaining optimistic makespan. A root which
+    # already needs 30 releases is less attractive than one needing 1.
+    prelim={}
+    for root in roots:
+        prelim[root]=counterfactual_closure(
+            dur,mutable,root,target,args.max_preliminary_cut)
+    if not args.root_ids:
+        jitter={root:rng.random() for root in roots}
+        roots.sort(key=lambda root:(
+            prelim[root][0] is None,
+            len(prelim[root][0][0]) if prelim[root][0] is not None else 999,
+            prelim[root][0][1]['lb'] if prelim[root][0] is not None else 999999,
+            static_slack[root],jitter[root]))
     begin=time.monotonic()
     output=dict(instance=('ta41' if args.start=='ta41'
             else Path(args.start).parent.name),
         target=target,incumbent=initial,policy=args.policy,
         experimental_design='counterfactual reversal, online path cycle/deadline/resource UNSAT clauses, reoptimized nonmonotone joint hitting set, complete full NoOverlap CP',
         root_selection=('FIXED ORACLE-AWARE DIAGNOSTIC: NOT BLIND' if args.root_ids
-            else 'source-only original near-critical diversity, no oracle'),
+            else 'oracle-blind near-critical root set reordered by minimal counterfactual cycle+deadline closure'),
         root_ids=roots,root_limit=args.roots,max_iterations_per_root=args.iterations,
         full_CP_seconds=args.cp_seconds,hitting_set_seconds=args.hit_seconds,
         global_wall_budget=args.seconds,records=[],
@@ -129,8 +145,7 @@ def run(args):
         # Use closure only to cheaply identify roots whose reversed
         # precedence cannot fit even in any partial order; do not
         # *permanently* accept its arbitrary mincut selections.
-        closure,proof=counterfactual_closure(
-            dur,mutable,root,target,args.max_preliminary_cut)
+        closure,proof=prelim[root]
         record=dict(root=root,machine=mutable[root][2],
                     initial_slack=static_slack[root],
                     preliminary=proof,iterations=[])
