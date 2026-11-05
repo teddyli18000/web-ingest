@@ -1,0 +1,104 @@
+name: temp-labs-ai4s-joint-symmetry-alignment
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-joint-symmetry-alignment.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-joint-symmetry-alignment
+  cancel-in-progress: false
+jobs:
+  alignment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Compile and selftest same Hamming radius exact LABS parent-orbit alignment operators
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search
+          g++ -O3 -std=c++17 -Wall -Wextra \
+            recombination_20261105/innovation/symmetry_alignment.cpp \
+            -o /tmp/labs_symmetry_alignment
+          /tmp/labs_symmetry_alignment --selftest
+      - name: Independent future seeds across seven source-elite lengths, full local repair budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          mkdir -p innovation/results/symmetry_alignment_v1
+          for spec in \
+            "selected60:c60_1-c60_4:40:21000" \
+            "holdout60a:c60_0-c60_3:30:22000" \
+            "holdout60b:c60_2-c60_5:30:23000" \
+            "holdout59:c59_0-c59_2:30:24000" \
+            "arch46:c46_0-c46_1:20:25000" \
+            "arch47:c47_0-c47_2:20:26000" \
+            "arch50:c50_0-c50_1:20:27000" \
+            "frontier92:c92_0-c92_1:20:28000" \
+            "frontier99:c99_0-c99_1:20:29000"; do
+            IFS=: read -r label pair reps offset <<< "$spec"
+            /tmp/labs_symmetry_alignment data/combined/combined10.tsv \
+              "innovation/results/symmetry_alignment_v1/${label}_sessions.tsv" \
+              "innovation/results/symmetry_alignment_v1/${label}_children.tsv" \
+              "$reps" 120 "$pair" "$offset"
+          done
+      - name: Independent direct integer LABS E, all eight symmetries, complete source-new repair certificate audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q numpy
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          for label in selected60 holdout60a holdout60b holdout59 arch46 arch47 arch50 frontier92 frontier99; do
+            python3 innovation/validate_symmetry.py \
+              --parents data/combined/combined10.tsv \
+              --sessions "innovation/results/symmetry_alignment_v1/${label}_sessions.tsv" \
+              --certificates "innovation/results/symmetry_alignment_v1/${label}_children.tsv" \
+              --out "innovation/results/symmetry_alignment_v1/${label}_analysis.json"
+          done
+      - name: Validate 2070 full source-pair trials and provenance checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 - <<'PY'
+          import csv,json,pathlib,hashlib,platform,subprocess
+          root=pathlib.Path('innovation/results/symmetry_alignment_v1')
+          counts={'selected60':40,'holdout60a':30,'holdout60b':30,'holdout59':30,
+                  'arch46':20,'arch47':20,'arch50':20,'frontier92':20,'frontier99':20}
+          for label,reps in counts.items():
+            rows=list(csv.DictReader((root/(label+'_sessions.tsv')).open(),delimiter='\t'))
+            assert len(rows)==reps*9
+            assert len({(x['rep'],x['arm']) for x in rows})==reps*9
+            assert all(float(x['elapsed_ms'])>=120 for x in rows)
+            analysis=json.loads((root/(label+'_analysis.json')).read_text())
+            assert analysis['verified_sessions']==reps*9 and analysis['repeats']==reps
+          m={'source_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+             'platform':platform.platform(),
+             'design':'Nine arms; source A fixed; all 8fold parent-B symmetries; exact same physical proposal Hamming distance; 120ms fully charged proposal+64Tabu+quench',
+             'counts':counts,'sessions':sum(counts.values())*9,
+             'data_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in root.glob('*.tsv')}}
+          (root/'provenance.json').write_text(json.dumps(m,indent=2)+'\n')
+          assert m['sessions']==2070
+          print('VERIFIED 2070 same physical Hamming radius source-elite symmetry alignment treatments')
+          PY
+      - name: Commit validated independent symmetry alignment experiment to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/results/symmetry_alignment_v1/
+          git commit -m 'research(labs-ai4s): certify 2070 future-seed fully costed source-symmetry alignment re-combinations'
+          for attempt in 1 2 3 4 5 6 7 8; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
