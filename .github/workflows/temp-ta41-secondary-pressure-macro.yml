@@ -1,0 +1,97 @@
+name: temp-ta41-secondary-pressure-macro
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/predictive_pressure_search.py'
+      - '.github/workflows/temp-ta41-secondary-pressure-macro.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-secondary-pressure-macro
+  cancel-in-progress: false
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check syntax and confirm pressure evaluator is exercised
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/predictive_pressure_search.py
+          python3 science-boundary/job-shop-ta41/predictive_pressure_search.py \
+            --parent baseline --policy replacement --seed 41 --budget 350 \
+            --pressure 0.003 --out /tmp/pressure-smoke
+          python3 - <<'PY'
+          import json
+          x=json.load(open('/tmp/pressure-smoke/constructive.json'))
+          assert x['scored_candidates']==350
+          assert x['best_score']<=2006
+          assert x['pressure_recomputations']>0
+          print('SMOKE',x['best_pressure'],x['pressure_recomputations'])
+          PY
+  compare:
+    needs: smoke
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - policy: replacement
+            weight: '0.003'
+            suffix: predictive
+          - policy: replacement
+            weight: '0.0'
+            suffix: neutral
+          - policy: current
+            weight: '0.003'
+            suffix: current
+          - policy: tabu
+            weight: '0.003'
+            suffix: tabu
+        parent: [baseline, '124']
+        seed: [4107, 9241]
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - name: Contrast latent-bottleneck objective with identical complete-DAG scoring budget
+        run: |
+          python3 science-boundary/job-shop-ta41/predictive_pressure_search.py \
+            --parent '${{ matrix.parent }}' --policy '${{ matrix.policy }}' \
+            --seed '${{ matrix.seed }}' --pressure '${{ matrix.weight }}' \
+            --budget 16000 \
+            --out 'science-boundary/job-shop-ta41/results/pressure-${{ matrix.parent }}-${{ matrix.suffix }}-${{ matrix.seed }}'
+      - name: Official independent certificate verification
+        if: always()
+        run: |
+          set -euo pipefail
+          out="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/pressure-${{ matrix.parent }}-${{ matrix.suffix }}-${{ matrix.seed }}"
+          if test -f "$out/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$out" | tee "$out/upstream-verdict.json"
+            python3 - "$out" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+          fi
+      - name: Persist audited result, best schedule and unbiased runtime statistics
+        if: always()
+        run: |
+          set -euo pipefail
+          out='science-boundary/job-shop-ta41/results/pressure-${{ matrix.parent }}-${{ matrix.suffix }}-${{ matrix.seed }}'
+          if ! test -d "$out"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$out"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): compare bottleneck pressure ${{ matrix.parent }} ${{ matrix.suffix }} ${{ matrix.seed }}'
+          for attempt in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
