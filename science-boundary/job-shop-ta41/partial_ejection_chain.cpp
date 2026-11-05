@@ -245,9 +245,12 @@ int main(int argc,char**argv){
         auto start=chrono::steady_clock::now();
         auto seedState=[&]()->State{
             State s=baseline;
+            // Deliberately visit 1..4 simultaneous unscheduled operations.
+            // A strict one-in/one-out state graph never escaped pool=1.
+            int seedTarget=min(maxPool,1+(stats.restarts%4));
             for(int step=0;step<maxPool;step++){
                 Evaluation ev=evaluate(s,p,&stats);
-                if(ev.cmax<=target)break;
+                if(ev.cmax<=target&&step>=seedTarget)break;
                 vector<int> pool;
                 for(int u:ev.path){
                     if(!ejected(s,u,p))pool.push_back(u);
@@ -281,6 +284,7 @@ int main(int argc,char**argv){
         unordered_set<uint64_t> visited;
         visited.insert(stateHash(state,p));
         long long restartAt=stats.evaluated+restartEvals;
+        int poolReductionStall=0;
         while(stats.evaluated<budget){
             if(state.pool.empty()){
                 Evaluation full=evaluate(state,p,&stats);
@@ -290,7 +294,7 @@ int main(int argc,char**argv){
                 stats.complete++;
                 state=seedState();now=evaluate(state,p,&stats);
                 visited.clear();visited.insert(stateHash(state,p));
-                stats.restarts++;restartAt=stats.evaluated+restartEvals;
+                stats.restarts++;poolReductionStall=0;restartAt=stats.evaluated+restartEvals;
                 continue;
             }
             if(stats.evaluated>restartAt){
@@ -325,12 +329,32 @@ int main(int argc,char**argv){
                     State repaired=inserted;
                     if(!removeOperation(repaired,y,p))continue;
                     Evaluation er=evaluate(repaired,p,&stats);
-                    if(er.cmax<0||er.cmax>target)continue;
-                    Candidate cand{move(repaired),er.cmax,
-                        int(find(initialPath.begin(),initialPath.end(),y)==initialPath.end()),
-                        1,0};
-                    cand.hash=stateHash(cand.state,p);
-                    if(!visited.count(cand.hash))proposals.push_back(move(cand));
+                    if(er.cmax<0)continue;
+                    if(er.cmax<=target){
+                        Candidate cand{repaired,er.cmax,
+                            int(find(initialPath.begin(),initialPath.end(),y)==initialPath.end()),
+                            1,0};
+                        cand.hash=stateHash(cand.state,p);
+                        if(!visited.count(cand.hash))proposals.push_back(move(cand));
+                    }
+                    // Allow TWO jointly coordinated ejections before
+                    // completing another insertion. This qualitatively
+                    // extends the original pool=1 lateral move graph.
+                    if(int(repaired.pool.size())>=maxPool)continue;
+                    vector<int> additional=ejectionCandidates(repaired,er,p,
+                        initialPath,x,policy,6);
+                    for(int z:additional){
+                        if(stats.evaluated>=budget)break;
+                        State twice=repaired;
+                        if(!removeOperation(twice,z,p))continue;
+                        Evaluation ez=evaluate(twice,p,&stats);
+                        if(ez.cmax<0||ez.cmax>target)continue;
+                        Candidate cand{move(twice),ez.cmax,
+                            int(find(initialPath.begin(),initialPath.end(),z)==initialPath.end()),
+                            2,0};
+                        cand.hash=stateHash(cand.state,p);
+                        if(!visited.count(cand.hash))proposals.push_back(move(cand));
+                    }
                 }
             }
             if(proposals.empty()){
@@ -354,8 +378,21 @@ int main(int argc,char**argv){
                 return a.replaced>b.replaced;
             });
             int pick=0;
-            if(proposals.size()>1&&rng()%7==0)
+            int oldPool=int(state.pool.size());
+            // When lateral ejections stall, occasionally enlarge the
+            // unscheduled set instead of accepting another one-for-one
+            // operation replacement. Otherwise prefer shrinking it.
+            vector<int> growth;
+            for(int i=0;i<int(proposals.size());i++)
+                if(int(proposals[i].state.pool.size())>oldPool)
+                    growth.push_back(i);
+            if(!growth.empty()&&poolReductionStall>=8&&rng()%5!=0)
+                pick=growth[rng()%min(size_t(5),growth.size())];
+            else if(proposals.size()>1&&rng()%7==0)
                 pick=int(rng()%min(size_t(4),proposals.size()));
+            int nextPool=int(proposals[pick].state.pool.size());
+            if(nextPool<oldPool)poolReductionStall=0;
+            else poolReductionStall++;
             State next=move(proposals[pick].state);
             stats.ejections+=proposals[pick].extra_ejections;
             if(proposals[pick].replaced)
