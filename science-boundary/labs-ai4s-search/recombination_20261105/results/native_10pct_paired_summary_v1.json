@@ -1,0 +1,996 @@
+{
+  "rows": 1120,
+  "paired_pair_rep_units": 140,
+  "novel_certificate_rows": 10,
+  "methods": {
+    "0": "parent_copy",
+    "1": "uniform_crossover",
+    "2": "one_point_crossover",
+    "3": "aligned_uniform_crossover",
+    "4": "marginal_EDA",
+    "5": "random_tree_GOM_style",
+    "6": "population_MI_tree_GOM_style",
+    "7": "exact_autocorrelation_epistasis_tree_GOM_style"
+  },
+  "lengths": {
+    "46": {
+      "parent_orbits": 3,
+      "pairs": 3,
+      "reps_per_pair": 5,
+      "parent_bestE": 131,
+      "methods": {
+        "parent_copy": {
+          "mean_session_bestE": 131.0,
+          "best_observedE": 131,
+          "mean_offspring_after_repair_E": 131.0,
+          "all_repaired_offspring": 10304,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 5719.5910124072025,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 116.7445942
+        },
+        "uniform_crossover": {
+          "mean_session_bestE": 137.4,
+          "best_observedE": 131,
+          "mean_offspring_after_repair_E": 224.484439,
+          "all_repaired_offspring": 9388,
+          "all_novel10_certificates_per_session": 1,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.5551374719647181,
+          "generation_rate_per_second": 5211.630586804773,
+          "sessions_with_novel10": 1,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 115.88174440000002,
+          "paired_bestE_gain_vs_copy": -6.4,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -12.8,
+            -1.0666666666666667
+          ]
+        },
+        "one_point_crossover": {
+          "mean_session_bestE": 131.0,
+          "best_observedE": 131,
+          "mean_offspring_after_repair_E": 183.895051,
+          "all_repaired_offspring": 9695,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 5382.1593951292225,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 116.18990426666666,
+          "paired_bestE_gain_vs_copy": 0.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            0.0,
+            0.0
+          ]
+        },
+        "aligned_uniform_crossover": {
+          "mean_session_bestE": 131.0,
+          "best_observedE": 131,
+          "mean_offspring_after_repair_E": 206.66432500000002,
+          "all_repaired_offspring": 9481,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 5262.481810766695,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 115.03830659999998,
+          "paired_bestE_gain_vs_copy": 0.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            0.0,
+            0.0
+          ]
+        },
+        "marginal_EDA": {
+          "mean_session_bestE": 152.86666666666667,
+          "best_observedE": 131,
+          "mean_offspring_after_repair_E": 225.88097040000002,
+          "all_repaired_offspring": 9398,
+          "all_novel10_certificates_per_session": 1,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.5551461913708677,
+          "generation_rate_per_second": 5217.2639065034155,
+          "sessions_with_novel10": 1,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 115.6996606,
+          "paired_bestE_gain_vs_copy": -21.866666666666667,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -26.666666666666668,
+            -17.066666666666666
+          ]
+        },
+        "random_tree_GOM_style": {
+          "mean_session_bestE": 131.0,
+          "best_observedE": 131,
+          "mean_offspring_after_repair_E": 181.81869233333333,
+          "all_repaired_offspring": 8852,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 4913.587314918684,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.16182886666666665,
+          "mean_repair_ms": 102.50264746666667,
+          "paired_bestE_gain_vs_copy": 0.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            0.0,
+            0.0
+          ]
+        },
+        "population_MI_tree_GOM_style": {
+          "mean_session_bestE": 131.0,
+          "best_observedE": 131,
+          "mean_offspring_after_repair_E": 163.0383881333333,
+          "all_repaired_offspring": 8907,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 4944.001248372805,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.20095306666666668,
+          "mean_repair_ms": 102.48248359999998,
+          "paired_bestE_gain_vs_copy": 0.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            0.0,
+            0.0
+          ]
+        },
+        "exact_autocorrelation_epistasis_tree_GOM_style": {
+          "mean_session_bestE": 131.0,
+          "best_observedE": 131,
+          "mean_offspring_after_repair_E": 159.51955566666666,
+          "all_repaired_offspring": 8924,
+          "all_novel10_certificates_per_session": 1,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.5552008673321299,
+          "generation_rate_per_second": 4954.6125400719275,
+          "sessions_with_novel10": 1,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.3543537333333333,
+          "mean_repair_ms": 102.81699353333333,
+          "paired_bestE_gain_vs_copy": 0.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "exact_vs_MI": {
+        "mean_bestE_advantage": 0.0,
+        "mean_new10_certificate_advantage": 0.06666666666666667,
+        "pair_rep_bootCI95_naive": [
+          0.0,
+          0.0
+        ],
+        "win_tie_loss": [
+          0,
+          15,
+          0
+        ]
+      },
+      "exact_vs_random_FOS": {
+        "mean_bestE_advantage": 0.0,
+        "mean_new10_certificate_advantage": 0.06666666666666667,
+        "pair_rep_bootCI95_naive": [
+          0.0,
+          0.0
+        ],
+        "win_tie_loss": [
+          0,
+          15,
+          0
+        ]
+      },
+      "MI_vs_random_FOS": {
+        "mean_bestE_advantage": 0.0,
+        "mean_new10_certificate_advantage": 0.0,
+        "pair_rep_bootCI95_naive": [
+          0.0,
+          0.0
+        ],
+        "win_tie_loss": [
+          0,
+          15,
+          0
+        ]
+      }
+    },
+    "47": {
+      "parent_orbits": 4,
+      "pairs": 6,
+      "reps_per_pair": 5,
+      "parent_bestE": 135,
+      "methods": {
+        "parent_copy": {
+          "mean_session_bestE": 135.0,
+          "best_observedE": 135,
+          "mean_offspring_after_repair_E": 135.0,
+          "all_repaired_offspring": 19953,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 5538.281301907726,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 117.59107833333331
+        },
+        "uniform_crossover": {
+          "mean_session_bestE": 139.13333333333333,
+          "best_observedE": 135,
+          "mean_offspring_after_repair_E": 234.65131276666668,
+          "all_repaired_offspring": 18065,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 5013.75540238875,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 116.52499089999996,
+          "paired_bestE_gain_vs_copy": -4.133333333333334,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -8.533333333333333,
+            -0.6666666666666666
+          ]
+        },
+        "one_point_crossover": {
+          "mean_session_bestE": 135.0,
+          "best_observedE": 135,
+          "mean_offspring_after_repair_E": 193.97462176666662,
+          "all_repaired_offspring": 18531,
+          "all_novel10_certificates_per_session": 2,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.5550929705246863,
+          "generation_rate_per_second": 5143.213918396481,
+          "sessions_with_novel10": 2,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 116.91905636666667,
+          "paired_bestE_gain_vs_copy": 0.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            0.0,
+            0.0
+          ]
+        },
+        "aligned_uniform_crossover": {
+          "mean_session_bestE": 135.0,
+          "best_observedE": 135,
+          "mean_offspring_after_repair_E": 229.78864130000002,
+          "all_repaired_offspring": 17959,
+          "all_novel10_certificates_per_session": 1,
+          "all_novel5_certificates_per_session": 1,
+          "unique_novel10_per_second": 0.2775273157738384,
+          "generation_rate_per_second": 4984.113063982363,
+          "sessions_with_novel10": 1,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 115.90173543333331,
+          "paired_bestE_gain_vs_copy": 0.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            0.0,
+            0.0
+          ]
+        },
+        "marginal_EDA": {
+          "mean_session_bestE": 163.13333333333333,
+          "best_observedE": 135,
+          "mean_offspring_after_repair_E": 236.16322343333331,
+          "all_repaired_offspring": 17955,
+          "all_novel10_certificates_per_session": 2,
+          "all_novel5_certificates_per_session": 1,
+          "unique_novel10_per_second": 0.5550849200217438,
+          "generation_rate_per_second": 4983.274869495205,
+          "sessions_with_novel10": 2,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 116.32768543333334,
+          "paired_bestE_gain_vs_copy": -28.133333333333333,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -32.13333333333333,
+            -24.0
+          ]
+        },
+        "random_tree_GOM_style": {
+          "mean_session_bestE": 135.0,
+          "best_observedE": 135,
+          "mean_offspring_after_repair_E": 188.8310195,
+          "all_repaired_offspring": 17137,
+          "all_novel10_certificates_per_session": 1,
+          "all_novel5_certificates_per_session": 1,
+          "unique_novel10_per_second": 0.2775363576888756,
+          "generation_rate_per_second": 4756.140561714261,
+          "sessions_with_novel10": 1,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.16542259999999998,
+          "mean_repair_ms": 103.73498173333333,
+          "paired_bestE_gain_vs_copy": 0.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            0.0,
+            0.0
+          ]
+        },
+        "population_MI_tree_GOM_style": {
+          "mean_session_bestE": 135.0,
+          "best_observedE": 135,
+          "mean_offspring_after_repair_E": 135.60113716666666,
+          "all_repaired_offspring": 17726,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 4920.5829555921455,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.2087545,
+          "mean_repair_ms": 105.0491179,
+          "paired_bestE_gain_vs_copy": 0.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            0.0,
+            0.0
+          ]
+        },
+        "exact_autocorrelation_epistasis_tree_GOM_style": {
+          "mean_session_bestE": 135.0,
+          "best_observedE": 135,
+          "mean_offspring_after_repair_E": 200.53084486666665,
+          "all_repaired_offspring": 17010,
+          "all_novel10_certificates_per_session": 1,
+          "all_novel5_certificates_per_session": 1,
+          "unique_novel10_per_second": 0.27752112908989596,
+          "generation_rate_per_second": 4720.63440581913,
+          "sessions_with_novel10": 1,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.4482571,
+          "mean_repair_ms": 103.15357466666666,
+          "paired_bestE_gain_vs_copy": 0.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "exact_vs_MI": {
+        "mean_bestE_advantage": 0.0,
+        "mean_new10_certificate_advantage": 0.03333333333333333,
+        "pair_rep_bootCI95_naive": [
+          0.0,
+          0.0
+        ],
+        "win_tie_loss": [
+          0,
+          30,
+          0
+        ]
+      },
+      "exact_vs_random_FOS": {
+        "mean_bestE_advantage": 0.0,
+        "mean_new10_certificate_advantage": 0.0,
+        "pair_rep_bootCI95_naive": [
+          0.0,
+          0.0
+        ],
+        "win_tie_loss": [
+          0,
+          30,
+          0
+        ]
+      },
+      "MI_vs_random_FOS": {
+        "mean_bestE_advantage": 0.0,
+        "mean_new10_certificate_advantage": -0.03333333333333333,
+        "pair_rep_bootCI95_naive": [
+          0.0,
+          0.0
+        ],
+        "win_tie_loss": [
+          0,
+          30,
+          0
+        ]
+      }
+    },
+    "50": {
+      "parent_orbits": 3,
+      "pairs": 3,
+      "reps_per_pair": 5,
+      "parent_bestE": 153,
+      "methods": {
+        "parent_copy": {
+          "mean_session_bestE": 153.0,
+          "best_observedE": 153,
+          "mean_offspring_after_repair_E": 155.66945626666663,
+          "all_repaired_offspring": 8824,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 4898.416612421264,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 117.24653533333337
+        },
+        "uniform_crossover": {
+          "mean_session_bestE": 153.53333333333333,
+          "best_observedE": 153,
+          "mean_offspring_after_repair_E": 266.5547862666666,
+          "all_repaired_offspring": 8029,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 4456.223964748062,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 116.52126686666665,
+          "paired_bestE_gain_vs_copy": -0.5333333333333333,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -1.6,
+            0.0
+          ]
+        },
+        "one_point_crossover": {
+          "mean_session_bestE": 153.0,
+          "best_observedE": 153,
+          "mean_offspring_after_repair_E": 215.012445,
+          "all_repaired_offspring": 8220,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 4562.267201435722,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 116.81560066666665,
+          "paired_bestE_gain_vs_copy": 0.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            0.0,
+            0.0
+          ]
+        },
+        "aligned_uniform_crossover": {
+          "mean_session_bestE": 153.0,
+          "best_observedE": 153,
+          "mean_offspring_after_repair_E": 261.6980399333333,
+          "all_repaired_offspring": 8020,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 4451.041541667278,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 115.73730353333332,
+          "paired_bestE_gain_vs_copy": 0.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            0.0,
+            0.0
+          ]
+        },
+        "marginal_EDA": {
+          "mean_session_bestE": 193.0,
+          "best_observedE": 169,
+          "mean_offspring_after_repair_E": 268.3812402666666,
+          "all_repaired_offspring": 7976,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 4426.061115536886,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 116.33115819999999,
+          "paired_bestE_gain_vs_copy": -40.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -44.8,
+            -34.666666666666664
+          ]
+        },
+        "random_tree_GOM_style": {
+          "mean_session_bestE": 154.6,
+          "best_observedE": 153,
+          "mean_offspring_after_repair_E": 216.5919500666667,
+          "all_repaired_offspring": 7697,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 4272.000734404492,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.18892973333333335,
+          "mean_repair_ms": 104.99551013333333,
+          "paired_bestE_gain_vs_copy": -1.6,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -3.2,
+            0.0
+          ]
+        },
+        "population_MI_tree_GOM_style": {
+          "mean_session_bestE": 157.26666666666668,
+          "best_observedE": 153,
+          "mean_offspring_after_repair_E": 214.1555867333333,
+          "all_repaired_offspring": 7701,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 4274.443888605774,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.2484593333333334,
+          "mean_repair_ms": 105.04314093333332,
+          "paired_bestE_gain_vs_copy": -4.266666666666667,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -6.4,
+            -2.1333333333333333
+          ]
+        },
+        "exact_autocorrelation_epistasis_tree_GOM_style": {
+          "mean_session_bestE": 157.26666666666668,
+          "best_observedE": 153,
+          "mean_offspring_after_repair_E": 221.4573305333333,
+          "all_repaired_offspring": 7561,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 4196.751314733646,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.43863620000000003,
+          "mean_repair_ms": 104.8413732,
+          "paired_bestE_gain_vs_copy": -4.266666666666667,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -6.4,
+            -2.1333333333333333
+          ]
+        }
+      },
+      "exact_vs_MI": {
+        "mean_bestE_advantage": 0.0,
+        "mean_new10_certificate_advantage": 0.0,
+        "pair_rep_bootCI95_naive": [
+          -1.6,
+          1.6
+        ],
+        "win_tie_loss": [
+          1,
+          13,
+          1
+        ]
+      },
+      "exact_vs_random_FOS": {
+        "mean_bestE_advantage": -2.6666666666666665,
+        "mean_new10_certificate_advantage": 0.0,
+        "pair_rep_bootCI95_naive": [
+          -4.8,
+          -1.0666666666666667
+        ],
+        "win_tie_loss": [
+          0,
+          10,
+          5
+        ]
+      },
+      "MI_vs_random_FOS": {
+        "mean_bestE_advantage": -2.6666666666666665,
+        "mean_new10_certificate_advantage": 0.0,
+        "pair_rep_bootCI95_naive": [
+          -4.8,
+          -1.0666666666666667
+        ],
+        "win_tie_loss": [
+          0,
+          10,
+          5
+        ]
+      }
+    },
+    "59": {
+      "parent_orbits": 4,
+      "pairs": 6,
+      "reps_per_pair": 5,
+      "parent_bestE": 205,
+      "methods": {
+        "parent_copy": {
+          "mean_session_bestE": 217.0,
+          "best_observedE": 213,
+          "mean_offspring_after_repair_E": 218.95071880000003,
+          "all_repaired_offspring": 12751,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 3537.139182894701,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 117.94071436666665
+        },
+        "uniform_crossover": {
+          "mean_session_bestE": 228.46666666666667,
+          "best_observedE": 213,
+          "mean_offspring_after_repair_E": 370.79858073333327,
+          "all_repaired_offspring": 11388,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 3160.2658020198674,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 1,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 117.181996,
+          "paired_bestE_gain_vs_copy": -11.466666666666667,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -21.866666666666667,
+            -3.066666666666667
+          ]
+        },
+        "one_point_crossover": {
+          "mean_session_bestE": 217.0,
+          "best_observedE": 213,
+          "mean_offspring_after_repair_E": 300.18108106666665,
+          "all_repaired_offspring": 11693,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 3244.240507152372,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 117.45286869999998,
+          "paired_bestE_gain_vs_copy": 0.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            0.0,
+            0.0
+          ]
+        },
+        "aligned_uniform_crossover": {
+          "mean_session_bestE": 217.0,
+          "best_observedE": 213,
+          "mean_offspring_after_repair_E": 365.28992776666666,
+          "all_repaired_offspring": 11428,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 3170.879715924604,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 116.63271373333333,
+          "paired_bestE_gain_vs_copy": 0.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            0.0,
+            0.0
+          ]
+        },
+        "marginal_EDA": {
+          "mean_session_bestE": 285.53333333333336,
+          "best_observedE": 249,
+          "mean_offspring_after_repair_E": 376.7152528666667,
+          "all_repaired_offspring": 11312,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 3138.3525707354543,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 117.08674133333332,
+          "paired_bestE_gain_vs_copy": -68.53333333333333,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -73.86666666666666,
+            -62.53333333333333
+          ]
+        },
+        "random_tree_GOM_style": {
+          "mean_session_bestE": 219.13333333333333,
+          "best_observedE": 213,
+          "mean_offspring_after_repair_E": 283.58296686666665,
+          "all_repaired_offspring": 11197,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 3106.3618298876363,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.2801134666666666,
+          "mean_repair_ms": 106.4475232,
+          "paired_bestE_gain_vs_copy": -2.1333333333333333,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -3.466666666666667,
+            -1.0666666666666667
+          ]
+        },
+        "population_MI_tree_GOM_style": {
+          "mean_session_bestE": 221.0,
+          "best_observedE": 221,
+          "mean_offspring_after_repair_E": 265.4154332,
+          "all_repaired_offspring": 11273,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 3127.3490835876796,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.3602975333333334,
+          "mean_repair_ms": 106.36382086666666,
+          "paired_bestE_gain_vs_copy": -4.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -5.6,
+            -2.6666666666666665
+          ]
+        },
+        "exact_autocorrelation_epistasis_tree_GOM_style": {
+          "mean_session_bestE": 220.2,
+          "best_observedE": 213,
+          "mean_offspring_after_repair_E": 262.0576205,
+          "all_repaired_offspring": 11280,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 3128.4648797258196,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.8405934666666666,
+          "mean_repair_ms": 106.25037263333334,
+          "paired_bestE_gain_vs_copy": -3.2,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -4.533333333333333,
+            -1.8666666666666667
+          ]
+        }
+      },
+      "exact_vs_MI": {
+        "mean_bestE_advantage": 0.8,
+        "mean_new10_certificate_advantage": 0.0,
+        "pair_rep_bootCI95_naive": [
+          0.0,
+          1.8666666666666667
+        ],
+        "win_tie_loss": [
+          3,
+          27,
+          0
+        ]
+      },
+      "exact_vs_random_FOS": {
+        "mean_bestE_advantage": -1.0666666666666667,
+        "mean_new10_certificate_advantage": 0.0,
+        "pair_rep_bootCI95_naive": [
+          -2.1333333333333333,
+          -0.26666666666666666
+        ],
+        "win_tie_loss": [
+          0,
+          26,
+          4
+        ]
+      },
+      "MI_vs_random_FOS": {
+        "mean_bestE_advantage": -1.8666666666666667,
+        "mean_new10_certificate_advantage": 0.0,
+        "pair_rep_bootCI95_naive": [
+          -3.2,
+          -0.8
+        ],
+        "win_tie_loss": [
+          0,
+          23,
+          7
+        ]
+      }
+    },
+    "60": {
+      "parent_orbits": 5,
+      "pairs": 10,
+      "reps_per_pair": 5,
+      "parent_bestE": 218,
+      "methods": {
+        "parent_copy": {
+          "mean_session_bestE": 221.6,
+          "best_observedE": 218,
+          "mean_offspring_after_repair_E": 226.0281783,
+          "all_repaired_offspring": 20396,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 3395.19681792486,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 118.01803446
+        },
+        "uniform_crossover": {
+          "mean_session_bestE": 240.24,
+          "best_observedE": 218,
+          "mean_offspring_after_repair_E": 388.33370801999996,
+          "all_repaired_offspring": 18087,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 3010.1750807831004,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 117.30045488,
+          "paired_bestE_gain_vs_copy": -18.64,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -27.68,
+            -10.56
+          ]
+        },
+        "one_point_crossover": {
+          "mean_session_bestE": 221.6,
+          "best_observedE": 218,
+          "mean_offspring_after_repair_E": 328.74577942,
+          "all_repaired_offspring": 18682,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 3109.647633161389,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 117.48669008,
+          "paired_bestE_gain_vs_copy": 0.0,
+          "pair_rep_bootCI95_naive_not_independent": [
+            0.0,
+            0.0
+          ]
+        },
+        "aligned_uniform_crossover": {
+          "mean_session_bestE": 221.68,
+          "best_observedE": 218,
+          "mean_offspring_after_repair_E": 382.94459795999995,
+          "all_repaired_offspring": 18116,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 3015.2067550381967,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 116.74284100000001,
+          "paired_bestE_gain_vs_copy": -0.08,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -0.24,
+            0.0
+          ]
+        },
+        "marginal_EDA": {
+          "mean_session_bestE": 297.92,
+          "best_observedE": 270,
+          "mean_offspring_after_repair_E": 390.07474488,
+          "all_repaired_offspring": 17987,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 2993.8206800489857,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.0,
+          "mean_repair_ms": 117.13507856,
+          "paired_bestE_gain_vs_copy": -76.32,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -80.4,
+            -72.0
+          ]
+        },
+        "random_tree_GOM_style": {
+          "mean_session_bestE": 228.4,
+          "best_observedE": 218,
+          "mean_offspring_after_repair_E": 300.14069484,
+          "all_repaired_offspring": 17827,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 2967.2337990488477,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.29881786,
+          "mean_repair_ms": 105.94659044,
+          "paired_bestE_gain_vs_copy": -6.8,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -8.48,
+            -5.12
+          ]
+        },
+        "population_MI_tree_GOM_style": {
+          "mean_session_bestE": 228.8,
+          "best_observedE": 218,
+          "mean_offspring_after_repair_E": 234.21731096000002,
+          "all_repaired_offspring": 18365,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 3057.039253125423,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 0.3821883199999999,
+          "mean_repair_ms": 106.61957516000001,
+          "paired_bestE_gain_vs_copy": -7.2,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -9.04,
+            -5.36
+          ]
+        },
+        "exact_autocorrelation_epistasis_tree_GOM_style": {
+          "mean_session_bestE": 229.76,
+          "best_observedE": 218,
+          "mean_offspring_after_repair_E": 268.1010827399999,
+          "all_repaired_offspring": 18011,
+          "all_novel10_certificates_per_session": 0,
+          "all_novel5_certificates_per_session": 0,
+          "unique_novel10_per_second": 0.0,
+          "generation_rate_per_second": 2997.808292054845,
+          "sessions_with_novel10": 0,
+          "sessions_with_strict_energy_gain": 0,
+          "mean_model_ms": 1.03177022,
+          "mean_repair_ms": 105.79218668000001,
+          "paired_bestE_gain_vs_copy": -8.16,
+          "pair_rep_bootCI95_naive_not_independent": [
+            -9.76,
+            -6.48
+          ]
+        }
+      },
+      "exact_vs_MI": {
+        "mean_bestE_advantage": -0.96,
+        "mean_new10_certificate_advantage": 0.0,
+        "pair_rep_bootCI95_naive": [
+          -2.32,
+          0.48
+        ],
+        "win_tie_loss": [
+          2,
+          38,
+          10
+        ]
+      },
+      "exact_vs_random_FOS": {
+        "mean_bestE_advantage": -1.36,
+        "mean_new10_certificate_advantage": 0.0,
+        "pair_rep_bootCI95_naive": [
+          -2.8,
+          0.0
+        ],
+        "win_tie_loss": [
+          1,
+          42,
+          7
+        ]
+      },
+      "MI_vs_random_FOS": {
+        "mean_bestE_advantage": -0.4,
+        "mean_new10_certificate_advantage": 0.0,
+        "pair_rep_bootCI95_naive": [
+          -2.08,
+          1.2
+        ],
+        "win_tie_loss": [
+          8,
+          36,
+          6
+        ]
+      }
+    }
+  },
+  "macro_limits": [
+    "Known optimum archive sequences N<=60: strict global improvement is impossible",
+    "GOMEA-style approximation uses a single FOS pass on uniform child, not the fully tuned published GOMEA optimizer",
+    "EDA is independent-bit marginal model, not multivariate state-of-the-art",
+    "Multiple source orbits at one length may belong to one shared discovery lineage",
+    "Longer N92/99 parents already include the best known solution: rediscovery is not a new record",
+    "Pair replicates are not independent parent families; source-length clustering is needed",
+    "Repair is costed 64-step Tabu + steepest quench, same for all arms, not modern GPU MTS"
+  ]
+}
