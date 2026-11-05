@@ -10,6 +10,7 @@
 #include <set>
 #include <map>
 #include <iomanip>
+#include <climits>
 using namespace std;
 
 struct Source{int n,e,near;string bits,provenance;};
