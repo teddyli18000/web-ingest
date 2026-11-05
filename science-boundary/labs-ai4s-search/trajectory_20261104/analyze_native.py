@@ -70,13 +70,15 @@ def inspect(path,entry):
                     snapshots.append(dict(N=n,seed=seed,episode=ep,gen=g,step=int(z['step']),
                        t=t,E=curr['E'],Eodd=curr['odd'],Eeven=curr['even'],Dodd=curr['Dodd'],
                        startE=st['E'],startOdd=st['feat']['odd'],startEven=st['feat']['even'],
-                       hamming=hamming(st['seq'],seq),tabu_active=active))
+                       hamming=hamming(st['seq'],seq),tabu_active=active,currentSeq=seq,tabuVector=tabu))
             elif tag=='TS_END':
                 st=starts.pop(ep,None)
                 if not st:raise RuntimeError('TS_END without TS_START')
                 p1=st['parents'].get('PARENT_1');p2=st['parents'].get('PARENT_2')
                 gain=st['E']-bf['E'];assert gain>=0
                 rows.append(dict(N=n,seed=seed,gen=g,episode=ep,
+                    startSeq=st['seq'],endBestSeq=best,endCurrentSeq=seq,
+                    parent1Seq=p1 or '',parent2Seq=p2 or '',endTabuRemaining=z['tabu_remaining'],
                     start_time=st['t'],end_time=t,startE=st['E'],endE=bf['E'],
                     endCurrentE=curr['E'],gain=gain,is_global_record=0,
                     oddStart=st['feat']['odd'],oddEnd=bf['odd'],
