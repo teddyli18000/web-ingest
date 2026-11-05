@@ -1,0 +1,57 @@
+{
+  "source": "borkob/git_labs lMAts original C solver, transient macro patch",
+  "source_commit": "1aa123407636e48630174e0bf122037e369c1d68",
+  "parameters": {
+    "exe": "/home/runner/work/_temp/git_labs/solvers/lMAts-lRRts/src/lMAts",
+    "out": "results/macro_smoke_v1",
+    "lengths": "64,99",
+    "reps": 1,
+    "seconds": 6,
+    "workers": 4,
+    "arms": "0,1,2,3,4,5"
+  },
+  "job_count": 12,
+  "valid": 12,
+  "failures": [],
+  "total_macro_events": 13963,
+  "by_length": {
+    "64": {
+      "mean_E": {
+        "0": 280.0,
+        "1": 284.0,
+        "2": 276.0,
+        "3": 280.0,
+        "4": 284.0,
+        "5": 272.0
+      },
+      "trigger_events": {
+        "0": 0,
+        "1": 2144,
+        "2": 2128,
+        "3": 2038,
+        "4": 2094,
+        "5": 2093
+      }
+    },
+    "99": {
+      "mean_E": {
+        "0": 769.0,
+        "1": 797.0,
+        "2": 809.0,
+        "3": 785.0,
+        "4": 817.0,
+        "5": 737.0
+      },
+      "trigger_events": {
+        "0": 0,
+        "1": 683,
+        "2": 680,
+        "3": 701,
+        "4": 692,
+        "5": 710
+      }
+    }
+  },
+  "runtime_wall_seconds": 18.36,
+  "note": "GA-stagnation intervention; macro proposals plus native Tabu counted within total solver timer; compare entire independent runs"
+}
