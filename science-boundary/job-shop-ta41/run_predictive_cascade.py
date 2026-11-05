@@ -22,8 +22,15 @@ PARENTS={
   'ninecore':('ninecore-neutral-baseline','neutral-certificate.json','neutral-verdict.json'),
   'gateway124':('gateway-124','certificate.json','upstream-verdict.json')
 }
-def source_parent(parent,pos,dur,baseline):
+def source_parent(parent,pos,dur,baseline,cert=None,verdict=None):
     if parent=='baseline':return baseline
+    if parent=='external':
+        assert cert is not None and verdict is not None
+        v=json.loads(verdict.read_text())
+        assert v['valid'] and int(v['score'])==2006,v
+        machines=json.loads(cert.read_text())['machines']
+        assert evaluate(machines,pos,dur)==2006
+        return machines
     folder,cert,verdict=PARENTS[parent]
     root=ROOT/'results'/folder
     v=json.loads((root/verdict).read_text())
@@ -44,7 +51,7 @@ def main(a):
     routes,rows,base=obtain()
     pos,dur=setup(routes,rows)
     assert evaluate(base,pos,dur)==2006
-    parent=source_parent(a.parent,pos,dur,base)
+    parent=source_parent(a.parent,pos,dur,base,a.external_certificate,a.external_verdict)
     a.out.mkdir(parents=True,exist_ok=True)
     data=a.out/'input.txt'
     with data.open('w') as f:
@@ -79,6 +86,7 @@ def main(a):
        candidate[c['machine']].index(c['from_job'])]
     report=dict(
         instance='ta41',source_verified_2006=a.parent,
+        external_parent_provenance=(str(a.external_certificate) if a.external_certificate else None),
         policy=a.policy,seed=a.seed,source_code='predictive_cascade_search.cpp',
         algorithm='fully legal critical-block insertion; tabu, static 3-hop, or dynamic replacement 3-hop',
         is_exact_2026_N7_implementation=False,
@@ -107,7 +115,9 @@ def main(a):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser()
-    p.add_argument('--parent',choices=tuple(PARENTS),required=True)
+    p.add_argument('--parent',choices=(*PARENTS,'external'),required=True)
+    p.add_argument('--external-certificate',type=Path)
+    p.add_argument('--external-verdict',type=Path)
     p.add_argument('--policy',choices=('tabu','static3','dynamic3'),required=True)
     p.add_argument('--seed',type=int,required=True)
     p.add_argument('--evaluations',type=int,default=150000)
