@@ -117,10 +117,11 @@ def run(a):
     flips=[]
     for m,seq in enumerate(orders):
         model.add_no_overlap([ints[j*20+pos[j][m]] for j in range(30)])
-        for k,(a,b) in enumerate(zip(seq,seq[1:])):
+        for k,(job_a,job_b) in enumerate(zip(seq,seq[1:])):
             idx=m*29+k
             x=model.new_bool_var(f'reverse_{m}_{k}')
-            u=a*20+pos[a][m];v=b*20+pos[b][m]
+            u=job_a*20+pos[job_a][m]
+            v=job_b*20+pos[job_b][m]
             model.add(s[v]>=e[u]).only_enforce_if(x.Not())
             model.add(s[u]>=e[v]).only_enforce_if(x)
             flips.append(x)
