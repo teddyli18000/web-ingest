@@ -1,0 +1,86 @@
+name: temp-ta41-elite-far-matched
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-elite-far-matched.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-elite-far-matched
+  cancel-in-progress: false
+jobs:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [4107, 4113, 4129]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile validated shared C++ exact DAG kernel and test Python harness
+        run: |
+          set -euo pipefail
+          g++ -std=c++17 -O3 -Wall -Wextra science-boundary/job-shop-ta41/elite_replacement_relink.cpp -o /tmp/relink
+          python3 -m py_compile science-boundary/job-shop-ta41/run_elite_relink.py
+      - name: Strong 10-parent elite path relink, including two far max-min neutral CP witnesses
+        run: |
+          set -euo pipefail
+          for mode in greedy dynamic2; do
+            python3 science-boundary/job-shop-ta41/run_elite_relink.py \
+              --mode "$mode" --seed '${{ matrix.seed }}' --evaluations 2000000 \
+              --binary /tmp/relink \
+              --out "science-boundary/job-shop-ta41/results/relink-far-$mode-${{ matrix.seed }}"
+          done
+      - name: Official Few Shots verification of all Cmax improved or neutral certificates
+        if: always()
+        run: |
+          set -euo pipefail
+          git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+          for mode in greedy dynamic2; do
+            root="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/relink-far-$mode-${{ matrix.seed }}"
+            if test -f "$root/certificate.json"; then
+              cd /tmp/few-shots
+              python3 problems/p009-job-shop-ta41/verify/verify.py "$root" | tee "$root/upstream-verdict.json"
+              python3 - "$root" <<'PY'
+          import json,sys
+          from pathlib import Path
+          x=json.loads((Path(sys.argv[1])/'upstream-verdict.json').read_text())
+          assert x['valid'] and int(x['score'])<=2005,x
+          PY
+            elif test -f "$root/neutral-certificate.json"; then
+              mkdir -p /tmp/check-neutral
+              cp "$root/neutral-certificate.json" /tmp/check-neutral/certificate.json
+              cd /tmp/few-shots
+              python3 problems/p009-job-shop-ta41/verify/verify.py /tmp/check-neutral | tee "$root/upstream-neutral-verdict.json"
+              python3 - "$root" <<'PY'
+          import json,sys
+          from pathlib import Path
+          x=json.loads((Path(sys.argv[1])/'upstream-neutral-verdict.json').read_text())
+          assert x['valid'] and int(x['score'])==2006,x
+          PY
+            fi
+          done
+      - name: Persist the complete matched evaluation evidence on main
+        if: always()
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for mode in greedy dynamic2; do
+            dir="science-boundary/job-shop-ta41/results/relink-far-$mode-${{ matrix.seed }}"
+            if test -d "$dir"; then
+              rm -f "$dir/elite-pool.txt" "$dir/raw.txt" "$dir/raw.txt.novel"
+              git add "$dir"
+            fi
+          done
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): elite guided path relinking far-parent matched 2m objective scores seed ${{ matrix.seed }}'
+          for attempt in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
