@@ -1,0 +1,84 @@
+name: temp-ta41-predictive-macro-headtohead
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/predictive_macro_search.py'
+      - '.github/workflows/temp-ta41-predictive-macro-headtohead.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-predictive-macro-headtohead
+  cancel-in-progress: false
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Original-source syntax and short executable smoke test
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/predictive_macro_search.py
+          python3 science-boundary/job-shop-ta41/predictive_macro_search.py \
+            --parent baseline --policy replacement --seed 41 \
+            --budget 360 --out /tmp/ta41-predictive-smoke
+          python3 - <<'PY'
+          import json
+          p=json.load(open('/tmp/ta41-predictive-smoke/constructive.json'))
+          assert p['scored_candidates']==360,p
+          assert p['best_score']<=2006,p
+          assert p['critical_state_recomputations']>0,p
+          print('SMOKE_OK',p['best_score'],p['scored_candidates'])
+          PY
+  compare:
+    needs: smoke
+    strategy:
+      fail-fast: false
+      matrix:
+        parent: [baseline, '124']
+        policy: [replacement, current, static, core, random, tabu]
+        seed: [4107, 9241]
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run paired-score budget constructive prediction comparisons
+        run: |
+          python3 science-boundary/job-shop-ta41/predictive_macro_search.py \
+            --parent '${{ matrix.parent }}' --policy '${{ matrix.policy }}' \
+            --seed '${{ matrix.seed }}' --budget 16000 \
+            --out 'science-boundary/job-shop-ta41/results/macro-${{ matrix.parent }}-${{ matrix.policy }}-${{ matrix.seed }}'
+      - name: Official independent Few Shots verification only when <=2005 produced
+        if: always()
+        run: |
+          set -euo pipefail
+          out="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/macro-${{ matrix.parent }}-${{ matrix.policy }}-${{ matrix.seed }}"
+          if test -f "$out/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$out" | tee "$out/upstream-verdict.json"
+            python3 - "$out" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+          fi
+      - name: Persist complete outcome and any certificate into main with collision retries
+        if: always()
+        run: |
+          set -euo pipefail
+          out='science-boundary/job-shop-ta41/results/macro-${{ matrix.parent }}-${{ matrix.policy }}-${{ matrix.seed }}'
+          if ! test -d "$out"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$out"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): constructive macro headtohead ${{ matrix.parent }} ${{ matrix.policy }} ${{ matrix.seed }}'
+          for attempt in $(seq 1 50); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
