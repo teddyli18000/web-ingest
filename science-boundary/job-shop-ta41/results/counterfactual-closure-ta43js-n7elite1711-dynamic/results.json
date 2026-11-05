@@ -1,0 +1,3094 @@
+{
+  "instance": "ta43js-n7elite1711",
+  "incumbent": 1888,
+  "target": 1887,
+  "policy": "dynamic",
+  "seed": 333,
+  "selection": "candidate root adjacent resource reversal; cycle mincut; replacement deadline mincut; assumption core release; exact CP completion",
+  "no_full_schedule_needed_for_conflict_prediction": true,
+  "root_count_limit": 18,
+  "CP_seconds_per_trial": 1.2,
+  "max_repair_rounds_per_root": 6,
+  "release_per_core": 5,
+  "max_released_resource_arcs": 95,
+  "roots": [
+    {
+      "root_id": 516,
+      "root_machine": 17,
+      "baseline_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [
+          {
+            "before": 1888,
+            "broken_arcs": [
+              206
+            ]
+          }
+        ],
+        "initial_released_arcs": 2,
+        "initial_new_order_lb": 1887
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.308,
+          "branches": 1361,
+          "conflicts": 5,
+          "num_assumed_resource_arcs": 578,
+          "sufficient_core_size": 34,
+          "round": 0,
+          "freed_resource_arcs": 2,
+          "partial_order_lb": 1887,
+          "released_core_precedences": [
+            127,
+            202,
+            199,
+            131,
+            126
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.273,
+          "branches": 1358,
+          "conflicts": 5,
+          "num_assumed_resource_arcs": 573,
+          "sufficient_core_size": 28,
+          "round": 1,
+          "freed_resource_arcs": 7,
+          "partial_order_lb": 1883,
+          "released_core_precedences": [
+            386,
+            393,
+            394,
+            53,
+            423
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.561,
+          "branches": 1801,
+          "conflicts": 15,
+          "num_assumed_resource_arcs": 568,
+          "sufficient_core_size": 72,
+          "round": 2,
+          "freed_resource_arcs": 12,
+          "partial_order_lb": 1878,
+          "released_core_precedences": [
+            533,
+            355,
+            5,
+            445,
+            4
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.476,
+          "branches": 1755,
+          "conflicts": 4,
+          "num_assumed_resource_arcs": 563,
+          "sufficient_core_size": 79,
+          "round": 3,
+          "freed_resource_arcs": 17,
+          "partial_order_lb": 1875,
+          "released_core_precedences": [
+            174,
+            226,
+            225,
+            47,
+            304
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.444,
+          "branches": 1807,
+          "conflicts": 10,
+          "num_assumed_resource_arcs": 558,
+          "sufficient_core_size": 82,
+          "round": 4,
+          "freed_resource_arcs": 22,
+          "partial_order_lb": 1865,
+          "released_core_precedences": [
+            348,
+            181,
+            238,
+            371,
+            239
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.641,
+          "branches": 1722,
+          "conflicts": 21,
+          "num_assumed_resource_arcs": 553,
+          "sufficient_core_size": 71,
+          "round": 5,
+          "freed_resource_arcs": 27,
+          "partial_order_lb": 1855
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 535,
+      "root_machine": 18,
+      "baseline_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [
+          {
+            "before": 1949,
+            "broken_arcs": [
+              407
+            ]
+          },
+          {
+            "before": 1947,
+            "broken_arcs": [
+              151
+            ]
+          },
+          {
+            "before": 1946,
+            "broken_arcs": [
+              174
+            ]
+          },
+          {
+            "before": 1945,
+            "broken_arcs": [
+              206
+            ]
+          },
+          {
+            "before": 1944,
+            "broken_arcs": [
+              386
+            ]
+          },
+          {
+            "before": 1942,
+            "broken_arcs": [
+              553
+            ]
+          },
+          {
+            "before": 1940,
+            "broken_arcs": [
+              92
+            ]
+          },
+          {
+            "before": 1936,
+            "broken_arcs": [
+              4
+            ]
+          },
+          {
+            "before": 1935,
+            "broken_arcs": [
+              116
+            ]
+          },
+          {
+            "before": 1931,
+            "broken_arcs": [
+              348
+            ]
+          },
+          {
+            "before": 1930,
+            "broken_arcs": [
+              118
+            ]
+          },
+          {
+            "before": 1929,
+            "broken_arcs": [
+              87
+            ]
+          },
+          {
+            "before": 1928,
+            "broken_arcs": [
+              179
+            ]
+          },
+          {
+            "before": 1924,
+            "broken_arcs": [
+              232
+            ]
+          },
+          {
+            "before": 1918,
+            "broken_arcs": [
+              494
+            ]
+          },
+          {
+            "before": 1913,
+            "broken_arcs": [
+              428
+            ]
+          },
+          {
+            "before": 1890,
+            "broken_arcs": [
+              482
+            ]
+          }
+        ],
+        "initial_released_arcs": 18,
+        "initial_new_order_lb": 1873
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.325,
+          "branches": 1405,
+          "conflicts": 5,
+          "num_assumed_resource_arcs": 562,
+          "sufficient_core_size": 40,
+          "round": 0,
+          "freed_resource_arcs": 18,
+          "partial_order_lb": 1873,
+          "released_core_precedences": [
+            47,
+            222,
+            225,
+            45,
+            46
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.356,
+          "branches": 1448,
+          "conflicts": 8,
+          "num_assumed_resource_arcs": 557,
+          "sufficient_core_size": 46,
+          "round": 1,
+          "freed_resource_arcs": 23,
+          "partial_order_lb": 1866,
+          "released_core_precedences": [
+            134,
+            294,
+            143,
+            126,
+            131
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.328,
+          "branches": 1392,
+          "conflicts": 4,
+          "num_assumed_resource_arcs": 552,
+          "sufficient_core_size": 30,
+          "round": 2,
+          "freed_resource_arcs": 28,
+          "partial_order_lb": 1857,
+          "released_core_precedences": [
+            394,
+            392,
+            393,
+            391,
+            395
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.334,
+          "branches": 1410,
+          "conflicts": 10,
+          "num_assumed_resource_arcs": 547,
+          "sufficient_core_size": 45,
+          "round": 3,
+          "freed_resource_arcs": 33,
+          "partial_order_lb": 1857,
+          "released_core_precedences": [
+            49,
+            104,
+            100,
+            101,
+            103
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.367,
+          "branches": 1455,
+          "conflicts": 8,
+          "num_assumed_resource_arcs": 542,
+          "sufficient_core_size": 48,
+          "round": 4,
+          "freed_resource_arcs": 38,
+          "partial_order_lb": 1849,
+          "released_core_precedences": [
+            53,
+            492,
+            485,
+            362,
+            337
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.4,
+          "branches": 1542,
+          "conflicts": 5,
+          "num_assumed_resource_arcs": 537,
+          "sufficient_core_size": 59,
+          "round": 5,
+          "freed_resource_arcs": 43,
+          "partial_order_lb": 1849
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 255,
+      "root_machine": 8,
+      "baseline_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [],
+        "initial_released_arcs": 1,
+        "initial_new_order_lb": 1887
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.267,
+          "branches": 1280,
+          "conflicts": 5,
+          "num_assumed_resource_arcs": 579,
+          "sufficient_core_size": 18,
+          "round": 0,
+          "freed_resource_arcs": 1,
+          "partial_order_lb": 1887,
+          "released_core_precedences": [
+            121,
+            127,
+            202,
+            124,
+            126
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.323,
+          "branches": 1428,
+          "conflicts": 9,
+          "num_assumed_resource_arcs": 574,
+          "sufficient_core_size": 38,
+          "round": 1,
+          "freed_resource_arcs": 6,
+          "partial_order_lb": 1885,
+          "released_core_precedences": [
+            442,
+            444,
+            166,
+            168,
+            165
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.516,
+          "branches": 1580,
+          "conflicts": 11,
+          "num_assumed_resource_arcs": 569,
+          "sufficient_core_size": 53,
+          "round": 2,
+          "freed_resource_arcs": 11,
+          "partial_order_lb": 1883,
+          "released_core_precedences": [
+            393,
+            407,
+            49,
+            50,
+            52
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.502,
+          "branches": 1506,
+          "conflicts": 22,
+          "num_assumed_resource_arcs": 564,
+          "sufficient_core_size": 43,
+          "round": 3,
+          "freed_resource_arcs": 16,
+          "partial_order_lb": 1875,
+          "released_core_precedences": [
+            46,
+            333,
+            332,
+            225,
+            45
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.583,
+          "branches": 1533,
+          "conflicts": 24,
+          "num_assumed_resource_arcs": 559,
+          "sufficient_core_size": 47,
+          "round": 4,
+          "freed_resource_arcs": 21,
+          "partial_order_lb": 1874,
+          "released_core_precedences": [
+            5,
+            302,
+            282,
+            54,
+            180
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.602,
+          "branches": 1692,
+          "conflicts": 25,
+          "num_assumed_resource_arcs": 554,
+          "sufficient_core_size": 65,
+          "round": 5,
+          "freed_resource_arcs": 26,
+          "partial_order_lb": 1867
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 533,
+      "root_machine": 18,
+      "baseline_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [],
+        "initial_released_arcs": 1,
+        "initial_new_order_lb": 1887
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.268,
+          "branches": 1302,
+          "conflicts": 5,
+          "num_assumed_resource_arcs": 579,
+          "sufficient_core_size": 25,
+          "round": 0,
+          "freed_resource_arcs": 1,
+          "partial_order_lb": 1887,
+          "released_core_precedences": [
+            202,
+            255,
+            567,
+            252,
+            253
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.441,
+          "branches": 1609,
+          "conflicts": 15,
+          "num_assumed_resource_arcs": 574,
+          "sufficient_core_size": 52,
+          "round": 1,
+          "freed_resource_arcs": 6,
+          "partial_order_lb": 1887,
+          "released_core_precedences": [
+            121,
+            127,
+            119,
+            118,
+            122
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.393,
+          "branches": 1538,
+          "conflicts": 8,
+          "num_assumed_resource_arcs": 569,
+          "sufficient_core_size": 46,
+          "round": 2,
+          "freed_resource_arcs": 11,
+          "partial_order_lb": 1883,
+          "released_core_precedences": [
+            424,
+            467,
+            105,
+            423,
+            385
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.496,
+          "branches": 1546,
+          "conflicts": 18,
+          "num_assumed_resource_arcs": 564,
+          "sufficient_core_size": 52,
+          "round": 3,
+          "freed_resource_arcs": 16,
+          "partial_order_lb": 1880,
+          "released_core_precedences": [
+            53,
+            445,
+            245,
+            442,
+            206
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.543,
+          "branches": 1819,
+          "conflicts": 7,
+          "num_assumed_resource_arcs": 559,
+          "sufficient_core_size": 79,
+          "round": 4,
+          "freed_resource_arcs": 21,
+          "partial_order_lb": 1875,
+          "released_core_precedences": [
+            94,
+            332,
+            174,
+            93,
+            47
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.665,
+          "branches": 1738,
+          "conflicts": 24,
+          "num_assumed_resource_arcs": 554,
+          "sufficient_core_size": 70,
+          "round": 5,
+          "freed_resource_arcs": 26,
+          "partial_order_lb": 1865
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 442,
+      "root_machine": 15,
+      "baseline_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [
+          {
+            "before": 1906,
+            "broken_arcs": [
+              410
+            ]
+          },
+          {
+            "before": 1890,
+            "broken_arcs": [
+              174
+            ]
+          }
+        ],
+        "initial_released_arcs": 3,
+        "initial_new_order_lb": 1887
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.245,
+          "branches": 1242,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 577,
+          "sufficient_core_size": 15,
+          "round": 0,
+          "freed_resource_arcs": 3,
+          "partial_order_lb": 1887,
+          "released_core_precedences": [
+            49,
+            51,
+            52,
+            53,
+            50
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.251,
+          "branches": 1282,
+          "conflicts": 1,
+          "num_assumed_resource_arcs": 572,
+          "sufficient_core_size": 22,
+          "round": 1,
+          "freed_resource_arcs": 8,
+          "partial_order_lb": 1887,
+          "released_core_precedences": [
+            201,
+            200,
+            199,
+            202,
+            253
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.243,
+          "branches": 1222,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 567,
+          "sufficient_core_size": 18,
+          "round": 2,
+          "freed_resource_arcs": 13,
+          "partial_order_lb": 1887,
+          "released_core_precedences": [
+            225,
+            224,
+            47,
+            223,
+            222
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.235,
+          "branches": 1212,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 562,
+          "sufficient_core_size": 16,
+          "round": 3,
+          "freed_resource_arcs": 18,
+          "partial_order_lb": 1884,
+          "released_core_precedences": [
+            546,
+            141,
+            545,
+            547,
+            453
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.224,
+          "branches": 1171,
+          "conflicts": 1,
+          "num_assumed_resource_arcs": 557,
+          "sufficient_core_size": 13,
+          "round": 4,
+          "freed_resource_arcs": 23,
+          "partial_order_lb": 1883,
+          "released_core_precedences": [
+            371,
+            485,
+            176,
+            424,
+            386
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.305,
+          "branches": 1369,
+          "conflicts": 4,
+          "num_assumed_resource_arcs": 552,
+          "sufficient_core_size": 42,
+          "round": 5,
+          "freed_resource_arcs": 28,
+          "partial_order_lb": 1880
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 443,
+      "root_machine": 15,
+      "baseline_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [
+          {
+            "before": 1939,
+            "broken_arcs": [
+              116
+            ]
+          },
+          {
+            "before": 1938,
+            "broken_arcs": [
+              4
+            ]
+          },
+          {
+            "before": 1937,
+            "broken_arcs": [
+              174
+            ]
+          },
+          {
+            "before": 1935,
+            "broken_arcs": [
+              118
+            ]
+          },
+          {
+            "before": 1927,
+            "broken_arcs": [
+              348
+            ]
+          },
+          {
+            "before": 1925,
+            "broken_arcs": [
+              410
+            ]
+          },
+          {
+            "before": 1924,
+            "broken_arcs": [
+              179
+            ]
+          },
+          {
+            "before": 1914,
+            "broken_arcs": [
+              494
+            ]
+          },
+          {
+            "before": 1903,
+            "broken_arcs": [
+              175
+            ]
+          }
+        ],
+        "initial_released_arcs": 10,
+        "initial_new_order_lb": 1883
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.257,
+          "branches": 1239,
+          "conflicts": 5,
+          "num_assumed_resource_arcs": 570,
+          "sufficient_core_size": 18,
+          "round": 0,
+          "freed_resource_arcs": 10,
+          "partial_order_lb": 1883,
+          "released_core_precedences": [
+            55,
+            393,
+            52,
+            53,
+            50
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.268,
+          "branches": 1279,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 565,
+          "sufficient_core_size": 27,
+          "round": 1,
+          "freed_resource_arcs": 15,
+          "partial_order_lb": 1875,
+          "released_core_precedences": [
+            210,
+            46,
+            333,
+            332,
+            407
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.29,
+          "branches": 1331,
+          "conflicts": 7,
+          "num_assumed_resource_arcs": 560,
+          "sufficient_core_size": 32,
+          "round": 2,
+          "freed_resource_arcs": 20,
+          "partial_order_lb": 1874,
+          "released_core_precedences": [
+            47,
+            74,
+            299,
+            304,
+            300
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.245,
+          "branches": 1199,
+          "conflicts": 8,
+          "num_assumed_resource_arcs": 555,
+          "sufficient_core_size": 14,
+          "round": 3,
+          "freed_resource_arcs": 25,
+          "partial_order_lb": 1866,
+          "released_core_precedences": [
+            140,
+            131,
+            135,
+            133,
+            129
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.233,
+          "branches": 1188,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 550,
+          "sufficient_core_size": 16,
+          "round": 4,
+          "freed_resource_arcs": 30,
+          "partial_order_lb": 1865,
+          "released_core_precedences": [
+            371,
+            485,
+            504,
+            126,
+            127
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.325,
+          "branches": 1383,
+          "conflicts": 5,
+          "num_assumed_resource_arcs": 545,
+          "sufficient_core_size": 46,
+          "round": 5,
+          "freed_resource_arcs": 35,
+          "partial_order_lb": 1865
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 445,
+      "root_machine": 15,
+      "baseline_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [
+          {
+            "before": 1999,
+            "broken_arcs": [
+              206
+            ]
+          },
+          {
+            "before": 1998,
+            "broken_arcs": [
+              290
+            ]
+          },
+          {
+            "before": 1991,
+            "broken_arcs": [
+              296
+            ]
+          },
+          {
+            "before": 1929,
+            "broken_arcs": [
+              116
+            ]
+          },
+          {
+            "before": 1927,
+            "broken_arcs": [
+              174
+            ]
+          },
+          {
+            "before": 1925,
+            "broken_arcs": [
+              118
+            ]
+          },
+          {
+            "before": 1904,
+            "broken_arcs": [
+              4
+            ]
+          }
+        ],
+        "initial_released_arcs": 8,
+        "initial_new_order_lb": 1883
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.251,
+          "branches": 1253,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 572,
+          "sufficient_core_size": 19,
+          "round": 0,
+          "freed_resource_arcs": 8,
+          "partial_order_lb": 1883,
+          "released_core_precedences": [
+            407,
+            408,
+            226,
+            47,
+            223
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.259,
+          "branches": 1285,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 567,
+          "sufficient_core_size": 26,
+          "round": 1,
+          "freed_resource_arcs": 13,
+          "partial_order_lb": 1881,
+          "released_core_precedences": [
+            253,
+            87,
+            256,
+            258,
+            259
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.261,
+          "branches": 1294,
+          "conflicts": 4,
+          "num_assumed_resource_arcs": 562,
+          "sufficient_core_size": 29,
+          "round": 2,
+          "freed_resource_arcs": 18,
+          "partial_order_lb": 1879,
+          "released_core_precedences": [
+            232,
+            281,
+            283,
+            280,
+            172
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.31,
+          "branches": 1337,
+          "conflicts": 9,
+          "num_assumed_resource_arcs": 557,
+          "sufficient_core_size": 31,
+          "round": 3,
+          "freed_resource_arcs": 23,
+          "partial_order_lb": 1879,
+          "released_core_precedences": [
+            394,
+            393,
+            200,
+            395,
+            199
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.276,
+          "branches": 1289,
+          "conflicts": 6,
+          "num_assumed_resource_arcs": 552,
+          "sufficient_core_size": 29,
+          "round": 4,
+          "freed_resource_arcs": 28,
+          "partial_order_lb": 1873,
+          "released_core_precedences": [
+            126,
+            53,
+            54,
+            128,
+            127
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.309,
+          "branches": 1322,
+          "conflicts": 4,
+          "num_assumed_resource_arcs": 547,
+          "sufficient_core_size": 32,
+          "round": 5,
+          "freed_resource_arcs": 33,
+          "partial_order_lb": 1863
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 515,
+      "root_machine": 17,
+      "baseline_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [
+          {
+            "before": 1909,
+            "broken_arcs": [
+              407
+            ]
+          },
+          {
+            "before": 1907,
+            "broken_arcs": [
+              151
+            ]
+          },
+          {
+            "before": 1906,
+            "broken_arcs": [
+              247
+            ]
+          }
+        ],
+        "initial_released_arcs": 4,
+        "initial_new_order_lb": 1887
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.278,
+          "branches": 1324,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 576,
+          "sufficient_core_size": 27,
+          "round": 0,
+          "freed_resource_arcs": 4,
+          "partial_order_lb": 1887,
+          "released_core_precedences": [
+            116,
+            117,
+            367,
+            165,
+            164
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.26,
+          "branches": 1280,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 571,
+          "sufficient_core_size": 24,
+          "round": 1,
+          "freed_resource_arcs": 9,
+          "partial_order_lb": 1886,
+          "released_core_precedences": [
+            143,
+            144,
+            202,
+            142,
+            126
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.243,
+          "branches": 1210,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 566,
+          "sufficient_core_size": 16,
+          "round": 2,
+          "freed_resource_arcs": 14,
+          "partial_order_lb": 1881,
+          "released_core_precedences": [
+            394,
+            423,
+            337,
+            53,
+            393
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.284,
+          "branches": 1339,
+          "conflicts": 4,
+          "num_assumed_resource_arcs": 561,
+          "sufficient_core_size": 31,
+          "round": 3,
+          "freed_resource_arcs": 19,
+          "partial_order_lb": 1881,
+          "released_core_precedences": [
+            444,
+            430,
+            533,
+            492,
+            206
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.39,
+          "branches": 1487,
+          "conflicts": 7,
+          "num_assumed_resource_arcs": 556,
+          "sufficient_core_size": 50,
+          "round": 4,
+          "freed_resource_arcs": 24,
+          "partial_order_lb": 1875,
+          "released_core_precedences": [
+            92,
+            95,
+            91,
+            225,
+            45
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.361,
+          "branches": 1528,
+          "conflicts": 5,
+          "num_assumed_resource_arcs": 551,
+          "sufficient_core_size": 57,
+          "round": 5,
+          "freed_resource_arcs": 29,
+          "partial_order_lb": 1861
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 532,
+      "root_machine": 18,
+      "baseline_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [
+          {
+            "before": 1928,
+            "broken_arcs": [
+              174
+            ]
+          },
+          {
+            "before": 1924,
+            "broken_arcs": [
+              553
+            ]
+          },
+          {
+            "before": 1922,
+            "broken_arcs": [
+              92
+            ]
+          },
+          {
+            "before": 1906,
+            "broken_arcs": [
+              407
+            ]
+          },
+          {
+            "before": 1902,
+            "broken_arcs": [
+              116
+            ]
+          },
+          {
+            "before": 1901,
+            "broken_arcs": [
+              68
+            ]
+          },
+          {
+            "before": 1897,
+            "broken_arcs": [
+              4
+            ]
+          },
+          {
+            "before": 1891,
+            "broken_arcs": [
+              348
+            ]
+          },
+          {
+            "before": 1888,
+            "broken_arcs": [
+              474
+            ]
+          }
+        ],
+        "initial_released_arcs": 10,
+        "initial_new_order_lb": 1883
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.3,
+          "branches": 1302,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 570,
+          "sufficient_core_size": 31,
+          "round": 0,
+          "freed_resource_arcs": 10,
+          "partial_order_lb": 1883,
+          "released_core_precedences": [
+            226,
+            134,
+            222,
+            46,
+            223
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.266,
+          "branches": 1255,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 565,
+          "sufficient_core_size": 20,
+          "round": 1,
+          "freed_resource_arcs": 15,
+          "partial_order_lb": 1881,
+          "released_core_precedences": [
+            53,
+            247,
+            54,
+            55,
+            51
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.309,
+          "branches": 1370,
+          "conflicts": 1,
+          "num_assumed_resource_arcs": 560,
+          "sufficient_core_size": 31,
+          "round": 2,
+          "freed_resource_arcs": 20,
+          "partial_order_lb": 1881,
+          "released_core_precedences": [
+            462,
+            123,
+            124,
+            196,
+            121
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.251,
+          "branches": 1213,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 555,
+          "sufficient_core_size": 22,
+          "round": 3,
+          "freed_resource_arcs": 25,
+          "partial_order_lb": 1881,
+          "released_core_precedences": [
+            206,
+            467,
+            232,
+            337,
+            371
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.359,
+          "branches": 1412,
+          "conflicts": 9,
+          "num_assumed_resource_arcs": 550,
+          "sufficient_core_size": 39,
+          "round": 4,
+          "freed_resource_arcs": 30,
+          "partial_order_lb": 1881,
+          "released_core_precedences": [
+            394,
+            202,
+            87,
+            255,
+            254
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.353,
+          "branches": 1516,
+          "conflicts": 9,
+          "num_assumed_resource_arcs": 545,
+          "sufficient_core_size": 55,
+          "round": 5,
+          "freed_resource_arcs": 35,
+          "partial_order_lb": 1866
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 444,
+      "root_machine": 15,
+      "baseline_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [
+          {
+            "before": 1971,
+            "broken_arcs": [
+              4
+            ]
+          },
+          {
+            "before": 1969,
+            "broken_arcs": [
+              116
+            ]
+          },
+          {
+            "before": 1967,
+            "broken_arcs": [
+              174
+            ]
+          },
+          {
+            "before": 1965,
+            "broken_arcs": [
+              348
+            ]
+          },
+          {
+            "before": 1962,
+            "broken_arcs": [
+              179
+            ]
+          },
+          {
+            "before": 1958,
+            "broken_arcs": [
+              410
+            ]
+          },
+          {
+            "before": 1952,
+            "broken_arcs": [
+              494
+            ]
+          },
+          {
+            "before": 1936,
+            "broken_arcs": [
+              175
+            ]
+          },
+          {
+            "before": 1932,
+            "broken_arcs": [
+              232
+            ]
+          },
+          {
+            "before": 1922,
+            "broken_arcs": [
+              147
+            ]
+          },
+          {
+            "before": 1896,
+            "broken_arcs": [
+              87
+            ]
+          },
+          {
+            "before": 1894,
+            "broken_arcs": [
+              75
+            ]
+          },
+          {
+            "before": 1893,
+            "broken_arcs": [
+              391
+            ]
+          },
+          {
+            "before": 1892,
+            "broken_arcs": [
+              42
+            ]
+          },
+          {
+            "before": 1891,
+            "broken_arcs": [
+              238
+            ]
+          }
+        ],
+        "initial_released_arcs": 16,
+        "initial_new_order_lb": 1887
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.253,
+          "branches": 1264,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 564,
+          "sufficient_core_size": 25,
+          "round": 0,
+          "freed_resource_arcs": 16,
+          "partial_order_lb": 1887,
+          "released_core_precedences": [
+            536,
+            253,
+            537,
+            414,
+            538
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.268,
+          "branches": 1280,
+          "conflicts": 5,
+          "num_assumed_resource_arcs": 559,
+          "sufficient_core_size": 28,
+          "round": 1,
+          "freed_resource_arcs": 21,
+          "partial_order_lb": 1883,
+          "released_core_precedences": [
+            224,
+            131,
+            223,
+            222,
+            225
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.27,
+          "branches": 1338,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 554,
+          "sufficient_core_size": 33,
+          "round": 2,
+          "freed_resource_arcs": 26,
+          "partial_order_lb": 1883,
+          "released_core_precedences": [
+            51,
+            50,
+            55,
+            49,
+            54
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.284,
+          "branches": 1356,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 549,
+          "sufficient_core_size": 39,
+          "round": 3,
+          "freed_resource_arcs": 31,
+          "partial_order_lb": 1883,
+          "released_core_precedences": [
+            154,
+            430,
+            415,
+            431,
+            429
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.256,
+          "branches": 1260,
+          "conflicts": 5,
+          "num_assumed_resource_arcs": 544,
+          "sufficient_core_size": 26,
+          "round": 4,
+          "freed_resource_arcs": 36,
+          "partial_order_lb": 1882,
+          "released_core_precedences": [
+            22,
+            125,
+            483,
+            371,
+            127
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.233,
+          "branches": 1177,
+          "conflicts": 1,
+          "num_assumed_resource_arcs": 539,
+          "sufficient_core_size": 16,
+          "round": 5,
+          "freed_resource_arcs": 41,
+          "partial_order_lb": 1876
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 202,
+      "root_machine": 6,
+      "baseline_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [
+          {
+            "before": 1912,
+            "broken_arcs": [
+              206
+            ]
+          },
+          {
+            "before": 1907,
+            "broken_arcs": [
+              116
+            ]
+          },
+          {
+            "before": 1906,
+            "broken_arcs": [
+              4
+            ]
+          },
+          {
+            "before": 1905,
+            "broken_arcs": [
+              174
+            ]
+          },
+          {
+            "before": 1904,
+            "broken_arcs": [
+              442
+            ]
+          },
+          {
+            "before": 1903,
+            "broken_arcs": [
+              118
+            ]
+          },
+          {
+            "before": 1899,
+            "broken_arcs": [
+              348
+            ]
+          },
+          {
+            "before": 1897,
+            "broken_arcs": [
+              407
+            ]
+          },
+          {
+            "before": 1896,
+            "broken_arcs": [
+              179
+            ]
+          },
+          {
+            "before": 1895,
+            "broken_arcs": [
+              87
+            ]
+          },
+          {
+            "before": 1893,
+            "broken_arcs": [
+              261
+            ]
+          },
+          {
+            "before": 1892,
+            "broken_arcs": [
+              386
+            ]
+          },
+          {
+            "before": 1891,
+            "broken_arcs": [
+              553
+            ]
+          },
+          {
+            "before": 1889,
+            "broken_arcs": [
+              536
+            ]
+          },
+          {
+            "before": 1888,
+            "broken_arcs": [
+              232
+            ]
+          }
+        ],
+        "initial_released_arcs": 16,
+        "initial_new_order_lb": 1886
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.257,
+          "branches": 1295,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 564,
+          "sufficient_core_size": 25,
+          "round": 0,
+          "freed_resource_arcs": 16,
+          "partial_order_lb": 1886,
+          "released_core_precedences": [
+            505,
+            277,
+            164,
+            504,
+            128
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.237,
+          "branches": 1208,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 559,
+          "sufficient_core_size": 15,
+          "round": 1,
+          "freed_resource_arcs": 21,
+          "partial_order_lb": 1882,
+          "released_core_precedences": [
+            314,
+            393,
+            424,
+            170,
+            395
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.586,
+          "branches": 1817,
+          "conflicts": 7,
+          "num_assumed_resource_arcs": 554,
+          "sufficient_core_size": 76,
+          "round": 2,
+          "freed_resource_arcs": 26,
+          "partial_order_lb": 1873,
+          "released_core_precedences": [
+            224,
+            294,
+            74,
+            299,
+            222
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.5,
+          "branches": 1738,
+          "conflicts": 13,
+          "num_assumed_resource_arcs": 549,
+          "sufficient_core_size": 65,
+          "round": 3,
+          "freed_resource_arcs": 31,
+          "partial_order_lb": 1867,
+          "released_core_precedences": [
+            91,
+            93,
+            95,
+            53,
+            48
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.636,
+          "branches": 1798,
+          "conflicts": 17,
+          "num_assumed_resource_arcs": 544,
+          "sufficient_core_size": 83,
+          "round": 4,
+          "freed_resource_arcs": 36,
+          "partial_order_lb": 1855,
+          "released_core_precedences": [
+            180,
+            9,
+            102,
+            103,
+            99
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.496,
+          "branches": 1773,
+          "conflicts": 7,
+          "num_assumed_resource_arcs": 539,
+          "sufficient_core_size": 77,
+          "round": 5,
+          "freed_resource_arcs": 41,
+          "partial_order_lb": 1850
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 258,
+      "root_machine": 8,
+      "baseline_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [],
+        "initial_released_arcs": 1,
+        "initial_new_order_lb": 1887
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.318,
+          "branches": 1406,
+          "conflicts": 11,
+          "num_assumed_resource_arcs": 579,
+          "sufficient_core_size": 36,
+          "round": 0,
+          "freed_resource_arcs": 1,
+          "partial_order_lb": 1887,
+          "released_core_precedences": [
+            202,
+            125,
+            120,
+            126,
+            124
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.275,
+          "branches": 1321,
+          "conflicts": 4,
+          "num_assumed_resource_arcs": 574,
+          "sufficient_core_size": 23,
+          "round": 1,
+          "freed_resource_arcs": 6,
+          "partial_order_lb": 1885,
+          "released_core_precedences": [
+            536,
+            539,
+            537,
+            540,
+            206
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.245,
+          "branches": 1229,
+          "conflicts": 4,
+          "num_assumed_resource_arcs": 569,
+          "sufficient_core_size": 17,
+          "round": 2,
+          "freed_resource_arcs": 11,
+          "partial_order_lb": 1883,
+          "released_core_precedences": [
+            424,
+            423,
+            394,
+            393,
+            386
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.259,
+          "branches": 1314,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 564,
+          "sufficient_core_size": 25,
+          "round": 3,
+          "freed_resource_arcs": 16,
+          "partial_order_lb": 1875,
+          "released_core_precedences": [
+            93,
+            96,
+            94,
+            92,
+            91
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.256,
+          "branches": 1286,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 559,
+          "sufficient_core_size": 22,
+          "round": 4,
+          "freed_resource_arcs": 21,
+          "partial_order_lb": 1874,
+          "released_core_precedences": [
+            414,
+            415,
+            355,
+            5,
+            4
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.265,
+          "branches": 1300,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 554,
+          "sufficient_core_size": 24,
+          "round": 5,
+          "freed_resource_arcs": 26,
+          "partial_order_lb": 1873
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 540,
+      "root_machine": 18,
+      "baseline_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [
+          {
+            "before": 1972,
+            "broken_arcs": [
+              116
+            ]
+          },
+          {
+            "before": 1971,
+            "broken_arcs": [
+              4
+            ]
+          },
+          {
+            "before": 1970,
+            "broken_arcs": [
+              174
+            ]
+          },
+          {
+            "before": 1968,
+            "broken_arcs": [
+              118
+            ]
+          },
+          {
+            "before": 1961,
+            "broken_arcs": [
+              407
+            ]
+          },
+          {
+            "before": 1960,
+            "broken_arcs": [
+              348
+            ]
+          },
+          {
+            "before": 1959,
+            "broken_arcs": [
+              87
+            ]
+          },
+          {
+            "before": 1957,
+            "broken_arcs": [
+              24
+            ]
+          },
+          {
+            "before": 1947,
+            "broken_arcs": [
+              164
+            ]
+          },
+          {
+            "before": 1944,
+            "broken_arcs": [
+              253
+            ]
+          },
+          {
+            "before": 1920,
+            "broken_arcs": [
+              368
+            ]
+          }
+        ],
+        "initial_released_arcs": 12,
+        "initial_new_order_lb": 1884
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.262,
+          "branches": 1266,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 568,
+          "sufficient_core_size": 24,
+          "round": 0,
+          "freed_resource_arcs": 12,
+          "partial_order_lb": 1884,
+          "released_core_precedences": [
+            202,
+            199,
+            200,
+            394,
+            386
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.254,
+          "branches": 1264,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 563,
+          "sufficient_core_size": 24,
+          "round": 1,
+          "freed_resource_arcs": 17,
+          "partial_order_lb": 1881,
+          "released_core_precedences": [
+            134,
+            126,
+            130,
+            125,
+            131
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.286,
+          "branches": 1324,
+          "conflicts": 7,
+          "num_assumed_resource_arcs": 558,
+          "sufficient_core_size": 28,
+          "round": 2,
+          "freed_resource_arcs": 22,
+          "partial_order_lb": 1881,
+          "released_core_precedences": [
+            443,
+            442,
+            96,
+            92,
+            91
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.251,
+          "branches": 1238,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 553,
+          "sufficient_core_size": 20,
+          "round": 3,
+          "freed_resource_arcs": 27,
+          "partial_order_lb": 1874,
+          "released_core_precedences": [
+            302,
+            297,
+            300,
+            206,
+            296
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.26,
+          "branches": 1238,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 548,
+          "sufficient_core_size": 26,
+          "round": 4,
+          "freed_resource_arcs": 32,
+          "partial_order_lb": 1866,
+          "released_core_precedences": [
+            179,
+            180,
+            182,
+            445,
+            355
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.354,
+          "branches": 1448,
+          "conflicts": 6,
+          "num_assumed_resource_arcs": 543,
+          "sufficient_core_size": 49,
+          "round": 5,
+          "freed_resource_arcs": 37,
+          "partial_order_lb": 1862
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 206,
+      "root_machine": 7,
+      "baseline_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [
+          {
+            "before": 1972,
+            "broken_arcs": [
+              179
+            ]
+          },
+          {
+            "before": 1949,
+            "broken_arcs": [
+              295
+            ]
+          },
+          {
+            "before": 1937,
+            "broken_arcs": [
+              125
+            ]
+          },
+          {
+            "before": 1913,
+            "broken_arcs": [
+              499
+            ]
+          },
+          {
+            "before": 1902,
+            "broken_arcs": [
+              61
+            ]
+          },
+          {
+            "before": 1900,
+            "broken_arcs": [
+              423
+            ]
+          }
+        ],
+        "initial_released_arcs": 7,
+        "initial_new_order_lb": 1881
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.254,
+          "branches": 1262,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 573,
+          "sufficient_core_size": 23,
+          "round": 0,
+          "freed_resource_arcs": 7,
+          "partial_order_lb": 1881,
+          "released_core_precedences": [
+            534,
+            202,
+            87,
+            387,
+            88
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.365,
+          "branches": 1404,
+          "conflicts": 10,
+          "num_assumed_resource_arcs": 568,
+          "sufficient_core_size": 38,
+          "round": 1,
+          "freed_resource_arcs": 12,
+          "partial_order_lb": 1875,
+          "released_core_precedences": [
+            46,
+            92,
+            333,
+            95,
+            94
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.24,
+          "branches": 1206,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 563,
+          "sufficient_core_size": 17,
+          "round": 2,
+          "freed_resource_arcs": 17,
+          "partial_order_lb": 1873,
+          "released_core_precedences": [
+            226,
+            304,
+            303,
+            75,
+            298
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.241,
+          "branches": 1207,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 558,
+          "sufficient_core_size": 17,
+          "round": 3,
+          "freed_resource_arcs": 22,
+          "partial_order_lb": 1873,
+          "released_core_precedences": [
+            53,
+            51,
+            244,
+            355,
+            247
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.233,
+          "branches": 1175,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 553,
+          "sufficient_core_size": 14,
+          "round": 4,
+          "freed_resource_arcs": 27,
+          "partial_order_lb": 1865,
+          "released_core_precedences": [
+            391,
+            485,
+            393,
+            394,
+            371
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.289,
+          "branches": 1227,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 548,
+          "sufficient_core_size": 24,
+          "round": 5,
+          "freed_resource_arcs": 32,
+          "partial_order_lb": 1862
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 355,
+      "root_machine": 12,
+      "baseline_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [
+          {
+            "before": 2007,
+            "broken_arcs": [
+              206
+            ]
+          },
+          {
+            "before": 2006,
+            "broken_arcs": [
+              290
+            ]
+          },
+          {
+            "before": 2004,
+            "broken_arcs": [
+              116
+            ]
+          },
+          {
+            "before": 2002,
+            "broken_arcs": [
+              174
+            ]
+          },
+          {
+            "before": 2001,
+            "broken_arcs": [
+              232
+            ]
+          },
+          {
+            "before": 2000,
+            "broken_arcs": [
+              348
+            ]
+          },
+          {
+            "before": 1999,
+            "broken_arcs": [
+              296
+            ]
+          },
+          {
+            "before": 1997,
+            "broken_arcs": [
+              179
+            ]
+          },
+          {
+            "before": 1995,
+            "broken_arcs": [
+              442
+            ]
+          },
+          {
+            "before": 1994,
+            "broken_arcs": [
+              4
+            ]
+          },
+          {
+            "before": 1991,
+            "broken_arcs": [
+              147
+            ]
+          },
+          {
+            "before": 1987,
+            "broken_arcs": [
+              494
+            ]
+          },
+          {
+            "before": 1981,
+            "broken_arcs": [
+              410
+            ]
+          },
+          {
+            "before": 1978,
+            "broken_arcs": [
+              118
+            ]
+          },
+          {
+            "before": 1967,
+            "broken_arcs": [
+              87
+            ]
+          },
+          {
+            "before": 1965,
+            "broken_arcs": [
+              261
+            ]
+          },
+          {
+            "before": 1963,
+            "broken_arcs": [
+              553
+            ]
+          },
+          {
+            "before": 1962,
+            "broken_arcs": [
+              0
+            ]
+          },
+          {
+            "before": 1961,
+            "broken_arcs": [
+              175
+            ]
+          },
+          {
+            "before": 1960,
+            "broken_arcs": [
+              233
+            ]
+          },
+          {
+            "before": 1953,
+            "broken_arcs": [
+              407
+            ]
+          },
+          {
+            "before": 1950,
+            "broken_arcs": [
+              437
+            ]
+          },
+          {
+            "before": 1942,
+            "broken_arcs": [
+              439
+            ]
+          },
+          {
+            "before": 1936,
+            "broken_arcs": [
+              435
+            ]
+          },
+          {
+            "before": 1934,
+            "broken_arcs": [
+              264
+            ]
+          },
+          {
+            "before": 1929,
+            "broken_arcs": [
+              522
+            ]
+          },
+          {
+            "before": 1928,
+            "broken_arcs": [
+              265
+            ]
+          },
+          {
+            "before": 1922,
+            "broken_arcs": [
+              466
+            ]
+          },
+          {
+            "before": 1918,
+            "broken_arcs": [
+              29
+            ]
+          },
+          {
+            "before": 1917,
+            "broken_arcs": [
+              5
+            ]
+          },
+          {
+            "before": 1916,
+            "broken_arcs": [
+              390
+            ]
+          }
+        ],
+        "initial_released_arcs": 32,
+        "initial_new_order_lb": 1854
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.302,
+          "branches": 1288,
+          "conflicts": 5,
+          "num_assumed_resource_arcs": 548,
+          "sufficient_core_size": 33,
+          "round": 0,
+          "freed_resource_arcs": 32,
+          "partial_order_lb": 1854,
+          "released_core_precedences": [
+            54,
+            394,
+            393,
+            49,
+            50
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.257,
+          "branches": 1273,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 543,
+          "sufficient_core_size": 31,
+          "round": 1,
+          "freed_resource_arcs": 37,
+          "partial_order_lb": 1837,
+          "released_core_precedences": [
+            226,
+            131,
+            133,
+            127,
+            223
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.311,
+          "branches": 1438,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 538,
+          "sufficient_core_size": 43,
+          "round": 2,
+          "freed_resource_arcs": 42,
+          "partial_order_lb": 1833,
+          "released_core_precedences": [
+            9,
+            10,
+            337,
+            32,
+            11
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.402,
+          "branches": 1609,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 533,
+          "sufficient_core_size": 69,
+          "round": 3,
+          "freed_resource_arcs": 47,
+          "partial_order_lb": 1818,
+          "released_core_precedences": [
+            254,
+            253,
+            97,
+            92,
+            256
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.328,
+          "branches": 1389,
+          "conflicts": 5,
+          "num_assumed_resource_arcs": 528,
+          "sufficient_core_size": 42,
+          "round": 4,
+          "freed_resource_arcs": 52,
+          "partial_order_lb": 1805,
+          "released_core_precedences": [
+            47,
+            280,
+            240,
+            282,
+            283
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.262,
+          "branches": 1332,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 523,
+          "sufficient_core_size": 25,
+          "round": 5,
+          "freed_resource_arcs": 57,
+          "partial_order_lb": 1801
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 142,
+      "root_machine": 4,
+      "baseline_slack": 1,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [
+          {
+            "before": 2063,
+            "broken_arcs": [
+              206
+            ]
+          },
+          {
+            "before": 2057,
+            "broken_arcs": [
+              116
+            ]
+          },
+          {
+            "before": 2056,
+            "broken_arcs": [
+              4
+            ]
+          },
+          {
+            "before": 2055,
+            "broken_arcs": [
+              430
+            ]
+          },
+          {
+            "before": 2050,
+            "broken_arcs": [
+              407
+            ]
+          },
+          {
+            "before": 2048,
+            "broken_arcs": [
+              151
+            ]
+          },
+          {
+            "before": 2047,
+            "broken_arcs": [
+              174
+            ]
+          },
+          {
+            "before": 2045,
+            "broken_arcs": [
+              386
+            ]
+          },
+          {
+            "before": 2043,
+            "broken_arcs": [
+              545
+            ]
+          },
+          {
+            "before": 2039,
+            "broken_arcs": [
+              198
+            ]
+          },
+          {
+            "before": 2031,
+            "broken_arcs": [
+              314
+            ]
+          },
+          {
+            "before": 2029,
+            "broken_arcs": [
+              343
+            ]
+          },
+          {
+            "before": 2003,
+            "broken_arcs": [
+              521
+            ]
+          },
+          {
+            "before": 1961,
+            "broken_arcs": [
+              463
+            ]
+          },
+          {
+            "before": 1945,
+            "broken_arcs": [
+              118,
+              553
+            ]
+          },
+          {
+            "before": 1943,
+            "broken_arcs": [
+              175
+            ]
+          },
+          {
+            "before": 1937,
+            "broken_arcs": [
+              348
+            ]
+          },
+          {
+            "before": 1936,
+            "broken_arcs": [
+              87
+            ]
+          },
+          {
+            "before": 1935,
+            "broken_arcs": [
+              290
+            ]
+          },
+          {
+            "before": 1934,
+            "broken_arcs": [
+              179
+            ]
+          },
+          {
+            "before": 1930,
+            "broken_arcs": [
+              232
+            ]
+          },
+          {
+            "before": 1924,
+            "broken_arcs": [
+              494
+            ]
+          },
+          {
+            "before": 1920,
+            "broken_arcs": [
+              147
+            ]
+          },
+          {
+            "before": 1917,
+            "broken_arcs": [
+              466
+            ]
+          },
+          {
+            "before": 1912,
+            "broken_arcs": [
+              261
+            ]
+          },
+          {
+            "before": 1906,
+            "broken_arcs": [
+              295
+            ]
+          },
+          {
+            "before": 1902,
+            "broken_arcs": [
+              439
+            ]
+          },
+          {
+            "before": 1901,
+            "broken_arcs": [
+              0
+            ]
+          },
+          {
+            "before": 1900,
+            "broken_arcs": [
+              29,
+              437
+            ]
+          },
+          {
+            "before": 1899,
+            "broken_arcs": [
+              125
+            ]
+          },
+          {
+            "before": 1898,
+            "broken_arcs": [
+              32,
+              91
+            ]
+          },
+          {
+            "before": 1894,
+            "broken_arcs": [
+              442
+            ]
+          },
+          {
+            "before": 1890,
+            "broken_arcs": [
+              296
+            ]
+          },
+          {
+            "before": 1889,
+            "broken_arcs": [
+              233
+            ]
+          },
+          {
+            "before": 1888,
+            "broken_arcs": [
+              410
+            ]
+          }
+        ],
+        "initial_released_arcs": 39,
+        "initial_new_order_lb": 1881
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.254,
+          "branches": 1166,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 541,
+          "sufficient_core_size": 13,
+          "round": 0,
+          "freed_resource_arcs": 39,
+          "partial_order_lb": 1881,
+          "released_core_precedences": [
+            395,
+            393,
+            453,
+            394,
+            452
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.26,
+          "branches": 1156,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 536,
+          "sufficient_core_size": 17,
+          "round": 1,
+          "freed_resource_arcs": 44,
+          "partial_order_lb": 1881,
+          "released_core_precedences": [
+            13,
+            11,
+            12,
+            333,
+            222
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.3,
+          "branches": 1194,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 531,
+          "sufficient_core_size": 21,
+          "round": 2,
+          "freed_resource_arcs": 49,
+          "partial_order_lb": 1848,
+          "released_core_precedences": [
+            431,
+            506,
+            240,
+            507,
+            504
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.261,
+          "branches": 1184,
+          "conflicts": 4,
+          "num_assumed_resource_arcs": 526,
+          "sufficient_core_size": 20,
+          "round": 3,
+          "freed_resource_arcs": 54,
+          "partial_order_lb": 1826,
+          "released_core_precedences": [
+            355,
+            21,
+            432,
+            99,
+            20
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.279,
+          "branches": 1295,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 521,
+          "sufficient_core_size": 37,
+          "round": 4,
+          "freed_resource_arcs": 59,
+          "partial_order_lb": 1811,
+          "released_core_precedences": [
+            51,
+            281,
+            49,
+            53,
+            283
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.338,
+          "branches": 1422,
+          "conflicts": 8,
+          "num_assumed_resource_arcs": 516,
+          "sufficient_core_size": 50,
+          "round": 5,
+          "freed_resource_arcs": 64,
+          "partial_order_lb": 1798
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 47,
+      "root_machine": 1,
+      "baseline_slack": 1,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [
+          {
+            "before": 1888,
+            "broken_arcs": [
+              206
+            ]
+          }
+        ],
+        "initial_released_arcs": 2,
+        "initial_new_order_lb": 1887
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.274,
+          "branches": 1323,
+          "conflicts": 6,
+          "num_assumed_resource_arcs": 578,
+          "sufficient_core_size": 27,
+          "round": 0,
+          "freed_resource_arcs": 2,
+          "partial_order_lb": 1887,
+          "released_core_precedences": [
+            121,
+            133,
+            123,
+            137,
+            126
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.25,
+          "branches": 1277,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 573,
+          "sufficient_core_size": 26,
+          "round": 1,
+          "freed_resource_arcs": 7,
+          "partial_order_lb": 1883,
+          "released_core_precedences": [
+            256,
+            254,
+            259,
+            253,
+            258
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.337,
+          "branches": 1489,
+          "conflicts": 10,
+          "num_assumed_resource_arcs": 568,
+          "sufficient_core_size": 43,
+          "round": 2,
+          "freed_resource_arcs": 12,
+          "partial_order_lb": 1883,
+          "released_core_precedences": [
+            50,
+            51,
+            52,
+            55,
+            54
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.48,
+          "branches": 1602,
+          "conflicts": 19,
+          "num_assumed_resource_arcs": 563,
+          "sufficient_core_size": 59,
+          "round": 3,
+          "freed_resource_arcs": 17,
+          "partial_order_lb": 1882,
+          "released_core_precedences": [
+            199,
+            386,
+            453,
+            144,
+            424
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.365,
+          "branches": 1526,
+          "conflicts": 8,
+          "num_assumed_resource_arcs": 558,
+          "sufficient_core_size": 53,
+          "round": 4,
+          "freed_resource_arcs": 22,
+          "partial_order_lb": 1878,
+          "released_core_precedences": [
+            166,
+            532,
+            355,
+            367,
+            169
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.468,
+          "branches": 1662,
+          "conflicts": 13,
+          "num_assumed_resource_arcs": 553,
+          "sufficient_core_size": 67,
+          "round": 5,
+          "freed_resource_arcs": 27,
+          "partial_order_lb": 1867
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    },
+    {
+      "root_id": 6,
+      "root_machine": 0,
+      "baseline_slack": 2,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [
+          {
+            "before": 1924,
+            "broken_arcs": [
+              87
+            ]
+          },
+          {
+            "before": 1888,
+            "broken_arcs": [
+              206
+            ]
+          }
+        ],
+        "initial_released_arcs": 3,
+        "initial_new_order_lb": 1887
+      },
+      "rounds": [
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.357,
+          "branches": 1381,
+          "conflicts": 9,
+          "num_assumed_resource_arcs": 577,
+          "sufficient_core_size": 33,
+          "round": 0,
+          "freed_resource_arcs": 3,
+          "partial_order_lb": 1887,
+          "released_core_precedences": [
+            200,
+            142,
+            143,
+            141,
+            199
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.238,
+          "branches": 1202,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 572,
+          "sufficient_core_size": 11,
+          "round": 1,
+          "freed_resource_arcs": 8,
+          "partial_order_lb": 1887,
+          "released_core_precedences": [
+            47,
+            222,
+            226,
+            224,
+            225
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.281,
+          "branches": 1324,
+          "conflicts": 6,
+          "num_assumed_resource_arcs": 567,
+          "sufficient_core_size": 31,
+          "round": 2,
+          "freed_resource_arcs": 13,
+          "partial_order_lb": 1885,
+          "released_core_precedences": [
+            534,
+            355,
+            253,
+            515,
+            533
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.231,
+          "branches": 1185,
+          "conflicts": 2,
+          "num_assumed_resource_arcs": 562,
+          "sufficient_core_size": 12,
+          "round": 3,
+          "freed_resource_arcs": 18,
+          "partial_order_lb": 1885,
+          "released_core_precedences": [
+            281,
+            283,
+            53,
+            282,
+            280
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.228,
+          "branches": 1185,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 557,
+          "sufficient_core_size": 12,
+          "round": 4,
+          "freed_resource_arcs": 23,
+          "partial_order_lb": 1883,
+          "released_core_precedences": [
+            485,
+            371,
+            363,
+            362,
+            364
+          ]
+        },
+        {
+          "status": "INFEASIBLE",
+          "wall_seconds": 0.256,
+          "branches": 1257,
+          "conflicts": 3,
+          "num_assumed_resource_arcs": 552,
+          "sufficient_core_size": 25,
+          "round": 5,
+          "freed_resource_arcs": 28,
+          "partial_order_lb": 1880
+        }
+      ],
+      "terminal": "EXHAUSTED_CONDITIONED_REPAIRS"
+    }
+  ],
+  "status": "UNRESOLVED",
+  "complete": true,
+  "elapsed_seconds": 38.872,
+  "CP_calls": 108,
+  "roots_tested": 18,
+  "globally_infeasible_claimed": false
+}
