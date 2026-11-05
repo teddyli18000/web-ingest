@@ -25,6 +25,7 @@ jobs:
           git clone --depth=1 https://github.com/Qiming01/Job-Shop-Scheduling.git /tmp/n7tabu
           git -C /tmp/n7tabu fetch --depth=1 origin 7e120ebada21cb604c871e0657814bf6e32611f8
           git -C /tmp/n7tabu checkout --detach 7e120ebada21cb604c871e0657814bf6e32611f8
+          sed -i '1i#include <climits>' /tmp/n7tabu/src/graph.cpp
           python3 -m pip install 'cmake>=3.30' pybind11 setuptools wheel
           python3 -m py_compile science-boundary/job-shop-ta41/run_external_n7_reference.py
           CMAKE_PREFIX_PATH="$(python3 -m pybind11 --cmakedir)" python3 -m pip install --no-build-isolation /tmp/n7tabu
