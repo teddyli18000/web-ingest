@@ -1,0 +1,115 @@
+name: temp-labs-ai4s-constrained-donor-recombination
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-constrained-donor-recombination.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-constrained-donor-recombination
+  cancel-in-progress: false
+jobs:
+  donor-cut:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Build strictly source-distinct merged parent cohorts and check direct scores
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 merge_verified_parents.py \
+            --archives data/parents.tsv \
+            --native data/native_independent_2009_v1/independent_highquality_orbits.tsv \
+            --out data/combined
+          python3 - <<'PY'
+          import csv,json,pathlib
+          root=pathlib.Path('data/combined')
+          a=json.loads((root/'combined_manifest.json').read_text())
+          assert a['total20']==33 and a['total10']==29,a
+          assert a['groups10']['59']['count']==6
+          assert a['groups10']['60']['count']==6
+          print('VALIDATED combined parent pool',a['groups10'])
+          PY
+      - name: Compile and test exact donor-inheritance mask geometry
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search
+          g++ -O3 -std=c++17 -Wall -Wextra recombination_20261105/conditional_inheritance.cpp -o /tmp/labs_parent_cut
+          /tmp/labs_parent_cut --selftest
+      - name: Primary 10-percent-quality parents, 4 reps, 9 operators
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          mkdir -p results/constrained_v1
+          /tmp/labs_parent_cut data/combined/combined10.tsv \
+            results/constrained_v1/primary_sessions.tsv \
+            results/constrained_v1/primary_novel_children.tsv 4 120
+      - name: Independent direct scoring of every novel child and each terminal best
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q --disable-pip-version-check numpy
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 evaluate_conditional.py --parents data/combined/combined10.tsv \
+            --sessions results/constrained_v1/primary_sessions.tsv \
+            --certificates results/constrained_v1/primary_novel_children.tsv \
+            --out results/constrained_v1/primary_analysis.json
+      - name: Secondary 20-percent-quality parent sensitivity cohort
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          /tmp/labs_parent_cut data/combined/combined20.tsv \
+            results/constrained_v1/sensitivity_sessions.tsv \
+            results/constrained_v1/sensitivity_novel_children.tsv 2 120
+          python3 evaluate_conditional.py --parents data/combined/combined20.tsv \
+            --sessions results/constrained_v1/sensitivity_sessions.tsv \
+            --certificates results/constrained_v1/sensitivity_novel_children.tsv \
+            --out results/constrained_v1/sensitivity_analysis.json
+      - name: Independently verify count and complete provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 - <<'PY'
+          import csv,json,hashlib,pathlib,platform,subprocess
+          root=pathlib.Path('results/constrained_v1')
+          for cohort,want in [('primary',2016),('sensitivity',2988//2)]:
+            rows=list(csv.DictReader((root/f'{cohort}_sessions.tsv').open(),delimiter='\t'))
+            assert len(rows)==want,(cohort,len(rows),want)
+            assert all(int(z['generations'])>=1 and int(z['bestE'])>0 for z in rows)
+            assert all(float(z['elapsed_ms'])>=120 for z in rows)
+            result=json.loads((root/f'{cohort}_analysis.json').read_text())
+            assert result['status']=='verified' and result['rows']==want
+          provenance={
+            'main_commit_at_source_checkout':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+            'compiler':subprocess.check_output(['g++','--version'],text=True).splitlines()[0],
+            'system':platform.platform(),
+            'runtime_ms_per_arm':120,'primary_reps_per_parent_pair':4,'sensitivity_reps':2,
+            'same_repair':'steepest direct true energy, 64 native-inspired Tabu-7 accepted moves, then steepest quench',
+            'comparison':'balanced donor inheritance, random, one-point, MI/epistasis FOS GOM-style, energy mask-swap, full exact envelope, shuffled envelope',
+            'data_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in root.glob('*.tsv')},
+            'declared_limitations':['GOMEA-style approximation, not tuned published GOMEA','source orbit repeats are not independent parent evidence',
+            'modern 2025 GPU-MTS/2026 SAW not benchmarked','single pair at each N92,99']}
+          (root/'provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
+          print('FULL PASS donor balanced v1 2016+1494 end-to-end sessions')
+          PY
+      - name: Commit source-backed audited joint donor action outcomes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/data/combined/
+          git add science-boundary/labs-ai4s-search/recombination_20261105/results/constrained_v1/
+          git commit -m 'research(labs-ai4s): verify source-distinct donor-cut macro recombination against classical and shuffled-correlation controls'
+          git pull --rebase origin main
+          git push origin HEAD:main
