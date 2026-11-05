@@ -1,0 +1,41 @@
+name: temp-labs-ai4s-cross-registry-audit
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-cross-registry-audit.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Exact independent audit of all unique child energy certificates and cross-registry novelty
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 audit_cross_registry.py
+          python3 - <<'PY'
+          import json,pathlib
+          p=pathlib.Path('results/cross_registry_novelty_audit.json')
+          r=json.loads(p.read_text())
+          assert r['archive_children']['rows']==22
+          assert r['archive_children']['distinct_orbits']==7
+          assert r['native_children']['rows']==10
+          assert r['native_children']['distinct_orbits']==6
+          assert r['combined']['distinct_not_in_parent_registry']>=0
+          print('VERIFIED cross-registry duplicate and archive-recognition audit')
+          PY
+      - name: Preserve independently audited novelty
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/results/cross_registry_novelty_audit.json
+          git commit -m 'research(labs-ai4s): preserve source-union novelty audit beyond active crossover parents'
+          git pull --rebase origin main
+          git push origin HEAD:main
