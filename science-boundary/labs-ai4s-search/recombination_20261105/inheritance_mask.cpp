@@ -74,7 +74,7 @@ L quench_tabu(L input,mt19937_64&rng,int&tabuMoves){
  best.descend(0);
  return best;
 }
-void test(){
+void selftest_inheritance(){
  mt19937_64 rng(5099);
  for(int N:{24,46,59,99})for(int k=0;k<15;k++){
   string a,b;for(int j=0;j<N;j++){a+=(rng()&1?'1':'0');b+=(rng()&1?'1':'0');}
@@ -91,7 +91,7 @@ void test(){
  cout<<"PASS forced-two-parent donor positions, all eight LABS symmetries and exact postrepair energies\n";
 }
 int main(int argc,char**argv){
- if(argc==2&&string(argv[1])=="--selftest"){test();return 0;}
+ if(argc==2&&string(argv[1])=="--selftest"){selftest_inheritance();return 0;}
  if(argc<6){cerr<<"usage PARENTS.tsv OUT.tsv REPS BUDGET_MS MODE_COUNT\n";return 2;}
  auto source=parents(argv[1]);map<int,vector<P*>>groups;
  for(auto &p:source)groups[p.n].push_back(&p);
@@ -129,7 +129,6 @@ int main(int argc,char**argv){
       value=double(descent.e)+(dist<max(2,D/4)?10000.:0.);
     }
     double bestVal=value;int bestSearchE=selected.e;
-    int chosenRepairs=0;
     while(elapsed(t0)*1000 < 0.75*budgetMs){
      vector<char>candidateSel=sel;
      L trial=cur;
