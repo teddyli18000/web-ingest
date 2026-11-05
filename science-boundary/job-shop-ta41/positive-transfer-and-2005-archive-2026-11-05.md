@@ -28,6 +28,26 @@ All 48 trials per method improved their starting makespan (trivial positive rate
 
 The true risk is that perturbing the archived target creates artificially recoverable directions. `create_independent_n7_positive.py` and `original_n7_cold_30x20_driver.cpp` generate **12 source-faithful true N7 cold-initialized elite schedules** (6 instances, two seeds 1701/1711, 20s author N7 search each) with no oracle machinery used in their construction. The final generated schedules are only retained if independently DAG verified and actually worse than an archived full oracle—so positive answer exists without injecting its structure. Workflow `temp-ta41-independent-n7-elite-positives.yml`, run **42044442285**, launched and not yet confirmed complete in this note. Once complete, compare all 4 algorithms on these genuinely independent basins, with **matched search start, paired seeds and both wall-time and evaluation budgets**. Do not claim cross-basin transfer from oracle-origin mutations.
 
+
+## Completed independent-elite basin benchmark — the decisive negative control
+
+The `temp-ta41-independent-n7-elite-positives.yml` run **42044442285** completed successfully, generating and independently verifying **12 30×20 source-algorithm-created schedules** (ta42..47 × author N7 seeds 1701 and 1711, **20 seconds of the genuine native author search from random initial schedules per case**). Their known score gap to published machine-order witnesses is **16–42**, and their parent machine orders were NOT derived by perturbing the hidden answer. The authentic N7 source is pinned as previously; each of the 600 operation machine/start/end records was checked before extracting final machine order.
+
+`temp-ta41-independent-elite-transfer-benchmark.yml` run **42045369980** then completed all **four policy × 12 starts × 2 second-stage seeds = 96** search trials, independent full-score replays, and `judge_independent_elite_transfer.py` produced `results/positive-independent-elite-judged.json`. All four method results were compared on *exactly the same starting schedules*, with the same 350k exact candidate-score budget for the three original arms; genuine N7 was given 5 CPU seconds per trial, which is NOT an equal wall-time budget.
+
+| Policy | Improvement found / 24 | Recovered known archived target / 24 | Mean score improvement | Mean CPU seconds per trial |
+|---|---:|---:|---:|---:|
+| **Genuine original N7** | **9 / 24** | 0 | **1.2083** | 5.00 |
+| dynamic3 | 5 / 24 | 0 | 0.2917 | 2.11 |
+| static3 | 5 / 24 | 0 | 0.2917 | 1.45 |
+| N7-inspired tabu | 4 / 24 | 0 | 0.3333 | 1.14 |
+
+Paired dynamic3 against genuine N7: **3 better / 14 tied / 7 worse**, mean dynamic minus genuine N7 final objective **+0.917** (larger is worse). Against static3: **2 better / 20 tied / 2 worse**. No transferable improvement advantage is established for dynamic3 on these deliberately independent strong-search basins.
+
+**Causal interpretation:** The earlier 24/24 oracle-recovery result was about **undoing damage to archived elite schedules**. This matched-start controlled independent-elite test exposes that as an insufficient proxy for cross-basin constructive ability. Do NOT train on or scale the current three-step full machine-permutation representation. Move to a distinct partial schedule search representation and compare genuine original N7, not only in-house approximations.
+
+**Novelty boundary:** The exact IEBO 2018 method (Nagata & Ono) already uses alternation of insertions and ejections in partial schedules, target-constrained partial makespan lower bounds, and dynamic programming over minimal ejections. The next hypothesis must add *prediction of replacement conflicts, then release/interference closure conditioned on that prediction* beyond IEBO, not claim invention of ejection chains.
+
 ## Historic 2005: evidence, provenance, and unsolved archival question
 
 - [ScheduleOpt historical `bks.json`](https://github.com/ScheduleOpt/benchmarks/blob/main/jobshop/solutions/bks.json) records **ta41js upper bound 2005**, attributed to **NO2013 (2013)** and **CPO2015 (2015)**, **both `certificate:no`**. Its machine-order `solutions.json` contains ta41 only at **2006**, independently scored against Few Shots. [Optimizizer](https://optimizizer.com/TA.php) also publicly provides a **2006** ta41 `(sol)`, not a 2005 certificate. The widely circulated 2005 number is a credible literature report, but not a usable/inspectable machine order.
