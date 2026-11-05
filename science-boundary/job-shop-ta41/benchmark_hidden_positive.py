@@ -33,7 +33,14 @@ def compile_generalized(out, wall_seconds=0):
         '        INITIAL_SCORE=evaluate(root).score;\n'
         '        if(INITIAL_SCORE<=0)throw runtime_error("start is cyclic");\n'
         '        UNREACHABLE_STOP=-1;',1)
-    if wall_seconds>0:\n        marker='while(evaluations<budget&&result.score>UNREACHABLE_STOP){'\n        assert source.count(marker)==1\n        source=source.replace(marker,\n            'while(evaluations<budget&&result.score>UNREACHABLE_STOP && '\n            'chrono::duration<double>(chrono::steady_clock::now()-begin).count()<'\n            +str(float(wall_seconds)) + '){')\n    out.write_text(source)
+    if wall_seconds>0:
+        marker='while(evaluations<budget&&result.score>UNREACHABLE_STOP){'
+        assert source.count(marker)==1
+        source=source.replace(marker,
+            'while(evaluations<budget&&result.score>UNREACHABLE_STOP && '
+            'chrono::duration<double>(chrono::steady_clock::now()-begin).count()<'
+            +str(float(wall_seconds)) + '){')
+    out.write_text(source)
     subprocess.run(['g++','-std=c++17','-O3','-pipe',str(out),'-o',str(out.with_suffix(''))],check=True)
     return out.with_suffix('')
 
