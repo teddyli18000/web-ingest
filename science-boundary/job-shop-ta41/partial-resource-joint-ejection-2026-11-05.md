@@ -94,3 +94,20 @@ The initial core (size 23) includes only one corrective arc 257; simple static s
 ## Software and data provenance
 
 All code, runs and artifacts remain on `main` under `science-boundary/job-shop-ta41/`. OR-Tools CP-SAT pinned `9.14.6206`. Positive control start sources original 2025 Ming Qi published N7 20s runs, 30×20 ta43/ta46, independently validated from all machine/job start/end times; original instance sources ScheduleOpt archived public JSON. Exact machine orders stored in the winning `results/joint-global-*/certificate.json`. The improved candidate scorer is independent of the full resource CP model; further audit uses a separately rebuilt DAG and independent CP. No 2005 certificate has been produced or submitted.
+
+## Counterfactual replacement-core lookahead (completed; falsified naive novelty ranking)
+
+`counterfactual_core_replacement.py`, Action `42053010323` **completed successfully**. For each member of the current sufficient CP UNSAT core, it simulated retracting that arc and computed the successor resource-core **before** any improved complete schedule existed. Rankings used only **number of newly introduced successor core clauses** and core size, with final corrective quartet `[168,199,257,258]` revealed post-hoc.
+
+| Partial release state (hindsight diagnostic only) | Existing core size | Next known corrective arc positions in predicted order | Top-5 corrective count |
+| --- | ---: | --- | ---: |
+| none | 23 | 257 at **rank 6**; 168,199,258 not in current core | 0 |
+| {257} | 35 | 199 at **rank 24**, 258 at **rank 35**; 168 not in current core | 0 |
+| {257,199,258} | 39 | 168 at **rank 39** (last position) | 0 |
+
+**Negative scientific finding:** The presence of an emerging core is useful as a necessary **disjunction**, but **maximizing apparent successor-core novelty is not a reliable autonomous ejection-selection heuristic**. In none of these stages did the predictor rank a true upcoming corrective arc top-5. Crucially, later stages are replayed using the known correct release sequence and do *not* establish that the method could autonomously choose them. Raw data: `results/ta43-counterfactual-core-replacement.json`. The intuitive rule "largest new bottleneck change is best" is falsified on this positive.
+
+### New constructive inference hypothesis
+
+Rather than greedily rank single arcs using successor core size/novelty, maintain **all discovered sufficient conflicting machine precedence sets** and compute a **joint minimum correction hitting set** over them; probe whether the associated partially specified schedule has a target-feasible completion, adding a new core only when the model proves infeasible. This is the established **implicit hitting set (IHS)/MCS** decomposition, not novelty by itself; the test is whether it can autonomously discover jointly required source machine arcs without knowing the 1887 answer. It is now implemented as `constructive_implicit_hitting_set.py` with three otherwise identical hitset cost strategies (uniform, static slack, random tie-break). Six 75s positive transfer trials (independent true-N7 elites ta43/ta46) launched as one-shot Action `temp-ta41-implicit-hitting-set-positive.yml`; **no result claimed until `results/ihs-*/ihs-result.json` is verified**.
+
