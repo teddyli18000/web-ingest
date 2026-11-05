@@ -1,0 +1,513 @@
+{
+  "source": "original 2009-era unrestricted lMAts native code",
+  "episode_and_record_counts": {
+    "episodes": 5057,
+    "records": 127,
+    "record_jumps": 115
+  },
+  "by_length": {
+    "48": {
+      "episodes": 2143,
+      "improvement_count": 2089,
+      "improvement_rate": 0.9748016798880075,
+      "modes": {
+        "both_improve": {
+          "count": 2032,
+          "frac": 0.9727142173288655
+        },
+        "odd_cost_even_repair": {
+          "count": 25,
+          "frac": 0.011967448539971278
+        },
+        "even_cost_odd_repair": {
+          "count": 20,
+          "frac": 0.009573958831977022
+        },
+        "one_axis_flat": {
+          "count": 12,
+          "frac": 0.0057443752991862135
+        }
+      },
+      "mean_success_hamming": 15.05840114887506,
+      "med_success_hamming": 15.0,
+      "pct_net_change_ge_N_over4": 0.7166108185734801,
+      "mean_odd_cost_ratio": 8.067047619047619,
+      "ga_global_records": 0,
+      "percent_of_successes_with_odd_increase": 0.011967448539971278
+    },
+    "64": {
+      "episodes": 1100,
+      "improvement_count": 1073,
+      "improvement_rate": 0.9754545454545455,
+      "modes": {
+        "both_improve": {
+          "count": 1047,
+          "frac": 0.9757688723205965
+        },
+        "odd_cost_even_repair": {
+          "count": 13,
+          "frac": 0.012115563839701771
+        },
+        "even_cost_odd_repair": {
+          "count": 8,
+          "frac": 0.007455731593662628
+        },
+        "one_axis_flat": {
+          "count": 5,
+          "frac": 0.004659832246039142
+        }
+      },
+      "mean_success_hamming": 20.11556383970177,
+      "med_success_hamming": 21.0,
+      "pct_net_change_ge_N_over4": 0.7297297297297297,
+      "mean_odd_cost_ratio": 5.153449328449328,
+      "ga_global_records": 1,
+      "percent_of_successes_with_odd_increase": 0.012115563839701771
+    },
+    "80": {
+      "episodes": 630,
+      "improvement_count": 621,
+      "improvement_rate": 0.9857142857142858,
+      "modes": {
+        "both_improve": {
+          "count": 606,
+          "frac": 0.9758454106280193
+        },
+        "even_cost_odd_repair": {
+          "count": 8,
+          "frac": 0.01288244766505636
+        },
+        "odd_cost_even_repair": {
+          "count": 5,
+          "frac": 0.008051529790660225
+        },
+        "one_axis_flat": {
+          "count": 2,
+          "frac": 0.00322061191626409
+        }
+      },
+      "mean_success_hamming": 25.21256038647343,
+      "med_success_hamming": 25.0,
+      "pct_net_change_ge_N_over4": 0.7294685990338164,
+      "mean_odd_cost_ratio": 6.7,
+      "ga_global_records": 0,
+      "percent_of_successes_with_odd_increase": 0.008051529790660225
+    },
+    "92": {
+      "episodes": 451,
+      "improvement_count": 440,
+      "improvement_rate": 0.975609756097561,
+      "modes": {
+        "both_improve": {
+          "count": 431,
+          "frac": 0.9795454545454545
+        },
+        "even_cost_odd_repair": {
+          "count": 5,
+          "frac": 0.011363636363636364
+        },
+        "odd_cost_even_repair": {
+          "count": 2,
+          "frac": 0.004545454545454545
+        },
+        "one_axis_flat": {
+          "count": 2,
+          "frac": 0.004545454545454545
+        }
+      },
+      "mean_success_hamming": 29.722727272727273,
+      "med_success_hamming": 30.0,
+      "pct_net_change_ge_N_over4": 0.7613636363636364,
+      "mean_odd_cost_ratio": 6.666666666666667,
+      "ga_global_records": 0,
+      "percent_of_successes_with_odd_increase": 0.004545454545454545
+    },
+    "99": {
+      "episodes": 374,
+      "improvement_count": 361,
+      "improvement_rate": 0.9652406417112299,
+      "modes": {
+        "both_improve": {
+          "count": 357,
+          "frac": 0.9889196675900277
+        },
+        "even_cost_odd_repair": {
+          "count": 3,
+          "frac": 0.008310249307479225
+        },
+        "odd_cost_even_repair": {
+          "count": 1,
+          "frac": 0.002770083102493075
+        }
+      },
+      "mean_success_hamming": 31.141274238227147,
+      "med_success_hamming": 32.0,
+      "pct_net_change_ge_N_over4": 0.7146814404432132,
+      "mean_odd_cost_ratio": 6.666666666666667,
+      "ga_global_records": 1,
+      "percent_of_successes_with_odd_increase": 0.002770083102493075
+    },
+    "100": {
+      "episodes": 359,
+      "improvement_count": 351,
+      "improvement_rate": 0.9777158774373259,
+      "modes": {
+        "both_improve": {
+          "count": 344,
+          "frac": 0.98005698005698
+        },
+        "even_cost_odd_repair": {
+          "count": 4,
+          "frac": 0.011396011396011397
+        },
+        "odd_cost_even_repair": {
+          "count": 3,
+          "frac": 0.008547008547008548
+        }
+      },
+      "mean_success_hamming": 31.811965811965813,
+      "med_success_hamming": 32.0,
+      "pct_net_change_ge_N_over4": 0.7236467236467237,
+      "mean_odd_cost_ratio": 5.122222222222223,
+      "ga_global_records": 0,
+      "percent_of_successes_with_odd_increase": 0.008547008547008548
+    }
+  },
+  "by_independent_run": {
+    "48_114859": {
+      "episodes": 1064,
+      "improvement_count": 1041,
+      "improvement_rate": 0.9783834586466166,
+      "modes": {
+        "both_improve": {
+          "count": 1008,
+          "frac": 0.968299711815562
+        },
+        "odd_cost_even_repair": {
+          "count": 17,
+          "frac": 0.01633045148895293
+        },
+        "even_cost_odd_repair": {
+          "count": 9,
+          "frac": 0.008645533141210375
+        },
+        "one_axis_flat": {
+          "count": 7,
+          "frac": 0.0067243035542747355
+        }
+      },
+      "mean_success_hamming": 14.892411143131604,
+      "med_success_hamming": 15.0,
+      "pct_net_change_ge_N_over4": 0.7012487992315082,
+      "mean_odd_cost_ratio": 10.565266106442577,
+      "ga_global_records": 0,
+      "percent_of_successes_with_odd_increase": 0.01633045148895293
+    },
+    "48_219588": {
+      "episodes": 1079,
+      "improvement_count": 1048,
+      "improvement_rate": 0.9712696941612604,
+      "modes": {
+        "both_improve": {
+          "count": 1024,
+          "frac": 0.9770992366412213
+        },
+        "even_cost_odd_repair": {
+          "count": 11,
+          "frac": 0.01049618320610687
+        },
+        "odd_cost_even_repair": {
+          "count": 8,
+          "frac": 0.007633587786259542
+        },
+        "one_axis_flat": {
+          "count": 5,
+          "frac": 0.004770992366412214
+        }
+      },
+      "mean_success_hamming": 15.223282442748092,
+      "med_success_hamming": 15.0,
+      "pct_net_change_ge_N_over4": 0.7318702290076335,
+      "mean_odd_cost_ratio": 2.7583333333333337,
+      "ga_global_records": 0,
+      "percent_of_successes_with_odd_increase": 0.007633587786259542
+    },
+    "64_116475": {
+      "episodes": 552,
+      "improvement_count": 538,
+      "improvement_rate": 0.9746376811594203,
+      "modes": {
+        "both_improve": {
+          "count": 527,
+          "frac": 0.9795539033457249
+        },
+        "odd_cost_even_repair": {
+          "count": 6,
+          "frac": 0.011152416356877323
+        },
+        "even_cost_odd_repair": {
+          "count": 4,
+          "frac": 0.007434944237918215
+        },
+        "one_axis_flat": {
+          "count": 1,
+          "frac": 0.0018587360594795538
+        }
+      },
+      "mean_success_hamming": 20.202602230483272,
+      "med_success_hamming": 21.0,
+      "pct_net_change_ge_N_over4": 0.7267657992565055,
+      "mean_odd_cost_ratio": 5.766666666666667,
+      "ga_global_records": 0,
+      "percent_of_successes_with_odd_increase": 0.011152416356877323
+    },
+    "64_221204": {
+      "episodes": 548,
+      "improvement_count": 535,
+      "improvement_rate": 0.9762773722627737,
+      "modes": {
+        "both_improve": {
+          "count": 520,
+          "frac": 0.9719626168224299
+        },
+        "odd_cost_even_repair": {
+          "count": 7,
+          "frac": 0.013084112149532711
+        },
+        "one_axis_flat": {
+          "count": 4,
+          "frac": 0.007476635514018692
+        },
+        "even_cost_odd_repair": {
+          "count": 4,
+          "frac": 0.007476635514018692
+        }
+      },
+      "mean_success_hamming": 20.02803738317757,
+      "med_success_hamming": 21.0,
+      "pct_net_change_ge_N_over4": 0.7327102803738318,
+      "mean_odd_cost_ratio": 4.627834467120182,
+      "ga_global_records": 1,
+      "percent_of_successes_with_odd_increase": 0.013084112149532711
+    },
+    "80_118091": {
+      "episodes": 316,
+      "improvement_count": 314,
+      "improvement_rate": 0.9936708860759493,
+      "modes": {
+        "both_improve": {
+          "count": 308,
+          "frac": 0.9808917197452229
+        },
+        "even_cost_odd_repair": {
+          "count": 3,
+          "frac": 0.009554140127388535
+        },
+        "odd_cost_even_repair": {
+          "count": 2,
+          "frac": 0.006369426751592357
+        },
+        "one_axis_flat": {
+          "count": 1,
+          "frac": 0.0031847133757961785
+        }
+      },
+      "mean_success_hamming": 25.802547770700638,
+      "med_success_hamming": 26.0,
+      "pct_net_change_ge_N_over4": 0.7420382165605095,
+      "mean_odd_cost_ratio": 10.125,
+      "ga_global_records": 0,
+      "percent_of_successes_with_odd_increase": 0.006369426751592357
+    },
+    "80_222820": {
+      "episodes": 314,
+      "improvement_count": 307,
+      "improvement_rate": 0.9777070063694268,
+      "modes": {
+        "both_improve": {
+          "count": 298,
+          "frac": 0.9706840390879479
+        },
+        "even_cost_odd_repair": {
+          "count": 5,
+          "frac": 0.016286644951140065
+        },
+        "odd_cost_even_repair": {
+          "count": 3,
+          "frac": 0.009771986970684038
+        },
+        "one_axis_flat": {
+          "count": 1,
+          "frac": 0.003257328990228013
+        }
+      },
+      "mean_success_hamming": 24.60912052117264,
+      "med_success_hamming": 25.0,
+      "pct_net_change_ge_N_over4": 0.7166123778501629,
+      "mean_odd_cost_ratio": 4.416666666666667,
+      "ga_global_records": 0,
+      "percent_of_successes_with_odd_increase": 0.009771986970684038
+    },
+    "92_119303": {
+      "episodes": 225,
+      "improvement_count": 222,
+      "improvement_rate": 0.9866666666666667,
+      "modes": {
+        "both_improve": {
+          "count": 218,
+          "frac": 0.9819819819819819
+        },
+        "even_cost_odd_repair": {
+          "count": 2,
+          "frac": 0.009009009009009009
+        },
+        "odd_cost_even_repair": {
+          "count": 1,
+          "frac": 0.0045045045045045045
+        },
+        "one_axis_flat": {
+          "count": 1,
+          "frac": 0.0045045045045045045
+        }
+      },
+      "mean_success_hamming": 29.54954954954955,
+      "med_success_hamming": 30.0,
+      "pct_net_change_ge_N_over4": 0.7612612612612613,
+      "mean_odd_cost_ratio": 12.125,
+      "ga_global_records": 0,
+      "percent_of_successes_with_odd_increase": 0.0045045045045045045
+    },
+    "92_224032": {
+      "episodes": 226,
+      "improvement_count": 218,
+      "improvement_rate": 0.9646017699115044,
+      "modes": {
+        "both_improve": {
+          "count": 213,
+          "frac": 0.9770642201834863
+        },
+        "even_cost_odd_repair": {
+          "count": 3,
+          "frac": 0.013761467889908258
+        },
+        "one_axis_flat": {
+          "count": 1,
+          "frac": 0.0045871559633027525
+        },
+        "odd_cost_even_repair": {
+          "count": 1,
+          "frac": 0.0045871559633027525
+        }
+      },
+      "mean_success_hamming": 29.89908256880734,
+      "med_success_hamming": 30.0,
+      "pct_net_change_ge_N_over4": 0.7614678899082569,
+      "mean_odd_cost_ratio": 1.2083333333333333,
+      "ga_global_records": 0,
+      "percent_of_successes_with_odd_increase": 0.0045871559633027525
+    },
+    "99_120010": {
+      "episodes": 187,
+      "improvement_count": 181,
+      "improvement_rate": 0.9679144385026738,
+      "modes": {
+        "both_improve": {
+          "count": 179,
+          "frac": 0.988950276243094
+        },
+        "even_cost_odd_repair": {
+          "count": 2,
+          "frac": 0.011049723756906077
+        }
+      },
+      "mean_success_hamming": 30.773480662983424,
+      "med_success_hamming": 32.0,
+      "pct_net_change_ge_N_over4": 0.6961325966850829,
+      "mean_odd_cost_ratio": null,
+      "ga_global_records": 1,
+      "percent_of_successes_with_odd_increase": 0.0
+    },
+    "99_224739": {
+      "episodes": 187,
+      "improvement_count": 180,
+      "improvement_rate": 0.9625668449197861,
+      "modes": {
+        "both_improve": {
+          "count": 178,
+          "frac": 0.9888888888888889
+        },
+        "even_cost_odd_repair": {
+          "count": 1,
+          "frac": 0.005555555555555556
+        },
+        "odd_cost_even_repair": {
+          "count": 1,
+          "frac": 0.005555555555555556
+        }
+      },
+      "mean_success_hamming": 31.511111111111113,
+      "med_success_hamming": 32.5,
+      "pct_net_change_ge_N_over4": 0.7333333333333333,
+      "mean_odd_cost_ratio": 6.666666666666667,
+      "ga_global_records": 0,
+      "percent_of_successes_with_odd_increase": 0.005555555555555556
+    },
+    "100_120111": {
+      "episodes": 180,
+      "improvement_count": 179,
+      "improvement_rate": 0.9944444444444445,
+      "modes": {
+        "both_improve": {
+          "count": 174,
+          "frac": 0.9720670391061452
+        },
+        "even_cost_odd_repair": {
+          "count": 3,
+          "frac": 0.01675977653631285
+        },
+        "odd_cost_even_repair": {
+          "count": 2,
+          "frac": 0.0111731843575419
+        }
+      },
+      "mean_success_hamming": 32.31843575418994,
+      "med_success_hamming": 33.0,
+      "pct_net_change_ge_N_over4": 0.7318435754189944,
+      "mean_odd_cost_ratio": 2.6,
+      "ga_global_records": 0,
+      "percent_of_successes_with_odd_increase": 0.0111731843575419
+    },
+    "100_224840": {
+      "episodes": 179,
+      "improvement_count": 172,
+      "improvement_rate": 0.9608938547486033,
+      "modes": {
+        "both_improve": {
+          "count": 170,
+          "frac": 0.9883720930232558
+        },
+        "odd_cost_even_repair": {
+          "count": 1,
+          "frac": 0.005813953488372093
+        },
+        "even_cost_odd_repair": {
+          "count": 1,
+          "frac": 0.005813953488372093
+        }
+      },
+      "mean_success_hamming": 31.28488372093023,
+      "med_success_hamming": 32.0,
+      "pct_net_change_ge_N_over4": 0.7151162790697675,
+      "mean_odd_cost_ratio": 10.166666666666666,
+      "ga_global_records": 0,
+      "percent_of_successes_with_odd_increase": 0.005813953488372093
+    }
+  },
+  "interpretation": [
+    "A GA record jump may arise from crossover of separate population lineages; it is NOT a physical path.",
+    "The Hamming distance between TS_START and TS best is a NET coordinate change across a multi-flip trajectory, not a simultaneous flip.",
+    "Odd/even tradeoffs are computed from exact LABS energy and parity-correct odd defect.",
+    "Per-run and per-length output is observational; within-run episodes are not independent trials.",
+    "Historical 2009 source is not the 2025 GPU-MTS at N92-100 record quality."
+  ]
+}

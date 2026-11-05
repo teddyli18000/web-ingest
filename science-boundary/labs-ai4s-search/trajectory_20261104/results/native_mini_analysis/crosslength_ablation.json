@@ -1,0 +1,78 @@
+{
+  "protocol": "disjoint heldout lengths, zero test-based hyperparameter tuning",
+  "train_N": [
+    48,
+    64,
+    80
+  ],
+  "test_N": [
+    92,
+    99,
+    100
+  ],
+  "train_rows": 3873,
+  "test_rows": 1184,
+  "targets": {
+    "local_improve": {
+      "train_positives": 3783,
+      "test_positives": 1152,
+      "train_rate": 0.9767621998450813,
+      "test_rate": 0.972972972972973,
+      "models": {
+        "constant": {
+          "log_loss": 0.12455159418720305,
+          "brier": 0.02631092507739569,
+          "avg_precision": 0.972972972972973,
+          "auc": 0.5
+        },
+        "energy_history": {
+          "log_loss": 0.04212447580315774,
+          "brier": 0.014840367458039985,
+          "avg_precision": 0.9999061694541427,
+          "auc": 0.996609157986111
+        },
+        "energy_plus_spectrum": {
+          "log_loss": 0.04212602458339009,
+          "brier": 0.015000769031580694,
+          "avg_precision": 0.9998473811653569,
+          "auc": 0.9944661458333333,
+          "mean_run_logloss_benefit_vs_energy": -0.0002119683900023471,
+          "source_run_boot95": [
+            -0.0027285463664300093,
+            0.0019962951358036113
+          ]
+        },
+        "energy_plus_bits": {
+          "log_loss": 0.04365367476645121,
+          "brier": 0.01542898818763307,
+          "avg_precision": 0.9998948519320716,
+          "auc": 0.9962022569444444,
+          "mean_run_logloss_benefit_vs_energy": -0.0015601853748826832,
+          "source_run_boot95": [
+            -0.0024982792606836196,
+            -0.000579276459692704
+          ]
+        },
+        "combined": {
+          "log_loss": 0.04284099102600808,
+          "brier": 0.015265413903194034,
+          "avg_precision": 0.9998474756883579,
+          "auc": 0.9944661458333334,
+          "mean_run_logloss_benefit_vs_energy": -0.0009485094337723323,
+          "source_run_boot95": [
+            -0.003788038189337506,
+            0.001475373767371213
+          ]
+        }
+      }
+    },
+    "global_record": {
+      "train_positives": 1,
+      "test_positives": 1,
+      "train_rate": 0.0002581977794990963,
+      "test_rate": 0.0008445945945945946,
+      "models": {},
+      "status": "insufficient class events for defensible cross-length inference"
+    }
+  }
+}
