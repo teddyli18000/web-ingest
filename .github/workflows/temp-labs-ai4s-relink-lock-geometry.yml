@@ -1,0 +1,59 @@
+name: temp-labs-ai4s-relink-lock-geometry
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-relink-lock-geometry.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  exact-oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Exact predeclared known-target donor-lock exclusion probability over 66 source-optimum triples
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 innovation/path_relinking/target_lock_geometry.py \
+            --parents data/parents.tsv \
+            --out innovation/path_relinking/results/known_third_target_lock_geometry.json
+      - name: Independently audit hypergeometric and symmetry-orbit targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 - <<'PY'
+          import json,math,pathlib
+          f=pathlib.Path('innovation/path_relinking/results/known_third_target_lock_geometry.json')
+          x=json.loads(f.read_text())
+          assert len(x['triples'])==66
+          assert {n:z['known_third_optimum_triples'] for n,z in x['by_length'].items()}=={'46':3,'47':60,'50':3}
+          for t in x['triples']:
+            d=t['nearest_B_distance'];u=t['minimum_B_conflict_sites']
+            for m,prob in zip(t['stage_locked_sites'],t['nearest_stage_target_compatibility']):
+              expected=math.comb(d-u,m)/math.comb(d,m) if m<=d-u else 0.
+              assert abs(prob-expected)<1e-14
+            assert t['nearest_stage_target_compatibility'][-1]==int(u==0)
+            assert all(v>=0 and v<=1 for v in t['symmetry_optimistic_target_compatibility'])
+          print('PASS all 66 target compatibility and exact k-of-n hypergeometric checks')
+          PY
+      - name: Commit exact known-target certificate with concurrent main rebase retry
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/path_relinking/results/
+          git commit -m 'research(labs-ai4s): certify all 66 known-target donor-lock incompatibility probabilities'
+          for attempt in 1 2 3 4 5 6; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
