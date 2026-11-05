@@ -29,10 +29,17 @@ def main(a):
         f.write('30 20\n')
         for j in range(30):
             f.write(' '.join(f'{routes[j][k]} {drows[j][k]}' for k in range(20))+'\n')
+    seed_file=None
+    if a.warmstart:
+        seed_file=a.out/'verified-parent-orders.txt'
+        with seed_file.open('w') as f:
+            for row in baseline:
+                f.write(' '.join(map(str,row))+'\n')
     csvpath=a.out/'upstream-schedule.csv'
     t=time.monotonic()
-    result=subprocess.run([str(a.driver),str(inp),str(csvpath),str(a.seconds),str(a.seed)],
-                          capture_output=True,text=True,check=True)
+    command=[str(a.driver),str(inp),str(csvpath),str(a.seconds),str(a.seed)]
+    if seed_file is not None:command.append(str(seed_file))
+    result=subprocess.run(command,capture_output=True,text=True,check=True)
     print(result.stdout,flush=True)
     assert result.stdout.startswith('RESULT '),result.stdout[-1000:]
     x=result.stdout.strip().split()
@@ -62,12 +69,15 @@ def main(a):
     report=dict(instance='ta41',baseline=2006,target=2005,
        external_implementation='Ming Qi C++ N7 tabu search 2025, AGPLv3',
        source_repository='https://github.com/Qiming01/Job-Shop-Scheduling',
-       upstream_sha=sha,upstream_modified=False,
+       upstream_sha=sha,upstream_modified=bool(a.warmstart),
+       exact_unmodified_N7_neighborhood_and_search_rules=True,
+       starting_schedule=('Few Shots verified 2006' if a.warmstart else 'upstream random Giffler-Thompson'),
+       warmstart_source_patch=('patch_original_n7_warmstart.py' if a.warmstart else None),
        original_reference='Zhang et al. 2007, Computers & Operations Research 34(11), 3229-3242',
        independent_python_dag_makespan=independent,original_cpp_makespan=score,
        seed=a.seed,budget_seconds=a.seconds,iterations=iterations,
        elapsed_cpp_seconds=secs,elapsed_total_seconds=round(time.monotonic()-t,3),
-       comparison_limitation='Unmodified upstream initializes with its own random feasible schedule. No shared 2006 warmstart; results are not paired with our incumbent-based experiments.',
+       comparison_limitation=('Source N7 search preserved exactly; only initialized with a verified 2006 complete machine order before search, so directly comparable at initial quality but original score-evaluation counts differ.' if a.warmstart else 'Original source initializes with its own random feasible schedule; not matched to incumbent-based experiments.'),
        exact_N7_author_source_reproduced=True,verified_by_official_FewShots_score=a.check,
        improvement=score<=2005)
     (a.out/'summary.json').write_text(json.dumps(report,indent=2)+'\n')
@@ -81,6 +91,7 @@ if __name__=='__main__':
     p.add_argument('--driver',required=True,type=Path)
     p.add_argument('--seconds',default=120,type=int)
     p.add_argument('--seed',required=True,type=int)
+    p.add_argument('--warmstart',action='store_true')
     p.add_argument('--check',default='pending_official_verifier')
     p.add_argument('--out',required=True,type=Path)
     main(p.parse_args())
