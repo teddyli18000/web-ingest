@@ -375,6 +375,7 @@ static Result search(Schedule initial,const string&policy,long long budget,
     if(evaluate(result.best).score!=result.score)throw runtime_error("invalid best");
     return result;
 }
+#ifndef CASCADE_LIB
 int main(int argc,char**argv){
     try{
         if(argc!=10){
@@ -409,3 +410,5 @@ int main(int argc,char**argv){
         return 1;
     }
 }
+
+#endif // CASCADE_LIB: permit exact graph evaluator reuse by elite path relinking
