@@ -1,0 +1,64 @@
+name: temp C7p5 new circular auxiliary versus BPZ t9 obstructions
+
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7p5-circular-t9.yml
+      - science-boundary/shannon-capacity-c7/code/c7p5_circular_t9_fft.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-c7p5-circular-t9
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install NumPy for exact-rounded 5D cyclic correlation
+        run: python -m pip install 'numpy>=1.26,<3'
+      - name: Fetch pinned BPZ/Tandon proof geometry
+        run: |
+          git init --quiet /tmp/c7-tandon
+          git -C /tmp/c7-tandon fetch --quiet --depth 1 https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git c753408492dde92a239708986d16c15dbf6c3235
+          git -C /tmp/c7-tandon checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-tandon rev-parse HEAD)" = c753408492dde92a239708986d16c15dbf6c3235
+      - name: Scan all 160 masks times 16,807 relative auxiliary translations
+        run: |
+          mkdir -p /tmp/c7-t9
+          python science-boundary/shannon-capacity-c7/code/c7p5_circular_t9_fft.py \
+            /tmp/c7-tandon \
+            science-boundary/shannon-capacity-c7/data/circular-phase-367-2026-11-04.json \
+            /tmp/c7-t9/status.json /tmp/c7-t9/certificate.json /tmp/c7-t9/near_miss.json
+      - name: Independently replay any p004 134,770-point breakthrough
+        run: |
+          if test -s /tmp/c7-t9/certificate.json; then
+            git clone --quiet --depth 1 https://github.com/few-shots/few-shots.git /tmp/c7-fewshots
+            mkdir -p /tmp/c7-t9/shot
+            cp /tmp/c7-t9/certificate.json /tmp/c7-t9/shot/certificate.json
+            python /tmp/c7-fewshots/problems/p004-shannon-capacity-c7/verify/verify.py /tmp/c7-t9/shot
+          else
+            echo 'No t9 auxiliary zero intersection; preserving closest obstruction.'
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c7p5-new-circular-t9-full-fft
+          path: |
+            /tmp/c7-t9/status.json
+            /tmp/c7-t9/near_miss.json
+            /tmp/c7-t9/certificate.json
+          retention-days: 14
