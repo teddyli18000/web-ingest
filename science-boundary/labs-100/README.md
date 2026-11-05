@@ -38,9 +38,15 @@ Current exact frontier:
 - on `O=58,K=16`, the four extreme compression splits `(1,15),(3,13),(13,3),(15,1)` and the six maximum-overlap subbranches of `(5,11),(7,9)` (and their swapped necessary-Q counterparts) are exactly excluded by periodic-cross + negacyclic fibre-Q checks (runs `41719753889`, `41851120769`); lower-overlap central cases remain;
 - on `O=58,K=34`, both zero-fibre splits `(25,9)` and `(9,25)` are exactly excluded by the independent 4,113-support-orbit periodic spectral census (run `41853593511`), which proves `SG>=72` and hence `E>=670` in those two splits.
 - on `O=58,K=34`, the two-sparse fibre splits `(23,11)` and `(11,23)` are also exactly closed: 240 normalized negacyclic systems leave 1,912 low-SH fibres, and an exhaustive support-constrained periodic join of 952 groups finds `Qpass=0` (clean run `41855726843`); only the five central K34 splits remain.
+- **New support-defect formulation:** with overlap T and uncovered sites Z, set F=T union Z. Modulo 2 the periodic cross equation becomes `P F*+F P*=target`, and `|F|=25-K+2|T|`. Small F replaces huge raw compressed support scans.
+- on `O=58,K=24`, balanced disjoint compression splits `(11,13)` and `(13,11)` at `t=0` are strictly excluded by exact reflection-support and negacyclic fibre-Q checks (clean run `42022471825`);
+- on `O=58,K=26`, balanced `(13,13)` at `t=1` is strictly excluded by the same one-site support-defect kernel (clean run `42023022631`);
+- on `O=58,K=28`, balanced `(13,15)` and swapped `(15,13)` at `t=3` are strictly excluded after 34 QHITs and all **66,000** induced binary affine-lift scorings (clean run `42025382319`; smallest full E=1310, smallest odd energy O=154). Other K28 overlaps/splits remain open.
 
 The latest complete records are:
 
+- [`results/2026-11-05-o58-k28-triple-overlap-allaffine.md`](results/2026-11-05-o58-k28-triple-overlap-allaffine.md)
+- [`results/2026-11-05-o58-central-nearfull-k24-k26.md`](results/2026-11-05-o58-central-nearfull-k24-k26.md)
 - [`results/2026-11-04-o58-k16-central-highoverlap-exclusion.md`](results/2026-11-04-o58-k16-central-highoverlap-exclusion.md)
 - [`results/2026-11-04-o58-k34-two-sparse-fibre-closure.md`](results/2026-11-04-o58-k34-two-sparse-fibre-closure.md)
 - [`results/2026-11-04-o58-k34-extreme-periodic-exclusion.md`](results/2026-11-04-o58-k34-extreme-periodic-exclusion.md)
@@ -315,11 +321,12 @@ So any surviving odd-perfect breakthrough has `d>=6`. This hierarchy should not 
 
 ## Next steps
 
-1. **Interpret the completed high-overlap `O=58,K=16` central-split exclusions** from run `41851120769`: all six maximum-overlap branches of `(5,11),(7,9)` and their necessary-Q swapped counterparts have no fibre-Q survivor. Lower-overlap central cases remain open, but avoid blindly multiplying support orbits before assessing candidate quality.
-2. **Reassess candidate quality before scaling more edge exclusions.** `O=58,K=34` now has four rigorously excluded edge splits, and `O=58,K=16` has four excluded extreme splits, but neither route has improved the unrestricted incumbent. Test whether the central centers `K=22,24,26,28` or the next odd-energy defect layer `O=66` have higher-value feasible candidate families. Prefer joint periodic/fibre support design over multiplying the old support census.
-3. Use the validated `K34` two-sparse method as a new mechanism, **not an instruction to enumerate every larger sparse-fibre class**: its exact GF(3) ternary negacyclic census yields 1,912 low-SH fibres and its support-wise periodic join proves 0 Q passes. For `(21,13)` or later, first characterize whether low-SH support orbits expose genuinely new candidates before investing in exhaustive computation.
-4. Retain odd-perfect `(18,0),K>=25` as a comparison only; three consecutive center layers are already rigorously excluded. Seek coupled/global constraints rather than one more automatic `K` increment.
-5. Re-check Few Shots/public records immediately before a record claim. Any `E<=574` candidate requires independent full LABS rescoring, the Few Shots verifier, the required certificate/SHOT and authorized publication.
+1. **Pursue candidate-generating three-site support-defect families, not automatic next K.** The common GF(2) kernel `F=T union Z`, |F|=3 spans the balanced O58 classes K22/t0 (25,324 support representatives), K24/t1 (4,742), K26/t2 (70,276), and K28/t3 (2,194), after the six affine orbits of F. K28/t3 has just been closed by direct all-affine scoring, and K24/t1 is being tested in run `42026399358`. Prioritize whichever has fewer actual odd-pair residual defects after complete lifting, rather than the one that excludes more candidates.
+2. **Enforce the missing odd-correlation residual early.** Let D_r=C_(2r+1), z_r=(D_r+D_(49-r))/4 and e_r=(D_r-D_(49-r))/2. On the O58 target, z is a unit vector and every |e_r|=1. The Q=SG+SH test alone left 34 K28/t3 apparent survivors, yet all 66,000 full affine images had O>=154. Derive or implement a coupled signed support/fibre filter for the e_r conditions before expensive full-lift generation.
+3. Record complete uncapped HITs and exact all-affine binary rescoring for **any** Q survivor. A periodic or fibre orbit representative alone is never a valid aperiodic exclusion.
+4. Compare these O58 candidates with unrestricted high-quality non-near-skew states. Fixed-(2,2) swap annealing and the exact four-flip transfer from the E678 odd-perfect seed failed to approach the record; do not scale those unchanged.
+5. Re-check the live Few Shots record before a record claim. Any E<=574 sequence requires independent LABS scoring, Few Shots verification, certificate/SHOT creation, and submission.
+
 
 ## Durable artifacts
 
@@ -348,5 +355,6 @@ So any surviving odd-perfect breakthrough has `d>=6`. This hierarchy should not 
 - **2026-10-29:** Proved exact N100 near-skew optimum 578; excluded endpoint defects 1 through 5; derived the global parity-polynomial factorization and norm identity; developed the order-25 compression program and closed W127.
 - **2026-10-30:** Repaired affine-fibre coverage rigor; exactly closed the remaining low11 W129/W131 branches; derived and regression-tested the periodic/negacyclic fibre split; began the `(18,0)` center-layer program.
 - **2026-10-31:** Completely excluded `(18,0)` `K=19` and `K=21` through `E<=570`, including direct final rescoring of all Q-level fibre survivors; generalized the compressed solver and moved to `K=23`.
+- **2026-11-05:** Derived the global small support-defect identity F=T union Z and exhausted three balanced central minimal-overlap families with independent Actions: K24/t0, K26/t1 and K28/t3. K28 needed a complete 34-QHIT, 66,000 full binary affine-witness audit (none even reaches odd energy 58). Opened candidate-oriented F3 K24/t1 run 42026399358 and reassessed the next mechanism as early odd-pair residual constraints. No record candidate.
 - **2026-11-04:** In the first non-odd-perfect O58 layer, closed four K16 extreme norm splits by uncapped compressed/fibre Q enumeration and four K34 edge norm splits by two independent exact pipelines: a 4,113-support-orbit periodic spectrum proof and a 240-system ternary-fibre plus 952-support-group periodic join. Clean Actions runs 41719753889, 41853593511 and 41855726843 verify the frozen counts. K16 central high-overlap Action subsequently finished with six more strict Q exclusions; best unrestricted E remains 578.
 - **2026-11-01:** Exactly closed the full `(18,0),K=23` layer, including independent sharded final witness rescoring of all lower-split Q survivors. Reassessed the search space and derived the first non-odd-perfect layer `O=58` as a one-sparse coupled periodic/negacyclic defect problem with canonical half sums `(2,2)`.
