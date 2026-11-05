@@ -46,6 +46,12 @@ jobs:
           assert re.search(r'^SUMMARY budget=128 .*$',y,re.M)
           print('K24_F3_Q_AUDIT',re.search(r'^SUMMARY budget=128 .*$',y,re.M).group(0))
           PY
+      - name: Score every matched binary fibre and all 500 affine transforms
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/o58_k24_overlap1_allaffine_witness.py outputs/compressed.log outputs/fibre.log | tee outputs/witness.log
+          grep -q 'K24_F3_FULL_AFFINE_AUDIT compressed=314 QHIT=10 mapped_Q=18 transforms=18000 O58=0 minE=1358 minO=170' outputs/witness.log
       - name: Archive complete exact transcripts
         if: always()
         uses: actions/upload-artifact@v4
