@@ -1,0 +1,90 @@
+name: temp-labs-ai4s-causal-second-parent-geometry
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-causal-second-parent-geometry.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-causal-second-parent-geometry
+  cancel-in-progress: false
+jobs:
+  source-geometry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Compile exact solver and selftest donor/placebo/Hamming class identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search
+          g++ -O3 -std=c++17 -Wall -Wextra recombination_20261105/innovation/causal_source_geometry.cpp -o /tmp/labs_causal
+          /tmp/labs_causal --selftest
+      - name: Preregistered 11 arm full-cost second-parent causal experiment
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          mkdir -p innovation/results/causal_parent_D_v1
+          /tmp/labs_causal data/combined/combined10.tsv \
+            innovation/results/causal_parent_D_v1/source_sessions.tsv \
+            innovation/results/causal_parent_D_v1/novel_children.tsv 5 120
+      - name: Verify every retained child with independent integer LABS correlations
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q numpy
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 innovation/validate_causal_geometry.py \
+            --parents data/combined/combined10.tsv \
+            --sessions innovation/results/causal_parent_D_v1/source_sessions.tsv \
+            --novel innovation/results/causal_parent_D_v1/novel_children.tsv \
+            --out innovation/results/causal_parent_D_v1/analysis.json
+          python3 - <<'PY'
+          import csv,hashlib,json,pathlib,platform,subprocess
+          root=pathlib.Path('innovation/results/causal_parent_D_v1')
+          r=json.loads((root/'analysis.json').read_text())
+          rows=list(csv.DictReader((root/'source_sessions.tsv').open(),delimiter='\t'))
+          assert len(rows)==r['sessions']==56*5*11==3080
+          assert r['source_orbits']==29 and r['source_parent_pairs']==56
+          assert set(r['by_length'])=={'46','47','50','59','60','92','99'}
+          assert all(float(x['elapsedMs'])>=120 for x in rows)
+          v={
+            'source_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+            'machine':platform.platform(),
+            'compiler':subprocess.check_output(['g++','--version'],text=True).splitlines()[0],
+            'full_solver_budget_ms_per_session':120,
+            'source_pair_reps':5,
+            'method_count':11,
+            'source_pair_count':56,
+            'source_orbit_count':29,
+            'all_full_cost_treatments':3080,
+            'source_parent_sha256':hashlib.sha256(pathlib.Path('data/combined/combined10.tsv').read_bytes()).hexdigest(),
+            'output_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in root.glob('*.tsv')},
+            'frozen_protocol':'innovation/CAUSAL_INHERITANCE_PROTOCOL.md',
+            'claim_limit':'Not a modern GPU MTS/full GOMEA comparison; source-shared offspring are dependent; no record submissions'}
+          (root/'provenance.json').write_text(json.dumps(v,indent=2)+'\n')
+          print('VERIFIED 3080 real vs shuffled second parent D versus same-radius single elite controls')
+          PY
+      - name: Preserve independently audited offspring, paired trials and metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/results/causal_parent_D_v1/
+          git commit -m 'research(labs-ai4s): exact certify 3080 full-cost real D versus placebo D and one-parent LABS recombination controls'
+          for attempt in 1 2 3 4 5 6 7 8; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              echo "PERSISTED fully audited causal experiment on attempt $attempt"
+              exit 0
+            fi
+            sleep 3
+          done
+          exit 1
