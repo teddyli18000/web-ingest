@@ -23,15 +23,17 @@ TRACE = r'''/* Instrumented GPL lMAts during transient build; not a solver repla
 #include <stdio.h>
 #include <time.h>
 #include <stdint.h>
+#include <string.h>
 static FILE *lab_trace=NULL;
-static int lab_initialized=0,lab_gen=0,lab_episode=0,lab_stride=32;
+static int lab_initialized=0,lab_gen=0,lab_episode=0,lab_stride=32,lab_genstride=4;
 static uint64_t lab_events=0;
 static struct timespec lab_t0;
 static void trace_lab_close(void) {if(lab_trace) {fflush(lab_trace);fclose(lab_trace);lab_trace=NULL;}}
 static void trace_lab_init(void) {
  if(lab_initialized)return;
  lab_initialized=1;
- const char *p=getenv("LABS_TRACE_FILE"),*str=getenv("LABS_TRACE_STRIDE");
+ const char *p=getenv("LABS_TRACE_FILE"),*str=getenv("LABS_TRACE_STRIDE"),*gs=getenv("LABS_TRACE_GENSTRIDE");
+ if(gs){int z=atoi(gs);if(z>=1)lab_genstride=z;}
  if(str){int z=atoi(str);if(z>=1)lab_stride=z;}
  if(!p||!*p)return;
  lab_trace=fopen(p,"w");if(!lab_trace){perror("LABS_TRACE_FILE");exit(4);}
@@ -46,6 +48,7 @@ int trace_lab_stride(void){trace_lab_init();return lab_stride;}
 void trace_lab_event(const char *tag,int step,int e,int best_e,const Gene *cur,
                      const Gene *best,const int *expiry,int n){
  trace_lab_init();if(!lab_trace)return;
+ if((lab_gen%lab_genstride)!=0 && strcmp(tag,"GA_RECORD")!=0)return;
  struct timespec now;clock_gettime(CLOCK_MONOTONIC,&now);
  double t=(now.tv_sec-lab_t0.tv_sec)+(now.tv_nsec-lab_t0.tv_nsec)*1.e-9;
  fprintf(lab_trace,"%s\t%d\t%d\t%d\t%d\t%d\t%d\t%.6f\t",tag,lab_gen,lab_episode,step,n,e,best_e,t);
