@@ -18,7 +18,7 @@ struct Inherit {
  vector<int>D,Q;
  int half,innovation;
  vector<int>env;
- Inherit(const Parent&a,const Parent&b):A(a.state),B(parse(align_donor(a.seq,b.seq))){
+ Inherit(const Parent&a,const Parent&b,bool align=true):A(a.state),B(parse(align?align_donor(a.seq,b.seq):b.seq)){
   for(int i=0;i<A.n;i++)(A.s[i]==B.s[i]?Q:D).push_back(i);
   if(D.size()<8)throw runtime_error("same-orbit/low-diversity parents");
   half=int(D.size())/2;
