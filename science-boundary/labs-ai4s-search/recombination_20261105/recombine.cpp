@@ -172,7 +172,7 @@ void selftest(){
   for(string v:orb(s))if(parse(v).e!=b.e||canon(v)!=canon(s))throw runtime_error("symmetry exactness");
   Parent A;A.n=n;A.seq=s;A.state=b;
   vector<Parent*> pool={&A};
-  for(auto &w:{link_mi(pool,n),link_exact(pool,n)}){
+  for(const auto &w:{link_mi(pool,n),link_exact(pool,n)}){
    auto fos=build_tree(w,n,rng);if(fos.size()<n)throw runtime_error("FOS malformed");
    int evaluations=0,accepted=0;L x=gom(b,b,fos,rng,evaluations,accepted);
    if(x.e!=b.e)throw runtime_error("GOM selftest unexpected");
