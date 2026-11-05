@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'science-boundary/job-shop-ta41/patch_external_n7_seed.py'
+      - 'science-boundary/job-shop-ta41/run_external_n7_reference.py'
       - '.github/workflows/temp-ta41-external-n7-warmstarted.yml'
   workflow_dispatch:
 permissions:
@@ -16,6 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         seed: [4107, 9241]
+        parent: [baseline, ninecore]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -36,13 +38,13 @@ jobs:
       - name: Run native N7/tabu from SAME 2006 start used by predictive macro
         run: |
           python3 science-boundary/job-shop-ta41/run_external_n7_reference.py \
-            --warmstart --seed '${{ matrix.seed }}' --seconds 120 \
-            --out 'science-boundary/job-shop-ta41/results/external-n7-seeded-${{ matrix.seed }}'
+            --warmstart --seed '${{ matrix.seed }}' --parent '${{ matrix.parent }}' --seconds 120 \
+            --out 'science-boundary/job-shop-ta41/results/external-n7-seeded-${{ matrix.parent }}-${{ matrix.seed }}'
       - name: Official Few Shots verification of complete native machine orders
         if: always()
         run: |
           set -euo pipefail
-          out="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/external-n7-seeded-${{ matrix.seed }}"
+          out="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/external-n7-seeded-${{ matrix.parent }}-${{ matrix.seed }}"
           if test -f "$out/candidate.json"; then
             git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
             cd /tmp/few-shots
@@ -61,7 +63,7 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          out='science-boundary/job-shop-ta41/results/external-n7-seeded-${{ matrix.seed }}'
+          out='science-boundary/job-shop-ta41/results/external-n7-seeded-${{ matrix.parent }}-${{ matrix.seed }}'
           if ! test -d "$out"; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
