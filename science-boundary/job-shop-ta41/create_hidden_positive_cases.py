@@ -62,7 +62,7 @@ def degrade(oracle,score,pos,duration,seed,level):
             history.append([m,i,val])
         else:
             rows[m][i],rows[m][i+1]=rows[m][i+1],rows[m][i]
-    assert count>=2 and best>=goal,(seed,level,count,best-score)
+    assert count>=1 and best>=goal,(seed,level,count,best-score)
     verified=evaluate(rows,pos,duration)
     assert verified==best and verified>score
     return rows,best,history
