@@ -97,8 +97,8 @@ int main(int argc,char**argv){
  for(auto &p:source)groups[p.n].push_back(&p);
  ofstream f(argv[2]);if(!f)throw runtime_error("output failed");
  int reps=stoi(argv[3]),budgetMs=stoi(argv[4]),methods=stoi(argv[5]);
- f<<"N\tpair\trep\tmode\tEA\tEB\tD\tH\tmask_search_E\tmask_target_score\t"
-   "mask_distance_to_A\tmask_distance_to_B\tquench_E\tfinal_E\tfinal_min_orbit_distance\t"
+ f<<"N\tpair\trep\tmode\tEA\tEB\tD\tH\tmask_search_E\tmask_bits\tmask_target_score\t"
+   "mask_distance_to_A\tmask_distance_to_B\tquench_E\tquench_bits\tfinal_E\tfinal_min_orbit_distance\t"
    "novel_strict\tnew_within5\tnew_within10\tcandidates_evaluated\tquench_evaluations\t"
    "repair_tabu_moves\tfinal_bits\tfinal_canonical\tsearch_ms\trepair_ms\telapsed_ms\n";
  f<<fixed<<setprecision(6);
@@ -178,7 +178,7 @@ int main(int argc,char**argv){
     int finalD=min(distance_orbit(finalBits,A.bits),distance_orbit(finalBits,B.bits));
     int novel=!family.count(ca);
     f<<n<<"\t"<<pair<<"\t"<<rep<<"\t"<<mode<<"\t"<<A.E<<"\t"<<B.E<<"\t"<<D<<"\t"<<H
-     <<"\t"<<bestSearchE<<"\t"<<bestVal<<"\t"<<H<<"\t"<<D-H<<"\t"<<quench.e
+     <<"\t"<<bestSearchE<<"\t"<<tobits(selected)<<"\t"<<bestVal<<"\t"<<H<<"\t"<<D-H<<"\t"<<quench.e<<"\t"<<tobits(quench)
      <<"\t"<<repaired.e<<"\t"<<finalD<<"\t"<<(repaired.e<min(A.E,B.E))
      <<"\t"<<(novel && repaired.e<=int(bestref*1.05+1e-9))
      <<"\t"<<(novel && repaired.e<=int(bestref*1.10+1e-9))
