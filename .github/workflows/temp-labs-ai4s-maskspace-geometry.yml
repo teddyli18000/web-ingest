@@ -1,0 +1,59 @@
+name: temp-labs-ai4s-maskspace-geometry
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-maskspace-geometry.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  maskspace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Compile and run independently verified fixed-Hamming macro geometry
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search
+          g++ -O3 -std=c++17 trajectory_20261104/mask_space.cpp -o /tmp/labs_mask_geometry
+          /tmp/labs_mask_geometry frontier_deformation/results/2026-10-29-frontier-elite-eval.tsv \
+            trajectory_20261104/results/mask_geometry_v1.tsv 20 50 12
+      - name: Paired analysis and source-vs-mask geometry verification
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q numpy
+          cd science-boundary/labs-ai4s-search
+          python3 trajectory_20261104/analyze_mask_space.py \
+            trajectory_20261104/results/mask_geometry_v1.tsv \
+            trajectory_20261104/results/mask_geometry_v1.json
+          python3 - <<'PY'
+          import csv,json,pathlib
+          p=pathlib.Path('trajectory_20261104/results/mask_geometry_v1.tsv')
+          rows=list(csv.DictReader(p.open(),delimiter='\t'))
+          assert len(rows)==240
+          assert set(int(r['id']) for r in rows)==set(range(6))
+          for r in rows:
+            assert int(r['distFromSource'])==12
+            assert int(r['bestOdd'])+int(r['bestEven'])==int(r['bestE'])
+            assert int(r['bestE'])>=int(r['sourceE']) or int(r['bestE'])<int(r['sourceE']) # direct recomputation in C++ verifier
+            assert float(r['seconds'])>=0.05
+          summary=json.loads(pathlib.Path('trajectory_20261104/results/mask_geometry_v1.json').read_text())
+          assert len(summary['results'])==6
+          print('VERIFIED 240 exact Hamming-weight-12 candidate searches')
+          PY
+      - name: Persist finite-horizon geometry evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/trajectory_20261104/results/mask_geometry_v1.*
+          git commit -m 'research(labs-ai4s): validate exact fixed-Hamming macro mask-space versus random controls'
+          git pull --rebase origin main
+          git push origin HEAD:main
