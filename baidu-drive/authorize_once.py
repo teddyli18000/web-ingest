@@ -120,7 +120,7 @@ def exchange_code(client_id: str, client_secret: str, code: str) -> dict[str, st
         "grant_type": "authorization_code", "code": code,
         "client_id": client_id, "client_secret": client_secret,
         "redirect_uri": "oob",
-    })
+    }, opener=urllib.request.urlopen)
     if not result.get("refresh_token") or not result.get("access_token"):
         raise RuntimeError("Baidu authorization failed; no GitHub Secret was changed")
     return {"refresh_token": str(result["refresh_token"])}
