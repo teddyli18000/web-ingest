@@ -158,17 +158,19 @@ That revision supplies the hardened scanner/stager/state/Drive-tree/cleanup logi
 
 The pin or bridge contract must not change without passing the repository integration gate and updating this documentation.
 
-## Authentication: one-time authorization target
+## Authentication: one-time login
 
 **Final interface:** the owner authorizes Baidu Netdisk and Google Drive once. Thereafter the master refreshes credentials automatically and workers only receive short-lived access tokens. Normal expiration must not require replacing a GitHub Secret.
 
 Baidu's official OAuth refresh endpoint provides both a new access token and a refresh token; the newest refresh token must win. `oauth_state.py` now implements the master-owned refresh protocol and AES-256-GCM encrypted persisted state under `state/auth/baidu-oauth.json`. File workers are readers, not competing refresh writers. The master refreshes sufficiently ahead of the maximum file-worker lifetime.
 
+**One-time local setup:** [`AUTHORIZATION.md`](AUTHORIZATION.md) now uses Baidu's official device-code login by default (open verification/QR page and approve). Google remains a one-time browser authorization with rclone. The setup script can be downloaded by itself; no repository clone is needed.
+
 Target one-time GitHub Secrets:
 
 | Name | Value |
 | --- | --- |
-| `BAIDU_DRIVE_BAIDU_OAUTH` | Bootstrap JSON with `client_id`, `client_secret`, initial `refresh_token` |
+| `BAIDU_DRIVE_BAIDU_OAUTH` | Bootstrap JSON with `client_id`, `client_secret`, initial `refresh_token`, and `app_root` |
 | `BAIDU_DRIVE_RCLONE_CONFIG` | Google Drive rclone remote with dedicated OAuth client and refresh token |
 | `BAIDU_DRIVE_STATE_KEY` | Base64 of one randomly generated 32-byte AES key |
 
