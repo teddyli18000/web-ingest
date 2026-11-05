@@ -157,16 +157,14 @@ def run(a):
                     v,qq=score_move(q,move)
                     if v is not None and v<=best+a.uphill:
                         if qq==orders:continue
-                        stage2.append((v,qq,path+[move],vals+[v],len(born)))
+                        stage2.append((v,qq,path+[move],vals+[v],len(born),qcr))
             stage2.sort(key=lambda x:(x[0],rng.random()))
-            options.extend(stage2[:a.width])
+            options.extend((v,q,p,vals,n) for v,q,p,vals,n,_ in stage2[:a.width])
             # Third move is a corrective action against new bottlenecks
             # of the SECOND speculative schedule (replacement of replacement).
-            for oldscore,q,path,vals,oldborn in stage2[:a.width]:
+            for oldscore,q,path,vals,oldborn,priorcr in stage2[:a.width]:
                 if scores>=a.budget:break
                 _,qcr,_=critical(q,pos,dur);state_recomputations+=1
-                _,priorcr,_=critical(stage1[0][1],pos,dur) if stage1 else (0,set(),set())
-                state_recomputations+=int(bool(stage1))
                 emerging=qcr-priorcr
                 detected_new_edges+=len(emerging)
                 speculative_replacements+=bool(emerging)
