@@ -1,0 +1,77 @@
+name: temp-labs-ai4s-native-elite-recombine
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-native-elite-recombine.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-native-elite-recombine
+  cancel-in-progress: false
+jobs:
+  native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Filter independent original-solver parents to true 10%-near-optimum cohort
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 filter_native.py \
+            data/native_independent_2009_v1/independent_highquality_orbits.tsv \
+            data/native_10pct_parents.tsv
+          g++ -O3 -std=c++17 -Wall -Wextra recombine.cpp -o /tmp/native_recombine
+          /tmp/native_recombine --selftest
+      - name: Independently source-seeded 840 timed eight-arm crossover comparisons
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          /tmp/native_recombine data/native_10pct_parents.tsv \
+            results/native_10pct_pairs_v1.tsv results/native_10pct_new_orbits_v1.tsv 5 120
+      - name: Independent exact certificate and source-seed lineage validation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q numpy
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 evaluate.py --parents data/native_10pct_parents.tsv \
+            --summary results/native_10pct_pairs_v1.tsv \
+            --novel results/native_10pct_new_orbits_v1.tsv \
+            --out results/native_10pct_paired_summary_v1.json
+          python3 - <<'PY'
+          import csv,json,pathlib,hashlib,platform,subprocess
+          d=pathlib.Path('results')
+          rows=list(csv.DictReader((d/'native_10pct_pairs_v1.tsv').open(),delimiter='\t'))
+          assert len(rows)==840,(len(rows),840)
+          assert len({(r['N'],r['pair'],r['rep']) for r in rows})==105
+          summary=json.loads((d/'native_10pct_paired_summary_v1.json').read_text())
+          assert summary['rows']==840
+          assert set(summary['lengths'])=={'46','47','50','59','60'}
+          m={'source_pin':'1aa123407636e48630174e0bf122037e369c1d68',
+             'source_seed_parent_count':17,'algorithm':'original unrestricted historical 2009 memetic-Tabu',
+             'pair_count':21,'reps_per_pair':5,'methods':8,
+             'same_total_cpu_wall_per_arm_ms':120,
+             'source_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+             'platform':platform.platform(),'compiler':subprocess.check_output(['g++','--version'],text=True).splitlines()[0],
+             'sha256':{f.name:hashlib.sha256(f.read_bytes()).hexdigest()
+               for f in [d/'native_10pct_pairs_v1.tsv',d/'native_10pct_new_orbits_v1.tsv',d/'native_10pct_paired_summary_v1.json']}}
+          (d/'native_10pct_metadata.json').write_text(json.dumps(m,indent=2)+'\n')
+          print('PASS exact 17 source-distinct independent parent orbits, 840 treatments')
+          PY
+      - name: Commit externally audited independent-source cohort and outcomes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/data/native_10pct_parents.*
+          git add science-boundary/labs-ai4s-search/recombination_20261105/results/native_10pct_*
+          git commit -m 'research(labs-ai4s): verify independent source-lineage parental recombination under 10% elite quality gate'
+          git pull --rebase origin main
+          git push origin HEAD:main
