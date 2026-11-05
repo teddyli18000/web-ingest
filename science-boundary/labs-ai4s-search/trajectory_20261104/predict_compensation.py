@@ -35,6 +35,9 @@ BASE=['E_per_n','E_density','step_per_n','startE_per_n','global_gap_per_n']
 SPECTRAL=['Dodd_per_n','odd_share']+[f'spec_{p}_{j}' for p in (0,1) for j in range(6)]
 BITS=['bit_imbalance','bit_run_variation']+[f'bit_local_lag_{i}' for i in (1,2,3,4)]
 FEATURES={'constant':[], 'energy_history':BASE,
+          'energy_plus_odd_share':BASE+['odd_share'],
+          'energy_plus_parity_scalars':BASE+['odd_share','Dodd_per_n'],
+          'energy_plus_spectrum_bins':BASE+[f'spec_{p}_{j}' for p in (0,1) for j in range(6)],
           'energy_plus_spectrum':BASE+SPECTRAL,
           'energy_plus_bits':BASE+BITS,
           'dual_branch':BASE+SPECTRAL+BITS}
@@ -53,10 +56,11 @@ def main():
     x=x[x.gap_steps>=16]
     x=x[((x.deltaOdd>0)&(x.deltaEven<0))|((x.deltaOdd<0)&(x.deltaEven>0))].copy()
     x['target']=(x.deltaOdd>0).astype(int)
+    assert ((x.step-x.gap_steps)>=0).all()
     x['run']=x.N.astype(str)+'_'+x.seed.astype(str)
     x['E_per_n']=x.oldE/x.N
     x['E_density']=x.oldE/(x.N*x.N)
-    x['step_per_n']=x.step/x.N
+    x['step_per_n']=(x.step-x.gap_steps)/x.N  # previous known TS_BEST step; NEVER future event step
     x['startE_per_n']=x.startE/x.N
     x['global_gap_per_n']=(x.oldE-x.global_at_start).clip(lower=0)/x.N
     x['Dodd_per_n']=x.oldDodd/x.N
@@ -67,7 +71,7 @@ def main():
     test=x[x.N.isin([92,99,100])].copy()
     assert len(train)>200 and len(test)>200
     assert set(train.run).isdisjoint(set(test.run))
-    results=dict(scope='Conditional mode of actual native TS_BEST transition after at least 16 accepted moves; NOT a prediction of success nor a generator',
+    results=dict(scope='Conditional mode of actual native TS_BEST transition after at least 16 accepted moves; predictor input only PRE-transition previous-best state; future gap used solely for offline cohort filtering, NOT predictive features; NOT a prediction of success nor a generator',
                  nTrain=len(train),nTest=len(test),
                  labels_train=dict(odd_cost=int(train.target.sum()),even_cost=int(len(train)-train.target.sum())),
                  labels_test=dict(odd_cost=int(test.target.sum()),even_cost=int(len(test)-test.target.sum())),
