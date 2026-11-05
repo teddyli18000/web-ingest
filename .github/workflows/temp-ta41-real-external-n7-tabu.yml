@@ -1,0 +1,72 @@
+name: temp-ta41-real-external-n7-tabu
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/run_external_n7_reference.py'
+      - '.github/workflows/temp-ta41-real-external-n7-tabu.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-real-external-n7-tabu
+  cancel-in-progress: false
+jobs:
+  run:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [4107, 9241]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install original pinned upstream C++ N7 tabu solver and modern CMake
+        run: |
+          git clone --depth=1 https://github.com/Qiming01/Job-Shop-Scheduling.git /tmp/n7tabu
+          git -C /tmp/n7tabu fetch --depth=1 origin 7e120ebada21cb604c871e0657814bf6e32611f8
+          git -C /tmp/n7tabu checkout --detach 7e120ebada21cb604c871e0657814bf6e32611f8
+          python3 -m pip install 'cmake>=3.30' pybind11 setuptools wheel
+          python3 -m py_compile science-boundary/job-shop-ta41/run_external_n7_reference.py
+          python3 -m pip install --no-build-isolation /tmp/n7tabu
+      - name: Execute genuine external N7 tabu and reconstruct full ta41 schedule
+        run: |
+          python3 science-boundary/job-shop-ta41/run_external_n7_reference.py \
+            --seed '${{ matrix.seed }}' --seconds 120 \
+            --out 'science-boundary/job-shop-ta41/results/external-n7-${{ matrix.seed }}'
+      - name: Grade every native result independently with Few Shots (including worse than incumbent)
+        if: always()
+        run: |
+          set -euo pipefail
+          out="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/external-n7-${{ matrix.seed }}"
+          if test -f "$out/candidate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            cp "$out/candidate.json" "$out/certificate.json"
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$out" | tee "$out/upstream-verdict.json"
+            python3 - "$out" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);d=json.loads((p/'external-n7.json').read_text())
+          v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])==d['native_makespan'],(v,d)
+          if int(v['score'])>2005:(p/'certificate.json').unlink()
+          PY
+          fi
+      - name: Preserve reproducible external comparison or build failure evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          out='science-boundary/job-shop-ta41/results/external-n7-${{ matrix.seed }}'
+          if ! test -d "$out"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$out"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): original external C++ N7 tabu ${{ matrix.seed }}'
+          for attempt in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
