@@ -17,6 +17,10 @@ static double max_peak=2006;
 static constexpr int MAX_POOL=64;
 static unordered_set<uint64_t> visited;
 static vector<Schedule> parents;
+static int protectedParents=0;
+static Schedule mostNovelNeutral;
+static int bestNovelty=-1;
+static uint64_t noveltyChecked=0;
 
 static int dist_to(const Schedule&a,const Schedule&target){
     int ans=0;
@@ -58,6 +62,24 @@ static void read_pool(const string&file){
         if(evaluate(s).score!=2006)throw runtime_error("seed is not feasible 2006");
         visited.insert(hash_schedule(s));
     }
+    protectedParents=int(parents.size());
+}
+static int original_elite_novelty(const Schedule &s){
+    // Minimum of 580 independently comparable adjacent-order disagreements
+    // against each protected, officially verified 2006 starting schedule.
+    // This is a diversity diagnostic, not a makespan proxy.
+    int worst=580;
+    for(int p=0;p<protectedParents;p++){
+        int disagreements=0;
+        for(int m=0;m<20;m++){
+            int where[30];
+            for(int k=0;k<30;k++)where[s.at(m,k)]=k;
+            for(int k=0;k<29;k++)
+                disagreements+=(where[parents[p].at(m,k)]>where[parents[p].at(m,k+1)]);
+        }
+        worst=min(worst,disagreements);
+    }
+    return worst;
 }
 static void note_solution(const Schedule&s,int score,Schedule&best,int&best_score){
     if(score<0)return;
@@ -69,9 +91,19 @@ static void note_solution(const Schedule&s,int score,Schedule&best,int&best_scor
         auto hash=hash_schedule(s);
         if(visited.insert(hash).second){
             neutral_states++;
+            // Score one in 256 new score-2006 states for *genuine*
+            // distance to all original neutral parents, not only the
+            // baseline. Keep a separate 20-machine schedule witness.
+            if(neutral_states%256==0){
+                noveltyChecked++;
+                int value=original_elite_novelty(s);
+                if(value>bestNovelty){
+                    bestNovelty=value;mostNovelNeutral=s;
+                }
+            }
             if(parents.size()<MAX_POOL)parents.push_back(s);
-            else if(u01()<0.08)
-                parents[8+uni(int(parents.size())-8)]=s;
+            else if(u01()<0.08 && int(parents.size())>protectedParents)
+                parents[protectedParents+uni(int(parents.size())-protectedParents)]=s;
         }
     }
 }
@@ -234,8 +266,16 @@ int main(int argc,char**argv){
           <<parents.size()<<" "<<setprecision(10)<<seconds<<"\n";
         for(int m=0;m<20;m++)for(int k=0;k<30;k++)
             f<<result.best.at(m,k)<<(k==29?"\n":" ");
+        if(bestNovelty>=0){
+            ofstream n(out+".novel");
+            if(!n)throw runtime_error("cannot write neutral novelty witness");
+            n<<bestNovelty<<" "<<noveltyChecked<<" "<<protectedParents<<"\n";
+            for(int m=0;m<20;m++)for(int k=0;k<30;k++)
+                n<<mostNovelNeutral.at(m,k)<<(k==29?"\n":" ");
+        }
         cerr<<"FINAL "<<policy<<" best="<<result.score<<" evals="<<evaluations
-            <<" paths="<<completed_paths<<" seconds="<<seconds<<"\n";
+            <<" paths="<<completed_paths<<" seconds="<<seconds
+            <<" neutral-best-min-adjacent-distance="<<bestNovelty<<"\n";
         return 0;
     }catch(const exception&e){cerr<<"ERROR "<<e.what()<<"\n";return 1;}
 }
