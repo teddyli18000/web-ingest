@@ -111,3 +111,23 @@ All code, runs and artifacts remain on `main` under `science-boundary/job-shop-t
 
 Rather than greedily rank single arcs using successor core size/novelty, maintain **all discovered sufficient conflicting machine precedence sets** and compute a **joint minimum correction hitting set** over them; probe whether the associated partially specified schedule has a target-feasible completion, adding a new core only when the model proves infeasible. This is the established **implicit hitting set (IHS)/MCS** decomposition, not novelty by itself; the test is whether it can autonomously discover jointly required source machine arcs without knowing the 1887 answer. It is now implemented as `constructive_implicit_hitting_set.py` with three otherwise identical hitset cost strategies (uniform, static slack, random tie-break). Six 75s positive transfer trials (independent true-N7 elites ta43/ta46) launched as one-shot Action `temp-ta41-implicit-hitting-set-positive.yml`; **no result claimed until `results/ihs-*/ihs-result.json` is verified**.
 
+
+## Constructive IHS controlled test — completed; autonomous joint selection still unsolved
+
+The six runs of `constructive_implicit_hitting_set.py` Action **42054109809** all succeeded technically and persisted `results/ihs-{ta43js-n7elite1711,ta46js-n7elite1701}-{uniform,static,random}/ihs-result.json`. In each run, an independently built hard target Cstart-1 full NoOverlap model with **580 old machine adjacent precedences as assumptions** either produced a new sufficient UNSAT core or could construct a verified complete candidate. At each step, a separate exact/feasible min-cost hitting-set CP tried to select the *joint* released machine arcs satisfying **all** prior core disjunctions. The original solution oracle was never read by the search.
+
+| Independent 30×20 start | Correction-set cost policy | Distinct new sufficient UNSAT cores in 75s | Maximum concurrently released arcs | Found a strictly better complete schedule? |
+| --- | --- | ---: | ---: | --- |
+| ta43 1888 | uniform | **220** | 3 | **No** |
+| ta43 1888 | static tie-break | **160** | 3 | **No** |
+| ta43 1888 | random tie-break | **144** | 3 | **No** |
+| ta46 2044 | uniform | **193** | 4 | **No** |
+| ta46 2044 | static tie-break | **216** | 4 | **No** |
+| ta46 2044 | random tie-break | **159** | 4 | **No** |
+
+All six terminated due to **TIME_LIMIT**, not proof that no correcting hit-set exists. In ta43, all known-witness satisfying correction combinations in the conditional four-arc family require exactly **four** original adjacent arcs, but none of these 75-second IHS runs selected more than **three** simultaneous released arcs. This demonstrates a specific failure mode: the search keeps finding alternative cheap 3-arc sets satisfying all **known** cores, but each tested partial schedule is still impossible; the learned cores have not yet forced the correct 4-arc correction. More core enumeration without representation changes would merely enlarge the excluded region again.
+
+Post-hoc true correction-arc ranks by frequency in the ta43 *uniform* run's 220 cores: arc 257 ranked **11**, 258 **14**, 199 **45**, 168 **76** among 580. Arc 168 was **never selected** in any tested ta43 hitting-set policy. Thus "repeat appearing in cores" also fails to recover the full cooperative correction as a naive predictor.
+
+**Research decision:** Do **not** scale IHS-on-580-adjacent-bit alone. Instead allow *operation-level ejection-chain and reinsertion* to alter multiple coupled machine relations in a single move, and use replacement cores only as a guardrail / evaluation feedback. On positive hidden-author N7 elite starts, demand a new complete legal schedule at lower makespan and a clear outperformance over the existing `static` CP guidance and genuine published N7 before spending on ta41. The exact four-arc case provides a **calibration target**, not a training example to memorize.
+
