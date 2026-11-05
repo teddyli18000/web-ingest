@@ -110,11 +110,36 @@ def main(a):
         improved=score<=2005,
         note="This is a constructive baseline vs dynamic-repair experiment; neither policy is a faithful 2026 N7/LLG/Diaz implementation. Only official Few Shots checker can establish record."
     )
+    archive=Path(str(result)+".novel")
+    if archive.exists():
+        note=archive.read_text().splitlines()
+        assert len(note)==21,len(note)
+        reported_novel,checked,protected=map(int,note[0].split())
+        assert protected==len(parents) and checked>0
+        archived=[list(map(int,line.split())) for line in note[1:]]
+        assert len(archived)==20 and all(sorted(row)==list(range(30)) for row in archived)
+        arch_score=evaluate(archived,pos,dur)
+        assert arch_score==2006,arch_score
+        positions=[{job:k for k,job in enumerate(archived[m])} for m in range(20)]
+        adj_distance={name:sum(
+           positions[m][arr[m][k]]>positions[m][arr[m][k+1]]
+           for m in range(20) for k in range(29))
+           for name,arr in parents.items()}
+        nearest=min(adj_distance.values())
+        assert nearest==reported_novel,(nearest,reported_novel)
+        kendall_dist={name:kendall(archived,arr) for name,arr in parents.items()}
+        info.update(
+           archived_verified_neutral_score=arch_score,
+           diverse_neutral_trials_sampled=checked,
+           reported_minimum_parent_adjacent_pair_disagreement=reported_novel,
+           independently_checked_minimum_parent_adjacent_pair_disagreement=nearest,
+           minimum_Kendall_distance_to_all_original_parents=min(kendall_dist.values()),
+           archive_pairwise_parent_disagreements=adj_distance)
+        if score>2005:
+            (a.out/"neutral-certificate.json").write_text(json.dumps({"machines":archived})+"\n")
     (a.out/"summary.json").write_text(json.dumps(info,indent=2)+"\n")
     if score<=2005:
         (a.out/"certificate.json").write_text(json.dumps({"machines":orders})+"\n")
-    elif all(orders!=v for v in parents.values()):
-        (a.out/"neutral-certificate.json").write_text(json.dumps({"machines":orders})+"\n")
     print("RESULT",json.dumps(info),flush=True)
 
 if __name__=="__main__":
