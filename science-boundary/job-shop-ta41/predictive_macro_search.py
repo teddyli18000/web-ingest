@@ -59,6 +59,13 @@ def sample(orders, focus, rng, n):
 
 def load_parent(name,baseline,pos,dur):
     if name=='baseline':return clone(baseline)
+    if name=='ninecore':
+        root=ROOT/'results'/'ninecore-neutral-baseline'
+        v=json.loads((root/'neutral-verdict.json').read_text())
+        assert v['valid'] and int(v['score'])==2006
+        parent=json.loads((root/'neutral-certificate.json').read_text())['machines']
+        assert evaluate(parent,pos,dur)==2006
+        return parent
     root=ROOT/'results'/('gateway-'+name)
     v=json.loads((root/'upstream-verdict.json').read_text())
     assert v['valid'] and int(v['score'])==2006
@@ -111,7 +118,8 @@ def run(a):
         return v,q
     def snapshot():
         out=dict(instance='ta41',parent=a.parent,policy=a.policy,seed=a.seed,
-             score_budget=a.budget,scored_candidates=scores,
+             score_budget=a.budget,wall_seconds_budget=a.wall_seconds,
+             scored_candidates=scores,
              complete=(scores>=a.budget),valid_candidates=scored_valid,
              cyclic_candidates=scored_cyclic,best_score=best,
              current_score=current,accepted_macros=accepted,
@@ -127,7 +135,7 @@ def run(a):
                if a.policy!='tabu' else 'incumbent critical-path N7-inspired tabu insertions',
              limitations='Same exact DAG scoring budget; critical-edge recomputations are extra and wall time differs; one-step generator is insertion radius4 not complete N7.')
         (a.out/'constructive.json').write_text(json.dumps(out,indent=2)+'\n')
-    while scores<a.budget and best>2005:
+    while scores<a.budget and best>2005 and (not a.wall_seconds or time.monotonic()-start<a.wall_seconds):
         attempted_macros+=1
         root_score,root_cr,root_near=critical(orders,pos,dur)
         state_recomputations+=1
@@ -229,10 +237,11 @@ def run(a):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser()
-    p.add_argument('--parent',choices=['baseline','124'],required=True)
+    p.add_argument('--parent',choices=['baseline','124','ninecore'],required=True)
     p.add_argument('--policy',choices=['replacement','current','static','core','random','tabu'],required=True)
     p.add_argument('--seed',type=int,required=True)
     p.add_argument('--budget',type=int,default=16000)
+    p.add_argument('--wall-seconds',type=float,default=0.0)
     p.add_argument('--first',type=int,default=16)
     p.add_argument('--second',type=int,default=10)
     p.add_argument('--third',type=int,default=10)
