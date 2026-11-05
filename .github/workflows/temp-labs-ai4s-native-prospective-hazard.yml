@@ -1,0 +1,53 @@
+name: temp-labs-ai4s-native-prospective-hazard
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-native-prospective-hazard.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  hazard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Prospective nonleaking native solver hazard from all accepted snapshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q numpy pandas scikit-learn
+          cd science-boundary/labs-ai4s-search/trajectory_20261104
+          python3 prospective_hazard.py results/native_mini_v1 \
+            --out results/native_hazard_v1 --horizon 64 --stall 64
+      - name: Verify labels and all source-run boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/trajectory_20261104
+          python3 - <<'PY'
+          import json,gzip,csv,pathlib
+          root=pathlib.Path('results/native_hazard_v1')
+          s=json.loads((root/'prospective_hazard.json').read_text())
+          assert len(s['by_run'])==12
+          with gzip.open(root/'prospective_hazard_samples.tsv.gz','rt') as f:
+            records=list(csv.DictReader(f,delimiter='\t'))
+          assert len(records)==s['all_rows']
+          assert all(int(z['stall_age'])>=64 for z in records)
+          assert all(int(z['positive']) in (0,1) for z in records)
+          assert s['train_rows']>0 and s['test_rows']>0
+          print('VERIFIED',len(records),'uncensored, source-disjoint hazard labels')
+          PY
+      - name: Commit independent audited hazard evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/trajectory_20261104/results/native_hazard_v1/
+          git commit -m 'research(labs-ai4s): validate truly prospective native-Tabu stalled improvement hazard'
+          git pull --rebase origin main
+          git push origin HEAD:main
