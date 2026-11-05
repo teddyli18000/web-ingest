@@ -1,0 +1,62 @@
+name: temp-labs-ai4s-recombine-curation
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-recombine-curation.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-recombine-curation
+  cancel-in-progress: false
+jobs:
+  curate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Fetch primary archived multiple-optimum parents at pinned version
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone -q --depth 1 https://github.com/borkob/git_labs.git "$RUNNER_TEMP/parents"
+          git -C "$RUNNER_TEMP/parents" fetch -q --depth 1 origin 1aa123407636e48630174e0bf122037e369c1d68
+          git -C "$RUNNER_TEMP/parents" checkout -q --detach 1aa123407636e48630174e0bf122037e369c1d68
+          test "$(git -C "$RUNNER_TEMP/parents" rev-parse HEAD)" = 1aa123407636e48630174e0bf122037e369c1d68
+          python3 science-boundary/labs-ai4s-search/recombination_20261105/curate_parents.py \
+            --archive "$RUNNER_TEMP/parents/results-2016/2004-Knauer-original.txt" \
+            --frontier science-boundary/labs-ai4s-search/frontier_deformation/results/2026-10-29-frontier-elite-eval.tsv \
+            --out science-boundary/labs-ai4s-search/recombination_20261105/data
+      - name: Second independent exact certifier and symmetry-orbit group gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import csv,json,pathlib
+          p=pathlib.Path('science-boundary/labs-ai4s-search/recombination_20261105/data')
+          z=list(csv.DictReader((p/'parents.tsv').open(),delimiter='\t'))
+          assert len(z)==20,(len(z),z)
+          groups={}
+          for r in z:
+              n=int(r['n']);s=[2*int(c)-1 for c in r['bits']]
+              assert len(s)==n
+              e=sum(sum(s[i]*s[i+k] for i in range(n-k))**2 for k in range(1,n))
+              assert e==int(r['E']),(n,e,r['E'])
+              groups.setdefault(n,set()).add(r['canonical'])
+          assert {n:len(a) for n,a in groups.items()}=={46:3,47:6,50:3,59:2,60:2,92:2,99:2}
+          d=json.loads((p/'parent_manifest.json').read_text())
+          assert d['no_synthetic_parents'] and d['total_orbits']==20
+          print('CERTIFIED',len(z),'distinct archived orbits across seven lengths')
+          PY
+      - name: Commit only audited distinct elite parent certificates
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add science-boundary/labs-ai4s-search/recombination_20261105/data/
+          git commit -m "research(labs-ai4s): verify historical distinct optimal-parent orbit catalog"
+          git pull --rebase origin main
+          git push origin HEAD:main
