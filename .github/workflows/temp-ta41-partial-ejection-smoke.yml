@@ -1,0 +1,50 @@
+name: temp-ta41-partial-ejection-smoke
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-partial-ejection-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-partial-ejection-smoke
+  cancel-in-progress: false
+jobs:
+  smoke:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [dynamic, static, random]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile independent partial scheduling engine
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/benchmark_partial_ejection.py
+          g++ -std=c++17 -O3 science-boundary/job-shop-ta41/partial_ejection_chain.cpp -o /tmp/ejection_smoke
+      - name: Run matched exactly scored constructive insertion-ejection chain from independently generated elite
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_partial_ejection.py \
+            --policy '${{ matrix.policy }}' --seeds 4107 \
+            --cases-filter ta43js-n7elite1711 ta46js-n7elite1701 \
+            --evaluations 80000 --restart-evals 10000 --timeout 120 \
+            --out 'science-boundary/job-shop-ta41/results/ejection-smoke-${{ matrix.policy }}'
+      - name: Persist full-scored experimental outcomes
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/ejection-smoke-${{ matrix.policy }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): pilot partial schedule ejection ${{ matrix.policy }}'
+          for attempt in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
