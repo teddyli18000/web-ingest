@@ -1,0 +1,21 @@
+{
+  "library": "PyPI gomea==1.1.0; official full CWI discrete GOMEA (not GOMEA style approximation)",
+  "problem": "unrestricted LABS exact integer E",
+  "objective": "maximize -E",
+  "source": "random initial population (no elite seeds supported in this interface)",
+  "comparisons": [
+    "univariate full GOMEA",
+    "filtered MI linkage-tree full GOMEA"
+  ],
+  "bias": "Python O(N^2) callback overhead, not hardware-normalized C++ native solver",
+  "parameters": {
+    "out": "official_gomea/results/smoke.tsv",
+    "lengths": "46,47",
+    "reps": 1,
+    "seconds": 0.7,
+    "seed_offset": 53000
+  },
+  "completed": 4,
+  "exact_verified_best": 4,
+  "file_sha256": "387cc8a0d4c5645cfb84c96c655ddab0fd936f72a7b6435e2960faa81ca3dab0"
+}
