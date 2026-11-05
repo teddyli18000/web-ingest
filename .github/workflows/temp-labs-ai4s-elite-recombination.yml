@@ -1,0 +1,73 @@
+name: temp-labs-ai4s-elite-recombination
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-elite-recombination.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-elite-recombination
+  cancel-in-progress: false
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Compile exact increment scorer and validate mixed donor/local repair operators
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search
+          g++ -O3 -std=c++17 -Wall -Wextra recombination_20261105/recombine.cpp -o /tmp/labs_recombine
+          /tmp/labs_recombine --selftest
+      - name: Full source-distinct multi-elite 8-arm fair runtime recombination
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          mkdir -p results
+          /tmp/labs_recombine data/parents.tsv results/source_pairs_v1.tsv \
+            results/new_source_orbits_v1.tsv 5 120
+      - name: Independently certify retained child energies and statistical outcome quality
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q --disable-pip-version-check numpy
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 evaluate.py --parents data/parents.tsv \
+            --summary results/source_pairs_v1.tsv --novel results/new_source_orbits_v1.tsv \
+            --out results/paired_summary_v1.json
+          python3 - <<'PY'
+          import csv,pathlib,hashlib,json,platform,subprocess
+          d=pathlib.Path('results')
+          rows=list(csv.DictReader((d/'source_pairs_v1.tsv').open(),delimiter='\t'))
+          # 3+15+3+1+1+1+1=25 independent parent-pair * source-orbit settings.
+          assert len(rows)==25*5*8,(len(rows),25*5*8)
+          assert all(float(x['elapsed_ms'])>=120 for x in rows)
+          stats=json.loads((d/'paired_summary_v1.json').read_text())
+          assert stats['rows']==1000 and set(stats['lengths'])=={'46','47','50','59','60','92','99'}
+          meta={'source_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+           'compiler':subprocess.check_output(['g++','--version'],text=True).splitlines()[0],
+           'platform':platform.platform(),
+           'budget_ms_per_pair_seed_arm':120,'replicates_per_pair':5,
+           'independent_parent_orbits':20,'source_length_strata':7,
+           'sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in d.iterdir() if p.is_file()},
+           'notes':'Eight arms are classical or classical-inspired; full modern GOMEA is not implemented, and repaired offspring use the same native-inspired 64-step tabu + steepest local quench.'}
+          (d/'metadata_v1.json').write_text(json.dumps(meta,indent=2)+'\n')
+          print('FINAL PASS 1000 full time-costed, exact-audited source-distinct elite treatments')
+          PY
+      - name: Persist all raw and separately certified new elite offspring
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/results/
+          git commit -m 'research(labs-ai4s): certify 1000 costed source-distinct elite recombination treatments'
+          git pull --rebase origin main
+          git push origin HEAD:main
