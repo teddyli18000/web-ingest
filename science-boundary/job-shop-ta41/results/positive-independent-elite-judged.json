@@ -1,0 +1,314 @@
+{
+  "instance_shape": "30x20",
+  "truly_independent_source": "12 actual 20-second published N7 search incumbents, NOT oracle perturbations",
+  "no_reference_machine_orders_seen_by_search": true,
+  "n": 24,
+  "distinct_source_instances": 6,
+  "policy_budgets": {
+    "tabu": "350k full exact DAG candidate evals",
+    "static3": "350k full exact DAG candidate evals",
+    "dynamic3": "350k full exact DAG candidate evals",
+    "true_n7": "5 seconds genuine published N7 kernel; iterations differ from exact DAG count"
+  },
+  "scope": "One source N7 elite initialization family, six instances, two first-stage and two second-stage seeds. Not sufficient for a universal transfer claim.",
+  "summary": {
+    "tabu": {
+      "trials": 24,
+      "improved": 4,
+      "recovered_hidden_known_best": 0,
+      "average_improvement": 0.3333333333333333,
+      "max_improvement": 3,
+      "average_final_makespan": 1972.3333333333333,
+      "average_search_seconds": 1.1374445842083334
+    },
+    "static3": {
+      "trials": 24,
+      "improved": 5,
+      "recovered_hidden_known_best": 0,
+      "average_improvement": 0.2916666666666667,
+      "max_improvement": 3,
+      "average_final_makespan": 1972.375,
+      "average_search_seconds": 1.4513151392083334
+    },
+    "dynamic3": {
+      "trials": 24,
+      "improved": 5,
+      "recovered_hidden_known_best": 0,
+      "average_improvement": 0.2916666666666667,
+      "max_improvement": 3,
+      "average_final_makespan": 1972.375,
+      "average_search_seconds": 2.1113373854583335
+    },
+    "true-n7": {
+      "trials": 24,
+      "improved": 9,
+      "recovered_hidden_known_best": 0,
+      "average_improvement": 1.2083333333333333,
+      "max_improvement": 8,
+      "average_final_makespan": 1971.4583333333333,
+      "average_search_seconds": 5.000007083333333
+    }
+  },
+  "pairwise": {
+    "tabu": {
+      "dynamic_wins": 2,
+      "tied": 21,
+      "dynamic_losses": 1,
+      "mean_score_gain_dynamic_over_baseline": -0.041666666666666664
+    },
+    "static3": {
+      "dynamic_wins": 2,
+      "tied": 20,
+      "dynamic_losses": 2,
+      "mean_score_gain_dynamic_over_baseline": 0
+    },
+    "true-n7": {
+      "dynamic_wins": 3,
+      "tied": 14,
+      "dynamic_losses": 7,
+      "mean_score_gain_dynamic_over_baseline": -0.9166666666666666
+    }
+  },
+  "trials": [
+    {
+      "case": "ta42js-n7elite1701",
+      "seed": 4107,
+      "initial": 1974,
+      "hidden_oracle": 1939,
+      "tabu": 1974,
+      "static3": 1974,
+      "dynamic3": 1974,
+      "true-n7": 1974
+    },
+    {
+      "case": "ta42js-n7elite1701",
+      "seed": 4113,
+      "initial": 1974,
+      "hidden_oracle": 1939,
+      "tabu": 1974,
+      "static3": 1974,
+      "dynamic3": 1974,
+      "true-n7": 1974
+    },
+    {
+      "case": "ta42js-n7elite1711",
+      "seed": 4107,
+      "initial": 1968,
+      "hidden_oracle": 1939,
+      "tabu": 1968,
+      "static3": 1968,
+      "dynamic3": 1968,
+      "true-n7": 1968
+    },
+    {
+      "case": "ta42js-n7elite1711",
+      "seed": 4113,
+      "initial": 1968,
+      "hidden_oracle": 1939,
+      "tabu": 1968,
+      "static3": 1968,
+      "dynamic3": 1968,
+      "true-n7": 1966
+    },
+    {
+      "case": "ta43js-n7elite1701",
+      "seed": 4107,
+      "initial": 1872,
+      "hidden_oracle": 1846,
+      "tabu": 1872,
+      "static3": 1872,
+      "dynamic3": 1872,
+      "true-n7": 1872
+    },
+    {
+      "case": "ta43js-n7elite1701",
+      "seed": 4113,
+      "initial": 1872,
+      "hidden_oracle": 1846,
+      "tabu": 1872,
+      "static3": 1871,
+      "dynamic3": 1872,
+      "true-n7": 1872
+    },
+    {
+      "case": "ta43js-n7elite1711",
+      "seed": 4107,
+      "initial": 1888,
+      "hidden_oracle": 1846,
+      "tabu": 1885,
+      "static3": 1885,
+      "dynamic3": 1885,
+      "true-n7": 1888
+    },
+    {
+      "case": "ta43js-n7elite1711",
+      "seed": 4113,
+      "initial": 1888,
+      "hidden_oracle": 1846,
+      "tabu": 1885,
+      "static3": 1888,
+      "dynamic3": 1888,
+      "true-n7": 1885
+    },
+    {
+      "case": "ta44js-n7elite1701",
+      "seed": 4107,
+      "initial": 2000,
+      "hidden_oracle": 1978,
+      "tabu": 2000,
+      "static3": 2000,
+      "dynamic3": 1999,
+      "true-n7": 1999
+    },
+    {
+      "case": "ta44js-n7elite1701",
+      "seed": 4113,
+      "initial": 2000,
+      "hidden_oracle": 1978,
+      "tabu": 2000,
+      "static3": 2000,
+      "dynamic3": 1999,
+      "true-n7": 1999
+    },
+    {
+      "case": "ta44js-n7elite1711",
+      "seed": 4107,
+      "initial": 2002,
+      "hidden_oracle": 1978,
+      "tabu": 2002,
+      "static3": 2002,
+      "dynamic3": 2002,
+      "true-n7": 2001
+    },
+    {
+      "case": "ta44js-n7elite1711",
+      "seed": 4113,
+      "initial": 2002,
+      "hidden_oracle": 1978,
+      "tabu": 2002,
+      "static3": 2002,
+      "dynamic3": 2002,
+      "true-n7": 2002
+    },
+    {
+      "case": "ta45js-n7elite1701",
+      "seed": 4107,
+      "initial": 2013,
+      "hidden_oracle": 1997,
+      "tabu": 2013,
+      "static3": 2013,
+      "dynamic3": 2013,
+      "true-n7": 2013
+    },
+    {
+      "case": "ta45js-n7elite1701",
+      "seed": 4113,
+      "initial": 2013,
+      "hidden_oracle": 1997,
+      "tabu": 2013,
+      "static3": 2013,
+      "dynamic3": 2013,
+      "true-n7": 2013
+    },
+    {
+      "case": "ta45js-n7elite1711",
+      "seed": 4107,
+      "initial": 2013,
+      "hidden_oracle": 1997,
+      "tabu": 2013,
+      "static3": 2013,
+      "dynamic3": 2013,
+      "true-n7": 2013
+    },
+    {
+      "case": "ta45js-n7elite1711",
+      "seed": 4113,
+      "initial": 2013,
+      "hidden_oracle": 1997,
+      "tabu": 2013,
+      "static3": 2013,
+      "dynamic3": 2013,
+      "true-n7": 2013
+    },
+    {
+      "case": "ta46js-n7elite1701",
+      "seed": 4107,
+      "initial": 2044,
+      "hidden_oracle": 2002,
+      "tabu": 2044,
+      "static3": 2044,
+      "dynamic3": 2044,
+      "true-n7": 2044
+    },
+    {
+      "case": "ta46js-n7elite1701",
+      "seed": 4113,
+      "initial": 2044,
+      "hidden_oracle": 2002,
+      "tabu": 2044,
+      "static3": 2044,
+      "dynamic3": 2044,
+      "true-n7": 2042
+    },
+    {
+      "case": "ta46js-n7elite1711",
+      "seed": 4107,
+      "initial": 2040,
+      "hidden_oracle": 2002,
+      "tabu": 2039,
+      "static3": 2039,
+      "dynamic3": 2039,
+      "true-n7": 2040
+    },
+    {
+      "case": "ta46js-n7elite1711",
+      "seed": 4113,
+      "initial": 2040,
+      "hidden_oracle": 2002,
+      "tabu": 2039,
+      "static3": 2039,
+      "dynamic3": 2039,
+      "true-n7": 2040
+    },
+    {
+      "case": "ta47js-n7elite1701",
+      "seed": 4107,
+      "initial": 1928,
+      "hidden_oracle": 1889,
+      "tabu": 1928,
+      "static3": 1928,
+      "dynamic3": 1928,
+      "true-n7": 1928
+    },
+    {
+      "case": "ta47js-n7elite1701",
+      "seed": 4113,
+      "initial": 1928,
+      "hidden_oracle": 1889,
+      "tabu": 1928,
+      "static3": 1928,
+      "dynamic3": 1928,
+      "true-n7": 1924
+    },
+    {
+      "case": "ta47js-n7elite1711",
+      "seed": 4107,
+      "initial": 1930,
+      "hidden_oracle": 1889,
+      "tabu": 1930,
+      "static3": 1929,
+      "dynamic3": 1930,
+      "true-n7": 1922
+    },
+    {
+      "case": "ta47js-n7elite1711",
+      "seed": 4113,
+      "initial": 1930,
+      "hidden_oracle": 1889,
+      "tabu": 1930,
+      "static3": 1930,
+      "dynamic3": 1930,
+      "true-n7": 1923
+    }
+  ]
+}
