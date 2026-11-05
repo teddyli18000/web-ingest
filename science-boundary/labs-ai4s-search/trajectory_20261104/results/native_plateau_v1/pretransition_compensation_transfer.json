@@ -1,5 +1,5 @@
 {
-  "scope": "Conditional mode of actual native TS_BEST transition after at least 16 accepted moves; NOT a prediction of success nor a generator",
+  "scope": "Conditional mode of actual native TS_BEST transition after at least 16 accepted moves; predictor input only PRE-transition previous-best state; future gap used solely for offline cohort filtering, NOT predictive features; NOT a prediction of success nor a generator",
   "nTrain": 1334,
   "nTest": 742,
   "labels_train": {
@@ -27,38 +27,68 @@
       "auc": 0.5
     },
     "energy_history": {
-      "logloss": 0.6955630542447713,
-      "brier": 0.25117189222379455,
-      "auc": 0.46159673659673656
+      "logloss": 0.6955283557572769,
+      "brier": 0.2511561055888368,
+      "auc": 0.46165501165501166
+    },
+    "energy_plus_odd_share": {
+      "logloss": 0.44762336795071356,
+      "brier": 0.14544396058202888,
+      "auc": 0.8741987179487178,
+      "per_run_logloss_gain_vs_energy": 0.24811081035917085,
+      "CI95_by_6_heldout_runs": [
+        0.23194448122393987,
+        0.2667176791293718
+      ]
+    },
+    "energy_plus_parity_scalars": {
+      "logloss": 0.44880603876866937,
+      "brier": 0.14709485420644566,
+      "auc": 0.8705492424242424,
+      "per_run_logloss_gain_vs_energy": 0.24608816129409586,
+      "CI95_by_6_heldout_runs": [
+        0.22501882480760968,
+        0.26988787873432
+      ]
+    },
+    "energy_plus_spectrum_bins": {
+      "logloss": 0.4616121482160757,
+      "brier": 0.15115289421772163,
+      "auc": 0.8651515151515151,
+      "per_run_logloss_gain_vs_energy": 0.23463089755485775,
+      "CI95_by_6_heldout_runs": [
+        0.21508148163269028,
+        0.25795350481499607
+      ]
     },
     "energy_plus_spectrum": {
-      "logloss": 0.4512265819736001,
-      "brier": 0.14796385930127917,
-      "auc": 0.8681453962703963,
-      "per_run_logloss_gain_vs_energy": 0.2446012214542658,
+      "logloss": 0.4509063490607776,
+      "brier": 0.14785168406708346,
+      "auc": 0.8683347902097902,
+      "per_run_logloss_gain_vs_energy": 0.24488407171552748,
       "CI95_by_6_heldout_runs": [
-        0.22287994796921526,
-        0.26935971742872905
+        0.2234289852861703,
+        0.2695078984338039
       ]
     },
     "energy_plus_bits": {
-      "logloss": 0.6918329752942566,
-      "brier": 0.24929817986318284,
-      "auc": 0.5329691142191142,
-      "per_run_logloss_gain_vs_energy": 0.003102881064656218,
+      "logloss": 0.6917626466902205,
+      "brier": 0.24928041451383565,
+      "auc": 0.5328744172494172,
+      "per_run_logloss_gain_vs_energy": 0.0031421481301492087,
       "CI95_by_6_heldout_runs": [
-        -0.002318397190894175,
-        0.009333289468338847
+        -0.00214458218949358,
+        0.009332571776166577
       ]
     },
     "dual_branch": {
-      "logloss": 0.4537977527036602,
-      "brier": 0.1490471680633945,
-      "auc": 0.8661640442890443,
-      "per_run_logloss_gain_vs_energy": 0.24189440995845615,
+      "logloss": 0.45374554970336867,
+      "brier": 0.14904305237603868,
+      "auc": 0.866062062937063,
+      "per_run_logloss_gain_vs_energy": 0.24189466484750666,
       "CI95_by_6_heldout_runs": [
-        0.21899601561555868,
-        0.2669213040912864
+        0.21928512296190514,
+        0.26655512698058503
       ]
     }
   }
