@@ -42,7 +42,7 @@ def load_2004(path):
     for line in src.splitlines():
         t=line.strip()
         if not t:continue
-        m=re.match(r'^(\d+)\*?\s+(\d+)\s+[\d.]+\s+(.+)',t)
+        m=re.match(r'^(\d+)\*?\t(\d+)\t[\d.]+\t(.+)',t)
         if m:
             n,energy=int(m[1]),int(m[2]);fragment=m[3]
             if n not in ARCHIVE_COUNTS:continue
