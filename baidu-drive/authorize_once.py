@@ -106,9 +106,12 @@ def device_authorize(client_id: str, client_secret: str) -> dict[str, str]:
     print("Baidu login: visit", device["verification_url"])
     if device["user_code"]:
         print("Enter code:", device["user_code"])
-    if device["qrcode_url"]:
-        print("QR code:", device["qrcode_url"])
-        webbrowser.open(device["qrcode_url"])
+    qr = urllib.parse.urlsplit(device["qrcode_url"])
+    if qr.hostname == "openapi.baidu.com" and qr.scheme in ("http", "https"):
+        # The provider sometimes returns an HTTP image URL; open it via HTTPS.
+        secure_qr = urllib.parse.urlunsplit(qr._replace(scheme="https"))
+        print("QR code:", secure_qr)
+        webbrowser.open(secure_qr)
     else:
         webbrowser.open(device["verification_url"])
     print("Confirm authorization in Baidu; this window will detect completion.")
