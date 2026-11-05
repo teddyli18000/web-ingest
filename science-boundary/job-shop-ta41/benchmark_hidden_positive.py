@@ -121,5 +121,6 @@ if __name__=='__main__':
     p.add_argument('--policy',choices=('tabu','static3','dynamic3'),required=True)
     p.add_argument('--seeds',type=int,nargs='+',default=[4107,4113])
     p.add_argument('--evaluations',type=int,default=350000)
-    p.add_argument('--timeout',type=int,default=80)\n    p.add_argument('--wall-seconds',type=float,default=0)
+    p.add_argument('--timeout',type=int,default=80)
+    p.add_argument('--wall-seconds',type=float,default=0)
     benchmark(p.parse_args())
