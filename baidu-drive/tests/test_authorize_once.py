@@ -104,6 +104,19 @@ class AuthorizeOnceTests(unittest.TestCase):
         self.assertEqual(auth, {"refresh_token": "rotated-refresh"})
         self.assertEqual(len(calls), 2)
 
+    def test_legacy_http_qr_url_is_upgraded_to_https(self):
+        device = {
+            "device_code": "opaque", "user_code": "ABCD",
+            "verification_url": "https://openapi.baidu.com/device",
+            "qrcode_url": "http://openapi.baidu.com/device/qrcode/example",
+            "expires_in": 600, "interval": 5,
+        }
+        with mock.patch.object(authorize_once, "request_device_code", return_value=device), \
+             mock.patch.object(authorize_once, "wait_for_device_login", return_value={"refresh_token":"ok"}), \
+             mock.patch.object(authorize_once.webbrowser, "open") as opened:
+            authorize_once.device_authorize("app", "secret")
+        opened.assert_called_once_with("https://openapi.baidu.com/device/qrcode/example")
+
     def test_device_login_expired_stops(self):
         now = [0]
         def pending(req, timeout):
