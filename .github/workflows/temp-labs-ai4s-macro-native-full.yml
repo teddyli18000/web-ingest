@@ -56,7 +56,7 @@ jobs:
           for r in rows:
              assert not r['error'] and int(r['oddE'])+int(r['evenE'])==int(r['bestE'])
              assert float(r['actual_seconds'])>=14
-             assert 0 if int(r['arm'])==0 else int(r['macro_proposals'])>0
+             assert (int(r['macro_proposals'])==0) if int(r['arm'])==0 else (int(r['macro_proposals'])>0)
           summary=json.loads((root/'summary.json').read_text())
           assert summary['valid']==144
           (root/'provenance.json').write_text(json.dumps({
