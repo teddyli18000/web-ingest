@@ -56,7 +56,7 @@ def main():
         assert len(seq)==n and E==exact(seq) and orb(seq)[0]==ca
         assert ca not in pool[n]
         assert threshold in (5,10)
-        assert E<=int(min(int(x['E']) for x in byN[n])*(1+threshold/100)+1e-9)
+        assert E<=int(min(int(x['best_known']) for x in byN[n])*(1+threshold/100)+1e-9)
         assert (n,pair,rep) in keys and arm in keys[(n,pair,rep)]
         token=(n,pair,rep,arm,ca)
         if threshold==5:
@@ -81,7 +81,7 @@ def main():
     for n in sorted(byN):
         group=[(k,v) for k,v in keys.items() if k[0]==n]
         if not group:continue
-        baseline=min(int(p['E']) for p in byN[n])
+        baseline=min(int(p['best_known']) for p in byN[n])
         nr={'parent_orbits':len(byN[n]),'pairs':len({k[1] for k,_ in group}),'reps_per_pair':len({k[2] for k,_ in group}),
             'parent_bestE':baseline,'methods':{}}
         for arm,name in NAMES.items():
