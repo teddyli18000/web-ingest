@@ -41,7 +41,7 @@ jobs:
               print(spec,'NO ELIGIBLE SAMPLE; scientific coverage failure')
               continue
             with gzip.open(root/'prospective_hazard_samples.tsv.gz','rt') as f:
-              records=list(csv.DictReader(f,delimiter='\\t'))
+              records=list(csv.DictReader(f,delimiter='\t'))
             assert len(records)==s['all_rows']
             assert len(s['by_run'])==12
             assert all(int(z['stall_age'])>=int(spec.split('-')[0]) for z in records)
