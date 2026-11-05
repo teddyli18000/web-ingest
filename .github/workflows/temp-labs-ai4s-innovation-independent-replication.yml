@@ -1,0 +1,91 @@
+name: temp-labs-ai4s-innovation-independent-replication
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-innovation-independent-replication.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-innovation-independent-replication
+  cancel-in-progress: false
+jobs:
+  replication:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Compile original direct LABS+Tabu solver and verify every proposal invariant
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search
+          g++ -O3 -std=c++17 -Wall -Wextra recombination_20261105/innovation/innovation.cpp -o /tmp/labs_consensus
+          /tmp/labs_consensus --selftest
+      - name: Exact source-pair-specific 100-replicate replay and three 50-replicate untouched holdouts
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          mkdir -p innovation/results/replication_v1
+          for spec in "selected:c60_1-c60_4:100:1000" "holdout60a:c60_0-c60_3:50:2000" "holdout60b:c60_2-c60_5:50:3000" "holdout59:c59_0-c59_2:50:4000"; do
+            IFS=: read -r label pair reps offset <<< "$spec"
+            /tmp/labs_consensus data/combined/combined10.tsv \
+              "innovation/results/replication_v1/${label}_sessions.tsv" \
+              "innovation/results/replication_v1/${label}_children.tsv" \
+              "$reps" 120 "$pair" "$offset"
+          done
+      - name: Independent direct O(N^2) score and source-symmetry audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q numpy
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          for label in selected holdout60a holdout60b holdout59; do
+            python3 innovation/validate.py --subset --parents data/combined/combined10.tsv \
+              --sessions "innovation/results/replication_v1/${label}_sessions.tsv" \
+              --certificates "innovation/results/replication_v1/${label}_children.tsv" \
+              --out "innovation/results/replication_v1/${label}_analysis.json"
+          done
+          python3 - <<'PY'
+          import pathlib,json,csv,hashlib,platform,subprocess
+          d=pathlib.Path('innovation/results/replication_v1')
+          cohorts={'selected':100,'holdout60a':50,'holdout60b':50,'holdout59':50}
+          for label,rep in cohorts.items():
+            rows=list(csv.DictReader((d/(label+'_sessions.tsv')).open(),delimiter='\t'))
+            assert len(rows)==rep*10
+            assert {int(r['rep']) for r in rows}==set(range({'selected':1000,'holdout60a':2000,'holdout60b':3000,'holdout59':4000}[label],
+                 {'selected':1000,'holdout60a':2000,'holdout60b':3000,'holdout59':4000}[label]+rep))
+            analysis=json.loads((d/(label+'_analysis.json')).read_text())
+            assert analysis['status']=='exact-verified' and analysis['sessions']==rep*10
+          m={'source_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+            'compiler':subprocess.check_output(['g++','--version'],text=True).splitlines()[0],
+            'platform':platform.platform(),
+            'design':'One selected successful N60 E226 source pair plus 3 untouched N59/60 source pairs, new independent replicate seeds; 120ms full proposal+Tabu+quench per arm',
+            'source_pairs':{'selected':'c60_1-c60_4','holdout60a':'c60_0-c60_3',
+              'holdout60b':'c60_2-c60_5','holdout59':'c59_0-c59_2'},
+            'replications':cohorts,
+            'sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in d.glob('*.tsv')}}
+          (d/'provenance.json').write_text(json.dumps(m,indent=2)+'\n')
+          print('FULL PASS 2500 independent seeded source-pair budgeted innovation arm outcomes')
+          PY
+      - name: Persist all exact audited rare-event replication evidence despite concurrent work
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/results/replication_v1/
+          git commit -m 'research(labs-ai4s): independently replicate rare N60 E226 consensus innovation event with three heldout source parent pairs'
+          for attempt in 1 2 3 4 5 6 7 8; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              echo "PERSISTED independent replication after $attempt attempt(s)"
+              exit 0
+            fi
+            sleep 3
+          done
+          exit 1
