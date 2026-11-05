@@ -1,0 +1,80 @@
+name: temp-labs-ai4s-protected-relink
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-protected-relink.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-protected-relink
+  cancel-in-progress: false
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Compile and independently selftest LABS source-elite protected relinking
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search
+          g++ -O3 -std=c++17 -Wall -Wextra recombination_20261105/innovation/path_relinking/protected_relink.cpp -o /tmp/labs_protected_relink
+          /tmp/labs_protected_relink --selftest
+      - name: Complete 972 timed fully repaired source-elite parent-pair interventions
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/path_relinking
+          mkdir -p results
+          /tmp/labs_protected_relink ../../data/combined/combined10.tsv \
+            results/sessions_v1.tsv results/novel_children_v1.tsv 12 400
+      - name: Independent exact O(N^2) integer verifier and pair-cluster bootstrap
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q --disable-pip-version-check numpy
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/path_relinking
+          python3 validate_relink.py \
+            --parents ../../data/combined/combined10.tsv \
+            --sessions results/sessions_v1.tsv \
+            --certificates results/novel_children_v1.tsv \
+            --out results/source_pair_analysis_v1.json
+          python3 - <<'PY'
+          import pathlib,csv,json,hashlib,subprocess,platform
+          d=pathlib.Path('results')
+          x=list(csv.DictReader((d/'sessions_v1.tsv').open(),delimiter='\t'))
+          assert len(x)==9*12*9,(len(x),9*12*9)
+          assert all(float(r['elapsedMs'])>=400 for r in x)
+          v=json.loads((d/'source_pair_analysis_v1.json').read_text())
+          assert v['status']=='independently verified' and v['sessions']==972
+          assert set(v['by_length'])=={'46','47','50','59','60','92','99'}
+          m={'source_git_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+            'compiler':subprocess.check_output(['g++','--version'],text=True).splitlines()[0],
+            'host':platform.platform(),'source_orbit_count':29,
+            'exact_nine_parent_pairs':9,'seed_reps_per_pair':12,'arms':9,'budget_ms_per_arm':400,
+            'source_sha256':hashlib.sha256(pathlib.Path('../../data/combined/combined10.tsv').read_bytes()).hexdigest(),
+            'all_result_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in d.glob('*.tsv')},
+            'interpretation':'classical source-elite path relinking versus protected intermediate Tabu, not modern full GPU MTS'}
+          (d/'provenance.json').write_text(json.dumps(m,indent=2)+'\n')
+          print('FULLY VERIFIED 972 complete postrepair costed source pair sessions')
+          PY
+      - name: Commit only independently checked original offspring and source cluster statistics
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/path_relinking/results/
+          git commit -m 'research(labs-ai4s): validate 972 stateful protected elite-relink interventions and strong classical nulls'
+          for attempt in 1 2 3 4 5 6 7 8; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 3
+          done
+          echo 'Cannot push validated scientific results' >&2
+          exit 1
