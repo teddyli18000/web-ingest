@@ -182,6 +182,7 @@ void selftest(){
  }
  cout<<"PASS symmetry-group energy, exact epistasis, MI-FOS and 64-step repair random tests\n";
 }
+#ifndef RECOMBINE_NO_MAIN
 int main(int argc,char **argv){
  if(argc==2 && string(argv[1])=="--selftest"){selftest();return 0;}
  if(argc<6){cerr<<"usage PARENTS.tsv OUT_SUMMARY.tsv OUT_NOVEL.tsv REPS BUDGET_MS\n";return 2;}
@@ -276,3 +277,4 @@ int main(int argc,char **argv){
  }
  cout<<"PASS source-parented exact recombination, outputs all length-matched source-orbit pairs\n";
 }
+#endif // RECOMBINE_NO_MAIN
