@@ -134,10 +134,12 @@ void check(){
 }
 int main(int argc,char**argv){
  if(argc==2&&string(argv[1])=="--selftest"){check();return 0;}
- if(argc<6){cerr<<"usage PARENTS.tsv SESSIONS.tsv CERTIFICATES.tsv REPS BUDGET_MS\n";return 2;}
+ if(argc<6){cerr<<"usage PARENTS.tsv SESSIONS.tsv CERTIFICATES.tsv REPS BUDGET_MS [PAIR_OR_all] [REPLICATE_OFFSET]\n";return 2;}
  auto all=load(argv[1]);map<int,vector<Parent*>>groups;
  for(auto&p:all)groups[p.n].push_back(&p);
  int reps=stoi(argv[4]),budget=stoi(argv[5]);
+ string target=argc>6?argv[6]:"all";
+ int offset=argc>7?stoi(argv[7]):0;
  ofstream out(argv[2]),nov(argv[3]);
  if(!out||!nov)throw runtime_error("could not write output");
  out<<"N\tpair\tA_id\tB_id\tAE\tBE\tD\tQ\tconsensus_r\trep\tarm\tgeneration_count\t"
@@ -155,7 +157,8 @@ int main(int argc,char**argv){
    const Parent&A=*pool[i],&B=*pool[j];
    Inherit ip(A,B);
    string pair=A.id+"-"+B.id;
-   for(int rep=0;rep<reps;rep++)for(int arm=0;arm<10;arm++){
+   if(target!="all"&&pair!=target){index++;continue;}
+   for(int rep=offset;rep<offset+reps;rep++)for(int arm=0;arm<10;arm++){
     mt19937_64 rng(hashseed(88499113+n*7197+index*7739+rep*10301+arm*37171));
     auto t0=clk::now();
     vector<int>env=ip.env;
