@@ -19,7 +19,7 @@ struct AlignOption{
   p(A,B,false),bbits(B.seq),d(int(p.D.size())){
   p.half=fixedK;
   for(int k=1;k<p.A.n;k++){
-   long long q=long long(p.A.c[k])-p.B.c[k];
+   long long q=static_cast<long long>(p.A.c[k])-p.B.c[k];
    signed_corr_sqdiff+=q*q;
   }
  }
