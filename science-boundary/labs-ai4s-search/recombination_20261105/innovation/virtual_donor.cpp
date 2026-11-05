@@ -2,9 +2,9 @@
 // uniform virtual-donor null with the SAME total Hamming distance from A.
 // The original 2026-11-05 innovation source is imported, so full 64-step
 // Tabu + steepest pre/post-repair is IDENTICAL across all treatment arms.
-#define main innovation_legacy_entry_unused
+#define INNOVATION_NO_MAIN
 #include "innovation.cpp"
-#undef main
+#undef INNOVATION_NO_MAIN
 #include <fstream>
 #include <sstream>
 #include <iomanip>
