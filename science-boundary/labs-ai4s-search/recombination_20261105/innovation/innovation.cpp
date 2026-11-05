@@ -8,6 +8,11 @@
 #include <unordered_set>
 #include <iomanip>
 using namespace std;
+int distance_to_parent_orbit(const string&x,const string&y){
+ int d=INT_MAX;
+ for(const string&o:orb(y))d=min(d,hd(x,o));
+ return d;
+}
 struct Inherit {
  L A,B;
  vector<int>D,Q;
