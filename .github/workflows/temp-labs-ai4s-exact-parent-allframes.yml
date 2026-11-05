@@ -1,0 +1,53 @@
+name: temp-labs-ai4s-exact-parent-allframes
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-exact-parent-allframes.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  allframes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Enumerate every symmetry orientation with <=21 disagreement sites and exact E checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search
+          g++ -O3 -std=c++17 -Wall -Wextra recombination_20261105/exhaustive_hypercube_allframes.cpp -o /tmp/labs_hypercube_all
+          /tmp/labs_hypercube_all recombination_20261105/data/parents.tsv \
+             recombination_20261105/results/exhaustive_parent_allframes_d21.tsv 21
+      - name: Independently verify closed-form exact mean LABS energy and no near-optimal raw recombinants
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 verify_hypercube_expectation.py \
+            --parents data/parents.tsv \
+            --rows results/exhaustive_parent_allframes_d21.tsv \
+            --out results/exhaustive_parent_allframes_d21.json
+          python3 - <<'PY'
+          import csv,json,pathlib,hashlib
+          d=pathlib.Path('results')
+          v=json.loads((d/'exhaustive_parent_allframes_d21.json').read_text())
+          assert v['alignment_frames_complete']==25
+          assert v['states_independently_enumerated']==19689472
+          assert v['all_independent_closed_form_mean_checks_passed']
+          p=d/'exhaustive_parent_allframes_d21.tsv'
+          (d/'exhaustive_parent_allframes_sha256.txt').write_text(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n')
+          PY
+      - name: Save full analytically verified source-pair mosaic structural census
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/results/exhaustive_parent_allframes_*
+          git commit -m 'research(labs-ai4s): verify all feasible symmetry frames and exact expected correlation energy of inheritance'
+          git pull --rebase origin main
+          git push origin HEAD:main
