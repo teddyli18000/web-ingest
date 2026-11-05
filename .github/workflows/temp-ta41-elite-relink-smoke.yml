@@ -1,4 +1,5 @@
 name: temp-ta41-elite-relink-smoke
+# Rebuild after adding two verified far neutral elites and novelty archive.
 # Recheck compiled C++ after const-safe comparator fix.
 on:
   push:
@@ -62,7 +63,7 @@ jobs:
           set -euo pipefail
           for mode in greedy dynamic2; do
             dir="science-boundary/job-shop-ta41/results/relink-smoke-$mode"
-            rm -f "$dir/elite-pool.txt" "$dir/raw.txt"
+            rm -f "$dir/elite-pool.txt" "$dir/raw.txt" "$dir/raw.txt.novel"
             if test -d "$dir"; then git add "$dir"; fi
           done
           if git diff --cached --quiet; then exit 0; fi
