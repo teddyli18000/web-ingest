@@ -1,5 +1,21 @@
 # Job-shop scheduling — Taillard ta41 (Few Shots p009)
 
+## Latest verified constructive checkpoint — 2026-11-05: hidden-answer positive transfer
+
+[Full experimental design, 192 independent scored outcomes, methodological limitations, historic 2005 archival investigation](positive-control-transfer-2026-11-05.md).
+
+**ta41 official makespan remains 2006; no retrieved 2005 machine-order certificate.** Reoriented research away from extending failed ta41 local searches and toward a positive-control transfer study on six 30×20 Taillard instances (ta42js..ta47js), each with an independently DAG-validated archived machine-order oracle. Generated **24 legal degraded hidden-answer starts** (12 simple, 12 with 16 or 32 swaps across 16–20 machines); source oracle order never passed to search.
+
+Three in-house C++ policies (`tabu`, `static3`, `dynamic3`) each ran **48 paired starts × 350,000 full DAG evaluations**. All improved their starting scores; oracle-score recoveries were **45/48**, **43/48**, **47/48**, respectively. On the 24 harder multiswap trials: 21,19,24 recoveries. Dynamic3 averaged 2.17 seconds, tabu 1.19 seconds; tabu had **smaller aggregate remaining makespan above oracle (3 vs dynamic3's 16)**. This is **positive transfer and a plausible coordination signal, not a dominance claim**.
+
+Critically, original published AGPLv3 **genuine N7 C++ tabu** `Qiming01/Job-Shop-Scheduling@7e120ebada21cb604c871e0657814bf6e32611f8` tested on the **same 48 starts** and verified from 600 native operation times, with its actual search rules unchanged. Original N7 got **41/48** oracle recoveries (17/24 hard) in **5.0 seconds** per trial. Dynamic3 beat it on 7 of 48 paired score comparisons, lost 1 and tied 40, but received a different evaluation/time budget. Complete independent paired judge: [results/positive-blind-compare.json](results/positive-blind-compare.json). A stricter **equal-5-second C++ time cap** for all three in-house algorithms is being tested in `temp-ta41-5sec-matched-hidden-positive.yml`; results not claimed until successfully committed.
+
+**Historical 2005 investigation:** ScheduleOpt `bks.json` reports NO2013 and CPO2015 2005 with `certificate:"no"`. Original Vilím/Laborie/Shaw 2015 detailed experimental appendix confirms 2005 but provides no full machine orders, and public solutions.json still only contains a verified ta41=2006. Van Hoorn dissertation reports an independent 2013 attribution to **Nagata & Ono**. Their 2018 [iterative ejection of bottleneck operations](https://doi.org/10.1016/j.cor.2017.09.017) is especially relevant strong *existing prior art* to the proposed dynamic critical-path replacement because it alternates bottleneck ordering removals and additions in partial schedules. No complete 2005 witness has been found in public source archives. Attempt to create a public certificate request issue on ScheduleOpt was **blocked 403**, hence no request was sent.
+
+**Next scientific decision:** Finish equal-time N7-vs-cascade controls, make harder positive controls if saturation remains high, and investigate **Nagata/Ono IEBO source/witness** and 2015 CP Optimizer author archives before inventing another local search. Score-first principle: independent complete legal machine-order certificate or no breakthrough claim.
+
+
+
 ## Latest constructive checkpoint — 2026-11-04 PDT / 2026-11-05 UTC
 
 **No new verified ta41 bound. Few Shots best machine-order certificate remains makespan 2006; the historical literature reports an uncertified 2005.** This round explicitly prioritized a **constructive, source-comparable critical-path-replacement mechanism** rather than more infeasibility proofs.
