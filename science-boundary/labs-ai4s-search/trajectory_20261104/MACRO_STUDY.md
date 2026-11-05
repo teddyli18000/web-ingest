@@ -50,3 +50,25 @@ The temporary GitHub Actions workflow performs exact output checks and commits t
 ## Go/no-go
 
 If arm 3/5 shows no reproducible gain over both original solver and random mask/corridor controls, **stop tuning these macro parameters**. Revisit the formulation: large replacement moves destroy strong correlations, and next candidate family should operate on balanced correlation-changing **cycles** or conditional pair-coupling-preserving reversible transformations rather than flipping arbitrary 12 positions. N99 skew E577 versus non-skew E553 is an oracle-only structural calibration; it cannot be used as a parent or hidden target for prospective unbiased search.
+
+
+## Full prospective source-native MTS benchmark — validated complete
+
+[Successful GitHub Actions run 41988872875](https://github.com/teddyli18000/web-ingest/actions/runs/41988872875); [all 144 exact-scored terminal sequences](results/macro_full_v1/results.tsv), [run metadata](results/macro_full_v1/summary.json), [paired statistical analysis](results/macro_full_v1/paired_analysis.json), and [SHA256 provenance](results/macro_full_v1/provenance.json).
+
+N=64,80,99,100, six arms, six pre-fixed seeded runs per arm, 14 seconds per **full solver run**, all evaluation, LNS generation, population replacement and local Tabu included. Every active method was triggered hundreds to thousands of times, and original untouched arm triggered zero. The 144 independent final solutions all pass integer LABS E recomputation and exact odd+even accounting. Paired differences are original best E minus alternate final best E, so **positive means the macro helps**.
+
+| N | original mean E | spectral-pair parity-corridor mean E | difference (95% seed bootstrap) | spectral-pair true-E selection mean E | difference (95% seed bootstrap) |
+|---|---:|---:|---|---:|---|
+|64|276.0|274.0|+2.0 [−1.33,+5.33]|272.0|+4.0 [−2,+10]|
+|80|481.33|486.0|−4.67 [−24,+13.33]|472.67|+8.67 [−18,+32.67]|
+|99|795.0|796.33|−1.33 [−14,+16]|784.33|+10.67 [−8,+28.67]|
+|100|798.0|800.67|−2.67 [−21.33,+17.33]|795.33|+2.67 [−22.67,+33.33]|
+
+The spectral-pair true-E arm has a slightly lower mean E than original in each of these four length strata, but **every interval crosses zero**, and at N100 it wins only 2/6 paired seeds and loses 4/6. No reproducible solver advantage is supported. The strongest observed single N100 macro solution E726 is still far above the published E578.
+
+Other arms and their results are fully available in the paired JSON; notably uniform-pair parity-corridor at N64 is **worse** than baseline by 12.67 energy units [−19.33,−6.0]. Selecting a convenient best arm after observing 5 arms×4 sizes is exploratory multiple comparison; no corrected familywise superiority claim is possible here.
+
+**Important control:** the prior attempted 144-run job [41988188919](https://github.com/teddyli18000/web-ingest/actions/runs/41988188919) completed all science runs and printed paired analysis, but a *malformed final workflow assertion* incorrectly asserted a zero truth value for the original baseline arm. The job failed before committing raw TSV. The corrected complete independent run above successfully committed the raw data and independent verification; the preliminary job should not be counted as separate independent seed replication because it uses the same fixed seed assignments. Its descriptive run means were almost identical, which is a debugging check only.
+
+**Verdict:** the tested *operator-replacement* family, fixed 12-spin stress-lag pair generation and inexpensive parity-corridor selection, is **not** a demonstrated improvement over original historical MTS. Do not tune `lambda`/mask count or invoke complex NN architectures on this evidence. The more fundamental [fixed-weight mask-space study](GEOMETRY_STUDY.md) shows structured mask optimization can win dramatically at candidate level, but still fails to produce anything near frontier-quality states. Future work should target correlation-preserving large transitions, native stalled checkpoints, and stronger published solver baselines, rather than this particular macro operator.
