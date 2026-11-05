@@ -1,0 +1,55 @@
+name: temp labs100 O58 K28 three-overlap exact fibre
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-o58-k28-threeoverlap.yml'
+  workflow_dispatch:
+concurrency:
+  group: temp-labs100-o58-k28-threeoverlap
+  cancel-in-progress: false
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-100
+          g++ -O3 -std=c++20 -DNDEBUG -fopenmp code/o58_k28_overlap3_compressed_exact.cpp -o "$RUNNER_TEMP/producer"
+          g++ -O3 -std=c++20 -DNDEBUG -fopenmp code/o58_qgroup_budget_exact.cpp -o "$RUNNER_TEMP/fibre"
+      - name: Exact affine triple quotient, GF2 supports, GF3 signs and negacyclic Q
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p outputs
+          python3 science-boundary/labs-100/code/o58_k28_overlap3_supports.py outputs/supports.csv | tee outputs/supports.log
+          export OMP_NUM_THREADS="$(nproc)"
+          "$RUNNER_TEMP/producer" outputs/supports.csv > outputs/compressed.log
+          grep '^SUMMARY ' outputs/compressed.log
+          emitted=$(grep -c '^HIT ' outputs/compressed.log || true)
+          declared=$(sed -n 's/.* qmin60=\([0-9]*\).*/\1/p' outputs/compressed.log | tail -1)
+          [[ "$emitted" == "$declared" ]]
+          [[ "$emitted" == 53 ]]
+          "$RUNNER_TEMP/fibre" 0 outputs/compressed.log 120 > outputs/fibre.log
+          grep '^SUMMARY ' outputs/fibre.log
+          grep '^QHIT ' outputs/fibre.log || true
+          python3 - <<'PY'
+          import re
+          c=open('outputs/compressed.log').read()
+          m=re.search(r'^SUMMARY supports=(\d+) ptests=(\d+) modular_systems=(\d+) exact=(\d+) minSG=(\d+) minQ=(\d+) qmin60=(\d+) maxfree=(\d+)$',c,re.M)
+          assert m
+          assert list(map(int,m.groups()))==[2194,11294712,7730197,3772,49,29,53,6],m.groups()
+          q=open('outputs/fibre.log').read()
+          assert re.search(r'^SUMMARY budget=120 .*$',q,re.M)
+          print('K28_EXACT_AUDIT',re.search(r'^SUMMARY budget=120 .*$',q,re.M).group(0))
+          PY
+      - name: Archive every compressed survivor and fibre transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-o58-k28-threeoverlap
+          path: outputs/
+          retention-days: 30
