@@ -1,0 +1,54 @@
+{
+  "campaign": "m220-n11-6-seq1-pigeonhole-post-audit",
+  "degree_sequence": {
+    "11": 6,
+    "12": 16,
+    "13": 14
+  },
+  "edges": 220,
+  "prior_certificates": [
+    "results/m220-n11-6-universal-low-post-audit.json",
+    "results/d12-anchor-orbits.json",
+    "results/d12-residual-symmetry.json"
+  ],
+  "classical_fact": "R(4,3)=R(3,4)=9",
+  "cases": [
+    {
+      "R": 22,
+      "low_graph6": "Ep~o",
+      "low_internal_degrees": [
+        4,
+        3,
+        4,
+        3,
+        4,
+        4
+      ],
+      "low_middle_edges": 44,
+      "middle_vertices": 16,
+      "middle_vertex_with_l_at_most_2_forced": true,
+      "checked_admissible_l_h_pairs": 15,
+      "ramsey_obstruction": "I2 in >=4 low nonneighbors + I3 in >=9 high nonneighbors + m gives I6"
+    },
+    {
+      "R": 24,
+      "low_graph6": "EznW",
+      "low_internal_degrees": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "low_middle_edges": 42,
+      "middle_vertices": 16,
+      "middle_vertex_with_l_at_most_2_forced": true,
+      "checked_admissible_l_h_pairs": 15,
+      "ramsey_obstruction": "I2 in >=4 low nonneighbors + I3 in >=9 high nonneighbors + m gives I6"
+    }
+  ],
+  "status": "UNSAT_for_this_degree_sequence",
+  "soundness": "Standalone graph6 decoding; degree handshake and Ramsey obstruction; no withdrawn row-CSP, MILP, or new SAT run.",
+  "conclusion": "No 36-vertex (4,6)-graph with 220 edges has degree sequence 11^6 12^16 13^14."
+}
