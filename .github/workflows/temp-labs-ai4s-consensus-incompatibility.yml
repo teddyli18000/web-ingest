@@ -1,0 +1,43 @@
+name: temp-labs-ai4s-consensus-incompatibility
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-consensus-incompatibility.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Exact enumerate third-optimum compatibility across all 8x8x8 symmetries
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 allele_compatibility.py --parents data/parents.tsv \
+            --out results/allele_compatibility_all_orientations.json
+          python3 - <<'PY'
+          import json,pathlib
+          f=pathlib.Path('results/allele_compatibility_all_orientations.json')
+          r=json.loads(f.read_text())
+          assert {n:d['n_triples'] for n,d in r['by_length'].items()}=={'46':3,'47':60,'50':3}
+          assert all(t['min_uninheritable']>0 for t in r['triples'])
+          assert r['by_length']['47']['min_uninheritable']==3
+          assert r['by_length']['50']['min_uninheritable']==8
+          print('VERIFIED: all 66 known-optimum triples require at least one consensus mutation')
+          PY
+      - name: Commit symmetry-complete inheritance barrier certificate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/results/allele_compatibility_all_orientations.json
+          git commit -m 'research(labs-ai4s): exact triple-optimum 8-fold symmetry consensus-edit barrier'
+          git pull --rebase origin main
+          git push origin HEAD:main
