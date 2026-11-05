@@ -23,7 +23,9 @@ SEEDS={
   "mixed20":("neutral-mixed20","neutral-certificate.json","neutral-verdict.json"),
   "rev5":("warm-backbone-5","neutral-certificate.json","best-verdict.json"),
   "rev6":("warm-backbone-6","neutral-certificate.json","best-verdict.json"),
-  "rev7":("continuation-7","neutral-certificate.json","best-verdict.json")
+  "rev7":("continuation-7","neutral-certificate.json","best-verdict.json"),
+  "far_unconditioned":("orientation-maxmin-false/witness","certificate.json","upstream-verdict.json"),
+  "far_core_guided":("orientation-maxmin-true/witness","certificate.json","upstream-verdict.json")
 }
 
 def kendall(a,b):
