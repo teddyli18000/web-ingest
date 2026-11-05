@@ -8,6 +8,9 @@ This directory is the durable research workspace for Few Shots `p003-ramsey-r46`
 
 ## Current state
 
+**New exact exclusion (2026-11-05): m=220, n11=6 seq1 is impossible.** For the post-audit R=22/24 low-graph orbits, the six degree-11 lows have no neighbours among the fourteen degree-13 highs, and send respectively 44/42 edges to sixteen degree-12 middle vertices. Therefore some middle vertex meets at most two lows. The independently certified no-lucky-d12 bound S<=147 then forces at least nine high non-neighbours; the middle vertex also misses at least four lows. R(4,3)=9 and K4-freeness produce an independent triple among the high non-neighbours and an independent pair among the low non-neighbours; adding the middle vertex gives an independent 6-set, contradiction. Standalone stdlib verifier: `m220_n11_6_seq1_pigeonhole_verify.py`; certificate: `results/m220-n11-6-seq1-pigeonhole-post-audit.json`. With independently re-proved seq3/4/5 and seq6–14 exclusions, **only seq2 (11^6 12^17 13^12 14) remains unresolved within the n11=6 layer**. Other m=220 degree-11-count layers remain open. This is not a new Ramsey bound or a 36-point construction.
+
+
 **Latest exact progress (2026-11-04):** The m=220, n11=6 **seq3 is now fully excluded** by a short post-audit extreme B88 packing / high-subgraph capacity contradiction. Independent Python and C++ bitset verifiers agree (170 -> 10 -> 0 class matrices); see \`m220_n11_6_seq3_high_packing_verify.py\`, \`m220_n11_6_seq3_independent.cpp\`, \`results/m220-n11-6-seq3-high-packing-post-audit.json\`, and \`notes/m220-seq3-high-packing-2026-11-04.md\`. **Only seq1 and seq2 remain within the six-degree-11-vertex layer**; other m=220 layers remain open and there is no 36-vertex certificate.
 
 
