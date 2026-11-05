@@ -22,7 +22,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from c7p5_circular_hall_io import independent, read_circular
-from c7p5_two_layer_repair import digits5, enc as enc5, solve_pair, dump_certificate
+from c7p5_two_layer_repair import digits5, solve_pair, dump_certificate
 
 P=(1,7,49,343,2401)
 
