@@ -1,0 +1,68 @@
+name: temp-labs-ai4s-independent-parent-harvest
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-independent-parent-harvest.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-independent-parent-harvest
+  cancel-in-progress: false
+jobs:
+  independent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Build pinned original strong classic solver (not a synthetic parent generator)
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone -q --depth 1 https://github.com/borkob/git_labs.git "$RUNNER_TEMP/source"
+          PIN=1aa123407636e48630174e0bf122037e369c1d68
+          git -C "$RUNNER_TEMP/source" fetch -q --depth 1 origin "$PIN"
+          git -C "$RUNNER_TEMP/source" checkout -q --detach "$PIN"
+          test "$(git -C "$RUNNER_TEMP/source" rev-parse HEAD)" = "$PIN"
+          make -s -j1 -C "$RUNNER_TEMP/source/solvers/lMAts-lRRts/src"
+      - name: Independent fixed-seed source trajectories across five archive-optimal lengths
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 harvest_independent.py \
+            --solver "$RUNNER_TEMP/source/solvers/lMAts-lRRts/src/lMAts" \
+            --out data/native_independent_2009_v1 --reps 8 --seconds 20 --workers 4
+      - name: Third-party exact score, source-orbit uniqueness, gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 - <<'PY'
+          import csv,json,pathlib
+          root=pathlib.Path('data/native_independent_2009_v1')
+          d=json.loads((root/'independent_manifest.json').read_text())
+          rows=list(csv.DictReader((root/'native_source_runs.tsv').open(),delimiter='\t'))
+          assert len(rows)==40 and d['valid_runs']==40
+          ref={46:131,47:135,50:153,59:205,60:218}
+          for r in rows:
+            n=int(r['n']);s=[2*int(z)-1 for z in r['bits']]
+            E=sum(sum(s[i]*s[i+k] for i in range(n-k))**2 for k in range(1,n))
+            assert len(s)==n and int(r['E'])==E
+          elite=list(csv.DictReader((root/'independent_highquality_orbits.tsv').open(),delimiter='\t'))
+          assert len({(int(z['n']),z['canonical']) for z in elite})==len(elite)
+          for z in elite:assert int(z['E'])<=1.2*ref[int(z['n'])]
+          print('CERTIFIED',len(elite),'unique orbits from 40 independent native solver runs')
+          PY
+      - name: Commit source-lineage backed nonperturbed parent audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/data/native_independent_2009_v1/
+          git commit -m 'research(labs-ai4s): verify 40 source-independent historical memetic solver parents'
+          git pull --rebase origin main
+          git push origin HEAD:main
