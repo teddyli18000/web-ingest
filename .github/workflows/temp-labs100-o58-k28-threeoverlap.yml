@@ -46,6 +46,12 @@ jobs:
           assert re.search(r'^SUMMARY budget=120 .*$',q,re.M)
           print('K28_EXACT_AUDIT',re.search(r'^SUMMARY budget=120 .*$',q,re.M).group(0))
           PY
+      - name: Exhaust all matched binary lifts and 500 induced affine transforms
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/o58_k28_overlap3_allaffine_witness.py outputs/compressed.log outputs/fibre.log | tee outputs/witness.log
+          grep -q 'K28_FULL_AFFINE_AUDIT compressed=53 QHIT=34 mapped_Q=66 transforms=66000 O58=0 minE=1310 minO=154' outputs/witness.log
       - name: Archive every compressed survivor and fibre transcript
         if: always()
         uses: actions/upload-artifact@v4
