@@ -74,6 +74,7 @@ void test_virtual(){
  }
  cout<<"PASS virtual-donor matched-cardinality, direct E and all identical repair arms\n";
 }
+#ifndef VIRTUAL_DONOR_NO_MAIN
 int main(int argc,char**argv){
  if(argc==2&&string(argv[1])=="--selftest"){test_virtual();return 0;}
  if(argc<7){
@@ -150,3 +151,5 @@ int main(int argc,char**argv){
  cout<<"PASS prospective matched-radius parent-information ablation for "<<target
      <<" new seeds "<<offset<<".."<<offset+reps-1<<"\n";
 }
+
+#endif // VIRTUAL_DONOR_NO_MAIN
