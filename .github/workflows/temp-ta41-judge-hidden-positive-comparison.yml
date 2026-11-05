@@ -1,0 +1,33 @@
+name: temp-ta41-judge-hidden-positive-comparison
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-judge-hidden-positive-comparison.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-judge-hidden-positive-comparison
+  cancel-in-progress: false
+jobs:
+  judge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Independently check 192 result records and grade hidden score oracle
+        run: |
+          python3 science-boundary/job-shop-ta41/grade_hidden_positive.py
+      - name: Preserve paired method-level analysis
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/job-shop-ta41/results/positive-blind-compare.json
+          git commit -m 'research(ta41): grade original N7 vs paired three-move repair hidden-answer controls'
+          for attempt in $(seq 1 30); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
