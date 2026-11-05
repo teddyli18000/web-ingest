@@ -65,5 +65,68 @@ class AuthorizeOnceTests(unittest.TestCase):
         self.assertEqual(authorize_once.app_root("/apps/demo"), "/apps/demo")
 
 
+    def test_device_code_requests_official_scope(self):
+        def fake_open(req, timeout):
+            url = urllib.parse.urlparse(req.full_url)
+            self.assertEqual(url.path, "/oauth/2.0/device/code")
+            values = urllib.parse.parse_qs(url.query)
+            self.assertEqual(values["response_type"], ["device_code"])
+            self.assertEqual(values["scope"], ["basic,netdisk"])
+            return io.BytesIO(json.dumps({
+                "device_code": "opaque", "user_code": "ABCD",
+                "verification_url": "https://openapi.baidu.com/device",
+                "qrcode_url": "https://openapi.baidu.com/qr",
+                "expires_in": 600, "interval": 2,
+            }).encode())
+        value = authorize_once.request_device_code("app-key", opener=fake_open)
+        self.assertEqual(value["device_code"], "opaque")
+        self.assertEqual(value["interval"], 2)
+        self.assertEqual(value["user_code"], "ABCD")
+
+    def test_device_login_polls_without_leaking_token(self):
+        calls = []
+        def fake_open(req, timeout):
+            query = urllib.parse.parse_qs(urllib.parse.urlsplit(req.full_url).query)
+            self.assertEqual(query["grant_type"], ["device_token"])
+            self.assertEqual(query["code"], ["opaque"])
+            calls.append(query)
+            result = {"error": "authorization_pending"} if len(calls) == 1 else {
+                "access_token": "access-token", "refresh_token": "rotated-refresh"
+            }
+            return io.BytesIO(json.dumps(result).encode())
+        now = [0]
+        def pause(seconds):
+            now[0] += seconds
+        auth = authorize_once.wait_for_device_login(
+            "app", "secret", {"device_code": "opaque", "interval": 2, "expires_in": 10},
+            opener=fake_open, clock=lambda: now[0], pause=pause
+        )
+        self.assertEqual(auth, {"refresh_token": "rotated-refresh"})
+        self.assertEqual(len(calls), 2)
+
+    def test_device_login_expired_stops(self):
+        now = [0]
+        def pending(req, timeout):
+            return io.BytesIO(b'{"error":"authorization_pending"}')
+        def pause(seconds):
+            now[0] += seconds
+        with self.assertRaisesRegex(RuntimeError, "timed out"):
+            authorize_once.wait_for_device_login(
+                "app", "secret", {"device_code": "opaque", "interval": 2, "expires_in": 3},
+                opener=pending, clock=lambda: now[0], pause=pause
+            )
+
+    def test_existing_secrets_prevent_key_rotation(self):
+        existing = mock.Mock(stdout=json.dumps([{"name": "BAIDU_DRIVE_STATE_KEY"}]))
+        with mock.patch.object(authorize_once.subprocess, "run", return_value=existing):
+            with self.assertRaisesRegex(RuntimeError, "already exist"):
+                authorize_once.ensure_fresh_install("owner/repo")
+
+    def test_fresh_install_can_continue(self):
+        existing = mock.Mock(stdout="[]")
+        with mock.patch.object(authorize_once.subprocess, "run", return_value=existing):
+            authorize_once.ensure_fresh_install("owner/repo")
+
+
 if __name__ == "__main__":
     unittest.main()
