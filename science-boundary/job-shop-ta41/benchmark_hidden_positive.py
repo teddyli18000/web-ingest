@@ -16,7 +16,7 @@ from search import setup,evaluate
 
 ROOT=Path(__file__).resolve().parent
 
-def compile_generalized(out):
+def compile_generalized(out, wall_seconds=0):
     source=(ROOT/'predictive_cascade_search.cpp').read_text()
     assert source.count('static Result search(')==1
     assert source.count('if(init.score!=2006)')==1
@@ -33,7 +33,7 @@ def compile_generalized(out):
         '        INITIAL_SCORE=evaluate(root).score;\n'
         '        if(INITIAL_SCORE<=0)throw runtime_error("start is cyclic");\n'
         '        UNREACHABLE_STOP=-1;',1)
-    out.write_text(source)
+    if wall_seconds>0:\n        marker='while(evaluations<budget&&result.score>UNREACHABLE_STOP){'\n        assert source.count(marker)==1\n        source=source.replace(marker,\n            'while(evaluations<budget&&result.score>UNREACHABLE_STOP && '\n            'chrono::duration<double>(chrono::steady_clock::now()-begin).count()<'\n            +str(float(wall_seconds)) + '){')\n    out.write_text(source)
     subprocess.run(['g++','-std=c++17','-O3','-pipe',str(out),'-o',str(out.with_suffix(''))],check=True)
     return out.with_suffix('')
 
@@ -63,7 +63,7 @@ def benchmark(a):
     records=[]
     with tempfile.TemporaryDirectory() as tmp:
         source=Path(tmp)/'generalized_cascade.cpp'
-        binary=compile_generalized(source)
+        binary=compile_generalized(source,a.wall_seconds)
         for folder in sorted(a.cases.glob('ta*js-*')):
             entry=folder/'start.txt'
             assert entry.is_file()
@@ -95,7 +95,7 @@ def benchmark(a):
                     native_wall_seconds=float(stat[11]),
                     harness_wall_seconds=round(elapsed,3),
                     independently_reproduced_score=independent,
-                    hidden_answer_not_accessible_to_search=True)
+                    hidden_answer_not_accessible_to_search=True,\n                    wall_clock_cap=a.wall_seconds)
                 records.append(outcome)
                 print('CASE',trial,a.policy,startscore,best,'gain',startscore-best,flush=True)
                 (a.out/'partial-results.json').write_text(json.dumps({'trials':records,'complete':False},indent=2)+'\n')
@@ -113,5 +113,5 @@ if __name__=='__main__':
     p.add_argument('--policy',choices=('tabu','static3','dynamic3'),required=True)
     p.add_argument('--seeds',type=int,nargs='+',default=[4107,4113])
     p.add_argument('--evaluations',type=int,default=350000)
-    p.add_argument('--timeout',type=int,default=80)
+    p.add_argument('--timeout',type=int,default=80)\n    p.add_argument('--wall-seconds',type=float,default=0)
     benchmark(p.parse_args())
