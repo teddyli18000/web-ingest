@@ -24,7 +24,7 @@ def main():
   key=(n,r['canonical'])
   assert key not in seen
   seen.add(key);dst.append(r);groups[n].append(r)
- assert {n:len(x) for n,x in groups.items()}=={46:3,47:4,50:3,59:4,60:3}
+ assert {n:len(x) for n,x in groups.items()}=={46:3,47:4,50:3,59:4,60:5}
  assert len({r['lineage'] for r in dst})==len(dst), 'every selected distinct orbit must have a different source seed'
  with a.out.open('w') as f:
   writer=csv.DictWriter(f,fieldnames=['id','n','E','bits','canonical','source','lineage','source_row','near','best_known'],delimiter='\t')
