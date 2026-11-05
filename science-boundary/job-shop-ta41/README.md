@@ -1,5 +1,18 @@
 # Job-shop scheduling — Taillard ta41 (Few Shots p009)
 
+## 2026-11-05 — Precompletion resource-conflict mechanism: constructive positive and limits
+
+[Full mathematical statements, independently audited proofs and reproducible results](partial-resource-joint-ejection-2026-11-05.md).
+
+**New rigorous 30×20 positive:** On a published N7-created, 20-second independent ta43 elite (Cmax **1888**), globally unrestricted CP partial-resource reorientation built a verified **1887** schedule with **4** reversed original adjacent machine precedences and **Kendall distance 9** across **3 machines**. With the other 576 original adjacency precedences pinned, **all 15 proper subsets** of the 4 corrections are independently proved INFEASIBLE and all 4 jointly produce 1887. A separate CP model rechecked each sufficient UNSAT core with ONLY its own core machine arcs. All complete legal machine orders scored by independent job+machine DAG. [Exhaustive conditional 16-subset proof](results/ta43-joint-4-arc-independent-audit.json), [exact 9-inversion minimax path barrier](results/ta43-joint-4-arc-microstructure.json): every path of target-directed adjacent swaps between these specific endpoints peaks at **1920**, 32 above the initial 1888; **does not apply to nonmonotone routes**.
+
+**Precompletion predictions:** 12 source-independent hidden-stronger-answer 30×20 schedules produced **8** sound two-way-forbidden machine pairs and **56** sound machine energetic overload witnesses, all **64 independently consistent** with the withheld improved machine orders. But static criticality **101** top-20 oracle reorientation hits, two-way pair **96**, energetic **90**; these early conflict rules **do not outperform** static guidance. Joint full CP repair delivered ta43 1888→1887 and ta46 2044→2042 on independent positive starts. All four full ta41-2005 60-second CP runs returned **UNKNOWN**, no official improvement beyond **2006**.
+
+**Mechanism caveat:** With baseline 580 precedence assumptions and hard 1887 deadline, initial UNSAT core of 23 arcs includes only one of the four ultimately corrective arcs (257); retracting it yields another core containing 199 and 258, then cores point to 258 and 168. That specific successful correction chain was **post-hoc selected** using a known witness. A one-step counterfactual "maximize replacement core novelty" policy ranked the next required arcs only **6th, 24th/35th, 39th** in three replay states, failing top-5 every time. It is **not an effective autonomous ranking policy**. [Details](results/ta43-counterfactual-core-replacement.json). To test autonomous construction, a distinct **implicit hitting-set / minimum correction set (IHS)** attempt is running on blind independent ta43/ta46 positives, with equal CP caps and static/uniform/random weighting, `constructive_implicit_hitting_set.py`; no successful result claimed yet.
+
+**Next:** Demand robust, oracle-blind constructive gains over *genuine original N7* and static full-CP on independent local-optimum basins before scaling to ta41. Plain ejection, edge finding, energetic reasoning, and IHS are established prior art (Nagata–Ono IEBO 2018 and CP literature); any novelty must lie in improved transferable replacement prediction, not rediscovering those methods.
+
+
 ## Latest constructive benchmark — 2026-11-05
 
 **No new ta41 certificate; verified Few Shots makespan still 2006.** Rather than scale the plateau, we built a reproducible 30×20 **hidden known-answer positive-control environment** using six separate Taillard instances and compared our candidate dynamic critical replacement search against genuine published N7 source code.
