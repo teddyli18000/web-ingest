@@ -51,6 +51,7 @@ def stream_events(root,job):
                 results.append(dict(N=n,seed=seed,gen=g,episode=ep,step=step,
                     gap_steps=gap,changed_positions=hd,
                     oldE=prev['prevE'],newE=newE,improvement=prev['prevE']-newE,
+                    oldSeq=prev['seq'],newSeq=bits,
                     startE=prev['startE'],global_at_start=prev['global_at_start'],
                     oldOdd=prev['odd'],newOdd=o,deltaOdd=delta_odd,
                     oldEven=prev['even'],newEven=e,deltaEven=delta_even,
