@@ -1,0 +1,60 @@
+name: temp-labs-ai4s-exact-parent-closure
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-exact-parent-closure.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  exhaustive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Build exact parental crossover-closure enumerator
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search
+          g++ -O3 -std=c++17 -Wall -Wextra recombination_20261105/exhaustive_hypercube.cpp -o /tmp/labs_hypercube
+          /tmp/labs_hypercube recombination_20261105/data/parents.tsv \
+            recombination_20261105/results/exhaustive_parent_closure_d21.tsv 21
+      - name: Assert algebraic accounting and source-pair completeness
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 - <<'PY'
+          import csv,pathlib,json,hashlib,subprocess,platform
+          p=pathlib.Path('results/exhaustive_parent_closure_d21.tsv')
+          r=list(csv.DictReader(p.open(),delimiter='\t'))
+          assert len(r)==17,('tested pairs',len(r))
+          assert sum(int(z['states']) for z in r)==12054528
+          assert all(int(z['mixed_states'])==int(z['states'])-2 for z in r)
+          assert all(int(z['direct_check_sampled'])>0 for z in r)
+          assert all(int(z['balanced_best_E'])>=int(z['refE']) for z in r)
+          assert all(int(z['mixed_le5_unique_orbits'])<=int(z['mixed_le10_unique_orbits']) for z in r)
+          d={'source_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+             'exact_states':sum(int(z['states']) for z in r),'covered_pairs':len(r),
+             'excluded_parent_pairs_D_over_21':4,
+             'max_difference_coordinates':21,
+             'scope':'Complete aligned two-parent inheritance hypercubes for D<=21 only; repair of top32 vs randomly sampled balanced32 is retrospective and not a fair prospective solver',
+             'platform':platform.platform(),
+             'source_sha256':hashlib.sha256(pathlib.Path('data/parents.tsv').read_bytes()).hexdigest(),
+             'result_sha256':hashlib.sha256(p.read_bytes()).hexdigest()}
+          pathlib.Path('results/exhaustive_parent_closure_d21.json').write_text(json.dumps(d,indent=2)+'\n')
+          print(json.dumps(d,indent=2))
+          PY
+      - name: Commit exact source-closure and postquench audit under research topic
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/results/exhaustive_parent_closure_d21.*
+          git commit -m 'research(labs-ai4s): certify all 12M aligned-elite parent mosaics for eligible small-N pairs'
+          git pull --rebase origin main
+          git push origin HEAD:main
