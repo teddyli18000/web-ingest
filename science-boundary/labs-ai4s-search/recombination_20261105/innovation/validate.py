@@ -30,6 +30,7 @@ def main():
  p.add_argument('--sessions',type=pathlib.Path,required=True)
  p.add_argument('--certificates',type=pathlib.Path,required=True)
  p.add_argument('--out',type=pathlib.Path,required=True)
+ p.add_argument('--subset',action='store_true',help='validate predeclared focused parent-pair holdouts')
  args=p.parse_args()
  parents=read(args.parents);rows=read(args.sessions);cert=read(args.certificates)
  lookup={p['id']:p for p in parents};byN=collections.defaultdict(list)
@@ -62,7 +63,9 @@ def main():
   groups[key][arm]=r
  assert all(set(v)==set(NAMES) for v in groups.values())
  expected_pairs=sum(len(g)*(len(g)-1)//2 for g in byN.values())
- assert len({(key[0],key[1]) for key in groups})==expected_pairs
+ observed_pairs=len({(key[0],key[1]) for key in groups})
+ if not args.subset:assert observed_pairs==expected_pairs
+ else:assert 0<observed_pairs<=expected_pairs
  saved=collections.defaultdict(list)
  for row in cert:
   n=int(row['N']);pair=row['pair'];rep=int(row['rep']);arm=int(row['arm'])
@@ -82,7 +85,7 @@ def main():
   for name,threshold in [('new5',1.05),('new10',1.10),('new15',1.15),('new20',1.20)]:
    count=sum(e<=known[n]*threshold+1e-8 for c,e in z)
    assert count==int(r[name]),(i,name,count,r[name])
- summary={'status':'exact-verified','sessions':len(rows),'source_pairs':expected_pairs,
+ summary={'status':'exact-verified','sessions':len(rows),'source_pairs':observed_pairs,
    'source_orbits':len(parents),'new_certificate_rows':len(cert),
    'method_mapping':NAMES,'strata':{},
    'warnings':['Parent-pair replications share source orbits and are not independent parent families',
