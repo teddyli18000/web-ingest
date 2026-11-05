@@ -1,0 +1,91 @@
+name: temp-labs-ai4s-oracle-consensus-paths
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-oracle-consensus-paths.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  oracle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Enumerate all triple-optimum consensus repair orders, exact 8^3 symmetry alignments
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 innovation/oracle_correction_paths.py \
+            --parents data/parents.tsv \
+            --out innovation/results/oracle_consensus_paths_v1.json
+      - name: Independent exact direct LABS scorers for all 66 target and correction subsets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 - <<'PY'
+          import json,pathlib,math
+          o=json.loads(pathlib.Path('innovation/results/oracle_consensus_paths_v1.json').read_text())
+          known=json.loads(pathlib.Path('results/allele_compatibility_all_orientations.json').read_text())
+          recorded={(r['N'],r['A'],r['B'],r['target']):r for r in o['witnesses']}
+          assert len(recorded)==len(o['witnesses'])==66
+          assert len(known['triples'])==66
+          def exact(bs):
+            x=[2*int(t)-1 for t in bs]
+            C=[]
+            for k in range(1,len(x)):
+              C.append(sum(a*b for a,b in zip(x[:-k],x[k:])))
+            return sum(y*y for y in C)
+          for r in o['witnesses']:
+            base=list(r['mixed_precursor'])
+            edits=r['consensus_edit_positions'];target=r['chosen_target_orientation']
+            assert len(edits)==r['k'] and len(set(edits))==len(edits)
+            assert exact(''.join(base))==r['precursor_E']
+            assert exact(target)==r['targetE']
+            x,y,z=r['chosen_A_orientation'],r['chosen_B_orientation'],target
+            for pos in range(len(base)):
+              assert base[pos] in (x[pos],y[pos])
+              if x[pos]==y[pos] and pos not in edits:assert base[pos]==z[pos]
+            assert r['min_uphill_total']>=0
+            for mask,old in enumerate(r['raw_E_by_all_correction_subsets']):
+              child=base.copy()
+              for bit,i in enumerate(edits):
+                if mask & (1<<bit):child[i]=target[i]
+              assert exact(''.join(child))==old,(r['target'],mask)
+            assert r['raw_E_by_all_correction_subsets'][-1]==r['targetE']
+            assert r['possible_correction_orders']==math.factorial(r['k'])
+            assert (r['monotone_order_count']>0)==(r['min_uphill_total']==0)
+            old=next(t for t in known['triples']
+                if (t['N'],t['A'],t['B'],t['C'])==(r['N'],r['A'],r['B'],r['target']))
+            assert old['min_uninheritable']==r['k']
+          print('PASS all 66 source-target orbits; direct scorer independently confirms all 2^k complete subset energies, all symmetry barriers and monotonicity equivalence')
+          PY
+      - name: Durable exact oracle evidence and provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 - <<'PY'
+          import pathlib,hashlib,json,subprocess
+          p=pathlib.Path('innovation/results/oracle_consensus_paths_v1.json')
+          d={'source_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+             'source_data_sha256':hashlib.sha256(pathlib.Path('data/parents.tsv').read_bytes()).hexdigest(),
+             'result_sha256':hashlib.sha256(p.read_bytes()).hexdigest(),
+             'scope':'oracle-only known third-optimum consensus repair path, not prospective solver performance'}
+          pathlib.Path('innovation/results/oracle_consensus_paths_v1_provenance.json').write_text(json.dumps(d,indent=2)+'\n')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add innovation/results/oracle_consensus_paths_v1*.json
+          git commit -m 'research(labs-ai4s): independently certify exact 66-triple consensus repair energy barriers'
+          for attempt in 1 2 3 4 5 6; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
