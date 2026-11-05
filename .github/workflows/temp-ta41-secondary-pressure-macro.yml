@@ -44,9 +44,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Contrast latent-bottleneck objective with identical complete-DAG scoring budget
         run: |
+          case '${{ matrix.variant }}' in
+            predictive) policy=replacement; pressure=0.003 ;;
+            neutral) policy=replacement; pressure=0.0 ;;
+            current) policy=current; pressure=0.003 ;;
+            tabu) policy=tabu; pressure=0.003 ;;
+          esac
           python3 science-boundary/job-shop-ta41/predictive_pressure_search.py \
-            --parent '${{ matrix.parent }}' --policy '${{ matrix.policy }}' \
-            --seed '${{ matrix.seed }}' --pressure '${{ matrix.weight }}' \
+            --parent '${{ matrix.parent }}' --policy "$policy" \
+            --seed '${{ matrix.seed }}' --pressure "$pressure" \
             --budget 16000 \
             --out 'science-boundary/job-shop-ta41/results/pressure-${{ matrix.parent }}-${{ matrix.variant }}-${{ matrix.seed }}'
       - name: Official independent certificate verification
