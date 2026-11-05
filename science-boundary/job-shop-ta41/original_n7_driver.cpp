@@ -25,6 +25,7 @@ int main(int argc,char**argv){
             throw runtime_error("shape mismatch");
         RandomGenerator::instance().setSeed(seed);
         TabuSearch solver(inst);
+#ifdef N7_WARMSTART_SUPPORT
         if(argc==6){
             ifstream in(argv[5]);
             if(!in)throw runtime_error("missing verified machine orders");
@@ -38,6 +39,9 @@ int main(int argc,char**argv){
                 throw runtime_error("native warmstart did not reproduce 2006");
             cerr<<"BOOTSTRAP original N7 search from verified 2006 C++ DAG\n";
         }
+#else
+        if(argc==6)throw runtime_error("compile with -DN7_WARMSTART_SUPPORT for seed data");
+#endif
         auto begin=chrono::steady_clock::now();
         auto stop=begin+chrono::seconds(secs);
         solver.search(100000000ULL,[&]{
