@@ -1,0 +1,65 @@
+{
+  "scope": "Conditional mode of actual native TS_BEST transition after at least 16 accepted moves; NOT a prediction of success nor a generator",
+  "nTrain": 1334,
+  "nTest": 742,
+  "labels_train": {
+    "odd_cost": 658,
+    "even_cost": 676
+  },
+  "labels_test": {
+    "odd_cost": 352,
+    "even_cost": 390
+  },
+  "length_train": [
+    48,
+    64,
+    80
+  ],
+  "length_test": [
+    92,
+    99,
+    100
+  ],
+  "models": {
+    "constant": {
+      "logloss": 0.6925471517002756,
+      "brier": 0.24970000239739992,
+      "auc": 0.5
+    },
+    "energy_history": {
+      "logloss": 0.6955630542447713,
+      "brier": 0.25117189222379455,
+      "auc": 0.46159673659673656
+    },
+    "energy_plus_spectrum": {
+      "logloss": 0.4512265819736001,
+      "brier": 0.14796385930127917,
+      "auc": 0.8681453962703963,
+      "per_run_logloss_gain_vs_energy": 0.2446012214542658,
+      "CI95_by_6_heldout_runs": [
+        0.22287994796921526,
+        0.26935971742872905
+      ]
+    },
+    "energy_plus_bits": {
+      "logloss": 0.6918329752942566,
+      "brier": 0.24929817986318284,
+      "auc": 0.5329691142191142,
+      "per_run_logloss_gain_vs_energy": 0.003102881064656218,
+      "CI95_by_6_heldout_runs": [
+        -0.002318397190894175,
+        0.009333289468338847
+      ]
+    },
+    "dual_branch": {
+      "logloss": 0.4537977527036602,
+      "brier": 0.1490471680633945,
+      "auc": 0.8661640442890443,
+      "per_run_logloss_gain_vs_energy": 0.24189440995845615,
+      "CI95_by_6_heldout_runs": [
+        0.21899601561555868,
+        0.2669213040912864
+      ]
+    }
+  }
+}
