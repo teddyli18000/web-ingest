@@ -27,6 +27,7 @@ jobs:
           git -C /tmp/n7 checkout --detach 7e120ebada21cb604c871e0657814bf6e32611f8
           python3 -m py_compile science-boundary/job-shop-ta41/patch_external_n7_seed.py
           python3 science-boundary/job-shop-ta41/patch_external_n7_seed.py --upstream /tmp/n7
+          sed -i '1i#include <climits>' /tmp/n7/src/graph.cpp
       - name: Build original C++ search with seeded-order pybind adapter
         run: |
           python3 -m pip install 'cmake>=3.30' pybind11 setuptools wheel
