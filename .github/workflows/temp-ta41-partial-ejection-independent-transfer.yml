@@ -1,0 +1,50 @@
+name: temp-ta41-partial-ejection-independent-transfer
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-partial-ejection-independent-transfer.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-partial-ejection-independent-transfer
+  cancel-in-progress: false
+jobs:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [dynamic, static, random]
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify independent held-out benchmark and compile partial schedule ejection solver
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/benchmark_partial_ejection.py
+          test "$(find science-boundary/job-shop-ta41/positive-n7-elite-data -name start.txt | wc -l)" -eq 12
+          g++ -std=c++17 -O3 -Wall -Wextra science-boundary/job-shop-ta41/partial_ejection_chain.cpp -o /tmp/ejection_verify
+      - name: Compare dynamic replacement vs static vs random ejections on 12 hidden-answer strong N7 basins
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_partial_ejection.py \
+            --policy '${{ matrix.policy }}' --seeds 4107 4113 \
+            --evaluations 500000 --restart-evals 30000 --timeout 120 \
+            --out 'science-boundary/job-shop-ta41/results/ejection-independent-${{ matrix.policy }}'
+      - name: Retain independently reproduced complete machine orders and all matched benchmark metrics
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/ejection-independent-${{ matrix.policy }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): independent 30x20 dynamic ejection-chain comparison ${{ matrix.policy }}'
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
