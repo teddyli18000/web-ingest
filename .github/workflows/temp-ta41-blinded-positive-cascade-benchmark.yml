@@ -1,0 +1,49 @@
+name: temp-ta41-blinded-positive-cascade-benchmark
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-blinded-positive-cascade-benchmark.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-blinded-positive-cascade-benchmark
+  cancel-in-progress: false
+jobs:
+  construct:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [tabu, static3, dynamic3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify 24 independently generated 30x20 blind cases available
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/benchmark_hidden_positive.py
+          test "$(find science-boundary/job-shop-ta41/positive-control-data -name start.txt | wc -l)" -eq 24
+      - name: Blindly search with identical C++ kernel and exact DAG evaluation budget
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_hidden_positive.py \
+            --cases science-boundary/job-shop-ta41/positive-control-data \
+            --policy '${{ matrix.policy }}' --evaluations 350000 --seeds 4107 4113 \
+            --out 'science-boundary/job-shop-ta41/results/positive-cascade-${{ matrix.policy }}'
+      - name: Preserve independently re-scored full results
+        if: always()
+        run: |
+          set -euo pipefail
+          out='science-boundary/job-shop-ta41/results/positive-cascade-${{ matrix.policy }}'
+          if ! test -d "$out"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$out"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): blind 30x20 positive control cascade ${{ matrix.policy }}'
+          for attempt in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
