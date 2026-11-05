@@ -121,8 +121,8 @@ void check(){
     for(int i:ip.Q)cons+=(g.child.s[i]!=ip.A.s[i]);
     assert(diff==ip.half&&cons==(arm==0?0:ip.innovation));
    }
-   int steps=0;auto z=repair(g.child,rng,steps);assert(E(z)==E(z)); // see compile? E(L) absent
-   assert(z.e==energy_direct(z.s));
+   int steps=0;auto z=repair(g.child,rng,steps);
+   assert(steps==64 && z.e==energy_direct(z.s));
   }
  }
  cout<<"PASS independent score, invariance, source-consensus novelty and common repair checks\n";
@@ -199,9 +199,8 @@ int main(int argc,char**argv){
        <<"\t"<<1000*modelSec<<"\t"<<1000*generatorSec<<"\t"<<1000*repairSec
        <<"\t"<<1000*ns(clk::now()-t0).count()<<"\n";
    }
-  }
-  index++;
-  cerr<<"N "<<n<<" pair "<<index<<"/"<<pool.size()*(pool.size()-1)/2<<" complete\n";
+   index++;
+   cerr<<"N "<<n<<" pair "<<index<<"/"<<pool.size()*(pool.size()-1)/2<<" complete\n";
   }
  }
  cout<<"PASS fully costed donor + noninherited consensus variants\n";
