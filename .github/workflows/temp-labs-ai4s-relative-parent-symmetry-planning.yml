@@ -1,0 +1,80 @@
+name: temp-labs-ai4s-relative-parent-symmetry-planning
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-relative-parent-symmetry-planning.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-relative-parent-symmetry-planning
+  cancel-in-progress: false
+jobs:
+  alignment:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Compile and exact source-check relative LABS orbit alignment and candidate repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search
+          g++ -O3 -std=c++17 -Wall -Wextra recombination_20261105/innovation/symmetry_planning.cpp -o /tmp/labs_symmetry_planning
+          /tmp/labs_symmetry_planning --selftest
+      - name: Costed all-29-elite-source-orbit pair experiment
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          mkdir -p innovation/results/symmetry_planning_v1
+          /tmp/labs_symmetry_planning data/combined/combined10.tsv \
+            innovation/results/symmetry_planning_v1/source_sessions.tsv \
+            innovation/results/symmetry_planning_v1/novel_certificates.tsv \
+            3 120
+      - name: Independent exact direct correlations and source-orbit symmetry certificate audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q numpy
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 innovation/validate_symmetry_planning.py \
+            --parents data/combined/combined10.tsv \
+            --sessions innovation/results/symmetry_planning_v1/source_sessions.tsv \
+            --children innovation/results/symmetry_planning_v1/novel_certificates.tsv \
+            --out innovation/results/symmetry_planning_v1/analysis.json
+          python3 - <<'PY'
+          import csv,json,pathlib,hashlib,subprocess,platform
+          root=pathlib.Path('innovation/results/symmetry_planning_v1')
+          rows=list(csv.DictReader((root/'source_sessions.tsv').open(),delimiter='\t'))
+          assert len(rows)==56*3*7,(len(rows),56*3*7)
+          a=json.loads((root/'analysis.json').read_text())
+          assert a['certified'] and a['session_count']==1176
+          assert a['parent_pair_count']==56
+          assert set(a['by_length'])=={'46','47','50','59','60','92','99'}
+          provenance={'source_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+            'compiler':subprocess.check_output(['g++','--version'],text=True).splitlines()[0],
+            'platform':platform.platform(),'budget_ms_per_source_pair_rep_arm':120,
+            'design':'7 min/random/expected-lowE/quench-planned/maxHD/bestE-planned/parent-copy arms, common 4 prequenched donor+consensus masks plus full Tabu repair; 29 source-distinct orbit parent certificates',
+            'source_sha256':hashlib.sha256(pathlib.Path('data/combined/combined10.tsv').read_bytes()).hexdigest(),
+            'outputs_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in root.glob('*.tsv')}}
+          (root/'provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
+          print('PASS all 1176 complete equally timed true LABS symmetry-planning source-family experiments')
+          PY
+      - name: Retain exact independently checked results despite other main commits
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/results/symmetry_planning_v1/
+          git commit -m 'research(labs-ai4s): exact certified source-relative parent symmetry planning versus min-Hamming and novelty controls'
+          for attempt in 1 2 3 4 5 6 7 8; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
