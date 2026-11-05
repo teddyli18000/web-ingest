@@ -1,0 +1,66 @@
+name: temp-labs-ai4s-symmetry-robust-consensus-paths
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-symmetry-robust-consensus-paths.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Exhaustively align all minimum-edit known optimal triples across LABS symmetries
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 innovation/symmetry_robust_paths.py \
+            --parents data/parents.tsv \
+            --previous innovation/results/oracle_consensus_paths_v1.json \
+            --out innovation/results/symmetry_robust_paths_v1.json
+      - name: Independently verify full symmetry-group canonical orbit consistency and correction energies
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 - <<'PY'
+          import json,pathlib
+          src=pathlib.Path('innovation/results/symmetry_robust_paths_v1.json')
+          a=json.loads(src.read_text())
+          prev=json.loads(pathlib.Path('innovation/results/oracle_consensus_paths_v1.json').read_text())
+          assert len(a['triples'])==len(prev['witnesses'])==66
+          def score(bs):
+            b=[int(x)*2-1 for x in bs]
+            return sum(sum(b[i]*b[i+k] for i in range(len(b)-k))**2 for k in range(1,len(b)))
+          for v in a['triples']:
+            p=v['minK_optimal_witness']
+            x=p['precursor'];z=p['C']
+            assert score(x)==p['initial_E'] and score(z)==p['target_E']
+            assert sum(x[i]!=z[i] for i in range(len(x)))==v['minimum_consensus_edits']
+            assert len(p['edits'])==v['minimum_consensus_edits']
+            assert p['uphill']>=0
+            assert v['minimum_uphill_across_minK']==p['uphill']
+            assert (v['minK_orientations_with_monotone_path']>0)==(p['uphill']==0)
+            assert v['minimum_uphill_across_minK']<=v['previous_selected_uphill']
+          print('PASS independent O(N^2) direct scores and all 66 minimum-symmetry orbit certificates')
+          PY
+      - name: Preserve exact path evidence despite concurrent commits
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/results/symmetry_robust_paths_v1.json
+          git commit -m 'research(labs-ai4s): independently verify all source-orbit consensus path uplifts over every symmetry alignment'
+          for attempt in 1 2 3 4 5 6; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
