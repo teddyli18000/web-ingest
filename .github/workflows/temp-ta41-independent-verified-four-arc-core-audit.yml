@@ -1,0 +1,44 @@
+name: temp-ta41-independent-verified-four-arc-core-audit
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-independent-verified-four-arc-core-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-independent-verified-four-arc-core-audit
+  cancel-in-progress: false
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned solver, compile-check fresh independent proof model
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/independent_verify_joint_resource_quartet.py
+      - name: Independently re-score both complete schedules and verify 15 UNSAT cores + one constructive witness
+        run: |
+          python3 science-boundary/job-shop-ta41/independent_verify_joint_resource_quartet.py \
+            --seconds 3 \
+            --out science-boundary/job-shop-ta41/results/ta43-joint-4-arc-independent-audit.json
+      - name: Preserve independently audited exact quartet decision evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          file='science-boundary/job-shop-ta41/results/ta43-joint-4-arc-independent-audit.json'
+          if ! test -f "$file"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$file"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): independently reverify all four-arc partial schedule UNSAT cores with fresh hard model'
+          for attempt in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
