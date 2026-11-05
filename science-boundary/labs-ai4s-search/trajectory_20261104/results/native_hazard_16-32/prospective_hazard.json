@@ -1,0 +1,130 @@
+{
+  "scope": "Prospective next-64-accepted-move TS_BEST improvement from TS_STEP stalled >=64; fully uncensored windows only",
+  "all_rows": 1450,
+  "episodes": 5057,
+  "train_rows": 662,
+  "test_rows": 788,
+  "train_positives": 283,
+  "test_positives": 257,
+  "by_run": {
+    "48_114859": {
+      "eligible": 86,
+      "positive": 41,
+      "rate": 0.47674418604651164
+    },
+    "48_219588": {
+      "eligible": 99,
+      "positive": 47,
+      "rate": 0.47474747474747475
+    },
+    "64_116475": {
+      "eligible": 129,
+      "positive": 58,
+      "rate": 0.4496124031007752
+    },
+    "64_221204": {
+      "eligible": 97,
+      "positive": 40,
+      "rate": 0.41237113402061853
+    },
+    "80_118091": {
+      "eligible": 124,
+      "positive": 47,
+      "rate": 0.3790322580645161
+    },
+    "80_222820": {
+      "eligible": 127,
+      "positive": 50,
+      "rate": 0.3937007874015748
+    },
+    "92_119303": {
+      "eligible": 130,
+      "positive": 42,
+      "rate": 0.3230769230769231
+    },
+    "92_224032": {
+      "eligible": 144,
+      "positive": 43,
+      "rate": 0.2986111111111111
+    },
+    "99_120010": {
+      "eligible": 131,
+      "positive": 45,
+      "rate": 0.3435114503816794
+    },
+    "99_224739": {
+      "eligible": 135,
+      "positive": 41,
+      "rate": 0.3037037037037037
+    },
+    "100_120111": {
+      "eligible": 121,
+      "positive": 44,
+      "rate": 0.36363636363636365
+    },
+    "100_224840": {
+      "eligible": 127,
+      "positive": 42,
+      "rate": 0.33070866141732286
+    }
+  },
+  "models": {
+    "constant": {
+      "logloss": 0.6529919803112715,
+      "brier": 0.23004532810848205,
+      "auprc": 0.32614213197969544,
+      "auc": 0.5
+    },
+    "history": {
+      "logloss": 0.41422726628287543,
+      "brier": 0.13239240613319575,
+      "auprc": 0.7897789594304288,
+      "auc": 0.8824550990349316
+    },
+    "parity": {
+      "logloss": 0.42033159378401674,
+      "brier": 0.1344815658918393,
+      "auprc": 0.7859908187791689,
+      "auc": 0.8788058651542131,
+      "mean_run_logloss_gain_vs_history": -0.006139962439022446,
+      "CI95_6_independent_heldout_runs": [
+        -0.009945053673528005,
+        -0.0022937690773202576
+      ]
+    },
+    "spectrum": {
+      "logloss": 0.4195707248057061,
+      "brier": 0.1355351336969081,
+      "auprc": 0.7841436362411203,
+      "auc": 0.879062337414906,
+      "mean_run_logloss_gain_vs_history": -0.005385765195777725,
+      "CI95_6_independent_heldout_runs": [
+        -0.013581912946627315,
+        0.0022211532712443673
+      ]
+    },
+    "bits": {
+      "logloss": 0.4156095324543612,
+      "brier": 0.13290785346094108,
+      "auprc": 0.7860133635668334,
+      "auc": 0.8808283321242498,
+      "mean_run_logloss_gain_vs_history": -0.0015411466344563516,
+      "CI95_6_independent_heldout_runs": [
+        -0.004140901801415366,
+        0.0014699710199824725
+      ]
+    },
+    "full_spectrum_bits": {
+      "logloss": 0.42579499863996295,
+      "brier": 0.13778918279710511,
+      "auprc": 0.7776075144964952,
+      "auc": 0.8757721646991581,
+      "mean_run_logloss_gain_vs_history": -0.011844510968527474,
+      "CI95_6_independent_heldout_runs": [
+        -0.0220199475067602,
+        -0.0039657815424776225
+      ]
+    }
+  },
+  "gate": "observational label only, not a demonstrated intervention policy"
+}

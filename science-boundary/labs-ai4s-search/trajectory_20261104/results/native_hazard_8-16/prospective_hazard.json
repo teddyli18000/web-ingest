@@ -1,0 +1,130 @@
+{
+  "scope": "Prospective next-64-accepted-move TS_BEST improvement from TS_STEP stalled >=64; fully uncensored windows only",
+  "all_rows": 3909,
+  "episodes": 5057,
+  "train_rows": 2250,
+  "test_rows": 1659,
+  "train_positives": 679,
+  "test_positives": 434,
+  "by_run": {
+    "48_114859": {
+      "eligible": 375,
+      "positive": 119,
+      "rate": 0.31733333333333336
+    },
+    "48_219588": {
+      "eligible": 416,
+      "positive": 135,
+      "rate": 0.3245192307692308
+    },
+    "64_116475": {
+      "eligible": 415,
+      "positive": 130,
+      "rate": 0.3132530120481928
+    },
+    "64_221204": {
+      "eligible": 407,
+      "positive": 113,
+      "rate": 0.27764127764127766
+    },
+    "80_118091": {
+      "eligible": 324,
+      "positive": 88,
+      "rate": 0.2716049382716049
+    },
+    "80_222820": {
+      "eligible": 313,
+      "positive": 94,
+      "rate": 0.3003194888178914
+    },
+    "92_119303": {
+      "eligible": 297,
+      "positive": 74,
+      "rate": 0.24915824915824916
+    },
+    "92_224032": {
+      "eligible": 295,
+      "positive": 77,
+      "rate": 0.26101694915254237
+    },
+    "99_120010": {
+      "eligible": 260,
+      "positive": 75,
+      "rate": 0.28846153846153844
+    },
+    "99_224739": {
+      "eligible": 280,
+      "positive": 76,
+      "rate": 0.2714285714285714
+    },
+    "100_120111": {
+      "eligible": 270,
+      "positive": 70,
+      "rate": 0.25925925925925924
+    },
+    "100_224840": {
+      "eligible": 257,
+      "positive": 62,
+      "rate": 0.24124513618677043
+    }
+  },
+  "models": {
+    "constant": {
+      "logloss": 0.5786629356905634,
+      "brier": 0.1947810320362557,
+      "auprc": 0.2616033755274262,
+      "auc": 0.5
+    },
+    "history": {
+      "logloss": 0.41120349597061123,
+      "brier": 0.13217694558130866,
+      "auprc": 0.6733070940293687,
+      "auc": 0.8474560331044859
+    },
+    "parity": {
+      "logloss": 0.41312157834692914,
+      "brier": 0.1326131868576468,
+      "auprc": 0.6702811934095708,
+      "auc": 0.8465174456879525,
+      "mean_run_logloss_gain_vs_history": -0.002080180495290541,
+      "CI95_6_independent_heldout_runs": [
+        -0.0042751116782923605,
+        0.0003050032427363047
+      ]
+    },
+    "spectrum": {
+      "logloss": 0.41193130383118653,
+      "brier": 0.13286357466725496,
+      "auprc": 0.6718959439604939,
+      "auc": 0.8496642527978934,
+      "mean_run_logloss_gain_vs_history": -0.0007348904769920189,
+      "CI95_6_independent_heldout_runs": [
+        -0.006857867004976089,
+        0.005189737200422436
+      ]
+    },
+    "bits": {
+      "logloss": 0.41147980018088975,
+      "brier": 0.13226436215344042,
+      "auprc": 0.672654560604945,
+      "auc": 0.8470328223455282,
+      "mean_run_logloss_gain_vs_history": -0.0002711493206792997,
+      "CI95_6_independent_heldout_runs": [
+        -0.00044513056658787125,
+        -0.00012283056144952128
+      ]
+    },
+    "full_spectrum_bits": {
+      "logloss": 0.41477559631925465,
+      "brier": 0.1337321558490453,
+      "auprc": 0.6696201928663774,
+      "auc": 0.8481105990783411,
+      "mean_run_logloss_gain_vs_history": -0.003683321173351392,
+      "CI95_6_independent_heldout_runs": [
+        -0.009771488623056166,
+        0.0016604545071624342
+      ]
+    }
+  },
+  "gate": "observational label only, not a demonstrated intervention policy"
+}
