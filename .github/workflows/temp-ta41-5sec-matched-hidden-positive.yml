@@ -1,0 +1,48 @@
+name: temp-ta41-5sec-matched-hidden-positive
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-5sec-matched-hidden-positive.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-5sec-matched-hidden-positive
+  cancel-in-progress: false
+jobs:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [tabu, static3, dynamic3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 11
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile-check original operators with outer wall-clock only
+        run: python3 -m py_compile science-boundary/job-shop-ta41/benchmark_hidden_positive.py
+      - name: Five-second real-time match to published original N7 on same 24 blind starts
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_hidden_positive.py \
+            --cases science-boundary/job-shop-ta41/positive-control-data \
+            --policy '${{ matrix.policy }}' --evaluations 4000000 \
+            --wall-seconds 5 --timeout 45 --seeds 4107 4113 \
+            --out 'science-boundary/job-shop-ta41/results/positive-5sec-${{ matrix.policy }}'
+      - name: Save independently scored paired results
+        if: always()
+        run: |
+          set -euo pipefail
+          out='science-boundary/job-shop-ta41/results/positive-5sec-${{ matrix.policy }}'
+          if ! test -d "$out"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+users.noreply.github.com'
+          git add "$out"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): five-second equal-wall hidden-answer ${{ matrix.policy }}'
+          for attempt in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
