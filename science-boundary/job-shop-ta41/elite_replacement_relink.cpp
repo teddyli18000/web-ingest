@@ -154,6 +154,14 @@ static RelinkResult relink(long long budget,const string&policy){
                             chosenSecond.insert(chosenSecond.end(),rest.begin(),rest.end());
                             second.swap(chosenSecond);
                         }
+                        // A one-inversion remainder has no eligible second
+                        // target-directed swap. Do not label a legal final
+                        // step as a blocked path merely because the macro
+                        // cannot have depth two.
+                        if(second.empty() && mid<bestMoveScore){
+                            bestMoveScore=mid;bestStageScore=mid;
+                            bestFocus=0;chosen=first;chosen2={-1,-1,-1};
+                        }
                         for(Move secondMove:second){
                             if(evaluations>=budget)break;
                             int hit=overlapping_focus(secondMove,cur,fresh);
