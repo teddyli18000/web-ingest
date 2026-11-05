@@ -3,9 +3,9 @@
 // Compare exact autocorrelation envelope corridor with permuted-envelope placebo.
 // Same true objective local repair and equal 120ms per pair/arm/seed.
 // Reuses independently tested L/delta + archived 8-fold symmetry from recombine.cpp.
-#define main recombine_base_main_unused
+#define RECOMBINE_NO_MAIN
 #include "recombine.cpp"
-#undef main
+#undef RECOMBINE_NO_MAIN
 #include <climits>
 #include <cmath>
 #include <unordered_set>
@@ -130,7 +130,7 @@ int distance_to_parent_orbit(const string&s,const string&parent){
  for(const auto &z:orb(parent))best=min(best,hd(s,z));
  return best;
 }
-void test(){
+void test_inheritance(){
  selftest();
  mt19937_64 rng(4210011);
  for(int n:{46,59,99}){
@@ -151,7 +151,7 @@ void test(){
  cout<<"PASS constrained-mask and exact-energy selftest\n";
 }
 int main(int argc,char**argv){
- if(argc==2 && string(argv[1])=="--selftest"){test();return 0;}
+ if(argc==2 && string(argv[1])=="--selftest"){test_inheritance();return 0;}
  if(argc<6){cerr<<"usage: PARENTS.tsv SUMMARY.tsv ELITE.tsv REPS BUDGET_MS\n";return 2;}
  vector<Parent>all=load(argv[1]);
  map<int,vector<Parent*>>byN;
