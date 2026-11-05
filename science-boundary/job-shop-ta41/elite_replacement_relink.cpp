@@ -141,7 +141,7 @@ static RelinkResult relink(long long budget,const string&policy){
                         auto fresh=delta_critical(cur,intermediate,oldcrit);
                         auto second=towards(cur,target);
                         if(!fresh.empty()){
-                            stable_sort(second.begin(),second.end(),[&](Move&a,Move&b){
+                            stable_sort(second.begin(),second.end(),[&](const Move&a,const Move&b){
                                 return overlapping_focus(a,cur,fresh)>overlapping_focus(b,cur,fresh);
                             });
                         }
