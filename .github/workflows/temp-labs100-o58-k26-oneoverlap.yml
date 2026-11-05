@@ -1,0 +1,53 @@
+name: temp labs100 O58 K26 one-overlap exact fibre
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-o58-k26-oneoverlap.yml'
+  workflow_dispatch:
+concurrency:
+  group: temp-labs100-o58-k26-oneoverlap
+  cancel-in-progress: false
+jobs:
+  exact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile exact producer and general negacyclic oracle
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-100
+          g++ -O3 -std=c++20 -DNDEBUG code/o58_k26_overlap1_compressed_exact.cpp -o "$RUNNER_TEMP/producer"
+          g++ -O3 -std=c++20 -DNDEBUG -fopenmp code/o58_qgroup_budget_exact.cpp -o "$RUNNER_TEMP/fibre"
+      - name: Complete K26 minimal-overlap centered defect
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p outputs
+          "$RUNNER_TEMP/producer" > outputs/compressed.log
+          cat outputs/compressed.log | grep '^SUMMARY '
+          actual=$(grep -c '^HIT ' outputs/compressed.log || true)
+          declared=$(sed -n 's/.* qmin64=\([0-9]*\).*/\1/p' outputs/compressed.log | tail -1)
+          [[ "$actual" == "$declared" ]]
+          [[ "$declared" == 120 ]]
+          export OMP_NUM_THREADS="$(nproc)"
+          "$RUNNER_TEMP/fibre" 0 outputs/compressed.log 128 > outputs/fibre.log
+          grep '^SUMMARY ' outputs/fibre.log
+          grep '^QHIT ' outputs/fibre.log || true
+          python3 - <<'PY'
+          import re
+          x=open('outputs/compressed.log').read()
+          m=re.search(r'^SUMMARY supports=(\d+) signed_p=(\d+) mod3_consistent=(\d+) rank_deficient=(\d+) maxfree=(\d+) exact=(\d+) minSG=(\d+) minQ=(\d+) qmin64=(\d+)$',x,re.M)
+          assert m
+          assert list(map(int,m.groups()))==[924,1585584,1102664,247644,6,4280,108,60,120],m.groups()
+          y=open('outputs/fibre.log').read()
+          assert re.search(r'^SUMMARY budget=128 .*$',y,re.M)
+          print('CENTRAL_K26_Q_AUDIT',re.search(r'^SUMMARY budget=128 .*$',y,re.M).group(0))
+          PY
+      - name: Archive full transcript
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-o58-k26-oneoverlap
+          path: outputs/
+          retention-days: 30
