@@ -1,5 +1,17 @@
 # Native strong-search trajectory study — 2026-11-04
 
+## Verified latest state (2026-11-04)
+
+**Completed and fully checked:** [12 native lMAts source runs](results/native_mini_v1/manifest.json) across N48/64/80/92/99/100. Independent exact scoring covers **all 93,000+ trace events**, with 5,057 complete native Tabu episodes and 127 GA global records. Full source-pinned trace and verification are committed in [results/native_mini_v1](results/native_mini_v1), and [mechanism/compensation analyses](results/native_mini_analysis) and [plateau transitions](results/native_plateau_v1) are source-backed. The legacy 2009-era solver primarily creates easy-to-relax offspring; its 97.7% local gain label is *not* a long-stall breakthrough label. Historical GA records from separate parents are not a physical path.
+
+**Strong conditional representation but weak decision relevance:** [The native-compensation audit](results/native_plateau_v1/pretransition_compensation_transfer.json) shows the odd/even energy ratio alone predicts *which parity component increases* given a success after ≥16 accepted moves (heldout AUC≈0.874). Adding 12 spectral bins or cheap bit statistics did not help. This is after selecting on **future success** and does not predict when an improvement occurs.
+
+**Actual prospective forecasting was tested and failed the incremental feature gate:** [hazard study](HAZARD_STUDY.md), with no future success/step in features, fixed next-horizon outcomes, and holdout N92/99/100. Stalled≥8, next16 (3,909 observations) gives energy+history AUC 0.847 vs spectrum 0.850, but log-loss 0.41120 vs 0.41193 (worse). Stalled≥16, next32 (1,450 observations) AUC 0.882 vs spectrum 0.879; log-loss 0.41423 vs 0.41957 (worse). Stalled≥32, next64 produces **only 3 training states and no positives**; stalled≥64,next64 produces **zero training states**. The data collection distribution is inadequate for long-stagnation learning. Do not train a large dual-branch architecture from these samples.
+
+**Prospective generator test underway:** [costed original-MTS macro study](MACRO_STUDY.md): source-pinned original solver, five structured/random 12-spin macro proposals injected during GA-wide stagnation vs unchanged original, all costs in actual solver wall time. Smoke verified all 12 six-second outputs and macro triggers; full 144-run six-arm test is currently being verified. Do not claim an improved solver until final paired results, time budgets, and independent score validation complete. No N100 record attempt or p006 submission.
+
+---
+
 ## Question and source scope
 
 Can one identify reproducible, cross-length LABS correlation-structure transitions that distinguish useful **large coordinated changes** from ordinary short-cycle Tabu moves, and would they justify a bit/spectrum dual-branch generative search method? This is **not** an N100 record-submission agent. No modifications to `science-boundary/labs-100/`.
@@ -32,7 +44,7 @@ Previous [weighted-lag and direct-skew target-deformation failures](../frontier_
 
 ## Research state
 
-Instrumented source patch committed; raw native trajectory collection and analysis require actual runner validation. Keep pilot failures visible. Retain full raw or lossless compressed trace rows when feasible, not only aggregated narrative. Record every validation failure and correct it before claims.
+The compact native mini cohort is now fully validated and committed; see the **Verified latest state** above. Earlier high-density runs failed because full exact checking exceeded runtime or an incorrectly parsed bitstring column; the compact validated 12-run source is authoritative. Keep pilot failures visible. Retain full raw or lossless compressed trace rows when feasible, not only aggregated narrative. Record every validation failure and correct it before claims.
 
 ## Sources
 
