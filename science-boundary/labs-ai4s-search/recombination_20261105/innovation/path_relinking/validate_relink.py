@@ -149,7 +149,7 @@ def main():
    'pair_contexts_with_improvement':sum(v>0 for v in vals),
    'pair_contexts_with_worse':sum(v<0 for v in vals)}
  a.out.parent.mkdir(parents=True,exist_ok=True)
- a.out.write_text(json.dumps(out,indent=2,ensure_ascii=False)+'\n')
+ a.out.write_text(json.dumps(out,indent=2,ensure_ascii=False,default=lambda v: v.item() if isinstance(v,np.generic) else str(v))+'\n')
  print('VERIFIED sessions',len(rows),'distinct frozen pair-contexts',out['source_pair_contexts'],
        'source-new terminal certificates',len(cert),flush=True)
  for n,row in out['by_length'].items():
