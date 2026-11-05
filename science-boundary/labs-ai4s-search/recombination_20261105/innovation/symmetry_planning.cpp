@@ -132,7 +132,7 @@ int main(int argc,char**argv){
   for(const auto*p:pool)ref=min(ref,p->best),registry.insert(p->canonical);
   int ipair=0;
   for(int i=0;i<(int)pool.size();i++)for(int j=i+1;j<(int)pool.size();j++){
-   const Parent&A=*pool[i],&B=*pool[j],other=B;
+   const Parent&A=*pool[i],&B=*pool[j];
    auto choices=orientations(A,B);
    const string pair=A.id+"-"+B.id;
    for(int rep=0;rep<reps;rep++)for(int arm=0;arm<7;arm++){
@@ -150,7 +150,7 @@ int main(int argc,char**argv){
     while(gens==0||ns(clk::now()-time0).count()*1000<budget){
      int orient=arm==1?select_alignment(arm,choices,rng,mdl,mdlQuenches):picked;
      auto tick=clk::now();
-     auto g=draw(choices[orient],rng);
+     auto g=arm==6?Generated((rng()&1)?A.state:B.state,0,0):draw(choices[orient],rng);
      proposalSeconds+=ns(clk::now()-tick).count();preq+=g.quench;
      string before=bits(g.child);int beforeE=g.child.e;
      tick=clk::now();int steps=0;L x=repair(move(g.child),rng,steps);
