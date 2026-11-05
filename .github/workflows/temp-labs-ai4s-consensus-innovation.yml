@@ -1,0 +1,97 @@
+name: temp-labs-ai4s-consensus-innovation
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-consensus-innovation.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-consensus-innovation
+  cancel-in-progress: false
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Independently rebuild frozen source-distinct 10 percent parent pool
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 merge_verified_parents.py --archives data/parents.tsv \
+            --native data/native_independent_2009_v1/independent_highquality_orbits.tsv \
+            --out data/combined
+          python3 - <<'PY'
+          import pathlib,csv
+          root=pathlib.Path('data/combined/combined10.tsv')
+          arr=list(csv.DictReader(root.open(),delimiter='\t'))
+          assert len(arr)==29
+          print('Validated 29 fully source-distinct elite orbits')
+          PY
+      - name: Source-pinned incremental evaluator and independent innovation-mask selftest
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search
+          g++ -O3 -std=c++17 -Wall -Wextra recombination_20261105/innovation/innovation.cpp -o /tmp/labs_consensus
+          /tmp/labs_consensus --selftest
+      - name: Equal-time joint inheritance plus non-parent-consensus innovations
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          mkdir -p innovation/results
+          /tmp/labs_consensus data/combined/combined10.tsv \
+            innovation/results/combined10_sessions.tsv \
+            innovation/results/combined10_new_children.tsv 3 120
+      - name: Independently verify every retained certificate and paired source clusters
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q --disable-pip-version-check numpy
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 innovation/validate.py --parents data/combined/combined10.tsv \
+            --sessions innovation/results/combined10_sessions.tsv \
+            --certificates innovation/results/combined10_new_children.tsv \
+            --out innovation/results/combined10_analysis.json
+          python3 - <<'PY'
+          import csv,json,pathlib,hashlib,platform,subprocess
+          root=pathlib.Path('innovation/results')
+          rows=list(csv.DictReader((root/'combined10_sessions.tsv').open(),delimiter='\t'))
+          assert len(rows)==1680,(len(rows),1680)
+          r=json.loads((root/'combined10_analysis.json').read_text())
+          assert r['status']=='exact-verified' and r['sessions']==1680
+          assert set(r['strata'])=={'46','47','50','59','60','92','99'}
+          p={'sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+             'compiler':subprocess.check_output(['g++','--version'],text=True).splitlines()[0],
+             'platform':platform.platform(),'parent_source':'certified archive+40 native independently seeded lMAts runs',
+             'arm_budget_ms':120,'source_pair_reps':3,'n_arms':10,'innovation_cardinality':'4 (N46/47), 8 (N50), 6 (N>=59), not post-optimized',
+             'regime':'all candidate generation and full steepest+64Tabu+steepest repair charged to 120ms',
+             'file_hashes':{q.name:hashlib.sha256(q.read_bytes()).hexdigest() for q in root.glob('*.tsv')}}
+          (root/'provenance.json').write_text(json.dumps(p,indent=2)+'\n')
+          print('FULL PASS 1680 source-disjoint costed donor consensus innovation treatments')
+          PY
+      - name: Save independently audited source and offspring evidence with concurrent main retry
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/results
+          git add science-boundary/labs-ai4s-search/recombination_20261105/data/combined
+          git commit -m 'research(labs-ai4s): costed independently certified donor-consensus innovation search with exact lag controls'
+          for attempt in 1 2 3 4 5 6 7 8; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              echo "PERSISTED exact verified innovation evidence after $attempt attempts"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo 'Failed to push verified science after eight attempts' >&2
+          exit 1
