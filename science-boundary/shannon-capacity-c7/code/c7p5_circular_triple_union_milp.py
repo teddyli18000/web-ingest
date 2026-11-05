@@ -111,7 +111,7 @@ def main():
             break
         if info["score"]==367:
             origins=[A,Bt,Ct]
-            gaps=[len(S-set(x)) for x in origins]
+            gaps=[len(set(S)-x) for x in origins]
             if min(gaps)>novel_distance and profile(S) not in set(map(profile,origins)):
                 best_novel=S;novel_distance=min(gaps)
         print("TRIAL",json.dumps(info,sort_keys=True),flush=True)
