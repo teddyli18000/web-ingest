@@ -1,0 +1,41 @@
+name: temp-ta41-create-hidden-positive-cases
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-create-hidden-positive-cases.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-create-hidden-positive-cases
+  cancel-in-progress: false
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch source archives and pin source revision
+        run: |
+          git clone --depth=1 https://github.com/ScheduleOpt/benchmarks.git /tmp/scheduleopt
+          git -C /tmp/scheduleopt rev-parse HEAD
+          python3 -m py_compile science-boundary/job-shop-ta41/create_hidden_positive_cases.py
+      - name: Verify archived high quality schedules and generate blinded degraded starts
+        run: |
+          python3 science-boundary/job-shop-ta41/create_hidden_positive_cases.py \
+            --reference-root /tmp/scheduleopt \
+            --out science-boundary/job-shop-ta41/positive-control-data
+      - name: Save validated positive fixture data
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/job-shop-ta41/positive-control-data
+          git commit -m 'research(ta41): independently verified ta42-ta47 30x20 hidden-answer positive controls'
+          for attempt in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
