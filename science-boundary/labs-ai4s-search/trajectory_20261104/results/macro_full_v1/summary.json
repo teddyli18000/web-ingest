@@ -1,0 +1,93 @@
+{
+  "source": "borkob/git_labs lMAts original C solver, transient macro patch",
+  "source_commit": "1aa123407636e48630174e0bf122037e369c1d68",
+  "parameters": {
+    "exe": "/home/runner/work/_temp/git_labs/solvers/lMAts-lRRts/src/lMAts",
+    "out": "results/macro_full_v1",
+    "lengths": "64,80,99,100",
+    "reps": 6,
+    "seconds": 14,
+    "workers": 4,
+    "arms": "0,1,2,3,4,5"
+  },
+  "job_count": 144,
+  "valid": 144,
+  "failures": [],
+  "total_macro_events": 224706,
+  "by_length": {
+    "64": {
+      "mean_E": {
+        "0": 276.0,
+        "1": 284.667,
+        "2": 282.0,
+        "3": 274.0,
+        "4": 288.667,
+        "5": 272.0
+      },
+      "trigger_events": {
+        "0": 0,
+        "1": 20237,
+        "2": 20165,
+        "3": 20151,
+        "4": 20193,
+        "5": 20109
+      }
+    },
+    "80": {
+      "mean_E": {
+        "0": 481.333,
+        "1": 483.333,
+        "2": 475.333,
+        "3": 486.0,
+        "4": 480.0,
+        "5": 472.667
+      },
+      "trigger_events": {
+        "0": 0,
+        "1": 11599,
+        "2": 11559,
+        "3": 11553,
+        "4": 11582,
+        "5": 11538
+      }
+    },
+    "99": {
+      "mean_E": {
+        "0": 795.0,
+        "1": 795.0,
+        "2": 786.333,
+        "3": 796.333,
+        "4": 804.333,
+        "5": 784.333
+      },
+      "trigger_events": {
+        "0": 0,
+        "1": 6763,
+        "2": 6752,
+        "3": 6811,
+        "4": 6778,
+        "5": 6812
+      }
+    },
+    "100": {
+      "mean_E": {
+        "0": 798.0,
+        "1": 806.0,
+        "2": 803.333,
+        "3": 800.667,
+        "4": 800.0,
+        "5": 795.333
+      },
+      "trigger_events": {
+        "0": 0,
+        "1": 6439,
+        "2": 6431,
+        "3": 6405,
+        "4": 6440,
+        "5": 6389
+      }
+    }
+  },
+  "runtime_wall_seconds": 508.47,
+  "note": "GA-stagnation intervention; macro proposals plus native Tabu counted within total solver timer; compare entire independent runs"
+}
