@@ -1,4 +1,5 @@
 name: temp-ta41-original-n7-tabu-reference
+# Compatibility flag includes missing upstream <climits> header without modifying vendor code.
 on:
   push:
     paths:
@@ -25,7 +26,7 @@ jobs:
           git clone --depth=1 https://github.com/Qiming01/Job-Shop-Scheduling.git /tmp/n7
           git -C /tmp/n7 fetch --depth=1 origin 7e120ebada21cb604c871e0657814bf6e32611f8
           git -C /tmp/n7 checkout --detach 7e120ebada21cb604c871e0657814bf6e32611f8
-          g++ -std=c++20 -O3 -I/tmp/n7/include \
+          g++ -std=c++20 -O3 -include climits -I/tmp/n7/include \
             science-boundary/job-shop-ta41/original_n7_driver.cpp \
             /tmp/n7/src/graph.cpp /tmp/n7/src/instance.cpp \
             /tmp/n7/src/schedule.cpp /tmp/n7/src/tabu_search.cpp \
