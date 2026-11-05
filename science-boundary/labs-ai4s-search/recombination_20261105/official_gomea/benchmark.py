@@ -80,10 +80,8 @@ def main():
    source='random initial population (no elite seeds supported in this interface)',
    comparisons=['univariate full GOMEA','filtered MI linkage-tree full GOMEA'],
    bias='Python O(N^2) callback overhead, not hardware-normalized C++ native solver',
-   parameters=vars(a),completed=len(rows),exact_verified_best=len(rows),
+   parameters=dict(vars(a),out=str(a.out)),completed=len(rows),exact_verified_best=len(rows),
    file_sha256=hashlib.sha256(a.out.read_bytes()).hexdigest())
- # pathlib.Path not jsonable
- meta['parameters']['out']=str(a.out)
  a.out.with_suffix('.json').write_text(json.dumps(meta,indent=2)+'\n')
  print(json.dumps({k:v for k,v in meta.items() if k!='parameters'},indent=2))
 if __name__=='__main__':main()
