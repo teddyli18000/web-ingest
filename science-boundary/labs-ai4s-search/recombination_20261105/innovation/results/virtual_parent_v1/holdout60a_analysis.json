@@ -1,0 +1,222 @@
+{
+  "scope": "independently exact integer-scored whole 120ms repair runs; second-parent information trueB vs matched virtualB",
+  "rows": 400,
+  "source_seed_pair_units": 40,
+  "new_20percent_child_records": 8,
+  "methods": {
+    "0": "copy_A",
+    "1": "trueB_uniform",
+    "2": "virtualB_uniform",
+    "3": "trueB_prequench",
+    "4": "virtualB_prequench",
+    "5": "trueB_exactE_coupled",
+    "6": "virtualB_exactE_coupled",
+    "7": "trueB_spectral_coupled",
+    "8": "virtualB_spectral_coupled",
+    "9": "A_only_free_mask_swap"
+  },
+  "pairwise": {
+    "c60_0-c60_3": {
+      "N": 60,
+      "pair": "c60_0-c60_3",
+      "seed_repetitions": 40,
+      "by_arm": {
+        "copy_A": {
+          "mean_postrepair_best_E": 218.0,
+          "mean_all_postrepair_E": 218.0,
+          "best_E": 218,
+          "near5_events": 0,
+          "near10_events": 0,
+          "near20_events": 0,
+          "distinct_new_near10_orbits": 0,
+          "new_near10_sessions": 0,
+          "source_orbit_best_frac": 1.0,
+          "repaired_total": 16802
+        },
+        "trueB_uniform": {
+          "mean_postrepair_best_E": 298.9,
+          "mean_all_postrepair_E": 390.1737061,
+          "best_E": 218,
+          "near5_events": 0,
+          "near10_events": 0,
+          "near20_events": 2,
+          "distinct_new_near10_orbits": 0,
+          "new_near10_sessions": 0,
+          "source_orbit_best_frac": 0.025,
+          "repaired_total": 12357
+        },
+        "virtualB_uniform": {
+          "mean_postrepair_best_E": 298.0,
+          "mean_all_postrepair_E": 389.47809079999996,
+          "best_E": 266,
+          "near5_events": 0,
+          "near10_events": 0,
+          "near20_events": 0,
+          "distinct_new_near10_orbits": 0,
+          "new_near10_sessions": 0,
+          "source_orbit_best_frac": 0.0,
+          "repaired_total": 12173
+        },
+        "trueB_prequench": {
+          "mean_postrepair_best_E": 303.0,
+          "mean_all_postrepair_E": 387.228506875,
+          "best_E": 278,
+          "near5_events": 0,
+          "near10_events": 0,
+          "near20_events": 0,
+          "distinct_new_near10_orbits": 0,
+          "new_near10_sessions": 0,
+          "source_orbit_best_frac": 0.0,
+          "repaired_total": 9499
+        },
+        "virtualB_prequench": {
+          "mean_postrepair_best_E": 301.9,
+          "mean_all_postrepair_E": 386.8835012,
+          "best_E": 262,
+          "near5_events": 0,
+          "near10_events": 0,
+          "near20_events": 0,
+          "distinct_new_near10_orbits": 0,
+          "new_near10_sessions": 0,
+          "source_orbit_best_frac": 0.0,
+          "repaired_total": 9393
+        },
+        "trueB_exactE_coupled": {
+          "mean_postrepair_best_E": 292.8,
+          "mean_all_postrepair_E": 389.63517987500006,
+          "best_E": 222,
+          "near5_events": 0,
+          "near10_events": 0,
+          "near20_events": 1,
+          "distinct_new_near10_orbits": 0,
+          "new_near10_sessions": 0,
+          "source_orbit_best_frac": 0.05,
+          "repaired_total": 13724
+        },
+        "virtualB_exactE_coupled": {
+          "mean_postrepair_best_E": 296.2,
+          "mean_all_postrepair_E": 389.808178775,
+          "best_E": 250,
+          "near5_events": 0,
+          "near10_events": 0,
+          "near20_events": 1,
+          "distinct_new_near10_orbits": 0,
+          "new_near10_sessions": 0,
+          "source_orbit_best_frac": 0.0,
+          "repaired_total": 13487
+        },
+        "trueB_spectral_coupled": {
+          "mean_postrepair_best_E": 293.3,
+          "mean_all_postrepair_E": 389.6090516,
+          "best_E": 218,
+          "near5_events": 0,
+          "near10_events": 0,
+          "near20_events": 1,
+          "distinct_new_near10_orbits": 0,
+          "new_near10_sessions": 0,
+          "source_orbit_best_frac": 0.025,
+          "repaired_total": 13662
+        },
+        "virtualB_spectral_coupled": {
+          "mean_postrepair_best_E": 295.9,
+          "mean_all_postrepair_E": 389.9577289,
+          "best_E": 246,
+          "near5_events": 0,
+          "near10_events": 0,
+          "near20_events": 1,
+          "distinct_new_near10_orbits": 0,
+          "new_near10_sessions": 0,
+          "source_orbit_best_frac": 0.0,
+          "repaired_total": 13431
+        },
+        "A_only_free_mask_swap": {
+          "mean_postrepair_best_E": 293.8,
+          "mean_all_postrepair_E": 389.933709125,
+          "best_E": 246,
+          "near5_events": 0,
+          "near10_events": 0,
+          "near20_events": 2,
+          "distinct_new_near10_orbits": 0,
+          "new_near10_sessions": 0,
+          "source_orbit_best_frac": 0.0,
+          "repaired_total": 14337
+        }
+      },
+      "comparisons": {
+        "uniform": {
+          "trueB_best_E_gain_over_virtualB": -0.9,
+          "CI95_seed_bootstrap_NOT_source_independent": [
+            -9.0,
+            7.9
+          ],
+          "mean_near10_event_gain": 0.0,
+          "win_tie_loss": [
+            16,
+            2,
+            22
+          ]
+        },
+        "prequench": {
+          "trueB_best_E_gain_over_virtualB": -1.1,
+          "CI95_seed_bootstrap_NOT_source_independent": [
+            -7.9,
+            5.4
+          ],
+          "mean_near10_event_gain": 0.0,
+          "win_tie_loss": [
+            15,
+            5,
+            20
+          ]
+        },
+        "exact_E_coupled": {
+          "trueB_best_E_gain_over_virtualB": 3.4,
+          "CI95_seed_bootstrap_NOT_source_independent": [
+            -4.9,
+            12.4
+          ],
+          "mean_near10_event_gain": 0.0,
+          "win_tie_loss": [
+            19,
+            4,
+            17
+          ]
+        },
+        "spectral_coupled": {
+          "trueB_best_E_gain_over_virtualB": 2.6,
+          "CI95_seed_bootstrap_NOT_source_independent": [
+            -4.1,
+            10.1
+          ],
+          "mean_near10_event_gain": 0.0,
+          "win_tie_loss": [
+            20,
+            1,
+            19
+          ]
+        },
+        "trueB_vs_A_free_mask": {
+          "trueB_best_E_gain_over_virtualB": 1.0,
+          "CI95_seed_bootstrap_NOT_source_independent": [
+            -7.3,
+            9.8
+          ],
+          "mean_near10_event_gain": 0.0,
+          "win_tie_loss": [
+            19,
+            2,
+            19
+          ]
+        }
+      }
+    }
+  },
+  "one_source_warning": "random virtual B sampled independently for each offspring and carries no true parent info",
+  "limits": [
+    "Same parent-pair seeds do NOT make separate independent source lineages",
+    "Unseen source-pair testing but N46/47/50 included for mechanism",
+    "Historical small solver, not modern GPU MTS or tuned GOMEA",
+    "Outcome is source-novel, not first-ever LABS discovery or improvement of published optimum",
+    "The full source library includes historical archived parent orbits; never use third hidden optimum as generator input"
+  ]
+}
