@@ -28,7 +28,7 @@ def main():
     p.add_argument("--seconds",type=float,default=5.0)
     a=p.parse_args()
     initial=set(read_circular(a.seed))
-    assert len(initial)==367 and independent(initial)
+    assert len(initial)==367 and independent(sorted(initial))
     S=initial.copy();best=S.copy();rng=random.Random(a.random_seed)
     seen={frozenset(S)};farthest=S.copy();max_distance=0;rows=[]
     t0=time.monotonic()
@@ -37,7 +37,7 @@ def main():
         rng.shuffle(pairs)
         for axis,s in pairs:
             S,res=solve_pair(S,axis,s,rng,a.seconds)
-            assert len(S)>=367 and independent(S)
+            assert len(S)>=367 and independent(sorted(S))
             dist=len(S.symmetric_difference(initial))
             if dist>max_distance and len(S)==367:
                 farthest=S.copy();max_distance=dist
