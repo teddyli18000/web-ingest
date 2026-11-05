@@ -1,0 +1,94 @@
+name: temp-ta41-memetic-neutral-refinement
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-memetic-neutral-refinement.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-memetic-neutral-refinement
+  cancel-in-progress: false
+jobs:
+  intensify:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [4107, 4113, 4129]
+        relink: [greedy, dynamic2]
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify source official neutral and compile exact critical block engine
+        run: |
+          set -euo pipefail
+          g++ -std=c++17 -O3 -Wall -Wextra science-boundary/job-shop-ta41/predictive_cascade_search.cpp -o /tmp/cascade
+          python3 -m py_compile science-boundary/job-shop-ta41/run_predictive_cascade.py
+          src='science-boundary/job-shop-ta41/results/relink-far-${{ matrix.relink }}-${{ matrix.seed }}'
+          test -f "$src/neutral-certificate.json"
+          test -f "$src/upstream-neutral-verdict.json"
+      - name: Fixed-budget memetic intensification from novel relink neutral with two alternative kernels
+        run: |
+          set -euo pipefail
+          src='science-boundary/job-shop-ta41/results/relink-far-${{ matrix.relink }}-${{ matrix.seed }}'
+          for policy in tabu dynamic3; do
+            python3 science-boundary/job-shop-ta41/run_predictive_cascade.py \
+              --parent external \
+              --external-certificate "$src/neutral-certificate.json" \
+              --external-verdict "$src/upstream-neutral-verdict.json" \
+              --policy "$policy" --seed '${{ matrix.seed }}' --evaluations 1000000 \
+              --binary /tmp/cascade \
+              --out "science-boundary/job-shop-ta41/results/memetic-${{ matrix.relink }}-$policy-${{ matrix.seed }}"
+          done
+      - name: Authoritative verifier for every scored improvement or neutral
+        if: always()
+        run: |
+          set -euo pipefail
+          git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+          for policy in tabu dynamic3; do
+            dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/memetic-${{ matrix.relink }}-$policy-${{ matrix.seed }}"
+            if test -f "$dir/certificate.json"; then
+              cd /tmp/few-shots
+              python3 problems/p009-job-shop-ta41/verify/verify.py "$dir" | tee "$dir/upstream-verdict.json"
+              python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+            elif test -f "$dir/neutral-certificate.json"; then
+              mkdir -p /tmp/neutral-check
+              cp "$dir/neutral-certificate.json" /tmp/neutral-check/certificate.json
+              cd /tmp/few-shots
+              python3 problems/p009-job-shop-ta41/verify/verify.py /tmp/neutral-check | tee "$dir/upstream-neutral-verdict.json"
+              python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-neutral-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])==2006,v
+          PY
+            fi
+          done
+      - name: Persist verified memetic construction comparisons
+        if: always()
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for policy in tabu dynamic3; do
+            dir="science-boundary/job-shop-ta41/results/memetic-${{ matrix.relink }}-$policy-${{ matrix.seed }}"
+            if test -d "$dir"; then
+              rm -f "$dir/input.txt" "$dir/raw-result.txt"
+              git add "$dir"
+            fi
+          done
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): memetic relink ${{ matrix.relink }} + two exact local search kernels seed ${{ matrix.seed }}'
+          for attempt in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
