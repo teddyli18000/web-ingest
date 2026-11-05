@@ -1,0 +1,69 @@
+name: temp-labs-ai4s-forced-inheritance
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-forced-inheritance.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-forced-inheritance
+  cancel-in-progress: false
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Compile, test exact enforced biparent donor inheritance and repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search
+          g++ -O3 -std=c++17 -Wall -Wextra recombination_20261105/inheritance_mask.cpp -o /tmp/labs_inherit
+          /tmp/labs_inherit --selftest
+      - name: Generate 625 timed forced donor mix and lag-spectrum-balanced candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          /tmp/labs_inherit data/parents.tsv results/forced_inheritance_v1.tsv 5 120 5
+      - name: Independently recalculate exact initial mixed/quenched/final sequence energies and source novelty
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q numpy
+          cd science-boundary/labs-ai4s-search/recombination_20261105
+          python3 evaluate_inheritance.py --parents data/parents.tsv \
+            --rows results/forced_inheritance_v1.tsv \
+            --out results/forced_inheritance_v1.json
+          python3 - <<'PY'
+          import csv,json,pathlib,hashlib,platform,subprocess
+          root=pathlib.Path('results')
+          z=json.loads((root/'forced_inheritance_v1.json').read_text())
+          assert z['rows']==625 and z['paired_units']==125
+          rows=list(csv.DictReader((root/'forced_inheritance_v1.tsv').open(),delimiter='\t'))
+          assert len(rows)==625
+          assert all(int(v['mask_distance_to_A'])==int(v['H']) for v in rows)
+          assert all(int(v['mask_distance_to_B'])==int(v['D'])-int(v['H']) for v in rows)
+          assert all(float(v['elapsed_ms'])>=90 for v in rows)
+          meta={'source_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+            'platform':platform.platform(),'compiler':subprocess.check_output(['g++','--version'],text=True).splitlines()[0],
+            'budget_ms':120,'replicates_per_pair':5,'total_treatments':625,
+            'sha256':{f.name:hashlib.sha256(f.read_bytes()).hexdigest()
+              for f in [root/'forced_inheritance_v1.tsv',root/'forced_inheritance_v1.json']}}
+          (root/'forced_inheritance_v1_metadata.json').write_text(json.dumps(meta,indent=2)+'\n')
+          print('VERIFIED 625 prospective forced inheritance outcomes across 7 lengths')
+          PY
+      - name: Preserve exact output and evidence under owning topic
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/results/forced_inheritance_v1*
+          git commit -m 'research(labs-ai4s): certify 625 costed forced biparent structure-inheritance trajectories'
+          git pull --rebase origin main
+          git push origin HEAD:main
