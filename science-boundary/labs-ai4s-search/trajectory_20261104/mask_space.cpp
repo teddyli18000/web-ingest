@@ -12,14 +12,14 @@
 #include <iomanip>
 using namespace std;
 
-struct Source{int n,e;string bits,provenance;};
+struct Source{int n,e,near;string bits,provenance;};
 vector<Source> load(const string&p){
  ifstream f(p);if(!f)throw runtime_error("missing corpus");string line;getline(f,line);
  map<int,set<int>> select={{64,{208}},{80,{352}},{92,{490}},{99,{553,577}},{100,{578}}};
  vector<Source> v;
  while(getline(f,line)){
-  istringstream is(line);Source z;string parent,seed,near,orbit;
-  if(!(is>>z.n>>z.e>>z.bits>>z.provenance>>parent>>seed>>near>>orbit))continue;
+  istringstream is(line);Source z;string parent,seed,orbit;
+  if(!(is>>z.n>>z.e>>z.bits>>z.provenance>>parent>>seed>>z.near>>orbit))continue;
   if(select.count(z.n)&&select[z.n].count(z.e)){
     vector<int> s;for(char c:z.bits)s.push_back(c=='1'?1:-1);
     L a(s);if(a.e!=z.e||energy_direct(a.s)!=z.e)throw runtime_error("reference E invalid");
@@ -49,9 +49,9 @@ int main(int argc,char**argv){
   L base(sign);
   for(int rep=0;rep<reps;rep++)for(int method=0;method<2;method++){
    mt19937_64 rng(seedhash(98117711ULL+q*1000003ULL+rep*10009ULL+method*37ULL));
-   L best=base;best.e=INT_MAX;vector<int>chosen;L cur=base;int proposals=0,stall=0;
+   L best=base;int bestE=INT_MAX;vector<int>chosen;L cur=base;int proposals=0,stall=0;
    auto t0=clk::now();
-   if(method==1){chosen=random_mask(base.n,m,rng);cur=mask_candidate(base,chosen);best=cur;proposals++;}
+   if(method==1){chosen=random_mask(base.n,m,rng);cur=mask_candidate(base,chosen);best=cur;bestE=cur.e;proposals++;}
    while(ns(clk::now()-t0).count()<target){
     L trial=base;
     if(method==0){
@@ -74,8 +74,8 @@ int main(int argc,char**argv){
       stall=0;
      }
     }
-    if(trial.e<best.e)best=trial;
-    if(method==1 && cur.e<best.e)best=cur;
+    if(trial.e<bestE){best=trial;bestE=trial.e;}
+    if(method==1 && cur.e<bestE){best=cur;bestE=cur.e;}
     proposals++;
    }
    double seconds=ns(clk::now()-t0).count();
@@ -83,7 +83,7 @@ int main(int argc,char**argv){
    if(energy_direct(best.s)!=best.e||energy_direct(post.s)!=post.e||ham(best,base)!=m)
     throw runtime_error("candidate exactness or distance failed");
    int odd,even;binenergy(best,odd,even);
-   int n=z.n;int near=(n%2==1)?0:0; // actual class source published in separate frozen corpus
+   int n=z.n;int near=z.near;
    out<<q<<"\t"<<n<<"\t"<<z.e<<"\t"<<near<<"\t"<<method<<"\t"<<rep<<"\t"<<m<<"\t"
       <<best.e<<"\t"<<post.e<<"\t"<<ham(best,base)<<"\t"<<ham(post,base)<<"\t"
       <<odd<<"\t"<<even<<"\t"<<proposals<<"\t"<<seconds<<"\n";
