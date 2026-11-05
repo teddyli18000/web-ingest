@@ -100,7 +100,78 @@ def partial_witnesses(orders,pos,dur,removed,L):
                 if len(examples)<10:
                     examples.append(dict(machine=m,u=u,v=v,uv=uv,vu=vu,
                        support_resource_arc_count=atoms))
-    return dict(lb=lb,count=nconf,pressure=scores,examples=examples,head=head,tail=tail,arcs=arcs)
+    return dict(lb=lb,count=nconf,pressure=scores,examples=examples,head=head,tail=tail,arcs=arcs,prefix=prefix,suffix=suffix)
+
+
+def energetic_conflicts(orders,pos,dur,removed,L,observation):
+    """Provable machine-window overload from only partial precedence bounds.
+
+    Each operation's earliest start ES=head[u] and latest start LS=L-tail[u].
+    For any window [a,b], the compulsory processing is the MINIMUM overlap
+    of [start,start+p] with [a,b] over ES<=start<=LS. The overlap function
+    is trapezoidal, hence its minimum on this interval is attained at
+    ES or LS. If the sum on a single machine exceeds b-a, no feasible
+    completion can retain these fixed resource precedences.
+
+    Any repair must relax at least one machine arc supporting an ES/LS
+    window bound of a contributor. We score those SUPPORT sets, not
+    claim that any individually fixed arc is mandatory.
+    """
+    head=observation['head'];tail=observation['tail']
+    prefix=observation['prefix'];suffix=observation['suffix']
+    pressure=Counter()
+    witnesses=[]
+    top_by_machine=[]
+    for m,sequence in enumerate(orders):
+        ops=[j*20+pos[j][m] for j in sequence]
+        endpoints=sorted(set([0,L]+[x for op in ops
+                        for x in (head[op],L-tail[op]+dur[op])]))
+        local=[]
+        for ai,a in enumerate(endpoints):
+            for b in endpoints[ai+1:]:
+                if b<=a:continue
+                compulsory=0
+                contributors=[]
+                for op in ops:
+                    p=dur[op]
+                    es=head[op];ls=L-tail[op]
+                    # Mandatory overlap: minimum at an endpoint start.
+                    left=max(0,min(es+p,b)-max(es,a))
+                    right=max(0,min(ls+p,b)-max(ls,a))
+                    required=min(left,right)
+                    if required:
+                        compulsory+=required
+                        contributors.append(op)
+                excess=compulsory-(b-a)
+                if excess>0:
+                    local.append((excess,a,b,contributors))
+        if not local:continue
+        local.sort(key=lambda x:(-x[0],len(x[3]),x[1],x[2]))
+        # One strongest overload per machine gives a diversity-balanced
+        # ranking, preventing near-duplicate time windows from dominating.
+        top_by_machine.append(local[0])
+        for excess,a,b,contributors in local[:4]:
+            witness_mask=0
+            for op in contributors:
+                witness_mask|=prefix[op]|suffix[op]
+            arcs=witness_mask.bit_count()
+            weight=(excess/(max(1,arcs)**0.5))
+            if arcs==0:continue
+            bits=witness_mask
+            while bits:
+                bit=bits&-bits
+                idx=bit.bit_length()-1
+                if idx not in removed:pressure[idx]+=weight
+                bits-=bit
+            if len(witnesses)<15:
+                witnesses.append(dict(machine=m,a=a,b=b,excess=excess,
+                    compulsory_processing=b-a+excess,
+                    contributing_operations=len(contributors),
+                    witness_resource_arcs=arcs))
+    return dict(count=len(top_by_machine),
+        total_positive_window_witnesses=len(witnesses),
+        maximum_excess=max((x[0] for x in top_by_machine),default=0),
+        pressure=pressure,witnesses=witnesses)
 
 def cp_repair(orders,pos,dur,removed,L,seconds,seed):
     mdl=cp_model.CpModel()
@@ -153,6 +224,7 @@ def run(a):
         assert len(cuts)<=580
     initial_cuts=sorted(removed)
     initial_witness=partial_witnesses(orders,pos,dur,removed,L)
+    initial_energy=energetic_conflicts(orders,pos,dur,removed,L,initial_witness)
     # STATIC reference: initial machine arcs nearest target deadline.
     static_scores={}
     for idx,(m,k,u,v) in enumerate(initial_witness['arcs']):
@@ -165,6 +237,9 @@ def run(a):
         initial_critical_path_cut_steps=len(cuts),
         initial_partial_order_longest_path=initial_witness['lb'],
         initial_double_forbidden_machine_pairs=initial_witness['count'],
+        initial_energy_overloaded_machines=initial_energy['count'],
+        initial_maximum_energy_overload=initial_energy['maximum_excess'],
+        initial_energy_witnesses=initial_energy['witnesses'][:4],
         initial_conflict_examples=initial_witness['examples'][:3],
         arcs_per_round=a.growth,round_limit=a.rounds,
         cp_seconds_per_round=a.cp_seconds,rounds=[],
@@ -178,9 +253,12 @@ def run(a):
     for round_id in range(a.rounds+1):
         obs=partial_witnesses(orders,pos,dur,removed,L)
         assert obs['lb']<=L
+        energy=energetic_conflicts(orders,pos,dur,removed,L,obs)
         record=dict(iteration=round_id,released_adjacent_arcs=len(removed),
              partial_order_longest_path=obs['lb'],
-             double_forbidden_machine_pairs=obs['count'])
+             double_forbidden_machine_pairs=obs['count'],
+             energy_overloaded_machines=energy['count'],
+             max_energy_excess=energy['maximum_excess'])
         cp,witness=cp_repair(orders,pos,dur,removed,L,a.cp_seconds,a.seed*19+round_id)
         record.update(cp)
         out['rounds'].append(record)
@@ -193,12 +271,15 @@ def run(a):
             out['status']='EXHAUSTED_ROUNDS' if round_id==a.rounds else 'ACTIVE'
         save()
         print('ROUND',out['instance'],a.method,round_id,'released',len(removed),
-              'double_forbidden',obs['count'],'cp',record['status'],
+              'double_forbidden',obs['count'],'energy_excess',energy['maximum_excess'],'cp',record['status'],
               'score',record.get('independent_makespan'),flush=True)
         if witness is not None or round_id==a.rounds:break
         remaining=[i for i in range(580) if i not in removed]
         if a.method=='bidirectional':
             power=obs['pressure']
+            selection=sorted(remaining,key=lambda x:(-power.get(x,0),rng.random()))[:a.growth]
+        elif a.method=='energetic':
+            power=energy['pressure']
             selection=sorted(remaining,key=lambda x:(-power.get(x,0),rng.random()))[:a.growth]
         elif a.method=='critical':
             selection=sorted(remaining,key=lambda x:(-static_scores[x],rng.random()))[:a.growth]
@@ -217,7 +298,7 @@ if __name__=='__main__':
     p.add_argument('--start',required=True,
                    help='validated local 30x20 start.txt; or ta41')
     p.add_argument('--method',required=True,
-                   choices=['bidirectional','critical','random'])
+                   choices=['bidirectional','energetic','critical','random'])
     p.add_argument('--seed',type=int,default=709)
     p.add_argument('--growth',type=int,default=20)
     p.add_argument('--rounds',type=int,default=10)
