@@ -64,7 +64,7 @@ def benchmark(a):
     with tempfile.TemporaryDirectory() as tmp:
         source=Path(tmp)/'generalized_cascade.cpp'
         binary=compile_generalized(source)
-        for folder in sorted(a.cases.glob('ta*js-gap*')):
+        for folder in sorted(a.cases.glob('ta*js-*')):
             entry=folder/'start.txt'
             assert entry.is_file()
             pos,d,startscore=load_start(entry)
