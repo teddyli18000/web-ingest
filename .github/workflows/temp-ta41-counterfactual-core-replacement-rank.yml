@@ -1,0 +1,44 @@
+name: temp-ta41-counterfactual-core-replacement-rank
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-counterfactual-core-replacement-rank.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-counterfactual-core-replacement-rank
+  cancel-in-progress: false
+jobs:
+  rank:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned CP solver and syntax-check core replacement model
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/counterfactual_core_replacement.py
+      - name: Blindly simulate each core-arc ejection and rank replacement conflicts
+        run: |
+          python3 science-boundary/job-shop-ta41/counterfactual_core_replacement.py \
+            --seconds 1.5 \
+            --out science-boundary/job-shop-ta41/results/ta43-counterfactual-core-replacement.json
+      - name: Persist true precompletion prediction ranking before post-hoc known-solution overlap audit
+        if: always()
+        run: |
+          set -euo pipefail
+          file='science-boundary/job-shop-ta41/results/ta43-counterfactual-core-replacement.json'
+          if ! test -f "$file"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$file"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): precompletion one-step counterfactual core-replacement ranking and true corrective arcs'
+          for attempt in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
