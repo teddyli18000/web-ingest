@@ -1,0 +1,76 @@
+name: temp-ta41-external-n7-warmstarted
+on:
+  push:
+    paths:
+      - 'science-boundary/job-shop-ta41/patch_external_n7_seed.py'
+      - '.github/workflows/temp-ta41-external-n7-warmstarted.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-external-n7-warmstarted
+  cancel-in-progress: false
+jobs:
+  baseline:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [4107, 9241]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clone pinned original C++ N7/tabu and add ONLY verified-order initialization
+        run: |
+          git clone --depth=1 https://github.com/Qiming01/Job-Shop-Scheduling.git /tmp/n7
+          git -C /tmp/n7 fetch --depth=1 origin 7e120ebada21cb604c871e0657814bf6e32611f8
+          git -C /tmp/n7 checkout --detach 7e120ebada21cb604c871e0657814bf6e32611f8
+          python3 -m py_compile science-boundary/job-shop-ta41/patch_external_n7_seed.py
+          python3 science-boundary/job-shop-ta41/patch_external_n7_seed.py --upstream /tmp/n7
+      - name: Build original C++ search with seeded-order pybind adapter
+        run: |
+          python3 -m pip install 'cmake>=3.30' pybind11 setuptools wheel
+          CMAKE_PREFIX_PATH="$(python3 -m pybind11 --cmakedir)" \
+            python3 -m pip install --no-build-isolation /tmp/n7
+      - name: Run native N7/tabu from SAME 2006 start used by predictive macro
+        run: |
+          python3 science-boundary/job-shop-ta41/run_external_n7_reference.py \
+            --warmstart --seed '${{ matrix.seed }}' --seconds 120 \
+            --out 'science-boundary/job-shop-ta41/results/external-n7-seeded-${{ matrix.seed }}'
+      - name: Official Few Shots verification of complete native machine orders
+        if: always()
+        run: |
+          set -euo pipefail
+          out="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/external-n7-seeded-${{ matrix.seed }}"
+          if test -f "$out/candidate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            cp "$out/candidate.json" "$out/certificate.json"
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$out" | tee "$out/upstream-verdict.json"
+            python3 - "$out" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-verdict.json').read_text())
+          d=json.loads((p/'external-n7.json').read_text())
+          assert v['valid'] and int(v['score'])==d['independently_verified_DAG_score'],(v,d)
+          if int(v['score'])>2005:(p/'certificate.json').unlink()
+          PY
+          fi
+      - name: Persist complete independent results
+        if: always()
+        run: |
+          set -euo pipefail
+          out='science-boundary/job-shop-ta41/results/external-n7-seeded-${{ matrix.seed }}'
+          if ! test -d "$out"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$out"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): pinned native N7 from 2006 seed ${{ matrix.seed }}'
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
