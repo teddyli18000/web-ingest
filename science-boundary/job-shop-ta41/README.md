@@ -1,5 +1,7 @@
 # Job-shop scheduling — Taillard ta41 (Few Shots p009)
 
+**2026-11-05 final blind constructive check (not yet an improvement over modern search):** Oracle-blind exact implicit hitting-set targeting the known constructible ta43 1888→1887 and ta46 2044→2042 instances was run on real independently generated N7 elites with three min-cost correction policies, six 75s trials. Every run accumulated **144–220 independently CP-certified sufficient UNSAT cores** but **none produced a completed strictly improved schedule**. For ta43, the discovered joint hitting sets involved at most **3** released adjacent relations, whereas the *verified conditional* improvement requires the quartet **168/199/257/258**; frequency and replacement-core novelty were ineffective (one necessary reference arc never chosen). This negative result rules out the *tested ranking/representation*, not the existence of closer improving schedules. Detailed results: [partial-resource-joint-ejection-2026-11-05.md](partial-resource-joint-ejection-2026-11-05.md) and `results/ihs-*/ihs-result.json`. Do not simply scale the same core enumeration; the next representation must coordinate operation ejection and reinsertion while keeping hard resource and job feasibility.
+
 ## 2026-11-05 — Precompletion resource-conflict mechanism: constructive positive and limits
 
 [Full mathematical statements, independently audited proofs and reproducible results](partial-resource-joint-ejection-2026-11-05.md).
