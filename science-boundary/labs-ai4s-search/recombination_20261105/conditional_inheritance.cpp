@@ -90,11 +90,13 @@ Result propose(int arm,const MaskProblem&m,const vector<Parent*>&pool,mt19937_64
   auto list=*fos;shuffle(list.begin(),list.end(),rng);
   for(const auto&indices:list){
    vector<char>z=x;int card=countmask(z);
+   // Alternate FOS donors A/B; avoid only expanding B until hitting upper bound.
+   int target=int(rng()&1);
    for(int pos:indices){
     if(m.A.s[pos]==m.B.s[pos])continue;
     int i=int(lower_bound(m.D.begin(),m.D.end(),pos)-m.D.begin());
     if(i>=k||m.D[i]!=pos)throw runtime_error("D set lookup mismatch");
-    if(!z[i])z[i]=1,card++;
+    if(int(z[i])!=target){card+=target?1:-1;z[i]=char(target);}
    }
    if(card>m.hi||card<m.lo||z==x)continue;
    L proposal=m.state(z);result.evals++;
