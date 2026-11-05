@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-11-04** | **4,410** | **2,563** |
+| **2014-08-09** | **2026-11-05** | **4,411** | **2,564** |
 
-### Latest All-Languages snapshot — 2026-11-04
+### Latest All-Languages snapshot — 2026-11-05
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 1,139 |
-| 2 | [vercel-labs/agent-desktop](https://github.com/vercel-labs/agent-desktop) | Rust | 3,791 |
-| 3 | [max-sixty/worktrunk](https://github.com/max-sixty/worktrunk) | Rust | 438 |
-| 4 | [JustVugg/colibri](https://github.com/JustVugg/colibri) | C | 802 |
-| 5 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 1,164 |
-| 6 | [p-e-w/heretic](https://github.com/p-e-w/heretic) | Python | 701 |
-| 7 | [spotify/portal-ai-plugins](https://github.com/spotify/portal-ai-plugins) | TypeScript | 91 |
-| 8 | [floci-io/floci](https://github.com/floci-io/floci) | Java | 482 |
-| 9 | [Usagi-org/ai-goofish-monitor](https://github.com/Usagi-org/ai-goofish-monitor) | Python | 228 |
-| 10 | [anomalyco/hex](https://github.com/anomalyco/hex) | Rust | 410 |
+| 1 | [NVIDIA/auto-ontology](https://github.com/NVIDIA/auto-ontology) | Python | 2,050 |
+| 2 | [max-sixty/worktrunk](https://github.com/max-sixty/worktrunk) | Rust | 531 |
+| 3 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 1,379 |
+| 4 | [floci-io/floci](https://github.com/floci-io/floci) | Java | 1,090 |
+| 5 | [thedotmack/claude-mem](https://github.com/thedotmack/claude-mem) | TypeScript | 1,172 |
+| 6 | [vercel-labs/agent-desktop](https://github.com/vercel-labs/agent-desktop) | Rust | 2,470 |
+| 7 | [github/spec-kit](https://github.com/github/spec-kit) | Python | 808 |
+| 8 | [The-PR-Agent/pr-agent](https://github.com/The-PR-Agent/pr-agent) | Python | 280 |
+| 9 | [harry0703/MoneyPrinterTurbo](https://github.com/harry0703/MoneyPrinterTurbo) | Python | 617 |
+| 10 | [garrytan/gstack](https://github.com/garrytan/gstack) | TypeScript | 290 |
 
-[Open full snapshot →](data/2026/11/04/trending.json)
+[Open full snapshot →](data/2026/11/05/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 308 days  
+[`2026`](data/2026/) · 309 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
