@@ -2,9 +2,9 @@
 // recombination variable, with the SAME balanced donor+consensus candidate
 // generator and fully costed steepest+64-step-tabu repair for each arm.
 // No hidden third optimum ever used in selecting a parent alignment.
-#define main consensus_innovation_legacy_main
+#define INNOVATION_NO_MAIN
 #include "innovation.cpp"
-#undef main
+#undef INNOVATION_NO_MAIN
 #include <climits>
 #include <unordered_set>
 #include <iomanip>
@@ -65,7 +65,7 @@ int select_alignment(int arm,const vector<Relative>&v,mt19937_64&rng,int&modelCa
   // charged to budget, not informed by a third known optimum.
   double best=1e100;
   for(int i=0;i<(int)v.size();i++){
-   double sum=0,bestE=INT_MAX;
+   double sum=0;int bestE=INT_MAX;
    for(int j=0;j<16;j++){
     L s=v[i].candidate(rng);modelCandidates++;
     sum+=s.e;bestE=min(bestE,s.e);
@@ -178,9 +178,8 @@ int main(int argc,char**argv){
      <<1000*modelSeconds<<"\t"<<1000*proposalSeconds<<"\t"<<1000*repairSeconds
      <<"\t"<<1000*ns(clk::now()-time0).count()<<"\n";
    }
-  }
-  ipair++;
-  cerr<<"N="<<n<<" pair "<<ipair<<"/"<<pool.size()*(pool.size()-1)/2<<" tested\n";
+   ipair++;
+   cerr<<"N="<<n<<" pair "<<ipair<<"/"<<pool.size()*(pool.size()-1)/2<<" tested\n";
   }
  }
  cout<<"PASS full-cost source-alignment and common-repair experiment\n";
