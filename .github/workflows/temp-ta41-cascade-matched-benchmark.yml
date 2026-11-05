@@ -1,0 +1,88 @@
+name: temp-ta41-cascade-matched-benchmark
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-cascade-matched-benchmark.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-cascade-matched-benchmark
+  cancel-in-progress: false
+jobs:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        parent: [baseline, ninecore, gateway124]
+        seed: [4107, 4113]
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile checked C++ critical-path prediction and N7-style tabu
+        run: |
+          set -euo pipefail
+          g++ -std=c++17 -O3 -Wall -Wextra science-boundary/job-shop-ta41/predictive_cascade_search.cpp -o /tmp/cascade
+          python3 -m py_compile science-boundary/job-shop-ta41/run_predictive_cascade.py
+      - name: Three matched original algorithms at 1 million exact candidate evaluations each
+        run: |
+          set -euo pipefail
+          for policy in tabu static3 dynamic3; do
+            python3 science-boundary/job-shop-ta41/run_predictive_cascade.py \
+              --parent '${{ matrix.parent }}' --policy "$policy" --seed '${{ matrix.seed }}' \
+              --evaluations 1000000 --tabu-cap 90 --first-cap 36 \
+              --second-cap 15 --third-cap 10 --binary /tmp/cascade \
+              --out "science-boundary/job-shop-ta41/results/cascade-${{ matrix.parent }}-$policy-${{ matrix.seed }}"
+          done
+      - name: Independent official verifier for every returned nontrivial schedule
+        if: always()
+        run: |
+          set -euo pipefail
+          git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+          for policy in tabu static3 dynamic3; do
+            dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/cascade-${{ matrix.parent }}-$policy-${{ matrix.seed }}"
+            if test -f "$dir/certificate.json"; then
+              cd /tmp/few-shots
+              python3 problems/p009-job-shop-ta41/verify/verify.py "$dir" | tee "$dir/upstream-verdict.json"
+              python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          r=Path(sys.argv[1]);x=json.loads((r/'upstream-verdict.json').read_text())
+          assert x['valid'] and int(x['score'])<=2005,x
+          PY
+            elif test -f "$dir/neutral-certificate.json"; then
+              mkdir -p /tmp/neutral
+              cp "$dir/neutral-certificate.json" /tmp/neutral/certificate.json
+              cd /tmp/few-shots
+              python3 problems/p009-job-shop-ta41/verify/verify.py /tmp/neutral | tee "$dir/upstream-neutral-verdict.json"
+              python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          r=Path(sys.argv[1]);x=json.loads((r/'upstream-neutral-verdict.json').read_text())
+          assert x['valid'] and int(x['score'])==2006,x
+          PY
+            fi
+          done
+      - name: Persist traceable, matched benchmark results on main
+        if: always()
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for policy in tabu static3 dynamic3; do
+            dir="science-boundary/job-shop-ta41/results/cascade-${{ matrix.parent }}-$policy-${{ matrix.seed }}"
+            if test -d "$dir"; then
+              rm -f "$dir/input.txt" "$dir/raw-result.txt"
+              git add "$dir"
+            fi
+          done
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): equal-score-evaluations tabu vs static3 vs dynamic3 ${{ matrix.parent }} ${{ matrix.seed }}'
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
