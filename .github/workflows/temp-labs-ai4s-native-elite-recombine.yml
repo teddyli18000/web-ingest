@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - .github/workflows/temp-labs-ai4s-native-elite-recombine.yml
+      - science-boundary/labs-ai4s-search/recombination_20261105/filter_native.py
   workflow_dispatch:
 permissions:
   contents: write
@@ -48,21 +49,21 @@ jobs:
           import csv,json,pathlib,hashlib,platform,subprocess
           d=pathlib.Path('results')
           rows=list(csv.DictReader((d/'native_10pct_pairs_v1.tsv').open(),delimiter='\t'))
-          assert len(rows)==840,(len(rows),840)
-          assert len({(r['N'],r['pair'],r['rep']) for r in rows})==105
+          assert len(rows)==1120,(len(rows),1120)
+          assert len({(r['N'],r['pair'],r['rep']) for r in rows})==140
           summary=json.loads((d/'native_10pct_paired_summary_v1.json').read_text())
-          assert summary['rows']==840
+          assert summary['rows']==1120
           assert set(summary['lengths'])=={'46','47','50','59','60'}
           m={'source_pin':'1aa123407636e48630174e0bf122037e369c1d68',
-             'source_seed_parent_count':17,'algorithm':'original unrestricted historical 2009 memetic-Tabu',
-             'pair_count':21,'reps_per_pair':5,'methods':8,
+             'source_seed_parent_count':19,'algorithm':'original unrestricted historical 2009 memetic-Tabu',
+             'pair_count':28,'reps_per_pair':5,'methods':8,
              'same_total_cpu_wall_per_arm_ms':120,
              'source_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
              'platform':platform.platform(),'compiler':subprocess.check_output(['g++','--version'],text=True).splitlines()[0],
              'sha256':{f.name:hashlib.sha256(f.read_bytes()).hexdigest()
                for f in [d/'native_10pct_pairs_v1.tsv',d/'native_10pct_new_orbits_v1.tsv',d/'native_10pct_paired_summary_v1.json']}}
           (d/'native_10pct_metadata.json').write_text(json.dumps(m,indent=2)+'\n')
-          print('PASS exact 17 source-distinct independent parent orbits, 840 treatments')
+          print('PASS exact 19 source-distinct independent parent orbits, 1120 treatments')
           PY
       - name: Commit externally audited independent-source cohort and outcomes
         shell: bash
