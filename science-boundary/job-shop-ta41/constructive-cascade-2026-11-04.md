@@ -1,0 +1,41 @@
+# Taillard ta41 — constructive predictive critical-path cascade, 2026-11-04/05
+
+## Scientific question
+
+**Primary outcome is a new full, independently verified legal schedule with Cmax <=2005.** We no longer aim to grow an exclusion boundary. The falsifiable mechanism claim is: conditional on the first critical-block insertion, predicting which machine resource arcs become newly critical and selecting the *next two* insertions on those replacement bottlenecks is a more productive way of jointly coordinating small modifications than an equal-cost critical-block tabu policy or the same three-step method with the original critical arc focus.
+
+Existing data are strong constraints on research design:
+- The 2026-10-29 two-step replacement pilot already ran **528,000 exact evaluations** across 24 arms/parents/seeds and never improved 2006. Merely enlarging two-step budgets is not an advance.
+- Fixed-survivor CP LNS after 240 released operations left >300 hard precedence arcs and 8/8 independently found UNSAT cores. Hitting an old core with 2 operation endpoints only caused new cores to appear; 16/16 had independent full-NoOverlap UNSAT replay. These **prove why not to freeze survivor arcs**, not that the global best is distant.
+- Full global soft-precedence CP and 14-parent consensus/core feedback have already produced new 2006 neutral states but no 2005. Do not simply rerun those same models.
+- Independent exact 2^15 swap lattice proves specific individually harmful swaps become neutral after 1–2 enabling moves at Cmax 2006. This supports coordinated acceptance at macro endpoints, not rejection of intermediate uphill moves.
+
+## Recent primary literature (checked 2026-11-04)
+
+- Ba, Liu, Yuan (2026), *A batch approximate evaluation method for neighborhood solutions in job shop scheduling*, COR 195 107610, DOI https://doi.org/10.1016/j.cor.2026.107610. The paper improves **evaluation speed** of N7 with slack recursion and reports tabu performance on 239 benchmarks; no direct evidence that its scoring acceleration solves ta41 or predicts future critical paths.
+- Nowicki & Smutnicki (1996), *A Fast Taboo Search Algorithm for the Job Shop Problem*, Management Science 42(6), https://doi.org/10.1287/mnsc.42.6.797. Critical blocks and tabu are well-established strong JSSP reference ideas.
+- Nowicki & Smutnicki (2005), *An Advanced Tabu Search Algorithm for the Job Shop Problem*, Journal of Scheduling 8, https://doi.org/10.1007/S10951-005-6364-5. Big-valley and elite path relinking are established, not novel.
+- ScheduleOpt [2026 JSPLib ranking](https://github.com/ScheduleOpt/benchmarks/blob/main/jobshop/README.md) attributes two DMU bounds to Diaz2026 (personal communication), using **N7 tabu with guided tenure, elite path-relinking and restarts**; there is no evidenced public faithful implementation used by this experiment. It attributes 17 benchmark-bound contributions to the 2026 Liu–Li–Gao decoupling/release framework, but does not document an exact reproduction protocol. Ta41 remains historically listed LB1926, UB2005 without a public certificate.
+- Lin & Yang (November 2026), *An incumbent-aware selective-repair framework for dynamic flexible job shop scheduling*, CIE 112299, https://doi.org/10.1016/j.cie.2026.112299. Its learned kept/released-operation policy plus CP repair corroborates adaptive selection on different FJSP instances, **not a ta41 quality claim**; it retains kept operations unlike our full-orientation constructive search.
+- A 2023 analysis of N5/N6/N7 neighborhood feasibility and insertion definitions: https://link.springer.com/article/10.1186/s10033-023-00911-8. The C++ move generator below is explicitly **N7-inspired** (boundary moves within critical machine blocks), not a faithful implementation of all published N7 feasibility filters or the 2026 batch estimator.
+
+## Actual new implementation, with explicit controls
+
+- `predictive_cascade_search.cpp`: original compact C++ full-disjunctive-DAG evaluator for ta41, all 600 operations, 570 job precedences, 580 machine-consecutive arcs. Rejects cyclic permutations. Computes head, tail, and all critical machine arcs on accepted/tentative states. All output stays legal machine-order permutations.
+- `run_predictive_cascade.py`: constructs **identical ta41 routing and durations** via existing `search.obtain()`, supplies one of three *official Few Shots verified* 2006 parents (`baseline`, `gateway124`, `ninecore`), executes binary and independently verifies every resulting schedule with `search.evaluate()`; any <=2005 certificate is checked separately by upstream Few Shots official verifier before claim.
+- **tabu:** N7-inspired critical-block insertion neighborhood, tabu rejection for recent reverse moves, aspiration when improving the global best, randomized tenure 8–20, global best restarts with up to 80 distinct elite schedules.
+- **static3:** three successive machine insertions treated as ONE atomic macro; original parent's critical machine edges guide steps two and three. Intermediate scores may deteriorate, and acceptance evaluates only final legal schedule.
+- **dynamic3:** same macro generation/budgets, except after tentative first and second moves it recomputes the entire exact critical machine arc set, constructs `new = Critical(child) \ Critical(parent)`, and preferentially proposes subsequent critical-block insertions on these *new* resource bottlenecks. The move focus is applied inside the same macro, not at a later restart. The final complete DAG score alone determines record improvement.
+- All three arms use the same exact evaluator and operation-insertion kernel with a shared criterion: best legal makespan. Each is allotted **1,000,000 candidate DAG evaluations**, same parent and seeds 4107/4113. Each experiment records CPU elapsed separately because looking deeper has different overhead; matched-evaluation and matched-wall-clock summaries must be distinguished.
+- 3 policies × 3 parents × 2 seeds = **18 controlled trials** in six parallel 3-policy Actions jobs. Stronger outside reference: original author C++ NDS-S random/heuristic 100,000 iterations each from 2006, both 2006; original checkpoint warmstart 120s also remained 2006. Those are **not matched-budget benchmarks**, so don't use them to claim statistical superiority.
+- The essential evaluation is (a) new independent 2005 certificate yes/no, (b) comparable best score vs tabu and static3, (c) time/evaluation, (d) neutral and critical-path migration statistics. Counts of newly critical arcs alone are **not objective performance**.
+- Single smoke matrix (`temp-ta41-cascade-smoke.yml`, run `41987285813`) completed successfully for all 3 policies with 2500 candidate evaluations, identical Python/C++ makespan 2006. Full matched experimental workflow: `temp-ta41-cascade-matched-benchmark.yml`, run `41987492659`; status must be checked before claiming results.
+- Beware: three-hop dynamic is still an **approximate N7-style insertion generator** not yet a faithful official N7/LLG2026 reproduction. A zero-advantage result on only two seeds is weak evidence; if all fail, next move should be an alternative **joint search representation** (predictor-conditioned full CP soft arc repair, or multi-parent path relinking) rather than merely extending the same local insertion loops.
+
+## Exact submission/verifier rule
+
+For any C++ candidate <2006, freeze `certificate.json` containing 20 lists of 30 jobs, run Few Shots `problems/p009-job-shop-ta41/verify/verify.py`; then current `tools/check.py` should exit code 0 on a proper shot, compared against the current live board. A no-better 2006 candidate is useful neutral geometry only, **not** a breakthrough. The historical reported 2005 is not an upstream-certified shot.
+
+## Next decision
+
+Await the authoritative Actions result JSON and official verifier verdict. If 2005 found, submit/publish per explicit project instruction. If no policy beats 2006 or dynamic does not outperform static/tabu, stop spending compute on the same depth-3 form; reconsider (1) false placement of fixed machine critical-block interface, (2) need for preserving near-critical **noncritical** arcs, and (3) elite path relinking to transfer coherent multi-machine changes. Design the next trial only after inspecting actual failure patterns and source references.
