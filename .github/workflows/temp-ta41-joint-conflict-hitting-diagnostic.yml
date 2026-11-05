@@ -1,0 +1,50 @@
+name: temp-ta41-joint-conflict-hitting-diagnostic
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-joint-conflict-hitting-diagnostic.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-joint-conflict-hitting-diagnostic
+  cancel-in-progress: false
+jobs:
+  diagnostic:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [dynamic, static, random]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile-check exact joint conflict hitting and complete CP
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/joint_conflict_hitting_repair.py
+      - name: Oracle-informed ROOT DIAGNOSTIC ONLY (not a blind benchmark)
+        run: |
+          python3 science-boundary/job-shop-ta41/joint_conflict_hitting_repair.py \
+            --start 'science-boundary/job-shop-ta41/positive-n7-elite-data/ta43js-n7elite1711/start.txt' \
+            --root-ids 258 --policy '${{ matrix.policy }}' --seed 333 \
+            --iterations 100 --cp-seconds 0.4 --hit-seconds 0.4 --seconds 70 \
+            --out 'science-boundary/job-shop-ta41/results/implicit-cover-ta43diagnostic-${{ matrix.policy }}'
+      - name: Persist known-root diagnostic and independently reproduced legal schedule if any
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/implicit-cover-ta43diagnostic-${{ matrix.policy }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): oracle-informed hitting-set diagnostic ${{ matrix.policy }} (not blind)'
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
