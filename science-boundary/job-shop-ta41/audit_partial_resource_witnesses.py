@@ -99,8 +99,6 @@ def main(args):
         known=evaluate(full,pos,dur)
         assert known==archive['makespan'] and known<=frozen['target']
         reversals=0
-        for idx,(m,seq) in enumerate(enumerate(base)):
-            pass
         for m in range(20):
             oracle_positions={job:i for i,job in enumerate(full[m])}
             for k in range(29):
