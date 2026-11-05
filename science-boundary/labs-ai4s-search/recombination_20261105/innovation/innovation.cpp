@@ -133,6 +133,7 @@ void check(){
  cout<<"PASS independent score, invariance, source-consensus novelty and common repair checks\n";
 }
 #ifndef INNOVATION_NO_MAIN
+#ifndef INNOVATION_NO_MAIN
 int main(int argc,char**argv){
  if(argc==2&&string(argv[1])=="--selftest"){check();return 0;}
  if(argc<6){cerr<<"usage PARENTS.tsv SESSIONS.tsv CERTIFICATES.tsv REPS BUDGET_MS [PAIR_OR_all] [REPLICATE_OFFSET]\n";return 2;}
@@ -214,4 +215,6 @@ int main(int argc,char**argv){
  }
  cout<<"PASS fully costed donor + noninherited consensus variants\n";
 }
+#endif // INNOVATION_NO_MAIN
+
 #endif // INNOVATION_NO_MAIN
