@@ -17,7 +17,7 @@ This workspace is permanent. It is **not** part of `temp-work/` and is not subje
 | [`thomson-960/`](thomson-960/) | Can the N=960 Coulomb energy be improved below the live Few Shots record? | Active — synced to `444368.3924061973`; live-record diagnostics and next-generation basin search starting. |
 | [`aes-sbox-circuit/`](aes-sbox-circuit/) | Can the AES S-box be implemented in at most 100 AND/XOR/XNOR gates? | Active — live verified Few Shots record is 101; strategy reset toward structurally distinct high-quality seed families and full-circuit cross-boundary sharing. |
 
-| [`job-shop-ta41/`](job-shop-ta41/) | Can constructive conflict-replacement scheduling beat 2006 on ta41 and transfer across 30×20 cases? | Active — 24 known-answer oracle-degradation fixtures were readily repaired, but 12 genuine author-N7 elite starting states yielded only 5/24 dynamic3 improvements vs authentic N7 9/24; no 2005 certificate. Pivot to partial-schedule ejections beyond IEBO prior art. |
+| [`job-shop-ta41/`](job-shop-ta41/) | Can precompletion resource-conflict inference construct jointly coordinated JSSP improvements and beat verified ta41 score 2006? | Active — proven conditional 4-arc joint correction of independent N7 ta43 elite 1888→1887; all 15 proper releases UNSAT, four jointly feasible, exact monotone one-swap barrier +32. Oracle-blind core-novelty ranking failed; IHS construction test pending, no ta41 2005 witness. |
 
 | [`mona-lisa-tsp/`](mona-lisa-tsp/) | Can Nagata's 5,757,191-city-tour score on Mona Lisa 100K be improved? | Active — exact nearest-neighbor 2-opt probe prepared; no verified improvement yet. |
 
