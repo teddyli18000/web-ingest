@@ -112,5 +112,14 @@ jobs:
           git add science-boundary/labs-ai4s-search/recombination_20261105/data/combined/
           git add science-boundary/labs-ai4s-search/recombination_20261105/results/constrained_v1/
           git commit -m 'research(labs-ai4s): verify source-distinct donor-cut macro recombination against classical and shuffled-correlation controls'
-          git pull --rebase origin main
-          git push origin HEAD:main
+          # Other science agents may update main during this expensive run.
+          for attempt in 1 2 3 4 5 6 7 8; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then
+              echo "PERSISTED verified data to main on attempt $attempt"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Could not persist verified results after eight rebase retries" >&2
+          exit 1
