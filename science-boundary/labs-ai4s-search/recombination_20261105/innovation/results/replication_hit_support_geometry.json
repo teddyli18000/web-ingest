@@ -1,0 +1,98 @@
+{
+  "scope": "posthoc exact support diagnostic, not a claim of new record or useful generator",
+  "formula": "min_Hamming(raw_child,target)=abs(target_B_count-floor(D/2))+abs(target_consensus_override-r)",
+  "source_pair_hits": [
+    {
+      "key": "60_c60_1-c60_4_000001111000000010001011011011101011010100110001101001110011",
+      "N": 60,
+      "E": 226,
+      "pair": "c60_1-c60_4",
+      "canonical": "000001111000000010001011011011101011010100110001101001110011",
+      "source_A_E": 218,
+      "source_B_E": 234,
+      "all_sym_min_consensus_override": 8,
+      "all_sym_min_required_postrepair_hamming": 4,
+      "fixed_nearest_parent_B_Hamming": 20,
+      "fixed_nearest_min_consensus_override": 14,
+      "fixed_nearest_min_required_postrepair_hamming": 8,
+      "fixed_nearest_min_hit_witness": {
+        "D": 20,
+        "donor_count": 10,
+        "consensus_override": 14,
+        "k": 10,
+        "r": 6,
+        "required_postrepair_hamming": 8
+      },
+      "replicates_and_arms": [
+        {
+          "cohort": "selected",
+          "rep": 1078,
+          "arm": 5
+        },
+        {
+          "cohort": "selected",
+          "rep": 1094,
+          "arm": 6
+        }
+      ]
+    },
+    {
+      "key": "60_c60_2-c60_5_000001111000000010001011011011101011010100110001101001110011",
+      "N": 60,
+      "E": 226,
+      "pair": "c60_2-c60_5",
+      "canonical": "000001111000000010001011011011101011010100110001101001110011",
+      "source_A_E": 222,
+      "source_B_E": 234,
+      "all_sym_min_consensus_override": 10,
+      "all_sym_min_required_postrepair_hamming": 5,
+      "fixed_nearest_parent_B_Hamming": 23,
+      "fixed_nearest_min_consensus_override": 13,
+      "fixed_nearest_min_required_postrepair_hamming": 8,
+      "fixed_nearest_min_hit_witness": {
+        "D": 23,
+        "donor_count": 10,
+        "consensus_override": 13,
+        "k": 11,
+        "r": 6,
+        "required_postrepair_hamming": 8
+      },
+      "replicates_and_arms": [
+        {
+          "cohort": "holdout60b",
+          "rep": 3004,
+          "arm": 4
+        }
+      ]
+    },
+    {
+      "key": "59_c59_0-c59_2_00000010110100000010010011010101110100111000001100011001110",
+      "N": 59,
+      "E": 209,
+      "pair": "c59_0-c59_2",
+      "canonical": "00000010110100000010010011010101110100111000001100011001110",
+      "source_A_E": 205,
+      "source_B_E": 213,
+      "all_sym_min_consensus_override": 8,
+      "all_sym_min_required_postrepair_hamming": 3,
+      "fixed_nearest_parent_B_Hamming": 23,
+      "fixed_nearest_min_consensus_override": 15,
+      "fixed_nearest_min_required_postrepair_hamming": 10,
+      "fixed_nearest_min_hit_witness": {
+        "D": 23,
+        "donor_count": 12,
+        "consensus_override": 15,
+        "k": 11,
+        "r": 6,
+        "required_postrepair_hamming": 10
+      },
+      "replicates_and_arms": [
+        {
+          "cohort": "holdout59",
+          "rep": 4004,
+          "arm": 1
+        }
+      ]
+    }
+  ]
+}
