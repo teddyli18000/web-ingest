@@ -1,0 +1,257 @@
+{
+  "experiment": "24 blinded published high-quality 30x20 positive starts, 2 seeds",
+  "source": "ScheduleOpt/benchmarks jobshop/solutions; target machine orders never read by search",
+  "compared_methods": [
+    "tabu",
+    "static3",
+    "dynamic3",
+    "true-n7"
+  ],
+  "scoring_budget_note": "Three in-house arms use identical 350,000 exact DAG scores/trial; author original N7 uses fixed five seconds/trial. Time, scores, and evaluation counts are not equivalent. Do not claim fair wall-clock superiority.",
+  "metrics": {
+    "tabu": {
+      "trials": 48,
+      "improved": 48,
+      "recovered_hidden_oracle": 45,
+      "multi_trials": 24,
+      "multi_recovered": 21,
+      "total_remaining_gap": 3,
+      "total_gain": 3347,
+      "outperforms_archived_oracle": 0,
+      "mean_wall_seconds": 1.188,
+      "mean_fraction_of_known_positive_gap_recovered": 0.99913,
+      "mean_remaining_makespan_above_oracle": 0.0625,
+      "mean_score_improvement": 69.72917
+    },
+    "static3": {
+      "trials": 48,
+      "improved": 48,
+      "recovered_hidden_oracle": 43,
+      "multi_trials": 24,
+      "multi_recovered": 19,
+      "total_remaining_gap": 39,
+      "total_gain": 3311,
+      "outperforms_archived_oracle": 0,
+      "mean_wall_seconds": 1.54,
+      "mean_fraction_of_known_positive_gap_recovered": 0.98748,
+      "mean_remaining_makespan_above_oracle": 0.8125,
+      "mean_score_improvement": 68.97917
+    },
+    "dynamic3": {
+      "trials": 48,
+      "improved": 48,
+      "recovered_hidden_oracle": 47,
+      "multi_trials": 24,
+      "multi_recovered": 24,
+      "total_remaining_gap": 16,
+      "total_gain": 3334,
+      "outperforms_archived_oracle": 0,
+      "mean_wall_seconds": 2.17,
+      "mean_fraction_of_known_positive_gap_recovered": 0.99573,
+      "mean_remaining_makespan_above_oracle": 0.33333,
+      "mean_score_improvement": 69.45833
+    },
+    "true-n7": {
+      "trials": 48,
+      "improved": 48,
+      "recovered_hidden_oracle": 41,
+      "multi_trials": 24,
+      "multi_recovered": 17,
+      "total_remaining_gap": 45,
+      "total_gain": 3305,
+      "outperforms_archived_oracle": 0,
+      "mean_wall_seconds": 5.006,
+      "mean_fraction_of_known_positive_gap_recovered": 0.98627,
+      "mean_remaining_makespan_above_oracle": 0.9375,
+      "mean_score_improvement": 68.85417
+    }
+  },
+  "paired": {
+    "dynamic3_vs_static3": {
+      "wins": 5,
+      "losses": 1,
+      "ties": 42,
+      "non_tie_cases": [
+        {
+          "case": "ta43js-multi32",
+          "seed": 4107,
+          "candidate_score": 1846,
+          "control_score": 1847
+        },
+        {
+          "case": "ta43js-multi32",
+          "seed": 4113,
+          "candidate_score": 1846,
+          "control_score": 1847
+        },
+        {
+          "case": "ta44js-multi32",
+          "seed": 4113,
+          "candidate_score": 1978,
+          "control_score": 1979
+        },
+        {
+          "case": "ta45js-multi32",
+          "seed": 4107,
+          "candidate_score": 1997,
+          "control_score": 2022
+        },
+        {
+          "case": "ta46js-multi16",
+          "seed": 4113,
+          "candidate_score": 2002,
+          "control_score": 2013
+        },
+        {
+          "case": "ta47js-gap35",
+          "seed": 4107,
+          "candidate_score": 1905,
+          "control_score": 1889
+        }
+      ]
+    },
+    "dynamic3_vs_tabu": {
+      "wins": 3,
+      "losses": 1,
+      "ties": 44,
+      "non_tie_cases": [
+        {
+          "case": "ta44js-multi32",
+          "seed": 4113,
+          "candidate_score": 1978,
+          "control_score": 1979
+        },
+        {
+          "case": "ta46js-multi32",
+          "seed": 4113,
+          "candidate_score": 2002,
+          "control_score": 2003
+        },
+        {
+          "case": "ta47js-gap35",
+          "seed": 4107,
+          "candidate_score": 1905,
+          "control_score": 1889
+        },
+        {
+          "case": "ta47js-multi32",
+          "seed": 4107,
+          "candidate_score": 1889,
+          "control_score": 1890
+        }
+      ]
+    },
+    "dynamic3_vs_true-n7": {
+      "wins": 7,
+      "losses": 1,
+      "ties": 40,
+      "non_tie_cases": [
+        {
+          "case": "ta42js-multi32",
+          "seed": 4107,
+          "candidate_score": 1939,
+          "control_score": 1949
+        },
+        {
+          "case": "ta42js-multi32",
+          "seed": 4113,
+          "candidate_score": 1939,
+          "control_score": 1949
+        },
+        {
+          "case": "ta44js-multi32",
+          "seed": 4107,
+          "candidate_score": 1978,
+          "control_score": 1981
+        },
+        {
+          "case": "ta44js-multi32",
+          "seed": 4113,
+          "candidate_score": 1978,
+          "control_score": 1981
+        },
+        {
+          "case": "ta46js-multi16",
+          "seed": 4113,
+          "candidate_score": 2002,
+          "control_score": 2005
+        },
+        {
+          "case": "ta47js-gap35",
+          "seed": 4107,
+          "candidate_score": 1905,
+          "control_score": 1889
+        },
+        {
+          "case": "ta47js-multi32",
+          "seed": 4107,
+          "candidate_score": 1889,
+          "control_score": 1897
+        },
+        {
+          "case": "ta47js-multi32",
+          "seed": 4113,
+          "candidate_score": 1889,
+          "control_score": 1897
+        }
+      ]
+    },
+    "tabu_vs_true-n7": {
+      "wins": 7,
+      "losses": 1,
+      "ties": 40,
+      "non_tie_cases": [
+        {
+          "case": "ta42js-multi32",
+          "seed": 4107,
+          "candidate_score": 1939,
+          "control_score": 1949
+        },
+        {
+          "case": "ta42js-multi32",
+          "seed": 4113,
+          "candidate_score": 1939,
+          "control_score": 1949
+        },
+        {
+          "case": "ta44js-multi32",
+          "seed": 4107,
+          "candidate_score": 1978,
+          "control_score": 1981
+        },
+        {
+          "case": "ta44js-multi32",
+          "seed": 4113,
+          "candidate_score": 1979,
+          "control_score": 1981
+        },
+        {
+          "case": "ta46js-multi16",
+          "seed": 4113,
+          "candidate_score": 2002,
+          "control_score": 2005
+        },
+        {
+          "case": "ta46js-multi32",
+          "seed": 4113,
+          "candidate_score": 2003,
+          "control_score": 2002
+        },
+        {
+          "case": "ta47js-multi32",
+          "seed": 4107,
+          "candidate_score": 1890,
+          "control_score": 1897
+        },
+        {
+          "case": "ta47js-multi32",
+          "seed": 4113,
+          "candidate_score": 1889,
+          "control_score": 1897
+        }
+      ]
+    }
+  },
+  "all_results_independently_score_checked": true,
+  "complete": true
+}
