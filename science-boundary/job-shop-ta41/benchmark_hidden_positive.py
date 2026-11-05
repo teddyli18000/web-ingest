@@ -102,7 +102,8 @@ def benchmark(a):
                     native_wall_seconds=float(stat[11]),
                     harness_wall_seconds=round(elapsed,3),
                     independently_reproduced_score=independent,
-                    hidden_answer_not_accessible_to_search=True,\n                    wall_clock_cap=a.wall_seconds)
+                    hidden_answer_not_accessible_to_search=True,
+                    wall_clock_cap=a.wall_seconds)
                 records.append(outcome)
                 print('CASE',trial,a.policy,startscore,best,'gain',startscore-best,flush=True)
                 (a.out/'partial-results.json').write_text(json.dumps({'trials':records,'complete':False},indent=2)+'\n')
