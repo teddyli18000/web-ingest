@@ -199,7 +199,7 @@ int main(int argc,char **argv){
  for(auto &[n,pool]:groups){
   if(pool.size()<2)continue;
   unordered_set<string> archive;int reference=INT_MAX;
-  for(auto*p:pool){archive.insert(p->canonical);reference=min(reference,p->E);}
+  for(auto*p:pool){archive.insert(p->canonical);reference=min(reference,p->best);}
   int nPairs=0;
   for(int a=0;a<(int)pool.size();a++)for(int b=a+1;b<(int)pool.size();b++){
    const Parent&A=*pool[a],&B=*pool[b];
