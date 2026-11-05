@@ -50,7 +50,7 @@ def record_transitions(df):
 def main():
  p=argparse.ArgumentParser();p.add_argument('episodes');p.add_argument('global_records');p.add_argument('--out',required=True)
  a=p.parse_args();out=pathlib.Path(a.out);out.mkdir(parents=True,exist_ok=True)
- ep=pd.read_csv(a.episodes,sep='\t');record=pd.read_csv(a.global_records,sep='\t')
+ ep=pd.read_csv(a.episodes,sep='\t');record=pd.read_csv(a.global_records,sep='\t',dtype={'bits':str})
  assert len(ep)>0 and len(record)>0
  assert (ep.deltaOdd+ep.deltaEven==-ep.gain).all()
  assert (ep.DoddStart>=0).all() and (ep.DoddEnd>=0).all()
