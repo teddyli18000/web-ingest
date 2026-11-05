@@ -99,8 +99,9 @@ def overlength_mincut(dur,g):
     for u in side:
         if u>=N:continue
         for v,idx in edges[u]:
-            if v not in side and idx is not None and idx>=0 and
-                 critical[u] and critical[v] and head[u]+dur[u]+tail[v]==C:
+            if (v not in side and idx is not None and idx>=0 and
+                    critical[u] and critical[v] and
+                    head[u]+dur[u]+tail[v]==C):
                 selected.add(idx)
     assert len(selected)==cost,(len(selected),cost)
     return selected
@@ -137,8 +138,8 @@ def hard_completion(dur,mutable,orders,pos,removed,reverse,L,seconds,seed):
         for k in range(19):model.add(s[j*20+k+1]>=e[j*20+k])
     for m in range(20):
         model.add_no_overlap([interval[j*20+pos[j][m]] for j in range(30)])
-    u,v,_=mutable[reverse]
-    model.add(s[u]>=e[v])
+    root_u,root_v,_=mutable[reverse]
+    model.add(s[root_u]>=e[root_v])
     assumptions={}
     for i,(u,v,m) in enumerate(mutable):
         if i in removed:continue
@@ -161,7 +162,8 @@ def hard_completion(dur,mutable,orders,pos,removed,reverse,L,seconds,seed):
             for m in range(20)]
         score=evaluate(order,pos,dur)
         assert score is not None and score<=L,(score,L)
-        assert order[mutable[reverse][2]].index(v//20)<order[mutable[reverse][2]].index(u//20)
+        assert (order[mutable[reverse][2]].index(root_v//20)<
+                order[mutable[reverse][2]].index(root_u//20))
         rec['independent_makespan']=score
         return rec,order,None
     if st==cp_model.INFEASIBLE:
