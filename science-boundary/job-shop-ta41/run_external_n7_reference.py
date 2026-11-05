@@ -32,6 +32,9 @@ def main(a):
             assert tuple(loaded.data[j][k])==(routes[j][k],rows[j][k])
     jsp.set_seed(a.seed)
     solver=jsp.TabuSearch(loaded)
+    if a.warmstart:
+        solver.seed_machine_orders(baseline)
+        assert solver.makespan()==2006,solver.makespan()
     start=time.monotonic()
     solver.search_for_seconds(a.seconds,100000000)
     spent=time.monotonic()-start
@@ -61,8 +64,11 @@ def main(a):
       'independently_verified_DAG_score':independent,
       'known_official_incumbent':2006,
       'source_instance_validated':True,
-      'cold_start_native_random_initialization':True,
-      'fairness':'External reproducible strong N7 tabu reference with different initial state; NOT paired warm-start comparison.',
+      'cold_start_native_random_initialization':not a.warmstart,
+      'upstream_initializer_instrumentation':a.warmstart,
+      'fairness':('Native N7 tabu starting from same official baseline; time budget comparable but incumbent construction and N7 move evaluation are not identical.'
+                 if a.warmstart else
+                 'External reproducible strong N7 tabu reference with different initial state; NOT paired warm-start comparison.'),
       'officially_verifiable_candidate':independent<=2005}
     (a.out/'external-n7.json').write_text(json.dumps(result,indent=2)+'\n')
     (a.out/'candidate.json').write_text(json.dumps({'machines':machines},separators=(',',':'))+'\n')
@@ -73,6 +79,7 @@ def main(a):
 if __name__=='__main__':
     p=argparse.ArgumentParser()
     p.add_argument('--seed',type=int,required=True)
+    p.add_argument('--warmstart',action='store_true')
     p.add_argument('--seconds',type=int,default=120)
     p.add_argument('--out',type=Path,required=True)
     main(p.parse_args())
