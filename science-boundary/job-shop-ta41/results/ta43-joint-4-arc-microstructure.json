@@ -1,0 +1,281 @@
+{
+  "instance": "ta43js",
+  "source_accepted_20s_native_N7_elite": "ta43js-n7elite1711",
+  "actual_initial_makespan": 1888,
+  "global_joint_solution_makespan": 1887,
+  "independent_full_DAG_score_accepted": true,
+  "changed_original_adjacent_pair_relations": [
+    {
+      "machine": 5,
+      "position": 23,
+      "job_a": 24,
+      "job_b": 11,
+      "arc_id": 168
+    },
+    {
+      "machine": 6,
+      "position": 25,
+      "job_a": 13,
+      "job_b": 21,
+      "arc_id": 199
+    },
+    {
+      "machine": 8,
+      "position": 25,
+      "job_a": 13,
+      "job_b": 18,
+      "arc_id": 257
+    },
+    {
+      "machine": 8,
+      "position": 26,
+      "job_a": 18,
+      "job_b": 5,
+      "arc_id": 258
+    }
+  ],
+  "exact_machine_Kendall_pair_distance": 9,
+  "changed_machine_count": 3,
+  "monotone_kendall_path": {
+    "exact_kendall_distance": 9,
+    "states_per_distance_level": [
+      1,
+      4,
+      8,
+      12,
+      15,
+      15,
+      12,
+      8,
+      4,
+      1
+    ],
+    "total_feasible_states": 80,
+    "cyclic_target_directed_attempts": 0,
+    "every_monotone_target_directed_swap_order_examined": true,
+    "feasible_first_moves": 4,
+    "best_feasible_first_move": 1888,
+    "all_first_moves": [
+      {
+        "machine": 5,
+        "position": 23,
+        "makespan": 1888
+      },
+      {
+        "machine": 6,
+        "position": 25,
+        "makespan": 1888
+      },
+      {
+        "machine": 8,
+        "position": 25,
+        "makespan": 1964
+      },
+      {
+        "machine": 8,
+        "position": 26,
+        "makespan": 1920
+      }
+    ],
+    "minimum_peak_makespan": 1920,
+    "minimum_uphill_barrier_above_incumbent": 32,
+    "optimal_monotone_path": [
+      {
+        "machine": 5,
+        "position": 23,
+        "verified_intermediate_score": 1888
+      },
+      {
+        "machine": 6,
+        "position": 25,
+        "verified_intermediate_score": 1888
+      },
+      {
+        "machine": 6,
+        "position": 26,
+        "verified_intermediate_score": 1888
+      },
+      {
+        "machine": 6,
+        "position": 27,
+        "verified_intermediate_score": 1904
+      },
+      {
+        "machine": 6,
+        "position": 28,
+        "verified_intermediate_score": 1904
+      },
+      {
+        "machine": 8,
+        "position": 26,
+        "verified_intermediate_score": 1920
+      },
+      {
+        "machine": 8,
+        "position": 25,
+        "verified_intermediate_score": 1920
+      },
+      {
+        "machine": 8,
+        "position": 26,
+        "verified_intermediate_score": 1904
+      },
+      {
+        "machine": 8,
+        "position": 27,
+        "verified_intermediate_score": 1887
+      }
+    ]
+  },
+  "all_16_strict_subsets_and_full_set_tested": true,
+  "subset_results": [
+    {
+      "released_arc_ids": [],
+      "released_arcs": 0,
+      "status": "INFEASIBLE",
+      "seconds": 0.015
+    },
+    {
+      "released_arc_ids": [
+        168
+      ],
+      "released_arcs": 1,
+      "status": "INFEASIBLE",
+      "seconds": 0.014
+    },
+    {
+      "released_arc_ids": [
+        199
+      ],
+      "released_arcs": 1,
+      "status": "INFEASIBLE",
+      "seconds": 0.013
+    },
+    {
+      "released_arc_ids": [
+        257
+      ],
+      "released_arcs": 1,
+      "status": "INFEASIBLE",
+      "seconds": 0.03
+    },
+    {
+      "released_arc_ids": [
+        258
+      ],
+      "released_arcs": 1,
+      "status": "INFEASIBLE",
+      "seconds": 0.029
+    },
+    {
+      "released_arc_ids": [
+        168,
+        199
+      ],
+      "released_arcs": 2,
+      "status": "INFEASIBLE",
+      "seconds": 0.013
+    },
+    {
+      "released_arc_ids": [
+        168,
+        257
+      ],
+      "released_arcs": 2,
+      "status": "INFEASIBLE",
+      "seconds": 0.03
+    },
+    {
+      "released_arc_ids": [
+        168,
+        258
+      ],
+      "released_arcs": 2,
+      "status": "INFEASIBLE",
+      "seconds": 0.029
+    },
+    {
+      "released_arc_ids": [
+        199,
+        257
+      ],
+      "released_arcs": 2,
+      "status": "INFEASIBLE",
+      "seconds": 0.027
+    },
+    {
+      "released_arc_ids": [
+        199,
+        258
+      ],
+      "released_arcs": 2,
+      "status": "INFEASIBLE",
+      "seconds": 0.029
+    },
+    {
+      "released_arc_ids": [
+        257,
+        258
+      ],
+      "released_arcs": 2,
+      "status": "INFEASIBLE",
+      "seconds": 0.03
+    },
+    {
+      "released_arc_ids": [
+        168,
+        199,
+        257
+      ],
+      "released_arcs": 3,
+      "status": "INFEASIBLE",
+      "seconds": 0.027
+    },
+    {
+      "released_arc_ids": [
+        168,
+        199,
+        258
+      ],
+      "released_arcs": 3,
+      "status": "INFEASIBLE",
+      "seconds": 0.029
+    },
+    {
+      "released_arc_ids": [
+        168,
+        257,
+        258
+      ],
+      "released_arcs": 3,
+      "status": "INFEASIBLE",
+      "seconds": 0.029
+    },
+    {
+      "released_arc_ids": [
+        199,
+        257,
+        258
+      ],
+      "released_arcs": 3,
+      "status": "INFEASIBLE",
+      "seconds": 0.027
+    },
+    {
+      "released_arc_ids": [
+        168,
+        199,
+        257,
+        258
+      ],
+      "released_arcs": 4,
+      "status": "OPTIMAL",
+      "seconds": 0.098,
+      "independent_makespan": 1887,
+      "actual_reversed_baseline_pairs": 4
+    }
+  ],
+  "min_four_arc_family_release_certified": true,
+  "interpretation": "Subset result is only for releasing some of these 4 arcs while leaving ALL 576 other original adjacent arcs fixed. Not a global minimum distance theorem.",
+  "all_original_N7_elite_and_CP_pair_orders_rechecked": true
+}
