@@ -30,6 +30,12 @@ def main(a):
     # Instance file was written directly from the hash-checked Few Shots data.
     # Upstream cold-start pybind omits stl.h and cannot expose loaded.data;
     # validation by the source generator and native scores remains independent.
+    if a.parent=='ninecore':
+        root=Path(__file__).resolve().parent/'results'/'ninecore-neutral-baseline'
+        v=json.loads((root/'neutral-verdict.json').read_text())
+        assert v['valid'] and int(v['score'])==2006
+        baseline=json.loads((root/'neutral-certificate.json').read_text())['machines']
+        assert evaluate(baseline,pos,dur)==2006
     jsp.set_seed(a.seed)
     solver=jsp.TabuSearch(loaded)
     if a.warmstart:
@@ -59,7 +65,7 @@ def main(a):
     result={'instance':'ta41','upstream':'Qiming01/Job-Shop-Scheduling',
       'upstream_sha':'7e120ebada21cb604c871e0657814bf6e32611f8',
       'algorithm':'upstream C++ tabu N7/approximate Balas-style evaluation',
-      'seed':a.seed,'seconds_budget':a.seconds,'elapsed_seconds':round(spent,3),
+      'seed':a.seed,'parent':a.parent,'seconds_budget':a.seconds,'elapsed_seconds':round(spent,3),
       'iterations':solver.get_iter(),'native_makespan':native,
       'independently_verified_DAG_score':independent,
       'known_official_incumbent':2006,
@@ -80,6 +86,7 @@ if __name__=='__main__':
     p=argparse.ArgumentParser()
     p.add_argument('--seed',type=int,required=True)
     p.add_argument('--warmstart',action='store_true')
+    p.add_argument('--parent',choices=('baseline','ninecore'),default='baseline')
     p.add_argument('--seconds',type=int,default=120)
     p.add_argument('--out',type=Path,required=True)
     main(p.parse_args())
