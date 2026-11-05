@@ -41,18 +41,18 @@ int ham(const L&a,const L&b){int r=0;for(int i=0;i<a.n;i++)r+=(a.s[i]!=b.s[i]);r
 uint64_t seedhash(uint64_t x){x+=0x9e3779b97f4a7c15ULL;x=(x^(x>>30))*0xbf58476d1ce4e5b9ULL;x=(x^(x>>27))*0x94d049bb133111ebULL;return x^(x>>31);}
 int main(int argc,char**argv){
  if(argc<5){cerr<<"usage IN.tsv OUT.tsv REP BUDGET_MS [M=12]\n";return 2;}
- auto sources=load(argv[1]);ofstream out(argv[2]);int reps=stoi(argv[3]),m=argc>5?stoi(argv[5]):12;
+ auto sources=load(argv[1]);ofstream out(argv[2]);int reps=stoi(argv[3]),m=argc>5?stoi(argv[5]):12,methods=argc>6?stoi(argv[6]):2;
  double target=stod(argv[4])/1000.;
  out<<"id\tn\tsourceE\tnear\tmethod\trep\tm\tbestE\tpostRelaxE\tdistFromSource\tpostDistance\tbestOdd\tbestEven\tproposals\tseconds\n";
  out<<fixed<<setprecision(8);
  for(int q=0;q<(int)sources.size();q++){
   const auto &z=sources[q];vector<int>sign;for(char c:z.bits)sign.push_back(c=='1'?1:-1);
   L base(sign);
-  for(int rep=0;rep<reps;rep++)for(int method=0;method<2;method++){
+  for(int rep=0;rep<reps;rep++)for(int method=0;method<methods;method++){
    mt19937_64 rng(seedhash(98117711ULL+q*1000003ULL+rep*10009ULL+method*37ULL));
    L best=base;int bestE=INT_MAX;vector<int>chosen;L cur=base;int proposals=0,stall=0;
    auto t0=clk::now();
-   if(method==1){chosen=random_mask(base.n,m,rng);cur=mask_candidate(base,chosen);best=cur;bestE=cur.e;proposals++;}
+   if(method!=0){chosen=random_mask(base.n,m,rng);cur=mask_candidate(base,chosen);best=cur;bestE=cur.e;proposals++;}
    while(ns(clk::now()-t0).count()<target){
     L trial=base;
     if(method==0){
@@ -63,20 +63,20 @@ int main(int argc,char**argv){
      int a=chosen[j],b;
      do{b=uniform_int_distribution<int>(0,base.n-1)(rng);}while(binary_search(chosen.begin(),chosen.end(),b));
      trial=cur;trial.flip(a);trial.flip(b);
-     if(trial.e<cur.e){
+     if(method==2 || trial.e<cur.e){
       cur=trial;
       chosen.erase(chosen.begin()+j);
       chosen.insert(lower_bound(chosen.begin(),chosen.end(),b),b);
       stall=0;
      }else stall++;
-     if(stall>300){
+     if(method==1 && stall>300){
       chosen=random_mask(base.n,m,rng);
       cur=mask_candidate(base,chosen);
       stall=0;
      }
     }
     if(trial.e<bestE){best=trial;bestE=trial.e;}
-    if(method==1 && cur.e<bestE){best=cur;bestE=cur.e;}
+    if(method!=0 && cur.e<bestE){best=cur;bestE=cur.e;}
     proposals++;
    }
    double seconds=ns(clk::now()-t0).count();
