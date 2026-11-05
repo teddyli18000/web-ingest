@@ -1,0 +1,65 @@
+name: temp-ta41-predictive-vs-native-n7-120s
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-predictive-vs-native-n7-120s.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-predictive-vs-native-n7-120s
+  cancel-in-progress: false
+jobs:
+  paired:
+    strategy:
+      fail-fast: false
+      matrix:
+        parent: [baseline, ninecore]
+        policy: [replacement, current]
+        seed: [4107, 9241]
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check syntax and archive author exact model
+        run: python3 -m py_compile science-boundary/job-shop-ta41/predictive_macro_search.py
+      - name: Evaluate up-to-three-step counterfactual repairs for the SAME 120 CPU seconds
+        run: |
+          python3 science-boundary/job-shop-ta41/predictive_macro_search.py \
+            --parent '${{ matrix.parent }}' --policy '${{ matrix.policy }}' --seed '${{ matrix.seed }}' \
+            --budget 1000000 --wall-seconds 120 \
+            --out 'science-boundary/job-shop-ta41/results/macro-120s-${{ matrix.parent }}-${{ matrix.policy }}-${{ matrix.seed }}'
+      - name: Independent official verification of any score <=2005
+        if: always()
+        run: |
+          set -euo pipefail
+          out="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/macro-120s-${{ matrix.parent }}-${{ matrix.policy }}-${{ matrix.seed }}"
+          if test -f "$out/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$out" | tee "$out/upstream-verdict.json"
+            python3 - "$out" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+          fi
+      - name: Save wall-budget-fair source-backed outcome
+        if: always()
+        run: |
+          set -euo pipefail
+          out='science-boundary/job-shop-ta41/results/macro-120s-${{ matrix.parent }}-${{ matrix.policy }}-${{ matrix.seed }}'
+          if ! test -d "$out"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$out"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): wall-matched critical replacement ${{ matrix.parent }} ${{ matrix.policy }} ${{ matrix.seed }}'
+          for attempt in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
