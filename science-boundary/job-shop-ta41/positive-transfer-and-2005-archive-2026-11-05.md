@@ -61,3 +61,11 @@ Paired dynamic3 against genuine N7: **3 better / 14 tied / 7 worse**, mean dynam
 - Archived ScheduleOpt `solutions.json` provides a complete ta45 schedule independently scoring **1997**, while its ranking README currently lists UB **1999**; the reference fixture uses the actual independently scored **1997** certificate and records a source/version discrepancy rather than cherry-picking a weak target.
 - `positive-control-data` contains **no oracle order**, only its runtime degraded `start.txt` and target makespan/hash in a manifest. This is a blinded algorithm run, not a secret or cryptographically committed pre-registration.
 - The 2018 IEBO paper emphasizes alternation of orientation addition and ejection, a qualitatively different interface from our complete fixed 20×30 permutations. If independent-basin controls invalidate dynamic3, **change representation** rather than running tens of millions more insertion moves.
+
+## Exact archival identity of NO2013 (stronger than an abbreviation)
+
+The **2016 primary doctoral dissertation** by Jelke Jeroen van Hoorn, *Dynamic Programming for Routing and Scheduling*, [publisher PDF](https://research.vu.nl/files/42163578/complete%20dissertation.pdf), has **Table B.7, printed page 166**, specifically `ta41 30 20 ... Upper bound 2005[88]`. On that same page the source key `[88]` is described as `Nagata and Ono (2013)`; the bibliography entry **[88]**, printed ~p. 187, spells out the otherwise hard-to-search original manuscript title:
+
+> Yuichi Nagata and Isao Ono. *Guided Constructive Local Search for the Job Shop Scheduling Problem*. 2013. submitted.
+
+This is **not** the 2013 TSP high-order entropy paper, nor merely an inference from the later 2018 IEBO paper. The 2013 title is a direct documentary clue to request/download the actual 2005 ta41 schedule from authors or archival supplements. The work appears to have evolved into the 2018 IEBO study, but **identity or equivalence of their exact experimental solutions has not been independently established**. No public original 2005 machine-order certificate found so far. The independently documented 2015 CPO result is a second route to the same reported bound.
