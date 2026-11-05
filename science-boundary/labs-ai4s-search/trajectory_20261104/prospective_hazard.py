@@ -95,14 +95,17 @@ def main():
         x,c=process(root,job,a.horizon,a.stall);epcount+=c;data.extend(x)
         print('RUN',job['n'],job['seed'],'eligible',len(x),'positive',sum(q['positive'] for q in x),flush=True)
     df=pd.DataFrame(data)
-    if df.empty:raise RuntimeError('no uncensored stalled episodes')
+    if df.empty:
+        (out/'prospective_hazard.json').write_text(json.dumps({'all_rows':0,'gate':'no eligible uncensored snapshots'},indent=2)+'\n')
+        print('NO ELIGIBLE UNCENSORED SNAPSHOTS',flush=True)
+        return
     df['bestE_per_n']=df.bestE/df.N
     df['currentE_per_n']=df.currentE/df.N
     df['gap_per_n']=df.E_gap/df.N
     df['stall_per_n']=df.stall_age/df.N
     df['tabu_active_per_n']=df.tabu_active/df.N
     assert (df.stall_age>=a.stall).all()
-    assert set(df.N)=={48,64,80,92,99,100},'must contain all six lengths'
+    # Some source lengths may contain zero eligible uncensored plateau snapshots.
     df.to_csv(out/'prospective_hazard_samples.tsv.gz',sep='\t',index=False,compression='gzip')
     train=df[df.N.isin([48,64,80])].copy()
     test=df[df.N.isin([92,99,100])].copy()
@@ -111,9 +114,12 @@ def main():
        'all_rows':len(df),'episodes':epcount,'train_rows':len(train),'test_rows':len(test),
        'train_positives':int(train.positive.sum()),'test_positives':int(test.positive.sum()),
        'by_run':{},'models':{}}
-    for (n,seed),sub in df.groupby(['N','seed']):
-        result['by_run'][f'{n}_{seed}']={'eligible':len(sub),'positive':int(sub.positive.sum()),'rate':float(sub.positive.mean())}
-    if min(int(train.positive.sum()),int(test.positive.sum()),
+    for job in meta['jobs']:
+        n=job['n'];seed=job['seed']
+        sub=df[(df.N==n)&(df.seed==seed)]
+        result['by_run'][f'{n}_{seed}']={'eligible':len(sub),'positive':int(sub.positive.sum()),
+                 'rate':float(sub.positive.mean()) if len(sub) else None}
+    if len(train)==0 or len(test)==0 or min(int(train.positive.sum()),int(test.positive.sum()),
            len(train)-int(train.positive.sum()),len(test)-int(test.positive.sum()))<20:
         result['gate']='insufficient positive or negative hazard labels; no model trained'
     else:
