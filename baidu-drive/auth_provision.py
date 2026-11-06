@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Prepare ephemeral OAuth and Drive credentials for the Actions data plane."""
+"""Ephemeral browser-cookie and rclone credentials for GitHub Actions runners."""
 from __future__ import annotations
 
 import argparse
-import base64
 import configparser
+import datetime as dt
 import hashlib
 import io
 import json
@@ -12,10 +12,10 @@ import os
 from pathlib import Path
 import subprocess
 import time
-import urllib.parse
 import urllib.request
 import zipfile
 
+import auth_session
 import controller
 import oauth_state
 
@@ -23,7 +23,6 @@ RCLONE_ARCHIVE = "rclone-v1.74.4-linux-amd64.zip"
 RCLONE_SHA256 = "fe435e0c36228e7c2f116a8701f01127bb1f694005fc11d1f27186c8bca4115d"
 RCLONE_URL = "https://downloads.rclone.org/v1.74.4/" + RCLONE_ARCHIVE
 RCLONE_MEMBER = "rclone-v1.74.4-linux-amd64/rclone"
-GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 REMOTE_NAME = "bdm-drive"
 REFRESH_MARGIN_SECONDS = 300
 
@@ -43,8 +42,8 @@ def validate_google(config_text: str, state_key: str) -> configparser.SectionPro
         raise AuthError("invalid Google Drive rclone configuration") from exc
     if remote.get("type") != "drive" or remote.get("scope") != "drive.file":
         raise AuthError("Google Drive remote must use the drive.file scope")
-    if not remote.get("client_id") or not token.get("refresh_token"):
-        raise AuthError("Google Drive remote requires a dedicated OAuth client and refresh token")
+    if not token.get("refresh_token"):
+        raise AuthError("Google Drive remote requires a refresh token")
     return remote
 
 
@@ -58,39 +57,6 @@ def export_paths(paths: dict[str, str | Path]) -> None:
     with output.open("a", encoding="utf-8") as handle:
         for key, value in paths.items():
             handle.write(f"{key}={value}\n")
-
-
-def refresh_google_token(config_path: Path, token_path: Path, freshness_path: Path) -> None:
-    if freshness_path.exists():
-        expiry = float(freshness_path.read_text(encoding="utf-8"))
-        if time.time() + REFRESH_MARGIN_SECONDS < expiry:
-            return
-    parser = configparser.ConfigParser(interpolation=None)
-    parser.read_string(config_path.read_text(encoding="utf-8"))
-    remote = parser[REMOTE_NAME]
-    original = json.loads(remote["token"])["refresh_token"]
-    body = {
-        "client_id": remote["client_id"],
-        "refresh_token": original,
-        "grant_type": "refresh_token",
-    }
-    if remote.get("client_secret"):
-        body["client_secret"] = remote["client_secret"]
-    request = urllib.request.Request(
-        GOOGLE_TOKEN_URL, data=urllib.parse.urlencode(body).encode("utf-8"),
-        headers={"Content-Type": "application/x-www-form-urlencoded"}, method="POST",
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=30) as response:
-            issued = json.loads(response.read(65536))
-        access_token = str(issued["access_token"])
-        expires_in = int(issued["expires_in"])
-        if not access_token or expires_in <= REFRESH_MARGIN_SECONDS:
-            raise ValueError("invalid token response")
-    except (OSError, ValueError, KeyError) as exc:
-        raise AuthError("Google access-token refresh failed") from exc
-    write_private(token_path, access_token)
-    write_private(freshness_path, str(time.time() + expires_in))
 
 
 def install_rclone(destination: Path) -> None:
@@ -110,42 +76,64 @@ def install_rclone(destination: Path) -> None:
         raise AuthError("pinned Linux rclone version check failed")
 
 
+def refresh_google_token(config_path: Path, token_path: Path, freshness_path: Path, rclone_path: Path) -> None:
+    if freshness_path.exists() and time.time() + REFRESH_MARGIN_SECONDS < float(freshness_path.read_text()):
+        return
+    environment = os.environ.copy()
+    environment["RCLONE_CONFIG"] = str(config_path)
+    result = subprocess.run(
+        [str(rclone_path), "lsf", "bdm-drive:", "--max-depth", "1", "--files-only"],
+        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        env=environment, timeout=90, check=False,
+    )
+    if result.returncode != 0:
+        raise AuthError("Google rclone token validation or refresh failed")
+    parser = configparser.ConfigParser(interpolation=None)
+    parser.read_string(config_path.read_text(encoding="utf-8"))
+    token = json.loads(parser[REMOTE_NAME]["token"])
+    access_token = str(token["access_token"])
+    expiry = dt.datetime.fromisoformat(str(token["expiry"]).replace("Z", "+00:00")).timestamp()
+    if not access_token or time.time() + REFRESH_MARGIN_SECONDS >= expiry:
+        raise AuthError("Google rclone did not return a fresh access token")
+    write_private(token_path, access_token)
+    write_private(freshness_path, str(expiry))
+
+
 def provision(mode: str) -> bool:
-    config_text = os.environ.get("BAIDU_DRIVE_RCLONE_CONFIG", "")
+    initial = os.environ.get("BAIDU_DRIVE_BAIDU_SESSION", "")
+    google = os.environ.get("BAIDU_DRIVE_RCLONE_CONFIG", "")
     state_key = os.environ.get("BAIDU_DRIVE_STATE_KEY", "")
-    bootstrap = os.environ.get("BAIDU_DRIVE_BAIDU_OAUTH", "")
-    if not config_text.strip() or not state_key.strip() or (mode == "prepare" and not bootstrap.strip()):
+    if not initial.strip() or not google.strip() or not state_key.strip():
         return False
-    validate_google(config_text, state_key)
+    auth_session.normalize(initial)
+    validate_google(google, state_key)
     gh = controller.GitHub(os.environ["GITHUB_REPOSITORY"], os.environ["GITHUB_TOKEN"])
+    session = auth_session.read(gh, initial, state_key)
     if mode == "prepare":
-        auth = oauth_state.ensure_fresh(gh, bootstrap, state_key)
-    elif mode == "relay":
-        auth = oauth_state.read_fresh(gh, state_key)
-    else:
+        auth_session.save_if_changed(gh, initial, state_key, session)
+    elif mode != "relay":
         raise AuthError("unknown provisioning mode")
+
     base = Path(os.environ["RUNNER_TEMP"]) / "baidu-drive-auth"
     base.mkdir(mode=0o700, parents=True, exist_ok=True)
-    baidu_path = base / "baidu.access-token"
+    cookie_path = base / "baidu.cookies"
     config_path = base / "rclone.conf"
     key_path = base / "state.key"
-    write_private(baidu_path, str(auth["access_token"]))
-    write_private(config_path, config_text)
+    rclone_path = base / "rclone"
+    write_private(cookie_path, session)
+    write_private(config_path, google)
     write_private(key_path, state_key.strip())
+    install_rclone(rclone_path)
     paths: dict[str, str | Path] = {
-        "BAIDU_DRIVE_BAIDU_OAUTH_TOKEN_FILE": baidu_path,
-        "BAIDU_DRIVE_BAIDU_APP_ROOT": str(auth["app_root"]),
+        "BAIDU_DRIVE_BAIDU_AUTH_FILE": cookie_path,
         "BAIDU_DRIVE_RCLONE_CONFIG_FILE": config_path,
+        "BAIDU_DRIVE_RCLONE_BIN": rclone_path,
         "BAIDU_DRIVE_STATE_KEY_FILE": key_path,
     }
-    if mode == "prepare":
-        rclone_path = base / "rclone"
-        install_rclone(rclone_path)
-        paths["BAIDU_DRIVE_RCLONE_BIN"] = rclone_path
-    else:
+    if mode == "relay":
         token_path = base / "google.access-token"
         expiry_path = base / "google.token-expiry"
-        refresh_google_token(config_path, token_path, expiry_path)
+        refresh_google_token(config_path, token_path, expiry_path, rclone_path)
         paths["BAIDU_DRIVE_GOOGLE_ACCESS_TOKEN_FILE"] = token_path
         paths["BAIDU_DRIVE_GOOGLE_TOKEN_EXPIRY_FILE"] = expiry_path
     export_paths(paths)
@@ -158,11 +146,10 @@ def main() -> int:
     args = parser.parse_args()
     try:
         configured = provision(args.mode)
-    except (AuthError, oauth_state.OAuthError):
-        print("Baidu Drive OAuth provisioning failed.")
+    except (AuthError, auth_session.SessionError, oauth_state.OAuthError):
+        print("Baidu Drive runner authentication provisioning failed.")
         return 1
-    print("Baidu Drive ephemeral OAuth files ready." if configured
-          else "Baidu Drive OAuth Secrets not configured.")
+    print("Runner authentication ready." if configured else "Baidu Drive login is not configured.")
     return 0
 
 
