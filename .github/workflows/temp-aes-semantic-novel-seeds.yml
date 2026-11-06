@@ -1,0 +1,65 @@
+name: temp-aes-semantic-novel-seeds
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/semantic_novel_seed.py'
+      - '.github/workflows/temp-aes-semantic-novel-seeds.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  constructive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - helpers: 48
+            mode: xor
+            extra: ''
+          - helpers: 128
+            mode: xor
+            extra: ''
+          - helpers: 80
+            mode: all
+            extra: '--include-and'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download the verified 101-gate parents
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 42252448125
+          github-token: ${{ github.token }}
+          pattern: aes-care-cone-fs-101-*
+          path: parent-archive
+          merge-multiple: false
+      - name: Construct a <=101 AES circuit using at least one genuinely new helper
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet ortools
+          python -m py_compile science-boundary/aes-sbox-circuit/semantic_novel_seed.py
+          python science-boundary/aes-sbox-circuit/semantic_novel_seed.py \
+            --archive-dir parent-archive --max-parents 41 \
+            --helper-limit '${{ matrix.helpers }}' ${{ matrix.extra }} --force-novel \
+            --seconds 360 --workers 4 --rng '${{ matrix.helpers }}' --out result | tee run.log
+          python -c "import json; d=json.load(open('result/summary.json')); assert d['verified_all_256']; print(d)"
+      - name: Official Few Shots verifier if <=100 constructed
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/p008shot
+            cp result/candidate.json /tmp/p008shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/p008shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-semantic-novel-parent-${{ matrix.mode }}-${{ matrix.helpers }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
