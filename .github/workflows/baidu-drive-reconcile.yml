@@ -18,6 +18,7 @@ on:
 permissions:
   contents: write
   actions: write
+  issues: write
 
 concurrency:
   group: baidu-drive-live-state
@@ -100,6 +101,10 @@ jobs:
 
       - name: Reconcile Release control and durable task state
         run: python3 baidu-drive/controller.py reconcile
+
+      - name: Synchronize fixed login notification Issue
+        if: always()
+        run: python3 baidu-drive/auth_notice.py
 
       - name: Queue master scheduler only for an accepted start or retry
         if: >-
