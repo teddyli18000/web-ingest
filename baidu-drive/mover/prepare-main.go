@@ -50,8 +50,8 @@ func runPrepare() int {
 	resumeTaskID := fs.String("resume", "", "existing mover task ID to resume")
 	runtimeBase := fs.String("runtime-base", "", "ephemeral runner directory owned by this invocation")
 	stateDBPath := fs.String("state-db", "", "checkpoint SQLite file copied in/out by the caller")
-	baiduTokenFile := fs.String("baidu-access-token-file", "", "runner-local Baidu OAuth access token")
-	baiduAppRoot := fs.String("baidu-app-root", "", "authorized Baidu /apps/<app> root")
+	baiduCookieFile := fs.String("baidu-cookie-file", "", "runner-local Baidu browser cookie header")
+	cookieOutput := fs.String("baidu-cookie-output", "", "runner-local updated browser session output")
 	rcloneConfigFile := fs.String("rclone-config-file", "", "prepared rclone config file")
 	rcloneBinary := fs.String("rclone-bin", "", "prepared platform rclone executable")
 	resultJSON := fs.String("result-json", "", "machine-readable result output path")
@@ -84,12 +84,14 @@ func runPrepare() int {
 	if err := prepareRestoreOptional(*stateDBPath, layout.StateDB, 0o600); err != nil {
 		return prepareFailBeforeStore(*resultJSON, fmt.Errorf("restore state checkpoint: %w", err))
 	}
-	baiduToken, err := os.ReadFile(*baiduTokenFile)
-	if err != nil || len(baiduToken) == 0 || len(baiduToken)>1<<20 {
-		return prepareFailBeforeStore(*resultJSON, fmt.Errorf("Baidu OAuth access token is missing"))
+	baiduCookie, err := os.ReadFile(*baiduCookieFile)
+	if err != nil || len(baiduCookie) == 0 || len(baiduCookie) > 1<<20 {
+		return prepareFailBeforeStore(*resultJSON, fmt.Errorf("Baidu browser session is missing"))
 	}
-	oauthClient, err := newOAuthBaidu(strings.TrimSpace(string(baiduToken)), *baiduAppRoot)
-	if err != nil { return prepareFailBeforeStore(*resultJSON, fmt.Errorf("invalid Baidu OAuth app configuration")) }
+	baiduClient, err := baidu.NewClient(strings.TrimSpace(string(baiduCookie)))
+	if err != nil || !baiduClient.HasLoginCookies() {
+		return prepareFailBeforeStore(*resultJSON, fmt.Errorf("Baidu browser login is required"))
+	}
 	if err := prepareRequireAndCopy(*rcloneConfigFile, layout.RcloneConfig, 0o600, "Google Drive rclone config"); err != nil {
 		return prepareFailBeforeStore(*resultJSON, err)
 	}
@@ -118,6 +120,9 @@ func runPrepare() int {
 	}
 
 	cookieStore := baidu.NewCookieStore(layout)
+	if err := cookieStore.Save(strings.TrimSpace(string(baiduCookie))); err != nil {
+		return prepareFinish(store, &closed, layout, *stateDBPath, *resultJSON, moverTaskID, err)
+	}
 	browser := prepareBlockedBrowser{}
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	input := strings.TrimSpace(*extractionCode)
@@ -133,7 +138,7 @@ func runPrepare() int {
 		Logger:      logger,
 		CookieStore: cookieStore,
 		NewClient: func(cookieHeader string) (app.BaiduAPI, error) {
-			return oauthClient, nil
+			return baidu.NewClient(cookieHeader)
 		},
 	}
 	if moverTaskID == "" {
@@ -155,11 +160,20 @@ func runPrepare() int {
 			RelayResultsPath:  *relayResultsJSON,
 			RelayManifestPath: *relayManifestJSON,
 			StageWindowBytes:  *stageWindowBytes,
-			NewStagingClient: func(string)(app.StagingBaiduAPI,error){return oauthClient,nil},
-			NewCleanupClient: func(string)(app.CleanupBaiduAPI,error){return oauthClient,nil},
+			NewStagingClient: func(cookieHeader string)(app.StagingBaiduAPI,error){return baidu.NewClient(cookieHeader)},
+			NewCleanupClient: func(cookieHeader string)(app.CleanupBaiduAPI,error){return baidu.NewClient(cookieHeader)},
 		})
 	}
-	return prepareFinish(store, &closed, layout, *stateDBPath, *resultJSON, moverTaskID, err)
+	status := prepareFinish(store, &closed, layout, *stateDBPath, *resultJSON, moverTaskID, err)
+	if *cookieOutput != "" {
+		if latest, readErr := cookieStore.Load(); readErr == nil && latest != "" {
+			if writeErr := os.WriteFile(*cookieOutput, []byte(latest), 0o600); writeErr != nil {
+				fmt.Fprintln(os.Stderr, "write updated browser session:", prepareSafeMessage(writeErr))
+				return 1
+			}
+		}
+	}
+	return status
 }
 
 func prepareFinish(store *state.Store, closed *bool, layout *runtimepath.Layout, checkpointPath, resultPath, moverTaskID string, runErr error) int {
