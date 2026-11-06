@@ -36,7 +36,7 @@ def cookie_header(cookies: list[dict]) -> str:
 def browser_authenticated(context) -> bool:
     response = context.request.post(
         "https://pan.baidu.com/api/gettemplatevariable?channel=chunlei&web=1&app_id=250528&clienttype=0",
-        data={"fields": '["username","loginstate"]'},
+        form={"fields": '["username","loginstate"]'},
         timeout=12000,
     )
     if not response.ok:
