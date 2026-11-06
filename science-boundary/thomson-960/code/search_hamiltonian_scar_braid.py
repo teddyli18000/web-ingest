@@ -247,7 +247,8 @@ def load_seed_files(fewshots,chord_dir):
     if abs(score-RECORD)>1e-7:
         raise RuntimeError(('live score changed',score,RECORD))
     x=sb.load_cert(shot/'certificate.json')
-    seeds=[('R',x)]
+    d2=fewshots/'problems/p007-thomson-problem/shots/Abreto/thomson960-d2-ga/certificate.json'
+    seeds=[('R',x),('D2',sb.load_cert(d2))]
     if chord_dir is not None:
         for name,label in [('A','886-380-s0.48'),('B','886-960-s0.78')]:
             path=chord_dir/f'thomson-saddle-chord-{label}'/'result.json'
