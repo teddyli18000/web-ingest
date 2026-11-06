@@ -4,6 +4,7 @@ import datetime as dt
 import sys
 from pathlib import Path
 import unittest
+from unittest import mock
 
 TASK_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TASK_DIR))
@@ -32,6 +33,30 @@ def source(file_id, size):
 class PrepareWorkerTests(unittest.TestCase):
     def now(self):
         return dt.datetime(2026, 10, 27, 16, 0, tzinfo=UTC)
+
+    def test_auth_updated_can_reenter_a_login_blocked_task(self):
+        task_id = "bd-20261106T160000Z-abcd"
+        task = {"id": task_id, "status": "NEEDS_LOGIN"}
+        gh = mock.Mock()
+        gh.read_json.return_value = ({"active_task": task_id}, None)
+        gh.mock = None
+        with mock.patch.object(prepare_worker.controller, "load_task", return_value=task), \
+             mock.patch.object(prepare_worker, "prepare_ready", return_value=False), \
+             mock.patch.object(prepare_worker.legacy_worker, "update_public_state") as update:
+            result = prepare_worker.run_prepare_worker(gh, mock.Mock(), task_id, "auth-updated")
+            self.assertEqual(result, 0)
+            self.assertEqual(update.call_args.kwargs["status"], "NEEDS_LOGIN")
+
+    def test_login_blocked_task_does_not_restart_without_new_authorization(self):
+        task_id = "bd-20261106T160000Z-abcd"
+        task = {"id": task_id, "status": "NEEDS_LOGIN"}
+        gh = mock.Mock()
+        gh.read_json.return_value = ({"active_task": task_id}, None)
+        with mock.patch.object(prepare_worker.controller, "load_task", return_value=task), \
+             mock.patch.object(prepare_worker, "prepare_ready") as ready:
+            result = prepare_worker.run_prepare_worker(gh, mock.Mock(), task_id, "file-worker-completed")
+            self.assertEqual(result, 0)
+            ready.assert_not_called()
 
     def test_apply_prepare_result_keeps_manifest_totals_and_drive_root(self):
         task = {"id": "task-1", "files_total": 0, "bytes_total": 0, "files_done": 9, "bytes_done": 900}
