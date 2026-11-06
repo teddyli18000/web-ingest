@@ -43,7 +43,7 @@ def expand_semantic_gate_space(edges,nodes,helper_limit,include_and):
                 if h in (a,b):continue
                 edge=(h,op,a,b)
                 if h in old:
-                    new_edges.add(edge)
+                    if h not in INPUTS.values():new_edges.add(edge)
                 elif h not in (0,MASK) and (include_and or h not in complemented):
                     # Several independent ways of constructing the same
                     # helper can matter to the global DAG optimizer.
@@ -52,6 +52,7 @@ def expand_semantic_gate_space(edges,nodes,helper_limit,include_and):
     for h,producers in production.items():
         target_edges=collections.defaultdict(list)
         for t in old:
+            if t in INPUTS.values():continue
             q=t^h
             if q in old and q!=t:
                 target_edges[t].append((t,'XOR',*sorted((h,q))))
@@ -61,7 +62,7 @@ def expand_semantic_gate_space(edges,nodes,helper_limit,include_and):
         if include_and:
             for q in old:
                 t=h&q
-                if t in old and t!=q and t!=h:
+                if t in old and t not in INPUTS.values() and t!=q and t!=h:
                     target_edges[t].append((t,'AND',*sorted((h,q))))
         # Ignore tautological reconstructions of the producer operands,
         # which would be cyclic when the producer edge is selected.
