@@ -1,0 +1,91 @@
+name: temp Ramsey R46 constructive joint core regrowth
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-constructive-regrow.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-constructive-regrow-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 140
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        parent: [baseline35, near14]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native Z3 library
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libz3-4
+          python3 -c "import ctypes,ctypes.util; print(ctypes.util.find_library('z3'))"
+      - name: Select parent and report capacity
+        run: |
+          if [ '${{ matrix.parent }}' = baseline35 ]; then
+            echo "SEED_FILE=science-boundary/ramsey-r46/data/few-shots-baseline.json" >> "$GITHUB_ENV"
+          else
+            echo "SEED_FILE=science-boundary/ramsey-r46/results/algorithm22-calibration-best-14.json" >> "$GITHUB_ENV"
+          fi
+          echo "OUT=$RUNNER_TEMP/regrow-${{ matrix.parent }}" >> "$GITHUB_ENV"
+          nproc
+          free -h
+      - name: Conduct randomized joint-regrowth construction campaign
+        shell: bash
+        run: |
+          mkdir -p "$OUT"
+          for i in $(seq 0 95); do
+            free=$((10 + (i % 5)))
+            rng=$((11062026 + i * 7919 + ${{ matrix.parent == 'near14' && 1000000 || 0 }}))
+            echo "$i $free $rng"
+          done | xargs -P 3 -n 3 bash -c '
+            set -e
+            i="$0"; free="$1"; rng="$2"
+            python3 science-boundary/ramsey-r46/constructive_regrow.py \
+              --seed "$SEED_FILE" --free "$free" --rng "$rng" --timeout 65 \
+              --out "$OUT/witness-$i.json" >> "$OUT/results.ndjson"
+          '
+      - name: Independently verify any breakthrough certificates
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import collections,glob,json,os
+          d=os.environ["OUT"]
+          files=glob.glob(d+"/results.ndjson")
+          if files:
+              rows=[json.loads(s) for s in open(files[0]) if s.strip()]
+              print("Completed:",len(rows),"status:",dict(collections.Counter(x["status"] for x in rows)))
+          print("Candidate certificates:",glob.glob(d+"/witness-*.json"))
+          PY
+          shopt -s nullglob
+          if compgen -G "$OUT/witness-*.json" > /dev/null; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+            for f in "$OUT"/witness-*.json; do
+              mkdir -p "$RUNNER_TEMP/p003-verify"
+              cp "$f" "$RUNNER_TEMP/p003-verify/certificate.json"
+              python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/p003-verify" | tee "$f.verdict"
+              python3 - "$f.verdict" <<'PY'
+          import json,sys
+          r=json.load(open(sys.argv[1]))
+          assert r["valid"] and int(r["score"])>=36,r
+          PY
+            done
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-regrow-${{ matrix.parent }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/regrow-${{ matrix.parent }}/
