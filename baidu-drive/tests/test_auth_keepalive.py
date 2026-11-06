@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import base64
 from pathlib import Path
 import sys
 import tempfile
@@ -12,26 +11,33 @@ import auth_keepalive  # noqa: E402
 
 
 class KeepaliveTests(unittest.TestCase):
-    def test_unconfigured_does_nothing(self):
+    def test_unconfigured_does_not_touch_credentials(self):
         with tempfile.TemporaryDirectory() as tmp, mock.patch.object(
-            auth_keepalive.oauth_state, "ensure_fresh"
-        ) as refresh:
-            self.assertFalse(auth_keepalive.maintain(object(), "", "", "", Path(tmp) / "unused"))
-            refresh.assert_not_called()
+            auth_keepalive.auth_session, "read"
+        ) as read:
+            self.assertFalse(auth_keepalive.maintain(object(), "", "", "", Path(tmp)/"unused"))
+            read.assert_not_called()
 
-    def test_configured_refreshes_both_without_persisting_google_access_token(self):
+    def test_configured_maintains_cookie_and_google_grant(self):
         with tempfile.TemporaryDirectory() as tmp, mock.patch.object(
-            auth_keepalive.oauth_state, "ensure_fresh"
-        ) as baidu, mock.patch.object(
+            auth_keepalive.auth_session, "read", return_value="BDUSS=one; STOKEN=two"
+        ) as read, mock.patch.object(
+            auth_keepalive.auth_session, "save_if_changed"
+        ) as save, mock.patch.object(
+            auth_keepalive.auth_provision, "install_rclone"
+        ) as binary, mock.patch.object(
             auth_keepalive.auth_provision, "refresh_google_token"
-        ) as google:
-            base = Path(tmp) / "auth"
-            key = base64.b64encode(b"q" * 32).decode()
-            self.assertTrue(auth_keepalive.maintain(object(), "oauth-json", "config", key, base))
-            baidu.assert_called_once()
-            google.assert_called_once()
-            self.assertEqual((base / "google-rclone.conf").read_text(), "config")
-            self.assertEqual((base / "google-rclone.conf").stat().st_mode & 0o077, 0)
+        ) as refresh, mock.patch.object(
+            auth_keepalive.auth_provision, "validate_google"
+        ):
+            root = Path(tmp)/"auth"
+            self.assertTrue(auth_keepalive.maintain(object(), "BDUSS=one; STOKEN=two", "config", "key", root))
+            read.assert_called_once()
+            save.assert_called_once()
+            binary.assert_called_once()
+            refresh.assert_called_once()
+            self.assertEqual((root/"google-rclone.conf").read_text(), "config")
+            self.assertEqual((root/"google-rclone.conf").stat().st_mode & 0o077, 0)
 
 
 if __name__ == "__main__":
