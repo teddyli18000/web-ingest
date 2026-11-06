@@ -1,0 +1,70 @@
+name: temp p004 constructive asymmetric per-X fiber search
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7p004-asymmetric-fibers.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: temp-c7p004-asymmetric-fibers
+  cancel-in-progress: false
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {parent: neutral14a, aux: port12a, left: 8, right: 9}
+          - {parent: neutral14b, aux: port12b, left: 9, right: 10}
+          - {parent: neutral14a, aux: port12b, left: 10, right: 12}
+          - {parent: neutral14b, aux: port12a, left: 11, right: 13}
+          - {parent: neutral14a, aux: neutral14b, left: 12, right: 14}
+          - {parent: neutral14b, aux: neutral14a, left: 9, right: 12}
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'ortools>=9.11,<10' 'numpy>=1.26,<3'
+      - name: Recover two public auxiliary 367 codes
+        run: |
+          mkdir -p /tmp/c7-asym/aux /tmp/c7-asym/a /tmp/c7-asym/b
+          gh run download 42024771296 --repo "${{ github.repository }}" --name c7-port-walk-2026110552 --dir /tmp/c7-asym/a
+          gh run download 42024771296 --repo "${{ github.repository }}" --name c7-port-walk-2026110554 --dir /tmp/c7-asym/b
+          cp /tmp/c7-asym/a/best_private367.ids /tmp/c7-asym/aux/port12a.ids
+          cp /tmp/c7-asym/b/best_private367.ids /tmp/c7-asym/aux/port12b.ids
+      - name: Construct complete asymmetric 10D row and column fibers
+        run: |
+          python science-boundary/shannon-capacity-c7/code/c7p004_joint_asymmetric_fibers_construct.py \
+            science-boundary/shannon-capacity-c7/data/circular-neutral-high-port-p004.json \
+            /tmp/c7-asym/aux /tmp/c7-asym/results \
+            --parent "${{ matrix.parent }}" --aux "${{ matrix.aux }}" \
+            --left "${{ matrix.left }}" --right "${{ matrix.right }}" \
+            --seconds 220 --workers 4
+      - name: Official verifier for any 10D improvement
+        run: |
+          if test -s /tmp/c7-asym/results/certificate.json; then
+            git clone --quiet --depth 1 https://github.com/few-shots/few-shots.git /tmp/fewshots
+            python /tmp/fewshots/problems/p004-shannon-capacity-c7/verify/verify.py /tmp/c7-asym/results
+          else
+            echo 'No >134753 candidate from this asymmetric fiber case.'
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c7asym-${{ matrix.parent }}-${{ matrix.aux }}-${{ matrix.left }}x${{ matrix.right }}
+          path: |
+            /tmp/c7-asym/results/status.json
+            /tmp/c7-asym/results/certificate.json
+            /tmp/c7-asym/results/best_certificate.json
+          retention-days: 14
