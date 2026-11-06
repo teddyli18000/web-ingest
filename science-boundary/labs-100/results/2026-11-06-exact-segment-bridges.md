@@ -78,6 +78,19 @@ For the interleaved 50-bit parity halves, all 10,200 choices of a nonempty align
 
 These are small, reproducible transformation censuses, not a global upper bound.
 
+## Follow-up geometry audit: distance to the incumbent symmetry orbit
+
+An independent check measured the minimum Hamming distance of every one-step candidate to **any** of the eight reversal/negation/alternation images of the incumbent (not merely distance from its printed orientation).
+
+- At orbit distance 0, there are 1,002 operation hits, all E578.
+- At orbit distance 1, the minimum energy is E686; the two-step beam's final nontrivial E686 witness lies exactly one bit from the incumbent (O=178). Thus this score is **not** evidence for a novel distant basin.
+- At orbit distance 2, the minimum energy is E874.
+- Across all candidates with orbit distance >=8, the minimum energy is E722 (O=146); this witness is the incumbent after alternating-sign symmetry followed by rotation by two positions. Thus even that relatively low-energy, Hamming-far state is a familiar rotated incumbent, not a new independent elite construction.
+
+The orbit-distance audit independently rescored all candidate strings via the packed original LABS formula, and a literal double-sum scorer confirmed the E686 and E722 witnesses.
+
+This is a cautionary outcome: allowing a large *nominal* Hamming displacement does not imply a genuinely new structural basin. The proposed segment operator is not worth scaling unchanged.
+
 ## Interpretation and pivot
 
 These checks constrain specific large-move interfaces, but do not warrant repeating them at greater depth. Unrestricted and odd-lag-constrained heuristic basins remain disconnected in terms of **joint** odd/even quality. The single best published candidate E578 is unusually isolated even under coherent segment transformations.
