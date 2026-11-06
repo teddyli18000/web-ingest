@@ -19,6 +19,7 @@ on:
 permissions:
   contents: write
   actions: write
+  issues: write
 
 concurrency:
   group: baidu-drive-live-state
@@ -33,6 +34,8 @@ jobs:
       PYTHONDONTWRITEBYTECODE: '1'
       BAIDU_DRIVE_TASK_ID: ${{ inputs.task_id || '' }}
       BAIDU_DRIVE_REASON: ${{ github.event_name == 'workflow_run' && 'file-worker-completed' || inputs.reason || 'manual' }}
+      BAIDU_DRIVE_BAIDU_SESSION: ${{ secrets.BAIDU_DRIVE_BAIDU_SESSION }}
+      BAIDU_DRIVE_STATE_KEY: ${{ secrets.BAIDU_DRIVE_STATE_KEY }}
     steps:
       - name: Checkout Baidu Drive task
         uses: actions/checkout@v4
@@ -61,7 +64,6 @@ jobs:
         run: |
           mkdir -p .prepare-core/cmd/baidu-drive-prepare
           cp baidu-drive/mover/prepare-main.go .prepare-core/cmd/baidu-drive-prepare/main.go
-          cp baidu-drive/mover/oauth_baidu.go .prepare-core/cmd/baidu-drive-prepare/oauth_baidu.go
           cp baidu-drive/mover/action_relay.go .prepare-core/cmd/baidu-drive-prepare/action_relay.go
           cp baidu-drive/mover/action_recovery.go .prepare-core/internal/state/action_recovery.go
           cd .prepare-core
@@ -73,7 +75,7 @@ jobs:
 
       - name: Provision ephemeral Baidu and Google credentials
         env:
-          BAIDU_DRIVE_BAIDU_OAUTH: ${{ secrets.BAIDU_DRIVE_BAIDU_OAUTH }}
+          BAIDU_DRIVE_BAIDU_SESSION: ${{ secrets.BAIDU_DRIVE_BAIDU_SESSION }}
           BAIDU_DRIVE_RCLONE_CONFIG: ${{ secrets.BAIDU_DRIVE_RCLONE_CONFIG }}
           BAIDU_DRIVE_STATE_KEY: ${{ secrets.BAIDU_DRIVE_STATE_KEY }}
         run: python3 baidu-drive/auth_provision.py prepare
@@ -83,3 +85,7 @@ jobs:
           python3 baidu-drive/prepare_worker.py
           --task-id "$BAIDU_DRIVE_TASK_ID"
           --reason "$BAIDU_DRIVE_REASON"
+
+      - name: Notify only on login-state changes
+        if: always()
+        run: python3 baidu-drive/auth_notice.py
