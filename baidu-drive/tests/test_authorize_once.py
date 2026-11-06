@@ -26,6 +26,18 @@ class AuthorizeOnceTests(unittest.TestCase):
         )
         self.assertEqual(authorize_once.cookie_header(cookies[:1]), "")
 
+    def test_stale_cookies_do_not_count_as_authenticated(self):
+        context = mock.Mock()
+        context.request.post.return_value = mock.Mock(
+            ok=True, json=lambda: {"errno": 0, "result": {"loginstate": 0}}
+        )
+        self.assertFalse(authorize_once.browser_authenticated(context))
+        context.request.post.return_value = mock.Mock(
+            ok=True, json=lambda: {"errno": 0, "result": {"loginstate": 1}}
+        )
+        self.assertTrue(authorize_once.browser_authenticated(context))
+        self.assertIn("fields", context.request.post.call_args.kwargs["form"])
+
     def test_google_remote_only_exports_dedicated_remote(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp)/"rclone.conf"
