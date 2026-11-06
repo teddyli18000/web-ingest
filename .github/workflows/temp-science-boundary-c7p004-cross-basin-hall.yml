@@ -1,0 +1,66 @@
+name: temp p004 constructive Hall relinking across independent record basins
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7p004-cross-basin-hall.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-c7p004-cross-basin-hall
+  cancel-in-progress: false
+jobs:
+  combine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5]
+    env:
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch pinned alternative independently verified 134753-point code
+        run: |
+          git clone --quiet --depth 1 https://github.com/few-shots/few-shots.git /tmp/c7-few-shots
+          python3 /tmp/c7-few-shots/problems/p004-shannon-capacity-c7/verify/verify.py /tmp/c7-few-shots/problems/p004-shannon-capacity-c7/baseline
+          git init --quiet /tmp/c7-tandon
+          git -C /tmp/c7-tandon fetch --quiet --depth 1 https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git c753408492dde92a239708986d16c15dbf6c3235
+          git -C /tmp/c7-tandon checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-tandon rev-parse HEAD)" = c753408492dde92a239708986d16c15dbf6c3235
+          mkdir -p /tmp/c7-basin /tmp/c7-result
+          python3 science-boundary/shannon-capacity-c7/code/bpz_jplus_seed.py \
+            /tmp/c7-tandon /tmp/c7-basin/certificate.json /tmp/c7-basin/status.json
+          python3 /tmp/c7-few-shots/problems/p004-shannon-capacity-c7/verify/verify.py /tmp/c7-basin
+      - name: Compile exact bipartite re-linker
+        run: |
+          g++ -std=c++17 -O3 -Wall -Wextra \
+            science-boundary/shannon-capacity-c7/code/c7p10_hall_construct.cpp -o /tmp/c7-result/relink
+      - name: Optimize union of public Itty and independent BPZ J-plus 10D codes
+        run: |
+          /tmp/c7-result/relink \
+            /tmp/c7-few-shots/problems/p004-shannon-capacity-c7/baseline/certificate.json \
+            "${{ matrix.shard }}0" 10 /tmp/c7-result \
+            /tmp/c7-basin/certificate.json | tee /tmp/c7-result/search.log
+      - name: Official Few Shots verifier on any new record
+        run: |
+          if test -s /tmp/c7-result/certificate.json; then
+            python3 /tmp/c7-few-shots/problems/p004-shannon-capacity-c7/verify/verify.py /tmp/c7-result
+          else
+            echo 'No better independent code in the tested cross-basin unions.'
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c7-cross-basin-hall-${{ matrix.shard }}
+          path: |
+            /tmp/c7-result/search.log
+            /tmp/c7-result/certificate.json
+            /tmp/c7-basin/status.json
+          retention-days: 14
