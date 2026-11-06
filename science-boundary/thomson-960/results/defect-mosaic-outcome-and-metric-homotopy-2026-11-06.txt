@@ -1,0 +1,62 @@
+Thomson N=960 — defective-core mosaic offspring campaign (2026-11-06)
+
+Accepted score R=444368.3924061973 (Few Shots p007; board on main as of 2026-11-06).
+Experiment: science-boundary/thomson-960/code/search_mosaic_scar_genomes.py
+Run https://github.com/teddyli18000/web-ingest/actions/runs/42257750496 (all 3 jobs green)
+Artifacts: thomson-mosaic-scar-core-91901, -91902, -91903
+Seeds 91901,91902,91903, each 450 fully physically quenched N960 Coulomb configurations.
+Total 1,350 legitimate N960 minimizations.
+Generate a 12-entry donor genotype, one per distinct scar core of record R.
+Each core independently picks R, W, A, B, D2, including C3 rotated
+versions; Gaussian blend local tangent displacement fields on sphere.
+Crossover/mutation/recycling select genotypes using actual quenched Coulomb
+energies, not an intermediate defect count. Physical N960 has NO
+symmetry constraint. Compiled numba pairwise Coulomb gradient, L-BFGS.
+
+Actual results:
+  seed91901: best E=444368.3924061973 R, no record candidate,
+       10 selected novel basins; lowest labeled novel E=444368.4344266609;
+       another new E=444368.4549304409, +0.0625242436 to R.
+  seed91902: best E=444368.3924061973 R, no record candidate,
+       10 selected novel basins; lowest labeled novel E=444368.4344266608;
+       next E=444368.44152990426, +0.049123707.
+  seed91903: best E=444368.3924061973 R, no record candidate,
+       10 selected novel basins; lowest labeled novel E=444368.4344266608;
+       next E=444368.44415125594, +0.0517450586.
+  Across all three, minimum genuinely new E~444368.4344266608 is
+  HIGHER than previous independently repolished W=444368.42162124.
+  Thus no improvement in quality frontier; counts of new higher local
+  minima do not imply progress toward record. No official p007
+  certificate submitted.
+
+Data notes: mosaic artifact result.json contains full coordinates of
+up to 12 novel basins and the full gene/energy histories per seed.
+Novelty was detected by simple energy classification; the same label
+"novel" in separate seeds could be the *same* basin, so do not report
+the nominal 30 detections as 30 distinct stationary points.
+Grad RMS after quench typically 1e-6 to 1e-5; upper rows with larger
+R residuals were not candidates and were not independent-polished.
+The experimental operator still used fixed globally learned R→parent
+fields and only varied 12 localized mixing weights, so plastic topology
+changes incompatible with all donors may require different physics.
+
+Reformulation: change the interaction landscape rather than only the
+deformation geometry. Two parallel constructive families:
+ - Riesz exponent r^-s homotopy (code/search_riesz_exponent_cycles.py,
+   Action 42258720979), varying exponent to temporarily soften/harden
+   Coulombic elastic penalties, then return to s=1 for final scoring.
+ - anisotropic metric loops (code/search_anisotropic_metric_loops.py,
+   Action 42261470927) locally relax with
+       E_Q = sum[(x_i-x_j)^T Q (x_i-x_j)]^-1/2
+   for SPD Q=exp(sym traceless S), traverse two noncommuting defect-centered
+   distortions in a closed loop, then restore Q=I. This explicitly breaks
+   rotational symmetry / moves the metric, and unlike the 12-core mosaic
+   alters actual energies and basins during relaxation.
+Both are evaluated on genuine 960-particle Coulomb energy after complete
+return to original physical objective. Both save all numerically subrecord
+candidate coordinates, to be independently polished and officially verified.
+
+Sources:
+  Few Shots board https://github.com/few-shots/few-shots/blob/main/data/board.json
+  Amore & Wales JCP 2026 https://doi.org/10.1063/5.0355867
+  Riesz database https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/site/index.html
