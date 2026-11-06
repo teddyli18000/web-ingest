@@ -1,0 +1,86 @@
+name: temp Ramsey R46 core32 multi-parent constructive fusion
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-core32-fusion.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-core32-fusion-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  fusion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        seed: [20261106, 20261107]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Bliss graph canonicalization
+        run: python3 -m pip install -q "igraph>=0.11,<2"
+      - name: Construct multi-parent 36-vertex fusions
+        run: |
+          python3 science-boundary/ramsey-r46/core32_multiparent_fusion.py \
+            --samples-per-parent 2000 --max-signatures 24 \
+            --rng ${{ matrix.seed }} \
+            --outdir "$RUNNER_TEMP/ramsey-core32-fusion"
+      - name: Independent certificate recount and Few Shots check if exact
+        if: always()
+        shell: bash
+        run: |
+          test ! -f "$RUNNER_TEMP/ramsey-core32-fusion/summary.json" || cat "$RUNNER_TEMP/ramsey-core32-fusion/summary.json"
+          if [ -f "$RUNNER_TEMP/ramsey-core32-fusion/best-36.json" ]; then
+            python3 - <<'PY'
+          import json,itertools,os
+          p=os.environ["RUNNER_TEMP"]+"/ramsey-core32-fusion/best-36.json"
+          r=json.load(open(p))["adjacency"]
+          assert len(r)==36 and all(len(s)==36 for s in r)
+          assert all(r[i][i]=="0" and all(r[i][j]==r[j][i] for j in range(36)) for i in range(36))
+          a=sum(all(r[i][j]=="1" for i,j in itertools.combinations(s,2)) for s in itertools.combinations(range(36),4))
+          full=(1<<36)-1
+          comp=[sum(1<<j for j in range(36) if i!=j and r[i][j]=="0") for i in range(36)]
+          def count(k,c):
+              if not k:return 1
+              z=0
+              while c.bit_count()>=k:
+                  b=c&-c;v=b.bit_length()-1;c^=b;z+=count_next(k-1,c&comp[v])
+              return z
+          def count_next(k,c):
+              if not k:return 1
+              z=0
+              while c.bit_count()>=k:
+                  b=c&-c;v=b.bit_length()-1;c^=b;z+=count_next(k-1,c&comp[v])
+              return z
+          b=count_next(6,full)
+          print("Independent verification: K4=",a,"I6=",b)
+          summary=json.load(open(os.environ["RUNNER_TEMP"]+"/ramsey-core32-fusion/summary.json"))
+          assert summary["best_improvement"]["K4"]==a and summary["best_improvement"]["I6"]==b
+          PY
+            if python3 - <<'PY'
+          import json,os,sys
+          x=json.load(open(os.environ["RUNNER_TEMP"]+"/ramsey-core32-fusion/summary.json"))
+          sys.exit(0 if x["best_improvement"] and x["best_improvement"]["defects"]==0 else 1)
+          PY
+            then
+              git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+              mkdir -p "$RUNNER_TEMP/verify"
+              cp "$RUNNER_TEMP/ramsey-core32-fusion/best-36.json" "$RUNNER_TEMP/verify/certificate.json"
+              python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/verify"
+            fi
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-core32-multiparent-${{ matrix.seed }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/ramsey-core32-fusion/
