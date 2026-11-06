@@ -17,7 +17,7 @@ import zipfile
 
 import auth_session
 import controller
-import oauth_state
+import auth_cipher
 
 RCLONE_ARCHIVE = "rclone-v1.74.4-linux-amd64.zip"
 RCLONE_SHA256 = "fe435e0c36228e7c2f116a8701f01127bb1f694005fc11d1f27186c8bca4115d"
@@ -32,7 +32,7 @@ class AuthError(RuntimeError):
 
 
 def validate_google(config_text: str, state_key: str) -> configparser.SectionProxy:
-    oauth_state.key_bytes(state_key)
+    auth_cipher.key_bytes(state_key)
     parser = configparser.ConfigParser(interpolation=None)
     try:
         parser.read_string(config_text)
@@ -146,7 +146,7 @@ def main() -> int:
     args = parser.parse_args()
     try:
         configured = provision(args.mode)
-    except (AuthError, auth_session.SessionError, oauth_state.OAuthError):
+    except (AuthError, auth_session.SessionError, auth_cipher.CipherError):
         print("Baidu Drive runner authentication provisioning failed.")
         return 1
     print("Runner authentication ready." if configured else "Baidu Drive login is not configured.")
