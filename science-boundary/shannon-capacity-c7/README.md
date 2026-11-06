@@ -12,6 +12,11 @@ The 134,753-point construction is a highly structured record-scale object built 
 
 ## Current state
 
+**2026-11-06 active frontier — frozen 12-private-owner circular basins, verified port search:** Two new 367-point five-dimensional witnesses have **12 distinct private owners** each and admit respectively **48** and **576** valid ten-port orientations; they are preserved as [port12a](data/circular-port12-port12a-2026-11-05.json) and [port12b](data/circular-port12-port12b-2026-11-05.json). Exhaustive cyclic-FFT scans of every t=9/t=10 orientation against **41** pinned public auxiliary codes and all **16,807** translations each found no disjoint auxiliary: best t=10 defects are **8** and **9**, best t=9 defects **5** and **7**. [Full experiment record and hosted verification](results/circular-port12-t9-t10-campaign-2026-11-06.md). **No improved p004 score.**
+
+**Constructive threshold and next distinct mechanism:** For a valid t=10 port set, a *D-free 366-point auxiliary* already yields **134,769** ten-dimensional points through `(367-10)^2+2×10×366`, beating 134,753. The best pinned t=10 near miss has 8 auxiliary words in its forbidden 1,229-word region. Instead of another translation sweep of the same 41 codes or a larger fixed-core exchange radius, jointly reconstruct the auxiliary's internal structure to retain **at least 366** allowed words. A valid t=11 orientation would lower the required auxiliary size to **365**, but neither frozen parent admits t=11 under its current private pairs.
+
+
 **2026-11-04 exact computational closure:** The entire free-label/full-phase reconstruction family based on 38 pinned public 367-word `C7^5` codes has verified optimum **367** on every coordinate axis. It allows complete 4D slice templates from any original symbol label to be placed at any destination label and translated independently by any of the 2,401 four-dimensional shifts. Across **6,882** ordered template pairs, **6,174** have no compatible relative phase; **708** admit only the zero phase; no nonzero relative phase is compatible. The resulting 7-cycle DP optimum is exactly **367** on all five axes, independently replayed by 4D integer convolution. See [full theorem and two reproductions](results/c7p5-free-label-full-phase-closure-2026-11-04.md). **This is not a bound on all of `C7^5`; no p004 record improvement.**
 
 **New search-space decision:** Stop extending translations/relabelings of unchanged public slices. Search must introduce genuinely new **internal 4D slice shapes** or genuinely independent 5D parent basins, and jointly optimize them with neighboring layers. The exact two-layer MILP pilot found only 367, and the 3,000-variable full three-layer CP-SAT probes timed out as `UNKNOWN`; see [whole-layer block frontier](results/c7p5-whole-layer-blocks-2026-11-04.md).
@@ -108,10 +113,16 @@ The original exploratory implementations remain historically available in `temp-
 
 ## Next steps
 
-1. Build a **new 4D slice-template generation mechanism** that changes the internal selected words, not merely their translation or original symbol labels. Couple candidate validity across the 7-cycle before interpreting a high-scoring local layer as a global improvement.
-2. Seek structurally distinct 5D source basins, e.g. algebraic or circular-code constructions outside the pinned I0/X/Family-F corpus, before recombination.
-3. Any `C7^5` witness of 368 would square to 135,424 points; replay all pairs and run the upstream Few Shots p004 verifier before making a breakthrough claim.
-4. The public p004 target remains 134,754 points; keep negative results scoped to their precise family.
+1. Construct an independent **366-point** `C7^5` auxiliary disjoint from the explicit eight-hit ten-port obstruction `D` of size 1,229; then build and run the upstream verifier on the resulting **134,769-point** ten-dimensional certificate.
+2. Re-parameterize neutral 367-word parent changes to change the *conflict graph between private neighbors*. Two disjoint odd triangles explain the current t<=10 limit in port12b; a genuine t=11 oriented parent together with a D-free 365-word auxiliary would instead yield **134,766**.
+3. If joint source/auxiliary reconstruction fails to improve constructive candidate quality, reassess the gadget interface itself rather than merely increasing time limits on the same restricted MILP.
+4. The original independent 368-word `C7^5` target would still square to 135,424. Verify every purported improvement with Few Shots p004 before a new-record claim.
+
+## Historical 2026-11-04 next steps (superseded)
+
+1. Build a **new 4D slice-template generation mechanism** that changes the internal selected words, not merely their translation or original symbol labels. Couple candidate validity across the 7-cycle.
+2. Seek structurally distinct 5D source basins outside the pinned I0/X/Family-F corpus.
+3. Any `C7^5` witness of 368 would square to 135,424 points.
 
 ## Historical next steps (2026-10-27)
 
