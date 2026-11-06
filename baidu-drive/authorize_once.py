@@ -64,7 +64,7 @@ def browser_login(profile: Path = CHROME_PROFILE, timeout_seconds: int = 600) ->
             while time.monotonic() < deadline:
                 session = cookie_header(context.cookies("https://pan.baidu.com/"))
                 if session and browser_authenticated(context):
-                    return session
+                    return cookie_header(context.cookies("https://pan.baidu.com/"))
                 page.wait_for_timeout(1800)
             raise RuntimeError("Baidu login was not completed")
         finally:
