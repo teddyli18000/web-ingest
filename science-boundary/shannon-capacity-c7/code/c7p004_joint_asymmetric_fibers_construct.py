@@ -105,16 +105,24 @@ def main():
     p.add_argument("--seconds",type=int,default=220)
     p.add_argument("--workers",type=int,default=4)
     p.add_argument("--seed",type=int,default=2026110689)
+    p.add_argument("--aux-file",type=Path)
     a=p.parse_args()
     src=parent_codes(a.parents)
     I=src[a.parent]
-    S=src.get(a.aux)
-    if S is None:S=list(map(int,(a.auxiliary/(a.aux+".ids")).read_text().split()))
     _,E,_=private_universe(I)
-    X,offset,active_min=choose_shift(S,E,a.rank)
+    if a.aux_file:
+        X=sorted(map(int,a.aux_file.read_text().split()))
+        assert len(X)==367 and legal(X) and not set(X).intersection(E)
+        endpoint_neighborhood={z for e in E for z in NB[e]}
+        active_min=sum(x in endpoint_neighborhood for x in X)
+        offset=None
+    else:
+        S=src.get(a.aux)
+        if S is None:S=list(map(int,(a.auxiliary/(a.aux+".ids")).read_text().split()))
+        X,offset,active_min=choose_shift(S,E,a.rank)
     a.out.mkdir(parents=True,exist_ok=True)
     result=solve(I,X,a.left,a.right,a.seconds,a.workers,a.seed,a.out)
-    result.update({"parent":a.parent,"auxiliary":a.aux,"shift":list(offset),
+    result.update({"parent":a.parent,"auxiliary":a.aux,"shift":list(offset) if offset is not None else None,
                    "chosen_rank":a.rank,"phase_active_count":active_min})
     (a.out/"status.json").write_text(json.dumps(result,indent=2,sort_keys=True)+"\n")
     print("FINAL",json.dumps(result,sort_keys=True),flush=True)
