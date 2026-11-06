@@ -203,8 +203,7 @@ def main():
         pert=hb.transport(x,rng,centers,move,kind)
         md=hb.min_spacing(pert);contract=0
         while md<.038 and contract<6:
-            pert=hb.expmap(x,np.arccos(np.clip(np.sum(x*pert,axis=1),-1,1))[:,None]*
-                   np.zeros_like(x)) if False else .5*(x+pert)
+            pert=.5*(x+pert)
             pert/=np.linalg.norm(pert,axis=1)[:,None]
             md=hb.min_spacing(pert);contract+=1
         if md<.038:
