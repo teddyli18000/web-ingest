@@ -58,10 +58,11 @@ def expand_semantic_gate_space(edges,nodes,helper_limit,include_and):
             q^=MASK
             if q in old and q!=t:
                 target_edges[t].append((t,'XNOR',*sorted((h,q))))
-            if include_and:
-                for q in old:
-                    if q!=h and (h&q)==t and t!=q:
-                        target_edges[t].append((t,'AND',*sorted((h,q))))
+        if include_and:
+            for q in old:
+                t=h&q
+                if t in old and t!=q and t!=h:
+                    target_edges[t].append((t,'AND',*sorted((h,q))))
         # Ignore tautological reconstructions of the producer operands,
         # which would be cyclic when the producer edge is selected.
         for t in list(target_edges):
