@@ -64,6 +64,7 @@ jobs:
         run: |
           mkdir -p .prepare-core/cmd/baidu-drive-prepare
           cp baidu-drive/mover/prepare-main.go .prepare-core/cmd/baidu-drive-prepare/main.go
+          cp baidu-drive/mover/browser_session_client.go .prepare-core/cmd/baidu-drive-prepare/browser_session_client.go
           cp baidu-drive/mover/action_relay.go .prepare-core/cmd/baidu-drive-prepare/action_relay.go
           cp baidu-drive/mover/action_recovery.go .prepare-core/internal/state/action_recovery.go
           cd .prepare-core
