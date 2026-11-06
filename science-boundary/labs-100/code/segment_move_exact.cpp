@@ -79,4 +79,5 @@ int main(int argc,char**argv){
      <<" le578="<<best.le578<<" le650="<<best.le650
      <<" wall_ms="<<chrono::duration_cast<chrono::milliseconds>(
         chrono::steady_clock::now()-start).count()<<" seq="<<fmt(best.seq)<<"\n";
+ return 0;
 }
