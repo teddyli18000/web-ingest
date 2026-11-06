@@ -54,22 +54,21 @@ func runRelayStepCommand() int {
 	fs.SetOutput(os.Stderr)
 	inputPath := fs.String("input-json", "", "runner-local relay state input")
 	outputPath := fs.String("output-json", "", "runner-local relay step output")
-	baiduTokenPath := fs.String("baidu-access-token-file", "", "runner-local Baidu OAuth access token")
-	baiduAppRoot := fs.String("baidu-app-root", "", "Baidu OAuth authorized application directory")
+	baiduCookiePath := fs.String("baidu-cookie-file", "", "runner-local Baidu browser cookie file")
 	tokenPath := fs.String("drive-access-token-file", "", "runner-local Drive access token file")
 	keyPath := fs.String("state-key-file", "", "runner-local base64 AES-256 state key file")
 	if err := fs.Parse(os.Args[1:]); err != nil {
 		return 2
 	}
-	if fs.NArg() != 0 || strings.TrimSpace(*inputPath) == "" || strings.TrimSpace(*outputPath) == "" || strings.TrimSpace(*baiduTokenPath) == "" || strings.TrimSpace(*baiduAppRoot) == "" || strings.TrimSpace(*tokenPath) == "" || strings.TrimSpace(*keyPath) == "" {
-		fmt.Fprintln(os.Stderr, "input-json, output-json, baidu-access-token-file, baidu-app-root, drive-access-token-file and state-key-file are required")
+	if fs.NArg() != 0 || strings.TrimSpace(*inputPath) == "" || strings.TrimSpace(*outputPath) == "" || strings.TrimSpace(*baiduCookiePath) == "" || strings.TrimSpace(*tokenPath) == "" || strings.TrimSpace(*keyPath) == "" {
+		fmt.Fprintln(os.Stderr, "input-json, output-json, baidu-cookie-file, drive-access-token-file and state-key-file are required")
 		return 2
 	}
 	input, err := readRelayStepInput(*inputPath)
 	if err != nil {
 		return writeRelayStepFailure(*outputPath, "input", err)
 	}
-	baiduToken, err := readSecretFile(*baiduTokenPath, 1<<20, "Baidu OAuth token")
+	baiduCookie, err := readSecretFile(*baiduCookiePath, 1<<20, "Baidu browser cookies")
 	if err != nil {
 		return writeRelayStepFailure(*outputPath, "auth", err)
 	}
@@ -81,7 +80,7 @@ func runRelayStepCommand() int {
 	if err != nil {
 		return writeRelayStepFailure(*outputPath, "auth", err)
 	}
-	output, runErr := runRelayStep(context.Background(), input, baiduToken, *baiduAppRoot, accessToken, stateKey)
+	output, runErr := runRelayStep(context.Background(), input, baiduCookie, accessToken, stateKey)
 	if runErr != nil {
 		if output.ErrorKind == "" {
 			output.ErrorKind = classifyRelayStepError(runErr)
@@ -99,7 +98,7 @@ func runRelayStepCommand() int {
 	return 0
 }
 
-func runRelayStep(ctx context.Context, input relayStepInput, baiduToken, baiduAppRoot, accessToken, stateKey string) (relayStepOutput, error) {
+func runRelayStep(ctx context.Context, input relayStepInput, baiduCookie, accessToken, stateKey string) (relayStepOutput, error) {
 	if strings.TrimSpace(input.TaskID) == "" || strings.TrimSpace(input.FileID) == "" {
 		return relayStepOutput{}, fmt.Errorf("task and file IDs are required")
 	}
@@ -141,8 +140,10 @@ func runRelayStep(ctx context.Context, input relayStepInput, baiduToken, baiduAp
 		}, nil
 	}
 
-	source, err := newOAuthBaidu(baiduToken,baiduAppRoot)
-	if err != nil {return relayStepOutput{ErrorKind: "auth"}, fmt.Errorf("initialize Baidu OAuth relay source: %w",err)}
+	source, err := baidu.NewClient(baiduCookie)
+	if err != nil || !source.HasLoginCookies() {
+		return relayStepOutput{ErrorKind: "auth"}, baidu.ErrAuthRequired
+	}
 
 	sessionURI := ""
 	sealed := strings.TrimSpace(input.SessionSealed)
