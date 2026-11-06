@@ -1,0 +1,62 @@
+name: temp-aes-care-cone-evolution
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/care_cone_evolution.py'
+      - '.github/workflows/temp-aes-care-cone-evolution.yml'
+permissions:
+  contents: read
+jobs:
+  constructive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - seed: fs-101
+            rng: 10
+          - seed: fs-101
+            rng: 11
+          - seed: fs-101
+            rng: 12
+          - seed: fs-101
+            rng: 13
+          - seed: fs-101
+            rng: 14
+          - seed: fs-101
+            rng: 15
+          - seed: nist-g103
+            rng: 16
+          - seed: nist-g104
+            rng: 17
+    steps:
+      - uses: actions/checkout@v4
+      - name: Evolve complete circuits with care-equivalent nonlinear cone refactors
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/care_cone_evolution.py
+          python science-boundary/aes-sbox-circuit/care_cone_evolution.py \
+            --seed '${{ matrix.seed }}' --rng '${{ matrix.rng }}' \
+            --seconds 300 --max-pool 80 --roots-per-step 7 --solutions-per-cone 60 \
+            --out result | tee run.log
+          python -c "import json; d=json.load(open('result/summary.json')); assert d['best_all_256']; print(d)"
+      - name: Official verifier for any <=100 gate candidate
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/p008shot
+            cp result/candidate.json /tmp/p008shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/p008shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-care-cone-${{ matrix.seed }}-${{ matrix.rng }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
