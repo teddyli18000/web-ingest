@@ -33,6 +33,19 @@ def cookie_header(cookies: list[dict]) -> str:
     return "; ".join(f"{name}={value}" for name, value in sorted(allowed.items()))
 
 
+def browser_authenticated(context) -> bool:
+    response = context.request.post(
+        "https://pan.baidu.com/api/gettemplatevariable?channel=chunlei&web=1&app_id=250528&clienttype=0",
+        data={"fields": '["username","loginstate"]'},
+        timeout=12000,
+    )
+    if not response.ok:
+        return False
+    payload = response.json()
+    result = payload.get("result") or {}
+    return payload.get("errno") == 0 and result.get("loginstate") in (True, 1, "1")
+
+
 def browser_login(profile: Path = CHROME_PROFILE, timeout_seconds: int = 600) -> str:
     try:
         from playwright.sync_api import sync_playwright
@@ -50,7 +63,7 @@ def browser_login(profile: Path = CHROME_PROFILE, timeout_seconds: int = 600) ->
             deadline = time.monotonic() + timeout_seconds
             while time.monotonic() < deadline:
                 session = cookie_header(context.cookies("https://pan.baidu.com/"))
-                if session:
+                if session and browser_authenticated(context):
                     return session
                 page.wait_for_timeout(1800)
             raise RuntimeError("Baidu login was not completed")
