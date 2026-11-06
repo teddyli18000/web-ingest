@@ -1,0 +1,61 @@
+name: temp-aes-semantic-parent-recombination
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/semantic_parent_recombination.py'
+      - '.github/workflows/temp-aes-semantic-parent-recombination.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  constructive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - parents: 12
+            rng: 1
+          - parents: 26
+            rng: 2
+          - parents: 41
+            rng: 3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download independently verified 101-gate parents
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 42252448125
+          github-token: ${{ github.token }}
+          pattern: aes-care-cone-fs-101-*
+          path: parent-archive
+          merge-multiple: false
+      - name: Jointly synthesize from semantic gate hyperedges
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet ortools
+          python -m py_compile science-boundary/aes-sbox-circuit/semantic_parent_recombination.py
+          python science-boundary/aes-sbox-circuit/semantic_parent_recombination.py \
+            --archive-dir parent-archive --max-parents '${{ matrix.parents }}' \
+            --seconds 360 --workers 4 --rng '${{ matrix.rng }}' --out result | tee run.log
+          python -c "import json; d=json.load(open('result/summary.json')); assert d['verified_all_256']; print(d)"
+      - name: Check candidate with the official Few Shots verifier
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/p008shot
+            cp result/candidate.json /tmp/p008shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/p008shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-semantic-parent-recombination-${{ matrix.parents }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
