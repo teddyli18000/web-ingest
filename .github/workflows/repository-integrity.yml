@@ -116,7 +116,7 @@ jobs:
         run: |
           python3 -m py_compile git-mirror/*.py
           python3 -m unittest discover -s git-mirror/tests -v
-      - name: Install Baidu OAuth state test dependency
+      - name: Install encrypted browser-session test dependency
         run: python3 -m pip install "cryptography==46.0.4"
       - name: Validate Baidu Drive control and worker code
         run: |
