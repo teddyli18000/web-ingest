@@ -1,0 +1,71 @@
+name: temp p004 constructive 9-10-port all-isometry auxiliaries
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7p004-port-isometries.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: temp-c7p004-port-isometries
+  cancel-in-progress: false
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'numpy>=1.26,<3'
+      - name: Recover verified 367-word twelve-private-owner parent codes
+        run: |
+          mkdir -p /tmp/c7-p004/parents /tmp/c7-p004/a /tmp/c7-p004/b
+          gh run download 42024771296 --repo "${{ github.repository }}" --name c7-port-walk-2026110552 --dir /tmp/c7-p004/a
+          gh run download 42024771296 --repo "${{ github.repository }}" --name c7-port-walk-2026110554 --dir /tmp/c7-p004/b
+          cp /tmp/c7-p004/a/best_private367.ids /tmp/c7-p004/parents/port12a.ids
+          cp /tmp/c7-p004/b/best_private367.ids /tmp/c7-p004/parents/port12b.ids
+          test "$(wc -l < /tmp/c7-p004/parents/port12a.ids)" -eq 367
+          test "$(wc -l < /tmp/c7-p004/parents/port12b.ids)" -eq 367
+      - name: Fetch pinned public auxiliary sources
+        run: |
+          git init --quiet /tmp/c7-tandon
+          git -C /tmp/c7-tandon fetch --quiet --depth 1 https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git c753408492dde92a239708986d16c15dbf6c3235
+          git -C /tmp/c7-tandon checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-tandon rev-parse HEAD)" = c753408492dde92a239708986d16c15dbf6c3235
+          git init --quiet /tmp/c7-five
+          git -C /tmp/c7-five fetch --quiet --depth 1 https://github.com/molind/c7-five.git ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+          git -C /tmp/c7-five checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-five rev-parse HEAD)" = ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+      - name: Construct 10D certificate by full auxiliary signed permutations and translations
+        run: |
+          mkdir -p /tmp/c7-p004/results
+          python science-boundary/shannon-capacity-c7/code/c7p5_port_symmetry_construct.py \
+            /tmp/c7-tandon /tmp/c7-five /tmp/c7-p004/parents /tmp/c7-p004/results \
+            --shard "${{ matrix.shard }}" --shards 9
+      - name: Independently replay any constructed p004 breakthrough
+        run: |
+          if test -s /tmp/c7-p004/results/certificate.json; then
+            git clone --quiet --depth 1 https://github.com/few-shots/few-shots.git /tmp/c7-fewshots
+            python /tmp/c7-fewshots/problems/p004-shannon-capacity-c7/verify/verify.py /tmp/c7-p004/results
+          else
+            echo 'No certificate in this auxiliary-isometry shard.'
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c7p004-constructive-isometry-shard-${{ matrix.shard }}
+          path: /tmp/c7-p004/results/
+          retention-days: 14
