@@ -1,55 +1,46 @@
-# One-time authorization
+# One-time login and automatic recovery
 
-The bot's normal use needs **no browser sessions or refreshed cookies**. You authorize Baidu and Google once on your Windows PC; credentials are installed as GitHub Actions Secrets and refreshed by the bot. The fixed Release remains the only transfer control surface.
+Use the same normal Baidu Netdisk account you already use in Chrome or LinkSwift. **No Baidu developer application, App Key, or Secret Key is required.** The fixed [Release](https://github.com/teddyli18000/web-ingest/releases/tag/baidu-drive-live) remains the transfer controller.
 
-## 1. One-time prerequisites
+## Your first setup (Windows, no repository clone)
 
-- **Baidu:** a Baidu Netdisk developer application with App Key, Secret Key and its assigned `/apps/<app-name>` directory. The app must be allowed to call share verify/list/transfer and file management/download APIs. Account login itself cannot grant developer API entitlements.
-- **Google:** a dedicated OAuth client with the Drive API enabled; for long-lived refresh tokens, avoid leaving the Google OAuth consent app in External/Testing status.
-- **Local commands:** Python 3, [GitHub CLI](https://cli.github.com/), and [rclone](https://rclone.org/downloads/). Sign in to GitHub CLI with `gh auth login`.
-
-Create your dedicated Google rclone remote once with `rclone config`: name `bdm-drive`, storage `drive`, scope `drive.file`, your own OAuth client ID and secret, and browser-based Google authorization. The remote must contain a refresh token.
-
-Find the configuration with:
+Install Python 3, [GitHub CLI](https://cli.github.com/) and [rclone](https://rclone.org/downloads/) if missing. Sign in to GitHub with:
 
 ```powershell
-rclone config file
+gh auth login
+python -m pip install playwright
 ```
 
-## 2. Run the one-time login helper (no repo clone)
+### Google Drive (once)
 
-Download **only the standalone authorization script** from this repository into your local temporary directory:
+If you have not configured the Google remote before, run `rclone config` and create a remote named **`bdm-drive`**, backend **`drive`**, scope **`drive.file`**. Select browser authorization and sign into Google. Since rclone is retiring its shared Google OAuth client in 2026, use your own Google OAuth client ID for durable unattended access; the [rclone Google Drive guide](https://rclone.org/drive/#making-your-own-client-id) walks through this one-time Google setup.
+
+You don't need to repeat Google setup or login when only your Baidu session expires.
+
+### Baidu (one browser window)
+
+Download **just the local login script** and run it:
 
 ```powershell
 $setup = Join-Path $env:TEMP 'baidu-drive-authorize.py'
 Invoke-WebRequest 'https://raw.githubusercontent.com/teddyli18000/web-ingest/main/baidu-drive/authorize_once.py' -OutFile $setup
-python $setup --rclone-config "$env:APPDATA\rclone\rclone.conf"
+python $setup
 ```
 
-The helper will:
+The helper opens a **dedicated Chrome profile** (saved at `%LOCALAPPDATA%\web-ingest\baidu-drive-browser`) and visits Baidu Netdisk. Sign in in the window that appears. It waits until the actual Baidu login status is valid, then sends a browser-session snapshot to the GitHub Actions Secret `BAIDU_DRIVE_BAIDU_SESSION` **through gh CLI standard input**, never through a Release, Issue, commit or CLI argument.
 
-1. Ask for the Baidu developer App Key, Secret Key and application folder once.
-2. Request a **Baidu device code**, open its verification/QR page, and wait for your approval. You can confirm the login with your existing Baidu account; there is no need to paste a token.
-3. Upload exactly three repository Secrets via `gh secret set`, with values on standard input rather than command arguments: `BAIDU_DRIVE_BAIDU_OAUTH`, `BAIDU_DRIVE_RCLONE_CONFIG`, and `BAIDU_DRIVE_STATE_KEY`.
+On the first run it also securely initializes `BAIDU_DRIVE_STATE_KEY` and, if absent, `BAIDU_DRIVE_RCLONE_CONFIG` from your local rclone remote. On subsequent runs it **preserves the encryption key and Google authorization**. The helper dispatches `baidu-drive-worker.yml` with `reason=auth-updated`; any paused transfer automatically resumes at its existing checkpoint.
 
-For an app that does not support device-code login, rerun the helper with `--baidu-login code`; this opens the older one-time Baidu authorization-code page.
+## After setup
 
-If the helper finds existing Baidu Drive Secrets, it stops before changing anything. **Do not rerun setup over an active installation**: replacing its AES key would make the persisted OAuth and Drive session state unreadable.
+- Normal activity requires **no browser**, no computer kept running, and no repeat login.
+- The scheduler uses the latest AES-GCM-encrypted browser session state. Updated cookies from master API operations are saved to this encrypted state, so newer sessions take priority over the original GitHub Secret.
+- The weekly credential-maintenance job keeps the Google OAuth grant active and maintains the encrypted Baidu session. It cannot manufacture new Baidu login cookies if Baidu revokes a session.
+- If Baidu really invalidates the session, the bot sets `NEEDS_LOGIN` in the fixed Release, retains all checkpoints, and opens/reopens **one fixed GitHub Issue**, mentioning the repository owner. Re-run the **same two-line PowerShell download/run commands**. Your dedicated Chrome profile usually already has the account session and can reuse it.
+- Google token refreshes are handled by rclone on each disposable runner. File workers never attempt interactive login.
 
-## 3. Initialize and test
+No password, Chrome profile, plaintext Cookie, OAuth token, or Google Drive resumable-session URL is published in GitHub Issues, Releases or git history. Never paste credentials into any public text.
 
-Open [Baidu Drive Auth Keepalive](https://github.com/teddyli18000/web-ingest/actions/workflows/baidu-drive-auth-keepalive.yml) → **Run workflow** once. It initializes the master-controlled encrypted Baidu OAuth state and checks Google refresh-token functionality.
+## Acceptance
 
-Then submit a small public Baidu share through the [fixed Release](https://github.com/teddyli18000/web-ingest/releases/tag/baidu-drive-live) to verify the app's share permissions and Drive upload. After that, test a large file that crosses a worker restart and multiple independent files.
-
-Only the authorization and real-account acceptance are user-dependent; the master scheduler, resumable relay and refresh workflows are automatic.
-
-## Normal operation
-
-- The weekly credential-only keepalive checks both providers without launching transfer workers.
-- The master rotates Baidu refresh tokens and stores only AES-GCM ciphertext in `state/auth/baidu-oauth.json`. File workers only consume short-lived access tokens.
-- Google access tokens are refreshed automatically from the configured Google grant.
-- Credentials and capability URLs never belong in public Release text, Git commits, or Actions logs.
-- Provider revocation, authorization-scope changes or lack of Baidu share-API entitlement require direct account action; ordinary token expiry does not.
-
-**Baidu share API entitlement:** if the app is not authorized to use the relevant share endpoints, the integration blocks at the provider permission check. The solution is obtaining that entitlement from Baidu; repeatedly scanning a QR code cannot grant it.
+After the first login, submit one small public Baidu share in the fixed Release to check real provider permissions and Drive upload. Then test independent files and a large file crossing worker replacement. The code/CI simulation does not substitute for this real-account validation.
