@@ -138,7 +138,7 @@ func runPrepare() int {
 		Logger:      logger,
 		CookieStore: cookieStore,
 		NewClient: func(cookieHeader string) (app.BaiduAPI, error) {
-			return baidu.NewClient(cookieHeader)
+			return newTrackedBaiduClient(cookieHeader, cookieStore)
 		},
 	}
 	if moverTaskID == "" {
@@ -160,8 +160,8 @@ func runPrepare() int {
 			RelayResultsPath:  *relayResultsJSON,
 			RelayManifestPath: *relayManifestJSON,
 			StageWindowBytes:  *stageWindowBytes,
-			NewStagingClient: func(cookieHeader string)(app.StagingBaiduAPI,error){return baidu.NewClient(cookieHeader)},
-			NewCleanupClient: func(cookieHeader string)(app.CleanupBaiduAPI,error){return baidu.NewClient(cookieHeader)},
+			NewStagingClient: func(cookieHeader string)(app.StagingBaiduAPI,error){return newTrackedBaiduClient(cookieHeader, cookieStore)},
+			NewCleanupClient: func(cookieHeader string)(app.CleanupBaiduAPI,error){return newTrackedBaiduClient(cookieHeader, cookieStore)},
 		})
 	}
 	status := prepareFinish(store, &closed, layout, *stateDBPath, *resultJSON, moverTaskID, err)
