@@ -1,151 +1,69 @@
 #!/usr/bin/env python3
-"""One-time local OAuth setup. No repository clone or Cookie is required.
-
-Requires GitHub CLI, a Baidu developer application, and an authorized Google
-rclone remote named bdm-drive with Drive scope drive.file.
-"""
+"""Local browser login for Baidu Drive: persistent Chrome + gh CLI Secrets."""
 from __future__ import annotations
 
 import argparse
 import base64
 import configparser
-from getpass import getpass
 from io import StringIO
 import json
+import os
 from pathlib import Path
+import re
 import secrets
 import subprocess
+import sys
 import time
-import urllib.error
-import urllib.parse
-import urllib.request
-import webbrowser
 
 REPO = "teddyli18000/web-ingest"
-BAIDU_AUTHORIZE_URL = "https://openapi.baidu.com/oauth/2.0/authorize"
-BAIDU_DEVICE_URL = "https://openapi.baidu.com/oauth/2.0/device/code"
-BAIDU_TOKEN_URL = "https://openapi.baidu.com/oauth/2.0/token"
-SECRET_NAMES = {
-    "BAIDU_DRIVE_BAIDU_OAUTH", "BAIDU_DRIVE_RCLONE_CONFIG", "BAIDU_DRIVE_STATE_KEY"
-}
+CHROME_PROFILE = Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "web-ingest" / "baidu-drive-browser"
+SESSION_SECRET = "BAIDU_DRIVE_BAIDU_SESSION"
+GOOGLE_SECRET = "BAIDU_DRIVE_RCLONE_CONFIG"
+KEY_SECRET = "BAIDU_DRIVE_STATE_KEY"
 
 
-def authorization_url(client_id: str) -> str:
-    params = urllib.parse.urlencode({
-        "response_type": "code", "client_id": client_id,
-        "redirect_uri": "oob", "scope": "basic,netdisk",
-    })
-    return f"{BAIDU_AUTHORIZE_URL}?{params}"
+def cookie_header(cookies: list[dict]) -> str:
+    allowed = {}
+    for cookie in cookies:
+        name, value = str(cookie["name"]), str(cookie["value"])
+        if re.fullmatch(r"[A-Za-z0-9_.-]{1,100}", name) and value and ";" not in value and "\n" not in value:
+            allowed[name] = value
+    if not allowed.get("BDUSS") or not allowed.get("STOKEN"):
+        return ""
+    return "; ".join(f"{name}={value}" for name, value in sorted(allowed.items()))
 
 
-def oauth_get(url: str, parameters: dict[str, str], opener=urllib.request.urlopen) -> dict:
-    address = url + "?" + urllib.parse.urlencode(parameters)
-    request = urllib.request.Request(address, method="GET")
+def browser_login(profile: Path = CHROME_PROFILE, timeout_seconds: int = 600) -> str:
     try:
-        with opener(request, timeout=30) as response:
-            return json.loads(response.read(65536))
-    except urllib.error.HTTPError as exc:
+        from playwright.sync_api import sync_playwright
+    except ImportError as exc:
+        raise RuntimeError("Install the local browser helper first: python -m pip install playwright") from exc
+    profile.mkdir(parents=True, exist_ok=True)
+    with sync_playwright() as playwright:
+        context = playwright.chromium.launch_persistent_context(
+            str(profile), channel="chrome", headless=False,
+        )
         try:
-            return json.loads(exc.read(65536))
-        except (ValueError, UnicodeDecodeError) as cause:
-            raise RuntimeError("Baidu OAuth request failed") from cause
-    except (OSError, ValueError) as exc:
-        raise RuntimeError("Baidu OAuth request failed") from exc
+            page = context.pages[0] if context.pages else context.new_page()
+            page.goto("https://pan.baidu.com/disk/home", wait_until="domcontentloaded", timeout=60000)
+            print("Use the Chrome window to log into Baidu Netdisk if needed.")
+            deadline = time.monotonic() + timeout_seconds
+            while time.monotonic() < deadline:
+                session = cookie_header(context.cookies("https://pan.baidu.com/"))
+                if session:
+                    return session
+                page.wait_for_timeout(1800)
+            raise RuntimeError("Baidu login was not completed")
+        finally:
+            context.close()
 
 
-def request_device_code(client_id: str, opener=urllib.request.urlopen) -> dict:
-    response = oauth_get(BAIDU_DEVICE_URL, {
-        "response_type": "device_code", "client_id": client_id,
-        "scope": "basic,netdisk",
-    }, opener=opener)
-    try:
-        code = str(response["device_code"])
-        verify_url = str(response["verification_url"])
-        expires = int(response["expires_in"])
-        interval = max(1, int(response.get("interval", 5)))
-        if not code or not verify_url.startswith("https://") or expires <= 0:
-            raise ValueError("incomplete device response")
-    except (KeyError, ValueError, TypeError) as exc:
-        raise RuntimeError("Baidu device authorization unavailable") from exc
-    return {
-        "device_code": code, "verification_url": verify_url,
-        "qrcode_url": str(response.get("qrcode_url") or ""),
-        "user_code": str(response.get("user_code") or ""),
-        "expires_in": expires, "interval": interval,
-    }
-
-
-def wait_for_device_login(client_id: str, client_secret: str, device: dict,
-                          opener=urllib.request.urlopen,
-                          clock=time.monotonic, pause=time.sleep) -> dict[str, str]:
-    deadline = clock() + device["expires_in"]
-    interval = device["interval"]
-    while clock() < deadline:
-        pause(min(interval, max(0, deadline - clock())))
-        response = oauth_get(BAIDU_TOKEN_URL, {
-            "grant_type": "device_token", "code": device["device_code"],
-            "client_id": client_id, "client_secret": client_secret,
-        }, opener=opener)
-        if response.get("access_token") and response.get("refresh_token"):
-            return {"refresh_token": str(response["refresh_token"])}
-        error = str(response.get("error") or response.get("error_description") or "")
-        if error in {"authorization_pending", "authorization_waiting", "authorization_pending_error"}:
-            continue
-        if error == "slow_down":
-            interval += 5
-            continue
-        if error in {"expired_token", "authorization_declined", "access_denied",
-                     "authorization_timeout"}:
-            raise RuntimeError("Baidu login was declined or expired; rerun setup")
-        raise RuntimeError("Baidu device authorization was rejected")
-    raise RuntimeError("Baidu device login timed out; rerun setup")
-
-
-def device_authorize(client_id: str, client_secret: str) -> dict[str, str]:
-    device = request_device_code(client_id)
-    print("Baidu login: visit", device["verification_url"])
-    if device["user_code"]:
-        print("Enter code:", device["user_code"])
-    qr = urllib.parse.urlsplit(device["qrcode_url"])
-    if qr.hostname == "openapi.baidu.com" and qr.scheme in ("http", "https"):
-        # The provider sometimes returns an HTTP image URL; open it via HTTPS.
-        secure_qr = urllib.parse.urlunsplit(qr._replace(scheme="https"))
-        print("QR code:", secure_qr)
-        webbrowser.open(secure_qr)
-    else:
-        webbrowser.open(device["verification_url"])
-    print("Confirm authorization in Baidu; this window will detect completion.")
-    return wait_for_device_login(client_id, client_secret, device)
-
-
-def exchange_code(client_id: str, client_secret: str, code: str) -> dict[str, str]:
-    result = oauth_get(BAIDU_TOKEN_URL, {
-        "grant_type": "authorization_code", "code": code,
-        "client_id": client_id, "client_secret": client_secret,
-        "redirect_uri": "oob",
-    }, opener=urllib.request.urlopen)
-    if not result.get("refresh_token") or not result.get("access_token"):
-        raise RuntimeError("Baidu authorization failed; no GitHub Secret was changed")
-    return {"refresh_token": str(result["refresh_token"])}
-
-
-def extract_google_remote(config_path: Path) -> str:
-    parser = configparser.ConfigParser(interpolation=None)
-    with config_path.open(encoding="utf-8") as source:
-        parser.read_file(source)
-    remote = parser["bdm-drive"]
-    if remote.get("type") != "drive" or remote.get("scope") != "drive.file":
-        raise ValueError("rclone bdm-drive must be a drive.file-scope Drive remote")
-    if not remote.get("client_id"):
-        raise ValueError("rclone bdm-drive needs a dedicated OAuth client ID")
-    token = json.loads(remote["token"])
-    if not token.get("refresh_token"):
-        raise ValueError("rclone bdm-drive has no refresh token")
-    output = configparser.ConfigParser(interpolation=None)
-    output["bdm-drive"] = dict(remote.items())
-    handle = StringIO()
-    output.write(handle)
-    return handle.getvalue()
+def secret_names(repo: str) -> set[str]:
+    result = subprocess.run(
+        ["gh", "secret", "list", "--repo", repo, "--json", "name"],
+        check=True, text=True, capture_output=True,
+    )
+    return {entry["name"] for entry in json.loads(result.stdout)}
 
 
 def set_secret(name: str, value: str, repo: str = REPO) -> None:
@@ -156,56 +74,60 @@ def set_secret(name: str, value: str, repo: str = REPO) -> None:
     )
 
 
-def ensure_fresh_install(repo: str) -> None:
-    result = subprocess.run(
-        ["gh", "secret", "list", "--repo", repo, "--json", "name"],
-        text=True, check=True, capture_output=True,
+def extract_google_remote(config_path: Path) -> str:
+    parser = configparser.ConfigParser(interpolation=None)
+    parser.read(config_path, encoding="utf-8")
+    remote = parser["bdm-drive"]
+    if remote.get("type") != "drive" or remote.get("scope") != "drive.file":
+        raise ValueError("The Google rclone remote bdm-drive needs scope drive.file")
+    if not remote.get("client_id"):
+        raise ValueError("The Google rclone remote needs a long-lived, dedicated OAuth client ID")
+    token = json.loads(remote["token"])
+    if not token.get("refresh_token"):
+        raise ValueError("Google rclone authentication is not complete")
+    result = configparser.ConfigParser(interpolation=None)
+    result["bdm-drive"] = dict(remote.items())
+    handle = StringIO()
+    result.write(handle)
+    return handle.getvalue()
+
+
+def google_configuration(config_path: Path) -> str:
+    if not config_path.is_file():
+        print("Configure Google once in rclone (remote: bdm-drive, type: drive, scope: drive.file).")
+        subprocess.run(["rclone", "config"], check=True)
+    return extract_google_remote(config_path)
+
+
+def initialize(repo: str, local_google: Path, login=browser_login) -> None:
+    subprocess.run(["gh", "auth", "status"], check=True, capture_output=True)
+    existing = secret_names(repo)
+    google = google_configuration(local_google) if GOOGLE_SECRET not in existing else None
+    session = login()
+    set_secret(SESSION_SECRET, session, repo)
+    if google is not None:
+        set_secret(GOOGLE_SECRET, google, repo)
+    if KEY_SECRET not in existing:
+        set_secret(KEY_SECRET, base64.b64encode(secrets.token_bytes(32)).decode(), repo)
+    subprocess.run(
+        ["gh", "workflow", "run", "baidu-drive-worker.yml", "--ref", "main",
+         "-f", "reason=auth-updated", "--repo", repo],
+        check=True,
     )
-    existing = {item["name"] for item in json.loads(result.stdout)}
-    if existing & SECRET_NAMES:
-        raise RuntimeError("Baidu Drive Secrets already exist. Do not overwrite the AES key or rotated refresh token.")
-
-
-def app_root(value: str) -> str:
-    if not value.startswith("/apps/") or "/" in value[6:] or ".." in value or any(ch in value for ch in "\\\r\n"):
-        raise ValueError("use the app's exact /apps/<app-name> directory")
-    return value
+    print("Baidu login saved privately. The master scheduler has been awakened.")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--rclone-config", required=True, type=Path)
     parser.add_argument("--repo", default=REPO)
-    parser.add_argument("--baidu-login", choices=("device", "code"), default="device")
+    parser.add_argument(
+        "--rclone-config", type=Path,
+        default=Path(os.environ.get("APPDATA", str(Path.home()))) / "rclone" / "rclone.conf",
+    )
     args = parser.parse_args()
-
-    google_remote = extract_google_remote(args.rclone_config)
-    subprocess.run(["gh", "auth", "status"], check=True, capture_output=True)
-    ensure_fresh_install(args.repo)
-    client_id = input("Baidu developer App Key: ").strip()
-    client_secret = getpass("Baidu developer Secret Key: ").strip()
-    root = app_root(input("Baidu app folder (e.g. /apps/MyApp): ").strip())
-    if not client_id or not client_secret:
-        raise ValueError("Baidu App Key and Secret Key are required")
-    if args.baidu_login == "device":
-        auth = device_authorize(client_id, client_secret)
-    else:
-        link = authorization_url(client_id)
-        webbrowser.open(link)
-        print("Baidu authorization page:", link)
-        auth = exchange_code(client_id, client_secret,
-                             getpass("Paste the one-time Baidu authorization code: ").strip())
-    bootstrap = json.dumps({
-        "client_id": client_id, "client_secret": client_secret,
-        "refresh_token": auth["refresh_token"], "app_root": root,
-    }, ensure_ascii=False)
-    key = base64.b64encode(secrets.token_bytes(32)).decode()
-    set_secret("BAIDU_DRIVE_BAIDU_OAUTH", bootstrap, args.repo)
-    set_secret("BAIDU_DRIVE_RCLONE_CONFIG", google_remote, args.repo)
-    set_secret("BAIDU_DRIVE_STATE_KEY", key, args.repo)
-    print("GitHub Actions Secrets installed. Run Baidu Drive Auth Keepalive once.")
+    initialize(args.repo, args.rclone_config)
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())
