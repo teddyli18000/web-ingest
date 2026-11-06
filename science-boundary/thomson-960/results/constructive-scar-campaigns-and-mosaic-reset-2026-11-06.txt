@@ -1,0 +1,87 @@
+Thomson p007 N=960 — constructive search campaigns completed 2026-11-06
+
+Target / accepted Few Shots live score R = 444368.3924061973.
+Any winning certificate must beat R by at least 1e-6, after independent repolishing, rationalization and official exact verifier.
+Current source: https://github.com/few-shots/few-shots/blob/main/problems/p007-thomson-problem/FEWSHOT.md
+
+1. Hamiltonian multiscalar flow from 24-dislocation record R and nearby A/B:
+   run 42250842594, 3 seeds x 240 full N960 minimizations (720).
+   All 3 jobs successful. No candidate E<R-2e-7.
+   New independently repolished local minima generated:
+      444368.42162123998 (R+0.02921504265), genuine new motif arrangement W;
+      444368.4436940799, 444368.47177837125, others.
+   All 8 coordinate sets independently verified by legacy SciPy stable relaxation
+   in run 42253037254, and stored permanently in
+   data/scar-braid-elites-2202-2026-11-06.json.
+   Defect signatures in results/scar-braid-novel-topology-2026-11-06.txt:
+   W still 36/900/24 with nine 7-7 twinned scars, like R, but geometric arrangement differs.
+
+2. R/A/B plus independent 20-dislocation D2 cross-topology scar flow:
+   run 42251234401, seeds 4404/5505 x 320 minimizations (640).
+   Both jobs successful. No E<R-2e-7. Best independently new parent
+   remains W=444368.42162124. A few near-record candidates turned out
+   to be incomplete minimizations of known A/B/R, not independent minima.
+
+3. Second-generation inherited-elite scar flow:
+   run 42252806055, seeds 6606/7707 x 450 full N960 minimizations (900).
+   Both jobs successful. No E<R-2e-7. Best newly inherited W remains
+   444368.42162124. Independent vortex/dipole/braid events continue to
+   produce A/B/R/W; the altered randomcap control has much smaller
+   actual RMS displacement (~0.007 vs ~0.05) after collision contraction,
+   so one cannot fairly claim vortex > randomcap at equal displacement
+   merely from these counts. Distinct novel but higher energy basins exist.
+
+4. C2 replica-exchange from D2 (20-dislocation parent):
+   run 42252230952, seeds 7001/8002 x 120 sweeps x 6 replicas.
+   Both jobs successful. Best C2 E=444368.404080530512 (D2),
+   R+0.01167433321. Both jobs found no new C2 minima with
+   E<R+0.10 so the script's full-space release gate did not open:
+   full_releases=0, CANDIDATES=0. This does not imply these higher
+   C2 minima could not relax to new lower E in full N960; no such release
+   was tested, and threshold policy should be revised if this family
+   is resumed. No record improvement.
+
+5. Full-sphere new-scar W/A/B event recombination (W+ C3 equivalents
+   of known R->A/B displacement, sequential and simultaneous fields,
+   commutators):
+   run 42254893792, three seeds 9091/9092/9093 x 400 N960 minimizations
+   = 1200. All 3 jobs successful. No E<R-2e-7.
+   Across every run, elite pool closes to R/A/B/D/W and one known
+   basin R+0.04202046; best verified new stays W=R+0.02921504.
+   Record-aligned spherical displacement RMS:
+      R->A 0.00388716085, R->B 0.00539494101,
+      R->W 0.00547894831 (W was Kabsch/ICP/Hungarian aligned;
+      maximum chord displacement ~0.0395).
+   Tangent-field cosine overlaps:
+      W/A 0.09336, W/B 0.57054, A/B 0.69749.
+   Thus W is geometrically distinct even at close energy and
+   provides a nonredundant local structural event, but the tested
+   *whole-sphere* nonlinear event algebra did not yield record gains.
+
+Total finished as of this note: 3460 full-N960 minimizations from the
+three scar-flow families (720+640+900+1200=3460), plus the separate
+C2 reduced-space 2x120x6 quench campaign. New near-record geometry W
+was independently verified; best global remains accepted R.
+
+STRUCTURAL SEARCH SPACE RESET:
+  The main fixed assumption across these full-N960 campaigns was
+  representing a scar rearrangement by one globally applied vector field
+  or a small sum of globally applied fields. A nontrivial spatial pattern
+  of distinct donor events *at each separate defect core* has not been
+  optimized in these runs.
+  New code: code/search_mosaic_scar_genomes.py
+  New action: 42257750496, three independent 450-trial jobs.
+  It assigns one of R, W, A, B, D2 C3-orbit displacement donors separately
+  to each of twelve R scar cores, smoothly stitches the 12 local fields,
+  and fully relaxes N960 using compiled Coulomb energy and gradient.
+  Lightweight genotype crossover/mutation recycles low-energy mosaics;
+  any sub-R numerical candidate is stored with all 960 point coordinates.
+  Success criterion: genuinely lower final N960 energy, not number of
+  excluded parameter cells or weighted-index saddles.
+
+References:
+  Amore & Wales, 'Efficient searches for low-energy structures in clusters
+  with thousands of particles: Application to the Thomson problem',
+  Journal of Chemical Physics 165, 164104 (2026), doi:10.1063/5.0355867.
+  This literature favors successful adjacent-size transfers, but
+  our candidate representation is a distinct within-size 12-unit mosaic.
