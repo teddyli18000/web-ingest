@@ -1,0 +1,70 @@
+name: temp C7p5 nine-port complete auxiliary library
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7p5-t9-all-aux.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-c7p5-t9-all-aux
+  cancel-in-progress: false
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        parent: [port12a, port12b]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install numpy
+        run: python -m pip install 'numpy>=1.26,<3'
+      - name: Pin source data
+        run: |
+          git init --quiet /tmp/c7-tandon
+          git -C /tmp/c7-tandon fetch --quiet --depth 1 https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git c753408492dde92a239708986d16c15dbf6c3235
+          git -C /tmp/c7-tandon checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-tandon rev-parse HEAD)" = c753408492dde92a239708986d16c15dbf6c3235
+          git init --quiet /tmp/c7-five
+          git -C /tmp/c7-five fetch --quiet --depth 1 https://github.com/molind/c7-five.git ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+          git -C /tmp/c7-five checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-five rev-parse HEAD)" = ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+      - name: Exhaust oriented t9 port choices and translations for 41 independent auxiliaries
+        run: |
+          mkdir -p /tmp/c7-t9
+          python science-boundary/shannon-capacity-c7/code/c7p5_port12_auxiliary_scan.py \
+            /tmp/c7-tandon/data/base_c7.json /tmp/c7-five/data/family-f.json \
+            science-boundary/shannon-capacity-c7/data/circular-phase-367-2026-11-04.json \
+            science-boundary/shannon-capacity-c7/data/circular-port12-port12a-2026-11-05.json \
+            science-boundary/shannon-capacity-c7/data/circular-port12-port12b-2026-11-05.json \
+            /tmp/c7-t9/status.json /tmp/c7-t9/certificate.json /tmp/c7-t9/near_miss.json \
+            --parent "${{ matrix.parent }}" --t 9
+      - name: Independently replay a 134,770-point candidate upstream
+        run: |
+          if test -s /tmp/c7-t9/certificate.json; then
+            git clone --quiet --depth 1 https://github.com/few-shots/few-shots.git /tmp/c7-fewshots
+            mkdir -p /tmp/c7-t9/shot
+            cp /tmp/c7-t9/certificate.json /tmp/c7-t9/shot/certificate.json
+            python /tmp/c7-fewshots/problems/p004-shannon-capacity-c7/verify/verify.py /tmp/c7-t9/shot
+          else
+            echo 'No zero-obstruction auxiliary in this finite family.'
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c7-nine-port-${{ matrix.parent }}
+          path: |
+            /tmp/c7-t9/status.json
+            /tmp/c7-t9/near_miss.json
+            /tmp/c7-t9/certificate.json
+          retention-days: 14
