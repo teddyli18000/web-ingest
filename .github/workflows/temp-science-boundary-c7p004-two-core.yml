@@ -1,0 +1,69 @@
+name: temp p004 constructive two-core unconstrained fibers
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7p004-two-core.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: temp-c7p004-two-core
+  cancel-in-progress: false
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {left: neutral14a, right: neutral14b, aux: port12a, l: 9, r: 9}
+          - {left: neutral14b, right: neutral14a, aux: port12b, l: 9, r: 10}
+          - {left: neutral14a, right: neutral14b, aux: neutral14a, l: 10, r: 11}
+          - {left: neutral14b, right: neutral14a, aux: neutral14b, l: 11, r: 12}
+          - {left: neutral14a, right: neutral14b, aux: port12b, l: 12, r: 14}
+          - {left: neutral14b, right: neutral14a, aux: port12a, l: 14, r: 12}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'numpy>=1.26,<3' 'ortools>=9.11,<10'
+      - name: Recover public independent auxiliary sources
+        run: |
+          mkdir -p /tmp/c7-two/aux /tmp/c7-two/a /tmp/c7-two/b
+          gh run download 42024771296 --repo "${{ github.repository }}" --name c7-port-walk-2026110552 --dir /tmp/c7-two/a
+          gh run download 42024771296 --repo "${{ github.repository }}" --name c7-port-walk-2026110554 --dir /tmp/c7-two/b
+          cp /tmp/c7-two/a/best_private367.ids /tmp/c7-two/aux/port12a.ids
+          cp /tmp/c7-two/b/best_private367.ids /tmp/c7-two/aux/port12b.ids
+      - name: Construct 10D code from distinct left-right core basins
+        run: |
+          python science-boundary/shannon-capacity-c7/code/c7p004_two_parent_full_fibers.py \
+            science-boundary/shannon-capacity-c7/data/circular-neutral-high-port-p004.json \
+            /tmp/c7-two/aux /tmp/c7-two/results \
+            --left "${{ matrix.left }}" --right "${{ matrix.right }}" \
+            --aux-name "${{ matrix.aux }}" --l "${{ matrix.l }}" --r "${{ matrix.r }}" \
+            --seconds 200 --workers 4
+      - name: Official Few Shots p004 candidate replay
+        run: |
+          if test -s /tmp/c7-two/results/certificate.json; then
+            git clone --quiet --depth 1 https://github.com/few-shots/few-shots.git /tmp/fewshots
+            python /tmp/fewshots/problems/p004-shannon-capacity-c7/verify/verify.py /tmp/c7-two/results
+          else
+            echo 'No >134753 record in this two-core candidate.'
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p004-two-core-${{ matrix.left }}-${{ matrix.right }}-${{ matrix.l }}x${{ matrix.r }}
+          path: |
+            /tmp/c7-two/results/status.json
+            /tmp/c7-two/results/certificate.json
+          retention-days: 14
