@@ -181,7 +181,7 @@ Implemented:
 - exact bounded Baidu Range reads;
 - Drive resumable-session creation/status/upload;
 - direct stream relay;
-- OAuth-only Baidu share/stage/download/cleanup adapter with app-root isolation;
+- authenticated pinned Baidu Cookie client for share/stage/download/cleanup; no developer OAuth app;
 - cross-VM MD5 checkpoints;
 - AES-GCM session sealing;
 - zero-byte create/adopt;
