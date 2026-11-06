@@ -1,0 +1,71 @@
+name: temp p004 constructive joint per-X fiber CP-SAT
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7p004-joint-fibers.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: temp-c7p004-joint-fibers
+  cancel-in-progress: false
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {parent: neutral14a, aux: port12a, t: 9, rank: 0}
+          - {parent: neutral14b, aux: port12b, t: 9, rank: 0}
+          - {parent: neutral14a, aux: port12b, t: 10, rank: 0}
+          - {parent: neutral14b, aux: port12a, t: 10, rank: 0}
+          - {parent: neutral14a, aux: neutral14b, t: 11, rank: 0}
+          - {parent: neutral14b, aux: neutral14a, t: 11, rank: 0}
+    env:
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install CP-SAT and FFT
+        run: python -m pip install 'ortools>=9.11,<10' 'numpy>=1.26,<3'
+      - name: Recover public 367-code auxiliary witnesses
+        run: |
+          mkdir -p /tmp/c7-joint-ports/aux /tmp/c7-joint-ports/a /tmp/c7-joint-ports/b
+          gh run download 42024771296 --repo "${{ github.repository }}" --name c7-port-walk-2026110552 --dir /tmp/c7-joint-ports/a
+          gh run download 42024771296 --repo "${{ github.repository }}" --name c7-port-walk-2026110554 --dir /tmp/c7-joint-ports/b
+          cp /tmp/c7-joint-ports/a/best_private367.ids /tmp/c7-joint-ports/aux/port12a.ids
+          cp /tmp/c7-joint-ports/b/best_private367.ids /tmp/c7-joint-ports/aux/port12b.ids
+      - name: Jointly select parent deletions and individualized row/column fibers
+        run: |
+          python science-boundary/shannon-capacity-c7/code/c7p004_joint_fibers_construct.py \
+            science-boundary/shannon-capacity-c7/data/circular-neutral-high-port-p004.json \
+            /tmp/c7-joint-ports/aux /tmp/c7-joint-ports/results \
+            --parent "${{ matrix.parent }}" --aux "${{ matrix.aux }}" \
+            --t "${{ matrix.t }}" --rank "${{ matrix.rank }}" \
+            --seconds 220 --workers 4 --seed 20261106
+      - name: Verify any record with authoritative Few Shots judge
+        run: |
+          if test -s /tmp/c7-joint-ports/results/certificate.json; then
+            git clone --depth 1 --quiet https://github.com/few-shots/few-shots.git /tmp/c7-fewshots
+            python /tmp/c7-fewshots/problems/p004-shannon-capacity-c7/verify/verify.py /tmp/c7-joint-ports/results
+          else
+            echo 'No >134753 record from this particular joint fiber search.'
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c7-joint-${{ matrix.parent }}-${{ matrix.aux }}-t${{ matrix.t }}
+          path: |
+            /tmp/c7-joint-ports/results/status.json
+            /tmp/c7-joint-ports/results/certificate.json
+            /tmp/c7-joint-ports/results/best_certificate.json
+          retention-days: 14
