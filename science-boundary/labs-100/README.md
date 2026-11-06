@@ -27,6 +27,8 @@ Public incumbent:
 
 The strongest exact progress is on the minimum odd-energy (`odd-perfect`) layer and on the first non-odd-perfect layer `O=58`. A separate constructive parity-half QUBO pilot (2026-11-06) reached O=58 repeatedly but had E>=5718 among those sampled states; full-energy paired swaps reached E=1030 (O=506/522), well above the incumbent.
 
+**Additional constructive check (2026-11-06):** complete interval reversal and adjacent-block swap neighborhoods of the E578 incumbent (676,500 operations) return only its trivial symmetry images at or below E578; the best nontrivial single-step state is E686. A 17-parent diverse two-step segment bridge also reaches no nontrivial E<=578. Exact 14-bit block repair, O66 polishing, affine decimation and parity-block exchange produced no breakthrough. [Reproducible experiment](results/2026-11-06-exact-segment-bridges.md).
+
 Current exact frontier:
 
 - the entire standard N=100 near-skew manifold has exact minimum `578`;
@@ -321,12 +323,10 @@ So any surviving odd-perfect breakthrough has `d>=6`. This hierarchy should not 
 
 ## Next steps
 
-1. **Pursue candidate-generating three-site support-defect families, not automatic next K.** The common GF(2) kernel `F=T union Z`, |F|=3 spans the balanced O58 classes K22/t0 (25,324 support representatives), K24/t1 (4,742), K26/t2 (70,276), and K28/t3 (2,194), after the six affine orbits of F. K28/t3 has just been closed by direct all-affine scoring, and K24/t1 finished in run `42026399358` with 10 fibre-Q survivors; the frozen K24 all-affine witness record in `code/o58_k24_overlap1_allaffine_witness.py` reports 18,000 scored transforms, no O58 survivor. Prioritize whichever has fewer actual odd-pair residual defects after complete lifting, rather than the one that excludes more candidates.
-2. **Enforce the missing odd-correlation residual early.** Let D_r=C_(2r+1), z_r=(D_r+D_(49-r))/4 and e_r=(D_r-D_(49-r))/2. On the O58 target, z is a unit vector and every |e_r|=1. The Q=SG+SH test alone left 34 K28/t3 apparent survivors, yet all 66,000 full affine images had O>=154. Derive or implement a coupled signed support/fibre filter for the e_r conditions before expensive full-lift generation.
-3. Record complete uncapped HITs and exact all-affine binary rescoring for **any** Q survivor. A periodic or fibre orbit representative alone is never a valid aperiodic exclusion.
-4. **Generate better complete sequences, not just lower O.** The new exact conditional parity-half QUBO constructs O58 states, but even energy remains far too high; ordinary weighted paired swaps on the same (2,2) class reached only E1030. Study joint cross-/auto-correlation target construction (or a different factorization) rather than scaling either scalarized search. Compare against unrestricted strong search at matched cost. See `results/2026-11-06-constructive-parity-qubo-joint-pilot.md`.
-5. Re-check the live Few Shots record before a record claim. Any E<=574 sequence requires independent LABS scoring, Few Shots verification, certificate/SHOT creation, and submission.
-
+1. **Prioritize simultaneous odd/even target-profile construction rather than larger local moves.** The 2026-11-06 parity-half QUBO probe constructs O58 but has poor even energy; a 47-million-state exact-block pilot and exhaustive single-step segment moves likewise did not improve E578. Formulate coupled target even autocorrelations and odd cross terms jointly and assess full reconstructed E at every stage. See [the constructive QUBO pilot](results/2026-11-06-constructive-parity-qubo-joint-pilot.md) and [segment-bridge result](results/2026-11-06-exact-segment-bridges.md).
+2. **Develop a real positive-control benchmark before scaling N100.** Hide independently superior solutions at nearby lengths, compare joint-repair, standard tabu/memetic, and exact-block/segment baselines under equal work; keep the target solution entirely out of the parents and candidate source. A mechanism that recovers withheld quality is a more credible N100 direction than another increasing exclusion.
+3. **Use O58/O66 compressed solvers as structural oracles, not as the default objective.** Include the missing odd-pair residual conditions before all-affine lifts. Promote any candidate only after complete binary reconstruction and original 99-lag scoring; negative partial-branch results do not imply global optimality.
+4. Re-check the live Few Shots record before claiming any advance. A candidate with E<=574 requires independent LABS verification, Few Shots verifier, certificate/SHOT preparation and submission.
 
 ## Durable artifacts
 
@@ -349,6 +349,8 @@ So any surviving odd-perfect breakthrough has `d>=6`. This hierarchy should not 
 - Wang & Zhu, base/normal/near-normal sequences (2025/2026): <https://arxiv.org/abs/2506.20296>
 
 ## Work log
+
+- **2026-11-06 (nonlocal repair):** Enumerated 9,900 signed interval reversals and 666,600 signed adjacent-block swaps of the E578 incumbent; only six distinct, trivial-equivalent E578 states and best nontrivial E686. Expanded 17 diverse E<=950 intermediate states with 11,500,500 second-step operations; best nontrivial still E686. Tested 47,183,040 exact 14-bit block assignments, nonlocal O66 repair (8 valid O66 seeds; min E1318), 4,000 affine decimations and 10,200 aligned parity-block exchanges, all without a new record. [Details and source](results/2026-11-06-exact-segment-bridges.md).
 
 - **2026-11-06:** Re-checked live Few Shots board (still 578); found exact conditional half-QUBO identity for odd aperiodic correlations and implemented alternating constructive search. In 100 seeded runs ×18 rounds, sampled 59 O58 states, best full E at O58 was 5718. Paired joint even/odd search with two schedules gave best E1030 (independent integer rescoring confirmed). Fixed-A odd-perfect swaps at the incumbent stayed within known near-skew freedom. Saved code and [full record](results/2026-11-06-constructive-parity-qubo-joint-pilot.md). No new record.
 
