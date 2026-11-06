@@ -65,7 +65,7 @@ Task-level public state:
 - `state/runtime.json` — active/last task;
 - `state/tasks/<task-id>.json` — task status/progress;
 - `state/checkpoints/<task-id>.sqlite.zlib.b64` — mover checkpoint;
-- `state/auth/baidu-oauth.json` — AES-GCM encrypted rotating Baidu OAuth credentials (never plaintext).
+- `state/auth/baidu-session.json` — AES-GCM encrypted current browser Cookie snapshot plus bootstrap fingerprint (never plaintext).
 
 File-level public state:
 
@@ -137,7 +137,7 @@ Interactive browsers are forbidden in Actions workers.
 
 Do not serialize all file payload transfer behind `baidu-drive-live-state`. Do not let file workers write task-global SQLite state.
 
-The Actions prepare/relay binaries use task-local `mover/oauth_baidu.go` for official OAuth share/file APIs. Do not reintroduce Cookie auth. Entitlement for real share verification/list/transfer must be proven at live acceptance; missing provider permission must block safely. No credentials means `BLOCKED_AUTH_SETUP`.
+The Actions prepare/relay binaries use the pinned mover Baidu web Cookie client. No Baidu developer OAuth App Key is required. Never publish browser Cookies or build interactive login into Actions. On expired login, preserve checkpoint and use `NEEDS_LOGIN` plus the single fixed Issue; only a local Chrome helper with `gh CLI` renews login. Google rclone refresh remains headless.
 
 ## Authentication and public-repository safety
 
@@ -155,15 +155,15 @@ Never commit or expose:
 - private-source data;
 - secret-derived diagnostic dumps.
 
-OAuth prepare runner-local interfaces:
+Browser-session prepare runner-local interfaces:
 
 ```text
-BAIDU_DRIVE_BAIDU_OAUTH_TOKEN_FILE
+BAIDU_DRIVE_BAIDU_AUTH_FILE
 BAIDU_DRIVE_RCLONE_CONFIG_FILE
 BAIDU_DRIVE_RCLONE_BIN
 ```
 
-OAuth file-relay runner-local interfaces:
+Browser-session file-relay runner-local interfaces:
 
 ```text
 BAIDU_DRIVE_BAIDU_OAUTH_TOKEN_FILE
@@ -171,7 +171,7 @@ BAIDU_DRIVE_GOOGLE_ACCESS_TOKEN_FILE
 BAIDU_DRIVE_STATE_KEY_FILE
 ```
 
-These are ephemeral runner interfaces; there is no Cookie fallback. The final bootstrap is `BAIDU_DRIVE_BAIDU_OAUTH` JSON (`client_id`, `client_secret`, initial `refresh_token`, `app_root`), plus `BAIDU_DRIVE_RCLONE_CONFIG` and `BAIDU_DRIVE_STATE_KEY`. Only the serialized master may call `oauth_state.ensure_fresh()` and commit `state/auth/baidu-oauth.json`; file workers use `oauth_state.read_fresh()` to avoid refresh races. Never treat the bootstrap refresh token as the live token after rotation.
+Three Secrets: `BAIDU_DRIVE_BAIDU_SESSION`, `BAIDU_DRIVE_RCLONE_CONFIG`, `BAIDU_DRIVE_STATE_KEY`. `auth_session.read()` uses the encrypted latest Cookie unless a newly submitted Secret changed its fingerprint. Only the serialized master may persist updated Cookie snapshots, using `auth_session.save_if_changed()`. The helper must never overwrite an existing state key. File workers only read. Browser profile stays local; `gh secret set` via stdin sends credentials privately.
 
 ## Validation
 
