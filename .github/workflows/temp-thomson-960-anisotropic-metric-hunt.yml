@@ -1,0 +1,75 @@
+name: temp Thomson 960 anisotropic metric hysteresis hunt
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-anisotropic-metric-hunt.yml'
+
+jobs:
+  metric-loop:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 210
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [61501, 61502]
+    permissions:
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: few-shots/few-shots
+          path: few-shots
+          persist-credentials: false
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy numba
+      - name: Static compile and run analytic-force finite-difference test and pilot
+        run: |
+          python3 -m py_compile science-boundary/thomson-960/code/search_anisotropic_metric_loops.py
+          python3 science-boundary/thomson-960/code/search_anisotropic_metric_loops.py \
+            few-shots \
+            --elite-json science-boundary/thomson-960/data/scar-braid-elites-2202-2026-11-06.json \
+            --seed ${{ matrix.seed }} --cycles 1 --stage-maxiter 350 \
+            --out "$RUNNER_TEMP/smoke"
+      - name: Construct fully relaxed N960 candidates after noncommuting metric loops
+        run: |
+          python3 science-boundary/thomson-960/code/search_anisotropic_metric_loops.py \
+            few-shots \
+            --elite-json science-boundary/thomson-960/data/scar-braid-elites-2202-2026-11-06.json \
+            --seed ${{ matrix.seed }} --cycles 115 --stage-maxiter 400 \
+            --out "$RUNNER_TEMP/out"
+      - name: Summarize true N960 scores and basin diversity
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json,os,pathlib
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])
+          for f in (root/'smoke'/'result.json',root/'out'/'result.json'):
+              if not f.exists():
+                  print('MISSING',f);continue
+              d=json.loads(f.read_text())
+              rows=[r for r in d['rows'] if 'energy' in r]
+              print('RESULT',f.parent.name,'seed',d['seed'],
+                    'cycles',d['cycles_done'],'best',d['best_energy'],
+                    'delta',d['best_delta_record'],'candidates',d['candidates'])
+              for ctrl in (False,True):
+                  z=[r for r in rows if r['control_at_isotropic']==ctrl]
+                  print('CONTROL',ctrl,'n',len(z),
+                        'best',min((r['energy'] for r in z),default=None),
+                        'novel',sum(r['novel'] for r in z))
+              print('POOL',[(v['energy'],v['tag']) for v in d['pool']])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-anisotropic-metric-loops-${{ matrix.seed }}
+          path: |
+            ${{ runner.temp }}/out
+            ${{ runner.temp }}/smoke
+          retention-days: 10
