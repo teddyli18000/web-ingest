@@ -16,6 +16,7 @@ from pathlib import Path
 import subprocess
 from typing import Any
 
+import auth_session
 import controller
 import relay_control
 import relay_state
@@ -46,14 +47,13 @@ def prepare_binary() -> Path | None:
 
 def prepare_ready() -> bool:
     binary = prepare_binary()
-    oauth = os.environ.get("BAIDU_DRIVE_BAIDU_OAUTH_TOKEN_FILE", "")
+    cookie = os.environ.get("BAIDU_DRIVE_BAIDU_AUTH_FILE", "")
     config = os.environ.get("BAIDU_DRIVE_RCLONE_CONFIG_FILE", "")
     rclone = os.environ.get("BAIDU_DRIVE_RCLONE_BIN", "")
-    root = os.environ.get("BAIDU_DRIVE_BAIDU_APP_ROOT", "")
     return (
         binary is not None and binary.is_file()
-        and all(Path(item).is_file() for item in (oauth, config, rclone) if item)
-        and all((oauth, config, rclone, root))
+        and all(Path(item).is_file() for item in (cookie, config, rclone) if item)
+        and all((cookie, config, rclone))
     )
 
 
@@ -81,15 +81,15 @@ def prepare_command(
     manifest_path: Path,
     verified_path: Path,
 ) -> list[str]:
-    baidu_auth = Path(os.environ["BAIDU_DRIVE_BAIDU_OAUTH_TOKEN_FILE"])
+    baidu_auth = Path(os.environ["BAIDU_DRIVE_BAIDU_AUTH_FILE"])
     rclone_config = Path(os.environ["BAIDU_DRIVE_RCLONE_CONFIG_FILE"])
     rclone_bin = Path(os.environ["BAIDU_DRIVE_RCLONE_BIN"])
     command = [
         str(binary),
         "--runtime-base", str(work / "runtime"),
         "--state-db", str(checkpoint),
-        "--baidu-access-token-file", str(baidu_auth),
-        "--baidu-app-root", os.environ["BAIDU_DRIVE_BAIDU_APP_ROOT"],
+        "--baidu-cookie-file", str(baidu_auth),
+        "--baidu-cookie-output", str(work / "updated-baidu.cookies"),
         "--rclone-config-file", str(rclone_config),
         "--rclone-bin", str(rclone_bin),
         "--result-json", str(result_path),
@@ -220,7 +220,7 @@ def run_prepare_worker(
         return 0
     if str(task.get("status") or "") == "COMPLETED":
         return 0
-    if str(task.get("status") or "") not in RUNNABLE_TASK_STATES:
+    if str(task.get("status") or "") not in RUNNABLE_TASK_STATES and not (reason == "auth-updated" and task.get("status") == "NEEDS_LOGIN"):
         return 0
 
     if not prepare_ready():
@@ -229,12 +229,26 @@ def run_prepare_worker(
             runtime,
             task,
             reason="relay-auth-setup-block",
-            status="BLOCKED_AUTH_SETUP",
-            message="Relay scheduler is ready, but ephemeral authentication inputs are not configured yet.",
+            status="NEEDS_LOGIN" if not os.environ.get("BAIDU_DRIVE_BAIDU_AUTH_FILE") else "BLOCKED_AUTH_SETUP",
+            message="Baidu browser login required. Run the local gh authorization helper." if not os.environ.get("BAIDU_DRIVE_BAIDU_AUTH_FILE") else "Google Drive setup is incomplete.",
         )
         return 0
 
-    if reason == "retry":
+    records = relay_repo.list_records(task_id)
+    auth_failed = any(
+        record.get("status") == relay_state.FAILED_RETRYABLE
+        and "authentication is unavailable or expired" in str(record.get("last_error") or "").lower()
+        for record in records
+    )
+    if auth_failed and reason not in {"auth-updated", "retry"}:
+        render_and_save(
+            gh, runtime, task, reason="relay-needs-login",
+            status="NEEDS_LOGIN",
+            message="Baidu or Google session expired. Renew credentials locally; transfer checkpoint preserved.",
+        )
+        return 0
+
+    if reason in {"retry", "auth-updated"}:
         relay_control.reset_retryable_files(relay_repo, task_id, utc_now())
 
     binary = prepare_binary()
@@ -263,19 +277,32 @@ def run_prepare_worker(
         check=False,
     )
     legacy_worker.persist_checkpoint(gh, task_id, checkpoint)
+    updated_cookie_path = work / "updated-baidu.cookies"
+    if updated_cookie_path.is_file():
+        auth_session.save_if_changed(
+            gh,
+            os.environ["BAIDU_DRIVE_BAIDU_SESSION"],
+            os.environ["BAIDU_DRIVE_STATE_KEY"],
+            updated_cookie_path.read_text(encoding="utf-8"),
+        )
     result = parse_json_file(result_path, {})
     if not isinstance(result, dict):
         result = {}
     task = apply_prepare_result(task, result)
 
     if proc.returncode != 0:
+        detail = str(result.get("last_error") or "").lower()
+        needs_login = any(part in detail for part in (
+            "baidu authentication required",
+            "baidu browser login",
+            "baidu security verification required",
+            "interactive baidu login",
+        ))
         render_and_save(
-            gh,
-            runtime,
-            task,
-            reason="relay-prepare-blocked",
-            status="BLOCKED",
-            message="Scheduler preparation stopped safely at a durable checkpoint.",
+            gh, runtime, task,
+            reason="relay-prepare-needs-login" if needs_login else "relay-prepare-blocked",
+            status="NEEDS_LOGIN" if needs_login else "BLOCKED",
+            message="Baidu browser session expired. Run the local gh authorization helper; checkpoint preserved." if needs_login else "Scheduler preparation stopped safely at a durable checkpoint.",
         )
         return 0
 
