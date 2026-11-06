@@ -143,6 +143,8 @@ jobs:
 
           mkdir -p .ci/baidu-drive-mover/cmd/baidu-drive-prepare
           cp baidu-drive/mover/prepare-main.go .ci/baidu-drive-mover/cmd/baidu-drive-prepare/main.go
+          cp baidu-drive/mover/browser_session_client.go .ci/baidu-drive-mover/cmd/baidu-drive-prepare/browser_session_client.go
+          cp baidu-drive/mover/browser_session_client_test.go .ci/baidu-drive-mover/cmd/baidu-drive-prepare/browser_session_client_test.go
           cp baidu-drive/mover/action_relay.go .ci/baidu-drive-mover/cmd/baidu-drive-prepare/action_relay.go
 
           mkdir -p .ci/baidu-drive-mover/cmd/baidu-drive-relay
