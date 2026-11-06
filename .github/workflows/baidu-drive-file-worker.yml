@@ -58,7 +58,6 @@ jobs:
         run: |
           mkdir -p .relay-core/cmd/baidu-drive-relay
           cp baidu-drive/mover/relay-main.go .relay-core/cmd/baidu-drive-relay/main.go
-          cp baidu-drive/mover/oauth_baidu.go .relay-core/cmd/baidu-drive-relay/oauth_baidu.go
           cp baidu-drive/mover/relay_core.go .relay-core/cmd/baidu-drive-relay/relay_core.go
           cp baidu-drive/mover/relay_session.go .relay-core/cmd/baidu-drive-relay/relay_session.go
           cp baidu-drive/mover/relay_secret.go .relay-core/cmd/baidu-drive-relay/relay_secret.go
@@ -74,6 +73,7 @@ jobs:
 
       - name: Provision ephemeral Baidu and Google credentials
         env:
+          BAIDU_DRIVE_BAIDU_SESSION: ${{ secrets.BAIDU_DRIVE_BAIDU_SESSION }}
           BAIDU_DRIVE_RCLONE_CONFIG: ${{ secrets.BAIDU_DRIVE_RCLONE_CONFIG }}
           BAIDU_DRIVE_STATE_KEY: ${{ secrets.BAIDU_DRIVE_STATE_KEY }}
         run: python3 baidu-drive/auth_provision.py relay
