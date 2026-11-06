@@ -71,7 +71,8 @@ def main():
         assert len(collection)==(672 if t==9 else 48),(t,len(collection))
         for oi in indices:
             pairs,H,V=collection[oi];mask=forbidden(H,V)
-            settings.append((t,oi,pairs,H,V,mask,np.fft.fftn(mask.reshape((7,)*5).astype(float))))
+            grid=np.zeros((7,)*5,dtype=float);grid[tuple(DIG[np.flatnonzero(mask)].T)]=1.0
+            settings.append((t,oi,pairs,H,V,mask,np.fft.fftn(grid)))
     stats=[];best=None;winner=None;start=time.monotonic()
     for si,(name,S) in enumerate(library):
         if si%a.shards!=a.shard:continue
