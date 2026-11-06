@@ -190,5 +190,5 @@ Implemented:
 
 Pending for live operation:
 
-- single local Baidu and Google OAuth authorization via `AUTHORIZATION.md`;
+- one-time Baidu Chrome browser login and Google rclone authorization through `AUTHORIZATION.md`;
 - live API entitlement and real-provider acceptance covering cross-VM resume, session refresh/expiry, parallel files, zero-byte files and cleanup.
