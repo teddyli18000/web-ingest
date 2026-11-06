@@ -1,0 +1,41 @@
+Thomson p007 — 2D weighted N961 saddle chord comparison (2026-11-06)
+
+Source: https://github.com/teddyli18000/web-ingest/actions/runs/41857433482
+All six workflow jobs succeeded. Exact coordinates and two independent continuation histories are in artifacts:
+  thomson-saddle-chord-886-960-s0.48 and -s0.78
+  thomson-saddle-chord-886-380-s0.48 and -s0.78
+  thomson-saddle-chord-960-380-s0.48 and -s0.78
+Each starts from separately continued fixed-charge A/H index-one stationary states, corrects its own branch to *identical* midpoint charges, and compares labelled Kabsch-aligned saddle geometries. Negative-mode release and real N960 deletion projections are checked.
+
+Pair 886/960, s=0.48, q[886,960,380]=[0.5866666667,0.5866666667,0.8266666667]:
+  weighted E 444373.5325047792 versus 444373.5325047931
+  energy gap 1.39116e-8, Kabsch geometry RMS 1.26476e-5; both index one
+  lowest eigenvalues about -10.1,+2.575
+  real N960: R (delete886), B (delete960), H380 (delete380)
+Pair 886/380, s=0.48, q=[0.5866666667,0.8266666667,0.5866666667]:
+  weighted E 444373.6203908371 vs 444373.6203908652
+  energy gap 2.81143e-8, geometry RMS 2.56368e-5; both index one
+  real N960: R,A,H380
+Pair 960/380, s=0.48, q=[0.8266666667,0.5866666667,0.5866666667]:
+  weighted E 444373.5643366682 vs 444373.5643367785
+  energy gap 1.10304e-7, geometry RMS 3.17896e-5; both index one
+  real N960: A,A,H380
+
+Pair 886/960, s=0.78, q=[0.5366666667,0.5366666667,0.9266666667]:
+  weighted E 444373.0527606242 vs 444373.0527606777
+  gap 5.3551e-8, geometry RMS 1.93365e-5; both index one
+  real N960: R,B,H380
+Pair 886/380, s=0.78, q=[0.5366666667,0.9266666667,0.5366666667]:
+  weighted E 444373.1940466798 vs 444373.1940467749
+  gap 9.51113e-8, geometry RMS 2.72880e-5; both index one
+  real N960: R,A,H380
+Pair 960/380, s=0.78, q=[0.9266666667,0.5366666667,0.5366666667]:
+  weighted E 444373.1040996797 vs 444373.1040997314
+  gap 5.16884e-8, geometry RMS 2.94129e-5; both index one
+  real N960: A,A,H380.
+
+All six pairs have same index-one saddle root to the accuracy of the numerical corrector (~3e-5 force RMS). No evidence of independent saddle sheets for these six checked midpoint charges; this is NOT a global exclusion of other sheets. No descent/deletion below Few Shots R=444368.3924061973.
+
+RESEARCH DECISION (user emphasis 2026-11-06): more 2D saddle bisections would not directly attack the record. Pause weighted-N961 3-particle triangle; prioritize *construction of new low-energy N960 minima*, accepting/exploiting basins rather than measuring boundaries. Launch full N960 Hamiltonian scar-braid candidate search (code/search_hamiltonian_scar_braid.py, workflow run 42250842594). This deforms all 960 points by coherent spherical area-preserving flows centered on moving topological scar motifs, with multistage compositions; a compiled direct pairwise L-BFGS polisher evaluates every candidate. Explicit randomcap control. R, A, B are distinct parents. Only actually smaller real 960 energies count as quality improvements.
+
+Background: Amore & Wales (2026), https://arxiv.org/abs/2610.08122, pushes low-energy structures across sizes. Live Few Shots record on main: https://github.com/few-shots/few-shots/blob/main/problems/p007-thomson-problem/FEWSHOT.md
