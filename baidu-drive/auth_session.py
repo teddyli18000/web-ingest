@@ -5,7 +5,7 @@ import hashlib
 import json
 from typing import Any
 
-import oauth_state
+import auth_cipher
 
 STATE_PATH = "baidu-drive/state/auth/baidu-session.json"
 
@@ -36,9 +36,9 @@ def read(repo: Any, initial_cookie: str, key: str) -> str:
     if not stored or stored.get("bootstrap_sha256") != fingerprint(initial):
         return initial
     try:
-        state = oauth_state.unseal(stored["sealed"], oauth_state.key_bytes(key))
+        state = auth_cipher.unseal(stored["sealed"], auth_cipher.key_bytes(key))
         return normalize(str(state["cookie"]))
-    except (KeyError, oauth_state.OAuthError) as exc:
+    except (KeyError, auth_cipher.CipherError) as exc:
         raise SessionError("encrypted Baidu browser session is unreadable") from exc
 
 
@@ -55,7 +55,7 @@ def save_if_changed(repo: Any, initial_cookie: str, key: str, latest_cookie: str
         {
             "schema": 1,
             "bootstrap_sha256": fingerprint(original),
-            "sealed": oauth_state.seal({"cookie": latest}, oauth_state.key_bytes(key)),
+            "sealed": auth_cipher.seal({"cookie": latest}, auth_cipher.key_bytes(key)),
         },
         "baidu-drive: save encrypted browser session",
     )
