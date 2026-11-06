@@ -94,3 +94,23 @@ Fix A to the incumbent's parity half (sum A=10), keep B sum zero, and optimize e
 - Earlier LABS topic records: ../README.md
 
 No new record or Few Shots shot resulted from these experiments.
+
+
+## Follow-up: is O66 a nearby escape corridor?
+
+The first O66 branch with half-product ab=0 can retain the incumbent (a,b)=(10,0) and replace exactly one odd opposite-lag pair (±1,∓1) by (±3,∓3), costing 16 odd-energy units. This is a potentially better *search interface* than changing the half sums all the way to (2,2) for O58.
+
+Before building another local search around that assumption, the exact local structure was checked by [incumbent_odd_shell24.cpp](../code/incumbent_odd_shell24.cpp). Every ordinary two-flip and four-flip change from the incumbent was rescored, using independent 128-bit popcount correlations.
+
+    radius 2: tested 4,950; O=50 states 50; O=66 states 0;
+              minimum O above 50 was 162; best complete E 778.
+    radius 4: tested 3,921,225; O=50 states 1,225; O=66 states 0;
+              minimum O above 50 was 130; best complete E 906.
+
+At both radii all states with O<=90 have O=50, consistent with the ordinary near-skew paired-flip directions. This is a *local* observation only: an O66 search seeded nonlocally is still open. It rules out the idea that a single or double ordinary bit-pair edit exposes an immediate O66 gateway. The constructive requirement is to generate a distant structure or perform a coordinated larger update, not repeat incumbent-local perturbations.
+
+Build and run:
+
+    g++ -O3 -std=c++20 code/incumbent_odd_shell24.cpp -o /tmp/labs-shell24
+    /tmp/labs-shell24 2
+    /tmp/labs-shell24 4
