@@ -146,8 +146,8 @@ def main() -> int:
     args = parser.parse_args()
     try:
         configured = provision(args.mode)
-    except (AuthError, auth_session.SessionError, auth_cipher.CipherError):
-        print("Baidu Drive runner authentication provisioning failed.")
+    except (AuthError, auth_session.SessionError, auth_cipher.CipherError) as exc:
+        print(f"Baidu Drive runner authentication provisioning failed: {exc}")
         return 1
     print("Runner authentication ready." if configured else "Baidu Drive login is not configured.")
     return 0
