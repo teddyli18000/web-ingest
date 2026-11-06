@@ -44,7 +44,7 @@ class ControlTests(unittest.TestCase):
         self.assertEqual(task["status"], "BLOCKED_AUTH_SETUP")
         self.assertEqual(task["extraction_code"], "1234")
         self.assertEqual(new_runtime["active_task"], task["id"])
-        self.assertIn("OAuth", message)
+        self.assertIn("Baidu browser", message)
 
     def test_start_refuses_second_active_task(self):
         active = {"id": "bd-1", "status": "BLOCKED_AUTH_SETUP"}
