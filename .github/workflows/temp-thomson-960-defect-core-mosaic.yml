@@ -1,0 +1,70 @@
+name: temp Thomson 960 defect-core mosaic genotype candidate hunt
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-defect-core-mosaic.yml'
+
+jobs:
+  mosaic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 210
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [91901, 91902, 91903]
+    permissions:
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: few-shots/few-shots
+          path: few-shots
+          persist-credentials: false
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy numba
+      - name: Compile new defect-core mosaic representation
+        run: |
+          python3 -m py_compile \
+            science-boundary/thomson-960/code/search_mosaic_scar_genomes.py \
+            science-boundary/thomson-960/code/search_recombined_novel_scar_fields.py
+      - name: Generate low-N960 candidate geometries from twelve independently recombined defect units
+        run: |
+          python3 science-boundary/thomson-960/code/search_mosaic_scar_genomes.py \
+            few-shots \
+            --elite-json science-boundary/thomson-960/data/scar-braid-elites-2202-2026-11-06.json \
+            --seed ${{ matrix.seed }} --trials 450 --maxiter 800 \
+            --out "$RUNNER_TEMP/out"
+      - name: Report candidate basin quality
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json,os,pathlib,collections
+          p=pathlib.Path(os.environ['RUNNER_TEMP'])/'out'/'result.json'
+          if not p.exists():
+              print('MISSING_RESULT');raise SystemExit(0)
+          d=json.loads(p.read_text())
+          rows=[z for z in d['rows'] if 'energy' in z]
+          print('SEED',d['seed'],'TRIALS',d['trials_done'],'BEST',d['best_energy'],
+                'DELTA',d['delta_record'],'CANDIDATES',d['subrecord_candidates'])
+          print('DISTINCT_N960',[(z['energy'],z['trial'],z['gene'])
+                                for z in d['novel_basins'][:10]])
+          for m in ('random-genes','mutation','crossover'):
+              z=[r for r in rows if r['recipe']==m]
+              print('OP',m,'n',len(z),
+                    'novel',sum(a['new_basin'] for a in z),
+                    'best',min((a['energy'] for a in z),default=None),
+                    'near_record',sum(a['energy']<444368.4424062 for a in z))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-mosaic-scar-core-${{ matrix.seed }}
+          path: ${{ runner.temp }}/out
+          retention-days: 10
