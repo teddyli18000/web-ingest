@@ -9,7 +9,7 @@ The fixed Release is the human control/status surface. One serialized master sch
 Implemented:
 
 - fixed Release control plane and accepted-command dispatch;
-- OAuth-only Baidu share scan/verification, staging, sandboxed cleanup and bounded-range download;
+- authenticated Baidu browser-share scanning, staging, cleanup and bounded-range download;
 - durable task/SQLite checkpoints and file-scoped relay state;
 - scan, isolated Baidu staging, Drive tree creation, verified-result import, and guarded cleanup through the pinned mover core;
 - exact bounded Baidu byte ranges;
@@ -18,7 +18,7 @@ Implemented:
 - up to three independent file workers with file-scoped leases;
 - cross-VM Drive offset and streaming-MD5 recovery;
 - AES-256-GCM sealing of resumable-session URIs, bound to task + file identity;
-- encrypted rotating Baidu OAuth credentials with a weekly keepalive;
+- encrypted rotating browser Cookie state, Google OAuth keepalive, and fixed Issue login notification;
 - local one-time authorization helper using GitHub CLI Secrets;
 - zero-byte Drive file creation/adoption with exact destination reconciliation;
 - expired-session reconciliation before any replay;
@@ -26,7 +26,7 @@ Implemented:
 
 Still pending before live transfer:
 
-- one-time Baidu/Google OAuth authorization and app-entitlement verification;
+- one-time normal Baidu browser login and Google rclone authorization;
 - real-provider acceptance of share transfer, ranged download, cross-VM resume and cleanup.
 
 Without those Secrets, accepted tasks stop at `BLOCKED_AUTH_SETUP`.
@@ -158,31 +158,25 @@ That revision supplies the hardened scanner/stager/state/Drive-tree/cleanup logi
 
 The pin or bridge contract must not change without passing the repository integration gate and updating this documentation.
 
-## Authentication: one-time login
+## Authentication: browser login once, revalidate only when needed
 
-**Final interface:** the owner authorizes Baidu Netdisk and Google Drive once. Thereafter the master refreshes credentials automatically and workers only receive short-lived access tokens. Normal expiration must not require replacing a GitHub Secret.
+Use your normal Baidu Netdisk account: **no Baidu developer application or App Key is needed**. The one-time local [authorization helper](AUTHORIZATION.md) uses a dedicated persistent Chrome profile, checks the real login state, and sends the browser Cookie header straight to a private GitHub Actions Secret using `gh secret set`.
 
-Baidu's official OAuth refresh endpoint provides both a new access token and a refresh token; the newest refresh token must win. `oauth_state.py` now implements the master-owned refresh protocol and AES-256-GCM encrypted persisted state under `state/auth/baidu-oauth.json`. File workers are readers, not competing refresh writers. The master refreshes sufficiently ahead of the maximum file-worker lifetime.
+Exactly three Secrets are needed:
 
-**One-time local setup:** [`AUTHORIZATION.md`](AUTHORIZATION.md) now uses Baidu's official device-code login by default (open verification/QR page and approve). Google remains a one-time browser authorization with rclone. The setup script can be downloaded by itself; no repository clone is needed.
-
-Target one-time GitHub Secrets:
-
-| Name | Value |
+| Secret | Value |
 | --- | --- |
-| `BAIDU_DRIVE_BAIDU_OAUTH` | Bootstrap JSON with `client_id`, `client_secret`, initial `refresh_token`, and `app_root` |
-| `BAIDU_DRIVE_RCLONE_CONFIG` | Google Drive rclone remote with dedicated OAuth client and refresh token |
-| `BAIDU_DRIVE_STATE_KEY` | Base64 of one randomly generated 32-byte AES key |
+| `BAIDU_DRIVE_BAIDU_SESSION` | Baidu browser session, automatically captured by the local helper |
+| `BAIDU_DRIVE_RCLONE_CONFIG` | Dedicated Google rclone `[bdm-drive]` remote and refresh token |
+| `BAIDU_DRIVE_STATE_KEY` | Stable, random 32-byte AES-256 key, created by the helper once |
 
-Once the first Baidu refresh succeeds, all subsequent rotations use encrypted repository state rather than repeatedly using the original bootstrap refresh token. Keep the encryption key stable across VM replacements.
+`auth_session.py` saves renewed browser Cookies as AES-256-GCM ciphertext in `state/auth/baidu-session.json`. It tracks a fingerprint of the initial Secret, so the latest server-refreshed Cookie wins until a new local login explicitly replaces it. The serialized master alone updates the encrypted session; file workers only read it.
 
-A small `baidu-drive-auth-keepalive.yml` runs weekly at 17:17 UTC on Tuesday (and has manual dispatch). It only keeps Baidu/Google OAuth grants active; it does not start a transfer. It uses the master's serialized concurrency group, so the Baidu refresh-token rotation has exactly one writer.
+The Go prepare and relay binaries now use the pinned mover's existing Baidu web client for share scanning, extraction codes, transfers, tool-owned staging, cleanup, and exact HTTP Range requests. No OAuth developer API adapter or separate local payload cache is involved.
 
-For long-lived Google authorization, the OAuth consent screen must **not** remain in External/Testing status: Google issues a seven-day refresh token to such apps when using Drive scopes. Use a suitable In production OAuth client before the one-time setup.
+A weekly `baidu-drive-auth-keepalive.yml` refreshes Google's OAuth grant using the pinned rclone binary, without running file transfers. Browser sessions cannot be renewed indefinitely after Baidu revokes them; in that case the master sets `NEEDS_LOGIN`, pauses all further work, and notifies through **one reusable GitHub Issue**. Running the same local helper updates the Secret without touching the stable AES key or Google login and automatically dispatches the existing master. Checkpoints survive.
 
-**OAuth data plane:** Actions prepare and relay use `mover/oauth_baidu.go`, not the old Cookie client. The adapter maps the virtual `/BaiduDriveMover/` namespace to `/apps/<your-app>/BaiduDriveMover/` and calls the OAuth share/file APIs. The standalone mover Windows CLI remains unchanged. Your developer app must have the required share/API entitlements; see [`AUTHORIZATION.md`](AUTHORIZATION.md) for the one-time authorization and acceptance steps.
-
-Google access-token refresh is already wired for file workers; the temporary master uses a SHA-256-pinned rclone Linux binary. The credential layer never prints secrets, and plain OAuth tokens or capability URLs must never be committed.
+See [`AUTHORIZATION.md`](AUTHORIZATION.md). Private credentials, signed URLs and plaintext sessions never belong in Release text, Git or Issues.
 
 ## Workflows
 
@@ -196,7 +190,7 @@ The **single master scheduler**. It serializes SQLite/control mutations, imports
 
 ### `baidu-drive-auth-keepalive.yml`
 
-Weekly OAuth maintenance, independent of data-transfer scheduling. It refreshes the master-owned Baidu OAuth token when needed, commits only AES-GCM ciphertext, and validates Google refresh-token usability without storing its access token. It only maintains credentials and never stages files.
+Weekly credentials-only maintenance. It preserves encrypted browser-session state and validates the Google refresh token; it never starts a transfer or attempts to simulate a Baidu browser login.
 
 ### `baidu-drive-file-worker.yml`
 
