@@ -276,6 +276,7 @@ def main():
     ap=argparse.ArgumentParser()
     ap.add_argument('few_shots',type=pathlib.Path)
     ap.add_argument('--chord-dir',type=pathlib.Path)
+    ap.add_argument('--elite-dir',type=pathlib.Path)
     ap.add_argument('--seed',type=int,required=True)
     ap.add_argument('--trials',type=int,default=250)
     ap.add_argument('--maxiter',type=int,default=650)
@@ -285,6 +286,18 @@ def main():
     args.out.mkdir(parents=True,exist_ok=True)
     rng=np.random.default_rng(args.seed)
     seeds=load_seed_files(args.few_shots,args.chord_dir)
+    if args.elite_dir is not None:
+        inherited=[]
+        for f in args.elite_dir.rglob('result.json'):
+            d=json.loads(f.read_text())
+            for p in d['population']:
+                e=float(p['energy'])
+                if e<RECORD+0.15 and e>RECORD+0.012:
+                    inherited.append((e,p['points'],str(f.parent),p['tag']))
+        inherited.sort(key=lambda t:t[0])
+        for i,(e,pts,source,tag) in enumerate(inherited[:6]):
+            seeds.append((f'elite-{i}-{tag}',np.asarray(pts,float)))
+            print('INHERIT',i,f'E={e:.12f}',tag,'from',source,flush=True)
     selftest=energy_gradient_selftest(sb.xyz_to_vars(seeds[0][1]))
     if abs(selftest-RECORD)>1e-5:raise RuntimeError(('bad seed energy',selftest))
     pool=[];parents=[]
@@ -313,9 +326,18 @@ def main():
         scale=float(np.exp(rng.uniform(math.log(0.018),math.log(0.16))))
         pert=transport(x,rng,centers,scale,mode)
         spacing=min_spacing(pert)
-        if spacing<0.026:
+        # A violent local field may create particle collisions, rendering
+        # randomcap an invalid control. Contract the SAME proposed motion
+        # along the sphere rather than discarding one operator systematically.
+        contractions=0
+        while spacing<0.038 and contractions<6:
+            pert=0.5*(x+pert)
+            pert/=np.linalg.norm(pert,axis=1)[:,None]
+            spacing=min_spacing(pert)
+            contractions+=1
+        if spacing<0.038:
             rows.append({'trial':t,'mode':mode,'scale':scale,'skip':'collision',
-                         'min_spacing':spacing})
+                         'min_spacing':spacing,'contractions':contractions})
             continue
         E,z,nit,ok,grms=polish(pert,args.maxiter)
         if grms>1e-3:
@@ -339,7 +361,10 @@ def main():
             hits+=1
         row={'trial':t,'parent_energy':parent['energy'],'energy':E,
              'delta_record':E-RECORD,'mode':mode,'scale':scale,
-             'min_spacing':spacing,'nit':nit,'grad_rms':grms,
+             'min_spacing':spacing,'contractions':contractions,
+             'move_rms':float(np.sqrt(np.mean(
+                 np.arccos(np.clip(np.sum(x*pert,axis=1),-1,1))**2))),
+             'nit':nit,'grad_rms':grms,
              'accepted':accepted,'unique':unique,
              'num_scar_centers':len(centers),'num_defect_components':components,
              'coord_counts':{str(k):int(v) for k,v in degrees.items()}}
