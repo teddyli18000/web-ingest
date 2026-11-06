@@ -133,10 +133,12 @@ struct Hall{
  }
 };
 int main(int argc,char**argv)try{
- if(argc!=5)throw runtime_error("usage: baseline.json start count output_dir");
- auto A=load(argv[1]);int first=stoi(argv[2]),count=stoi(argv[3]);string dir=argv[4];Conf5 g;
+ if(argc!=5&&argc!=6)throw runtime_error("usage: first.json start count output_dir [second.json]");
+ auto A=load(argv[1]);auto B=argc==6?load(argv[5]):A;
+ if(A.size()!=B.size())throw runtime_error("source sizes differ");
+ int first=stoi(argv[2]),count=stoi(argv[3]);string dir=argv[4];Conf5 g;
  for(int t=first;t<first+count;t++){
-  auto start=chrono::steady_clock::now();Hall h(g,A,moveCode(A,t));
+  auto start=chrono::steady_clock::now();Hall h(g,A,moveCode(B,t));
   vector<int>ma,mb;int match=h.match(ma,mb),gain=int(h.L.size())-match;
   auto seconds=chrono::duration<double>(chrono::steady_clock::now()-start).count();
   cout<<"TRIAL "<<t<<" overlap="<<h.same.size()<<" left="<<h.L.size()
