@@ -1,0 +1,56 @@
+name: temp p004 constructive ten-dimensional Hall recombination
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7p004-hall10.yml
+      - science-boundary/shannon-capacity-c7/code/c7p10_hall_construct.cpp
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-c7p004-hall10
+  cancel-in-progress: false
+jobs:
+  relink:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pin the upstream verifier and the 134753-point record
+        run: |
+          git clone --quiet --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+          git -C /tmp/few-shots rev-parse HEAD
+          python3 /tmp/few-shots/problems/p004-shannon-capacity-c7/verify/verify.py /tmp/few-shots/problems/p004-shannon-capacity-c7/baseline
+      - name: Compile high-dimensional Hall relinking
+        run: |
+          mkdir -p /tmp/c7-hall10
+          g++ -std=c++17 -O3 -Wall -Wextra \
+            science-boundary/shannon-capacity-c7/code/c7p10_hall_construct.cpp \
+            -o /tmp/c7-hall10/construct
+      - name: Find better 10D independent code by exact cross-basin matching
+        run: |
+          /tmp/c7-hall10/construct \
+            /tmp/few-shots/problems/p004-shannon-capacity-c7/baseline/certificate.json \
+            "${{ matrix.shard }}0" 10 /tmp/c7-hall10 | tee /tmp/c7-hall10/trials.log
+      - name: Official Few Shots exact verifier for a better construction
+        run: |
+          if test -s /tmp/c7-hall10/certificate.json; then
+            cp /tmp/c7-hall10/certificate.json /tmp/c7-hall10/candidate.json
+            python3 /tmp/few-shots/problems/p004-shannon-capacity-c7/verify/verify.py /tmp/c7-hall10
+          else
+            echo 'No Hall-deficient union among these 10 automorphisms.'
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c7-hall10-construct-${{ matrix.shard }}
+          path: |
+            /tmp/c7-hall10/trials.log
+            /tmp/c7-hall10/certificate.json
+          retention-days: 14
