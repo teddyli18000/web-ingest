@@ -12,7 +12,7 @@ All cron expressions are stored in UTC. Human-facing times below use Asia/Singap
 | `ai-daily.yml` | recovery 09:13 / 10:13 / 11:13 / 11:37 | 3 min | Short recovery opportunities before downstream retries, plus manual backfill |
 | `github-trending.yml` | 09:31 / 10:43 / 11:55 daily | 15 min | Three retry opportunities; first valid snapshot wins |
 | `google-trending.yml` | 12:37 / 13:49 daily | 15 min | Capture SG + US + GB + HK Trending Now; second slot is retry/no-op |
-| `baidu-drive-auth-keepalive.yml` | 01:17 Wednesday, weekly | 5 min | Refresh encrypted Baidu OAuth state and validate Google OAuth without running transfer workers |
+| `baidu-drive-auth-keepalive.yml` | 01:17 Wednesday, weekly | 5 min | Maintain encrypted browser-session state and refresh Google rclone without transfer workers |
 | `temp-work-cleanup.yml` | 23:17 Sunday | 3 min | Delete first-level `temp-work/` workspaces untouched by meaningful commits for more than one month |
 
 AI Daily is intentionally different from the other collectors because punctuality around an external publication time matters. Its known downstream consumer checks the mirror at 08:15 and then hourly through 12:15.
