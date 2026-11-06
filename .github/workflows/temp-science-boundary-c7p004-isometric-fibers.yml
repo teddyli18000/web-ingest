@@ -1,0 +1,88 @@
+name: temp p004 construct from full C7p5 auxiliary isometries
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-c7p004-isometric-fibers.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: temp-c7p004-isometric-fibers
+  cancel-in-progress: false
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6,7,8]
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'numpy>=1.26,<3' 'ortools>=9.11,<10'
+      - name: Recover two 12-private-owner code sources
+        run: |
+          mkdir -p /tmp/c7-iso/aux /tmp/c7-iso/a /tmp/c7-iso/b
+          gh run download 42024771296 --repo "${{ github.repository }}" --name c7-port-walk-2026110552 --dir /tmp/c7-iso/a
+          gh run download 42024771296 --repo "${{ github.repository }}" --name c7-port-walk-2026110554 --dir /tmp/c7-iso/b
+          cp /tmp/c7-iso/a/best_private367.ids /tmp/c7-iso/aux/port12a.ids
+          cp /tmp/c7-iso/b/best_private367.ids /tmp/c7-iso/aux/port12b.ids
+      - name: Pin public 367-point source families
+        run: |
+          git init --quiet /tmp/c7-tandon
+          git -C /tmp/c7-tandon fetch --quiet --depth 1 https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git c753408492dde92a239708986d16c15dbf6c3235
+          git -C /tmp/c7-tandon checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-tandon rev-parse HEAD)" = c753408492dde92a239708986d16c15dbf6c3235
+          git init --quiet /tmp/c7-five
+          git -C /tmp/c7-five fetch --quiet --depth 1 https://github.com/molind/c7-five.git ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+          git -C /tmp/c7-five checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-five rev-parse HEAD)" = ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+      - name: Find constructive auxiliary isometries avoiding the parent port endpoints
+        run: |
+          python science-boundary/shannon-capacity-c7/code/c7p004_port_aux_full_isometry.py \
+            /tmp/c7-tandon /tmp/c7-five \
+            science-boundary/shannon-capacity-c7/data/circular-neutral-high-port-p004.json \
+            /tmp/c7-iso/aux /tmp/c7-iso/results \
+            --shard "${{ matrix.shard }}" --shards 9
+      - name: Reoptimize entire 10D certificate using the new auxiliary codes
+        run: |
+          for parent in neutral14a neutral14b; do
+            mkdir -p "/tmp/c7-iso/solver/$parent"
+            if test "$parent" = neutral14a; then left=9; right=9; else left=9; right=10; fi
+            python science-boundary/shannon-capacity-c7/code/c7p004_joint_asymmetric_fibers_construct.py \
+              science-boundary/shannon-capacity-c7/data/circular-neutral-high-port-p004.json \
+              /tmp/c7-iso/aux "/tmp/c7-iso/solver/$parent" \
+              --parent "$parent" --aux "$parent" \
+              --aux-file "/tmp/c7-iso/results/$parent.ids" \
+              --left "$left" --right "$right" --seconds 125 --workers 4
+          done
+      - name: Authoritative p004 verification for any constructed record
+        run: |
+          for parent in neutral14a neutral14b; do
+            if test -s "/tmp/c7-iso/solver/$parent/certificate.json"; then
+              if ! test -d /tmp/fewshots; then
+                git clone --quiet --depth 1 https://github.com/few-shots/few-shots.git /tmp/fewshots
+              fi
+              python /tmp/fewshots/problems/p004-shannon-capacity-c7/verify/verify.py "/tmp/c7-iso/solver/$parent"
+            fi
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c7p004-iso-fiber-shard-${{ matrix.shard }}
+          path: |
+            /tmp/c7-iso/results/status.json
+            /tmp/c7-iso/results/*.ids
+            /tmp/c7-iso/solver/**/status.json
+            /tmp/c7-iso/solver/**/certificate.json
+          retention-days: 14
