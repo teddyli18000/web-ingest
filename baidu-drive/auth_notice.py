@@ -21,9 +21,7 @@ BODY = (
 def synchronize(gh: controller.GitHub) -> None:
     runtime, _ = gh.read_json(controller.RUNTIME_PATH, default=controller.DEFAULT_RUNTIME)
     task = controller.load_active_task(gh, runtime)
-    if task is None:
-        return
-    needed = task.get("status") == "NEEDS_LOGIN"
+    needed = task is not None and task.get("status") == "NEEDS_LOGIN"
     issues = gh.request("GET", gh.api + "/issues?state=all&per_page=100")
     matches = [item for item in issues if item.get("title") == TITLE and "pull_request" not in item]
     if len(matches) > 1:
