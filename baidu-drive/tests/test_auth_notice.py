@@ -50,6 +50,21 @@ class NoticeTests(unittest.TestCase):
         self.assertEqual(gh.issue["state"], "open")
         self.assertEqual(len(gh.events), 4)
 
+    def test_closes_issue_when_active_task_is_canceled_or_completed(self):
+        gh = FakeGH()
+        auth_notice.synchronize(gh)
+        self.assertEqual(gh.issue["state"], "open")
+        original_read = gh.read_json
+
+        def no_active(path, default=None):
+            if path == controller.RUNTIME_PATH:
+                return {"active_task": None, "last_task": gh.task["id"]}, None
+            return original_read(path, default)
+
+        gh.read_json = no_active
+        auth_notice.synchronize(gh)
+        self.assertEqual(gh.issue["state"], "closed")
+
     def test_never_posts_secrets_to_issue(self):
         self.assertNotIn("BDUSS=", auth_notice.BODY)
         self.assertNotIn("STOKEN=", auth_notice.BODY)
