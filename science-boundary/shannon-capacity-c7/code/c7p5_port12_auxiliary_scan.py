@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Exhaust all oriented ten-port gadgets from two 367-point circular basins.
 
-For each parent I and each candidate oriented ten-tuple (PH,PV), compute the
+For each parent I and each candidate oriented t-tuple (PH,PV), compute the
 forbidden D = N[PH] ∩ N[PV] in C7^5.  For every pinned independent auxiliary
 367-code X, check all 7^5 translations of X against D by cyclic FFT.
-A zero intersection yields a 134,789 point 10-dimensional construction by
+A zero intersection yields a (367^2+t^2) point 10-dimensional construction by
 the BPZ two-sided port lemma, checked before any certificate is exported.
 
 A nonzero minimum is a finite-family obstruction only, NOT an impossibility
@@ -113,6 +113,7 @@ def main():
     p.add_argument('certificate',type=Path)
     p.add_argument('near_miss',type=Path)
     p.add_argument('--parent',choices=('port12a','port12b'),required=True)
+    p.add_argument('--t',type=int,choices=(9,10),default=10)
     a=p.parse_args()
     bpz=json.loads(a.bpz.read_text())
     family=json.loads(a.family.read_text())
@@ -130,8 +131,8 @@ def main():
     I=sources[a.parent]
     groups=private_pairs(I)
     assert len(groups)==12,(a.parent,len(groups))
-    ports=orientations(groups,10)
-    expected={'port12a':48,'port12b':576}[a.parent]
+    ports=orientations(groups,a.t)
+    expected={9:{'port12a':672,'port12b':4032},10:{'port12a':48,'port12b':576}}[a.t][a.parent]
     assert len(ports)==expected,(a.parent,len(ports))
     F={name:np.fft.fftn(arr(S)) for name,S in sources.items()}
     best=None
@@ -168,10 +169,10 @@ def main():
                 X=translated(sources[name],delta)
                 assert not (set(X)&mask)
                 words=build(I,X,pairs,H,V)
-                assert len(words)==134789
+                assert len(words)==367**2+a.t**2
                 a.certificate.parent.mkdir(parents=True,exist_ok=True)
                 a.certificate.write_text(json.dumps({'points':words},separators=(',',':'))+'\n')
-                winner={'parent':a.parent,'orientation_index':oi,'auxiliary':name,
+                winner={'parent':a.parent,'port_count':a.t,'orientation_index':oi,'auxiliary':name,
                         'delta':list(delta),'score':len(words)}
                 break
         if winner:break
@@ -179,7 +180,7 @@ def main():
           'parent':a.parent,'best':best}
     a.near_miss.parent.mkdir(parents=True,exist_ok=True)
     a.near_miss.write_text(json.dumps(near,indent=2,sort_keys=True)+'\n')
-    result={'method':near['method'],'parent':a.parent,'private_owner_count':len(groups),
+    result={'method':near['method'],'parent':a.parent,'port_count':a.t,'private_owner_count':len(groups),
             'valid_ten_port_orientations':len(ports),'auxiliary_codes':len(sources),
             'translations_per_case':N,'orientation_auxiliary_cases':cases,
             'all_cases_exhausted':cases==len(ports)*len(sources),
