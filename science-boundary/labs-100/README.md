@@ -27,7 +27,7 @@ Public incumbent:
 
 The strongest exact progress is on the minimum odd-energy (`odd-perfect`) layer and on the first non-odd-perfect layer `O=58`. A separate constructive parity-half QUBO pilot (2026-11-06) reached O=58 repeatedly but had E>=5718 among those sampled states; full-energy paired swaps reached E=1030 (O=506/522), well above the incumbent.
 
-**Additional constructive check (2026-11-06):** complete interval reversal and adjacent-block swap neighborhoods of the E578 incumbent (676,500 operations) return only its trivial symmetry images at or below E578; the best nontrivial single-step state is E686. A 17-parent diverse two-step segment bridge also reaches no nontrivial E<=578. Exact 14-bit block repair, O66 polishing, affine decimation and parity-block exchange produced no breakthrough. [Reproducible experiment](results/2026-11-06-exact-segment-bridges.md).
+**Additional constructive check (2026-11-06):** complete interval reversal and adjacent-block swap neighborhoods of the E578 incumbent (676,500 operations) return only its trivial symmetry images at or below E578; the best nonsymmetry single-step state is E686, but this is only a one-bit change. A 17-parent diverse two-step segment bridge also reaches no nontrivial E<=578. At symmetry-orbit distance >=8, the best single-step E722 state is a two-place rotation of an alternating-sign incumbent. Exact 14-bit block repair, O66 polishing, affine decimation and parity-block exchange produced no breakthrough. [Reproducible experiment](results/2026-11-06-exact-segment-bridges.md).
 
 Current exact frontier:
 
