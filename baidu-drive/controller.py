@@ -26,7 +26,7 @@ RUNTIME_PATH = "baidu-drive/state/runtime.json"
 TASK_DIR = "baidu-drive/state/tasks"
 VALID_COMMANDS = {"none", "start", "retry", "cancel"}
 TERMINAL_STATES = {"COMPLETED", "CANCELED", "FAILED_PERMANENT"}
-RETRYABLE_STATES = {"BLOCKED_AUTH_SETUP", "BLOCKED", "PAUSED", "FAILED_RETRYABLE"}
+RETRYABLE_STATES = {"BLOCKED_AUTH_SETUP", "BLOCKED", "PAUSED", "FAILED_RETRYABLE", "NEEDS_LOGIN"}
 BAIDU_HOSTS = {"pan.baidu.com", "yun.baidu.com"}
 
 DEFAULT_RUNTIME: dict[str, Any] = {
@@ -249,7 +249,7 @@ def render_release(
         "- `cancel`: mark the active non-terminal task canceled.",
         "- `none`: no request.",
         "",
-        "Authentication is intentionally not stored in this Release or repository. Until the OAuth/secret setup is wired, accepted start/retry requests stop safely in `BLOCKED_AUTH_SETUP`.",
+        "Credentials are never stored in this Release. If State becomes `NEEDS_LOGIN`, use the local browser helper; the bot resumes automatically after renewal.",
         "",
     ])
 
@@ -309,7 +309,7 @@ def new_task(control: dict[str, str]) -> dict[str, Any]:
         "bytes_done": 0,
         "drive_folder_url": None,
         "attempt": 0,
-        "message": "Task accepted. OAuth/secret-backed transfer worker is not configured yet.",
+        "message": "Task accepted. The scheduler will check Baidu browser and Google Drive authorization.",
     }
 
 
@@ -351,7 +351,7 @@ def apply_command(
     task = copy.deepcopy(active)
     task["attempt"] = int(task.get("attempt") or 0) + 1
     task["status"] = "BLOCKED_AUTH_SETUP"
-    task["message"] = "Retry accepted. OAuth/secret-backed transfer worker is still not configured."
+    task["message"] = "Retry accepted. The scheduler will recheck account authorization."
     return runtime, task, task["message"]
 
 
