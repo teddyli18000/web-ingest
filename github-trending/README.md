@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-11-06** | **4,412** | **2,565** |
+| **2014-08-09** | **2026-11-07** | **4,413** | **2,566** |
 
-### Latest All-Languages snapshot — 2026-11-06
+### Latest All-Languages snapshot — 2026-11-07
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [NVIDIA/auto-ontology](https://github.com/NVIDIA/auto-ontology) | Python | 2,679 |
-| 2 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 2,071 |
-| 3 | [garrytan/gstack](https://github.com/garrytan/gstack) | TypeScript | 612 |
-| 4 | [Usagi-org/ai-goofish-monitor](https://github.com/Usagi-org/ai-goofish-monitor) | Python | 240 |
-| 5 | [D4Vinci/Scrapling](https://github.com/D4Vinci/Scrapling) | Python | 1,655 |
-| 6 | [vercel-labs/agent-desktop](https://github.com/vercel-labs/agent-desktop) | Rust | 2,173 |
-| 7 | [max-sixty/worktrunk](https://github.com/max-sixty/worktrunk) | Rust | 546 |
-| 8 | [lz4/lz4](https://github.com/lz4/lz4) | C | 23 |
-| 9 | [google/skills](https://github.com/google/skills) | Python | 211 |
-| 10 | [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) | Rust | 150 |
+| 1 | [zed-industries/zed](https://github.com/zed-industries/zed) | Rust | 306 |
+| 2 | [NVIDIA/auto-ontology](https://github.com/NVIDIA/auto-ontology) | Python | 2,015 |
+| 3 | [rails/rails](https://github.com/rails/rails) | Ruby | 142 |
+| 4 | [mpv-player/mpv](https://github.com/mpv-player/mpv) | C | 37 |
+| 5 | [rust-lang/rust](https://github.com/rust-lang/rust) | Rust | 192 |
+| 6 | [react/react](https://github.com/react/react) | JavaScript | 248 |
+| 7 | [angular/angular](https://github.com/angular/angular) | TypeScript | 135 |
+| 8 | [symfony/symfony](https://github.com/symfony/symfony) | PHP | 128 |
+| 9 | [prometheus/prometheus](https://github.com/prometheus/prometheus) | Go | 148 |
+| 10 | [google/skills](https://github.com/google/skills) | Python | 534 |
 
-[Open full snapshot →](data/2026/11/06/trending.json)
+[Open full snapshot →](data/2026/11/07/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 310 days  
+[`2026`](data/2026/) · 311 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
