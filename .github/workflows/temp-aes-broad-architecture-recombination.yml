@@ -1,0 +1,81 @@
+name: temp-aes-broad-architecture-recombination
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/semantic_broad_architecture.py'
+      - '.github/workflows/temp-aes-broad-architecture-recombination.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - parents: 32
+            rng: 21
+            extra: ''
+          - parents: 64
+            rng: 22
+            extra: ''
+          - parents: 80
+            rng: 23
+            extra: '--force-new-and'
+          - parents: 140
+            rng: 24
+            extra: '--force-new-and'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load archived independently checked 102-gate nonlinear mutant parents
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 40996646594
+          github-token: ${{ github.token }}
+          pattern: aes-joint-factor-*
+          path: parent-archive
+          merge-multiple: false
+      - name: Load 101-gate neutral parent variants
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 42252448125
+          github-token: ${{ github.token }}
+          pattern: aes-care-cone-fs-101-*
+          path: parent-archive
+          merge-multiple: false
+      - name: Add independently verified changed-AND 102-gate shear seed
+        run: |
+          set -euxo pipefail
+          mkdir -p parent-archive/shear
+          python science-boundary/aes-sbox-circuit/make_and_shear_102.py --out parent-archive/shear/candidate-shear102.json
+      - name: Globally recombine complete nonlinear architecture parents
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet ortools
+          python -m py_compile science-boundary/aes-sbox-circuit/semantic_broad_architecture.py
+          python science-boundary/aes-sbox-circuit/semantic_broad_architecture.py \
+            --archive-dir parent-archive --max-source-gates 102 \
+            --max-parents '${{ matrix.parents }}' --seconds 420 --workers 4 \
+            --rng '${{ matrix.rng }}' ${{ matrix.extra }} --out result | tee run.log
+          python -c "import json; d=json.load(open('result/summary.json')); assert d['verified_all_256']; print(d)"
+      - name: Submit any <=100 candidate to exact official verifier
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/p008shot
+            cp result/candidate.json /tmp/p008shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/p008shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-broad-arch-${{ matrix.parents }}-${{ matrix.rng }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
