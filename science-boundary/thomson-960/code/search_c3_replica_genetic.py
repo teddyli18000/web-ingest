@@ -175,6 +175,7 @@ def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("few_shots",type=pathlib.Path)
     ap.add_argument("--seed",type=int,required=True)
+    ap.add_argument("--t-file",type=pathlib.Path)
     ap.add_argument("--sweeps",type=int,default=100)
     ap.add_argument("--maxiter",type=int,default=740)
     ap.add_argument("--out",type=pathlib.Path,required=True)
@@ -193,6 +194,25 @@ def main():
     temps=np.geomspace(.004,.32,6)
     replicas=[{"energy":E0,"v":v0.copy()} for _ in temps]
     c3pop=[{"energy":E0,"v":v0.copy(),"tag":"record"}]
+    if args.t_file is not None:
+        # Independent old Amore-Wales T parent shares a C3 subgroup but
+        # differs globally in 12-scar arrangement from the winning C3 R.
+        import search_t_c3_basin_hop as t3
+        old=t3.load_points(args.t_file)
+        pole,cubic=t3.approximate_threefold_axis(old,seed=args.seed+17)
+        err,rmse,axis,_=t3.refine_symmetry_axis(old,pole)
+        aligned,emax,erms=t3.align_axis_to_z(old,axis)
+        vt=c3.xyz_to_vars(c3.c3_representatives(aligned))
+        Et,vt,tnit,tgr=c3_polish(vt,1800)
+        if abs(Et-444368.4373479895)>3e-4:
+            raise RuntimeError(("old T seed energy inconsistent",Et))
+        c3pop.append({"energy":Et,"v":vt.copy(),"tag":"old-T"})
+        replicas[-1]={"energy":Et,"v":vt.copy()}
+        replicas[-2]={"energy":Et,"v":vt.copy()}
+        print("T_PARENT",f"E={Et:.12f}","gap",Et-E0,
+              "symmetry_error",err,"axis_error",emax,
+              "initial_replicas",[(round(q["energy"]-RECORD,9)) for q in replicas],
+              flush=True)
     freebest=RECORD
     fullpop=[{"energy":E0,"tag":"record"}]
     stats=[]
@@ -308,6 +328,7 @@ def main():
                 "best_c3":c3pop[0]["energy"],
                 "best_full":freebest,
                 "full_releases":nfull,
+                "T_parent_enabled":bool(args.t_file),
                 "subrecord_candidates":record_candidates,
                 "new_full_basins":new_basin_count,
                 "c3_elites":[{"energy":z["energy"],"tag":z["tag"],
