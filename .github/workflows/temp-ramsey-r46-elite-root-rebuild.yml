@@ -1,0 +1,61 @@
+name: temp Ramsey R46 elite 14-defect rooted reconstruction
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-elite-root-rebuild.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reconstruct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PySAT
+        run: python3 -m pip install --disable-pip-version-check -q python-sat
+      - name: Jointly synthesize all cross edges of elite's valid rooted halves
+        run: |
+          python3 science-boundary/ramsey-r46/rooted_fusion35_36.py \
+            --mode near14 --root 3 --seed 1 --seconds 390 \
+            --near14 science-boundary/ramsey-r46/results/algorithm22-calibration-best-14.json \
+            --outdir "$RUNNER_TEMP/root3"
+      - name: Independently verify any breakthrough candidate
+        if: always()
+        shell: bash
+        run: |
+          if test -f "$RUNNER_TEMP/root3/summary.json"; then cat "$RUNNER_TEMP/root3/summary.json"; fi
+          if test -f "$RUNNER_TEMP/root3/candidate36.json"; then
+            python3 - <<'PY'
+          import json,os
+          rows=json.load(open(os.environ["RUNNER_TEMP"]+"/root3/candidate36.json"))["adjacency"]
+          assert len(rows)==36 and all(len(r)==36 for r in rows)
+          assert all(rows[i][i]=='0' and rows[i][j]==rows[j][i] for i in range(36) for j in range(36))
+          g=[sum(1<<j for j,c in enumerate(r) if c=='1') for r in rows]
+          m=(1<<36)-1;c=[m&~a&~(1<<i) for i,a in enumerate(g)]
+          def f(x,z,k):
+              if not k:return 1
+              total=0
+              while z.bit_count()>=k:
+                  b=z&-z;i=b.bit_length()-1;z^=b
+                  total+=f(x,z&x[i],k-1)
+              return total
+          assert f(g,m,4)==0 and f(c,m,6)==0
+          print("INDEPENDENT VERIFIED: 36 vertices, K4=0 and I6=0")
+          PY
+            git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+            mkdir -p "$RUNNER_TEMP/p003-verify"
+            cp "$RUNNER_TEMP/root3/candidate36.json" "$RUNNER_TEMP/p003-verify/certificate.json"
+            python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/p003-verify"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-elite-root-rebuild-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/root3/
