@@ -1,0 +1,91 @@
+name: temp Ramsey R46 elite12 exact 11-defect SAT construction
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-elite12-threshold.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-elite12-threshold-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        include:
+          - {label: hub35, vertices: '35'}
+          - {label: duo2, vertices: '2 35'}
+          - {label: duo5, vertices: '5 35'}
+          - {label: duo7, vertices: '7 35'}
+          - {label: duo13, vertices: '13 35'}
+          - {label: duo15, vertices: '15 34'}
+          - {label: tri257, vertices: '2 7 35'}
+          - {label: tri513, vertices: '5 13 35'}
+          - {label: tri715, vertices: '7 15 35'}
+          - {label: quad257, vertices: '2 5 7 35'}
+          - {label: quad135, vertices: '5 13 15 35'}
+          - {label: sext, vertices: '2 5 7 11 12 35'}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Glucose4 SAT
+        run: |
+          python3 -m pip install --disable-pip-version-check -q python-sat
+          python3 -m py_compile science-boundary/ramsey-r46/elite12_lns_sat.py
+      - name: Find exact 36-vertex construction with fewer than 12 defects
+        shell: bash
+        run: |
+          python3 science-boundary/ramsey-r46/elite12_lns_sat.py \
+            --elite science-boundary/ramsey-r46/results/compound-repair-36-12-defects.json \
+            --vertices ${{ matrix.vertices }} --target 11 --seconds 150 \
+            --outdir "$RUNNER_TEMP/elite12-threshold"
+      - name: Independently recount any sub-12 candidate
+        if: always()
+        shell: bash
+        run: |
+          if test -f "$RUNNER_TEMP/elite12-threshold/summary.json"; then
+            cat "$RUNNER_TEMP/elite12-threshold/summary.json"
+          fi
+          if test -f "$RUNNER_TEMP/elite12-threshold/candidate36.json"; then
+            python3 - <<'PY'
+          import json,itertools,os
+          d=os.environ['RUNNER_TEMP']+'/elite12-threshold/'
+          a=json.load(open(d+'candidate36.json'))['adjacency']
+          assert len(a)==36 and all(len(r)==36 for r in a)
+          assert all(a[i][i]=='0' and a[i][j]==a[j][i] for i in range(36) for j in range(36))
+          # Deliberately independent direct exhaustive witnesses.
+          k4=sum(all(a[i][j]=='1' for i,j in itertools.combinations(s,2)) for s in itertools.combinations(range(36),4))
+          i6=sum(all(a[i][j]=='0' for i,j in itertools.combinations(s,2)) for s in itertools.combinations(range(36),6))
+          summary=json.load(open(d+'summary.json'))
+          assert (k4,i6)==(summary['K4'],summary['I6'])
+          assert 0<=k4+i6<=11
+          print('INDEPENDENTLY VERIFIED sub-12: K4',k4,'I6',i6,'total',k4+i6)
+          PY
+            if python3 - <<'PY'
+          import json,os,sys
+          p=os.environ['RUNNER_TEMP']+'/elite12-threshold/summary.json'
+          sys.exit(0 if json.load(open(p))['defects']==0 else 1)
+          PY
+            then
+              git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+              mkdir -p "$RUNNER_TEMP/p003-verify"
+              cp "$RUNNER_TEMP/elite12-threshold/candidate36.json" "$RUNNER_TEMP/p003-verify/certificate.json"
+              python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/p003-verify"
+            fi
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-elite12-threshold-${{ matrix.label }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/elite12-threshold/
