@@ -71,6 +71,13 @@ class ControlTests(unittest.TestCase):
         with self.assertRaises(controller.ProtocolError):
             controller.apply_command("retry", controller.default_control(), runtime, active)
 
+    def test_release_explains_inputs_and_destination(self):
+        body = controller.render_release(controller.default_control(), controller.DEFAULT_RUNTIME, None, "IDLE", "Ready.")
+        for field in ("`command`", "`share_url`", "`extraction_code`"):
+            self.assertIn(field, body)
+        self.assertIn("My Drive / `BaiduDriveMover-<task-id>`", body)
+        self.assertIn("Drive folder: -", body)
+
     def test_render_release_never_echoes_extraction_code_into_status(self):
         task = {
             "id": "bd-1",
