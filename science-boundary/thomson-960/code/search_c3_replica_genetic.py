@@ -158,7 +158,7 @@ def cut_splice(A,B,rng):
 def quality_candidates(pop,E,pts,tag,limit=35):
     if any(abs(z["energy"]-E)<3e-6 for z in pop):
         return False
-    pop.append({"energy":float(E),"v":pts.copy(),"tag":tag})
+    pop.append({"energy":float(E),"v":None if pts is None else pts.copy(),"tag":tag})
     pop.sort(key=lambda z:z["energy"])
     if len(pop)>limit:pop.pop()
     return True
