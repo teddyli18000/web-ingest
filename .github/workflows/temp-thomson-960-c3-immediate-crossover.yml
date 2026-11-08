@@ -1,0 +1,93 @@
+name: temp Thomson 960 verified immediate R-T C3 crossover
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-c3-immediate-crossover.yml'
+
+jobs:
+  first-crossovers:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 160
+    permissions:
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: few-shots/few-shots
+          path: few-shots
+          persist-credentials: false
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy numba
+      - name: Check one independent T 960-point parent
+        run: |
+          python3 - <<'PY'
+          import os,pathlib,urllib.request,numpy as np
+          p=pathlib.Path(os.environ['RUNNER_TEMP'])/'oldT.dat'
+          p.write_bytes(urllib.request.urlopen(
+              'https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/site/s_1/dat/points_960_1.dat',
+              timeout=70).read())
+          x=np.loadtxt(p)
+          assert x.shape==(960,3)
+          x=x/np.linalg.norm(x,axis=1)[:,None]
+          d=x@x.T
+          np.fill_diagonal(d,-1)
+          e=np.triu(1/np.sqrt(2-2*d),1).sum()
+          print('T_SCORE',e)
+          assert abs(e-444368.4373479895)<.001
+          PY
+      - name: Smoke test that crossover starts with the two independent parents
+        run: |
+          python3 -m py_compile science-boundary/thomson-960/code/search_c3_replica_genetic.py
+          python3 science-boundary/thomson-960/code/search_c3_replica_genetic.py \
+            few-shots --t-file "$RUNNER_TEMP/oldT.dat" \
+            --seed 72901 --sweeps 3 --maxiter 470 \
+            --out "$RUNNER_TEMP/smoke"
+          python3 - <<'PY'
+          import json,os,pathlib
+          f=pathlib.Path(os.environ['RUNNER_TEMP'])/'smoke'/'result.json'
+          d=json.loads(f.read_text())
+          n=sum(r['replica']=='GA' for r in d['rows'])
+          print('CROSSOVERS_EXECUTED',n,'PARENTS',[(x['tag'],x['energy']) for x in d['c3_elites']])
+          assert n>0, 'genetic recombination must occur with R and T alone'
+          PY
+      - name: Generate new C3 minima and fully unconstrained 960-point candidates
+        run: |
+          python3 science-boundary/thomson-960/code/search_c3_replica_genetic.py \
+            few-shots --t-file "$RUNNER_TEMP/oldT.dat" \
+            --seed 72901 --sweeps 75 --maxiter 730 \
+            --out "$RUNNER_TEMP/out"
+      - name: Report operator success and any genuine record candidates
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os,json,pathlib
+          f=pathlib.Path(os.environ['RUNNER_TEMP'])/'out'/'result.json'
+          if not f.exists():print('NO_RESULT');raise SystemExit(0)
+          d=json.loads(f.read_text())
+          print('SWEEPS',d['sweeps_done'],'C3_BEST',d['best_c3'],
+                'UNCONSTRAINED_BEST',d['best_full'],
+                'RELEASES',d['full_releases'],
+                'NEW_N960',d['new_full_basins'],
+                'SUB_RECORD',d['subrecord_candidates'])
+          for op in ('cut-splice','registered-patch','scar-flow','scar-noise','global-noise'):
+              s=[r for r in d['rows'] if r['mode']==op]
+              print('OPERATOR',op,'attempts',len(s),
+                    'novel',sum(r['c3_unique'] for r in s),
+                    'min_E',min((r['energy_c3'] for r in s),default=None))
+          print('TOP_C3',[(z['energy'],z['tag']) for z in d['c3_elites'][:15]])
+          print('TOP_N960',d['full_elites'][:15])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-c3-immediate-RT-genetic
+          path: |
+            ${{ runner.temp }}/out
+            ${{ runner.temp }}/smoke
+          retention-days: 10
