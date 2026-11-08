@@ -1,0 +1,92 @@
+Thomson N=960 — constructive C3 orbit exchange and independent-parent GA
+Research snapshot: 2026-11-07 22:xx America/Los_Angeles
+
+VERIFIED TARGET
+Few Shots p007 merged score: R=444368.3924061973 (Ronnie2025),
+winning epsilon 1e-6. Source:
+https://github.com/few-shots/few-shots/blob/main/problems/p007-thomson-problem/FEWSHOT.md
+Check official data/board.json and open PRs before any record claim.
+
+CURRENT SEARCH A — C3 GA + six-temperature replica exchange
+Latest baseline single-origin (R) source:
+ code/search_c3_replica_genetic.py, run 42455369621 (3 seeds, 115 sweeps).
+Independent old-T parent cohort:
+ run 42455931301 (2 seeds, 145 sweeps), old Amore-Wales T N960
+ E~444368.4373479895 from CCD 960x3 coordinate file.
+Both use 320-particle orbit quotient and evaluate physical N960
+unconstrained quench after promising C3 states. The T parent was
+converted to a common C3 frame by a verified threefold axis fit.
+Both runs reached full search after successful smoke. No result available
+at snapshot time because live job logs are downloaded upon completion.
+
+CRITICAL CORRECTIONS to GA (commit 6c928097):
+ - Original C3 energy dedup threshold 3e-6 could reject a genuine
+   improvement meeting >=1e-6 official threshold as duplicate R.
+   Fixed source threshold 3e-8. Full-space winners are separately
+   stored whenever E < R-2e-7 after any valid C3 release.
+ - Original GA section activated only with >=3 distinct C3 minima,
+   so even with two independent R/T parent seeds, genetic recombination
+   could be delayed until a third eligible minimum was discovered.
+   Fixed condition to >=2 C3 elites.
+ - Existing two legacy Actions checked out old source and ARE NOT
+   affected by this correction. A fresh one-job corrected C3 R×T
+   experiment uses full smoke assertion of actual GA execution
+   before formal search: Action 42456573446, 75 sweeps seed72901.
+   Treat THIS Action as the correctness control for early crossovers.
+
+CURRENT SEARCH B — +/-3 ENTIRE C3 ORBIT SIZE EXCHANGE
+New constructive algorithm code/search_c3_orbit_size_exchange.py.
+This is qualitatively distinct from earlier N960<->N959/N961
+single-particle bounces (which often created high 23-dislocation
+descendants) and from N972->N960 full 12-particle T orbit removal.
+A C3 orbit contains 3 equal charges:
+  N960 (320 C3 orbits)
+   -> remove any orbit, physically optimize N957 (319 C3 orbits);
+   -> add an unrelated triplet at a low full-orbit insertion energy,
+      physically optimize N960 (320 C3 orbits); or reverse
+  N960 -> add triplet N963 (321 C3 orbits)
+   -> remove a distinct orbit, optimize N960.
+This preserves C3 throughout size excursion, allowing a collective
+scar change without the asymmetric +1/-1 vacancy endpoint.
+Then symmetry breaking and unconstrained true N960 Coulomb relaxation.
+The code independently computes stable exact Coulomb forces and
+freezes ANY subrecord N960 xyz coordinates.
+
+The orbit insertion exact Coulomb increment for point y and its 120°
+rotations, given a C3 source X, is:
+  Delta_add = 3 * sum_{x in X} 1/||x-y|| + 3/d(y),
+  d(y) = sqrt[3(1-y_z²)].
+For deleting orbit {a,Ra,R²a}, source potential against other 3m-3
+charges is p(a), the exact energy removed is:
+  Delta_del = 3*p(a) + 3/d(a).
+First version incorrectly subtracted 3/d and treated self excluded
+entries as dot=-1 instead of inverse distance zero. Fixed source in
+commit 00b17dd (self-test independently computes full N960 and N957
+energy and confirms three representative removal differences within 3e-7).
+Original two-seed pilot Action 42456406401 uses biased ranking but
+generates genuine valid N960 endpoints; corrected two-seed Action
+42456551742 (80 cycles each) runs the accurate ranking with compulsory
+energy identity check. Old T and R sources both used.
+
+BACKGROUND and why this matters
+The Amore/Wales 2026 JCP 165 164104 cross-size study reported
+propagating favorable spherical configurations between adjacent N;
+upstream Few Shots winner also reports failure for simple Riesz
+homotopy and isolated defect moves. Earlier project N±1 live-centered
+bounce tested a few rank choices, no E<R. Triplet-group orbit moves
+are not equivalent to those single-particle changes: intermediate
+N957/N963 preserves a C3 symmetry, all 3 particles are related,
+and the return alters a different orbit.
+
+POSITIVE EVIDENCE REQUIRED
+Only an independently fully minimized N960 Coulomb energy lower than
+R by >=1e-6 and an official exact rational certificate establishes
+breakthrough. Otherwise report best distinctly NEW full N960 energy,
+coordination/scar arrangements and actual method effects.
+Retain numeric evidence under results/ and best coordinates under data/.
+
+Primary sources:
+ https://pubmed.ncbi.nlm.nih.gov/42910716/
+ https://github.com/few-shots/few-shots/blob/main/problems/p007-thomson-problem/shots/Ronnie2025/c3-replica-exchange-scars/SHOT.md
+ https://github.com/few-shots/few-shots/blob/main/problems/p007-thomson-problem/shots/Abreto/thomson960-d2-ga/SHOT.md
+ science-boundary/thomson-960/results/live-size-bounce-scout-results-2026-10-31.txt
