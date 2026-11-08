@@ -27,6 +27,8 @@ Public incumbent:
 
 The strongest exact progress is on the minimum odd-energy (`odd-perfect`) layer and on the first non-odd-perfect layer `O=58`. A separate constructive parity-half QUBO pilot (2026-11-06) reached O=58 repeatedly but had E>=5718 among those sampled states; full-energy paired swaps reached E=1030 (O=506/522), well above the incumbent.
 
+**Constructive continuation (2026-11-08):** matched-work N40/60/80/100 exact-block/Tabu controls found no stable advantage, and alternative N99→100 movable-insertion plus N100 two-parent interval-stitching did not improve the independently published E606 target-class seed (32,360,000 lifted source-neighborhood evaluations and 32,663,400 two-interval inheritance evaluations). A genuine published N59→60 hidden-answer control also failed to recover the known E218 optimum (best E246). The next stage must introduce a qualitatively different signed-correlation-cut proposal mechanism rather than enlarge these fixed support families. [Full constructive audit and reproducible source](results/2026-11-08-constructive-controls-insertion-stitch.md).
+
 **Additional constructive check (2026-11-06):** complete interval reversal and adjacent-block swap neighborhoods of the E578 incumbent (676,500 operations) return only its trivial symmetry images at or below E578; the best nonsymmetry single-step state is E686, but this is only a one-bit change. A 17-parent diverse two-step segment bridge also reaches no nontrivial E<=578. At symmetry-orbit distance >=8, the best single-step E722 state is a two-place rotation of an alternating-sign incumbent. Exact 14-bit block repair, O66 polishing, affine decimation and parity-block exchange produced no breakthrough. [Reproducible experiment](results/2026-11-06-exact-segment-bridges.md).
 
 Current exact frontier:
@@ -323,6 +325,8 @@ So any surviving odd-perfect breakthrough has `d>=6`. This hierarchy should not 
 
 ## Next steps
 
+**2026-11-08 constructive gate:** the matched-work 8-spin LNS and source-movable insertion families failed to establish transferable gains even on known-answer N59→60 and N40/60 controls. Do not scale these unchanged. Coordinate any signed-correlation-cut construction with the independent [AI4S LABS search topic](../labs-ai4s-search/README.md), which has already examined pair-epistasis, native tabu, linkage-tree recombination and whole-solver controls. Seek a novel near-frontier *candidate* under matched total compute and an independent literal energy check before dispatching heavy Actions.
+
 1. **Prioritize simultaneous odd/even target-profile construction rather than larger local moves.** The 2026-11-06 parity-half QUBO probe constructs O58 but has poor even energy; a 47-million-state exact-block pilot and exhaustive single-step segment moves likewise did not improve E578. Formulate coupled target even autocorrelations and odd cross terms jointly and assess full reconstructed E at every stage. See [the constructive QUBO pilot](results/2026-11-06-constructive-parity-qubo-joint-pilot.md) and [segment-bridge result](results/2026-11-06-exact-segment-bridges.md).
 2. **Develop a real positive-control benchmark before scaling N100.** Hide independently superior solutions at nearby lengths, compare joint-repair, standard tabu/memetic, and exact-block/segment baselines under equal work; keep the target solution entirely out of the parents and candidate source. A mechanism that recovers withheld quality is a more credible N100 direction than another increasing exclusion.
 3. **Use O58/O66 compressed solvers as structural oracles, not as the default objective.** Include the missing odd-pair residual conditions before all-affine lifts. Promote any candidate only after complete binary reconstruction and original 99-lag scoring; negative partial-branch results do not imply global optimality.
@@ -349,6 +353,8 @@ So any surviving odd-perfect breakthrough has `d>=6`. This hierarchy should not 
 - Wang & Zhu, base/normal/near-normal sequences (2025/2026): <https://arxiv.org/abs/2506.20296>
 
 ## Work log
+
+- **2026-11-08 (constructive controls/insertion):** Matched proposal-count N40/60/80/100 tabu/exact-block/lag-graph/synergy pilots did not show reliable cross-length quality advantages. Tried all 32,360,000 source-radius≤3 mobile-insertion evaluations from verified N99 E553, all 54,615,120 source-radius-4 insertions from N59 E205, N98 dual insertion and 1-source-flip refinement, all N99 rotations/alternations and 32,663,400 E578/E606 two-parent interval stitches; no N100 E<606 candidate. Added exact reconstructable C++ generators and [negative/positive-control evidence](results/2026-11-08-constructive-controls-insertion-stitch.md); no shot.
 
 - **2026-11-06 (nonlocal repair):** Enumerated 9,900 signed interval reversals and 666,600 signed adjacent-block swaps of the E578 incumbent; only six distinct, trivial-equivalent E578 states and best nontrivial E686. Expanded 17 diverse E<=950 intermediate states with 11,500,500 second-step operations; best nontrivial still E686. Tested 47,183,040 exact 14-bit block assignments, nonlocal O66 repair (8 valid O66 seeds; min E1318), 4,000 affine decimations and 10,200 aligned parity-block exchanges, all without a new record. [Details and source](results/2026-11-06-exact-segment-bridges.md).
 
