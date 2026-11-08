@@ -1,0 +1,96 @@
+name: temp Ramsey R46 cross-core six-tail constructive repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-cross-core-six-tail.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-cross-core-six-tail-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        include:
+          - {start: 0, stop: 8}
+          - {start: 8, stop: 16}
+          - {start: 16, stop: 24}
+          - {start: 24, stop: 32}
+          - {start: 32, stop: 40}
+          - {start: 40, stop: 46}
+    env:
+      OPENBLAS_NUM_THREADS: "1"
+      OMP_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      NUMEXPR_NUM_THREADS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install array engine
+        run: python3 -m pip install --disable-pip-version-check -q numpy
+      - name: Jointly reassemble six tails across valid 30-cores
+        run: |
+          python3 science-boundary/ramsey-r46/cross_core_six_tail_repair.py \
+            --seed science-boundary/ramsey-r46/results/algorithm22-calibration-best-14.json \
+            --outdir "$RUNNER_TEMP/p003-cross-core" \
+            --start ${{ matrix.start }} --stop ${{ matrix.stop }} \
+            --steps 6000 --rng $((20261107 + ${{ matrix.start }} * 613))
+      - name: Independent full-graph defect verification
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/p003-cross-core/summary.json" ]; then
+            cat "$RUNNER_TEMP/p003-cross-core/summary.json"
+          fi
+          if [ -f "$RUNNER_TEMP/p003-cross-core/best-36.json" ]; then
+            python3 - <<'PY'
+          import json,os
+          d=os.environ["RUNNER_TEMP"]+"/p003-cross-core/"
+          g=json.load(open(d+"best-36.json"))["adjacency"]
+          assert len(g)==36 and all(len(r)==36 for r in g)
+          assert all(g[i][i]=="0" and all(g[i][j]==g[j][i] for j in range(36)) for i in range(36))
+          a=[sum(1<<j for j,c in enumerate(row) if c=="1") for row in g]
+          full=(1<<36)-1
+          co=[full&~r&~(1<<i) for i,r in enumerate(a)]
+          def count(x,c,k):
+              if not k:return 1
+              ans=0
+              while c.bit_count()>=k:
+                  b=c&-c;i=b.bit_length()-1;c^=b
+                  ans+=count(x,c&x[i],k-1)
+              return ans
+          k4=count(a,full,4)
+          i6=count(co,full,6)
+          print("Independent exact recount: K4=",k4,"I6=",i6,"defects=",k4+i6)
+          assert k4+i6<14
+          PY
+            if python3 - <<'PY'
+          import json,os,sys
+          d=os.environ["RUNNER_TEMP"]+"/p003-cross-core/"
+          r=json.load(open(d+"summary.json"))
+          sys.exit(0 if r["best_defects"]==0 else 1)
+          PY
+            then
+              git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+              mkdir -p "$RUNNER_TEMP/p003-verify"
+              cp "$RUNNER_TEMP/p003-cross-core/best-36.json" "$RUNNER_TEMP/p003-verify/certificate.json"
+              python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/p003-verify"
+            fi
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-cross-core-${{ matrix.start }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/p003-cross-core/
