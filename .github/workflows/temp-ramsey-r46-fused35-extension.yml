@@ -1,0 +1,110 @@
+name: temp Ramsey R46 cross-parent 35 synthesis and extension
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-fused35-extension.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-fused35-extension-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  synthesis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - {mode: fusion35, seed: 101, seconds: 240}
+          - {mode: fusion35, seed: 102, seconds: 240}
+          - {mode: fusion35, seed: 103, seconds: 240}
+          - {mode: fusion35, seed: 104, seconds: 240}
+          - {mode: fusion35, seed: 105, seconds: 240}
+          - {mode: fusion35, seed: 106, seconds: 240}
+          - {mode: fusion35, seed: 107, seconds: 240}
+          - {mode: fusion35, seed: 108, seconds: 240}
+          - {mode: fusion35, seed: 109, seconds: 240}
+          - {mode: fusion35, seed: 110, seconds: 240}
+          - {mode: fusion35, seed: 111, seconds: 240}
+          - {mode: fusion35, seed: 112, seconds: 240}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install CaDiCaL via Python SAT
+        run: |
+          python3 -m pip install --disable-pip-version-check -q python-sat
+          python3 -c "from pysat.solvers import Cadical195; print('CaDiCaL195 available')"
+      - name: Synthesize cross-cut edges jointly
+        run: |
+          python3 science-boundary/ramsey-r46/independent_halves_cadical.py \
+            --mode ${{ matrix.mode }} --rng ${{ matrix.seed }} \
+            --timeout ${{ matrix.seconds }} \
+            --baseline science-boundary/ramsey-r46/data/few-shots-baseline.json \
+            --outdir "$RUNNER_TEMP/p003-halves"
+      - name: Independent full-matrix verification and Few Shots verifier
+        if: always()
+        shell: bash
+        run: |
+          if test -f "$RUNNER_TEMP/p003-halves/summary.json"; then
+            cat "$RUNNER_TEMP/p003-halves/summary.json"
+          fi
+          shopt -s nullglob
+          for f in "$RUNNER_TEMP"/p003-halves/candidate*.json; do
+            python3 - "$f" <<'PY'
+          import json,sys
+          a=json.load(open(sys.argv[1]))["adjacency"]
+          n=len(a)
+          assert n in (35,36)
+          assert all(len(r)==n for r in a)
+          assert all(a[i][i]=="0" and all(a[i][j]==a[j][i] for j in range(n)) for i in range(n))
+          g=[sum(1<<j for j,c in enumerate(r) if c=="1") for r in a]
+          full=(1<<n)-1
+          c=[full&~row&~(1<<i) for i,row in enumerate(g)]
+          def count(g,mask,k):
+              if not k:return 1
+              total=0
+              while mask.bit_count()>=k:
+                  bit=mask&-mask;u=bit.bit_length()-1;mask^=bit
+                  total+=count(g,mask&g[u],k-1)
+              return total
+          k4=count(g,full,4)
+          i6=count(c,full,6)
+          print("Independent recount:",n,"vertices; K4",k4,"I6",i6)
+          assert k4==i6==0
+          PY
+            if [ '${{ matrix.mode }}' = overlap36 ]; then
+              git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+              mkdir -p "$RUNNER_TEMP/p003-verify"
+              cp "$f" "$RUNNER_TEMP/p003-verify/certificate.json"
+              python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/p003-verify"
+            fi
+          done
+      - name: Screen cross-parent 35 graph and exact extension
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/p003-halves/candidate35.json" ]; then
+            python3 science-boundary/ramsey-r46/screen_fused35_extension.py \
+              --parent "$RUNNER_TEMP/p003-halves/candidate35.json" \
+              --reference science-boundary/ramsey-r46/results/extension-all-37.json \
+              --outdir "$RUNNER_TEMP/p003-halves"
+          fi
+          if [ -f "$RUNNER_TEMP/p003-halves/certificate36.json" ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+            mkdir -p "$RUNNER_TEMP/p003-verify"
+            cp "$RUNNER_TEMP/p003-halves/certificate36.json" "$RUNNER_TEMP/p003-verify/certificate.json"
+            python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/p003-verify"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-fused35-${{ matrix.mode }}-${{ matrix.seed }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/p003-halves/
