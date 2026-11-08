@@ -45,7 +45,7 @@ jobs:
           print('INDEPENDENT_OLD_T',E,flush=True)
           assert abs(E-444368.4373479895)<0.0005
           PY
-      - name: Verify C2 axis discovery, reduced gradient and cross-topology offspring
+      - name: Verify repaired five-field C2 polish, 20/24 parent axis fitting and actual offspring
         run: |
           python3 -m py_compile science-boundary/thomson-960/code/search_c2_cross_topology_genetic.py
           python3 science-boundary/thomson-960/code/search_c2_cross_topology_genetic.py \
