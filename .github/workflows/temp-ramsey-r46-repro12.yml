@@ -1,0 +1,54 @@
+name: temp Ramsey R46 compound-repair 12-defect reproduction
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-repro12.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reproduce 14 to 12 construction, fixed seed
+        run: |
+          python3 science-boundary/ramsey-r46/compound_repair_search.py \
+            --initial science-boundary/ramsey-r46/results/algorithm22-calibration-best-14.json \
+            --out "$RUNNER_TEMP/repro12.json" --seed 42 \
+            --steps 220 --depth 6 --seconds 15
+      - name: Independent combinatorial check against committed witness
+        run: |
+          python3 - <<'PY'
+          import itertools,json,os
+          root="science-boundary/ramsey-r46/results/"
+          expected=json.load(open(root+"compound-repair-36-12-defects.json"))['adjacency']
+          actual=json.load(open(os.environ['RUNNER_TEMP']+"/repro12.json"))['adjacency']
+          assert expected==actual
+          def check(a):
+              assert len(a)==36 and all(len(row)==36 for row in a)
+              assert all(a[i][i]=='0' and a[i][j]==a[j][i] for i in range(36) for j in range(36))
+              k4=sum(all(a[i][j]=='1' for i,j in itertools.combinations(s,2)) for s in itertools.combinations(range(36),4))
+              i6=sum(all(a[i][j]=='0' for i,j in itertools.combinations(s,2)) for s in itertools.combinations(range(36),6))
+              return k4,i6,sum(row.count('1') for row in a)//2
+          old=json.load(open(root+"algorithm22-calibration-best-14.json"))['adjacency']
+          assert check(old)==(10,4,263)
+          assert check(actual)==(12,0,260)
+          distance=sum(old[i][j]!=actual[i][j] for i in range(36) for j in range(i+1,36))
+          assert distance==29,distance
+          print("REPRODUCED_AND_INDEPENDENTLY_VERIFIED")
+          print("old K4=10 I6=4 edges=263")
+          print("new K4=12 I6=0 edges=260")
+          print("undirected edge differences:",distance)
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-compound-repro12-${{ github.run_id }}
+          path: ${{ runner.temp }}/repro12.json
+          retention-days: 14
