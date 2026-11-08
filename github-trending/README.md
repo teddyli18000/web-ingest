@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-11-07** | **4,413** | **2,566** |
+| **2014-08-09** | **2026-11-08** | **4,414** | **2,567** |
 
-### Latest All-Languages snapshot — 2026-11-07
+### Latest All-Languages snapshot — 2026-11-08
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [zed-industries/zed](https://github.com/zed-industries/zed) | Rust | 306 |
-| 2 | [NVIDIA/auto-ontology](https://github.com/NVIDIA/auto-ontology) | Python | 2,015 |
-| 3 | [rails/rails](https://github.com/rails/rails) | Ruby | 142 |
-| 4 | [mpv-player/mpv](https://github.com/mpv-player/mpv) | C | 37 |
-| 5 | [rust-lang/rust](https://github.com/rust-lang/rust) | Rust | 192 |
-| 6 | [react/react](https://github.com/react/react) | JavaScript | 248 |
-| 7 | [angular/angular](https://github.com/angular/angular) | TypeScript | 135 |
-| 8 | [symfony/symfony](https://github.com/symfony/symfony) | PHP | 128 |
-| 9 | [prometheus/prometheus](https://github.com/prometheus/prometheus) | Go | 148 |
-| 10 | [google/skills](https://github.com/google/skills) | Python | 534 |
+| 1 | [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) | Rust | 190 |
+| 2 | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | JavaScript | 2,085 |
+| 3 | [google/skills](https://github.com/google/skills) | Python | 443 |
+| 4 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 1,100 |
+| 5 | [anthropics/skills](https://github.com/anthropics/skills) | Python | 390 |
+| 6 | [meta/astryx](https://github.com/meta/astryx) | TypeScript | 96 |
+| 7 | [prometheus/prometheus](https://github.com/prometheus/prometheus) | Go | 322 |
+| 8 | [sherlock-project/sherlock](https://github.com/sherlock-project/sherlock) | Python | 1,766 |
+| 9 | [milind-soni/OpenMausBot](https://github.com/milind-soni/OpenMausBot) | TypeScript | 1,955 |
+| 10 | [astral-sh/ruff](https://github.com/astral-sh/ruff) | Rust | 350 |
 
-[Open full snapshot →](data/2026/11/07/trending.json)
+[Open full snapshot →](data/2026/11/08/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 311 days  
+[`2026`](data/2026/) · 312 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
