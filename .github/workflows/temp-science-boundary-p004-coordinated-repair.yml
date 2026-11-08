@@ -1,0 +1,74 @@
+name: temp p004 constructive 3000-point 10D coordinated rewiring
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-p004-coordinated-repair.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-p004-coordinated-repair
+  cancel-in-progress: false
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [1, 17, 101]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'numpy>=1.26,<3' 'scipy>=1.12,<2'
+      - name: Pin public Itty/Rosin/Carstensen/Reichman baseline
+        run: |
+          git init --quiet /tmp/c7-itty
+          git -C /tmp/c7-itty fetch --quiet --depth 1 https://github.com/nathanielitty/lower-bounds-for-shannon-capacity.git fe8966079013abaac21d1c08441500100f8e3b86
+          git -C /tmp/c7-itty checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-itty rev-parse HEAD)" = fe8966079013abaac21d1c08441500100f8e3b86
+      - name: Rebuild and optimize published 10D code by large joint release
+        run: |
+          mkdir -p /tmp/c7-record/shot /tmp/c7-record/repaired
+          python /tmp/c7-itty/c7/construct_cc_10_7_134753.py \
+            < /tmp/c7-itty/c7/R367.txt > /tmp/c7-record/raw.txt
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          words=[''.join(line.split()) for line in Path('/tmp/c7-record/raw.txt').read_text().splitlines() if len(line.split())==10]
+          assert len(words)==134753 and len(set(words))==134753
+          Path('/tmp/c7-record/shot/certificate.json').write_text(json.dumps({'points':words},separators=(',',':'))+'\n')
+          PY
+          python science-boundary/shannon-capacity-c7/code/c7p004_record_coordinated_repair.py \
+            /tmp/c7-record/shot/certificate.json \
+            /tmp/c7-itty/c7/R367.txt /tmp/c7-record/repaired \
+            --seed "${{ matrix.seed }}" --limit 180
+      - name: Independently verify resulting 10D certificate with official Few Shots judge
+        run: |
+          git clone --quiet --depth 1 https://github.com/few-shots/few-shots.git /tmp/fewshots
+          python /tmp/fewshots/problems/p004-shannon-capacity-c7/verify/verify.py \
+            /tmp/c7-record/repaired | tee /tmp/c7-record/repaired/verdict.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/c7-record/repaired')
+          status=json.loads((p/'status.json').read_text())
+          verdict=json.loads((p/'verdict.json').read_text())
+          assert status['optimal'] and verdict['valid'] and int(verdict['score'])==status['score']
+          assert status['score']>=134753
+          print('VALIDATED',json.dumps({'score':status['score'],'turnover':status['added'],
+                                         'canonical_hash':verdict['canonical_hash']}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c7-p004-coordinated-repair-${{ matrix.seed }}
+          path: /tmp/c7-record/repaired/
+          retention-days: 14
