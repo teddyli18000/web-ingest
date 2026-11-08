@@ -116,6 +116,7 @@ def main():
     ap.add_argument("--degree",type=int,default=14)
     ap.add_argument("--root",type=int,default=3)
     ap.add_argument("--near14",type=Path)
+    ap.add_argument("--check-only",action="store_true")
     ap.add_argument("--seed",type=int,required=True)
     ap.add_argument("--seconds",type=int,default=300)
     ap.add_argument("--outdir",type=Path,required=True)
@@ -165,6 +166,26 @@ def main():
                               for i in av for j in bv]
                         s.add_clause(lits)
                         counters["K4" if k==4 else "I6"]+=1
+        # Independent encoding sanity check: the known parent is an
+        # explicit satisfying assignment to every cross-edge variable.
+        if args.mode=="control35":
+            known=catalog()[orig["A_parent"]]
+            root=orig["A_root"]
+            ka=[i for i in range(35) if known[root]>>i&1]
+            kb=[i for i in range(35) if i!=root and not known[root]>>i&1]
+            assert len(ka)==na and len(kb)==nb
+            phases=[vars[(i,j)] if known[u]>>v&1 else -vars[(i,j)]
+                    for i,u in enumerate(ka) for j,v in enumerate(kb)]
+            assert s.solve(assumptions=phases) is True
+            print("KNOWN_PARENT_SAT",json.dumps({"n":n,
+                "cross_variables":base,"source":orig}),flush=True)
+            s.set_phases(phases)
+            if args.check_only:
+                summary={"mode":args.mode,"status":"CONTROL_WITNESS_VERIFIED",
+                         "cross_variables":base,"source":orig}
+                (args.outdir/"summary.json").write_text(
+                    json.dumps(summary,indent=2)+"\n")
+                return
         # A and B internally satisfy all required root-aware Ramsey restrictions.
         deadline=threading.Timer(args.seconds,s.interrupt)
         deadline.start()
