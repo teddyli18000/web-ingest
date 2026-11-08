@@ -56,6 +56,15 @@ def catalog():
     assert len(graphs)==37
     return graphs
 def sample_structure(args,rng):
+    if args.mode=="near14":
+        rows=json.loads(args.near14.read_text())["adjacency"]
+        assert len(rows)==36 and all(len(row)==36 for row in rows)
+        g=[sum(1<<j for j,c in enumerate(row) if c=="1") for row in rows]
+        root=args.root
+        A=[i for i in range(36) if g[root]>>i&1]
+        B=[i for i in range(36) if i!=root and not g[root]>>i&1]
+        return induced(g,A),induced(g,B),{"kind":"14-defect-elite-root-cut",
+                                         "root":root,"initial_defects":14}
     gs=catalog()
     if args.mode=="control35":
         g=gs[rng.randrange(37)]
@@ -103,8 +112,10 @@ def clique_subsets(g,k,red):
 
 def main():
     ap=argparse.ArgumentParser()
-    ap.add_argument("--mode",choices=["control35","fusion36"],required=True)
+    ap.add_argument("--mode",choices=["control35","fusion36","near14"],required=True)
     ap.add_argument("--degree",type=int,default=14)
+    ap.add_argument("--root",type=int,default=3)
+    ap.add_argument("--near14",type=Path)
     ap.add_argument("--seed",type=int,required=True)
     ap.add_argument("--seconds",type=int,default=300)
     ap.add_argument("--outdir",type=Path,required=True)
