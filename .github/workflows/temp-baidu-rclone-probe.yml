@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   verify:
@@ -34,3 +35,7 @@ jobs:
               install_rclone(Path(temp) / "rclone")
           print("Pinned Linux rclone bootstrap succeeded.")
           PY
+      - name: Trigger Baidu Drive master after successful bootstrap
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run baidu-drive-worker.yml --repo teddyli18000/web-ingest --ref main -f reason=auth-updated
