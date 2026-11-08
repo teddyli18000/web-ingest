@@ -21,7 +21,7 @@ import auth_cipher
 
 RCLONE_ARCHIVE = "rclone-v1.74.4-linux-amd64.zip"
 RCLONE_SHA256 = "fe435e0c36228e7c2f116a8701f01127bb1f694005fc11d1f27186c8bca4115d"
-RCLONE_URL = "https://downloads.rclone.org/v1.74.4/" + RCLONE_ARCHIVE
+RCLONE_URL = "https://github.com/rclone/rclone/releases/download/v1.74.4/" + RCLONE_ARCHIVE
 RCLONE_MEMBER = "rclone-v1.74.4-linux-amd64/rclone"
 REMOTE_NAME = "bdm-drive"
 REFRESH_MARGIN_SECONDS = 300
