@@ -249,7 +249,7 @@ def main():
                         ef,y,n2,fok,fgr=hb.polish(y,1600)
                         fnit+=n2
                     nfull+=1
-                    novel=quality_candidates(fullpop,ef,None,
+                    novel=quality_candidates(fullpop,ef,y,
                                              f"{sweep}:{j}:{mode}:{amp}",50)
                     if novel:
                         new_basin_count+=1
@@ -289,7 +289,7 @@ def main():
                     ef,yy,fnit,fok,fgr=hb.polish(
                         weak_symmetry_break(full_xyz(v),rng,.005),1600)
                     nfull+=1
-                    novelty=quality_candidates(fullpop,ef,None,
+                    novelty=quality_candidates(fullpop,ef,yy,
                         f"GA:{sweep}:{childnum}",50)
                     if novelty:
                         new_basin_count+=1
@@ -333,7 +333,9 @@ def main():
                 "new_full_basins":new_basin_count,
                 "c3_elites":[{"energy":z["energy"],"tag":z["tag"],
                               "points":full_xyz(z["v"]).tolist()} for z in c3pop[:14]],
-                "full_elites":[{"energy":z["energy"],"tag":z["tag"]} for z in fullpop[:30]],
+                "full_elites":[{"energy":z["energy"],"tag":z["tag"],
+                                "points":None if z.get("v") is None else z["v"].tolist()}
+                               for z in fullpop[:20]],
                 "rows":stats}
             (args.out/"result.json").write_text(
                 json.dumps(archive,separators=(",",":"))+"\n")
