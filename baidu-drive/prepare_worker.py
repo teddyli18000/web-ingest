@@ -292,6 +292,24 @@ def run_prepare_worker(
 
     if proc.returncode != 0:
         detail = str(result.get("last_error") or "").lower()
+        phases = (
+            ("probe prepared drive authorization", "Google Drive authorization probe"),
+            ("reconcile drive directory tree", "Google Drive folder creation/reconciliation"),
+            ("create drive tree client", "Google Drive client configuration"),
+            ("relay cleanup pass", "Baidu staging cleanup"),
+            ("plan relay staging batch", "Baidu staging batch planning"),
+            ("staging pass", "Baidu staging"),
+            ("persist state checkpoint", "checkpoint persistence"),
+            ("scan", "Baidu share scan"),
+        )
+        phase = next((label for marker, label in phases if marker in detail), "mover preparation")
+        indicators = tuple(label for marker, label in (
+            ("403", "HTTP 403"), ("401", "HTTP 401"),
+            ("429", "HTTP 429"), ("invalid_grant", "invalid OAuth grant"),
+            ("insufficient", "insufficient permissions"),
+            ("timeout", "timeout"), ("not found", "not found"),
+        ) if marker in detail)
+        print("Baidu Drive prepare blocked in " + phase + (": " + ", ".join(indicators) if indicators else "") + ".")
         needs_login = any(part in detail for part in (
             "baidu authentication required",
             "baidu browser login",
