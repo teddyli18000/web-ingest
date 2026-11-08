@@ -1,0 +1,90 @@
+name: temp-aes-two-level-helper-cosynthesis
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/semantic_two_level_helpers.py'
+      - '.github/workflows/temp-aes-two-level-helper-cosynthesis.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - parents: 84
+            first: 32
+            second: 64
+            extra: ''
+          - parents: 130
+            first: 64
+            second: 128
+            extra: '--include-and'
+          - parents: 180
+            first: 100
+            second: 240
+            extra: '--include-and'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import 102-gate nonlinear factor families
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 40996646594
+          github-token: ${{ github.token }}
+          pattern: aes-joint-factor-*
+          path: parents
+          merge-multiple: false
+      - name: Import 101-gate neutral variants
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 42252448125
+          github-token: ${{ github.token }}
+          pattern: aes-care-cone-fs-101-*
+          path: parents
+          merge-multiple: false
+      - name: Import second-generation AND factorization variants
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 42456112245
+          github-token: ${{ github.token }}
+          pattern: aes-shear-joint-and-*
+          path: parents
+          merge-multiple: false
+      - name: Add checked AND shear seed
+        run: |
+          set -euxo pipefail
+          mkdir -p parents/shear
+          python science-boundary/aes-sbox-circuit/make_and_shear_102.py --out parents/shear/candidate-shear102.json
+      - name: Jointly optimize 2-level helpers, nonlinear factorization, and complete AES DAG
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet ortools
+          python -m py_compile science-boundary/aes-sbox-circuit/semantic_two_level_helpers.py
+          python science-boundary/aes-sbox-circuit/semantic_two_level_helpers.py \
+            --archive-dir parents --max-source-gates 102 \
+            --max-parents '${{ matrix.parents }}' --first-width '${{ matrix.first }}' \
+            --second-width '${{ matrix.second }}' --force-new-and ${{ matrix.extra }} \
+            --seconds 480 --workers 4 --rng '${{ matrix.first }}' --out result | tee run.log
+          python -c "import json; d=json.load(open('result/summary.json')); assert d['verified_all_256']; print(d)"
+      - name: Independent official Few Shots verifier if <=100 found
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/p008shot
+            cp result/candidate.json /tmp/p008shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/p008shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-2level-${{ matrix.first }}-${{ matrix.second }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
