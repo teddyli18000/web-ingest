@@ -32,7 +32,7 @@ The candidate universe is all `(u,v)` with both factors outside the retained 359
   - seed 17: `d3664c3ed7b26f4c50fef1f96cd644f928eff400b7e7dd228494aa79871a3256`;
   - seed 101: `5127054dce1c46c5f99796b50cc01cba079bf69118fb874bd01a34cf1e852c59`.
 
-Reusable deterministic producer: [`code/c7p004_record_coordinated_repair.py`](../code/c7p004_record_coordinated_repair.py). The one-shot workflow [`temp-science-boundary-p004-coordinated-repair.yml`](https://github.com/teddyli18000/web-ingest/blob/main/.github/workflows/temp-science-boundary-p004-coordinated-repair.yml) pins the public parent, replays it, creates three new 10D certificates and independently judges them.
+Reusable deterministic producer: [`code/c7p004_record_coordinated_repair.py`](../code/c7p004_record_coordinated_repair.py). The completed disposable workflow in [run 42502891420](https://github.com/teddyli18000/web-ingest/actions/runs/42502891420) pinned the public parent, constructed three new 10D certificates and independently judged them; the workflow file was retired after validation, while reusable code and hosted results remain.
 
 Locally, an independently implemented second round from one such neutral code effected a further **4,686-for-4,686** legal rearrangement, verified by a distinct 10D prefix-neighborhood bitset checker. This continuation is **not** yet an official independently reproduced artifact. Do not count it as a new record or use it as a substitute for the hosted result.
 
