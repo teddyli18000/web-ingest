@@ -1,0 +1,69 @@
+name: temp p004 constructive full-safe-endpoint MILP replay
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-p004-direct-endpoints.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: temp-p004-direct-endpoints
+  cancel-in-progress: false
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {case: nine, run_id: 42251306345, artifact: c7-nine-port-port12a}
+          - {case: ten, run_id: 42251245285, artifact: c7-ten-port-port12a}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install exact MILP solver
+        run: python -m pip install 'numpy>=1.26,<3' 'scipy>=1.12,<2'
+      - name: Pin previous independent 367-point parent and private-port witness
+        run: |
+          mkdir -p /tmp/c7p004/parent /tmp/c7p004/near /tmp/c7p004/result /tmp/c7p004/shot
+          gh run download 42024771296 --repo "${{ github.repository }}" --name c7-port-walk-2026110552 --dir /tmp/c7p004/parent
+          gh run download "${{ matrix.run_id }}" --repo "${{ github.repository }}" --name "${{ matrix.artifact }}" --dir /tmp/c7p004/near
+          test "$(wc -l < /tmp/c7p004/parent/best_private367.ids)" -eq 367
+          test -s /tmp/c7p004/near/near_miss.json
+      - name: Optimize full endpoint domain and replay actual 10D construction
+        run: |
+          python science-boundary/shannon-capacity-c7/code/c7p004_full_endpoint_direct_milp.py \
+            /tmp/c7p004/parent/best_private367.ids \
+            /tmp/c7p004/near/near_miss.json \
+            /tmp/c7p004/result --seconds 180
+          cp /tmp/c7p004/result/best_certificate.json /tmp/c7p004/shot/certificate.json
+      - name: Verify certificate with authoritative Few Shots p004 judge
+        run: |
+          git clone --quiet --depth 1 https://github.com/few-shots/few-shots.git /tmp/c7-fewshots
+          python /tmp/c7-fewshots/problems/p004-shannon-capacity-c7/verify/verify.py \
+            /tmp/c7p004/shot | tee /tmp/c7p004/result/verdict.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=Path('/tmp/c7p004/result')
+          score=json.loads((r/'status.json').read_text())['score']
+          v=json.loads((r/'verdict.json').read_text())
+          assert v['valid'] and int(v['score'])==score,(score,v)
+          print('INDEPENDENT_REPLAY',json.dumps(v,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c7p004-direct-endpoint-${{ matrix.case }}
+          path: /tmp/c7p004/result/
+          retention-days: 14
