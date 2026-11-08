@@ -24,12 +24,9 @@ Implemented:
 - expired-session reconciliation before any replay;
 - automatic master-scheduler wakeup whenever a file-worker workflow completes, including failed/cancelled runs.
 
-Still pending before live transfer:
+Live acceptance is still pending. The Baidu browser login and GitHub Secrets were initialized, but the first test transfer was blocked by Google Drive API HTTP 403 because the original custom OAuth project's Google Cloud project was deleted. The test task and checkpoint have been reset. For the next test, use rclone's shared OAuth client as documented in [AUTHORIZATION.md](AUTHORIZATION.md), update the Google Secret and submit a new public share.
 
-- one-time normal Baidu browser login and Google rclone authorization;
-- real-provider acceptance of share transfer, ranged download, cross-VM resume and cleanup.
-
-Without those Secrets, accepted tasks stop at `BLOCKED_AUTH_SETUP`.
+The shared OAuth client is being retired during 2026, so this is a temporary testing path, not a permanent unattended authentication plan.
 
 ## Fixed Release
 
