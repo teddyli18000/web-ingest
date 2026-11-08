@@ -83,7 +83,7 @@ jobs:
 
           runtime = fetch("baidu-drive/state/runtime.json")
           task = fetch("baidu-drive/state/tasks/" + task_id + ".json")
-          if runtime["active_task"] != task_id or task["status"] != "BLOCKED_AUTH_SETUP":
+          if runtime["active_task"] != task_id or task["status"] not in {"BLOCKED_AUTH_SETUP", "BLOCKED"}:
               print("Task has already moved forward; no dispatch needed.")
           else:
               subprocess.run(
