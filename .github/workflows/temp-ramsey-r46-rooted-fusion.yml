@@ -45,6 +45,16 @@ jobs:
             --mode ${{ matrix.mode }} --degree ${{ matrix.degree }} \
             --seed ${{ matrix.seed }} --seconds 170 \
             --outdir "$RUNNER_TEMP/p003-rooted"
+      - name: Require hidden-answer positive control to succeed
+        if: ${{ matrix.mode == 'control35' }}
+        run: |
+          python3 - <<'PY'
+          import json,os
+          p=os.environ["RUNNER_TEMP"]+"/p003-rooted/summary.json"
+          summary=json.load(open(p))
+          assert summary["status"]=="SAT",summary
+          print("Positive control passed: valid 35-vertex reconstruction")
+          PY
       - name: Independent recount and authoritative verification
         if: always()
         run: |
