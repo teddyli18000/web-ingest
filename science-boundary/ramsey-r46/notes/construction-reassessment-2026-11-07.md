@@ -60,3 +60,12 @@ The best candidate quality is still 14; do **not** scale repeated near14 local s
 - Exoo (2012), *On the Ramsey Number R(4,6)*: https://www.combinatorics.org/ojs/index.php/eljc/article/view/v19i1p66
 - McKay public 37 graph6: https://users.cecs.anu.edu.au/~bdm/data/r46_35some.g6
 - Radziszowski, *Small Ramsey Numbers*, 2026 revision: https://www.combinatorics.org/ojs/index.php/eljc/article/view/DS1
+
+
+### Overlapping-parent and genuinely cross-parent synthesis (follow-up)
+
+- \`independent_halves_cadical.py\` now also has \`overlap36\`: take two 18-vertex induced graphs of one published valid 35-vertex graph that overlap in exactly one original vertex, duplicate that original vertex into two vertices, and resynthesize every one of the 324 cross edges without retaining the original cross-edge assignment. The experiment is [42456264481](https://github.com/teddyli18000/web-ingest/actions/runs/42456264481), eight seeded pairs.
+- \`fusion35\` instead takes 17 and 18 vertices from **two distinct published Exoo graphs** and synthesizes all 306 cross edges. Its key objective is to produce genuinely new *valid* 35-point parents, not just to regenerate the same 37 graph types. \`screen_fused35_extension.py\` checks K4/I6 and attempts exact one-vertex extension using two independent algorithms, and records whether each graph's triangle/I5 fingerprint is new relative to all 37 published examples. Distinct fingerprints certify nonisomorphism; matching fingerprints are inconclusive without an isomorphism test.
+- The constructed 35-vertex hidden-answer controls in [42456135866](https://github.com/teddyli18000/web-ingest/actions/runs/42456135866) both returned SAT, independently recounted as valid: 247 edges in 17.748 seconds, 248 edges in 70.672 seconds. This establishes **construction ability** for the balanced split and is the relevant calibration benchmark.
+- Cross-parent 35 synthesis and immediate extension are running in [42456461164](https://github.com/teddyli18000/web-ingest/actions/runs/42456461164), twelve seeded fusions. The necessary test for progress is a previously unseen 35-point structure or, decisively, a verified 36-vertex graph. An UNSAT fixed-half pair is not a global nonexistence claim.
+- When a valid 36-point candidate is output, rerun the independent full-matrix K4/I6 test and the live Few Shots verifier, then commit and submit the exact certificate per Few Shots rules. These workflows retain candidates as GitHub Action artifacts for 14 days.
