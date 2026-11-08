@@ -61,6 +61,12 @@ share_url: https://pan.baidu.com/s/...
 extraction_code: abcd
 ```
 
+### Google Drive destination
+
+Each transfer creates its own folder in **My Drive**, named `BaiduDriveMover-<task-id>`, with the original directory structure preserved inside. The destination is fixed by the mover; the Release has no destination-path input.
+
+Once the folder exists, the Release `Drive folder` status field shows its direct Google Drive link. Uploaded files remain in Drive after completion; only tool-owned Baidu staging is cleaned up.
+
 The Release is only a public control/status projection. It is not a secret store, database, or file-transfer staging area.
 
 ## Architecture
