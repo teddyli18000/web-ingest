@@ -18,6 +18,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: baidu-drive-file-${{ inputs.task_id }}-${{ inputs.file_id }}
@@ -85,3 +86,12 @@ jobs:
           --task-id '${{ inputs.task_id }}'
           --file-id '${{ inputs.file_id }}'
           --lease-id '${{ inputs.lease_id }}'
+
+      - name: Wake master scheduler after this file worker
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TRANSFER_TASK_ID: ${{ inputs.task_id }}
+        run: |
+          gh workflow run baidu-drive-worker.yml --repo "$GITHUB_REPOSITORY" --ref main \
+            -f "task_id=$TRANSFER_TASK_ID" -f "reason=file-worker-completed"
