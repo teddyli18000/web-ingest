@@ -9,7 +9,7 @@ All same-fiber and row/column cross-conflicts are encoded exactly as MILP.
 The returned candidate is replayed independently; if it exceeds the Few
 Shots p004 baseline, it is also materialized as certificate.json.
 """
-import argparse,itertools,json,time
+import argparse,base64,hashlib,itertools,json,struct,time
 from pathlib import Path
 import numpy as np
 from scipy.optimize import milp,Bounds,LinearConstraint
@@ -35,7 +35,13 @@ def transform(S,delta):
     return [sum((D[x][i]+delta[i])%7*P[i] for i in range(5)) for x in S]
 
 def optimize(parent,near,seconds,aux_swaps=()):
-    I=[int(v) for v in parent.read_text().split()]
+    if parent.suffix==".json":
+        data=json.loads(parent.read_text())
+        raw=base64.b64decode(data["data"])
+        assert hashlib.sha256(raw).hexdigest()==data["sha256_decoded_bytes"]
+        I=list(struct.unpack("<367H",raw))
+    else:
+        I=[int(v) for v in parent.read_text().split()]
     assert len(I)==367 and independent(I)
     case=json.loads(near.read_text())["best"]
     pairs=case["pairs"]
