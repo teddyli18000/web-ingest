@@ -1,0 +1,59 @@
+name: temp p004 public record substrate and constructive repair
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-p004-public-record.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-p004-public-record
+  cancel-in-progress: false
+jobs:
+  reconstruct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch pinned Itty-Rosin-Carstensen-Reichman 2026 construction
+        run: |
+          git init --quiet /tmp/c7-itty
+          git -C /tmp/c7-itty fetch --quiet --depth 1 https://github.com/nathanielitty/lower-bounds-for-shannon-capacity.git fe8966079013abaac21d1c08441500100f8e3b86
+          git -C /tmp/c7-itty checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-itty rev-parse HEAD)" = fe8966079013abaac21d1c08441500100f8e3b86
+      - name: Rebuild published 134753-word code and freeze machine-readable certificate
+        run: |
+          mkdir -p /tmp/c7-p004-record/shot
+          python /tmp/c7-itty/c7/construct_cc_10_7_134753.py < /tmp/c7-itty/c7/R367.txt \
+            > /tmp/c7-p004-record/record.txt
+          python - <<'PY'
+          import json,pathlib
+          p=pathlib.Path('/tmp/c7-p004-record')
+          words=[''.join(line.split()) for line in (p/'record.txt').read_text().splitlines() if len(line.split())==10]
+          assert len(words)==134753 and len(set(words))==len(words)
+          (p/'shot/certificate.json').write_text(json.dumps({'points':words},separators=(',',':'))+'\n')
+          print('PUBLISHED_RECORD_RECONSTRUCTED',len(words))
+          PY
+      - name: Replay through authoritative Few Shots verifier
+        run: |
+          git clone --quiet --depth 1 https://github.com/few-shots/few-shots.git /tmp/fewshots
+          python /tmp/fewshots/problems/p004-shannon-capacity-c7/verify/verify.py \
+            /tmp/c7-p004-record/shot | tee /tmp/c7-p004-record/verdict.json
+          python - <<'PY'
+          import json
+          r=json.load(open('/tmp/c7-p004-record/verdict.json'))
+          assert r['valid'] and r['score']=='134753',r
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c7-p004-published-record-verified
+          path: |
+            /tmp/c7-p004-record/shot/certificate.json
+            /tmp/c7-p004-record/verdict.json
+          retention-days: 14
