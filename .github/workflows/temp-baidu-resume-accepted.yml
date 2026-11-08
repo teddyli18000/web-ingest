@@ -1,0 +1,53 @@
+name: temp Baidu resume accepted task
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-baidu-resume-accepted.yml'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  resume:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Resume already-accepted blocked Baidu share
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
+          import urllib.request
+
+          task_id = "bd-20261108T061817Z-f542f8"
+          api = "https://api.github.com/repos/teddyli18000/web-ingest"
+          headers = {
+              "Authorization": "Bearer " + os.environ["GH_TOKEN"],
+              "Accept": "application/vnd.github+json",
+              "X-GitHub-Api-Version": "2022-11-28",
+          }
+          def fetch(path):
+              req = urllib.request.Request(api + "/contents/" + path + "?ref=main", headers=headers)
+              with urllib.request.urlopen(req, timeout=30) as resp:
+                  import base64
+                  item = json.load(resp)
+              return json.loads(base64.b64decode(item["content"]))
+
+          runtime = fetch("baidu-drive/state/runtime.json")
+          task = fetch("baidu-drive/state/tasks/" + task_id + ".json")
+          if runtime["active_task"] != task_id or task["status"] != "BLOCKED_AUTH_SETUP":
+              print("Task has already moved forward; no dispatch needed.")
+          else:
+              subprocess.run(
+                  ["gh", "workflow", "run", "baidu-drive-worker.yml",
+                   "--repo", "teddyli18000/web-ingest", "--ref", "main",
+                   "-f", "task_id=" + task_id, "-f", "reason=retry"],
+                  check=True,
+              )
+              print("Resumed accepted Baidu task through the current master.")
+          PY
