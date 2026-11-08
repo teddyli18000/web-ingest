@@ -144,6 +144,20 @@ def main():
                     for q in ee:impact[q]+=1
                     added+=1
             stats["ramsey_clauses"]+=added
+            # Proactively escape frozen-parent basins before UNSAT is reached.
+            # Conditional core relaxation alone did not fire in the first campaign:
+            # all runs kept all 306 original fixed edges for their entire budget.
+            if stats["sat_models"] % 4 == 0:
+                left=args.max_unfreeze-(fixed_initial-len(fixed))
+                if left>0:
+                    ranking=sorted(fixed,key=lambda z:(-impact[abs(z)],rng.random()))
+                    take=set(ranking[:min(args.unfreeze_batch,left)])
+                    fixed=[z for z in fixed if z not in take]
+                    stats["proactive_released_edges"]+=len(take)
+                    print(json.dumps({"step":iteration,
+                        "event":"proactive-witness-edge-release",
+                        "released":len(take),"fixed_remaining":len(fixed),
+                        "sampled_K4":len(k4),"sampled_I6":len(i6)}),flush=True)
             if iteration<=5 or iteration%25==0:
                 print(json.dumps({"step":iteration,"event":"separate",
                     "K4_sample":len(k4),"I6_sample":len(i6),"added":added,
@@ -157,7 +171,7 @@ def main():
             "source":source,"n":n,"original_fixed_edges":fixed_initial,
             "fixed_edges_remaining":len(fixed),"best_defects":best,
             "stats":dict(stats),"seconds":round(time.monotonic()-started,2),
-            "method":"unsat-core-guided-mutable-halves-lazy-ramsey"}
+            "method":"witness-guided-proactive-mutable-halves-lazy-ramsey"}
     (args.outdir/"summary.json").write_text(json.dumps(result,indent=2)+"\n")
     print("SUMMARY",json.dumps(result,sort_keys=True),flush=True)
 
