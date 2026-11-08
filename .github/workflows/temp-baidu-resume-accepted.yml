@@ -65,4 +65,12 @@ jobs:
           print("Drive API probe status:", "success" if result.returncode == 0 else "failed")
           found = [label for key, label in labels if key in raw]
           print("Drive API failure categories:", ", ".join(found) if found else "unclassified")
+          import re
+          lines = [line for line in result.stderr.splitlines() if "error 403:" in line.lower()]
+          if lines:
+              explanation = lines[-1].split("Error 403:", 1)[-1].split("Details:", 1)[0].strip()
+              explanation = re.sub(r"https?://[^\\s]+", "[URL]", explanation)
+              explanation = re.sub(r"[\\w.+-]+@[\\w.-]+", "[email]", explanation)
+              explanation = re.sub(r"\\b\\d{6,}\\b", "[ID]", explanation)
+              print("Sanitized 403 explanation:", explanation[:200])
           PY
