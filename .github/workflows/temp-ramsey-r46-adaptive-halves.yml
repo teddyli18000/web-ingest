@@ -1,0 +1,107 @@
+name: temp Ramsey R46 core-guided mutable-half construction
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-adaptive-halves.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-adaptive-halves-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - {mode: control35, seed: 31, seconds: 200}
+          - {mode: control35, seed: 32, seconds: 200}
+          - {mode: fusion36, seed: 41, seconds: 320}
+          - {mode: fusion36, seed: 42, seconds: 320}
+          - {mode: fusion36, seed: 43, seconds: 320}
+          - {mode: fusion36, seed: 44, seconds: 320}
+          - {mode: overlap36, seed: 45, seconds: 320}
+          - {mode: overlap36, seed: 46, seconds: 320}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native SAT solver
+        run: python3 -m pip install --disable-pip-version-check -q python-sat
+      - name: Construct by relaxing incompatible inner-core edges
+        run: |
+          python3 science-boundary/ramsey-r46/adaptive_halves_cadical.py \
+            --mode ${{ matrix.mode }} --seed ${{ matrix.seed }} \
+            --seconds ${{ matrix.seconds }} --max-unfreeze 72 --unfreeze-batch 5 \
+            --baseline science-boundary/ramsey-r46/data/few-shots-baseline.json \
+            --outdir "$RUNNER_TEMP/ramsey-adaptive"
+      - name: Independently validate candidates
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/ramsey-adaptive/summary.json" ]; then
+            cat "$RUNNER_TEMP/ramsey-adaptive/summary.json"
+          fi
+          if [ -f "$RUNNER_TEMP/ramsey-adaptive/certificate.json" ]; then
+            python3 - <<'PY'
+          import json,os
+          p=os.environ["RUNNER_TEMP"]+"/ramsey-adaptive/certificate.json"
+          a=json.load(open(p))["adjacency"];n=len(a)
+          assert n in (35,36)
+          assert all(len(row)==n for row in a)
+          assert all(a[i][i]=="0" and a[i][j]==a[j][i] for i in range(n) for j in range(n))
+          g=[sum(1<<j for j,c in enumerate(r) if c=="1") for r in a]
+          full=(1<<n)-1
+          co=[full&~row&~(1<<i) for i,row in enumerate(g)]
+          def f(a,c,k):
+              if not k:return 1
+              ans=0
+              while c.bit_count()>=k:
+                  b=c&-c;i=b.bit_length()-1;c^=b
+                  ans+=f(a,c&a[i],k-1)
+              return ans
+          assert (f(g,full,4),f(co,full,6))==(0,0)
+          print("Independent recount passed, vertices:",n)
+          PY
+            if [ '${{ matrix.mode }}' != control35 ]; then
+              git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+              mkdir -p "$RUNNER_TEMP/p003-verify"
+              cp "$RUNNER_TEMP/ramsey-adaptive/certificate.json" "$RUNNER_TEMP/p003-verify/certificate.json"
+              python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/p003-verify"
+            fi
+          fi
+          if [ -f "$RUNNER_TEMP/ramsey-adaptive/best-nearmiss.json" ]; then
+            python3 - <<'PY'
+          import json,os
+          d=os.environ["RUNNER_TEMP"]+"/ramsey-adaptive"
+          a=json.load(open(d+"/best-nearmiss.json"))["adjacency"]
+          n=len(a);full=(1<<n)-1
+          g=[sum(1<<j for j,c in enumerate(r) if c=="1") for r in a]
+          c=[full&~m&~(1<<i) for i,m in enumerate(g)]
+          def f(x,c,k):
+              if k==0:return 1
+              s=0
+              while c.bit_count()>=k:
+                  b=c&-c;v=b.bit_length()-1;c^=b
+                  s+=f(x,c&x[v],k-1)
+              return s
+          k4=f(g,full,4);i6=f(c,full,6)
+          s=json.load(open(d+"/summary.json"))
+          assert k4+i6==s["best_defects"]
+          print("Independent near-miss recount:",k4,i6)
+          PY
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-adaptive-${{ matrix.mode }}-${{ matrix.seed }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/ramsey-adaptive/
