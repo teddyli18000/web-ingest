@@ -8,7 +8,19 @@ Can the AES S-box be implemented with at most **100** two-input gates over the e
 
 Before substantial p008 work, re-check the live Few Shots board, recent/open p008 PRs, and every newer record's complete `SHOT.md` including dead ends. Do not extrapolate a restricted exact exclusion into a global lower bound.
 
-## Current state — verified 2026-11-04
+## Current state — constructive search, 2026-11-07
+
+- **Live Few Shots record remains 101 gates** (PR #31); no open p008 PR at the latest check.
+- A fully AES-verified 102-gate circuit changes the **unordered nonlinear AND-function set** (symmetric difference 2) by a bilinear AND shear. See `make_and_shear_102.py`.
+- Repeating the shear jointly on two nonlinear sites produces a substantial new parent family: the local constructive run generated 1,273 distinct nontrivially changed-AND circuits, including 104-gate examples with symmetric difference 4. The reproducible `double_and_shear_construction.py` and independent [Action 42456579731](https://github.com/teddyli18000/web-ingest/actions/runs/42456579731) provide its runner validation.
+- Joint factorizations of the 102-gate shear produce 11 additional verified 102-gate variants ([Action 42456112245](https://github.com/teddyli18000/web-ingest/actions/runs/42456112245)); all retain the same changed AND-function set but differ in their gate connections.
+- Whole-circuit semantic recombination combined 756 archived 101/102 parent files (512 distinct verified circuits). Merely mixing their existing intermediates recovers 101 without a new AND basis ([Action 42455846885](https://github.com/teddyli18000/web-ingest/actions/runs/42455846885)).
+- **Constructive direction**: co-optimize the new AND basis with new shared XOR/XNOR helpers. Single-level novel helpers have not yet produced a new 101 witness ([Action 42456007862](https://github.com/teddyli18000/web-ingest/actions/runs/42456007862)). Running next: *two dependent new helpers* ([Action 42456435193](https://github.com/teddyli18000/web-ingest/actions/runs/42456435193)) and *global synthesis warm-started from a known valid 102* ([Action 42456706490](https://github.com/teddyli18000/web-ingest/actions/runs/42456706490)).
+- The immediate target is **a verified 101-gate circuit with a genuinely different AND-function set**, followed by 100 or fewer. Candidate quality, not additional exact exclusions of the original 101 neighborhood, decides what to scale.
+
+Detailed construction, measurements, source code and follow-up: [constructive AND shear note](notes/constructive-and-shear-2026-11-07.md).
+
+## Prior checkpoint — 2026-11-04
 
 - **Best verified public Few Shots score is still 101 gates** (PR #31), with no open p008 PR at this check.
 - The G103 32-AND late-tail two-new-helper direct-100 family completed all 16 shards: 4,368 guide deletion choices, ~3.47M second-helper checks, no candidate (run 41195582759).
