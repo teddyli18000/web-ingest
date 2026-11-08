@@ -1,0 +1,89 @@
+name: temp p004 constructive coupled core-periphery rectangles
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-p004-coupled-core.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: temp-p004-coupled-core
+  cancel-in-progress: false
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        source: [published, neutral3034]
+        shard: [0,1,2,3]
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install MILP solver dependencies
+        run: python -m pip install 'numpy>=1.26,<3' 'scipy>=1.12,<2'
+      - name: Fetch and pin public record source
+        run: |
+          git init --quiet /tmp/c7-itty
+          git -C /tmp/c7-itty fetch --quiet --depth 1 https://github.com/nathanielitty/lower-bounds-for-shannon-capacity.git fe8966079013abaac21d1c08441500100f8e3b86
+          git -C /tmp/c7-itty checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-itty rev-parse HEAD)" = fe8966079013abaac21d1c08441500100f8e3b86
+      - name: Materialize exact independently verified 134753-point source
+        run: |
+          mkdir -p /tmp/c7-rect/source /tmp/c7-rect/output
+          if test "${{ matrix.source }}" = 'published'; then
+            python /tmp/c7-itty/c7/construct_cc_10_7_134753.py \
+              < /tmp/c7-itty/c7/R367.txt > /tmp/c7-rect/raw.txt
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/c7-rect')
+          words=[''.join(x.split()) for x in (p/'raw.txt').read_text().splitlines() if len(x.split())==10]
+          assert len(words)==134753 and len(set(words))==134753
+          (p/'source/certificate.json').write_text(json.dumps({'points':words},separators=(',',':'))+'\n')
+          PY
+          else
+            gh run download 42502891420 --repo "${{ github.repository }}" \
+              --name c7-p004-coordinated-repair-1 --dir /tmp/c7-rect/source
+          fi
+          test -s /tmp/c7-rect/source/certificate.json
+      - name: Optimize coupled rectangular core and ten-dimensional fiber replacements
+        run: |
+          python science-boundary/shannon-capacity-c7/code/c7p004_core_rectangle_construct.py \
+            /tmp/c7-itty/c7/R367.txt /tmp/c7-rect/source/certificate.json \
+            /tmp/c7-rect/output --shard "${{ matrix.shard }}" \
+            --shards 4 --trials 400 --limit 3
+      - name: Independently verify any generated positive-gain C7 ten-dimensional code
+        run: |
+          if test -s /tmp/c7-rect/output/certificate.json; then
+            git clone --quiet --depth 1 https://github.com/few-shots/few-shots.git /tmp/c7-fewshots
+            python /tmp/c7-fewshots/problems/p004-shannon-capacity-c7/verify/verify.py \
+              /tmp/c7-rect/output | tee /tmp/c7-rect/output/verdict.json
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/c7-rect/output')
+          s=json.loads((p/'status.json').read_text())
+          v=json.loads((p/'verdict.json').read_text())
+          assert v['valid'] and int(v['score'])==s['score'] and s['score']>=134754
+          print('NEW_RECORD_VERIFIED',json.dumps(v,sort_keys=True))
+          PY
+          else
+            echo 'No >134753 certificate constructed in this shard.'
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c7p004-coupled-${{ matrix.source }}-shard-${{ matrix.shard }}
+          path: /tmp/c7-rect/output/
+          retention-days: 14
