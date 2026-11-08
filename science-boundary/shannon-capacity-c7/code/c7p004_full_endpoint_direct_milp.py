@@ -34,7 +34,7 @@ def independent(S):
 def transform(S,delta):
     return [sum((D[x][i]+delta[i])%7*P[i] for i in range(5)) for x in S]
 
-def optimize(parent,near,seconds):
+def optimize(parent,near,seconds,aux_swaps=()):
     I=[int(v) for v in parent.read_text().split()]
     assert len(I)==367 and independent(I)
     case=json.loads(near.read_text())["best"]
@@ -42,7 +42,10 @@ def optimize(parent,near,seconds):
     R={a for a,b in pairs};t=len(R);B=set(I)-R
     assert len(R)==len(pairs) and len(B)==367-t
     X=transform(I,case["delta"])
-    assert len(X)==367 and len(set(X))==367
+    for old,new in aux_swaps:
+        assert old in X and new not in X
+        X[X.index(old)]=new
+    assert len(X)==367 and independent(X)
     # Exact owner supports; do not artificially restrict endpoints to PH/PV.
     supp=[set() for _ in range(U)]
     for a in I:
@@ -121,9 +124,12 @@ def main():
     p.add_argument("near_miss",type=Path)
     p.add_argument("output",type=Path)
     p.add_argument("--seconds",type=float,default=120)
+    p.add_argument("--aux-swap",default="",help="old:new 5D point replacement after translation")
     args=p.parse_args()
     args.output.mkdir(parents=True,exist_ok=True)
-    stats,words=optimize(args.parent_ids,args.near_miss,args.seconds)
+    swaps=[tuple(map(int,pair.split(":"))) for pair in args.aux_swap.split(",") if pair]
+    stats,words=optimize(args.parent_ids,args.near_miss,args.seconds,swaps)
+    stats["auxiliary_swaps"]=[list(x) for x in swaps]
     (args.output/"status.json").write_text(json.dumps(stats,indent=2,sort_keys=True)+"\n")
     if words is not None:
         data=json.dumps({"points":words},separators=(",",":"))+"\n"
