@@ -156,7 +156,7 @@ def cut_splice(A,B,rng):
 
 
 def quality_candidates(pop,E,pts,tag,limit=35):
-    if any(abs(z["energy"]-E)<3e-6 for z in pop):
+    if any(abs(z["energy"]-E)<3e-8 for z in pop):
         return False
     pop.append({"energy":float(E),"v":None if pts is None else pts.copy(),"tag":tag})
     pop.sort(key=lambda z:z["energy"])
@@ -268,7 +268,7 @@ def main():
             stats.append(row)
         # Genetic children are *new combinatorial C3 orbit assemblies*, unlike
         # smooth coordinate averaging or whole-sphere field compositions.
-        if len(c3pop)>=3:
+        if len(c3pop)>=2:
             for childnum in range(3):
                 ranks=np.arange(min(12,len(c3pop)))
                 w=np.exp(-ranks/3.5);w/=w.sum()
