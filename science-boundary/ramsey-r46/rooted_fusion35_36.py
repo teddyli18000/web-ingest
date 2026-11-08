@@ -170,7 +170,7 @@ def main():
         deadline.start()
         sat=s.solve_limited(expect_interrupt=True)
         deadline.cancel()
-        result={"mode":args.mode,"degree":args.degree,
+        result={"mode":args.mode,"degree":na,
                 "seed":args.seed,"source":orig,"n":n,"A":na,"B":nb,
                 "cross_variables":base,"clauses":counters,
                 "status":"SAT" if sat is True else
