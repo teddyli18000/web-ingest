@@ -82,3 +82,21 @@ A reproducibility issue was detected by reading the live GitHub Actions logs for
 - The source was checked against the PySAT solver API and the stand-alone bitset recount on the 35-point baseline and 36-point retained 14-defect graph. **No construction result is claimed until the new Action actually completes.**
 
 Do not report a solved 35-point positive-control instance as a new Ramsey bound. The scoring target remains a verified 36-point zero-defect certificate; a genuine sub-14 defect candidate is a lesser but directly measurable improvement.
+
+
+### 2026-11-08 final audit of four workflows
+
+Read GitHub Actions' actual final run/job states and successful-job logs (not merely green job badges). All four campaigns are **finished**:
+
+| run | conclusion | completed useful outcomes |
+|---|---|---|
+| [42456135866](https://github.com/teddyli18000/web-ingest/actions/runs/42456135866) | cancelled (2 shards cancelled) | 35-point controls seeds 1,2: SAT and independent K4=I6=0 (247 and 248 edges); 36-point fusion seeds 11–14: UNSAT for each *specified frozen pair* |
+| [42456264481](https://github.com/teddyli18000/web-ingest/actions/runs/42456264481) | cancelled (2 shards cancelled) | 36-point overlap seeds 21,22,24,25,26,27: UNSAT for each *specified frozen pair* |
+| [42456461164](https://github.com/teddyli18000/web-ingest/actions/runs/42456461164) | cancelled (6 shards cancelled) | 35-point cross-parent fusion seeds 102,104,105,106,108,112: UNSAT for each *specified frozen pair* |
+| [42457396915](https://github.com/teddyli18000/web-ingest/actions/runs/42457396915) | success (all 5 shards) | Glucose4 interface self-test passed; control35 seed31: 209 defects at timeout; 36-point fusion seeds41,42 and overlap seeds45,46: timeout UNKNOWN, no improved candidate |
+
+**Important correction to the proposed algorithm:** The four completed 36-point Glucose4 runs generated 10,526–11,069 lazy Ramsey clauses, examined 28–31 SAT models each, and timed out at ~240 seconds. In all four, \`fixed_edges_remaining=306\` equals \`original_fixed_edges=306\`; **zero UNSAT assumption cores were reached and zero parent-internal edges were released**. Thus the *intended* core-guided mutation was not exercised at all. The method behaved as frozen-half synthesis during these runs. The 35-point control in the same engine also failed to reconstruct a valid graph (209 defects after 150 seconds), unlike the separate CaDiCaL fixed-half controls. This is evidence of insufficient convergence for this formulation, not of a Ramsey obstruction.
+
+The 36-point Glucose4 summaries all print \`best_defects=14\`, but this is an **initialized incumbent threshold** (\`best=14 if n==36\`), **not a discovered 14-defect graph**. No \`IMPROVED\` line, \`best-nearmiss.json\`, or \`certificate.json\` was produced in any of those four 36-point shards. Their artifacts contain only the summary. The 35-point Glucose4 artifact does contain a near-miss; its 209-defect result was independently recounted by the workflow. No new 36-point candidate exists in these runs to independently recount; the retained old 14-defect candidate is the unchanged incumbent.
+
+**Research decision:** Do not present this as successful adaptive core relaxation, and do not repeat it at higher seeds or longer timeout. A next experiment would need an *explicit* relaxation mechanism that can activate before the full frozen-core SAT search proves UNSAT, e.g. an optimization over selected intra-core edges with a calibrated 35-point positive control. The present four-workflow campaign is closed with **no verified sub-14 result and no 36-point certificate**. Existing baseline and prior 35-point positive controls remain intact.
