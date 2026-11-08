@@ -67,6 +67,18 @@ def graph(mode, rng, baseline):
         perm=list(range(35));rng.shuffle(perm)
         l=induced(a,perm[:17]);r=induced(a,perm[17:])
         chosen={"kind":"known35-hidden-cross-edges","split":[17,18]}
+    elif mode=="overlap36":
+        base=parents()
+        i=rng.randrange(len(base))
+        perm=list(range(35))
+        rng.shuffle(perm)
+        left_vertices=perm[:18]
+        right_vertices=[perm[0]]+perm[18:]
+        l=induced(base[i],left_vertices)
+        r=induced(base[i],right_vertices)
+        chosen={"kind":"same-parent-overlap-one-vertex-recombination",
+                "published_parent_index":i,
+                "duplicated_original_vertex":perm[0]}
     elif mode=="fusion36":
         base=parents()
         i,j=rng.sample(range(len(base)),2)
@@ -82,7 +94,7 @@ def graph(mode, rng, baseline):
 
 def main():
     p=argparse.ArgumentParser()
-    p.add_argument("--mode",choices=("control35","fusion36"),required=True)
+    p.add_argument("--mode",choices=("control35","fusion36","overlap36"),required=True)
     p.add_argument("--baseline",type=Path,required=True)
     p.add_argument("--rng",type=int,default=20261107)
     p.add_argument("--timeout",type=int,default=120)
