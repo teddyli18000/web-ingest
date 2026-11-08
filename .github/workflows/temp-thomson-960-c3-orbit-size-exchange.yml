@@ -45,7 +45,7 @@ jobs:
           print("INDEPENDENT_T_SCORE",E,flush=True)
           assert abs(E-444368.4373479895)<.001
           PY
-      - name: Verify C3 orbit cardinalities N957/N960/N963 and force implementation
+      - name: Verify C3 orbit cardinalities and corrected removal-energy identity
         run: |
           python3 -m py_compile science-boundary/thomson-960/code/search_c3_orbit_size_exchange.py
           python3 science-boundary/thomson-960/code/search_c3_orbit_size_exchange.py \
@@ -56,7 +56,7 @@ jobs:
         run: |
           python3 science-boundary/thomson-960/code/search_c3_orbit_size_exchange.py \
             few-shots --t-file "$RUNNER_TEMP/oldT.dat" \
-            --seed ${{ matrix.seed }} --cycles 95 --polish-iter 700 \
+            --seed ${{ matrix.seed }} --cycles 80 --polish-iter 700 \
             --out "$RUNNER_TEMP/out"
       - name: Compare genuinely new N960 low-energy families
         if: always()
