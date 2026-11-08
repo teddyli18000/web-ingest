@@ -9,7 +9,7 @@ is independently recounted. Timed out means unknown, not impossible.
 import argparse, itertools, json, random, threading, time
 from collections import Counter
 from pathlib import Path
-from pysat.solvers import Cadical195
+from pysat.solvers import Glucose4
 from pysat.card import CardEnc, EncType
 from independent_halves_cadical import graph
 
@@ -79,7 +79,7 @@ def main():
     seen=set()
     started=time.monotonic()
     status="UNKNOWN"
-    with Cadical195() as solver:
+    with Glucose4() as solver:
         top=len(pairs)
         for e in all_degree:
             for method,bound in ((CardEnc.atmost,17),(CardEnc.atleast,n-25)):
