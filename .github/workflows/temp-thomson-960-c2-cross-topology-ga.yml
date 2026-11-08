@@ -1,0 +1,97 @@
+name: temp Thomson 960 cross-topology C2 genetic candidate hunt
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-c2-cross-topology-ga.yml'
+
+jobs:
+  c2-cross-topology:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 190
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [84201, 84202]
+    permissions:
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: few-shots/few-shots
+          path: few-shots
+          persist-credentials: false
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy numba
+      - name: Fetch historical T configuration and verify independent 24-dislocation parent
+        run: |
+          python3 - <<'PY'
+          import numpy as np,os,pathlib,urllib.request
+          raw=urllib.request.urlopen(
+              'https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/site/s_1/dat/points_960_1.dat',
+              timeout=65).read()
+          f=pathlib.Path(os.environ['RUNNER_TEMP'])/'T960.dat'
+          f.write_bytes(raw)
+          x=np.loadtxt(f);assert x.shape==(960,3)
+          x=x/np.linalg.norm(x,axis=1)[:,None]
+          dot=x@x.T
+          np.fill_diagonal(dot,-1)
+          E=np.sum(np.triu(1/np.sqrt(2-2*dot),1))
+          print('INDEPENDENT_OLD_T',E,flush=True)
+          assert abs(E-444368.4373479895)<0.0005
+          PY
+      - name: Verify C2 axis discovery, reduced gradient and cross-topology offspring
+        run: |
+          python3 -m py_compile science-boundary/thomson-960/code/search_c2_cross_topology_genetic.py
+          python3 science-boundary/thomson-960/code/search_c2_cross_topology_genetic.py \
+            few-shots --old-t "$RUNNER_TEMP/T960.dat" \
+            --seed ${{ matrix.seed }} --sweeps 2 --maxiter 450 \
+            --out "$RUNNER_TEMP/smoke"
+          python3 - <<'PY'
+          import os,json,pathlib
+          d=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'smoke'/'result.json').read_text())
+          print('SMOKE',d['seed'],d['sweeps_done'],
+                'C2_energies',[(x['E'],x['tag']) for x in d['c2_pool']],
+                'operators',d['operators'],
+                'T_fit',d['fit_old_T'])
+          assert d['operators']['cut-splice']+d['operators']['patch']>0
+          assert d['full_releases']>=0
+          PY
+      - name: New low-energy 960 search by 20x24-dislocation C2 genetic reconstruction
+        run: |
+          python3 science-boundary/thomson-960/code/search_c2_cross_topology_genetic.py \
+            few-shots --old-t "$RUNNER_TEMP/T960.dat" \
+            --seed ${{ matrix.seed }} --sweeps 85 --maxiter 650 \
+            --out "$RUNNER_TEMP/out"
+      - name: Preserve actual N960 scores and 20/24-structure candidate outcomes
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json,os,pathlib
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])
+          for name in ['smoke','out']:
+              f=root/name/'result.json'
+              if not f.exists():print('NO_RESULT',name);continue
+              d=json.loads(f.read_text())
+              print('FINAL_RESULT',name,'seed',d['seed'],
+                    'sweeps',d['sweeps_done'],'best_C2',d['best_C2'],
+                    'best_N960',d['best_full'],'new_C2',d['num_C2_new'],
+                    'unconstrained_releases',d['full_releases'],
+                    'winning_candidates',d['hits'])
+              print('C2_ELITES',[(e['E'],e['tag']) for e in d['c2_pool']])
+              print('FULL_ELITES',d['full_pool'])
+              print('OPERATORS',d['operators'])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-c2-ga-cross-topology-${{ matrix.seed }}
+          path: |
+            ${{ runner.temp }}/out
+            ${{ runner.temp }}/smoke
+          retention-days: 10
