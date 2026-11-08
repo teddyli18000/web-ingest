@@ -69,10 +69,12 @@ def main():
     root=args.root
     A=[i for i in range(36) if g[root]>>i&1]
     B=[i for i in range(36) if i!=root and not g[root]>>i&1]
-    assert len(A)==13 and len(B)==22 and root==3
-    # The full near miss has 14 defects, all crossing this cut.
-    assert all(any(u in A for u in q) and any(v in B for v in q)
-               for q in four+six)
+    assert len(A)+len(B)==35
+    root_incident=sum(root in q for q in four+six)
+    interior_bad=sum(all(u in A for u in q) or all(u in B for u in q)
+                     for q in four+six)
+    if root==3:
+        assert root_incident==interior_bad==0
     rng=random.Random(args.seed)
     score={}
     for q in four+six:
@@ -94,7 +96,8 @@ def main():
            for u,v in itertools.combinations(range(36),2) if (u,v) not in vid}
     assert len(vid)==len(A)*len(B)+args.free_a+args.free_b
     print('CONFIG',json.dumps({'A':A,'B':B,'free_inside':len(free_inside),
-                               'vars':len(vid),'root':root}),flush=True)
+                               'vars':len(vid),'root':root,'root_incident':root_incident,
+                               'interior_bad':interior_bad}),flush=True)
     nclauses=0
     t0=time.monotonic()
     with Glucose4() as solver:
@@ -141,6 +144,7 @@ def main():
                  'root':root,'A':len(A),'B':len(B),
                  'free_A':args.free_a,'free_B':args.free_b,
                  'free_inside':len(free_inside),'variables':len(vid),
+                 'root_incident':root_incident,'interior_bad':interior_bad,
                  'ramsey_clauses':nclauses,'seed':args.seed,
                  'status':'SAT' if sat is True else
                           ('UNSAT_THIS_FREE_SET' if sat is False else 'UNKNOWN'),
