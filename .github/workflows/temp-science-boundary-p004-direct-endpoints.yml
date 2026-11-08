@@ -18,8 +18,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {case: nine, run_id: 42251306345, artifact: c7-nine-port-port12a}
-          - {case: ten, run_id: 42251245285, artifact: c7-ten-port-port12a}
+          - {case: nine-original, run_id: 42251306345, artifact: c7-nine-port-port12a, swap: ""}
+          - {case: nine-neutral-swap, run_id: 42251306345, artifact: c7-nine-port-port12a, swap: "4848:4898"}
+          - {case: ten-original, run_id: 42251245285, artifact: c7-ten-port-port12a, swap: ""}
     env:
       GH_TOKEN: ${{ github.token }}
       OPENBLAS_NUM_THREADS: '1'
@@ -45,7 +46,7 @@ jobs:
           python science-boundary/shannon-capacity-c7/code/c7p004_full_endpoint_direct_milp.py \
             /tmp/c7p004/parent/best_private367.ids \
             /tmp/c7p004/near/near_miss.json \
-            /tmp/c7p004/result --seconds 180
+            /tmp/c7p004/result --seconds 180 --aux-swap "${{ matrix.swap }}"
           cp /tmp/c7p004/result/best_certificate.json /tmp/c7p004/shot/certificate.json
       - name: Verify certificate with authoritative Few Shots p004 judge
         run: |
