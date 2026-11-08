@@ -1,0 +1,75 @@
+Thomson N=960 — completed Riesz / anisotropic metric homotopy and C3 hybrid reset
+Date: 2026-11-07
+
+Accepted p007 record on Few Shots main, checked 2026-11-07:
+  R = 444368.3924061973 (Ronnie2025 C3 replica exchange);
+  valid new record needs >=1e-6 lower exact rational verifier score.
+
+Source run A: https://github.com/teddyli18000/web-ingest/actions/runs/42258720979
+Method: code/search_riesz_exponent_cycles.py.
+Two jobs seeds 22301, 22302, each 140 completed full-size N960
+Riesz exponent cycles (plus separate one-cycle smoke).
+All jobs succeeded; no candidate E<R-2e-7.
+  Exponents s = 0.18,.35,.55,.78,1.27,1.7,2.4,3.4;
+  each cycle relax at nonphysical s, scar-perturb, and adiabatically
+  return to physical Coulomb s=1, then full N960 quench.
+  Best E (both): 444368.3924061973 = accepted R.
+  Strongest genuinely new basin in the returned small elite pool:
+    444368.4412242053 = R + 0.0488180080 (seed22301).
+  Other new basins ~444368.4441513 and 444368.5428697, all worse than
+  previously stored W=444368.42162124.
+  Note upstream winner SHOT.md explicitly listed Riesz-s homotopy as a
+  previously unsuccessful mechanism. Our independent result is consistent.
+
+Source run B: https://github.com/teddyli18000/web-ingest/actions/runs/42261470927
+Method: code/search_anisotropic_metric_loops.py.
+Two jobs seeds 61501, 61502, 115 full-N960 cycles each, all successful.
+  Temporarily use Coulomb metric E_Q=sum 1/sqrt((xi-xj)^T Q(xi-xj))
+  with Q=exp(traceless symmetric), two noncommuting anisotropic axes;
+  return to Q=I and relax true N960.
+  Self-tests checked Q=I against compiled independent Coulomb objective
+  and the nontrivial-Q gradient by finite differences.
+  All 230 cycles returned E>=R within numerical precision.
+  Seed61501 nontrivial Q 102 cycles: best E=444368.992068273 (R+0.599662076);
+             13 direct-isotropic controls: best E=444368.395686226.
+  Seed61502 nontrivial Q 102 cycles: best E=444368.882227587 (R+0.489821390);
+             13 direct-isotropic controls: best E=R.
+  So moderate/strong global anisotropy causes large elastic reorganization
+  with a persistent energy penalty. It is not a useful near-record candidate
+  generator at the tested strength distribution. No extrapolation to weaker
+  anisotropy is justified, and scaling same perturbation family is not a
+  strong next priority.
+
+NEW CANDIDATE-CONSTRUCTION SEARCH SPACE
+The two accepted Few Shots p007 shots' original SHOT.md describe:
+ - Ronnie2025 winning C3 score R: six-temperature replica exchange in
+   320-point C3 orbit space (T=0.003..0.3), then physical N960 release.
+ - Abreto earlier D2 score 444368.4040805305: 240-orbit subgroup,
+   symmetry-preserving Deaven-Ho cut-and-splice genetic crossover among
+   distinct D2 minima, with 200 basin-hopping steps per child and full release.
+These mechanisms had distinct successes and fit the general property of
+spherical defect lattices: global scar arrangement can change under symmetry
+constraints without blowing up local elastic energy.
+
+Rather than spend more cycles mapping basins or slightly altering a
+hop amplitude, new code combines *C3* six-temperature replica exchange
+with a *C3* GA with registered patch recombination and true Deaven-Ho
+spatial orbit cuts, while symmetry preserving. It uses compiled stable
+Coulomb energy, C3 320-orbit representation, physical release of
+low C3 minima up to R+0.55, real N960 scoring, independent three seeds.
+
+Experiment code:
+  science-boundary/thomson-960/code/search_c3_replica_genetic.py
+Workflow Action:
+  https://github.com/teddyli18000/web-ingest/actions/runs/42455291835
+Workload: 3 independent seeds, 115 six-replica sweeps + three proposed
+symmetry-preserving crossover children per sweep. Every putative subrecord
+960-point result is saved for independent official verification.
+This tests a constructive combination of previously successful search
+features. It does NOT claim a breakthrough until a verified score improves R.
+
+Primary sources:
+  https://github.com/few-shots/few-shots/blob/main/problems/p007-thomson-problem/shots/Ronnie2025/c3-replica-exchange-scars/SHOT.md
+  https://github.com/few-shots/few-shots/blob/main/problems/p007-thomson-problem/shots/Abreto/thomson960-d2-ga/SHOT.md
+  https://doi.org/10.1063/5.0355867 (Amore/Wales, 2026)
+  https://arxiv.org/abs/2506.08398 (Amore et al., energy landscape)
