@@ -147,6 +147,8 @@ Credentials, access/refresh tokens, cookies, private headers, and plaintext resu
 
 ## Transfer core
 
+The runner installs Linux rclone v1.74.4 from the upstream GitHub Release and verifies its pinned SHA-256 before use. This is independent of the rclone version installed locally for initial Google authorization.
+
 The Actions adapters are compiled against the pinned standalone mover commit:
 
 ```text
