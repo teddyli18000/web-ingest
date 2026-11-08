@@ -1,0 +1,86 @@
+name: temp Ramsey R46 root-aware independent parent construction
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-rooted-fusion.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-rooted-fusion-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - {mode: control35, degree: 14, seed: 1}
+          - {mode: control35, degree: 15, seed: 2}
+          - {mode: fusion36, degree: 13, seed: 101}
+          - {mode: fusion36, degree: 13, seed: 102}
+          - {mode: fusion36, degree: 14, seed: 103}
+          - {mode: fusion36, degree: 14, seed: 104}
+          - {mode: fusion36, degree: 14, seed: 105}
+          - {mode: fusion36, degree: 14, seed: 106}
+          - {mode: fusion36, degree: 15, seed: 107}
+          - {mode: fusion36, degree: 15, seed: 108}
+          - {mode: fusion36, degree: 15, seed: 109}
+          - {mode: fusion36, degree: 15, seed: 110}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SAT
+        run: python3 -m pip install --disable-pip-version-check -q python-sat
+      - name: Synthesize rooted A-B graph with exact mixed constraints
+        run: |
+          python3 science-boundary/ramsey-r46/rooted_fusion35_36.py \
+            --mode ${{ matrix.mode }} --degree ${{ matrix.degree }} \
+            --seed ${{ matrix.seed }} --seconds 170 \
+            --outdir "$RUNNER_TEMP/p003-rooted"
+      - name: Independent recount and authoritative verification
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/p003-rooted/summary.json" ]; then cat "$RUNNER_TEMP/p003-rooted/summary.json"; fi
+          shopt -s nullglob
+          for path in "$RUNNER_TEMP"/p003-rooted/candidate*.json; do
+            python3 - "$path" <<'PY'
+          import json,sys
+          g=json.load(open(sys.argv[1]))["adjacency"];n=len(g)
+          assert n in (35,36)
+          assert all(len(row)==n for row in g)
+          assert all(g[i][i]=="0" and g[i][j]==g[j][i] for i in range(n) for j in range(n))
+          a=[sum(1<<j for j,c in enumerate(row) if c=="1") for row in g]
+          m=(1<<n)-1
+          b=[m&~z&~(1<<i) for i,z in enumerate(a)]
+          def f(a,c,k):
+              if not k:return 1
+              out=0
+              while c.bit_count()>=k:
+                  bit=c&-c;i=bit.bit_length()-1;c^=bit
+                  out+=f(a,c&a[i],k-1)
+              return out
+          assert f(a,m,4)==0 and f(b,m,6)==0
+          print("INDEPENDENT_VERIFIED",n)
+          PY
+            if [ '${{ matrix.mode }}' = fusion36 ]; then
+              git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+              mkdir -p "$RUNNER_TEMP/p003-verify"
+              cp "$path" "$RUNNER_TEMP/p003-verify/certificate.json"
+              python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/p003-verify"
+            fi
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-rooted-${{ matrix.mode }}-${{ matrix.degree }}-${{ matrix.seed }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/p003-rooted/
