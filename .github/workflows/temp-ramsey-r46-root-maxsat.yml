@@ -1,0 +1,98 @@
+name: temp Ramsey R46 exact defect MaxSAT construction
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-root-maxsat.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-root-maxsat-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  optimize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - {a: 0, b: 0, seed: 1}
+          - {a: 3, b: 9, seed: 2}
+          - {a: 6, b: 16, seed: 3}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PySAT
+        run: python3 -m pip install --disable-pip-version-check -q python-sat
+      - name: Smoke MaxSAT backend
+        run: |
+          python3 - <<'PY'
+          from pysat.formula import WCNF
+          from pysat.examples.rc2 import RC2
+          w=WCNF()
+          w.append([1],weight=1);w.append([-1],weight=1)
+          with RC2(w,solver='g4') as r:
+              assert r.compute() is not None and r.cost==1
+          print('MaxSAT exact score test passed')
+          PY
+      - name: Optimize forbidden subgraphs instead of testing zero only
+        shell: bash
+        run: |
+          timeout 430s python3 science-boundary/ramsey-r46/rooted_maxsat.py \
+            --near14 science-boundary/ramsey-r46/results/algorithm22-calibration-best-14.json \
+            --root 3 --free-a ${{ matrix.a }} --free-b ${{ matrix.b }} \
+            --seed ${{ matrix.seed }} \
+            --outdir "$RUNNER_TEMP/p003-maxsat"
+      - name: Independent recount and official verifier for any valid witness
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/p003-maxsat/summary.json" ]; then cat "$RUNNER_TEMP/p003-maxsat/summary.json"; fi
+          if [ -f "$RUNNER_TEMP/p003-maxsat/best-36.json" ]; then
+            python3 - <<'PY'
+          import os,json
+          d=os.environ["RUNNER_TEMP"]+"/p003-maxsat/"
+          rows=json.load(open(d+"best-36.json"))["adjacency"]
+          assert len(rows)==36 and all(len(r)==36 for r in rows)
+          assert all(rows[i][i]=="0" and rows[i][j]==rows[j][i]
+                     for i in range(36) for j in range(36))
+          g=[sum(1<<j for j,c in enumerate(r) if c=="1") for r in rows]
+          m=(1<<36)-1
+          co=[m&~x&~(1<<i) for i,x in enumerate(g)]
+          def count(a,c,k):
+              if not k:return 1
+              z=0
+              while c.bit_count()>=k:
+                  b=c&-c;i=b.bit_length()-1;c^=b
+                  z+=count(a,c&a[i],k-1)
+              return z
+          k4=count(g,m,4);i6=count(co,m,6)
+          score=json.load(open(d+"summary.json"))["best_score"]
+          assert k4+i6==score and score<14
+          print("INDEPENDENT VERIFIED IMPROVEMENT",score,k4,i6)
+          PY
+            if python3 - <<'PY'
+          import os,json,sys
+          d=os.environ["RUNNER_TEMP"]+"/p003-maxsat/summary.json"
+          sys.exit(0 if json.load(open(d))["best_score"]==0 else 1)
+          PY
+            then
+              git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+              mkdir -p "$RUNNER_TEMP/p003-verify"
+              cp "$RUNNER_TEMP/p003-maxsat/best-36.json" "$RUNNER_TEMP/p003-verify/certificate.json"
+              python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/p003-verify"
+            fi
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-maxsat-${{ matrix.a }}-${{ matrix.b }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/p003-maxsat/
