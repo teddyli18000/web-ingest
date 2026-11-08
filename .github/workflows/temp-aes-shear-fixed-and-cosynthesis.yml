@@ -1,0 +1,65 @@
+name: temp-aes-shear-fixed-and-cosynthesis
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/semantic_shear_fixed_and.py'
+      - '.github/workflows/temp-aes-shear-fixed-and-cosynthesis.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - parents: 60
+            helpers: 0
+            seconds: 60
+            extra: ''
+          - parents: 130
+            helpers: 100
+            seconds: 360
+            extra: '--include-and'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import validated parent archives
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 40996646594
+          github-token: ${{ github.token }}
+          pattern: aes-joint-factor-*
+          path: parents
+          merge-multiple: false
+      - name: Optimize entire affine network at fixed transformed 33-AND basis
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet ortools
+          python -m py_compile science-boundary/aes-sbox-circuit/semantic_shear_fixed_and.py
+          python science-boundary/aes-sbox-circuit/semantic_shear_fixed_and.py \
+            --archive-dir parents --max-source-gates 102 \
+            --max-parents '${{ matrix.parents }}' --new-helpers '${{ matrix.helpers }}' \
+            --max-gates 102 --warm-shear --force-new-and ${{ matrix.extra }} \
+            --seconds '${{ matrix.seconds }}' --workers 4 --rng '${{ matrix.helpers }}' --out result | tee run.log
+          python -c "import json; d=json.load(open('result/summary.json')); assert d['verified_all_256']; print(d)"
+      - name: Verify any <=100 using Few Shots official checker
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/p008shot
+            cp result/candidate.json /tmp/p008shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/p008shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-shear-fixed-and-${{ matrix.parents }}-${{ matrix.helpers }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
