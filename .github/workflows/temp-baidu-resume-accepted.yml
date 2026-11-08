@@ -35,6 +35,11 @@ jobs:
           import subprocess
 
           base = Path(os.environ["RUNNER_TEMP"]) / "baidu-drive-auth"
+          import configparser
+          config = configparser.ConfigParser(interpolation=None)
+          config.read(base / "rclone.conf", encoding="utf-8")
+          client_id = config["bdm-drive"].get("client_id", "")
+          print("Google client belongs to deleted project:", client_id.startswith("177565628939-"))
           args = [
               str(base / "rclone"),
               "--config", str(base / "rclone.conf"),
