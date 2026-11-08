@@ -53,6 +53,34 @@ class AuthorizeOnceTests(unittest.TestCase):
             self.assertNotIn("unrelated", result)
             self.assertNotIn("do-not-export", result)
 
+    def test_shared_rclone_client_can_be_exported(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "rclone.conf"
+            path.write_text(
+                '[bdm-drive]\ntype=drive\nscope=drive.file\n'
+                'token={"refresh_token":"refresh"}\n',
+                encoding="utf-8",
+            )
+            result = authorize_once.extract_google_remote(path)
+            self.assertIn("[bdm-drive]", result)
+            self.assertNotIn("client_id", result)
+
+    def test_google_only_updates_google_secret_and_preserves_baidu_key(self):
+        existing = {authorize_once.SESSION_SECRET, authorize_once.KEY_SECRET, authorize_once.GOOGLE_SECRET}
+        with mock.patch.object(
+            authorize_once, "secret_names", return_value=existing
+        ), mock.patch.object(
+            authorize_once, "google_configuration", return_value="[bdm-drive]\n"
+        ), mock.patch.object(
+            authorize_once, "set_secret"
+        ) as set_secret, mock.patch.object(
+            authorize_once.subprocess, "run", return_value=mock.Mock(returncode=0)
+        ) as run:
+            authorize_once.initialize("owner/repo", Path("unused"), login=lambda: self.fail("Baidu login should not run"), google_only=True)
+        set_secret.assert_called_once_with(authorize_once.GOOGLE_SECRET, "[bdm-drive]\n", "owner/repo")
+        self.assertTrue(any(call.args[0][:2] == ["rclone", "lsjson"] for call in run.call_args_list))
+        self.assertIn("reason=auth-updated", run.call_args.args[0])
+
     def test_initial_setup_writes_three_secrets_then_wakes_master(self):
         with mock.patch.object(
             authorize_once, "secret_names", return_value=set()
