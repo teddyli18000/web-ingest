@@ -91,11 +91,9 @@ At 5 hours the worker stops starting new windows, checkpoints, releases the leas
 
 ## Wakeup and hard VM loss
 
-Normal progress does not rely on a worker's final shell step.
+After the relay step, a file worker dispatches `baidu-drive-worker.yml` explicitly through `workflow_dispatch` in a final `always()` step. This works with GitHub's built-in `GITHUB_TOKEN`; relying only on `workflow_run: completed` did not wake the master for Actions-token-dispatched file workers.
 
-`baidu-drive-worker.yml` listens to `workflow_run: completed` for `Baidu Drive File Worker`. GitHub therefore wakes the same master when a file-worker workflow finishes successfully, fails, is cancelled, or reaches its workflow timeout.
-
-The master re-reads durable state instead of trusting the completed VM. If a lease has become stale, normal scheduler rules may reclaim it.
+The master re-reads durable state instead of trusting the completed VM. The `workflow_run: completed` trigger remains as a possible additional entry point, but is not relied on for normal chained operation. If a VM disappears before its final step, the lease remains safe and can be reclaimed after staleness when the master next runs.
 
 No cron watchdog and no second scheduler are used.
 

@@ -24,9 +24,7 @@ Implemented:
 - expired-session reconciliation before any replay;
 - automatic master-scheduler wakeup whenever a file-worker workflow completes, including failed/cancelled runs.
 
-Live acceptance is still pending. The Baidu browser login and GitHub Secrets were initialized, but the first test transfer was blocked by Google Drive API HTTP 403 because the original custom OAuth project's Google Cloud project was deleted. The test task and checkpoint have been reset. For the next test, use rclone's shared OAuth client as documented in [AUTHORIZATION.md](AUTHORIZATION.md), update the Google Secret and submit a new public share.
-
-The shared OAuth client is being retired during 2026, so this is a temporary testing path, not a permanent unattended authentication plan.
+The first live acceptance succeeded on November 8, 2026: one public-share file (6,065,237 bytes) was uploaded to Google Drive and independently verified, and task-owned Baidu staging was cleaned. The test confirmed end-to-end transfer using a personal Google Cloud OAuth Desktop client, not rclone's retiring shared client. See [AUTHORIZATION.md](AUTHORIZATION.md) for setup.
 
 ## Fixed Release
 
@@ -112,7 +110,7 @@ The master scheduler is the only global decision maker. It prefers independent f
 
 Each file worker owns one persisted lease and may process many relay windows during the same VM lifetime. At the soft runtime boundary it checkpoints and releases the lease instead of trying to run until GitHub's hard limit.
 
-`baidu-drive-worker.yml` is also triggered by completion of `Baidu Drive File Worker`. This is the hard-runner-loss wakeup path: GitHub completing a worker workflow wakes the same master scheduler, which re-reads current durable state and reclaims stale work when eligible. No polling/cron watchdog and no second scheduler are used.
+After a file worker runs, its final `always()` step explicitly dispatches `baidu-drive-worker.yml` using `workflow_dispatch` and `GITHUB_TOKEN`. The master re-reads durable state and reconciles verified uploads. A `workflow_run: completed` fallback remains configured, but GitHub can suppress that chained event for workflows initiated by `GITHUB_TOKEN`; it must not be the sole wakeup path. Abrupt runner loss before the final dispatch may require another master run after the lease is stale. No second scheduler is used.
 
 ## Cross-VM recovery
 
