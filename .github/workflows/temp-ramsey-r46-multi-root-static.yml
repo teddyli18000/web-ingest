@@ -1,0 +1,79 @@
+name: temp Ramsey R46 multi-root constructive topology repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-multi-root-static.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-multi-root-static-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - {root: 6, a: 8, b: 24, seed: 17}
+          - {root: 7, a: 8, b: 24, seed: 23}
+          - {root: 15, a: 8, b: 24, seed: 29}
+          - {root: 17, a: 8, b: 24, seed: 31}
+          - {root: 30, a: 14, b: 32, seed: 37}
+          - {root: 33, a: 14, b: 32, seed: 41}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native PySAT
+        run: python3 -m pip install --disable-pip-version-check -q python-sat
+      - name: Full static Ramsey construction with mutable parent interiors
+        run: |
+          python3 science-boundary/ramsey-r46/rooted_mutable_static.py \
+            --near14 science-boundary/ramsey-r46/results/algorithm22-calibration-best-14.json \
+            --root ${{ matrix.root }} --free-a ${{ matrix.a }} --free-b ${{ matrix.b }} \
+            --seed ${{ matrix.seed }} --seconds 300 \
+            --outdir "$RUNNER_TEMP/p003-root-mutable"
+      - name: Independently verify a claimed construction
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/p003-root-mutable/summary.json" ]; then cat "$RUNNER_TEMP/p003-root-mutable/summary.json"; fi
+          if [ -f "$RUNNER_TEMP/p003-root-mutable/certificate.json" ]; then
+            python3 - <<'PY'
+          import json,os
+          a=json.load(open(os.environ["RUNNER_TEMP"]+"/p003-root-mutable/certificate.json"))["adjacency"]
+          n=len(a);assert n==36
+          assert all(len(row)==n for row in a)
+          assert all(a[i][i]=="0" and a[i][j]==a[j][i] for i in range(n) for j in range(n))
+          g=[sum(1<<j for j,c in enumerate(row) if c=="1") for row in a]
+          full=(1<<n)-1
+          co=[full&~x&~(1<<i) for i,x in enumerate(g)]
+          def count(x,c,k):
+              if not k:return 1
+              z=0
+              while c.bit_count()>=k:
+                  b=c&-c;i=b.bit_length()-1;c^=b
+                  z+=count(x,c&x[i],k-1)
+              return z
+          assert count(g,full,4)==0 and count(co,full,6)==0
+          print("INDEPENDENT VERIFIED 36-PNT WITNESS")
+          PY
+            git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+            mkdir -p "$RUNNER_TEMP/p003-verify"
+            cp "$RUNNER_TEMP/p003-root-mutable/certificate.json" "$RUNNER_TEMP/p003-verify/certificate.json"
+            python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/p003-verify"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-multi-root-${{ matrix.root }}-${{ matrix.a }}-${{ matrix.b }}-${{ matrix.seed }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/p003-root-mutable/
