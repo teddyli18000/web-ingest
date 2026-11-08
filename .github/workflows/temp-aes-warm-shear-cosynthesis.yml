@@ -1,0 +1,77 @@
+name: temp-aes-warm-shear-cosynthesis
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/semantic_shear_warmstart.py'
+      - '.github/workflows/temp-aes-warm-shear-cosynthesis.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - parents: 50
+            helpers: 0
+            seconds: 90
+            extra: ''
+          - parents: 100
+            helpers: 48
+            seconds: 360
+            extra: ''
+          - parents: 160
+            helpers: 120
+            seconds: 360
+            extra: '--include-and'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download known valid 101 and nonlinear 102 architecture variants
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 40996646594
+          github-token: ${{ github.token }}
+          pattern: aes-joint-factor-*
+          path: parent-archive
+          merge-multiple: false
+      - name: Download neutral 101 parents
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 42252448125
+          github-token: ${{ github.token }}
+          pattern: aes-care-cone-fs-101-*
+          path: parent-archive
+          merge-multiple: false
+      - name: Construct globally from new 102 AND basis
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet ortools
+          python -m py_compile science-boundary/aes-sbox-circuit/semantic_shear_warmstart.py
+          python science-boundary/aes-sbox-circuit/semantic_shear_warmstart.py \
+            --archive-dir parent-archive --max-source-gates 102 \
+            --max-parents '${{ matrix.parents }}' --new-helpers '${{ matrix.helpers }}' \
+            --max-gates 102 --warm-shear --force-new-and ${{ matrix.extra }} \
+            --seconds '${{ matrix.seconds }}' --workers 4 --rng '${{ matrix.helpers }}' --out result | tee run.log
+          python -c "import json; d=json.load(open('result/summary.json')); assert d['verified_all_256']; print(d)"
+      - name: Official verifier for <=100
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/p008shot
+            cp result/candidate.json /tmp/p008shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/p008shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-warm-shear-${{ matrix.parents }}-${{ matrix.helpers }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
