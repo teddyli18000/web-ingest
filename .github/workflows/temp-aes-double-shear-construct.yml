@@ -1,0 +1,50 @@
+name: temp-aes-double-shear-construct
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/double_and_shear_construction.py'
+      - '.github/workflows/temp-aes-double-shear-construct.yml'
+permissions:
+  contents: read
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construct and independently validate double-AND-shear AES seed family
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/double_and_shear_construction.py
+          python science-boundary/aes-sbox-circuit/double_and_shear_construction.py \
+            --max-gates 104 --keep 120 --out result | tee run.log
+          python - <<'PY'
+          import glob,json,sys
+          sys.path.insert(0,'science-boundary/aes-sbox-circuit')
+          import released_and_skeleton as ras
+          files=glob.glob('result/candidate-*.json')
+          for f in files:
+              assert ras.independent_check(json.load(open(f)))[0],f
+          summary=json.load(open('result/summary.json'))
+          assert summary['archive_count']==len(files)
+          print(json.dumps({'reverified_all_256':len(files),'best':summary['best_novel_gates']}))
+          PY
+      - name: Official verifier if any <=100 was constructed
+        run: |
+          set -euxo pipefail
+          if [ "$(python -c "import json; d=json.load(open('result/summary.json'));print(d['best_novel_gates'] or 999)")" -le 100 ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp "$(find result -name 'candidate-*.json' | sort | head -1)" /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-double-shear-parent-archive
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
