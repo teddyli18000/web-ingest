@@ -131,7 +131,7 @@ def main():
             hi=min(nb,17-base_deg)
             for kind,bnd in ((CardEnc.atleast,lo),(CardEnc.atmost,hi)):
                 cnf=kind(lits=row,bound=bnd,top_id=top,encoding=EncType.seqcounter)
-                s.append_formula(cnf.clauses);top=cnf.nv
+                s.append_formula(cnf.clauses);top=max(top,cnf.nv)
                 counters["degree_clauses"]+=len(cnf.clauses)
         for j in range(nb):
             col=[vars[i,j] for i in range(na)]
@@ -140,7 +140,7 @@ def main():
             hi=min(na,17-deg)
             for kind,bnd in ((CardEnc.atleast,lo),(CardEnc.atmost,hi)):
                 cnf=kind(lits=col,bound=bnd,top_id=top,encoding=EncType.seqcounter)
-                s.append_formula(cnf.clauses);top=cnf.nv
+                s.append_formula(cnf.clauses);top=max(top,cnf.nv)
                 counters["degree_clauses"]+=len(cnf.clauses)
         for k in (4,6):
             for a in range(1,k):
