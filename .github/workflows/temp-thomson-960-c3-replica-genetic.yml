@@ -32,7 +32,7 @@ jobs:
         run: |
           python3 -m py_compile science-boundary/thomson-960/code/search_c3_replica_genetic.py
           python3 science-boundary/thomson-960/code/search_c3_replica_genetic.py \
-            few-shots --seed ${{ matrix.seed }} --sweeps 2 --maxiter 400 \
+            few-shots --seed ${{ matrix.seed }} --sweeps 5 --maxiter 400 \
             --out "$RUNNER_TEMP/smoke"
       - name: Search new C3 orbit arrangements by six-temperature replica + genetic crossover
         run: |
