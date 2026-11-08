@@ -93,8 +93,6 @@ def extract_google_remote(config_path: Path) -> str:
     remote = parser["bdm-drive"]
     if remote.get("type") != "drive" or remote.get("scope") != "drive.file":
         raise ValueError("The Google rclone remote bdm-drive needs scope drive.file")
-    if not remote.get("client_id"):
-        raise ValueError("The Google rclone remote needs a long-lived, dedicated OAuth client ID")
     token = json.loads(remote["token"])
     if not token.get("refresh_token"):
         raise ValueError("Google rclone authentication is not complete")
@@ -112,22 +110,32 @@ def google_configuration(config_path: Path) -> str:
     return extract_google_remote(config_path)
 
 
-def initialize(repo: str, local_google: Path, login=browser_login) -> None:
+def initialize(repo: str, local_google: Path, login=browser_login, *, google_only: bool = False) -> None:
     subprocess.run(["gh", "auth", "status"], check=True, capture_output=True)
     existing = secret_names(repo)
-    google = google_configuration(local_google) if GOOGLE_SECRET not in existing else None
-    session = login()
-    set_secret(SESSION_SECRET, session, repo)
+    google = google_configuration(local_google) if google_only or GOOGLE_SECRET not in existing else None
+    if google_only:
+        subprocess.run(
+            ["rclone", "lsjson", "bdm-drive:", "--dirs-only", "--max-depth", "1"],
+            check=True, stdout=subprocess.DEVNULL,
+        )
+    else:
+        session = login()
+        set_secret(SESSION_SECRET, session, repo)
     if google is not None:
         set_secret(GOOGLE_SECRET, google, repo)
-    if KEY_SECRET not in existing:
+    if not google_only and KEY_SECRET not in existing:
         set_secret(KEY_SECRET, base64.b64encode(secrets.token_bytes(32)).decode(), repo)
     subprocess.run(
         ["gh", "workflow", "run", "baidu-drive-worker.yml", "--ref", "main",
          "-f", "reason=auth-updated", "--repo", repo],
         check=True,
     )
-    print("Baidu login saved privately. The master scheduler has been awakened.")
+    print(
+        "Google Drive authorization updated. The master scheduler has been awakened."
+        if google_only else
+        "Baidu login saved privately. The master scheduler has been awakened."
+    )
 
 
 def main() -> int:
@@ -137,8 +145,9 @@ def main() -> int:
         "--rclone-config", type=Path,
         default=Path(os.environ.get("APPDATA", str(Path.home()))) / "rclone" / "rclone.conf",
     )
+    parser.add_argument("--google-only", action="store_true", help="refresh the Google Secret without reopening Baidu")
     args = parser.parse_args()
-    initialize(args.repo, args.rclone_config)
+    initialize(args.repo, args.rclone_config, google_only=args.google_only)
     return 0
 
 
