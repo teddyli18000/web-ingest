@@ -13,9 +13,27 @@ python -m pip install playwright
 
 ### Google Drive (once)
 
-If you have not configured the Google remote before, run `rclone config` and create a remote named **`bdm-drive`**, backend **`drive`**, scope **`drive.file`**. Select browser authorization and sign into Google. Since rclone is retiring its shared Google OAuth client in 2026, use your own Google OAuth client ID for durable unattended access; the [rclone Google Drive guide](https://rclone.org/drive/#making-your-own-client-id) walks through this one-time Google setup.
+This test setup uses rclone's built-in shared Google OAuth client: **no self-created Google Cloud project**. Set the `bdm-drive` remote to backend `drive` and scope `drive.file` with Client ID/Secret left unset.
 
-You don't need to repeat Google setup or login when only your Baidu session expires.
+For a remote previously connected to a deleted personal Google Cloud project, run in PowerShell:
+
+```powershell
+rclone config unset bdm-drive client_id client_secret | Out-Null
+rclone config reconnect bdm-drive:
+rclone lsd bdm-drive:
+```
+
+Complete the browser authorization. Then refresh **only the Google Secret** without opening Baidu:
+
+```powershell
+$setup = Join-Path $env:TEMP 'baidu-drive-authorize.py'
+Invoke-WebRequest 'https://raw.githubusercontent.com/teddyli18000/web-ingest/main/baidu-drive/authorize_once.py' -OutFile $setup
+& "E:\\Python_Projects\\Anaconda\\python.exe" $setup --google-only
+```
+
+This replaces the old Google Secret and dispatches the master. The Baidu browser session and encryption key stay untouched.
+
+**Note:** rclone is retiring the built-in shared Google client during 2026, so this is a test configuration, not a guaranteed permanent unattended credential. See the [rclone Google Drive documentation](https://rclone.org/drive/).
 
 ### Baidu (one browser window)
 
