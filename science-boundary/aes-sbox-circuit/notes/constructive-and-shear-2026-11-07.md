@@ -16,9 +16,9 @@ This is a new architecture exploration *seed*, not a public record improvement.
 
 ## Multiple genuinely nonlinear changes
 
-A separate local constructive generator enumerated 37 shared-factor AND pairs. Plain single shear normally adds 2 gates; complement-aware CSE saves one gate on the 46/48 case, yielding the known 102 seed. Two successive shears yielded **1,273 structurally distinct fully checked circuits** with at least one true AND-function-set change, including 69 raw 104-gate instances with symmetric difference 4 from the original 33-AND set. The minimum observed with two nontrivial shears was 104, not 101.
+A separate local constructive generator enumerated 37 shared-factor AND pairs. Plain single shear normally adds 2 gates; complement-aware CSE saves one gate on the 46/48 case, yielding the known 102 seed. Two successive shears yielded **1,322 raw generated combinations**, including 69 raw 104-gate instances with symmetric difference 4 from the original 33-AND set. The local named-JSON dedup counted 1,273; **the independent Actions canonicalized, independently checked and identified 661 distinct pruned circuit structures**, of which **38 distinct 104-gate certificates** were archived and re-verified on all 256 AES inputs. The minimum observed with two nontrivial shears was 104, not 101.
 
-Reusable audited implementation: [double_and_shear_construction.py](../double_and_shear_construction.py). Independent Actions rerun: [42456579731](https://github.com/teddyli18000/web-ingest/actions/runs/42456579731). The raw local counts describe the local reference implementation; confirm the new Actions summary before treating the repository implementation as completely calibrated.
+Reusable audited implementation: [double_and_shear_construction.py](../double_and_shear_construction.py). Independent Actions rerun: [42456579731](https://github.com/teddyli18000/web-ingest/actions/runs/42456579731). The authoritative reproducible run is complete: [Action 42456579731](https://github.com/teddyli18000/web-ingest/actions/runs/42456579731) reports 661 distinct normalized circuits and revalidates all 38 archived 104-gate candidates.
 
 ## Global multi-parent recombination, not individual local shaving
 
