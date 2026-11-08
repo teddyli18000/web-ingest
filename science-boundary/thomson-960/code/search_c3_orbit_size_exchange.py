@@ -63,10 +63,13 @@ def remove_contribution(v):
     k=len(v)//2
     reps=pts[:k]
     dots=reps@pts.T
-    for m in range(3):dots[np.arange(k),np.arange(k)+m*k]=-1.0
-    pot=np.sum(1/np.sqrt(np.maximum(2-2*dots,1e-12)),axis=1)
+    inv=1/np.sqrt(np.maximum(2-2*dots,1e-12))
+    for m in range(3):inv[np.arange(k),np.arange(k)+m*k]=0.0
+    pot=np.sum(inv,axis=1)
     own=np.sqrt(3)*np.maximum(1-reps[:,2]**2,1e-8)**.5
-    return 3*pot-3/own
+    # The other two members of the SAME orbit were excluded above.
+    # Removing all three deletes 3*outside-potential plus three internal pairs.
+    return 3*pot+3/own
 
 
 def propose_insert(v,rng,num=900):
@@ -147,6 +150,19 @@ def main():
     v0=c3.xyz_to_vars(c3.c3_representatives(R))
     e0,v0,n0,g0=polish(v0,1200)
     assert abs(e0-RECORD)<5e-6
+    # Verify the three-point removal contribution against two independent
+    # full pair sums, before relying on any orbit ranking.
+    source_full=xfull(v0)
+    base_abs=math.fsum(hb.pair_inverse(sb.xyz_to_vars(source_full)).tolist())
+    contrib=remove_contribution(v0)
+    for rep_id in (0,len(v0)//4,len(v0)//2-1):
+        reduced=xfull(remove_at(v0,rep_id))
+        e_reduced=math.fsum(hb.pair_inverse(sb.xyz_to_vars(reduced)).tolist())
+        actual=base_abs-e_reduced
+        predicted=contrib[rep_id]
+        if abs(actual-predicted)>3e-7:
+            raise RuntimeError(("orbit removal sum mismatch",rep_id,actual,predicted))
+    print("VERIFIED_ORBIT_REMOVE",len(contrib),"first",float(contrib[0]),flush=True)
     pool=[{"energy":e0,"v":v0.copy(),"tag":"R"}]
     if args.t_file is not None:
         vt=fit_T(args.t_file,args.seed+1701)
