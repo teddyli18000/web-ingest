@@ -1,0 +1,95 @@
+name: temp Thomson 960 cross-origin C3 genetic search
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-c3-old-t-genetic.yml'
+
+jobs:
+  t-c3-genetic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 225
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [72801, 72802]
+    permissions:
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: few-shots/few-shots
+          path: few-shots
+          persist-credentials: false
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy numba
+      - name: Validate historical independent T-symmetric 960-point parent
+        run: |
+          python3 - <<'PY'
+          import urllib.request,numpy as np,os,pathlib
+          url="https://www-wales.ch.cam.ac.uk/~wales/CCD/Thomson/site/s_1/dat/points_960_1.dat"
+          raw=urllib.request.urlopen(url,timeout=60).read()
+          p=pathlib.Path(os.environ["RUNNER_TEMP"])/"oldT.dat"
+          p.write_bytes(raw)
+          arr=np.loadtxt(p)
+          assert arr.shape==(960,3),arr.shape
+          arr/=np.linalg.norm(arr,axis=1)[:,None]
+          diff=arr[:,None,:]-arr[None,:,:]
+          d=np.sqrt(np.sum(diff*diff,axis=-1))
+          np.fill_diagonal(d,np.inf)
+          E=float(np.sum(np.triu(1/d,1)))
+          print("T_SEED_ENERGY",f"{E:.12f}","EXPECTED",444368.4373479895,flush=True)
+          assert abs(E-444368.4373479895)<0.001
+          PY
+      - name: Five-sweep smoke test with independent T and C3 parent plus genetic crossover
+        run: |
+          python3 science-boundary/thomson-960/code/search_c3_replica_genetic.py \
+            few-shots --t-file "$RUNNER_TEMP/oldT.dat" \
+            --seed ${{ matrix.seed }} --sweeps 5 --maxiter 410 \
+            --out "$RUNNER_TEMP/smoke"
+      - name: Search competitive C3 and full-N960 configurations via R x T recombination
+        run: |
+          python3 science-boundary/thomson-960/code/search_c3_replica_genetic.py \
+            few-shots --t-file "$RUNNER_TEMP/oldT.dat" \
+            --seed ${{ matrix.seed }} --sweeps 145 --maxiter 700 \
+            --out "$RUNNER_TEMP/out"
+      - name: Compare physical record hit rates with genetic and replica operators
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os,json,pathlib
+          root=pathlib.Path(os.environ["RUNNER_TEMP"])
+          for sub in ("smoke","out"):
+              path=root/sub/"result.json"
+              if not path.exists():
+                  print("MISSING_RESULT",sub);continue
+              d=json.loads(path.read_text())
+              print("RESULT",sub,"seed",d["seed"],"sweeps",d["sweeps_done"],
+                    "T_parent",d["T_parent_enabled"],
+                    "best_c3",d["best_c3"],"best_full",d["best_full"],
+                    "full_releases",d["full_releases"],
+                    "new_full_basins",d["new_full_basins"],
+                    "CANDIDATES",d["subrecord_candidates"])
+              print("BEST_C3",[(p["energy"],p["tag"]) for p in d["c3_elites"][:12]])
+              print("BEST_FULL",d["full_elites"][:15])
+              for op in ("scar-flow","scar-noise","global-noise",
+                         "cut-splice","registered-patch"):
+                  z=[r for r in d["rows"] if r["mode"]==op]
+                  print("OP",op,"n",len(z),
+                        "new_c3",sum(r["c3_unique"] for r in z),
+                        "best_c3",min((r["energy_c3"] for r in z),default=None))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-c3-cross-origin-T-${{ matrix.seed }}
+          path: |
+            ${{ runner.temp }}/out
+            ${{ runner.temp }}/smoke
+          retention-days: 10
