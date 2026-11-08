@@ -286,7 +286,7 @@ def subprocess_step(record: dict[str, Any]) -> tuple[int, dict[str, Any]]:
     except auth_provision.AuthError as exc:
         raise WorkerError("Google Drive token refresh failed") from exc
 
-    base = pathlib.Path(os.environ.get("RUNNER_TEMP") or ".") / "baidu-drive-relay"
+    base = pathlib.Path(os.environ.get("RUNNER_TEMP") or ".") / "baidu-drive-relay-work"
     base.mkdir(parents=True, exist_ok=True)
     input_path = base / "input.json"
     output_path = base / "output.json"

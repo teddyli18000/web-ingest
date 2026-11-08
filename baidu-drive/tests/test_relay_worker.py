@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import copy
 import datetime as dt
+import os
+import subprocess
+import tempfile
 import sys
 from pathlib import Path
 import unittest
+from unittest import mock
 
 TASK_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(TASK_DIR))
@@ -301,6 +305,35 @@ class RelayWorkerTests(unittest.TestCase):
         self.assertEqual(repo.record["status"], relay_state.FAILED_RETRYABLE)
         self.assertIsNone(repo.record["lease_id"])
         self.assertEqual(repo.record["last_error"], relay_worker.public_error("runtime"))
+
+    def test_relay_workspace_does_not_conflict_with_compiled_binary(self):
+        with tempfile.TemporaryDirectory() as directory:
+            binary = Path(directory) / "baidu-drive-relay"
+            binary.write_bytes(b"test-executable")
+
+            def fake_run(command, **kwargs):
+                output = Path(command[command.index("--output-json") + 1])
+                output.write_text('{"complete": false}', encoding="utf-8")
+                return subprocess.CompletedProcess(command, 0)
+
+            environment = {
+                "RUNNER_TEMP": directory,
+                "BAIDU_DRIVE_RELAY_BIN": str(binary),
+                "BAIDU_DRIVE_BAIDU_AUTH_FILE": "cookie",
+                "BAIDU_DRIVE_GOOGLE_ACCESS_TOKEN_FILE": "access-token",
+                "BAIDU_DRIVE_STATE_KEY_FILE": "state-key",
+                "BAIDU_DRIVE_RCLONE_CONFIG_FILE": "rclone.conf",
+                "BAIDU_DRIVE_GOOGLE_TOKEN_EXPIRY_FILE": "token-expiry",
+                "BAIDU_DRIVE_RCLONE_BIN": "rclone",
+            }
+            with mock.patch.dict(os.environ, environment), mock.patch.object(
+                relay_worker.auth_provision, "refresh_google_token"
+            ), mock.patch.object(relay_worker.subprocess, "run", side_effect=fake_run):
+                returncode, output = relay_worker.subprocess_step({"file_id": "file-1"})
+            self.assertEqual(returncode, 0)
+            self.assertEqual(output, {"complete": False})
+            self.assertTrue(binary.is_file())
+            self.assertTrue((Path(directory) / "baidu-drive-relay-work" / "input.json").is_file())
 
     def test_step_cannot_swap_session_capability(self):
         record = make_record(self.now(), 100)
