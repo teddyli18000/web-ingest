@@ -93,7 +93,7 @@ def run(raw,core,seed,limit):
     A=coo_matrix((np.asarray(vals,float),(r,c)),shape=(len(upper),n+len(blocks))).tocsr()
     rng=random.Random(seed)
     weights=np.asarray([rng.randint(1,3) for _ in range(n)])
-    objective=np.r_[-20000-np.asarray(weights,float),np.full(len(blocks),20000.)]
+    objective=np.r_[-100000-np.asarray(weights,float),np.full(len(blocks),100000.)]
     solve=milp(objective,integrality=np.ones(n+len(blocks)),
                bounds=Bounds(np.zeros(n+len(blocks)),np.ones(n+len(blocks))),
                constraints=LinearConstraint(A,-np.inf,upper),
