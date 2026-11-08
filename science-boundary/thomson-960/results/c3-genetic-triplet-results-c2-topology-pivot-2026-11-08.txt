@@ -1,0 +1,75 @@
+Thomson p007 constructive C3 and C2 experimental summary — Nov 8 2026
+
+Official p007 current accepted score rechecked from Few Shots board and open PRs:
+  R = 444368.3924061973 (Ronnie2025), no new p007 PR.
+Winning target = R - 1e-6 = 444368.3924051973.
+
+Completed C3 orbit genetic (3 seeds, 115 sweeps each):
+  Action 42455369621, all jobs SUCCESS.
+  72701: 57 unconstrained N960 releases, best R, zero subrecord.
+  72702: 41 releases, best R, zero subrecord.
+  72703: 41 releases, best R, zero subrecord.
+  Best new C3 constrained e.g 444368.411417883 (known index-2 C).
+  Closest independent N960 GA offspring from these output tables
+     ~444368.4669669597, much worse than previous W=444368.42162124.
+  No winning 960 point coordinates.
+
+Completed C3 orbit genetic with independently sourced old T 24-dislocation
+parent versus R C3 (2 seeds, 145 sweeps each):
+  Action 42455931301, both jobs SUCCESS.
+  72801: 83 unconstrained releases, best R, zero winning candidates.
+  72802: 101 releases, best R, zero winning candidates.
+  Old T source E=444368.437347989413 and C3 symmetry fits
+  max 5.85e-11 and 6.01e-11; physically nonduplicate donor.
+  New constrained C3 e.g 444368.443705265, 444368.460293828.
+  Some C3 states collapse to existing A/B/D on release; new 960
+  daughters remain above R. Genuine record frontier unchanged.
+
+Corrected immediate two-parent GA + accurate elite duplicate threshold:
+  Action 42456573446, one seed 72901, 3-sweep smoke GA execution
+  ASSERT PASSED: 9 actual genetic children with only R/T sources.
+  75 full sweeps, 64 full-size releases, zero subrecord.
+  Cheapest new C3 from GA ~444368.4807240; overall C3 R.
+  Full-score best R, no new parent better than W.
+
+Completed C3 3-charge orbit size exchange, maintaining C3 symmetry
+during temporary N957/N963:
+  Original biased-rank Action 42456406401, 2x95 cycles,
+  545 total full N960 releases (270+275), no subrecord.
+  Corrected removal-geometry Action 42456551742, 2x80 cycles,
+  446 total unconstrained releases (218+228), no subrecord.
+  Smoke asserts total-pair physical energy difference and
+  C3 orbit removal cost match to 3e-7 for 3 representative orbits.
+  Recovered R, B, D, old-T and independent higher-energy basins
+  but not a lower N960 energy.
+  Thus fixed +3/-3 whole-orbit size exchanges generate topology
+  diversity but not better-energy basin quality at tested two
+  parent types and sampling windows.
+
+SCIENTIFIC DECISION:
+  C3 (24-dislocation) global record alone + old T (24-dislocation)
+  donor does not create improving GA offspring; C3 entire ±3 orbit
+  exchange likewise usually loses the excellent scar elastic
+  structure. New work must optimize cross-topology *20 dislocation*
+  D2 and *24 dislocation* T jointly in a lower-than-D2 symmetry
+  quotient. This is unsearched in current code: C2 with 480
+  representatives, preserving neither parental full D2 nor T.
+  Algorithm code/search_c2_cross_topology_genetic.py, Action
+  42500722842 (two independent seeds ×85 six-replica sweeps + 3
+  symmetry-preserving crossover children per sweep), active as
+  of this note. It fits T to an exact C2 axis via optimised tetrahedral
+  2fold axis constrained angle arccos(1/sqrt(3)) to a recovered C3
+  axis; D2 has direct C2 z subgroup. C2 genetic cut-splice and
+  registered patch recombine truly different 20/24-defect scaffolds.
+  All interesting minima release N960 symmetry, all winning
+  numerical candidate coordinates saved.
+
+Source URLs:
+  https://github.com/teddyli18000/web-ingest/actions/runs/42455369621
+  https://github.com/teddyli18000/web-ingest/actions/runs/42455931301
+  https://github.com/teddyli18000/web-ingest/actions/runs/42456573446
+  https://github.com/teddyli18000/web-ingest/actions/runs/42456406401
+  https://github.com/teddyli18000/web-ingest/actions/runs/42456551742
+  https://github.com/teddyli18000/web-ingest/actions/runs/42500722842
+  https://github.com/few-shots/few-shots/blob/main/problems/p007-thomson-problem/FEWSHOT.md
+  https://doi.org/10.1063/5.0355867
