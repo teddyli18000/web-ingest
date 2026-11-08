@@ -140,9 +140,9 @@ def main():
     d2file=args.few_shots/"problems/p007-thomson-problem/shots/Abreto/thomson960-d2-ga/certificate.json"
     xd2=sb.load_cert(d2file)
     rd,derr=c2.from_d2(xd2)
-    E_d2,vd2,n,g=c2.c2_polish(sb.xyz_to_vars(rd),1500)
+    E_d2,vd2,n,ok,g=c2.c2_polish(sb.xyz_to_vars(rd),1500)
     vt,fit=old_t_c2_reps(args.old_t,args.seed)
-    E_t,vt,n2,g2=c2.c2_polish(vt,1500)
+    E_t,vt,n2,ok2,g2=c2.c2_polish(vt,1500)
     print("PARENTS",{"D2":E_d2,"T":E_t},"FIT",fit,"D2error",derr,flush=True)
     assert abs(E_d2-444368.4040805305)<2e-5
     assert abs(E_t-444368.4373479895)<2e-5
