@@ -6,7 +6,6 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-  actions: read
 concurrency:
   group: temp-p004-direct-endpoints
   cancel-in-progress: false
@@ -18,11 +17,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {case: nine-original, run_id: 42251306345, artifact: c7-nine-port-port12a, swap: ""}
-          - {case: nine-neutral-swap, run_id: 42251306345, artifact: c7-nine-port-port12a, swap: "4848:4898"}
-          - {case: ten-original, run_id: 42251245285, artifact: c7-ten-port-port12a, swap: ""}
+          - {case: nine-original, case_file: c7p004-direct-nine-port-case.json, swap: "", expected: 134704}
+          - {case: nine-neutral-swap, case_file: c7p004-direct-nine-port-case.json, swap: "4848:4898", expected: 134705}
+          - {case: ten-original, case_file: c7p004-direct-ten-port-case.json, swap: "", expected: 134684}
     env:
-      GH_TOKEN: ${{ github.token }}
       OPENBLAS_NUM_THREADS: '1'
       OMP_NUM_THREADS: '1'
     steps:
@@ -34,21 +32,15 @@ jobs:
           python-version: '3.12'
       - name: Install exact MILP solver
         run: python -m pip install 'numpy>=1.26,<3' 'scipy>=1.12,<2'
-      - name: Pin previous independent 367-point parent and private-port witness
+      - name: Optimize direct ten-dimensional certificate from frozen input
         run: |
-          mkdir -p /tmp/c7p004/parent /tmp/c7p004/near /tmp/c7p004/result /tmp/c7p004/shot
-          gh run download 42024771296 --repo "${{ github.repository }}" --name c7-port-walk-2026110552 --dir /tmp/c7p004/parent
-          gh run download "${{ matrix.run_id }}" --repo "${{ github.repository }}" --name "${{ matrix.artifact }}" --dir /tmp/c7p004/near
-          test "$(wc -l < /tmp/c7p004/parent/best_private367.ids)" -eq 367
-          test -s /tmp/c7p004/near/near_miss.json
-      - name: Optimize full endpoint domain and replay actual 10D construction
-        run: |
+          mkdir -p /tmp/c7p004/result /tmp/c7p004/shot
           python science-boundary/shannon-capacity-c7/code/c7p004_full_endpoint_direct_milp.py \
-            /tmp/c7p004/parent/best_private367.ids \
-            /tmp/c7p004/near/near_miss.json \
+            science-boundary/shannon-capacity-c7/data/circular-port12-port12a-2026-11-05.json \
+            science-boundary/shannon-capacity-c7/data/${{ matrix.case_file }} \
             /tmp/c7p004/result --seconds 180 --aux-swap "${{ matrix.swap }}"
           cp /tmp/c7p004/result/best_certificate.json /tmp/c7p004/shot/certificate.json
-      - name: Verify certificate with authoritative Few Shots p004 judge
+      - name: Independently verify with Few Shots p004 judge
         run: |
           git clone --quiet --depth 1 https://github.com/few-shots/few-shots.git /tmp/c7-fewshots
           python /tmp/c7-fewshots/problems/p004-shannon-capacity-c7/verify/verify.py \
@@ -57,10 +49,12 @@ jobs:
           import json
           from pathlib import Path
           r=Path('/tmp/c7p004/result')
-          score=json.loads((r/'status.json').read_text())['score']
-          v=json.loads((r/'verdict.json').read_text())
-          assert v['valid'] and int(v['score'])==score,(score,v)
-          print('INDEPENDENT_REPLAY',json.dumps(v,sort_keys=True))
+          status=json.loads((r/'status.json').read_text())
+          verdict=json.loads((r/'verdict.json').read_text())
+          assert status['solver_status']==0
+          assert status['score']==${{ matrix.expected }}
+          assert verdict['valid'] and int(verdict['score'])==status['score']
+          print('INDEPENDENT_REPLAY',json.dumps(verdict,sort_keys=True))
           PY
       - uses: actions/upload-artifact@v4
         if: always()
