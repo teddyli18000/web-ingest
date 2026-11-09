@@ -1,0 +1,45 @@
+name: temp-ta41-judge-whole-machine-heldout-transfer
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-judge-whole-machine-heldout-transfer.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-judge-whole-machine-heldout-transfer
+  cancel-in-progress: false
+jobs:
+  judge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check all 72 source-independent group-release trials and original 24 actual N7 reference trials exist
+        run: |
+          set -euo pipefail
+          for p in dynamic static random; do
+            for shard in 0 1; do
+              for seed in 4107 4113; do
+                test -f "science-boundary/job-shop-ta41/results/whole-machine-transfer-$p-shard$shard-seed$seed/results.json"
+              done
+            done
+          done
+          test -f science-boundary/job-shop-ta41/results/positive-independent-true-n7/results.json
+      - name: Paired complete makespan comparison, source equal starts and explicit wall-clock cost
+        run: python3 science-boundary/job-shop-ta41/judge_whole_machine_transfer.py
+      - name: Commit inspectable independent-strong-basin transfer verdict
+        run: |
+          set -euo pipefail
+          file='science-boundary/job-shop-ta41/results/whole-machine-heldout-paired-judgment.json'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$file"
+          git commit -m 'research(ta41): score 24 true independent N7 elite starts against full-machine group IHS and original N7 5s'
+          for i in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
