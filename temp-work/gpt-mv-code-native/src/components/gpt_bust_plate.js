@@ -1,5 +1,5 @@
 const SOURCE={
-  name:'gpt-bust-matted-v4',
+  name:'gpt-bust-matted-v5',
   url:'/assets/gpt/bust_v3.webp',
   sha:'76164bf82a81c67b9efb795033e71972a6c8512d1fa73370026736028dd6b0eb',
   width:550,height:640,
@@ -86,7 +86,9 @@ function matteCharacter(img){
     const begin=372+Math.max(-8,Math.min(10,(350-x)*.035));
     let t=Math.max(0,Math.min(1,(y-begin)/65));
     t=t*t*(3-2*t);
-    rgba[i+3]=Math.round(rgba[i+3]*(1-top)*(1-t));
+    const side=Math.max(0,Math.min(1,x/65));
+    const sideFade=side*side*(3-2*side);
+    rgba[i+3]=Math.round(rgba[i+3]*(1-top)*(1-t)*sideFade);
   }
   ctx.putImageData(frame,0,0);
   return canvas;
