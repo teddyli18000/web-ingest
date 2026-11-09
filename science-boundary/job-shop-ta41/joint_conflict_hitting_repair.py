@@ -296,11 +296,11 @@ def run(args):
                         record['outcome']='AUGMENTED_CONSTRUCTIVE_IMPROVEMENT'
                         trace['candidate_makespan']=val
                         break
-                    if core:
-                        c=frozenset(core)
-                        if c not in seen:
-                            assert c.isdisjoint(chosen)
-                            clauses.append(c);seen.add(c)
+                    # Auxiliary probes do NOT add clauses to the main
+                    # IHS model: next_set was already optimized before this
+                    # diagnostic, so appending would cause a stale cover
+                    # and duplicate unhit CP cores on the next iteration.
+                    # Only the primary exact completion teaches the IHS.
                 if output['status']=='IMPROVED':
                     break
             latest=dag_graph(dur,mutable,chosen,reverse=None)
