@@ -205,6 +205,7 @@ void deploy(const vector<Scenario>&data,const map<string,Model>&models,
    mt19937_64 rng(hashseed(s.seed^0xdff00ULL)); // shared proposal RNG until policies diverge
    L donor=(arm==1||arm==3||arm==4)?B:arm==2?make_fake(s,s.seed):s.A;
    L current=s.X;History history(current.e);
+   const bool forceRealChange=(getenv("LABS_FORCE_NONZERO") && string(getenv("LABS_FORCE_NONZERO"))=="1");
    int bestE=INT_MAX,bestNonA=INT_MAX,sourceReturns=0,repairs=0,iterations=0,rawCount=0;
    double inferenceTime=0;
    string bestWord,bestCan,bestOtherWord,bestOtherCan;
@@ -234,9 +235,10 @@ void deploy(const vector<Scenario>&data,const map<string,Model>&models,
      iterations++;
      const auto t0=clk::now();
      L chosen=current;Feature cf{};double bestScore=1.e100;
-     int candidateCount=(arm==5?1:K);
+     int candidateCount=(arm==5?1:(forceRealChange?K-1:K));
      for(int j=0;j<candidateCount;j++){
-       L raw=proposal(current,donor,rng,arm==5?int(1+rng()%5):j);
+       int proposalIndex=(arm==5?int(1+rng()%5):(forceRealChange?j+1:j));
+       L raw=proposal(current,donor,rng,proposalIndex);
        rawCount++;
        double val=raw.e;
        if(arm==3||arm==4){
