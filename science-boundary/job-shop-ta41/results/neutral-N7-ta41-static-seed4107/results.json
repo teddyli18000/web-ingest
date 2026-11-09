@@ -1,0 +1,50 @@
+{
+  "instance": "ta41",
+  "original_makespan": 2006,
+  "source_n7_revision": "Qiming01/Job-Shop-Scheduling@7e120ebada21cb604c871e0657814bf6e32611f8",
+  "original_author_N7_search_unchanged": true,
+  "oracle_never_loaded_by_optimizer": true,
+  "policy": "static",
+  "seed": 4107,
+  "comparison": "neutral CP+source-faithful N7 vs source-faithful N7 alone at same total planning budget",
+  "total_time_budget": 14,
+  "control_only_N7": {
+    "score": 2006,
+    "native_seconds": 14.0,
+    "iterations": 1002617,
+    "independently_audited_600_records": true
+  },
+  "neutral_cp": {
+    "status": "UNKNOWN",
+    "cp_wall_seconds": 5.008,
+    "cp_conflicts": 75,
+    "free_machines": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      19
+    ],
+    "required_changed_machines": 3,
+    "required_original_adjacent_pair_reversals": 6,
+    "gateway_reversal_hard_required": true
+  },
+  "hybrid_CP_then_N7": null,
+  "hybrid_better_than_direct_N7": false,
+  "hybrid_equal_to_direct_N7": false,
+  "complete": true,
+  "total_actual_wall_seconds": 19.045
+}
