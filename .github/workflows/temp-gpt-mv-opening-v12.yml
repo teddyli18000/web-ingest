@@ -1,0 +1,70 @@
+name: Temp GPT MV opening v12 director gate
+
+on:
+  push:
+    paths:
+      - "temp-work/gpt-mv-code-native/src/scenes/opening_v12.js"
+      - "temp-work/gpt-mv-code-native/src/main.js"
+      - "temp-work/gpt-mv-code-native/export/shot_stills.mjs"
+      - "temp-work/gpt-mv-code-native/export/render.mjs"
+      - ".github/workflows/temp-gpt-mv-opening-v12.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: temp-gpt-mv-opening-v12
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  director-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    defaults:
+      run:
+        working-directory: temp-work/gpt-mv-code-native
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install dependencies
+        run: |
+          npm install --no-audit --no-fund
+          CHROME="$(command -v google-chrome || command -v chromium || command -v chromium-browser)"
+          echo "CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
+          ffmpeg -version | head -1
+      - name: Validate source syntax
+        run: |
+          node --check src/scenes/opening_v12.js
+          node --check src/main.js
+          node --check export/shot_stills.mjs
+      - name: Render authored 0-15s sequence
+        run: node export/render.mjs --start 0 --end 15 --width 960 --height 540 --fps 15 --art-source reach-hq --bust-source gpt-bust-matted-v5 --out out/opening_v12.mp4
+      - name: Render 1080p director frames
+        run: node export/shot_stills.mjs out/opening_v12_stills
+      - name: Check media and cut handoff
+        run: |
+          set -euo pipefail
+          ffmpeg -v error -i out/opening_v12.mp4 -f null -
+          test "$(find out/opening_v12_stills -maxdepth 1 -name '*.png' | wc -l)" -eq 15
+          python - <<'PY'
+          import json,subprocess
+          p='out/opening_v12.mp4'
+          info=json.loads(subprocess.check_output(['ffprobe','-v','error','-show_entries','stream=width,height,r_frame_rate','-show_entries','format=duration','-of','json',p]))
+          assert abs(float(info['format']['duration'])-15)<.1
+          assert info['streams'][0]['width']==960 and info['streams'][0]['height']==540
+          print('validated', info['format']['duration'])
+          PY
+      - name: Upload review reel
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gpt-mv-opening-v12-${{ github.run_id }}
+          path: |
+            temp-work/gpt-mv-code-native/out/opening_v12.mp4
+            temp-work/gpt-mv-code-native/out/opening_v12.contact.jpg
+            temp-work/gpt-mv-code-native/out/opening_v12_stills/*.png
+          retention-days: 14
+          if-no-files-found: warn
