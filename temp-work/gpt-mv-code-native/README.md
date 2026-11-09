@@ -37,3 +37,5 @@ Keep everything under this temporary workspace. Delete one-off workflows after r
 ## 2026-11-08 — Bust compositing into actual timeline
 
 The 1080p character lab CI [42570400762](https://github.com/teddyli18000/web-ingest/actions/runs/42570400762) passed after code-only matting; inspected the resulting PNG and alpha statistics. The clean plate is intended for bust/face shots only. The previous 60s render had visible rectangular boundaries on the old reach crop around 4s and 16s. `opening_v11` and `drafts_v13` now use the matted bust at those two shots; reaching hands still use the existing pose art. The full-film render must be reviewed for scale, continuity and composition before this change can be accepted as a visual improvement.
+
+Final bust matting revision `v5` also softly feathers the source image's left-side cutoff (65 source pixels); isolated and full-timeline review runs must use `gpt-bust-matted-v5`. Do not mistake this for an approved full-body pose.
