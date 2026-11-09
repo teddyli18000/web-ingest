@@ -40,7 +40,7 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/job-adaptive-${{ matrix.case }}-${{ matrix.policy }}"
+          dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/job-adaptive-v2-${{ matrix.case }}-${{ matrix.policy }}"
           if test '${{ matrix.case }}' = ta41 && test -f "$dir/certificate.json"; then
             git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
             cd /tmp/few-shots
@@ -56,7 +56,7 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          dir="science-boundary/job-shop-ta41/results/job-adaptive-${{ matrix.case }}-${{ matrix.policy }}"
+          dir="science-boundary/job-shop-ta41/results/job-adaptive-v2-${{ matrix.case }}-${{ matrix.policy }}"
           if ! test -d "$dir"; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
