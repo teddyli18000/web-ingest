@@ -48,3 +48,44 @@ The compile-only first run [42575062349](https://github.com/teddyli18000/web-ing
 ## Frozen out-of-sample replication
 
 Use the **unchanged same six candidate/repair rules**, same nine fixed source pairs, but **16 independent unseen seed indices 4–19** (seed offset 4) and **250 ms full time** per session; 9×16×6=864 paired sessions. Because budget differs from the pilot, this is a longer-cost *independent-seed test*, not identical-protocol replication. Primary true-B guided vs virtual-B guided **novel ≤5/10%** success and source-pair-clustered repaired-E difference. Also compare same-source raw-E-guided, true-random and short-radius ILS. All nonparent canonical sequences must pass independent integer energy and source registry checks. Treat first nine pair contexts as nine not 864 independent parental scientific samples. The negative pilot does not support increasing this exact local-mask family indefinitely; this one replay is the defined final evaluation gate.
+
+
+## Held-out seed replay — completed and independently verified
+
+[Successful run 42575682860](https://github.com/teddyli18000/web-ingest/actions/runs/42575682860). [Full 864 source-run sessions](results/replay_v1/sessions.tsv), [all 343 independently re-scored novel ≤20% endpoint certificates](results/replay_v1/novel.tsv), [independent exact score/orbit verification](results/replay_v1/verified.json), [source-pair bootstrap](results/replay_v1/paired_analysis.json), and [source revision / SHA256 provenance](results/replay_v1/provenance.json). Every parent, final candidate and recorded novel child was evaluated by independent integer O(N²) LABS scorer, eightfold canonical orbit and explicit parent registry. Same nine pairs ×16 previously untested seeds 4–19 ×6 arms = **864** sessions at **250ms all-cost inclusive** each. These share source pairs with the 216-pilot but not search seeds or budget, so don't pool outcomes as if identical interventions or 1,080 independent parents.
+
+### Primary near-frontier novel structure outcome
+
+| Arm | Source-novel ≤5% session events | Source-novel ≤10% session events | Distinct source-new ≤10% orbits over all lengths |
+| --- | ---: | ---: | ---: |
+| 0 true B random inheritance | 0 | 7 | 5 |
+| 1 true B true-immediate-E swaps | 0 | 2 | 1 |
+| 2 **true B postrepair-E mask search** | **0** | **5** | **2** |
+| 3 fake B same geometry and postrepair search | **1** | **6** | **6** |
+| 4 true B postrepair-novelty search | 0 | 5 | 3 |
+| 5 elite-A short-radius ILS | 0 | 4 | 3 |
+
+**The sole ≤5% success in the replay occurred in the *fake-B* condition**, at N60 pair `c60_2-c60_5`, seed 5, repaired E226, full canonical `000001111000000010001011011011101011010100110001101001110011`. The exact same **N60 E226 orbit** was previously found in a genuine two-parent experiment using different parents, and is not a novel discovery relative to the complete historical research result registry. It was only novel relative to the frozen **source-parent** registry. That is strong negative evidence against treating any previous isolated E226 hit as proof the real second parent contributed the causal necessary feature. It is NOT evidence real parental information is generally worthless; the matching fake geometry still shares its Hamming statistics and original A elite.
+
+For N≥59 (six pair contexts), **the true-B postrepair-guided and true-B novelty-guided arms generated zero ≤10% novel events**. The fake B arm generated two ≤10% events (one E226, N60 and one N59), versus true-B random one and raw-E true B zero. N92/99 zero novel ≤10% across all arms. The total of 7+2+5+6+5+4 successful discovery events should not be treated as distinct independent discoveries; the distinct-orbit column above handles duplicates.
+
+### Source-pair clustered costed secondary quality comparison
+
+Comparison = mean per-pair final **best repaired E** of comparison method minus true-B postrepair-guided E; positive favors true B. Nine-pair bootstrap with the nine source pairs as clusters, 10,000 draws, unadjusted exploratory 95% intervals:
+
+- True-B random minus guided: **+2.19**, CI [−1.56,+7.33].
+- True-B immediate-E swaps minus guided: **+4.06**, CI [−1.00,+9.92].
+- Fake B postrepair-guided minus true B postrepair-guided: **+3.17**, CI [−1.03,+8.11].
+- Single-elite ILS minus true B postrepair-guided: **−97.25**, CI [−176.98,−35.58]; this is largely preservation or return to an existing excellent source, **not** creation of new structures.
+
+Among six N≥59 pairs, fake B minus true B is +4.46 [−0.17,+10.58], still spanning zero, and N92/99 separately show negligible +0.75 and +1.00 differences per pair in final best E. Numerical gains are tiny compared with inherited-parent damage (e.g. N99 true B guided mean best E873, while A original E553). Source pairs within the same length share parents; **nine clusters are not nine fully independent source populations**. Inference is therefore descriptive and unadjusted across multiple methods.
+
+### Verifier and parent geometry
+
+[Independent 29-orbit audit](results/cohort_geometry.json), successful [workflow 42576015594](https://github.com/teddyli18000/web-ingest/actions/runs/42576015594), confirms seven length groups have 3/6/4/6/6/2/2 distinct exact-energy eightfold orbits, respectively. N46 and N47 parents are all *known best*; N92 exact cross-source pair Hamming distance **38**, N99 pair distance **41** after best symmetry. **An archive optimum orbit may not be a separately documented solver-run lineage**: these are legitimate independent *genetic structures*, but independence of historical optimization processes is narrower. N100 is not included because there is no second independently sourced elite orbit.
+
+### Research decision
+
+**Stop this static donor-half + consensus-r (+postrepair hillclimb) operator family.** It now fails the genuine-new-frontier structure gate in both pilot and unseen seed replay despite a real B-vs-fake B quality-preservation signal in early work. Crucially, making mask acceptance depend on actual basin fate did **not** solve the dominant failure. The stronger family should evolve the *interface*: permit donor-group cardinality to change and inherited constraints to be released, use **joint A/B signed relative interactions** rather than separate one-parent spectra, and coordinate original-objective repair with a moving spatial inheritance support. A genuinely useful learned policy needs new diverse elite data and an increment over *actual full standard GOMEA*, source-conditioned classical recombination, strong native tabu and modern 2025+ GPU MTS; the current cold-start official GOMEA experiment has a different scope and cannot decide the former.
+
+Do not claim a new N100 record, a new N60 E226 orbit, deep-model superiority, or any source-independent cross-length elite-generation advance.
