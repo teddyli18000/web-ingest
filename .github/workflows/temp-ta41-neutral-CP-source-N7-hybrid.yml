@@ -1,0 +1,96 @@
+name: temp-ta41-neutral-CP-source-N7-hybrid
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-neutral-CP-source-N7-hybrid.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-neutral-CP-source-N7-hybrid
+  cancel-in-progress: false
+jobs:
+  hybrid:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [static, random]
+        seed: [4107,4113]
+        case: [ta43js-n7elite1711, ta46js-n7elite1701, ta41]
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin CP and original N7 native author source; keep N7 search unchanged
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/neutral_machine_cp_then_original_n7.py
+          git clone --depth=1 https://github.com/Qiming01/Job-Shop-Scheduling.git /tmp/n7
+          git -C /tmp/n7 fetch --depth=1 origin 7e120ebada21cb604c871e0657814bf6e32611f8
+          git -C /tmp/n7 checkout --detach 7e120ebada21cb604c871e0657814bf6e32611f8
+          python3 science-boundary/job-shop-ta41/patch_original_n7_warmstart.py /tmp/n7
+          g++ -std=c++20 -O3 -include climits -DN7_WARMSTART_SUPPORT -I/tmp/n7/include \
+            science-boundary/job-shop-ta41/original_n7_blind_driver.cpp \
+            /tmp/n7/src/graph.cpp /tmp/n7/src/instance.cpp /tmp/n7/src/schedule.cpp /tmp/n7/src/tabu_search.cpp \
+            -o /tmp/n7_true_blind
+      - name: Matched search time: CP neutral 5 sec plus N7 9 sec, versus direct native N7 14 sec
+        run: |
+          set -euo pipefail
+          c='${{ matrix.case }}'
+          if test "$c" = ta41; then
+            src=ta41; machines=18; min_changed=3; min_reversed=6
+          else
+            src="science-boundary/job-shop-ta41/positive-n7-elite-data/$c/start.txt"
+            machines=8; min_changed=2; min_reversed=3
+          fi
+          python3 science-boundary/job-shop-ta41/neutral_machine_cp_then_original_n7.py \
+            --start "$src" --policy '${{ matrix.policy }}' \
+            --driver /tmp/n7_true_blind --seed '${{ matrix.seed }}' \
+            --open-machines "$machines" --min-changed-machines "$min_changed" \
+            --min-reversed-pairs "$min_reversed" \
+            --cp-seconds 5 --total-seconds 14 \
+            --out 'science-boundary/job-shop-ta41/results/neutral-N7-${{ matrix.case }}-${{ matrix.policy }}-seed${{ matrix.seed }}'
+      - name: Upstream check ONLY if actual ta41 hybrid schedule reaches 2005
+        if: always()
+        run: |
+          set -euo pipefail
+          if test '${{ matrix.case }}' != ta41; then exit 0; fi
+          dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/neutral-N7-${{ matrix.case }}-${{ matrix.policy }}-seed${{ matrix.seed }}"
+          if ! test -f "$dir/results.json"; then exit 0; fi
+          python3 - "$dir" <<'PY'
+          import json,sys,shutil
+          from pathlib import Path
+          p=Path(sys.argv[1]);x=json.loads((p/'results.json').read_text())
+          v=x.get('hybrid_CP_then_N7')
+          if v is not None and v['score']<=2005:
+            shutil.copy(p/'hybrid-certificate.json',p/'certificate.json')
+          PY
+          if test -f "$dir/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$dir" | tee "$dir/upstream-verdict.json"
+            python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+          fi
+      - name: Preserve source matched N7 outcomes and constructed 2006 neutral certificates
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/neutral-N7-${{ matrix.case }}-${{ matrix.policy }}-seed${{ matrix.seed }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): compare CP neutral machine rewiring+authentic N7 to equal-budget N7 ${{ matrix.case }} ${{ matrix.policy }} seed${{ matrix.seed }}'
+          for i in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
