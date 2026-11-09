@@ -31,11 +31,17 @@ assert set(combined["random"])==keys and len(keys)==24
 outrows=[]
 for key in sorted(keys):
     s=combined["static"][key];r=combined["random"][key]
-    assert s["original"]==r["original"] and s["direct_N7_score"]==r["direct_N7_score"]
+    assert s["original"]==r["original"]
+    # A wall-clock-stopped N7 can execute different iteration counts on
+    # different hosted runners even with identical random seed. Preserve
+    # separate controls and never silently require equal makespans.
     assert s["direct_N7_seconds"]>=13.99 and r["direct_N7_seconds"]>=13.99
     row={"case":key[0],"seed":key[1],
-        "start":s["original"],"direct_N7":s["direct_N7_score"]}
+        "start":s["original"],
+        "direct_N7_difference_across_runners":s["direct_N7_score"]-r["direct_N7_score"]}
     for policy,t in (("static",s),("random",r)):
+        row[policy+"_direct_N7_score"]=t["direct_N7_score"]
+        row[policy+"_direct_N7_seconds"]=t["direct_N7_seconds"]
         row[policy+"_CP_status"]=t["neutral_CP_status"]
         row[policy+"_CP_sec"]=t["neutral_CP_seconds"]
         row[policy+"_neutral"]=t["neutral_makespan"]
@@ -76,6 +82,13 @@ report=dict(experiment="CP-neutral machine reorientation followed by unchanged n
      direct_N7_seconds=14,
      hybrid_budget="CP <=5 seconds + genuine original N7 with 14-ceil(CP wall seconds) seconds, may leave unused budget",
      summary=summary,
+     cross_runner_direct_N7_repeatability=dict(
+         n_same_start_seed=24,
+         different_direct_N7_objective_count=sum(
+             x["direct_N7_difference_across_runners"]!=0 for x in outrows),
+         direct_N7_abs_score_difference_total=sum(
+             abs(x["direct_N7_difference_across_runners"]) for x in outrows),
+         conclusion="Wall-clock N7 search is not iteration-matched across runners; only within-run source control comparisons are interpretable, and fixed-work audit is required."),
      paired_policy_comparison=dict(n_both_eligible=len(relative),
          random_better=sum(x>0 for x in relative),
          tied=sum(x==0 for x in relative),
