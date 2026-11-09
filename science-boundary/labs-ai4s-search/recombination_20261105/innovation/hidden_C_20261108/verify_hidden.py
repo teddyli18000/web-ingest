@@ -94,6 +94,18 @@ def score_deployment(inputs,vault,events,summary,output):
         assert len(raw)==len(post)==n
         assert E(raw)==int(e['rawE']) and E(post)==int(e['postE'])
         assert canon(post)==e['postCanon']
+        if 'proposal_origin_bits' in e:
+            origin=e['proposal_origin_bits']
+            assert len(origin)==n and E(origin)==int(e['proposal_origin_E'])
+            assert e['retention_active'] in ('0','1')
+            it=int(e['iteration'])
+            delta=sum(q!=z for q,z in zip(origin,raw))
+            if it==0:
+                assert origin==x[sid]['X'] and delta==0
+            else:
+                assert delta in (2,4,6,8,10),(sid,it,delta)
+                if e['retention_active']=='1' and it%2==1:
+                    assert origin==x[sid]['X'],(sid,it)
         run_ev[(sid,int(e['arm']))].append(e)
     assert set(run_ev)=={(sid,i) for sid in x for i in range(6)}
     run_sum={}
