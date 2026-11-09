@@ -9,6 +9,7 @@
 #include <unordered_set>
 #include <iomanip>
 #include <climits>
+#include <memory>
 #include <sstream>
 using namespace std;
 
@@ -141,7 +142,7 @@ void search_session(const Parent&A,const Parent&B,int arm,int rep,int pairidx,
       // Existing raw E exact joint D/Q swaps. Only the chosen raw candidate
       // undergoes expensive original-objective Tabu repair.
       L cur=from_mask(p,m),best=cur;
-      for(int j=0;j<24;j++){
+      for(int it=0;it<24;it++){
         Mask trial=m;L alt=cur;
         int i=pick(trial.d,1,rng),j=pick(trial.d,0,rng);
         trial.d[i]=0;trial.d[j]=1;alt.flip(p.D[i]);alt.flip(p.D[j]);
