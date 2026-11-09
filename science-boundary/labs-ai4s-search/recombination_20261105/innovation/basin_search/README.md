@@ -29,3 +29,22 @@ Original-parent-pair/seed outcome is count of **unique nonregistered fully repai
 Use `basin_mask_search.cpp`, `validate_basin.py`, and a one-shot self-cleaning Actions workflow; preserve source commit, exact test outputs and hashes. Scope limited to `science-boundary/labs-ai4s-search/recombination_20261105/innovation/basin_search/`, without changing `science-boundary/labs-100/`.
 
 Prior art includes [Gallardo, Cotta, Fernández 2009 LABS memetic recombination](https://www.sciencedirect.com/science/article/pii/S1568494609000404) and [Parameterless GOMEA, 2024](https://research-portal.uu.nl/files/248508813/evco_a_00338.pdf). This method is a straightforward combination of guided LNS/postrepair lookahead with mask search, **not a novelty claim**.
+
+
+## First 9-pair, 216-session exact pilot — completed 2026-11-08
+
+[Verified source-pair/seed results](results/pilot_v1/analysis.json) | [All 216 rows](results/pilot_v1/sessions.tsv) | [84 recorded novel ≤20%-orbits](results/pilot_v1/novel.tsv) | [successful native selftest and independent exact verifier](https://github.com/teddyli18000/web-ingest/actions/runs/42575167393).
+
+Nine true source-distinct parent pairs × four pre-fixed seeds × six methods × **150 ms inclusive** = 216 complete sessions. Original and virtual donor models use identical cardinality, and every proposed candidate in methods 0–4 undergoes the exact common steepest → 64 accepted native Tabu moves → steepest before acceptance is decided.
+
+**Principal outcome:** zero **new source-orbit ≤5%** offspring in all 216 sessions. Source-novel ≤10% successes occur **only N46/47** (N46 true-B random=3, postrepair-guided=2, virtual-B postrepair-guided=2, novelty-guided=2; N47 true-B random=1, novelty-guided=1). At N50/59/60/92/99 there are **zero source-novel ≤10%** offspring under *any* method. These are not 216 independent source lineages; there are nine overlapping parent-pair families.
+
+There is a candidate-quality benefit but not new high-grade structure: at N59 source pair c59_0-c59_2, raw/true random/postrepair-guided full-repair best mean E=278/282/**259**; at N92=752/751/**730**, at N99=916/904/**876**. Fake-B postrepair-guided at N92 E756, N99 E878. But **single-source small-radius ILS** preserves known elite E205/E490/E553 respectively and all outcomes are far from the near-elite goal. Individual source-pair improvements are exploratory with four seeds only.
+
+**Important mechanistic distinction:** optimizing postrepair E indeed can outperform optimizing pre-repair E in some source contexts, but this does not imply that the actual second parent's structure supplies incremental near-elite recombination benefit. N99 true B guided E876 vs virtual B guided E878 is indistinguishable at this scale. Therefore do **not** train a network on this positive raw-quality proxy.
+
+The compile-only first run [42575062349](https://github.com/teddyli18000/web-ingest/actions/runs/42575062349) failed due to missing C++ `<memory>` and reused loop variable before any experiment. The corrected run completed, passed integer energy and eightfold orbit identity checks, and committed input SHA256 and all raw offspring certificates.
+
+## Frozen out-of-sample replication
+
+Use the **unchanged same six candidate/repair rules**, same nine fixed source pairs, but **16 independent unseen seed indices 4–19** (seed offset 4) and **250 ms full time** per session; 9×16×6=864 paired sessions. Because budget differs from the pilot, this is a longer-cost *independent-seed test*, not identical-protocol replication. Primary true-B guided vs virtual-B guided **novel ≤5/10%** success and source-pair-clustered repaired-E difference. Also compare same-source raw-E-guided, true-random and short-radius ILS. All nonparent canonical sequences must pass independent integer energy and source registry checks. Treat first nine pair contexts as nine not 864 independent parental scientific samples. The negative pilot does not support increasing this exact local-mask family indefinitely; this one replay is the defined final evaluation gate.
