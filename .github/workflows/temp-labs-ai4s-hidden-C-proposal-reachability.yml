@@ -1,0 +1,86 @@
+name: temp-labs-ai4s-hidden-C-proposal-reachability
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-hidden-C-proposal-reachability.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-hidden-C-proposal-reachability
+  cancel-in-progress: false
+jobs:
+  frozen_bank:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Frozen forced-exploration model and externally verified N50 search must already exist
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 - <<'PY'
+          import json,pathlib,hashlib
+          root=pathlib.Path('results')
+          m=json.loads((root/'forced_models_v1/training_audit.json').read_text())
+          v=json.loads((root/'test50_forced_v1/verdict.json').read_text())
+          assert m['model_sha256']=='2abb727677b9c065b624322f1446fc950987d2c64fc41396e4b90e80c5ad576b'
+          assert hashlib.sha256((root/'forced_models_v1/frozen_models.tsv').read_bytes()).hexdigest()==m['model_sha256']
+          assert v['run_rows']==864 and v['events']>=1000 and v['states']==144
+          assert v['n']==[50]
+          print('PASS archived full C-blind forced replay prerequisite. Offline bank oracle post hoc only')
+          PY
+          g++ -std=c++17 -O3 -Wall -Wextra probe_reachability.cpp -o /tmp/labs_C_bank
+      - name: Exactly first five nonzero actions after common native full repair, no target C access
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          for name in train46 validation47 test50_forced_v1; do
+            mkdir -p "results/bank_${name}"
+            /tmp/labs_C_bank "results/${name}/scenario-input.tsv" \
+              results/forced_models_v1/frozen_models.tsv \
+              "results/bank_${name}/bank_raw.tsv"
+          done
+      - name: Independent source-orbit and integer LABS scoring, target C only here
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          for name in train46 validation47 test50_forced_v1; do
+            python3 verify_probe.py \
+              --input "results/${name}/scenario-input.tsv" \
+              --vault "results/${name}/target-vault.tsv" \
+              --bank "results/bank_${name}/bank_raw.tsv" \
+              --out "results/bank_${name}"
+          done
+          python3 - <<'PY'
+          import pathlib,json
+          root=pathlib.Path('results')
+          for name in ('train46','validation47','test50_forced_v1'):
+            p=root/('bank_'+name)
+            r=json.loads((p/'bank_reachability.json').read_text())
+            assert r['candidate_repairs']==2160 and r['state_count']==144
+            assert r['status'].startswith('PASS')
+          print('PASS 6480 exactly scored C-free candidate repairs with posthoc target reachability oracle')
+          PY
+      - name: Persist replicable oracle-upper-bound evidence and hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/bank_train46
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/bank_validation47
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/bank_test50_forced_v1
+          git commit -m 'research(labs-ai4s): verify 6480 nonzero candidate full-repair basins and posthoc hidden C reachability'
+          ok=0
+          for attempt in 1 2 3 4 5 6; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then ok=1; break; fi
+          done
+          test "$ok" -eq 1
