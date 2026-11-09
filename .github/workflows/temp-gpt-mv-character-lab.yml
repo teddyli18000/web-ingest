@@ -42,7 +42,7 @@ jobs:
           set -euo pipefail
           test -s out/gpt_character_lab.png
           test -s out/gpt_character_lab.json
-          grep -q 'gpt-bust-color-v3' out/gpt_character_lab.json
+          grep -q 'gpt-bust-matted-v4' out/gpt_character_lab.json
           python - <<'PY'
           import struct
           p='out/gpt_character_lab.png'
