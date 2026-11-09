@@ -1,0 +1,78 @@
+name: temp-labs-ai4s-hidden-C-forced-train
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-hidden-C-forced-train.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-hidden-C-forced-train
+  cancel-in-progress: false
+jobs:
+  freeze_forced_model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Confirm prior fixed input and untouched originally frozen test
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 - <<'PY'
+          import json,hashlib,pathlib
+          root=pathlib.Path('results')
+          old=json.loads((root/'frozen_models/training_audit.json').read_text())
+          seal=json.loads((root/'test50/frozen_test_provenance.json').read_text())
+          assert old['model_sha256']=='b47759a27123c3ef066c3e345f9eafbf32eb650a9f92aef4a55010230096cba9'
+          assert seal['frozen_model_sha256']==old['model_sha256']
+          assert hashlib.sha256((root/'frozen_models/frozen_models.tsv').read_bytes()).hexdigest()==old['model_sha256']
+          assert not (root/'forced_models_v1').exists()
+          print('Old test is EXPOSED; forced new seed replay is exploratory, not freshly sealed')
+          PY
+      - name: Fit on N46 and choose frozen hyperparameters N47, strictly exclude j=0
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q --disable-pip-version-check numpy pandas scikit-learn
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 train_policy.py --train results/train46/harvest.tsv \
+            --validation results/validation47/harvest.tsv \
+            --output-dir results/forced_models_v1 --exclude-noop
+          python3 - <<'PY'
+          import json,pathlib,hashlib
+          root=pathlib.Path('results/forced_models_v1')
+          a=json.loads((root/'training_audit.json').read_text())
+          assert a['train_N']==[46] and a['validation_N']==[47] and a['test_N']==[50]
+          assert a['excluded_trivial_original_candidate'] is True
+          assert a['train_rows']==a['validation_rows']==2880
+          assert hashlib.sha256((root/'frozen_models.tsv').read_bytes()).hexdigest()==a['model_sha256']
+          (root/'frozen_protocol.json').write_text(json.dumps({
+           'second_exploratory_model':True,
+           'old_sealed_N50_results_already_known':True,
+           'test_orbit_length':50,
+           'test_state_seed_indices_to_use':list(range(8,16)),
+           'must_not_retrain_on_N50':True,
+           'forced_change':True,
+           'model_sha256':a['model_sha256']
+          },indent=2)+'\n')
+          print('PASS new forced-exploration coefficient freeze:',a['model_sha256'])
+          PY
+      - name: Publish just new separately frozen model before starting posthoc N50 replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/forced_models_v1
+          git commit -m 'research(labs-ai4s): freeze separate N46/N47 forced-action history vs joint-feature models'
+          ok=0
+          for attempt in 1 2 3 4 5 6; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then ok=1; break; fi
+          done
+          test "$ok" -eq 1
