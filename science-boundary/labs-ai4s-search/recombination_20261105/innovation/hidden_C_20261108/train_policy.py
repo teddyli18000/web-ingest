@@ -15,11 +15,12 @@ F=16
 BASE=[0,1,2,3,5,12,13,14,15]
 FULL=list(range(F))
 ALPHAS=[.1,1.,10.,100.]
-def load(path,n):
+def load(path,n,exclude_noop=False):
     d=pd.read_csv(path,sep='\t',dtype={'id':str,'repairBits':str,'repairCanon':str})
     assert set(d.n)=={n} and (d.repairSteps==64).all()
+    if exclude_noop:d=d[d.proposal_index>0].copy()
     assert d['id'].nunique()>10 and d[['id','round','proposal_index']].duplicated().sum()==0
-    assert d.groupby(['id','round']).size().eq(6).all()
+    assert d.groupby(['id','round']).size().eq(5 if exclude_noop else 6).all()
     assert (d.repairE>0).all()
     return d
 
@@ -62,8 +63,9 @@ def main():
     ap=argparse.ArgumentParser()
     ap.add_argument('--train',required=True);ap.add_argument('--validation',required=True)
     ap.add_argument('--output-dir',required=True)
+    ap.add_argument('--exclude-noop',action='store_true')
     a=ap.parse_args();start=time.perf_counter()
-    tr=load(a.train,46);va=load(a.validation,47)
+    tr=load(a.train,46,a.exclude_noop);va=load(a.validation,47,a.exclude_noop)
     assert set(tr.id).isdisjoint(set(va.id))
     out=pathlib.Path(a.output_dir);out.mkdir(parents=True,exist_ok=True)
     models={};results={}
@@ -81,6 +83,7 @@ def main():
       'C_target_labels_used_in_training_or_validation':False,
       'raw_optimum_target_words_used_in_model':False,
       'source_orbit_identifiers_used_in_features':False,
+      'excluded_trivial_original_candidate':a.exclude_noop,
       'train_rows':len(tr),'validation_rows':len(va),
       'train_scenarios':tr.id.nunique(),'validation_scenarios':va.id.nunique(),
       'model_sha256':hashlib.sha256(f.read_bytes()).hexdigest(),
