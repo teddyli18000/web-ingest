@@ -20,7 +20,7 @@ def main(a):
     data=json.loads((a.reference_root/'jobshop'/'solutions'/'solutions.json').read_text())
     cases=[]
     a.out.mkdir(parents=True,exist_ok=True)
-    for name in SELECTED:
+    for name in a.instances:
         routes,durs,oracle,known,pos,duration=load_case(a.reference_root,name,data)
         for seed in a.seeds:
             folder=a.out/f'{name}-n7elite{seed}'
@@ -69,7 +69,7 @@ def main(a):
                   'known improvable',independent-known,flush=True)
     (a.out/'manifest.json').write_text(json.dumps({'independent_elites':True,'cases':cases,
         'hiding':'Only 30x20 instance and N7 native solution passed to downstream algorithms; oracle metadata remains for judging.'},indent=2)+'\n')
-    assert len(cases)==len(SELECTED)*len(a.seeds)
+    assert len(cases)==len(a.instances)*len(a.seeds)
     print('RESULT',len(cases),'independently generated genuine N7 elite starts',flush=True)
 if __name__=='__main__':
     p=argparse.ArgumentParser()
@@ -77,5 +77,6 @@ if __name__=='__main__':
     p.add_argument('--driver',type=Path,required=True)
     p.add_argument('--seconds',type=int,default=20)
     p.add_argument('--seeds',nargs='+',type=int,default=[1701,1711])
+    p.add_argument('--instances',nargs='+',default=list(SELECTED))
     p.add_argument('--out',type=Path,required=True)
     main(p.parse_args())
