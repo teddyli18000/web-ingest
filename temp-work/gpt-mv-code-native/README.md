@@ -33,3 +33,7 @@ This bust is **not yet an approved film master**. Inspect the navy silhouette re
 Obtain the actual 1080p lab PNG/alpha report and confirm the source leak. Fix the cutout from existing approved art (no new image generation), then rerun the isolated visual gate. Only after a clean character plate passes should it replace suitable close/bust shots; inspect compositing and dense cut boundaries before rerendering section gates. Do not export a final 1080p30 film until the full visual review passes.
 
 Keep everything under this temporary workspace. Delete one-off workflows after review; retained old scenes are historical studies, not approved footage.
+
+## 2026-11-08 — Bust compositing into actual timeline
+
+The 1080p character lab CI [42570400762](https://github.com/teddyli18000/web-ingest/actions/runs/42570400762) passed after code-only matting; inspected the resulting PNG and alpha statistics. The clean plate is intended for bust/face shots only. The previous 60s render had visible rectangular boundaries on the old reach crop around 4s and 16s. `opening_v11` and `drafts_v13` now use the matted bust at those two shots; reaching hands still use the existing pose art. The full-film render must be reviewed for scale, continuity and composition before this change can be accepted as a visual improvement.
