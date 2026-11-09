@@ -12,28 +12,27 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-11-08** | **4,414** | **2,567** |
+| **2014-08-09** | **2026-11-09** | **4,415** | **2,568** |
 
-### Latest All-Languages snapshot — 2026-11-08
+### Latest All-Languages snapshot — 2026-11-09
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) | Rust | 190 |
-| 2 | [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) | JavaScript | 2,085 |
-| 3 | [google/skills](https://github.com/google/skills) | Python | 443 |
-| 4 | [mattpocock/skills](https://github.com/mattpocock/skills) | Shell | 1,100 |
-| 5 | [anthropics/skills](https://github.com/anthropics/skills) | Python | 390 |
-| 6 | [meta/astryx](https://github.com/meta/astryx) | TypeScript | 96 |
-| 7 | [prometheus/prometheus](https://github.com/prometheus/prometheus) | Go | 322 |
-| 8 | [sherlock-project/sherlock](https://github.com/sherlock-project/sherlock) | Python | 1,766 |
-| 9 | [milind-soni/OpenMausBot](https://github.com/milind-soni/OpenMausBot) | TypeScript | 1,955 |
-| 10 | [astral-sh/ruff](https://github.com/astral-sh/ruff) | Rust | 350 |
+| 1 | [sherlock-project/sherlock](https://github.com/sherlock-project/sherlock) | Python | 2,373 |
+| 2 | [dsx-ai-factory/nvke](https://github.com/dsx-ai-factory/nvke) | Go | 345 |
+| 3 | [milind-soni/OpenMausBot](https://github.com/milind-soni/OpenMausBot) | TypeScript | 1,439 |
+| 4 | [anthropics/claude-quickstarts](https://github.com/anthropics/claude-quickstarts) | Python | 32 |
+| 5 | [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) | Rust | 815 |
+| 6 | [meta/astryx](https://github.com/meta/astryx) | TypeScript | 875 |
+| 7 | [anthropics/skills](https://github.com/anthropics/skills) | Python | 792 |
+| 8 | [google-deepmind/mujoco](https://github.com/google-deepmind/mujoco) | C++ | 41 |
+| 9 | [ranxianglei/billion-context](https://github.com/ranxianglei/billion-context) | TypeScript | 460 |
 
-[Open full snapshot →](data/2026/11/08/trending.json)
+[Open full snapshot →](data/2026/11/09/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 312 days  
+[`2026`](data/2026/) · 313 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
