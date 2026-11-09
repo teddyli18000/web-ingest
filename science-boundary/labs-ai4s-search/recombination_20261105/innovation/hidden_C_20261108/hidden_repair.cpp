@@ -180,8 +180,8 @@ void harvest(const vector<Scenario>&data,const string&file,int rounds){
        <<raw.e<<"\t"<<t.e<<"\t"<<bits(t)<<"\t"<<canon(bits(t))<<"\t"<<steps;
     print_features(out,feat);out<<"\n";
     if(raw.e<selectedE){selectedE=raw.e;selected=j;selectedRepair=t;}
-    hist.tried++;
    }
+   hist.tried++; // only the one chosen repair is observed by the simulated policy
    if(selectedRepair.e<current.e && canon(bits(selectedRepair))!=s.ac){
      hist.prevGain=current.e-selectedRepair.e;
      current=selectedRepair;hist.best=min(hist.best,current.e);hist.stall=0;
