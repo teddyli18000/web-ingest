@@ -6,6 +6,16 @@ For genuinely distinct published LABS optimum orbits at N=46,47,50, ask whether 
 
 This is a research protocol, **not** a claimed neural generator or benchmark against modern GPU MTS. Public exhaustive enumeration establishes all optimal orbits for N≤66 [Packebusch & Mertens, 2016](https://doi.org/10.1088/1751-8113/49/16/165001). [Original high-quality corpus](../../data/combined/combined10.tsv) was independently direct-E and eight-symmetry verified. Exactly **3 optima N46 E131**, **6 N47 E135**, and **3 N50 E153** are eligible; `c50_3 E161` is **not** an optimum and must be excluded. At most 12 source-optimum identities exist here, **not 12 independent scientific replicates**.
 
+## Current verified state — 2026-11-09
+
+[Detailed exact-output study](RESULTS_20261109.md) | [first sealed N50 verdict](results/test50/verdict.json) | [new-seed forced-action N50 verdict](results/test50_forced_v1/verdict.json) | [candidate reachability audits](results/bank_test50_forced_v1/bank_reachability.json) | [two-state representation audit](results/branch_test50_forced_v1/branch_causal_diagnostic.json).
+
+**The strict test failed to show cross-basin learning**: original N50 AB_blind hidden C hits 0/72 per method; all 17/72 C_shell returns came from the same initial direct local repair. A no-op classical benchmark defect was found after first test, and all follow-ups on N50 are therefore **exploratory** rather than a second sealed holdout. Second frozen model based on N46/N47 nonzero actions: N47 cheap history selected mean postrepair E219.118, exact-joint+history E219.333; no incremental structural advantage. Fresh N50 seeds rep8–15: 864 full-time 150ms treatments, exact E for 697,569 events; all six AB_blind methods hit C zero times. The two true-B and one single-ILS non-A optimum hits all returned to the **provided B orbit**, not hidden C. C_shell 21 shared first-repair returns; ILS one extra, neither learned model any extra.
+
+**Critical representation gate**: among 6,480 exactly evaluated j=1..5 donor candidate repairs, the post-first-repair N50 AB_blind and 51 C_shell failures contained **no reachable hidden C**, even to an oracle. Reinterpreting search state to keep the original damaged X in parallel, 12,960 more exact repairs found **one** N50 C_shell reachable candidate (X was 4 flips from C, greedy incumbent moved 20 flips away), but no AB_blind reachability and neither model chose it. C_shell is privileged target-conditioned evidence, not real C discovery. [Live costed two-state experiment source](run_retention.py) separately evaluates alternating exploration from X and repaired incumbent under identical full-budget controls.
+
+**Current decision:** Model feature sophistication has not earned a deep architecture. First distinguish reachability failures, known-parent B reconstruction, and third-orbit target C innovation. Need genuinely new A/B-blind positive examples from independent orbit populations before claiming learnable cross-basin structure.
+
 ## Hard leakage barriers
 
 1. Group at the **entire eightfold LABS orbit**, not string, and do not duplicate the same orbit under reversal, complement or alternating sign. A, B, C in each scenario are distinct.
