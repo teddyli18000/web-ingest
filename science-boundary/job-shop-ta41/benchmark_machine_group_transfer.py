@@ -29,7 +29,7 @@ def main(a):
                 start=str(case),policy=a.policy,seed=seed,
                 trials_per_stage=a.trials_per_stage,
                 only_groups=[],fixed_open_machines=[],
-                cp_seconds=a.cp_seconds,
+                cp_seconds=a.cp_seconds,repair_objective=a.repair_objective,
                 master_seconds=a.master_seconds,
                 total_seconds=a.total_seconds,
                 out=folder)
@@ -75,6 +75,7 @@ if __name__=='__main__':
     p.add_argument('--expected-instances',type=int,default=6)
     p.add_argument('--total-seconds',type=float,default=5.0)
     p.add_argument('--cp-seconds',type=float,default=0.7)
+    p.add_argument('--repair-objective',choices=['minimal-change','feasibility'],default='minimal-change')
     p.add_argument('--master-seconds',type=float,default=0.15)
     p.add_argument('--trials-per-stage',type=int,default=8)
     p.add_argument('--out',type=Path,required=True)
