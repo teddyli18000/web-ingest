@@ -1,0 +1,50 @@
+name: temp-ta41-oracle-blind-root-screen
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-oracle-blind-root-screen.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-oracle-blind-root-screen
+  cancel-in-progress: false
+jobs:
+  screen:
+    strategy:
+      fail-fast: false
+      matrix:
+        case: [ta43js-n7elite1711, ta46js-n7elite1701, ta41]
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin exact CP and validate program syntax
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/screen_joint_conflict_roots.py
+      - name: Probe 100 source-only root reversals using one short CP core
+        run: |
+          case='${{ matrix.case }}'
+          if test "$case" = ta41; then input=ta41; else input="science-boundary/job-shop-ta41/positive-n7-elite-data/$case/start.txt"; fi
+          python3 science-boundary/job-shop-ta41/screen_joint_conflict_roots.py \
+            --start "$input" --pool 100 --cp-seconds 0.30 --seed 333 \
+            --out "science-boundary/job-shop-ta41/results/root-screen-$case.json"
+      - name: Save independently inspectable root-ranking diagnostics
+        if: always()
+        run: |
+          set -euo pipefail
+          file="science-boundary/job-shop-ta41/results/root-screen-${{ matrix.case }}.json"
+          if ! test -f "$file"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$file"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "research(ta41): 100 root conflict precompletion screening ${{ matrix.case }}"
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
