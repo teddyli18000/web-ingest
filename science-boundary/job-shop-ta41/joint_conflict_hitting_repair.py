@@ -230,6 +230,7 @@ def run(args):
         if closure is None:
             record['outcome']='PROVEN_IMPOSSIBLE_INITIAL_PARTIAL_ORDER'
             continue
+        root_started=time.monotonic()
         seen=set();clauses=[]
         chosen={root}
         latest=dag_graph(dur,mutable,chosen,reverse=None)
@@ -237,6 +238,9 @@ def run(args):
         for trial in range(args.iterations):
             if time.monotonic()-begin>args.seconds:
                 record['outcome']='GLOBAL_TIME_LIMIT'
+                break
+            if args.root_seconds and time.monotonic()-root_started>args.root_seconds:
+                record['outcome']='ROOT_TIME_LIMIT'
                 break
             proposed=dag_graph(dur,mutable,chosen,reverse=root)
             trace=dict(iteration=trial,release_size=len(chosen),clauses=len(clauses))
@@ -379,6 +383,7 @@ if __name__=='__main__':
     p.add_argument('--augment-every',type=int,default=0)
     p.add_argument('--augment-budgets',type=int,nargs='+',default=[12,24,48])
     p.add_argument('--seconds',type=float,default=120.0)
+    p.add_argument('--root-seconds',type=float,default=0.0)
     p.add_argument('--max-release',type=int,default=120)
     p.add_argument('--max-preliminary-cut',type=int,default=120)
     p.add_argument('--out',type=Path,required=True)
