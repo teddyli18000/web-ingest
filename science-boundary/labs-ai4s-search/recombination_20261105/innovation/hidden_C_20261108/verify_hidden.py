@@ -15,9 +15,15 @@ def canon(s):return orb(s)[0]
 def hd(s,t):return sum(a!=b for a,b in zip(s,t))
 def orbit_hd(s,t):return min(hd(s,q) for q in orb(t))
 def E(s):
-    assert set(s)<={'0','1'}
-    x=[1 if c=='1' else -1 for c in s];n=len(x)
-    return sum(sum(x[i]*x[i+k] for i in range(n-k))**2 for k in range(1,n))
+    # Independent exact integer aperiodic LABS scorer using XOR/popcount, not
+    # the C++ solver's delta formula. O(N) native bit_count operations.
+    assert set(s)<={'0','1'} and s
+    n=len(s);v=int(s,2);energy=0
+    for k in range(1,n):
+        mismatch=((v ^ (v>>k)) & ((1<<(n-k))-1)).bit_count()
+        corr=n-k-2*mismatch
+        energy+=corr*corr
+    return energy
 def sha(path):return hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
 
 def validate_inputs(inputs,vault):
