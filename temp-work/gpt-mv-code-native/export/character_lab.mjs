@@ -27,7 +27,7 @@ try{
   console.log('page_status',response?.status());
   await page.waitForFunction(()=>window.GPT_ART_READY===true,null,{timeout:10000});
   const meta=await page.evaluate(()=>({source:window.GPT_ART_SOURCE,w:document.querySelector('#stage').width,h:document.querySelector('#stage').height,alpha:window.GPT_ART_ALPHA}));
-  if(meta.source!=='gpt-bust-color-v3')throw new Error(`unexpected source ${meta.source}`);
+  if(meta.source!=='gpt-bust-matted-v4')throw new Error(`unexpected source ${meta.source}`);
   if(meta.w!==1920||meta.h!==1080)throw new Error(`unexpected canvas ${meta.w}x${meta.h}`);
   await page.locator('#stage').screenshot({path:OUT,timeout:10000});
   await fs.writeFile(OUT.replace(/\.png$/i,'.json'),JSON.stringify(meta,null,2)+'\n');
