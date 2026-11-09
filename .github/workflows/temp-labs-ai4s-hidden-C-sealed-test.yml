@@ -1,0 +1,106 @@
+name: temp-labs-ai4s-hidden-C-sealed-test
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-hidden-C-sealed-test.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-hidden-C-sealed-test
+  cancel-in-progress: false
+jobs:
+  holdout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Freeze model identity, check no N50 leakage and compile C-blind search process
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          expected=b47759a27123c3ef066c3e345f9eafbf32eb650a9f92aef4a55010230096cba9
+          current="$(sha256sum results/frozen_models/frozen_models.tsv | cut -d' ' -f1)"
+          test "$current" = "$expected"
+          python3 - <<'PY'
+          import json,pathlib
+          model=json.loads(pathlib.Path('results/frozen_models/training_audit.json').read_text())
+          assert model['train_N']==[46] and model['validation_N']==[47]
+          assert model['test_N']==[50] and model['model_sha256']=='b47759a27123c3ef066c3e345f9eafbf32eb650a9f92aef4a55010230096cba9'
+          assert not pathlib.Path('results/test50').exists()
+          assert model['C_target_labels_used_in_training_or_validation'] is False
+          print('MODEL FROZEN BEFORE GENERATING TEST N50')
+          PY
+          g++ -O3 -std=c++17 -Wall -Wextra hidden_repair.cpp -o /tmp/labs_hidden_C_repair
+          /tmp/labs_hidden_C_repair selftest
+      - name: Only now construct heldout N50 exact-optimum scenarios, with hidden vault separate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 make_scenarios.py ../../data/combined/combined10.tsv \
+            --lengths 50 --out results/test50 --reps 8
+          python3 - <<'PY'
+          import csv,pathlib
+          p=pathlib.Path('results/test50/scenario-input.tsv')
+          rr=list(csv.DictReader(p.open(),delimiter='\t'))
+          assert len(rr)==144 and set(int(z['n']) for z in rr)=={50}
+          assert all('C' not in z for z in rr)
+          print('N50 scenario inputs are blinded, 144 matched states')
+          PY
+      - name: Equal complete wall budget blinded deployment across all 6 strategies
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          /tmp/labs_hidden_C_repair deploy \
+            results/test50/scenario-input.tsv \
+            results/frozen_models/frozen_models.tsv \
+            results/test50/events.tsv \
+            results/test50/sessions.tsv 150
+      - name: Independent POST-HOC exact energy and full hidden C symmetry-orbit verdict
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 verify_hidden.py deploy \
+            --input results/test50/scenario-input.tsv \
+            --vault results/test50/target-vault.tsv \
+            --events results/test50/events.tsv \
+            --sessions results/test50/sessions.tsv \
+            --output results/test50
+          python3 - <<'PY'
+          import json,pathlib,csv,hashlib,platform,subprocess
+          p=pathlib.Path('results/test50')
+          verdict=json.loads((p/'verdict.json').read_text())
+          assert verdict['states']==144 and verdict['run_rows']==864
+          assert verdict['n']==[50] and len(verdict['tier_outcomes'])==2
+          info={'frozen_model_sha256':'b47759a27123c3ef066c3e345f9eafbf32eb650a9f92aef4a55010230096cba9',
+                'test_source_revision':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+                'compiler':subprocess.check_output(['g++','--version'],text=True).splitlines()[0],
+                'runner':platform.platform(),'budget_per_arm_ms':150,
+                'train_orbit_length':46,'validation_orbit_length':47,'test_orbit_length':50,
+                'holdout_source_orbit_triplets':3,
+                'solver_did_not_receive_target_vault':True,'independent_verdict_hashes':verdict['hashes']}
+          (p/'frozen_test_provenance.json').write_text(json.dumps(info,indent=2)+'\n')
+          print('PASS 864 C-blind costed N50 treatments with independent C-orbit verdict')
+          PY
+      - name: Publish exact-verified heldout test without retraining or cherry-picking
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/test50
+          git commit -m 'research(labs-ai4s): preserve pre-frozen N50 blind optimum-C six-arm recovery and exact verdict'
+          ok=0
+          for attempt in 1 2 3 4 5 6 7 8; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then ok=1; break; fi
+            echo "Concurrent main push, retry $attempt"
+          done
+          test "$ok" -eq 1
