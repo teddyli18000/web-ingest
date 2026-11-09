@@ -1,0 +1,69 @@
+name: temp-ta41-job-coupled-ihs-positive
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-job-coupled-ihs-positive.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-job-coupled-ihs-positive
+  cancel-in-progress: false
+jobs:
+  discover:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [dynamic, static, random]
+        case: [ta43js-n7elite1711, ta46js-n7elite1701, ta42js-n7elite1701, ta41]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin CP solver and compile-check job-coupled representation
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/job_coupled_ihs_repair.py
+      - name: Joint job-level conflict release and exact complete 600-operation reconstruction
+        run: |
+          set -euo pipefail
+          c='${{ matrix.case }}'
+          if test "$c" = ta41; then input=ta41; else input="science-boundary/job-shop-ta41/positive-n7-elite-data/$c/start.txt"; fi
+          python3 science-boundary/job-shop-ta41/job_coupled_ihs_repair.py \
+            --start "$input" --policy '${{ matrix.policy }}' --seed 4107 \
+            --seconds 90 --max-iterations 500 --cp-seconds 0.6 --hit-seconds 0.3 \
+            --out "science-boundary/job-shop-ta41/results/job-ihs-$c-${{ matrix.policy }}"
+      - name: Independent official Few Shots verification for any ta41 breakthrough
+        if: always()
+        run: |
+          set -euo pipefail
+          dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/job-ihs-${{ matrix.case }}-${{ matrix.policy }}"
+          if test '${{ matrix.case }}' = ta41 && test -f "$dir/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$dir" | tee "$dir/upstream-verdict.json"
+            python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+          fi
+      - name: Commit independently checked complete outcomes or honest UNKNOWNs
+        if: always()
+        run: |
+          set -euo pipefail
+          dir="science-boundary/job-shop-ta41/results/job-ihs-${{ matrix.case }}-${{ matrix.policy }}"
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): job-coupled all-machine resource IHS ${{ matrix.case }} ${{ matrix.policy }}'
+          for attempt in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
