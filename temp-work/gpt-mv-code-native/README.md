@@ -22,6 +22,8 @@ A new isolated 1080p character lab now tests the existing approved visual-study 
 
 The older bust_plate.b64.0..3 payload was corrupt (five Base64 characters missing) and is no longer loaded. Remove the unused chunks after a clean replacement passes.
 
+**2026-11-08 matting iteration:** The original `bust_v3.webp` bytes and SHA remain unchanged. `gpt_bust_plate.js` now builds a browser-side matted cutout: selective upper navy-halo removal and a curved lower-bust fade, preserving face/hair and avoiding holes in clothing. The standalone character lab checks navy residue rather than treating every nearly full-width opaque row as proof of background contamination. This is an isolated candidate; it is not yet routed into the 60-second film. CI and rendered image review are required.
+
 **2026-11-04 handoff review:** Direct inspection of the committed `bust_v3.webp` shows large surviving blue/white horizontal background bands. It is **visually rejected as a clean character cutout**, despite having an alpha channel. The lab now reports corner/edge coverage and full-width visible rows; the temporary CI rejects likely rectangular leakage and uploads the review image even on gate failure. No change to the 60-second film is justified by this asset.
 
 This bust is **not yet an approved film master**. Inspect the navy silhouette residue, lower edge, hair detail and enlarged face. It cannot replace full-body or reaching poses.
