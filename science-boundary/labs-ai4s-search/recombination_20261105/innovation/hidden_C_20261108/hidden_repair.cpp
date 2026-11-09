@@ -194,7 +194,7 @@ void deploy(const vector<Scenario>&data,const map<string,Model>&models,
             const string&events,const string&summary,int budget){
  ofstream ev(events),out(summary);if(!ev||!out)throw runtime_error("deploy outputs open");
  ev<<"id\tn\tmode\tdamage\trep\tarm\titeration\tt_ms\tpostE\tpostBits\tpostCanon\t"
-   "rawE\trawBits\tselection_ms\trepair_ms\tcurrentE\tcandidate_count\n";
+   "rawE\trawBits\tselection_ms\trepair_ms\tcurrentE\tcandidate_count\tproposal_origin_E\tproposal_origin_bits\tretention_active\n";
  out<<"id\tn\tmode\tdamage\trep\tarm\tbudget_ms\twall_ms\tsteps\t"
     "bestE\tbestBits\tbestCanon\tbestNonA_E\tbestNonA_Bits\tbestNonA_Canon\t"
     "source_returns\tfull_repair_calls\tmodel_cost_ms\traw_energy_calls\n";
@@ -206,17 +206,18 @@ void deploy(const vector<Scenario>&data,const map<string,Model>&models,
    L donor=(arm==1||arm==3||arm==4)?B:arm==2?make_fake(s,s.seed):s.A;
    L current=s.X;History history(current.e);
    const bool forceRealChange=(getenv("LABS_FORCE_NONZERO") && string(getenv("LABS_FORCE_NONZERO"))=="1");
+   const bool retainOriginal=(getenv("LABS_RETAIN_ORIGINAL_X") && string(getenv("LABS_RETAIN_ORIGINAL_X"))=="1");
    int bestE=INT_MAX,bestNonA=INT_MAX,sourceReturns=0,repairs=0,iterations=0,rawCount=0;
    double inferenceTime=0;
    string bestWord,bestCan,bestOtherWord,bestOtherCan;
    auto start=clk::now(); uint64_t repSeed=hashseed(s.seed^0x44556677ULL);
-   auto observe=[&](const L&repaired,const L&raw,int iteration,double selectms,double repairms,int count){
+   auto observe=[&](const L&repaired,const L&raw,const L&origin,int iteration,double selectms,double repairms,int count){
      string word=bits(repaired),can=canon(word);
      double t=1000*dur(start);
      ev<<s.id<<"\t"<<s.n<<"\t"<<s.mode<<"\t"<<s.damage<<"\t"<<s.rep
        <<"\t"<<arm<<"\t"<<iteration<<"\t"<<t<<"\t"<<repaired.e<<"\t"
        <<word<<"\t"<<can<<"\t"<<raw.e<<"\t"<<bits(raw)<<"\t"<<selectms<<"\t"<<repairms
-       <<"\t"<<current.e<<"\t"<<count<<"\n";
+       <<"\t"<<current.e<<"\t"<<count<<"\t"<<origin.e<<"\t"<<bits(origin)<<"\t"<<int(retainOriginal)<<"\n";
      repairs++;if(can==s.ac)sourceReturns++;
      if(repaired.e<bestE){bestE=repaired.e;bestWord=word;bestCan=can;}
      if(can!=s.ac && repaired.e<bestNonA){
@@ -230,20 +231,21 @@ void deploy(const vector<Scenario>&data,const map<string,Model>&models,
    };
    // Each arm pays for the identical strong 64-step native repair(X).
    {int steps=0;auto ts=clk::now();L t=full_repair(s.X,repSeed,steps);
-    double time=1000*dur(ts);observe(t,s.X,0,0,time,1);}
+    double time=1000*dur(ts);observe(t,s.X,s.X,0,0,time,1);}
    while(1000*dur(start)<budget){
      iterations++;
      const auto t0=clk::now();
-     L chosen=current;Feature cf{};double bestScore=1.e100;
+     const L origin=(retainOriginal && (iterations%2==1))?s.X:current;
+     L chosen=origin;Feature cf{};double bestScore=1.e100;
      int candidateCount=(arm==5?1:(forceRealChange?K-1:K));
      for(int j=0;j<candidateCount;j++){
        int proposalIndex=(arm==5?int(1+rng()%5):(forceRealChange?j+1:j));
-       L raw=proposal(current,donor,rng,proposalIndex);
+       L raw=proposal(origin,donor,rng,proposalIndex);
        rawCount++;
        double val=raw.e;
        if(arm==3||arm==4){
          auto ft=clk::now();
-         Feature ff=describe(current,raw,s.A,B,history);
+         Feature ff=describe(origin,raw,s.A,B,history);
          val=models.at(arm==3?"full":"base").predict(ff);
          inferenceTime+=1000*dur(ft);
        }
@@ -254,7 +256,7 @@ void deploy(const vector<Scenario>&data,const map<string,Model>&models,
      double selectms=1000*dur(t0);
      int steps=0;auto rt=clk::now();L repaired=full_repair(chosen,repSeed,steps);
      double repairms=1000*dur(rt);
-     observe(repaired,chosen,iterations,selectms,repairms,candidateCount);
+     observe(repaired,chosen,origin,iterations,selectms,repairms,candidateCount);
      if(iterations>10000)throw runtime_error("runaway iterations");
    }
    out<<s.id<<"\t"<<s.n<<"\t"<<s.mode<<"\t"<<s.damage<<"\t"<<s.rep
