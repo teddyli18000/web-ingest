@@ -1,0 +1,59 @@
+name: temp-ta41-ta46-multistage-2043-to-2042
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-ta46-multistage-2043-to-2042.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-ta46-multistage-2043-to-2042
+  cancel-in-progress: false
+jobs:
+  continue_from_constructed:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [dynamic, static, random]
+        seed: [20261108, 20261117]
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin CP-SAT and verify source-created positive start remains 2043 independently
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/whole_machine_release_ihs.py
+          python3 - <<'PY'
+          import sys
+          sys.path.insert(0,'science-boundary/job-shop-ta41')
+          from partial_resource_pair_repair import parse_case
+          inp='science-boundary/job-shop-ta41/positive-constructed-starts/ta46js-machine-2043/start.txt'
+          _,_,_,score=parse_case(inp)
+          assert score==2043,score
+          PY
+      - name: Blind second stage full machine release, target Cmax<=2042
+        run: |
+          python3 science-boundary/job-shop-ta41/whole_machine_release_ihs.py \
+            --start science-boundary/job-shop-ta41/positive-constructed-starts/ta46js-machine-2043/start.txt \
+            --policy '${{ matrix.policy }}' --seed '${{ matrix.seed }}' \
+            --per-stage 28 --cp-seconds 0.75 --master-seconds 0.25 --seconds 95 \
+            --out 'science-boundary/job-shop-ta41/results/multistage-ta46-2043-${{ matrix.policy }}-seed${{ matrix.seed }}'
+      - name: Persist score-reproduced independent second-stage certificate and outcome
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/multistage-ta46-2043-${{ matrix.policy }}-seed${{ matrix.seed }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): blind second-stage full-machine ta46<=2042 ${{ matrix.policy }} seed${{ matrix.seed }}'
+          for i in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
