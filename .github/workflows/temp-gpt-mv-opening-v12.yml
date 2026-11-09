@@ -40,10 +40,10 @@ jobs:
           node --check src/scenes/opening_v12.js
           node --check src/main.js
           node --check export/shot_stills.mjs
-      - name: Render authored 0-15s sequence
-        run: node export/render.mjs --start 0 --end 15 --width 960 --height 540 --fps 15 --art-source reach-hq --bust-source gpt-bust-matted-v5 --out out/opening_v12.mp4
       - name: Render 1080p director frames
         run: node export/shot_stills.mjs out/opening_v12_stills
+      - name: Render authored 0-15s sequence
+        run: node export/render.mjs --start 0 --end 15 --width 960 --height 540 --fps 15 --art-source reach-hq --bust-source gpt-bust-matted-v5 --out out/opening_v12.mp4
       - name: Check media and cut handoff
         run: |
           set -euo pipefail
