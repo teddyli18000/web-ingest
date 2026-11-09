@@ -1,0 +1,67 @@
+name: temp-ta41-group-repair-objective-ablation
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-group-repair-objective-ablation.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-group-repair-objective-ablation
+  cancel-in-progress: false
+jobs:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - batch: development
+            source_seed: 1701
+            n: 6
+            dirname: positive-n7-elite-data
+          - batch: development
+            source_seed: 1711
+            n: 6
+            dirname: positive-n7-elite-data
+          - batch: heldout
+            source_seed: 1801
+            n: 3
+            dirname: positive-n7-holdout-data
+          - batch: heldout
+            source_seed: 1811
+            n: 3
+            dirname: positive-n7-holdout-data
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin CP and syntax check fair counterfactual objective-only ablation
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/machine_group_order_repair.py science-boundary/job-shop-ta41/benchmark_machine_group_transfer.py
+      - name: Fixed policy, same group and pair reifications, feasibility-only versus incumbent-distance objective
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_machine_group_transfer.py \
+            --policy dynamic --repair-objective feasibility \
+            --cases-dir 'science-boundary/job-shop-ta41/${{ matrix.dirname }}' \
+            --initial-seed '${{ matrix.source_seed }}' --expected-instances '${{ matrix.n }}' \
+            --total-seconds 5 --cp-seconds 0.7 --master-seconds 0.15 \
+            --out 'science-boundary/job-shop-ta41/results/group-feasibility-only-${{ matrix.batch }}-${{ matrix.source_seed }}'
+      - name: Persist independently checked complete machine sequences
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/group-feasibility-only-${{ matrix.batch }}-${{ matrix.source_seed }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): controlled group CP feasibility-only objective ablation ${{ matrix.batch }} ${{ matrix.source_seed }}'
+          for i in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
