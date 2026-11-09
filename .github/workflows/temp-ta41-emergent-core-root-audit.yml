@@ -1,0 +1,51 @@
+name: temp-ta41-emergent-core-root-audit
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-emergent-core-root-audit.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-emergent-core-root-audit
+  cancel-in-progress: false
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        case: [ta41, ta42js-n7elite1701, ta43js-n7elite1711, ta44js-n7elite1711, ta46js-n7elite1701, ta47js-n7elite1711]
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin CP and compile-check source-only diagnostic
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/learn_emergent_core_roots.py
+      - name: Predict hidden resource roots by secondary UNSAT-core emergence without reading archived answers
+        run: |
+          set -euo pipefail
+          c='${{ matrix.case }}'
+          if test "$c" = ta41; then input=ta41; else input="science-boundary/job-shop-ta41/positive-n7-elite-data/$c/start.txt"; fi
+          python3 science-boundary/job-shop-ta41/learn_emergent_core_roots.py \
+            --start "$input" --seed 403 --query-seconds 0.55 --keep 60 \
+            --out "science-boundary/job-shop-ta41/results/emergent-core-$c.json"
+      - name: Persist complete source-only ranking and exact precursor CP cores
+        if: always()
+        run: |
+          set -euo pipefail
+          p="science-boundary/job-shop-ta41/results/emergent-core-${{ matrix.case }}.json"
+          if ! test -f "$p"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$p"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): independently test new-precedence emergence in partial CP core replacements ${{ matrix.case }}'
+          for i in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
