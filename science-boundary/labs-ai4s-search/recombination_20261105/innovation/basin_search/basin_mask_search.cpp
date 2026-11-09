@@ -222,7 +222,7 @@ void test_basin(){
 }
 int main(int argc,char **argv){
   if(argc==2 && string(argv[1])=="--selftest"){test_basin();return 0;}
-  if(argc<6){cerr<<"usage PARENTS.tsv RESULTS.tsv NOVEL.tsv REPS BUDGET_MS\n";return 2;}
+  if(argc<6){cerr<<"usage PARENTS.tsv RESULTS.tsv NOVEL.tsv REPS BUDGET_MS [REP_OFFSET]\n";return 2;}
   auto parents=load(argv[1]);map<string,Parent*>id;
   unordered_map<int,unordered_set<string>>registry;map<int,int>optim;
   for(auto&p:parents){id[p.id]=&p;registry[p.n].insert(p.canonical);
@@ -230,7 +230,7 @@ int main(int argc,char **argv){
   const vector<pair<string,string>>pairs={{"c46_0","c46_1"},{"c47_0","c47_2"},
    {"c50_0","c50_1"},{"c59_0","c59_2"},{"c60_1","c60_4"},
    {"c60_0","c60_3"},{"c60_2","c60_5"},{"c92_0","c92_1"},{"c99_0","c99_1"}};
-  int reps=stoi(argv[4]),ms=stoi(argv[5]);
+  int reps=stoi(argv[4]),ms=stoi(argv[5]),offset=(argc>6?stoi(argv[6]):0);
   ofstream out(argv[2]),nov(argv[3]);
   if(!out||!nov)throw runtime_error("open output failed");
   out<<"N\tpair\tA_id\tB_id\trep\tarm\tevaluated\traw_moves\taccepted\trestarts\t"
@@ -241,7 +241,7 @@ int main(int argc,char **argv){
     auto [an,bn]=pairs[ip];if(!id.count(an)||!id.count(bn))throw runtime_error("missing frozen parent");
     const Parent &A=*id.at(an),&B=*id.at(bn);
     if(A.n!=B.n)throw runtime_error("cross N");
-    for(int rep=0;rep<reps;rep++)for(int arm=0;arm<6;arm++)
+    for(int rep=offset;rep<offset+reps;rep++)for(int arm=0;arm<6;arm++)
       search_session(A,B,arm,rep,ip,ms,registry[A.n],optim[A.n],out,nov,an+"-"+bn);
     cerr<<"COMPLETE "<<an<<" / "<<bn<<" source-orbit fixed pairs\n";
   }
