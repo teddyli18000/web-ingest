@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - .github/workflows/temp-labs-ai4s-hidden-C-sealed-test.yml
+      - science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/verify_hidden.py
   workflow_dispatch:
 permissions:
   contents: write
@@ -88,6 +89,40 @@ jobs:
                 'solver_did_not_receive_target_vault':True,'independent_verdict_hashes':verdict['hashes']}
           (p/'frozen_test_provenance.json').write_text(json.dumps(info,indent=2)+'\n')
           print('PASS 864 C-blind costed N50 treatments with independent C-orbit verdict')
+          PY
+      - name: Preserve all 1M exact-scored event rows losslessly below GitHub blob limit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 - <<'PY'
+          import gzip,hashlib,json,pathlib,shutil
+          root=pathlib.Path('results/test50')
+          raw=root/'events.tsv'
+          gz=root/'events.tsv.gz'
+          v=json.loads((root/'verdict.json').read_text())
+          assert hashlib.sha256(raw.read_bytes()).hexdigest()==v['hashes']['events']
+          with raw.open('rb') as src, gz.open('wb') as dest:
+            with gzip.GzipFile(filename='',fileobj=dest,mode='wb',compresslevel=6,mtime=0) as archive:
+              shutil.copyfileobj(src,archive,1024*1024)
+          assert gz.stat().st_size < 90*1024*1024
+          with gzip.open(gz,'rb') as f:
+            h=hashlib.sha256()
+            while True:
+              part=f.read(1024*1024)
+              if not part:break
+              h.update(part)
+          assert h.hexdigest()==v['hashes']['events']
+          (root/'lossless_archive_provenance.json').write_text(json.dumps({
+            'archive':'events.tsv.gz','row_count':v['events'],
+            'verified_original_event_SHA256':v['hashes']['events'],
+            'archive_sha256':hashlib.sha256(gz.read_bytes()).hexdigest(),
+            'original_bytes':raw.stat().st_size,
+            'archive_bytes':gz.stat().st_size,
+            'compression':'gzip mtime=0; fully lossless independently roundtrip-verified'
+          },indent=2)+'\\n')
+          print('PASS lossless full event archive',raw.stat().st_size,'->',gz.stat().st_size)
+          raw.unlink()
           PY
       - name: Publish exact-verified heldout test without retraining or cherry-picking
         shell: bash
