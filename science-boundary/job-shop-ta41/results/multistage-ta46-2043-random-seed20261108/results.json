@@ -1,0 +1,118 @@
+{
+  "instance": "ta46js-machine-2043",
+  "baseline": 2043,
+  "target": 2042,
+  "policy": "random",
+  "search_representation": "whole-machine ordering completely free if selected; all 20 NoOverlap unconditional; job arcs hard",
+  "independent_15_machine_distance_proof_used": false,
+  "ta41_known_gateway_machine_sets": [],
+  "stages": [
+    2,
+    3,
+    4,
+    5,
+    7,
+    10,
+    15,
+    20
+  ],
+  "success": true,
+  "complete": true,
+  "trials": [
+    {
+      "size": 2,
+      "attempt": 0,
+      "open": [
+        11,
+        17
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.005480269
+      },
+      "cores_known": 0,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.115,
+        "conflicts": 3,
+        "branches": 61,
+        "fixed_machines": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          18,
+          19
+        ],
+        "necessary_release_machine_core": [
+          1,
+          4,
+          5,
+          6,
+          9,
+          13
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 2,
+      "attempt": 1,
+      "open": [
+        1,
+        18
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0009518220000000001
+      },
+      "cores_known": 1,
+      "completion": {
+        "status": "OPTIMAL",
+        "seconds": 0.074,
+        "conflicts": 0,
+        "branches": 555,
+        "fixed_machines": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          19
+        ],
+        "independently_reproduced_makespan": 2042
+      }
+    }
+  ],
+  "wall_seconds": 0.249,
+  "status": "CONSTRUCTIVE_IMPROVEMENT",
+  "verified_makespan": 2042,
+  "groups_opened": [
+    1,
+    18
+  ]
+}
