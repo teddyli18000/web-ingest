@@ -1,0 +1,133 @@
+{
+  "experiment": "Oracle-blind 30x20 full CP joint job release radius ladder",
+  "source": "20s native-N7 independent elite starts, unless case=ta41",
+  "solver": "OR-Tools 9.14.6206",
+  "radii": [
+    2,
+    4,
+    5,
+    7,
+    10
+  ],
+  "time_caps": [
+    0.8,
+    1.0,
+    1.0,
+    1.1,
+    1.1
+  ],
+  "time_caps_total_seconds": 5.0,
+  "hidden_lookahead_used": false,
+  "trials": 2,
+  "improved_trials": 0,
+  "mean_improvement": 0,
+  "sample": [
+    {
+      "case": "ta41",
+      "seed": 4107,
+      "initial": 2006,
+      "best_score": 2006,
+      "improvement": 0,
+      "solver_seconds_total": 5.0261,
+      "full_wall_seconds": 5.145,
+      "strictly_improved": false,
+      "verified_complete_machine_permutations": true,
+      "stages": [
+        {
+          "radius_jobs": 2,
+          "target": 2005,
+          "status": "UNKNOWN",
+          "solver_seconds": 0.8026,
+          "conflicts": 415,
+          "branches": 1746
+        },
+        {
+          "radius_jobs": 4,
+          "target": 2005,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0118,
+          "conflicts": 608,
+          "branches": 2627
+        },
+        {
+          "radius_jobs": 5,
+          "target": 2005,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0042,
+          "conflicts": 617,
+          "branches": 1741
+        },
+        {
+          "radius_jobs": 7,
+          "target": 2005,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1044,
+          "conflicts": 957,
+          "branches": 1786
+        },
+        {
+          "radius_jobs": 10,
+          "target": 2005,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1031,
+          "conflicts": 829,
+          "branches": 2077
+        }
+      ]
+    },
+    {
+      "case": "ta41",
+      "seed": 4113,
+      "initial": 2006,
+      "best_score": 2006,
+      "improvement": 0,
+      "solver_seconds_total": 5.0206,
+      "full_wall_seconds": 5.144,
+      "strictly_improved": false,
+      "verified_complete_machine_permutations": true,
+      "stages": [
+        {
+          "radius_jobs": 2,
+          "target": 2005,
+          "status": "UNKNOWN",
+          "solver_seconds": 0.8043,
+          "conflicts": 416,
+          "branches": 1746
+        },
+        {
+          "radius_jobs": 4,
+          "target": 2005,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0031,
+          "conflicts": 497,
+          "branches": 1238
+        },
+        {
+          "radius_jobs": 5,
+          "target": 2005,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.003,
+          "conflicts": 722,
+          "branches": 2091
+        },
+        {
+          "radius_jobs": 7,
+          "target": 2005,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1071,
+          "conflicts": 970,
+          "branches": 3409
+        },
+        {
+          "radius_jobs": 10,
+          "target": 2005,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1031,
+          "conflicts": 557,
+          "branches": 4149
+        }
+      ]
+    }
+  ],
+  "complete": true
+}
