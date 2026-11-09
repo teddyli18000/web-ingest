@@ -1,6 +1,6 @@
 # Opening V12 — shot and acceptance notes
 
-**Status:** code authored and linked on main; 1080p review and edited reel gate pending as of 2026-11-09. This is a visual prototype, not the final MV.
+**Status:** routed on main, 1080p shot review and edited 15s reel gate [42586033152](https://github.com/teddyli18000/web-ingest/actions/runs/42586033152) passed on 2026-11-09. Visual prototype; not the final MV.
 
 ## Story in one sentence
 A human question and GPT's answer become two strips of actual paper, are torn and revised together, then construct a world that leads directly into act II.
@@ -27,5 +27,5 @@ A human question and GPT's answer become two strips of actual paper, are torn an
 ## Implementation and limits
 - Source: `src/scenes/opening_v12.js`, not imported from the Claude repository.
 - Approved image source: existing GPT bust plate for character performance; all paper, architecture, ribbons, light and transition geometry code-drawn.
-- The final wipe renders the current first frame of `drafts_v13` into a second Canvas for a geometrically contiguous stage.
+- The final wipe renders the first frame of `drafts_v13` into a second Canvas for a geometrically contiguous stage; the active second act is the rewritten `drafts_v14` and its first frame uses that same stage.
 - Current review workflow is a **disposable** CI under `.github/workflows/temp-gpt-mv-opening-v12.yml`; remove it after verification and document the last good artifact.
