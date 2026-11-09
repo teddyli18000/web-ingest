@@ -1,0 +1,708 @@
+{
+  "experiment": "Oracle-blind 30x20 full CP joint job release radius ladder",
+  "source": "20s native-N7 independent elite starts, unless case=ta41",
+  "solver": "OR-Tools 9.14.6206",
+  "radii": [
+    2,
+    4,
+    5,
+    7,
+    10
+  ],
+  "time_caps": [
+    0.8,
+    1.0,
+    1.0,
+    1.1,
+    1.1
+  ],
+  "time_caps_total_seconds": 5.0,
+  "hidden_lookahead_used": false,
+  "trials": 12,
+  "improved_trials": 5,
+  "mean_improvement": 0.6666666666666666,
+  "sample": [
+    {
+      "case": "ta42js-n7elite1701",
+      "seed": 4107,
+      "initial": 1974,
+      "best_score": 1974,
+      "improvement": 0,
+      "solver_seconds_total": 5.0218,
+      "full_wall_seconds": 5.184,
+      "strictly_improved": false,
+      "verified_complete_machine_permutations": true,
+      "stages": [
+        {
+          "radius_jobs": 2,
+          "target": 1973,
+          "status": "UNKNOWN",
+          "solver_seconds": 0.8043,
+          "conflicts": 191,
+          "branches": 1327
+        },
+        {
+          "radius_jobs": 4,
+          "target": 1973,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.004,
+          "conflicts": 324,
+          "branches": 1094
+        },
+        {
+          "radius_jobs": 5,
+          "target": 1973,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0069,
+          "conflicts": 452,
+          "branches": 1256
+        },
+        {
+          "radius_jobs": 7,
+          "target": 1973,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1033,
+          "conflicts": 468,
+          "branches": 2000
+        },
+        {
+          "radius_jobs": 10,
+          "target": 1973,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1033,
+          "conflicts": 553,
+          "branches": 1840
+        }
+      ]
+    },
+    {
+      "case": "ta42js-n7elite1711",
+      "seed": 4107,
+      "initial": 1968,
+      "best_score": 1967,
+      "improvement": 1,
+      "solver_seconds_total": 4.129,
+      "full_wall_seconds": 4.291,
+      "strictly_improved": true,
+      "verified_complete_machine_permutations": true,
+      "stages": [
+        {
+          "radius_jobs": 2,
+          "target": 1967,
+          "status": "UNKNOWN",
+          "solver_seconds": 0.8034,
+          "conflicts": 157,
+          "branches": 3296
+        },
+        {
+          "radius_jobs": 4,
+          "target": 1967,
+          "status": "OPTIMAL",
+          "solver_seconds": 0.1165,
+          "conflicts": 8,
+          "branches": 711,
+          "independent_score": 1967,
+          "free_jobs": [
+            7,
+            16,
+            17,
+            26
+          ],
+          "changed_adjacencies": 10
+        },
+        {
+          "radius_jobs": 5,
+          "target": 1966,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.003,
+          "conflicts": 328,
+          "branches": 1325
+        },
+        {
+          "radius_jobs": 7,
+          "target": 1966,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.103,
+          "conflicts": 411,
+          "branches": 1877
+        },
+        {
+          "radius_jobs": 10,
+          "target": 1966,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1031,
+          "conflicts": 396,
+          "branches": 1889
+        }
+      ]
+    },
+    {
+      "case": "ta43js-n7elite1701",
+      "seed": 4107,
+      "initial": 1872,
+      "best_score": 1872,
+      "improvement": 0,
+      "solver_seconds_total": 5.0164,
+      "full_wall_seconds": 5.186,
+      "strictly_improved": false,
+      "verified_complete_machine_permutations": true,
+      "stages": [
+        {
+          "radius_jobs": 2,
+          "target": 1871,
+          "status": "UNKNOWN",
+          "solver_seconds": 0.8034,
+          "conflicts": 280,
+          "branches": 1283
+        },
+        {
+          "radius_jobs": 4,
+          "target": 1871,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0034,
+          "conflicts": 330,
+          "branches": 1479
+        },
+        {
+          "radius_jobs": 5,
+          "target": 1871,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0031,
+          "conflicts": 303,
+          "branches": 1280
+        },
+        {
+          "radius_jobs": 7,
+          "target": 1871,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1033,
+          "conflicts": 371,
+          "branches": 1566
+        },
+        {
+          "radius_jobs": 10,
+          "target": 1871,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1032,
+          "conflicts": 374,
+          "branches": 1313
+        }
+      ]
+    },
+    {
+      "case": "ta43js-n7elite1711",
+      "seed": 4107,
+      "initial": 1888,
+      "best_score": 1887,
+      "improvement": 1,
+      "solver_seconds_total": 5.008900000000001,
+      "full_wall_seconds": 5.176,
+      "strictly_improved": true,
+      "verified_complete_machine_permutations": true,
+      "stages": [
+        {
+          "radius_jobs": 2,
+          "target": 1887,
+          "status": "OPTIMAL",
+          "solver_seconds": 0.7949,
+          "conflicts": 150,
+          "branches": 2160,
+          "independent_score": 1887,
+          "free_jobs": [
+            19,
+            20
+          ],
+          "changed_adjacencies": 14
+        },
+        {
+          "radius_jobs": 4,
+          "target": 1886,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0031,
+          "conflicts": 256,
+          "branches": 1290
+        },
+        {
+          "radius_jobs": 5,
+          "target": 1886,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0034,
+          "conflicts": 240,
+          "branches": 1274
+        },
+        {
+          "radius_jobs": 7,
+          "target": 1886,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1042,
+          "conflicts": 313,
+          "branches": 1372
+        },
+        {
+          "radius_jobs": 10,
+          "target": 1886,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1033,
+          "conflicts": 217,
+          "branches": 1946
+        }
+      ]
+    },
+    {
+      "case": "ta44js-n7elite1701",
+      "seed": 4107,
+      "initial": 2000,
+      "best_score": 2000,
+      "improvement": 0,
+      "solver_seconds_total": 5.0156,
+      "full_wall_seconds": 5.191,
+      "strictly_improved": false,
+      "verified_complete_machine_permutations": true,
+      "stages": [
+        {
+          "radius_jobs": 2,
+          "target": 1999,
+          "status": "UNKNOWN",
+          "solver_seconds": 0.8034,
+          "conflicts": 402,
+          "branches": 1455
+        },
+        {
+          "radius_jobs": 4,
+          "target": 1999,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0028,
+          "conflicts": 375,
+          "branches": 1891
+        },
+        {
+          "radius_jobs": 5,
+          "target": 1999,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0036,
+          "conflicts": 476,
+          "branches": 1748
+        },
+        {
+          "radius_jobs": 7,
+          "target": 1999,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.103,
+          "conflicts": 509,
+          "branches": 2661
+        },
+        {
+          "radius_jobs": 10,
+          "target": 1999,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1028,
+          "conflicts": 391,
+          "branches": 2538
+        }
+      ]
+    },
+    {
+      "case": "ta44js-n7elite1711",
+      "seed": 4107,
+      "initial": 2002,
+      "best_score": 2002,
+      "improvement": 0,
+      "solver_seconds_total": 5.0179,
+      "full_wall_seconds": 5.179,
+      "strictly_improved": false,
+      "verified_complete_machine_permutations": true,
+      "stages": [
+        {
+          "radius_jobs": 2,
+          "target": 2001,
+          "status": "UNKNOWN",
+          "solver_seconds": 0.8031,
+          "conflicts": 242,
+          "branches": 973
+        },
+        {
+          "radius_jobs": 4,
+          "target": 2001,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0036,
+          "conflicts": 295,
+          "branches": 2320
+        },
+        {
+          "radius_jobs": 5,
+          "target": 2001,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0049,
+          "conflicts": 255,
+          "branches": 2396
+        },
+        {
+          "radius_jobs": 7,
+          "target": 2001,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1037,
+          "conflicts": 542,
+          "branches": 2405
+        },
+        {
+          "radius_jobs": 10,
+          "target": 2001,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1026,
+          "conflicts": 573,
+          "branches": 2392
+        }
+      ]
+    },
+    {
+      "case": "ta45js-n7elite1701",
+      "seed": 4107,
+      "initial": 2013,
+      "best_score": 2013,
+      "improvement": 0,
+      "solver_seconds_total": 4.5625,
+      "full_wall_seconds": 4.727,
+      "strictly_improved": false,
+      "verified_complete_machine_permutations": true,
+      "stages": [
+        {
+          "radius_jobs": 2,
+          "target": 2012,
+          "status": "INFEASIBLE",
+          "solver_seconds": 0.3483,
+          "conflicts": 99,
+          "branches": 861
+        },
+        {
+          "radius_jobs": 4,
+          "target": 2012,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0039,
+          "conflicts": 379,
+          "branches": 2236
+        },
+        {
+          "radius_jobs": 5,
+          "target": 2012,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0032,
+          "conflicts": 560,
+          "branches": 1763
+        },
+        {
+          "radius_jobs": 7,
+          "target": 2012,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1038,
+          "conflicts": 609,
+          "branches": 1544
+        },
+        {
+          "radius_jobs": 10,
+          "target": 2012,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1033,
+          "conflicts": 652,
+          "branches": 2714
+        }
+      ]
+    },
+    {
+      "case": "ta45js-n7elite1711",
+      "seed": 4107,
+      "initial": 2013,
+      "best_score": 2013,
+      "improvement": 0,
+      "solver_seconds_total": 4.5279,
+      "full_wall_seconds": 4.691,
+      "strictly_improved": false,
+      "verified_complete_machine_permutations": true,
+      "stages": [
+        {
+          "radius_jobs": 2,
+          "target": 2012,
+          "status": "INFEASIBLE",
+          "solver_seconds": 0.3151,
+          "conflicts": 66,
+          "branches": 963
+        },
+        {
+          "radius_jobs": 4,
+          "target": 2012,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0031,
+          "conflicts": 399,
+          "branches": 2398
+        },
+        {
+          "radius_jobs": 5,
+          "target": 2012,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0033,
+          "conflicts": 552,
+          "branches": 1555
+        },
+        {
+          "radius_jobs": 7,
+          "target": 2012,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1034,
+          "conflicts": 677,
+          "branches": 2317
+        },
+        {
+          "radius_jobs": 10,
+          "target": 2012,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.103,
+          "conflicts": 485,
+          "branches": 1163
+        }
+      ]
+    },
+    {
+      "case": "ta46js-n7elite1701",
+      "seed": 4107,
+      "initial": 2044,
+      "best_score": 2042,
+      "improvement": 2,
+      "solver_seconds_total": 4.1144,
+      "full_wall_seconds": 4.277,
+      "strictly_improved": true,
+      "verified_complete_machine_permutations": true,
+      "stages": [
+        {
+          "radius_jobs": 2,
+          "target": 2043,
+          "status": "UNKNOWN",
+          "solver_seconds": 0.8035,
+          "conflicts": 165,
+          "branches": 1856
+        },
+        {
+          "radius_jobs": 4,
+          "target": 2043,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0031,
+          "conflicts": 205,
+          "branches": 2000
+        },
+        {
+          "radius_jobs": 5,
+          "target": 2043,
+          "status": "OPTIMAL",
+          "solver_seconds": 0.1019,
+          "conflicts": 0,
+          "branches": 519,
+          "independent_score": 2042,
+          "free_jobs": [
+            12,
+            17,
+            21,
+            26,
+            29
+          ],
+          "changed_adjacencies": 13
+        },
+        {
+          "radius_jobs": 7,
+          "target": 2041,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.103,
+          "conflicts": 670,
+          "branches": 1803
+        },
+        {
+          "radius_jobs": 10,
+          "target": 2041,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1029,
+          "conflicts": 1043,
+          "branches": 2808
+        }
+      ]
+    },
+    {
+      "case": "ta46js-n7elite1711",
+      "seed": 4107,
+      "initial": 2040,
+      "best_score": 2039,
+      "improvement": 1,
+      "solver_seconds_total": 4.700200000000001,
+      "full_wall_seconds": 4.872,
+      "strictly_improved": true,
+      "verified_complete_machine_permutations": true,
+      "stages": [
+        {
+          "radius_jobs": 2,
+          "target": 2039,
+          "status": "OPTIMAL",
+          "solver_seconds": 0.4878,
+          "conflicts": 79,
+          "branches": 1938,
+          "independent_score": 2039,
+          "free_jobs": [
+            3,
+            7
+          ],
+          "changed_adjacencies": 4
+        },
+        {
+          "radius_jobs": 4,
+          "target": 2038,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0032,
+          "conflicts": 566,
+          "branches": 1761
+        },
+        {
+          "radius_jobs": 5,
+          "target": 2038,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0035,
+          "conflicts": 267,
+          "branches": 2720
+        },
+        {
+          "radius_jobs": 7,
+          "target": 2038,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1025,
+          "conflicts": 412,
+          "branches": 2929
+        },
+        {
+          "radius_jobs": 10,
+          "target": 2038,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1032,
+          "conflicts": 673,
+          "branches": 1772
+        }
+      ]
+    },
+    {
+      "case": "ta47js-n7elite1701",
+      "seed": 4107,
+      "initial": 1928,
+      "best_score": 1928,
+      "improvement": 0,
+      "solver_seconds_total": 5.0162,
+      "full_wall_seconds": 5.181,
+      "strictly_improved": false,
+      "verified_complete_machine_permutations": true,
+      "stages": [
+        {
+          "radius_jobs": 2,
+          "target": 1927,
+          "status": "UNKNOWN",
+          "solver_seconds": 0.8035,
+          "conflicts": 231,
+          "branches": 1260
+        },
+        {
+          "radius_jobs": 4,
+          "target": 1927,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0035,
+          "conflicts": 394,
+          "branches": 2372
+        },
+        {
+          "radius_jobs": 5,
+          "target": 1927,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.0031,
+          "conflicts": 441,
+          "branches": 1505
+        },
+        {
+          "radius_jobs": 7,
+          "target": 1927,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1029,
+          "conflicts": 374,
+          "branches": 2297
+        },
+        {
+          "radius_jobs": 10,
+          "target": 1927,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1032,
+          "conflicts": 371,
+          "branches": 2291
+        }
+      ]
+    },
+    {
+      "case": "ta47js-n7elite1711",
+      "seed": 4107,
+      "initial": 1930,
+      "best_score": 1927,
+      "improvement": 3,
+      "solver_seconds_total": 3.2265,
+      "full_wall_seconds": 3.39,
+      "strictly_improved": true,
+      "verified_complete_machine_permutations": true,
+      "stages": [
+        {
+          "radius_jobs": 2,
+          "target": 1929,
+          "status": "UNKNOWN",
+          "solver_seconds": 0.8033,
+          "conflicts": 319,
+          "branches": 2048
+        },
+        {
+          "radius_jobs": 4,
+          "target": 1929,
+          "status": "OPTIMAL",
+          "solver_seconds": 0.1087,
+          "conflicts": 0,
+          "branches": 526,
+          "independent_score": 1928,
+          "free_jobs": [
+            15,
+            18,
+            20
+          ],
+          "changed_adjacencies": 5
+        },
+        {
+          "radius_jobs": 5,
+          "target": 1927,
+          "status": "OPTIMAL",
+          "solver_seconds": 0.107,
+          "conflicts": 0,
+          "branches": 525,
+          "independent_score": 1927,
+          "free_jobs": [
+            13,
+            15,
+            18,
+            20,
+            22
+          ],
+          "changed_adjacencies": 13
+        },
+        {
+          "radius_jobs": 7,
+          "target": 1926,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1043,
+          "conflicts": 283,
+          "branches": 1252
+        },
+        {
+          "radius_jobs": 10,
+          "target": 1926,
+          "status": "UNKNOWN",
+          "solver_seconds": 1.1032,
+          "conflicts": 282,
+          "branches": 1772
+        }
+      ]
+    }
+  ],
+  "complete": true
+}
