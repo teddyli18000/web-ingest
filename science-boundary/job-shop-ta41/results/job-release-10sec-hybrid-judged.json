@@ -1,0 +1,545 @@
+{
+  "question": "Does 5sec coupled job-release CP plus 5sec real original N7 beat 10sec original N7, with identical machine-order elite starts?",
+  "source_pins": {
+    "original_n7": "Qiming01/Job-Shop-Scheduling@7e120ebada21cb604c871e0657814bf6e32611f8",
+    "CP": "ortools==9.14.6206"
+  },
+  "fairness": "Approximately matched SOLVER WALL time (two five-second stages vs one ten-second). Not matched CPU: CP uses 4 worker threads, N7 is single-core; OS scheduling, build and process overhead differ. Oracle-derived tuning on ta43/ta46 makes those development cases, NOT untouched prospective holdouts.",
+  "hidden_optimal_orders_not_used": true,
+  "groups": {
+    "all": {
+      "summary": {
+        "cp5": {
+          "trials": 24,
+          "strict_improvements": 10,
+          "mean_makespan_gain": 0.6666666666666666,
+          "total_makespan_gain": 16,
+          "best_gain": 3
+        },
+        "n7_5": {
+          "trials": 24,
+          "strict_improvements": 9,
+          "mean_makespan_gain": 1.2083333333333333,
+          "total_makespan_gain": 29,
+          "best_gain": 8
+        },
+        "n7_10": {
+          "trials": 24,
+          "strict_improvements": 11,
+          "mean_makespan_gain": 1.3333333333333333,
+          "total_makespan_gain": 32,
+          "best_gain": 8
+        },
+        "cp_then_n7": {
+          "trials": 24,
+          "strict_improvements": 14,
+          "mean_makespan_gain": 1.9166666666666667,
+          "total_makespan_gain": 46,
+          "best_gain": 17
+        },
+        "simple_portfolio": {
+          "trials": 24,
+          "strict_improvements": 14,
+          "mean_makespan_gain": 1.4583333333333333,
+          "total_makespan_gain": 35,
+          "best_gain": 8
+        }
+      },
+      "paired": {
+        "sequential_vs_n7_10": {
+          "policy_a": "cp_then_n7",
+          "policy_b": "n7_10",
+          "a_better": 6,
+          "tied": 15,
+          "a_worse": 3,
+          "mean_objective_advantage_a": 0.5833333333333334
+        },
+        "portfolio_vs_n7_10": {
+          "policy_a": "simple_portfolio",
+          "policy_b": "n7_10",
+          "a_better": 4,
+          "tied": 19,
+          "a_worse": 1,
+          "mean_objective_advantage_a": 0.125
+        },
+        "cp5_vs_n7_5": {
+          "policy_a": "cp5",
+          "policy_b": "n7_5",
+          "a_better": 5,
+          "tied": 11,
+          "a_worse": 8,
+          "mean_objective_advantage_a": -0.5416666666666666
+        }
+      }
+    },
+    "prospective_untouched_ta44_ta45_ta47": {
+      "summary": {
+        "cp5": {
+          "trials": 12,
+          "strict_improvements": 2,
+          "mean_makespan_gain": 0.5,
+          "total_makespan_gain": 6,
+          "best_gain": 3
+        },
+        "n7_5": {
+          "trials": 12,
+          "strict_improvements": 6,
+          "mean_makespan_gain": 1.8333333333333333,
+          "total_makespan_gain": 22,
+          "best_gain": 8
+        },
+        "n7_10": {
+          "trials": 12,
+          "strict_improvements": 7,
+          "mean_makespan_gain": 2,
+          "total_makespan_gain": 24,
+          "best_gain": 8
+        },
+        "cp_then_n7": {
+          "trials": 12,
+          "strict_improvements": 6,
+          "mean_makespan_gain": 1.3333333333333333,
+          "total_makespan_gain": 16,
+          "best_gain": 6
+        },
+        "simple_portfolio": {
+          "trials": 12,
+          "strict_improvements": 6,
+          "mean_makespan_gain": 1.8333333333333333,
+          "total_makespan_gain": 22,
+          "best_gain": 8
+        }
+      },
+      "paired": {
+        "sequential_vs_n7_10": {
+          "policy_a": "cp_then_n7",
+          "policy_b": "n7_10",
+          "a_better": 0,
+          "tied": 9,
+          "a_worse": 3,
+          "mean_objective_advantage_a": -0.6666666666666666
+        },
+        "portfolio_vs_n7_10": {
+          "policy_a": "simple_portfolio",
+          "policy_b": "n7_10",
+          "a_better": 0,
+          "tied": 11,
+          "a_worse": 1,
+          "mean_objective_advantage_a": -0.16666666666666666
+        },
+        "cp5_vs_n7_5": {
+          "policy_a": "cp5",
+          "policy_b": "n7_5",
+          "a_better": 0,
+          "tied": 6,
+          "a_worse": 6,
+          "mean_objective_advantage_a": -1.3333333333333333
+        }
+      }
+    },
+    "other_ta42_ta43_ta46": {
+      "summary": {
+        "cp5": {
+          "trials": 12,
+          "strict_improvements": 8,
+          "mean_makespan_gain": 0.8333333333333334,
+          "total_makespan_gain": 10,
+          "best_gain": 2
+        },
+        "n7_5": {
+          "trials": 12,
+          "strict_improvements": 3,
+          "mean_makespan_gain": 0.5833333333333334,
+          "total_makespan_gain": 7,
+          "best_gain": 3
+        },
+        "n7_10": {
+          "trials": 12,
+          "strict_improvements": 4,
+          "mean_makespan_gain": 0.6666666666666666,
+          "total_makespan_gain": 8,
+          "best_gain": 3
+        },
+        "cp_then_n7": {
+          "trials": 12,
+          "strict_improvements": 8,
+          "mean_makespan_gain": 2.5,
+          "total_makespan_gain": 30,
+          "best_gain": 17
+        },
+        "simple_portfolio": {
+          "trials": 12,
+          "strict_improvements": 8,
+          "mean_makespan_gain": 1.0833333333333333,
+          "total_makespan_gain": 13,
+          "best_gain": 3
+        }
+      },
+      "paired": {
+        "sequential_vs_n7_10": {
+          "policy_a": "cp_then_n7",
+          "policy_b": "n7_10",
+          "a_better": 6,
+          "tied": 6,
+          "a_worse": 0,
+          "mean_objective_advantage_a": 1.8333333333333333
+        },
+        "portfolio_vs_n7_10": {
+          "policy_a": "simple_portfolio",
+          "policy_b": "n7_10",
+          "a_better": 4,
+          "tied": 8,
+          "a_worse": 0,
+          "mean_objective_advantage_a": 0.4166666666666667
+        },
+        "cp5_vs_n7_5": {
+          "policy_a": "cp5",
+          "policy_b": "n7_5",
+          "a_better": 5,
+          "tied": 5,
+          "a_worse": 2,
+          "mean_objective_advantage_a": 0.25
+        }
+      }
+    }
+  },
+  "paired_trials": [
+    {
+      "case": "ta42js-n7elite1701",
+      "seed": 4107,
+      "initial": 1974,
+      "cp5": 1974,
+      "n7_5": 1974,
+      "n7_10": 1974,
+      "cp_then_n7": 1974,
+      "simple_portfolio": 1974,
+      "wall_cp5": 5.184,
+      "native_n7_5_seconds": 5.0,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.00001
+    },
+    {
+      "case": "ta42js-n7elite1711",
+      "seed": 4107,
+      "initial": 1968,
+      "cp5": 1967,
+      "n7_5": 1968,
+      "n7_10": 1967,
+      "cp_then_n7": 1966,
+      "simple_portfolio": 1967,
+      "wall_cp5": 4.291,
+      "native_n7_5_seconds": 5.0,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.0
+    },
+    {
+      "case": "ta43js-n7elite1701",
+      "seed": 4107,
+      "initial": 1872,
+      "cp5": 1872,
+      "n7_5": 1872,
+      "n7_10": 1872,
+      "cp_then_n7": 1872,
+      "simple_portfolio": 1872,
+      "wall_cp5": 5.186,
+      "native_n7_5_seconds": 5.0,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.00001
+    },
+    {
+      "case": "ta43js-n7elite1711",
+      "seed": 4107,
+      "initial": 1888,
+      "cp5": 1887,
+      "n7_5": 1888,
+      "n7_10": 1888,
+      "cp_then_n7": 1885,
+      "simple_portfolio": 1887,
+      "wall_cp5": 5.176,
+      "native_n7_5_seconds": 5.00002,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.00001
+    },
+    {
+      "case": "ta44js-n7elite1701",
+      "seed": 4107,
+      "initial": 2000,
+      "cp5": 2000,
+      "n7_5": 1999,
+      "n7_10": 1999,
+      "cp_then_n7": 1999,
+      "simple_portfolio": 1999,
+      "wall_cp5": 5.191,
+      "native_n7_5_seconds": 5.00001,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.0
+    },
+    {
+      "case": "ta44js-n7elite1711",
+      "seed": 4107,
+      "initial": 2002,
+      "cp5": 2002,
+      "n7_5": 2001,
+      "n7_10": 2001,
+      "cp_then_n7": 2001,
+      "simple_portfolio": 2001,
+      "wall_cp5": 5.179,
+      "native_n7_5_seconds": 5.0,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.0
+    },
+    {
+      "case": "ta45js-n7elite1701",
+      "seed": 4107,
+      "initial": 2013,
+      "cp5": 2013,
+      "n7_5": 2013,
+      "n7_10": 2013,
+      "cp_then_n7": 2013,
+      "simple_portfolio": 2013,
+      "wall_cp5": 4.727,
+      "native_n7_5_seconds": 5.00001,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.00001
+    },
+    {
+      "case": "ta45js-n7elite1711",
+      "seed": 4107,
+      "initial": 2013,
+      "cp5": 2013,
+      "n7_5": 2013,
+      "n7_10": 2013,
+      "cp_then_n7": 2013,
+      "simple_portfolio": 2013,
+      "wall_cp5": 4.691,
+      "native_n7_5_seconds": 5.00001,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.0
+    },
+    {
+      "case": "ta46js-n7elite1701",
+      "seed": 4107,
+      "initial": 2044,
+      "cp5": 2042,
+      "n7_5": 2044,
+      "n7_10": 2044,
+      "cp_then_n7": 2042,
+      "simple_portfolio": 2042,
+      "wall_cp5": 4.277,
+      "native_n7_5_seconds": 5.00001,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.00001
+    },
+    {
+      "case": "ta46js-n7elite1711",
+      "seed": 4107,
+      "initial": 2040,
+      "cp5": 2039,
+      "n7_5": 2040,
+      "n7_10": 2040,
+      "cp_then_n7": 2039,
+      "simple_portfolio": 2039,
+      "wall_cp5": 4.872,
+      "native_n7_5_seconds": 5.00002,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.00001
+    },
+    {
+      "case": "ta47js-n7elite1701",
+      "seed": 4107,
+      "initial": 1928,
+      "cp5": 1928,
+      "n7_5": 1928,
+      "n7_10": 1926,
+      "cp_then_n7": 1928,
+      "simple_portfolio": 1928,
+      "wall_cp5": 5.181,
+      "native_n7_5_seconds": 5.00001,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.0
+    },
+    {
+      "case": "ta47js-n7elite1711",
+      "seed": 4107,
+      "initial": 1930,
+      "cp5": 1927,
+      "n7_5": 1922,
+      "n7_10": 1922,
+      "cp_then_n7": 1924,
+      "simple_portfolio": 1922,
+      "wall_cp5": 3.39,
+      "native_n7_5_seconds": 5.00002,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.00001
+    },
+    {
+      "case": "ta42js-n7elite1701",
+      "seed": 4113,
+      "initial": 1974,
+      "cp5": 1974,
+      "n7_5": 1974,
+      "n7_10": 1974,
+      "cp_then_n7": 1974,
+      "simple_portfolio": 1974,
+      "wall_cp5": 5.157,
+      "native_n7_5_seconds": 5.00001,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.0
+    },
+    {
+      "case": "ta42js-n7elite1711",
+      "seed": 4113,
+      "initial": 1968,
+      "cp5": 1967,
+      "n7_5": 1966,
+      "n7_10": 1966,
+      "cp_then_n7": 1966,
+      "simple_portfolio": 1966,
+      "wall_cp5": 4.264,
+      "native_n7_5_seconds": 5.0,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.00001
+    },
+    {
+      "case": "ta43js-n7elite1701",
+      "seed": 4113,
+      "initial": 1872,
+      "cp5": 1872,
+      "n7_5": 1872,
+      "n7_10": 1872,
+      "cp_then_n7": 1872,
+      "simple_portfolio": 1872,
+      "wall_cp5": 5.155,
+      "native_n7_5_seconds": 5.00001,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.0
+    },
+    {
+      "case": "ta43js-n7elite1711",
+      "seed": 4113,
+      "initial": 1888,
+      "cp5": 1887,
+      "n7_5": 1885,
+      "n7_10": 1885,
+      "cp_then_n7": 1871,
+      "simple_portfolio": 1885,
+      "wall_cp5": 5.143,
+      "native_n7_5_seconds": 5.0,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.00001
+    },
+    {
+      "case": "ta44js-n7elite1701",
+      "seed": 4113,
+      "initial": 2000,
+      "cp5": 2000,
+      "n7_5": 1999,
+      "n7_10": 1999,
+      "cp_then_n7": 1999,
+      "simple_portfolio": 1999,
+      "wall_cp5": 5.167,
+      "native_n7_5_seconds": 5.00001,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.00001
+    },
+    {
+      "case": "ta44js-n7elite1711",
+      "seed": 4113,
+      "initial": 2002,
+      "cp5": 2002,
+      "n7_5": 2002,
+      "n7_10": 2002,
+      "cp_then_n7": 2002,
+      "simple_portfolio": 2002,
+      "wall_cp5": 5.155,
+      "native_n7_5_seconds": 5.00001,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.0
+    },
+    {
+      "case": "ta45js-n7elite1701",
+      "seed": 4113,
+      "initial": 2013,
+      "cp5": 2013,
+      "n7_5": 2013,
+      "n7_10": 2013,
+      "cp_then_n7": 2013,
+      "simple_portfolio": 2013,
+      "wall_cp5": 4.688,
+      "native_n7_5_seconds": 5.0,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.0
+    },
+    {
+      "case": "ta45js-n7elite1711",
+      "seed": 4113,
+      "initial": 2013,
+      "cp5": 2013,
+      "n7_5": 2013,
+      "n7_10": 2013,
+      "cp_then_n7": 2013,
+      "simple_portfolio": 2013,
+      "wall_cp5": 4.67,
+      "native_n7_5_seconds": 5.0,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.00001
+    },
+    {
+      "case": "ta46js-n7elite1701",
+      "seed": 4113,
+      "initial": 2044,
+      "cp5": 2042,
+      "n7_5": 2042,
+      "n7_10": 2042,
+      "cp_then_n7": 2042,
+      "simple_portfolio": 2042,
+      "wall_cp5": 4.257,
+      "native_n7_5_seconds": 5.0,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.00002
+    },
+    {
+      "case": "ta46js-n7elite1711",
+      "seed": 4113,
+      "initial": 2040,
+      "cp5": 2039,
+      "n7_5": 2040,
+      "n7_10": 2040,
+      "cp_then_n7": 2039,
+      "simple_portfolio": 2039,
+      "wall_cp5": 4.861,
+      "native_n7_5_seconds": 5.0,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.0
+    },
+    {
+      "case": "ta47js-n7elite1701",
+      "seed": 4113,
+      "initial": 1928,
+      "cp5": 1928,
+      "n7_5": 1924,
+      "n7_10": 1924,
+      "cp_then_n7": 1924,
+      "simple_portfolio": 1924,
+      "wall_cp5": 5.157,
+      "native_n7_5_seconds": 5.00001,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.00002
+    },
+    {
+      "case": "ta47js-n7elite1711",
+      "seed": 4113,
+      "initial": 1930,
+      "cp5": 1927,
+      "n7_5": 1923,
+      "n7_10": 1923,
+      "cp_then_n7": 1927,
+      "simple_portfolio": 1923,
+      "wall_cp5": 3.354,
+      "native_n7_5_seconds": 5.00001,
+      "native_n7_10_seconds": 10.0,
+      "native_n7_after_cp_seconds": 5.00002
+    }
+  ],
+  "complete": true
+}
