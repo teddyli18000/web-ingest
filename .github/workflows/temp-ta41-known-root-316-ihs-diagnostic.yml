@@ -1,0 +1,50 @@
+name: temp-ta41-known-root-316-ihs-diagnostic
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-known-root-316-ihs-diagnostic.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-known-root-316-ihs-diagnostic
+  cancel-in-progress: false
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [dynamic, static, random]
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin correct OR-Tools and syntax check constructive IHS
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/joint_conflict_hitting_repair.py
+      - name: Oracle-aware root 316 DIAGNOSTIC ONLY, test whether IHS can recover improvement at any chosen root
+        run: |
+          python3 science-boundary/job-shop-ta41/joint_conflict_hitting_repair.py \
+            --start science-boundary/job-shop-ta41/positive-n7-elite-data/ta46js-n7elite1701/start.txt \
+            --root-ids 316 --policy '${{ matrix.policy }}' --seed 333 \
+            --iterations 330 --cp-seconds 0.35 --hit-seconds 0.4 --seconds 145 \
+            --out science-boundary/job-shop-ta41/results/ihs-ta46-knownroot316-${{ matrix.policy }}
+      - name: Preserve diagnostic witness and exact independent complete score
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/ihs-ta46-knownroot316-${{ matrix.policy }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): label known-root316 diagnostic as oracle informed ${{ matrix.policy }}'
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
