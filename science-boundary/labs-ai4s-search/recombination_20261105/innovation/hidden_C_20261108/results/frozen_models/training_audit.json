@@ -1,0 +1,150 @@
+{
+  "train_N": [
+    46
+  ],
+  "validation_N": [
+    47
+  ],
+  "test_N": [
+    50
+  ],
+  "C_target_labels_used_in_training_or_validation": false,
+  "raw_optimum_target_words_used_in_model": false,
+  "source_orbit_identifiers_used_in_features": false,
+  "train_rows": 3456,
+  "validation_rows": 3456,
+  "train_scenarios": 144,
+  "validation_scenarios": 144,
+  "model_sha256": "b47759a27123c3ef066c3e345f9eafbf32eb650a9f92aef4a55010230096cba9",
+  "training_wall_s": 0.634195179999999,
+  "models": {
+    "base": {
+      "chosen": {
+        "banks": 576,
+        "selected_mean_repairedE": 212.125,
+        "rawE_ranking_mean_repairedE": 215.39583333333334,
+        "unusable_lookahead_oracle_mean_repairedE": 196.68055555555554,
+        "ranking_gain_vs_rawE": 3.270833333333343,
+        "alpha": 100.0,
+        "valid_mse": 785.8877370949023
+      },
+      "all_validation_alphas": [
+        {
+          "banks": 576,
+          "selected_mean_repairedE": 212.125,
+          "rawE_ranking_mean_repairedE": 215.39583333333334,
+          "unusable_lookahead_oracle_mean_repairedE": 196.68055555555554,
+          "ranking_gain_vs_rawE": 3.270833333333343,
+          "alpha": 100.0,
+          "valid_mse": 785.8877370949023
+        },
+        {
+          "banks": 576,
+          "selected_mean_repairedE": 212.125,
+          "rawE_ranking_mean_repairedE": 215.39583333333334,
+          "unusable_lookahead_oracle_mean_repairedE": 196.68055555555554,
+          "ranking_gain_vs_rawE": 3.270833333333343,
+          "alpha": 10.0,
+          "valid_mse": 785.8961359347427
+        },
+        {
+          "banks": 576,
+          "selected_mean_repairedE": 212.125,
+          "rawE_ranking_mean_repairedE": 215.39583333333334,
+          "unusable_lookahead_oracle_mean_repairedE": 196.68055555555554,
+          "ranking_gain_vs_rawE": 3.270833333333343,
+          "alpha": 1.0,
+          "valid_mse": 785.9033965644957
+        },
+        {
+          "banks": 576,
+          "selected_mean_repairedE": 212.125,
+          "rawE_ranking_mean_repairedE": 215.39583333333334,
+          "unusable_lookahead_oracle_mean_repairedE": 196.68055555555554,
+          "ranking_gain_vs_rawE": 3.270833333333343,
+          "alpha": 0.1,
+          "valid_mse": 785.9041927279359
+        }
+      ],
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        12,
+        13,
+        14,
+        15
+      ]
+    },
+    "full": {
+      "chosen": {
+        "banks": 576,
+        "selected_mean_repairedE": 212.25694444444446,
+        "rawE_ranking_mean_repairedE": 215.39583333333334,
+        "unusable_lookahead_oracle_mean_repairedE": 196.68055555555554,
+        "ranking_gain_vs_rawE": 3.1388888888888857,
+        "alpha": 10.0,
+        "valid_mse": 777.9231625962099
+      },
+      "all_validation_alphas": [
+        {
+          "banks": 576,
+          "selected_mean_repairedE": 212.25694444444446,
+          "rawE_ranking_mean_repairedE": 215.39583333333334,
+          "unusable_lookahead_oracle_mean_repairedE": 196.68055555555554,
+          "ranking_gain_vs_rawE": 3.1388888888888857,
+          "alpha": 10.0,
+          "valid_mse": 777.9231625962099
+        },
+        {
+          "banks": 576,
+          "selected_mean_repairedE": 212.25694444444446,
+          "rawE_ranking_mean_repairedE": 215.39583333333334,
+          "unusable_lookahead_oracle_mean_repairedE": 196.68055555555554,
+          "ranking_gain_vs_rawE": 3.1388888888888857,
+          "alpha": 1.0,
+          "valid_mse": 778.1000385299641
+        },
+        {
+          "banks": 576,
+          "selected_mean_repairedE": 212.25694444444446,
+          "rawE_ranking_mean_repairedE": 215.39583333333334,
+          "unusable_lookahead_oracle_mean_repairedE": 196.68055555555554,
+          "ranking_gain_vs_rawE": 3.1388888888888857,
+          "alpha": 0.1,
+          "valid_mse": 778.1179953086818
+        },
+        {
+          "banks": 576,
+          "selected_mean_repairedE": 212.36111111111111,
+          "rawE_ranking_mean_repairedE": 215.39583333333334,
+          "unusable_lookahead_oracle_mean_repairedE": 196.68055555555554,
+          "ranking_gain_vs_rawE": 3.0347222222222285,
+          "alpha": 100.0,
+          "valid_mse": 776.398595543874
+        }
+      ],
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ]
+    }
+  },
+  "limitation": "Model predicts postrepair E/N, NOT hidden C identity or probability. Full features add exact signed cross-parent correlation and mask epistasis."
+}

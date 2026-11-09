@@ -1,0 +1,25 @@
+{
+  "status": "PASS independently exact-scored all non-oracle harvest episodes",
+  "N": 46,
+  "cases": 144,
+  "candidate_rows": 3456,
+  "banks": 576,
+  "by_tier": {
+    "AB_blind": {
+      "examples": 1728,
+      "C_hit": 0,
+      "any_nonA_optimum": 0
+    },
+    "C_shell": {
+      "examples": 1728,
+      "C_hit": 100,
+      "any_nonA_optimum": 100
+    }
+  },
+  "sha256": {
+    "scenario_input": "6cae5f657191553ed2bc0bfd53c76c60b3a817ad1c113f58bd51932612b76a63",
+    "oracle_vault": "b07e31b661bd576d31c4980c908b1e639dfb968db9d22c1d75c97b14d78a2a81",
+    "harvest": "f1ba25f2ca082e44ee7c432cc520b71b33371337e9f6599deb159b2bb3d14dfd"
+  },
+  "warning": "Oracle C labels computed only after harvest and not used to train either model."
+}
