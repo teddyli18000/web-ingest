@@ -1,0 +1,53 @@
+{
+  "case": "ta46js-n7elite1701",
+  "incumbent_makespan": 2044,
+  "target_makespan": 2043,
+  "release_unit": "whole job across 20 machines",
+  "released_jobs_upper_bound": 5,
+  "allowed_job_sets": "ANY <=K of the 30 source jobs, chosen jointly with full machine order",
+  "solver": "OR-Tools CP-SAT 9.14.6206",
+  "case_source_only": true,
+  "solver_status": "OPTIMAL",
+  "full_solver_seconds": 0.088,
+  "total_wall_seconds": 0.114,
+  "num_branches": 519,
+  "num_conflicts": 0,
+  "optimize_release_cardinality": false,
+  "interpretation": "INFEASIBLE excludes only this K-job source-neighborhood, not the global JSSP. UNKNOWN has no exclusion force.",
+  "independently_verified_makespan": 2042,
+  "declared_released_jobs": [
+    12,
+    17,
+    21,
+    26,
+    29
+  ],
+  "released_job_count": 5,
+  "actual_original_adjacent_reversals": [
+    54,
+    112,
+    198,
+    313,
+    316,
+    317,
+    426,
+    428,
+    453,
+    458,
+    489,
+    519,
+    573
+  ],
+  "actual_reversals": 13,
+  "affected_machines": [
+    1,
+    3,
+    6,
+    10,
+    14,
+    15,
+    16,
+    17,
+    19
+  ]
+}
