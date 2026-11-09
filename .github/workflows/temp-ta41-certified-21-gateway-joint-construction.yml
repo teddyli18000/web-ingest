@@ -1,0 +1,79 @@
+name: temp-ta41-certified-21-gateway-joint-construction
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-certified-21-gateway-joint-construction.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-certified-21-gateway-joint-construction
+  cancel-in-progress: false
+jobs:
+  gateway:
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0,1,2,3,4,5,6]
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned CP, verify syntax of necessary-gateway enumeration
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/joint_conflict_hitting_repair.py
+          python3 - <<'PY'
+          import sys
+          sys.path.insert(0,'science-boundary/job-shop-ta41')
+          from search import obtain,setup,evaluate
+          from joint_conflict_hitting_repair import certified_ta41_gateway_roots
+          routes,rows,orders=obtain()
+          pos,dur=setup(routes,rows)
+          assert evaluate(orders,pos,dur)==2006
+          ids=certified_ta41_gateway_roots(orders)
+          assert len(ids)==21 and all(0<=x<580 for x in ids)
+          print('21 proven necessary gateway roots:',ids)
+          PY
+      - name: Independently explore 3 of 21 mathematically necessary reversed machine arcs with all-new conflict sets
+        run: |
+          python3 science-boundary/job-shop-ta41/joint_conflict_hitting_repair.py \
+            --start ta41 --root-policy certified-core --gateway-shard '${{ matrix.shard }}' \
+            --policy dynamic --seed 333 --iterations 200 --root-seconds 78 --seconds 255 \
+            --cp-seconds 0.25 --hit-seconds 0.30 \
+            --augment-every 8 --augment-budgets 12 24 48 \
+            --out 'science-boundary/job-shop-ta41/results/ihs-certified-21-shard${{ matrix.shard }}'
+      - name: Official Few Shots verifier on any genuinely improved ta41 schedule
+        if: always()
+        run: |
+          set -euo pipefail
+          dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/ihs-certified-21-shard${{ matrix.shard }}"
+          if test -f "$dir/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$dir" | tee "$dir/upstream-verdict.json"
+            python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+          fi
+      - name: Persist source-audited exact partial conflict histories and valid certificates
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/ihs-certified-21-shard${{ matrix.shard }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): certified 21-core mandatory reversal shard ${{ matrix.shard }} with constructive joint CP repair'
+          for i in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
