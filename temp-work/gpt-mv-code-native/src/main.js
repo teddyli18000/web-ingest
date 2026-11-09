@@ -14,7 +14,7 @@ const d=new Draw(g,canvas.width,canvas.height);
 const params=new URLSearchParams(location.search);
 const characterLab=params.get('lab')==='character';
 const [gptArt,gptPoses,gptBustPlate]=await Promise.all([
-  loadGPTArt(),loadGPTPoses(),characterLab?loadGPTBustPlate():Promise.resolve(null)
+  loadGPTArt(),loadGPTPoses(),loadGPTBustPlate()
 ]);
 
 export const DURATION=characterLab?1:60;
@@ -35,8 +35,8 @@ export function renderFrame(t){
   g.clearRect(0,0,canvas.width,canvas.height);
   if(characterLab){renderCharacterLab(d,t,gptBustPlate);return canvas;}
   const body=()=>{
-    if(t<15)renderOpeningV11(d,t,gptArt);
-    else if(t<30)renderDraftsV13(d,t,gptArt,gptPoses);
+    if(t<15)renderOpeningV11(d,t,gptArt,gptBustPlate);
+    else if(t<30)renderDraftsV13(d,t,gptArt,gptPoses,gptBustPlate);
     else renderConstructV6(d,t,gptArt,gptPoses);
   };
   if(t<45)withShotCamera(t,body);else renderEndingV3(d,t,gptArt,gptPoses);
@@ -48,6 +48,7 @@ window.GPT_MV_DURATION=DURATION;
 window.GPT_MV_READY=true;
 window.GPT_ART_SOURCE=characterLab?gptBustPlate.source:gptArt.source;
 window.GPT_POSES_READY=true;
+window.GPT_BUST_SOURCE=gptBustPlate.source;
 
 if(params.has('t'))renderFrame(Number(params.get('t'))||0);
 else{let start=performance.now();const tick=now=>{const t=((now-start)/1000)%DURATION;renderFrame(t);requestAnimationFrame(tick)};requestAnimationFrame(tick);}
