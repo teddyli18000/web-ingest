@@ -1,0 +1,44 @@
+name: temp-ta41-judge-neutral-N7-12case-transfer
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-judge-neutral-N7-12case-transfer.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-judge-neutral-N7-12case-transfer
+  cancel-in-progress: false
+jobs:
+  judge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require all 48 full-source-validated hybrid cases and their paired wall-time-matched native N7 controls
+        run: |
+          set -euo pipefail
+          for p in static random; do
+            for shard in 0 1; do
+              for seed in 4107 4113; do
+                test -f "science-boundary/job-shop-ta41/results/neutral-N7-transfer-$p-shard$shard-seed$seed/results.json"
+              done
+            done
+          done
+      - name: Judge source-heldout paired advantages while preserving different hosted-runner N7 iteration counts
+        run: python3 science-boundary/job-shop-ta41/judge_neutral_n7_transfer.py
+      - name: Commit full audited comparison and runner-speed caveat
+        run: |
+          set -euo pipefail
+          file='science-boundary/job-shop-ta41/results/neutral-N7-12case-transfer-judged.json'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$file"
+          git commit -m 'research(ta41): paired 48 neutral-CP+N7 trials with documented wall-time N7 source control variance'
+          for i in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
