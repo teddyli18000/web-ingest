@@ -11,13 +11,13 @@
   "control_only_N7": {
     "score": 2006,
     "native_seconds": 14.0,
-    "iterations": 872632,
+    "iterations": 1000857,
     "independently_audited_600_records": true
   },
   "neutral_cp": {
-    "status": "UNKNOWN",
-    "cp_wall_seconds": 5.009,
-    "cp_conflicts": 12,
+    "status": "OPTIMAL",
+    "cp_wall_seconds": 4.718,
+    "cp_conflicts": 75,
     "free_machines": [
       0,
       2,
@@ -40,11 +40,21 @@
     ],
     "required_changed_machines": 3,
     "required_original_adjacent_pair_reversals": 6,
-    "gateway_reversal_hard_required": true
+    "gateway_reversal_hard_required": true,
+    "neutral_makespan": 2006,
+    "changed_machines": 18,
+    "reversed_original_adjacent_pairs": 39,
+    "reversed_mandatory_gateway_pairs": 1
   },
-  "hybrid_CP_then_N7": null,
+  "hybrid_remaining_N7_seconds": 9,
+  "hybrid_CP_then_N7": {
+    "score": 2006,
+    "native_seconds": 9.0,
+    "iterations": 643675,
+    "independently_audited_600_records": true
+  },
   "hybrid_better_than_direct_N7": false,
-  "hybrid_equal_to_direct_N7": false,
+  "hybrid_equal_to_direct_N7": true,
   "complete": true,
-  "total_actual_wall_seconds": 19.058
+  "total_actual_wall_seconds": 27.763
 }
