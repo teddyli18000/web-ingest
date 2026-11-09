@@ -1,0 +1,60 @@
+name: temp-ta41-neutral-CP-N7-12-case-transfer
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-neutral-CP-N7-12-case-transfer.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-neutral-CP-N7-12-case-transfer
+  cancel-in-progress: false
+jobs:
+  transfer:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [static, random]
+        shard: [0,1]
+        seed: [4107,4113]
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin author-native N7 and exact CP source
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/benchmark_neutral_n7_transfer.py
+          python3 -m py_compile science-boundary/job-shop-ta41/neutral_machine_cp_then_original_n7.py
+          git clone --depth=1 https://github.com/Qiming01/Job-Shop-Scheduling.git /tmp/n7
+          git -C /tmp/n7 fetch --depth=1 origin 7e120ebada21cb604c871e0657814bf6e32611f8
+          git -C /tmp/n7 checkout --detach 7e120ebada21cb604c871e0657814bf6e32611f8
+          python3 science-boundary/job-shop-ta41/patch_original_n7_warmstart.py /tmp/n7
+          g++ -std=c++20 -O3 -include climits -DN7_WARMSTART_SUPPORT -I/tmp/n7/include \
+            science-boundary/job-shop-ta41/original_n7_blind_driver.cpp \
+            /tmp/n7/src/graph.cpp /tmp/n7/src/instance.cpp /tmp/n7/src/schedule.cpp /tmp/n7/src/tabu_search.cpp \
+            -o /tmp/n7_true_blind
+      - name: Source-heldout, time-matched 14-second hybrid versus unchanged N7, six starts per shard
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_neutral_n7_transfer.py \
+            --policy '${{ matrix.policy }}' --seed '${{ matrix.seed }}' \
+            --shard '${{ matrix.shard }}' --driver /tmp/n7_true_blind \
+            --out 'science-boundary/job-shop-ta41/results/neutral-N7-transfer-${{ matrix.policy }}-shard${{ matrix.shard }}-seed${{ matrix.seed }}'
+      - name: Save independently verified full machine orders and all exact comparison data
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/neutral-N7-transfer-${{ matrix.policy }}-shard${{ matrix.shard }}-seed${{ matrix.seed }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): source-independent 14-second CP-neutral+N7 vs real N7 ${{ matrix.policy }} shard${{ matrix.shard }} seed${{ matrix.seed }}'
+          for i in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
