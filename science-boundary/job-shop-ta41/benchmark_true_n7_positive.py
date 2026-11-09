@@ -22,7 +22,7 @@ def main(a):
     trials=[]
     with tempfile.TemporaryDirectory() as tmp:
         tmp=Path(tmp)
-        for folder in sorted(a.cases.glob('ta*js-*')):
+        for folder in sorted(p for p in a.cases.iterdir() if p.is_dir() and (p/'start.txt').is_file()):
             path=folder/'start.txt'
             data=path.read_text().splitlines()
             assert len(data)==51 and data[0].strip()=='30 20'
