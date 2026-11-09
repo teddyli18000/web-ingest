@@ -94,7 +94,7 @@ def complete(orders,pos,dur,mutable,released,L,seconds,seed):
         assumption_index[b.index]=i
     solver=cp_model.CpSolver()
     solver.parameters.num_search_workers=1
-    solver.parameters.random_seed=seed
+    solver.parameters.random_seed=int(seed%2147483647)
     solver.parameters.max_time_in_seconds=seconds
     tic=time.monotonic();status=solver.solve(cp)
     result=dict(status=solver.status_name(status),seconds=round(time.monotonic()-tic,3),
@@ -154,7 +154,7 @@ def master_selection(gateways,machine_cores,learned,unknown_nogoods,
     solver=cp_model.CpSolver()
     solver.parameters.max_time_in_seconds=seconds
     solver.parameters.num_search_workers=4
-    solver.parameters.random_seed=seed
+    solver.parameters.random_seed=int(seed%2147483647)
     status=solver.solve(cp)
     out=dict(status=solver.status_name(status),seconds=solver.wall_time,
              branches=solver.num_branches)
