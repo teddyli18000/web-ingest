@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - '.github/workflows/temp-ta41-adaptive-job-coupling.yml'
+      - 'science-boundary/job-shop-ta41/job_coupled_adaptive_repair.py'
   workflow_dispatch:
 permissions:
   contents: write
@@ -34,7 +35,7 @@ jobs:
             --seconds 100 --max-iterations 500 \
             --min-jobs 1 --growth-step 30 --max-jobs 7 \
             --cp-seconds 0.8 --hit-seconds 0.3 \
-            --out "science-boundary/job-shop-ta41/results/job-adaptive-$c-${{ matrix.policy }}"
+            --out "science-boundary/job-shop-ta41/results/job-adaptive-v2-$c-${{ matrix.policy }}"
       - name: Official p009 Few Shots verification on any ta41 better completion
         if: always()
         run: |
