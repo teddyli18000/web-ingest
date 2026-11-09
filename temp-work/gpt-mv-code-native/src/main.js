@@ -3,7 +3,7 @@ import {loadGPTArt} from './components/gpt_art.js';
 import {loadGPTPoses} from './components/gpt_poses.js';
 import {loadGPTBustPlate} from './components/gpt_bust_plate.js';
 import {renderOpeningV12} from './scenes/opening_v12.js';
-import {renderDraftsV13} from './scenes/drafts_v13.js';
+import {renderDraftsV14} from './scenes/drafts_v14.js';
 import {renderConstructV6} from './scenes/construct_v6.js';
 import {renderEndingV3} from './scenes/ending_v3.js';
 import {renderCharacterLab} from './scenes/character_lab.js';
@@ -36,10 +36,10 @@ export function renderFrame(t){
   if(characterLab){renderCharacterLab(d,t,gptBustPlate);return canvas;}
   const body=()=>{
     if(t<15)renderOpeningV12(d,t,gptArt,gptBustPlate,gptPoses);
-    else if(t<30)renderDraftsV13(d,t,gptArt,gptPoses,gptBustPlate);
+    else if(t<30)renderDraftsV14(d,t,gptArt,gptPoses,gptBustPlate);
     else renderConstructV6(d,t,gptArt,gptPoses);
   };
-  if(t<15)body();else if(t<45)withShotCamera(t,body);else renderEndingV3(d,t,gptArt,gptPoses);
+  if(t<30)body();else if(t<45)withShotCamera(t,body);else renderEndingV3(d,t,gptArt,gptPoses);
   return canvas;
 }
 
