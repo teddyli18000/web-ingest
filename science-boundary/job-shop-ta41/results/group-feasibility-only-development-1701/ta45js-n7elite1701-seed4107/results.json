@@ -1,0 +1,302 @@
+{
+  "instance": "ta45js-n7elite1701",
+  "incumbent": 2013,
+  "target": 2012,
+  "policy": "dynamic",
+  "group_released_all_29_resource_adjacencies": true,
+  "complete_NoOverlap_and_job_precedence_hard": true,
+  "all_open_machine_permutations_allowed": true,
+  "ta41_minimum_changed_machines_independently_proved": null,
+  "initial_valid_machine_conflict_count": 0,
+  "mandatory_ta41_adjacent_gateway_ids": [],
+  "stages": [
+    3,
+    5,
+    8,
+    12,
+    16,
+    20
+  ],
+  "traces": [
+    {
+      "stage": 3,
+      "trial": 0,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.002259891,
+        "opened": [
+          4,
+          7,
+          11
+        ],
+        "master_heuristic_score": 1404
+      },
+      "known_proven_machine_clauses": 0,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.624,
+        "conflicts": 0,
+        "branches": 1178,
+        "open_machine_count": 3,
+        "closed_machine_assumptions": 17,
+        "sufficient_machine_conflict": [
+          0
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 3,
+      "trial": 1,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.001028878,
+        "opened": [
+          0,
+          4,
+          7
+        ],
+        "master_heuristic_score": 1708
+      },
+      "known_proven_machine_clauses": 1,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.628,
+        "conflicts": 0,
+        "branches": 1180,
+        "open_machine_count": 3,
+        "closed_machine_assumptions": 17,
+        "sufficient_machine_conflict": [
+          13
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 3,
+      "trial": 2,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.001099168,
+        "opened": [
+          0,
+          7,
+          13
+        ],
+        "master_heuristic_score": 2017
+      },
+      "known_proven_machine_clauses": 2,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.624,
+        "conflicts": 0,
+        "branches": 1180,
+        "open_machine_count": 3,
+        "closed_machine_assumptions": 17,
+        "sufficient_machine_conflict": [
+          4
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 3,
+      "trial": 3,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.002197835,
+        "opened": [
+          0,
+          4,
+          13
+        ],
+        "master_heuristic_score": 2309
+      },
+      "known_proven_machine_clauses": 3,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.626,
+        "conflicts": 0,
+        "branches": 1180,
+        "open_machine_count": 3,
+        "closed_machine_assumptions": 17,
+        "sufficient_machine_conflict": [
+          7
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 3,
+      "trial": 4,
+      "master": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.00010756000000000001
+      },
+      "known_proven_machine_clauses": 4,
+      "outcome": "MASTER_INFEASIBLE_OR_UNKNOWN"
+    },
+    {
+      "stage": 5,
+      "trial": 0,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.002213905,
+        "opened": [
+          0,
+          4,
+          7,
+          11,
+          13
+        ],
+        "master_heuristic_score": 3671
+      },
+      "known_proven_machine_clauses": 4,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.62,
+        "conflicts": 0,
+        "branches": 1178,
+        "open_machine_count": 5,
+        "closed_machine_assumptions": 15,
+        "sufficient_machine_conflict": [
+          14
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 5,
+      "trial": 1,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.001141888,
+        "opened": [
+          0,
+          4,
+          7,
+          13,
+          14
+        ],
+        "master_heuristic_score": 4066
+      },
+      "known_proven_machine_clauses": 5,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.621,
+        "conflicts": 0,
+        "branches": 1180,
+        "open_machine_count": 5,
+        "closed_machine_assumptions": 15,
+        "sufficient_machine_conflict": [
+          18
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 5,
+      "trial": 2,
+      "master": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.00010748000000000001
+      },
+      "known_proven_machine_clauses": 6,
+      "outcome": "MASTER_INFEASIBLE_OR_UNKNOWN"
+    },
+    {
+      "stage": 8,
+      "trial": 0,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.002185822,
+        "opened": [
+          0,
+          3,
+          4,
+          7,
+          11,
+          13,
+          14,
+          18
+        ],
+        "master_heuristic_score": 5262
+      },
+      "known_proven_machine_clauses": 6,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.616,
+        "conflicts": 0,
+        "branches": 1176,
+        "open_machine_count": 8,
+        "closed_machine_assumptions": 12,
+        "sufficient_machine_conflict": [
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 8,
+      "trial": 1,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0022463360000000003,
+        "opened": [
+          0,
+          4,
+          7,
+          11,
+          13,
+          14,
+          18,
+          19
+        ],
+        "master_heuristic_score": 5697
+      },
+      "known_proven_machine_clauses": 7,
+      "completion": {
+        "status": "UNKNOWN",
+        "wall_seconds": 0.21,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 8,
+        "closed_machine_assumptions": 12
+      },
+      "outcome": "UNKNOWN_SKIP_THIS_MASK_ONLY"
+    },
+    {
+      "stage": 8,
+      "trial": 2,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.001048794,
+        "opened": [
+          0,
+          3,
+          4,
+          7,
+          13,
+          14,
+          18,
+          19
+        ],
+        "master_heuristic_score": 5580
+      },
+      "known_proven_machine_clauses": 7,
+      "completion": {
+        "status": "UNKNOWN",
+        "wall_seconds": 0.039,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 8,
+        "closed_machine_assumptions": 12
+      },
+      "outcome": "UNKNOWN_SKIP_THIS_MASK_ONLY"
+    }
+  ],
+  "status": "UNRESOLVED",
+  "wall_seconds": 5.033,
+  "complete": true,
+  "outcome": "GLOBAL_TIME_LIMIT"
+}
