@@ -1,0 +1,1512 @@
+{
+  "instance": "ta45js-n7elite1701",
+  "baseline": 2013,
+  "target": 2012,
+  "policy": "random",
+  "search_representation": "whole-machine ordering completely free if selected; all 20 NoOverlap unconditional; job arcs hard",
+  "independent_15_machine_distance_proof_used": false,
+  "ta41_known_gateway_machine_sets": [],
+  "stages": [
+    2,
+    3,
+    4,
+    5,
+    7,
+    10,
+    15,
+    20
+  ],
+  "success": false,
+  "complete": true,
+  "trials": [
+    {
+      "size": 2,
+      "attempt": 0,
+      "open": [
+        1,
+        3
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0023314660000000004
+      },
+      "cores_known": 0,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.077,
+        "conflicts": 0,
+        "branches": 22,
+        "fixed_machines": [
+          0,
+          2,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "necessary_release_machine_core": [
+          0
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 2,
+      "attempt": 1,
+      "open": [
+        0,
+        12
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.004169329
+      },
+      "cores_known": 1,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.082,
+        "conflicts": 0,
+        "branches": 24,
+        "fixed_machines": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "necessary_release_machine_core": [
+          4
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 2,
+      "attempt": 2,
+      "open": [
+        0,
+        4
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0020247800000000003
+      },
+      "cores_known": 2,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.073,
+        "conflicts": 0,
+        "branches": 26,
+        "fixed_machines": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "necessary_release_machine_core": [
+          7
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 2,
+      "attempt": 3,
+      "open": [],
+      "master": {
+        "status": "INFEASIBLE",
+        "wall": 0.000134143
+      },
+      "cores_known": 3,
+      "outcome": "MASTER_NO_MORE_CHOICES_OR_TIMEOUT"
+    },
+    {
+      "size": 3,
+      "attempt": 0,
+      "open": [
+        0,
+        4,
+        7
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002001014
+      },
+      "cores_known": 3,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.074,
+        "conflicts": 0,
+        "branches": 26,
+        "fixed_machines": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "necessary_release_machine_core": [
+          13
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 3,
+      "attempt": 1,
+      "open": [],
+      "master": {
+        "status": "INFEASIBLE",
+        "wall": 0.000142955
+      },
+      "cores_known": 4,
+      "outcome": "MASTER_NO_MORE_CHOICES_OR_TIMEOUT"
+    },
+    {
+      "size": 4,
+      "attempt": 0,
+      "open": [
+        0,
+        4,
+        7,
+        13
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.001965784
+      },
+      "cores_known": 4,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.072,
+        "conflicts": 0,
+        "branches": 26,
+        "fixed_machines": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          8,
+          9,
+          10,
+          11,
+          12,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "necessary_release_machine_core": [
+          14
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 4,
+      "attempt": 1,
+      "open": [],
+      "master": {
+        "status": "INFEASIBLE",
+        "wall": 0.000134609
+      },
+      "cores_known": 5,
+      "outcome": "MASTER_NO_MORE_CHOICES_OR_TIMEOUT"
+    },
+    {
+      "size": 5,
+      "attempt": 0,
+      "open": [
+        0,
+        4,
+        7,
+        13,
+        14
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002004052
+      },
+      "cores_known": 5,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.069,
+        "conflicts": 0,
+        "branches": 26,
+        "fixed_machines": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          8,
+          9,
+          10,
+          11,
+          12,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "necessary_release_machine_core": [
+          18
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 5,
+      "attempt": 1,
+      "open": [],
+      "master": {
+        "status": "INFEASIBLE",
+        "wall": 0.000132449
+      },
+      "cores_known": 6,
+      "outcome": "MASTER_NO_MORE_CHOICES_OR_TIMEOUT"
+    },
+    {
+      "size": 7,
+      "attempt": 0,
+      "open": [
+        0,
+        4,
+        7,
+        12,
+        13,
+        14,
+        18
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002034721
+      },
+      "cores_known": 6,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.067,
+        "conflicts": 0,
+        "branches": 24,
+        "fixed_machines": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          8,
+          9,
+          10,
+          11,
+          15,
+          16,
+          17,
+          19
+        ],
+        "necessary_release_machine_core": [
+          19
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 7,
+      "attempt": 1,
+      "open": [
+        0,
+        4,
+        7,
+        13,
+        14,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002025518
+      },
+      "cores_known": 7,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.072,
+        "conflicts": 1,
+        "branches": 28,
+        "fixed_machines": [
+          1,
+          2,
+          3,
+          5,
+          6,
+          8,
+          9,
+          10,
+          11,
+          12,
+          15,
+          16,
+          17
+        ],
+        "necessary_release_machine_core": [
+          1,
+          6
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 7,
+      "attempt": 2,
+      "open": [],
+      "master": {
+        "status": "INFEASIBLE",
+        "wall": 0.00011806400000000001
+      },
+      "cores_known": 8,
+      "outcome": "MASTER_NO_MORE_CHOICES_OR_TIMEOUT"
+    },
+    {
+      "size": 10,
+      "attempt": 0,
+      "open": [
+        0,
+        2,
+        4,
+        6,
+        7,
+        11,
+        13,
+        14,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0020841180000000003
+      },
+      "cores_known": 8,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.056,
+        "conflicts": 1,
+        "branches": 22,
+        "fixed_machines": [
+          1,
+          3,
+          5,
+          8,
+          9,
+          10,
+          12,
+          15,
+          16,
+          17
+        ],
+        "necessary_release_machine_core": [
+          3,
+          10
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 10,
+      "attempt": 1,
+      "open": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        7,
+        13,
+        14,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002121557
+      },
+      "cores_known": 9,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.066,
+        "conflicts": 1,
+        "branches": 22,
+        "fixed_machines": [
+          2,
+          6,
+          8,
+          9,
+          10,
+          11,
+          12,
+          15,
+          16,
+          17
+        ],
+        "necessary_release_machine_core": [
+          2,
+          6
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 10,
+      "attempt": 2,
+      "open": [
+        0,
+        4,
+        5,
+        6,
+        7,
+        10,
+        13,
+        14,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.001112703
+      },
+      "cores_known": 10,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.06,
+        "conflicts": 3,
+        "branches": 28,
+        "fixed_machines": [
+          1,
+          2,
+          3,
+          8,
+          9,
+          11,
+          12,
+          15,
+          16,
+          17
+        ],
+        "necessary_release_machine_core": [
+          3,
+          11
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 10,
+      "attempt": 3,
+      "open": [
+        0,
+        3,
+        4,
+        6,
+        7,
+        12,
+        13,
+        14,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002121003
+      },
+      "cores_known": 11,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.061,
+        "conflicts": 1,
+        "branches": 22,
+        "fixed_machines": [
+          1,
+          2,
+          5,
+          8,
+          9,
+          10,
+          11,
+          15,
+          16,
+          17
+        ],
+        "necessary_release_machine_core": [
+          2,
+          10
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 10,
+      "attempt": 4,
+      "open": [
+        0,
+        4,
+        6,
+        7,
+        10,
+        11,
+        13,
+        14,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002334154
+      },
+      "cores_known": 12,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.059,
+        "conflicts": 3,
+        "branches": 28,
+        "fixed_machines": [
+          1,
+          2,
+          3,
+          5,
+          8,
+          9,
+          12,
+          15,
+          16,
+          17
+        ],
+        "necessary_release_machine_core": [
+          2,
+          3,
+          12
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 10,
+      "attempt": 5,
+      "open": [
+        0,
+        2,
+        3,
+        4,
+        6,
+        7,
+        13,
+        14,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0021786120000000003
+      },
+      "cores_known": 13,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.058,
+        "conflicts": 1,
+        "branches": 22,
+        "fixed_machines": [
+          1,
+          5,
+          8,
+          9,
+          10,
+          11,
+          12,
+          15,
+          16,
+          17
+        ],
+        "necessary_release_machine_core": [
+          8,
+          10
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 10,
+      "attempt": 6,
+      "open": [
+        0,
+        3,
+        4,
+        6,
+        7,
+        10,
+        13,
+        14,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0021711200000000003
+      },
+      "cores_known": 14,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.061,
+        "conflicts": 2,
+        "branches": 26,
+        "fixed_machines": [
+          1,
+          2,
+          5,
+          8,
+          9,
+          11,
+          12,
+          15,
+          16,
+          17
+        ],
+        "necessary_release_machine_core": [
+          2,
+          11,
+          12
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 10,
+      "attempt": 7,
+      "open": [],
+      "master": {
+        "status": "INFEASIBLE",
+        "wall": 0.00040380600000000004
+      },
+      "cores_known": 15,
+      "outcome": "MASTER_NO_MORE_CHOICES_OR_TIMEOUT"
+    },
+    {
+      "size": 15,
+      "attempt": 0,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7,
+        10,
+        11,
+        12,
+        13,
+        14,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002916137
+      },
+      "cores_known": 15,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.046,
+        "conflicts": 1,
+        "branches": 12,
+        "fixed_machines": [
+          6,
+          8,
+          9,
+          15,
+          16
+        ],
+        "necessary_release_machine_core": [
+          6,
+          8
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 1,
+      "open": [
+        0,
+        2,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0024762900000000003
+      },
+      "cores_known": 16,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.047,
+        "conflicts": 3,
+        "branches": 18,
+        "fixed_machines": [
+          1,
+          3,
+          8,
+          12,
+          16
+        ],
+        "necessary_release_machine_core": [
+          1,
+          3,
+          12
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 2,
+      "open": [
+        0,
+        1,
+        3,
+        4,
+        6,
+        7,
+        10,
+        11,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.003270901
+      },
+      "cores_known": 17,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.045,
+        "conflicts": 2,
+        "branches": 16,
+        "fixed_machines": [
+          2,
+          5,
+          8,
+          9,
+          12
+        ],
+        "necessary_release_machine_core": [
+          2,
+          5,
+          8
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 3,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        6,
+        7,
+        8,
+        9,
+        12,
+        13,
+        14,
+        16,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.003616887
+      },
+      "cores_known": 18,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.049,
+        "conflicts": 1,
+        "branches": 12,
+        "fixed_machines": [
+          5,
+          10,
+          11,
+          15,
+          17
+        ],
+        "necessary_release_machine_core": [
+          10,
+          11
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 4,
+      "open": [
+        0,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        11,
+        12,
+        13,
+        14,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0025901080000000003
+      },
+      "cores_known": 19,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.049,
+        "conflicts": 2,
+        "branches": 16,
+        "fixed_machines": [
+          1,
+          2,
+          3,
+          9,
+          15
+        ],
+        "necessary_release_machine_core": [
+          1,
+          2,
+          3
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 5,
+      "open": [
+        0,
+        2,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        11,
+        12,
+        13,
+        14,
+        16,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002856013
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.048,
+        "conflicts": 4,
+        "branches": 17,
+        "fixed_machines": [
+          1,
+          3,
+          9,
+          15,
+          17
+        ],
+        "necessary_release_machine_core": [
+          1,
+          15
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 6,
+      "open": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        10,
+        11,
+        13,
+        14,
+        15,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.001495728
+      },
+      "cores_known": 21,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.047,
+        "conflicts": 3,
+        "branches": 18,
+        "fixed_machines": [
+          2,
+          8,
+          9,
+          12,
+          16
+        ],
+        "necessary_release_machine_core": [
+          2,
+          8,
+          12
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 7,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7,
+        8,
+        10,
+        12,
+        13,
+        14,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002889523
+      },
+      "cores_known": 22,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.048,
+        "conflicts": 1,
+        "branches": 12,
+        "fixed_machines": [
+          6,
+          9,
+          11,
+          15,
+          16
+        ],
+        "necessary_release_machine_core": [
+          6,
+          11
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 8,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        6,
+        7,
+        10,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002920794
+      },
+      "cores_known": 23,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.051,
+        "conflicts": 3,
+        "branches": 18,
+        "fixed_machines": [
+          5,
+          8,
+          9,
+          11,
+          12
+        ],
+        "necessary_release_machine_core": [
+          5,
+          8,
+          11
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 9,
+      "open": [
+        0,
+        3,
+        4,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.003508441
+      },
+      "cores_known": 24,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.045,
+        "conflicts": 2,
+        "branches": 16,
+        "fixed_machines": [
+          1,
+          2,
+          5,
+          12,
+          16
+        ],
+        "necessary_release_machine_core": [
+          1,
+          2,
+          12
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 10,
+      "open": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        10,
+        12,
+        13,
+        14,
+        15,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.003371658
+      },
+      "cores_known": 25,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.05,
+        "conflicts": 3,
+        "branches": 18,
+        "fixed_machines": [
+          2,
+          8,
+          9,
+          11,
+          16
+        ],
+        "necessary_release_machine_core": [
+          2,
+          8,
+          11
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 11,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        13,
+        14,
+        16,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0035158090000000004
+      },
+      "cores_known": 26,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.047,
+        "conflicts": 2,
+        "branches": 16,
+        "fixed_machines": [
+          8,
+          11,
+          12,
+          15,
+          17
+        ],
+        "necessary_release_machine_core": [
+          8,
+          11,
+          12
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 12,
+      "open": [
+        0,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0034819380000000004
+      },
+      "cores_known": 27,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.045,
+        "conflicts": 2,
+        "branches": 16,
+        "fixed_machines": [
+          1,
+          2,
+          8,
+          16,
+          17
+        ],
+        "necessary_release_machine_core": [
+          2,
+          8,
+          16
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 13,
+      "open": [
+        0,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        12,
+        13,
+        14,
+        15,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0034564870000000003
+      },
+      "cores_known": 28,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.049,
+        "conflicts": 2,
+        "branches": 16,
+        "fixed_machines": [
+          1,
+          2,
+          9,
+          11,
+          16
+        ],
+        "necessary_release_machine_core": [
+          2,
+          11,
+          16
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 14,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        7,
+        8,
+        11,
+        12,
+        13,
+        14,
+        15,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002717801
+      },
+      "cores_known": 29,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.056,
+        "conflicts": 2,
+        "branches": 16,
+        "fixed_machines": [
+          5,
+          6,
+          9,
+          10,
+          16
+        ],
+        "necessary_release_machine_core": [
+          5,
+          6,
+          9
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 15,
+      "open": [
+        0,
+        1,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.003180033
+      },
+      "cores_known": 30,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.048,
+        "conflicts": 2,
+        "branches": 16,
+        "fixed_machines": [
+          2,
+          3,
+          15,
+          16,
+          17
+        ],
+        "necessary_release_machine_core": [
+          2,
+          3,
+          16
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 20,
+      "attempt": 0,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002083707
+      },
+      "cores_known": 31,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 0.803,
+        "conflicts": 377,
+        "branches": 3746,
+        "fixed_machines": []
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 20,
+      "attempt": 1,
+      "open": [],
+      "master": {
+        "status": "INFEASIBLE",
+        "wall": 0.000192828
+      },
+      "cores_known": 31,
+      "outcome": "MASTER_NO_MORE_CHOICES_OR_TIMEOUT"
+    }
+  ],
+  "wall_seconds": 3.374,
+  "status": "NO_IMPROVEMENT_WITHIN_FINITE_SEARCH_BUDGET"
+}
