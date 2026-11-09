@@ -92,9 +92,10 @@ void inspect(const Candidate&c,const Parent&A,const Parent&B,int optimum,
     s.bestDist=min(distance_to_parent_orbit(c.word,A.seq),distance_to_parent_orbit(c.word,B.seq));
   }
   if(reg.count(c.canonword)){s.nearParent++;return;}
-  s.novelAll+=s.visited.insert(c.canonword).second;
+  bool first=s.visited.insert(c.canonword).second;
+  s.novelAll+=first;
   if(e<s.bestNovelE){s.bestNovelE=e;s.bestNovelBits=c.word;s.bestNovelCanon=c.canonword;}
-  if(e<=optimum*1.2 && s.visited.count(c.canonword)==1){
+  if(e<=optimum*1.2 && first){
     // report every distinct new within 20%, but emit once per session.
     if(s.unique10.count(c.canonword))return;
     s.novel20++;
@@ -142,7 +143,10 @@ void search_session(const Parent&A,const Parent&B,int arm,int rep,int pairidx,
       L cur=from_mask(p,m),best=cur;
       for(int j=0;j<24;j++){
         Mask trial=m;L alt=cur;
-        swap_in(trial,alt,Inherit(A,B),rng,true,true);
+        int i=pick(trial.d,1,rng),j=pick(trial.d,0,rng);
+        trial.d[i]=0;trial.d[j]=1;alt.flip(p.D[i]);alt.flip(p.D[j]);
+        i=pick(trial.q,1,rng);j=pick(trial.q,0,rng);
+        trial.q[i]=0;trial.q[j]=1;alt.flip(p.Q[i]);alt.flip(p.Q[j]);
         st.rawMoves++;
         if(alt.e<cur.e){cur=alt;m=move(trial);}
         if(alt.e<best.e)best=alt;
