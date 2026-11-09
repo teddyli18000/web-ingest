@@ -1,0 +1,53 @@
+name: temp-ta41-whole-machine-heldout-transfer
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-whole-machine-heldout-transfer.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-whole-machine-heldout-transfer
+  cancel-in-progress: false
+jobs:
+  benchmark:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [dynamic, static, random]
+        shard: [0,1]
+        seed: [4107,4113]
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin CP solver and syntax-check held-out constructive benchmark
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/benchmark_whole_machine_transfer.py
+          python3 -m py_compile science-boundary/job-shop-ta41/whole_machine_release_ihs.py
+          test "$(find science-boundary/job-shop-ta41/positive-n7-elite-data -name start.txt | wc -l)" -eq 12
+      - name: Matched 5-second budget on 6 source-independent 30x20 N7 elite starts
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_whole_machine_transfer.py \
+            --policy '${{ matrix.policy }}' --shard '${{ matrix.shard }}' \
+            --seed '${{ matrix.seed }}' --seconds 5 --cp-seconds 0.8 \
+            --out 'science-boundary/job-shop-ta41/results/whole-machine-transfer-${{ matrix.policy }}-shard${{ matrix.shard }}-seed${{ matrix.seed }}'
+      - name: Preserve independently reproduced makespan results and full machine-order witnesses
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/whole-machine-transfer-${{ matrix.policy }}-shard${{ matrix.shard }}-seed${{ matrix.seed }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): full-machine IHS source-N7 heldout transfer ${{ matrix.policy }} shard${{ matrix.shard }} seed${{ matrix.seed }}'
+          for i in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
