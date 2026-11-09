@@ -40,7 +40,7 @@ def choose_machines(orders,pos,dur,C,policy,seed,count):
     return sorted(ranked[:count]),scores,graph
 
 def exact_neutral(orders,pos,dur,C,policy,seed,seconds,is_ta41,
-                  open_count,min_groups,min_flips):
+                  open_count,min_groups,min_flips,workers=4):
     free,scores,graph=choose_machines(orders,pos,dur,C,policy,seed,open_count)
     if is_ta41:
         mandatory=json.loads((ROOT/'results'/
@@ -96,7 +96,7 @@ def exact_neutral(orders,pos,dur,C,policy,seed,seconds,is_ta41,
         model.add_hint(e[op],graph['head'][op]+dur[op])
     for f in flags:model.add_hint(f,0)
     solver=cp_model.CpSolver()
-    solver.parameters.num_search_workers=4
+    solver.parameters.num_search_workers=workers
     solver.parameters.random_seed=seed%2147483647
     solver.parameters.max_time_in_seconds=seconds
     tick=time.monotonic()
