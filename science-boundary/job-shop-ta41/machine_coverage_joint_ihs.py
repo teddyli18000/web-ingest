@@ -114,23 +114,6 @@ def complete(orders,pos,dur,mutable,released,L,seconds,seed):
         return result,None,core
     return result,None,None
 
-def assign_costs(policy,C,target,original_graph,changed_graph,mutable,learned,rng):
-    if policy=='random':
-        return [rng.randrange(1,100) for i in range(ARCS)]
-    reference=original_graph if policy=='static' else changed_graph
-    core_frequency=Counter()
-    for core in learned:
-        for i in core:core_frequency[i]+=1
-    weights=[]
-    for i,(u,v,m) in enumerate(mutable):
-        slack=reference['lb']-(reference['head'][u]+
-            (reference['tail'][u]-max(
-                (reference['tail'][w] for w,_ in reference['edges'][u]),default=0) if False else 0))
-        # We require exact own op duration, which the graph doesn't
-        # store; caller supplies static head-tail scores separately.
-        weights.append(0)
-    return weights
-
 def master_selection(gateways,machine_cores,learned,unknown_nogoods,
                      original_slack,dynamic_slack,policy,
                      min_groups,per_group,budget,seconds,seed):
