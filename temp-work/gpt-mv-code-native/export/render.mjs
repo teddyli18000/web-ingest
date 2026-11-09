@@ -12,6 +12,7 @@ function arg(name,def){const i=process.argv.indexOf(`--${name}`);return i>=0?pro
 const width=Number(arg('width','960')),height=Number(arg('height','540')),fps=Number(arg('fps','18'));
 const start=Number(arg('start','0')),end=Number(arg('end','15'));
 const expectedArtSource=arg('art-source','');
+const expectedBustSource=arg('bust-source','');
 const out=path.resolve(arg('out',path.join(ROOT,'out','gate.mp4')));
 const frames=path.join(path.dirname(out),'.frames-code-native');
 await fs.mkdir(path.dirname(out),{recursive:true});
@@ -34,6 +35,11 @@ await page.goto(`http://127.0.0.1:${port}/?t=0`,{waitUntil:'networkidle'});
 await page.waitForFunction(()=>window.GPT_MV_READY===true);
 const artSource=await page.evaluate(()=>window.GPT_ART_SOURCE??'unknown');
 console.log(`character source: ${artSource}`);
+const bustSource=await page.evaluate(()=>window.GPT_BUST_SOURCE??'unknown');
+console.log(`bust source: ${bustSource}`);
+if(expectedBustSource&&bustSource!==expectedBustSource){
+  throw new Error(`expected bust source ${expectedBustSource}, got ${bustSource}`);
+}
 if(expectedArtSource&&artSource!==expectedArtSource){
   throw new Error(`expected character source ${expectedArtSource}, got ${artSource}`);
 }
