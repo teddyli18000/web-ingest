@@ -104,6 +104,43 @@ def weighted_cover(clauses,root,mutable,static_slack,dynamic_slack,
         selected_arc_count=len(selected),exact_minimum_cardinality_proven=(
             status==cp_model.OPTIMAL),solver_seconds=solver.wall_time)
 
+def augmented_release_ranking(clauses,chosen,mutable,original_slack,
+                              current_slack,policy,rng):
+    """Predict surplus coordinated decisions beyond a minimal hitting set.
+
+    Hitting only known UNSAT clauses is necessary, never sufficient. A
+    separate completion probe releases extra machine relations expected
+    to participate in still-hidden bottleneck replacement conflicts.
+    This probe uses no oracle order; it is an independently falsifiable
+    experiment over source-observable core/path statistics.
+    """
+    density=Counter()
+    for clause in clauses:
+        w=1.0/(len(clause)**0.5)
+        for i in clause:
+            density[i]+=w
+    neighbor=Counter()
+    for i in chosen:
+        for offset in (-3,-2,-1,1,2,3):
+            j=i+offset
+            if 0<=j<580 and j//29==i//29:
+                neighbor[j]+=1.0/(abs(offset)**0.7)
+    def rating(i):
+        if policy=='random':
+            return rng.random()
+        closeness=neighbor[i]
+        if policy=='static':
+            slack=original_slack[i]
+            return (2.0/(1+max(0,slack)) +
+                    0.15*density[i]+0.1*closeness+rng.random()*0.01)
+        if policy=='dynamic':
+            slack=current_slack[i]
+            return (2.0/(1+max(0,slack)) +
+                    1.25*density[i]+0.6*closeness+rng.random()*0.01)
+        raise ValueError(policy)
+    return sorted((i for i in range(580) if i not in chosen),
+                  key=lambda i:-rating(i))
+
 def run(args):
     orders,pos,dur,initial=parse_case(args.start)
     target=initial-1
@@ -225,6 +262,47 @@ def run(args):
             trace['released_from_previous_set']=len(chosen-next_set)
             trace['newly_released']=len(next_set-chosen)
             chosen=next_set
+
+            # Precompletion hypothesis: a minimum hitting set is often too
+            # brittle. Periodically ask the same full CP completion oracle
+            # about a coordinated, source-only group of EXTRA future
+            # replacement conflicts. Keep fixed assignments only for this
+            # constructive probe; resume the optimal hitting-set solver
+            # unchanged if the augmented group does not improve.
+            if args.augment_every and (trial+1)%args.augment_every==0:
+                ranking=augmented_release_ranking(
+                    clauses,chosen,mutable,static_slack,dynamic_slack,
+                    args.policy,rng)
+                trace['augmented_probes']=[]
+                for count in args.augment_budgets:
+                    if count<=len(chosen):continue
+                    augmented=chosen|set(ranking[:count-len(chosen)])
+                    if len(augmented)>args.max_release:continue
+                    probe,found,core=hard_completion(
+                        dur,mutable,orders,pos,augmented,root,target,
+                        args.cp_seconds,args.seed+2000000+root_index*5000+
+                        trial*20+count)
+                    trace['augmented_probes'].append(dict(
+                        total_released_arcs=len(augmented),
+                        status=probe['status'],
+                        sufficient_core_size=(len(core) if core is not None else None),
+                        wall_seconds=probe['wall_seconds']))
+                    if found is not None:
+                        val=evaluate(found,pos,dur)
+                        assert val<initial and val<=target
+                        (args.out/'certificate.json').write_text(
+                            json.dumps({'machines':found},separators=(',',':'))+'\\n')
+                        output['status']='IMPROVED'
+                        record['outcome']='AUGMENTED_CONSTRUCTIVE_IMPROVEMENT'
+                        trace['candidate_makespan']=val
+                        break
+                    if core:
+                        c=frozenset(core)
+                        if c not in seen:
+                            assert c.isdisjoint(chosen)
+                            clauses.append(c);seen.add(c)
+                if output['status']=='IMPROVED':
+                    break
             latest=dag_graph(dur,mutable,chosen,reverse=None)
             assert latest is not None
             if len(chosen)>args.max_release:
@@ -258,6 +336,8 @@ if __name__=='__main__':
     p.add_argument('--iterations',type=int,default=80)
     p.add_argument('--cp-seconds',type=float,default=1.0)
     p.add_argument('--hit-seconds',type=float,default=1.0)
+    p.add_argument('--augment-every',type=int,default=0)
+    p.add_argument('--augment-budgets',type=int,nargs='+',default=[12,24,48])
     p.add_argument('--seconds',type=float,default=120.0)
     p.add_argument('--max-release',type=int,default=120)
     p.add_argument('--max-preliminary-cut',type=int,default=120)
