@@ -2,16 +2,16 @@
 // after the identical direct repair(X); never load C or target-vault.
 // Evaluates every candidate with exactly the usual 64-Tabu complete repair.
 // This is an upper-bound diagnostic, not a costed deployable search strategy.
-#define main hidden_c_solver_unused_main
+#define HIDDEN_REPAIR_NO_MAIN
 #include "hidden_repair.cpp"
-#undef main
+#undef HIDDEN_REPAIR_NO_MAIN
 #include <fstream>
 #include <iomanip>
 using namespace std;
 
 int main(int argc,char**argv){
  if(argc!=4)throw runtime_error("usage: probe_reachability INPUT FROZEN_MODELS OUTPUT");
- auto xs=load_inputs(argv[1]),models=load_models(argv[2]);
+ auto xs=load_inputs(argv[1]);auto models=load_models(argv[2]);
  ofstream out(argv[3]);if(!out)throw runtime_error("cannot open probe output");
  out<<"id\tn\tmode\tdamage\trep\tdonor_method\tj\tinitial_current_E"
     "\tbaseline_post_E\tbaseline_post_bits\tstarting_E\tstarting_bits\t"
