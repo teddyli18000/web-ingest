@@ -1,0 +1,92 @@
+name: temp-ta41-unseen-ta48-ta50-blind-transfer
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-unseen-ta48-ta50-blind-transfer.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-unseen-ta48-ta50-blind-transfer
+  cancel-in-progress: false
+jobs:
+  group:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [dynamic, static, random]
+        source_N7_seed: [1801, 1811]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin solver and check six previously unseen source elites
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/machine_group_order_repair.py science-boundary/job-shop-ta41/benchmark_machine_group_transfer.py
+          test "$(find science-boundary/job-shop-ta41/positive-n7-holdout-data -name start.txt | wc -l)" -eq 6
+      - name: Strict 5-second per independent case, full 30x20 NoOverlap, hidden oracle never loaded by search
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_machine_group_transfer.py \
+            --cases-dir science-boundary/job-shop-ta41/positive-n7-holdout-data \
+            --expected-instances 3 --initial-seed '${{ matrix.source_N7_seed }}' \
+            --policy '${{ matrix.policy }}' --total-seconds 5 \
+            --cp-seconds 0.7 --master-seconds 0.15 \
+            --out 'science-boundary/job-shop-ta41/results/holdout-machine-group-${{ matrix.source_N7_seed }}-${{ matrix.policy }}'
+      - name: Persist complete independent DAG score and latency data
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/holdout-machine-group-${{ matrix.source_N7_seed }}-${{ matrix.policy }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): fresh ta48-ta50 5s blind whole-machine transfer ${{ matrix.source_N7_seed }} ${{ matrix.policy }}'
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+  original_n7:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile unchanged original published Ming Qi N7 kernel pinned exact commit
+        run: |
+          git clone --depth=1 https://github.com/Qiming01/Job-Shop-Scheduling.git /tmp/n7
+          git -C /tmp/n7 fetch --depth=1 origin 7e120ebada21cb604c871e0657814bf6e32611f8
+          git -C /tmp/n7 checkout --detach 7e120ebada21cb604c871e0657814bf6e32611f8
+          python3 science-boundary/job-shop-ta41/patch_original_n7_warmstart.py /tmp/n7
+          g++ -std=c++20 -O3 -include climits -DN7_WARMSTART_SUPPORT -I/tmp/n7/include \
+            science-boundary/job-shop-ta41/original_n7_blind_driver.cpp \
+            /tmp/n7/src/graph.cpp /tmp/n7/src/instance.cpp /tmp/n7/src/schedule.cpp /tmp/n7/src/tabu_search.cpp \
+            -o /tmp/n7_true_blind
+      - name: Genuine published N7 from the exact same unseen 30x20 starts, matching 5s native time
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_true_n7_positive.py \
+            --cases science-boundary/job-shop-ta41/positive-n7-holdout-data \
+            --driver /tmp/n7_true_blind --seconds 5 --seeds 4107 4113 \
+            --out science-boundary/job-shop-ta41/results/holdout-original-n7
+      - name: Persist original source N7 independent full schedules
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/holdout-original-n7'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): original author N7 five-second source-faithful unseen ta48-ta50 control'
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
