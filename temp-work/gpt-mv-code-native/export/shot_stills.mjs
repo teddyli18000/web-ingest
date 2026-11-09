@@ -6,7 +6,7 @@ import {chromium} from 'playwright-core';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const out=path.resolve(process.argv[2]||'out/opening-v12-stills');
-const times=[.58,1.55,2.52,3.37,4.62,5.48,6.86,7.82,8.92,9.92,11.25,12.15,13.42,14.72,15.18];
+const times=process.argv[3]?process.argv[3].split(',').map(Number):[.58,1.55,2.52,3.37,4.62,5.48,6.86,7.82,8.92,9.92,11.25,12.15,13.42,14.72,15.18];
 await fs.mkdir(out,{recursive:true});
 const types={'.html':'text/html','.js':'text/javascript','.webp':'image/webp','.png':'image/png','.json':'application/json'};
 const server=http.createServer(async(req,res)=>{
