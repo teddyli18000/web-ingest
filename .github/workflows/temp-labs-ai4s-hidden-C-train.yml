@@ -4,6 +4,7 @@ on:
     paths:
       - .github/workflows/temp-labs-ai4s-hidden-C-train.yml
       - science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/make_scenarios.py
+      - science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/hidden_repair.cpp
   workflow_dispatch:
 permissions:
   contents: write
@@ -80,5 +81,10 @@ jobs:
           git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/validation47
           git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/frozen_models
           git commit -m 'research(labs-ai4s): independently verify C-free N46 train N47 validation and frozen feature models'
-          git pull --rebase origin main
-          git push origin HEAD:main
+          ok=0
+          for attempt in 1 2 3 4 5 6 7 8; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then ok=1; break; fi
+            echo "Concurrent main push, retry $attempt"
+          done
+          test "$ok" -eq 1
