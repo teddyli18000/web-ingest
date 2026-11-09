@@ -63,7 +63,7 @@ def main(a):
         improved=sum(x['gain']>0 for x in trials),
         mean_improvement=statistics.mean(x['gain'] for x in trials),
         complete=True,trials=trials,
-        caveat='5-second timing is internal Python model and solver time, exclusive of dependency installation / GitHub runner startup. Genuine N7 is C++ 5-second native duration. All policies same machine-group CP model and budget.'))
+        caveat='5-second timing is internal Python model and solver time, exclusive of dependency installation / GitHub runner startup. Genuine N7 is C++ 5-second native duration. All policies same machine-group CP model and budget.')
     (a.out/'summary.json').write_text(json.dumps(result,indent=2)+'\n')
     print('RESULT',json.dumps({k:v for k,v in result.items() if k!='trials'}),flush=True)
 
