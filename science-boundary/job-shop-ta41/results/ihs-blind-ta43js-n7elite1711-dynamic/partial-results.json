@@ -1,0 +1,6032 @@
+{
+  "instance": "ta43js-n7elite1711",
+  "target": 1887,
+  "incumbent": 1888,
+  "policy": "dynamic",
+  "experimental_design": "counterfactual reversal, online path cycle/deadline/resource UNSAT clauses, reoptimized nonmonotone joint hitting set, complete full NoOverlap CP",
+  "root_selection": "oracle-blind near-critical root set reordered by minimal counterfactual cycle+deadline closure",
+  "root_ids": [
+    253,
+    533,
+    258,
+    536,
+    254,
+    256,
+    537,
+    538,
+    255,
+    127,
+    126,
+    133,
+    130,
+    121
+  ],
+  "root_screened": 80,
+  "root_limit": 14,
+  "max_iterations_per_root": 100,
+  "full_CP_seconds": 0.35,
+  "hitting_set_seconds": 0.4,
+  "global_wall_budget": 150.0,
+  "records": [
+    {
+      "root": 253,
+      "machine": 8,
+      "initial_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [],
+        "initial_released_arcs": 1,
+        "initial_new_order_lb": 1887
+      },
+      "iterations": [
+        {
+          "iteration": 0,
+          "release_size": 1,
+          "clauses": 0,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.152,
+            "branches": 1296,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 579,
+            "sufficient_core_size": 23
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 23,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.004540329
+          },
+          "released_from_previous_set": 0,
+          "newly_released": 1
+        },
+        {
+          "iteration": 1,
+          "release_size": 2,
+          "clauses": 1,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.146,
+            "branches": 1256,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 20
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 20,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.004105194
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 2,
+          "release_size": 2,
+          "clauses": 2,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.152,
+            "branches": 1293,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 23
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 23,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.003389698
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 3,
+          "release_size": 2,
+          "clauses": 3,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.153,
+            "branches": 1299,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 24
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 24,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.004761110000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 4,
+          "release_size": 2,
+          "clauses": 4,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.157,
+            "branches": 1295,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 21
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 21,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.008085710000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 5,
+          "release_size": 2,
+          "clauses": 5,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.151,
+            "branches": 1302,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 24
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 24,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.004808562000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 6,
+          "release_size": 2,
+          "clauses": 6,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.234,
+            "branches": 1535,
+            "conflicts": 12,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 48
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 48,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.005723949000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 2
+        },
+        {
+          "iteration": 7,
+          "release_size": 3,
+          "clauses": 7,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.146,
+            "branches": 1277,
+            "conflicts": 2,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 20
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 20,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.0057825870000000005
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 8,
+          "release_size": 3,
+          "clauses": 8,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.154,
+            "branches": 1303,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 26
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 26,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.005707203
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 9,
+          "release_size": 3,
+          "clauses": 9,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.171,
+            "branches": 1364,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 33
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 33,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.006195568
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 10,
+          "release_size": 3,
+          "clauses": 10,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.151,
+            "branches": 1279,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 20
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 20,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.006088898000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 11,
+          "release_size": 3,
+          "clauses": 11,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.166,
+            "branches": 1337,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 25
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 25,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.0076881630000000005
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 12,
+          "release_size": 3,
+          "clauses": 12,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.155,
+            "branches": 1276,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 23
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 23,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.007655042000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 13,
+          "release_size": 3,
+          "clauses": 13,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.172,
+            "branches": 1379,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 35
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 35,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.007953843
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 14,
+          "release_size": 3,
+          "clauses": 14,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.252,
+            "branches": 1554,
+            "conflicts": 8,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 48
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 48,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.007196503000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 15,
+          "release_size": 3,
+          "clauses": 15,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.267,
+            "branches": 1557,
+            "conflicts": 17,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 43
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 43,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.008926185000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 16,
+          "release_size": 3,
+          "clauses": 16,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.15,
+            "branches": 1294,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 22
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 22,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.00878377
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 17,
+          "release_size": 3,
+          "clauses": 17,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.276,
+            "branches": 1558,
+            "conflicts": 20,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 50
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 50,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.008075655000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 18,
+          "release_size": 3,
+          "clauses": 18,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.284,
+            "branches": 1575,
+            "conflicts": 18,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 48
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 48,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.008488145
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 19,
+          "release_size": 3,
+          "clauses": 19,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.227,
+            "branches": 1491,
+            "conflicts": 15,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 45
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 45,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.009306767
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 20,
+          "release_size": 3,
+          "clauses": 20,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.16,
+            "branches": 1337,
+            "conflicts": 8,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 28
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 28,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.010248163000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 21,
+          "release_size": 3,
+          "clauses": 21,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.31,
+            "branches": 1586,
+            "conflicts": 18,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 52
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 52,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.009899719000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 22,
+          "release_size": 3,
+          "clauses": 22,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.308,
+            "branches": 1580,
+            "conflicts": 20,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 50
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 50,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.009772534000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 23,
+          "release_size": 3,
+          "clauses": 23,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.267,
+            "branches": 1601,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 55
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 55,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.011619739
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 24,
+          "release_size": 3,
+          "clauses": 24,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.214,
+            "branches": 1469,
+            "conflicts": 11,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 42
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 42,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.01109455
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 25,
+          "release_size": 3,
+          "clauses": 25,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.171,
+            "branches": 1331,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 29
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 29,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.012134182
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 26,
+          "release_size": 3,
+          "clauses": 26,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.33,
+            "branches": 1559,
+            "conflicts": 29,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 47
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 47,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.011000679000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 3
+        },
+        {
+          "iteration": 27,
+          "release_size": 4,
+          "clauses": 27,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.208,
+            "branches": 1518,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 50
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 50,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.013368888
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 28,
+          "release_size": 4,
+          "clauses": 28,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.163,
+            "branches": 1326,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 28
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 28,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.012268444000000002
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 29,
+          "release_size": 4,
+          "clauses": 29,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.142,
+            "branches": 1274,
+            "conflicts": 2,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 20
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 20,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.013444411000000002
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 30,
+          "release_size": 4,
+          "clauses": 30,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.145,
+            "branches": 1274,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 18
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 18,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.011656074
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 31,
+          "release_size": 4,
+          "clauses": 31,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.15,
+            "branches": 1256,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 20
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 20,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.017359154
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 32,
+          "release_size": 4,
+          "clauses": 32,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.29,
+            "branches": 1535,
+            "conflicts": 16,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 46
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 46,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.012586485000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 33,
+          "release_size": 4,
+          "clauses": 33,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.18,
+            "branches": 1412,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 37
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 37,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.012912505000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 34,
+          "release_size": 4,
+          "clauses": 34,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.352,
+            "branches": 1571,
+            "conflicts": 22,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 46
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 46,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.013696090000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 35,
+          "release_size": 4,
+          "clauses": 35,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.191,
+            "branches": 1530,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 45
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 45,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.0128094
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 36,
+          "release_size": 4,
+          "clauses": 36,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.293,
+            "branches": 1544,
+            "conflicts": 17,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 45
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 45,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.019041572
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 37,
+          "release_size": 4,
+          "clauses": 37,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.175,
+            "branches": 1437,
+            "conflicts": 2,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 38
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 38,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.017490704000000003
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 38,
+          "release_size": 4,
+          "clauses": 38,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.294,
+            "branches": 1584,
+            "conflicts": 21,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 46
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 46,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.013643532000000002
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 39,
+          "release_size": 4,
+          "clauses": 39,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.213,
+            "branches": 1445,
+            "conflicts": 10,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 42
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 42,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.088249246
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 40,
+          "release_size": 4,
+          "clauses": 40,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.17,
+            "branches": 1349,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 26
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 26,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.016361949
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 41,
+          "release_size": 4,
+          "clauses": 41,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.158,
+            "branches": 1304,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 23
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 23,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.019066488
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 42,
+          "release_size": 4,
+          "clauses": 42,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.154,
+            "branches": 1302,
+            "conflicts": 8,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 19
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 19,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.021030065
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 43,
+          "release_size": 4,
+          "clauses": 43,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.15,
+            "branches": 1284,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 20
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 20,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.01797412
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 44,
+          "release_size": 4,
+          "clauses": 44,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.143,
+            "branches": 1260,
+            "conflicts": 2,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 19
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 19,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.015953648
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 45,
+          "release_size": 4,
+          "clauses": 45,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.308,
+            "branches": 1533,
+            "conflicts": 21,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 43
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 43,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.015984504
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 46,
+          "release_size": 4,
+          "clauses": 46,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.295,
+            "branches": 1634,
+            "conflicts": 16,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 54
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 54,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.018629423000000003
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 47,
+          "release_size": 4,
+          "clauses": 47,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.172,
+            "branches": 1417,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 37
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 37,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.014511584000000001
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 48,
+          "release_size": 4,
+          "clauses": 48,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.302,
+            "branches": 1528,
+            "conflicts": 18,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 43
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 43,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.016788761000000003
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 49,
+          "release_size": 4,
+          "clauses": 49,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.259,
+            "branches": 1516,
+            "conflicts": 16,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 44
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 44,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.018540119
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 50,
+          "release_size": 4,
+          "clauses": 50,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.147,
+            "branches": 1265,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 20
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 20,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.023118966
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 51,
+          "release_size": 4,
+          "clauses": 51,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.165,
+            "branches": 1330,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 22
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 22,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.014292755
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 52,
+          "release_size": 4,
+          "clauses": 52,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.327,
+            "branches": 1573,
+            "conflicts": 19,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 45
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 45,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.02933248
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 53,
+          "release_size": 4,
+          "clauses": 53,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.16,
+            "branches": 1398,
+            "conflicts": 2,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 33
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 33,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.020043654
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 54,
+          "release_size": 4,
+          "clauses": 54,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.306,
+            "branches": 1588,
+            "conflicts": 20,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 44
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 44,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.022880216000000002
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 55,
+          "release_size": 4,
+          "clauses": 55,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.188,
+            "branches": 1410,
+            "conflicts": 8,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 38
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 38,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.022901327000000003
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 56,
+          "release_size": 4,
+          "clauses": 56,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.211,
+            "branches": 1437,
+            "conflicts": 8,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 43
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 43,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.030010288000000003
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 57,
+          "release_size": 4,
+          "clauses": 57,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.282,
+            "branches": 1570,
+            "conflicts": 15,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 49
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 49,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.021928289
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 58,
+          "release_size": 4,
+          "clauses": 58,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.166,
+            "branches": 1320,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 27
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 27,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.02404107
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 59,
+          "release_size": 4,
+          "clauses": 59,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.317,
+            "branches": 1569,
+            "conflicts": 19,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 50
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 50,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.017374785
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 60,
+          "release_size": 4,
+          "clauses": 60,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.31,
+            "branches": 1566,
+            "conflicts": 17,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 46
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 46,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.024348835000000003
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 61,
+          "release_size": 4,
+          "clauses": 61,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.319,
+            "branches": 1626,
+            "conflicts": 20,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 51
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 51,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.025879938
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 62,
+          "release_size": 4,
+          "clauses": 62,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.209,
+            "branches": 1489,
+            "conflicts": 8,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 44
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 44,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.031640987
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 63,
+          "release_size": 4,
+          "clauses": 63,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.308,
+            "branches": 1678,
+            "conflicts": 17,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 57
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 57,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.033467191
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 64,
+          "release_size": 4,
+          "clauses": 64,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.272,
+            "branches": 1538,
+            "conflicts": 17,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 44
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 44,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.034043585
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 65,
+          "release_size": 4,
+          "clauses": 65,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.351,
+            "branches": 1742,
+            "conflicts": 22,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 65
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 65,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.034548309
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 66,
+          "release_size": 4,
+          "clauses": 66,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.286,
+            "branches": 1639,
+            "conflicts": 13,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 58
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 58,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.027667137
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 67,
+          "release_size": 4,
+          "clauses": 67,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.169,
+            "branches": 1336,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 31
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 31,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.030718330000000002
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 68,
+          "release_size": 4,
+          "clauses": 68,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.236,
+            "branches": 1524,
+            "conflicts": 10,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 48
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 48,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.039216569
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 69,
+          "release_size": 4,
+          "clauses": 69,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.263,
+            "branches": 1536,
+            "conflicts": 11,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 51
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 51,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.025826811
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 70,
+          "release_size": 4,
+          "clauses": 70,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.185,
+            "branches": 1455,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 41
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 41,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.031643933
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 71,
+          "release_size": 4,
+          "clauses": 71,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.351,
+            "branches": 1620,
+            "conflicts": 29,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 52
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 52,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.037744256000000004
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 72,
+          "release_size": 4,
+          "clauses": 72,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.283,
+            "branches": 1533,
+            "conflicts": 16,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 48
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 48,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.027878684
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 73,
+          "release_size": 4,
+          "clauses": 73,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.24,
+            "branches": 1563,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 51
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 51,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.037656129
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 74,
+          "release_size": 4,
+          "clauses": 74,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.292,
+            "branches": 1701,
+            "conflicts": 12,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 59
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 59,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.041144244
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 75,
+          "release_size": 4,
+          "clauses": 75,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.24,
+            "branches": 1676,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 63
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 63,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.043161155
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 76,
+          "release_size": 4,
+          "clauses": 76,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.233,
+            "branches": 1477,
+            "conflicts": 12,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 42
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 42,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.050918576
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 77,
+          "release_size": 4,
+          "clauses": 77,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.307,
+            "branches": 1588,
+            "conflicts": 23,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 51
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 51,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.045130612
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 78,
+          "release_size": 4,
+          "clauses": 78,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.17,
+            "branches": 1364,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 34
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 34,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.045205989
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 79,
+          "release_size": 4,
+          "clauses": 79,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.334,
+            "branches": 1652,
+            "conflicts": 19,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 55
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 55,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.039261449000000004
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 80,
+          "release_size": 4,
+          "clauses": 80,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.29,
+            "branches": 1596,
+            "conflicts": 17,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 56
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 56,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.045339808
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 81,
+          "release_size": 4,
+          "clauses": 81,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.211,
+            "branches": 1506,
+            "conflicts": 10,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 46
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 46,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.050152364000000005
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 4
+        },
+        {
+          "iteration": 82,
+          "release_size": 5,
+          "clauses": 82,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.206,
+            "branches": 1450,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 41
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 41,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.029019318000000002
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 83,
+          "release_size": 5,
+          "clauses": 83,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.143,
+            "branches": 1269,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 20
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 20,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.024117107000000002
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 84,
+          "release_size": 5,
+          "clauses": 84,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.165,
+            "branches": 1328,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 30
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 30,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.027915309000000003
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 85,
+          "release_size": 5,
+          "clauses": 85,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.35,
+            "branches": 1683,
+            "conflicts": 22,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 59
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 59,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.026075562
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 86,
+          "release_size": 5,
+          "clauses": 86,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.163,
+            "branches": 1330,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 29
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 29,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.028715534
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 87,
+          "release_size": 5,
+          "clauses": 87,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.222,
+            "branches": 1336,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 30
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 30,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.053486049
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 88,
+          "release_size": 5,
+          "clauses": 88,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.152,
+            "branches": 1290,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 22
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 22,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.030757081000000002
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 89,
+          "release_size": 5,
+          "clauses": 89,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.3,
+            "branches": 1594,
+            "conflicts": 19,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 50
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 50,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.04235154
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 90,
+          "release_size": 5,
+          "clauses": 90,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.232,
+            "branches": 1394,
+            "conflicts": 9,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 36
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 36,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.039627079
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 91,
+          "release_size": 5,
+          "clauses": 91,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.177,
+            "branches": 1381,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 32
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 32,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.043950452
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 92,
+          "release_size": 5,
+          "clauses": 92,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.15,
+            "branches": 1289,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 22
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 22,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.032695375
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 93,
+          "release_size": 5,
+          "clauses": 93,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.304,
+            "branches": 1545,
+            "conflicts": 16,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 42
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 42,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.034903568
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 94,
+          "release_size": 5,
+          "clauses": 94,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.174,
+            "branches": 1386,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 33
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 33,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.062006522
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 95,
+          "release_size": 5,
+          "clauses": 95,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.302,
+            "branches": 1523,
+            "conflicts": 19,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 43
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 43,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.042317798000000004
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 96,
+          "release_size": 5,
+          "clauses": 96,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.351,
+            "branches": 1692,
+            "conflicts": 18,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 64
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 64,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.031550452
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 97,
+          "release_size": 5,
+          "clauses": 97,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.303,
+            "branches": 1622,
+            "conflicts": 15,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 51
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 51,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.036463829
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 98,
+          "release_size": 5,
+          "clauses": 98,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.314,
+            "branches": 1575,
+            "conflicts": 16,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 52
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 52,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.047185774
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 99,
+          "release_size": 5,
+          "clauses": 99,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.307,
+            "branches": 1609,
+            "conflicts": 16,
+            "num_assumed_resource_arcs": 575,
+            "sufficient_core_size": 54
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 54,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 5,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.037692745
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        }
+      ],
+      "outcome": "ITERATION_LIMIT",
+      "necessary_clause_category_counts": {
+        "hard_resource_unsat_core": 100
+      }
+    },
+    {
+      "root": 533,
+      "machine": 18,
+      "initial_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [],
+        "initial_released_arcs": 1,
+        "initial_new_order_lb": 1887
+      },
+      "iterations": [
+        {
+          "iteration": 0,
+          "release_size": 1,
+          "clauses": 0,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.157,
+            "branches": 1302,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 579,
+            "sufficient_core_size": 25
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 25,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.001119161
+          },
+          "released_from_previous_set": 0,
+          "newly_released": 1
+        },
+        {
+          "iteration": 1,
+          "release_size": 2,
+          "clauses": 1,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.186,
+            "branches": 1413,
+            "conflicts": 9,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 33
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 33,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.0030642710000000004
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 2,
+          "release_size": 2,
+          "clauses": 2,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.158,
+            "branches": 1314,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 23
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 23,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.004344824000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 3,
+          "release_size": 2,
+          "clauses": 3,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.207,
+            "branches": 1422,
+            "conflicts": 11,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 37
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 37,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.00438231
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 4,
+          "release_size": 2,
+          "clauses": 4,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.171,
+            "branches": 1357,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 32
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 32,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.003761748
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 5,
+          "release_size": 2,
+          "clauses": 5,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.172,
+            "branches": 1390,
+            "conflicts": 8,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 29
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 29,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.003502559
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 6,
+          "release_size": 2,
+          "clauses": 6,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.209,
+            "branches": 1485,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 43
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 43,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.005983795
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 7,
+          "release_size": 2,
+          "clauses": 7,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.172,
+            "branches": 1387,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 30
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 30,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.005583734
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 8,
+          "release_size": 2,
+          "clauses": 8,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.322,
+            "branches": 1542,
+            "conflicts": 22,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 46
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 46,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.00478819
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 2
+        },
+        {
+          "iteration": 9,
+          "release_size": 3,
+          "clauses": 9,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.192,
+            "branches": 1395,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 38
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 38,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.006550485
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 10,
+          "release_size": 3,
+          "clauses": 10,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.204,
+            "branches": 1412,
+            "conflicts": 9,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 35
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 35,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.006976175
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 11,
+          "release_size": 3,
+          "clauses": 11,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.216,
+            "branches": 1477,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 42
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 42,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.006358367
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 12,
+          "release_size": 3,
+          "clauses": 12,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.351,
+            "branches": 1513,
+            "conflicts": 28,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 39
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 39,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.008916698
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 13,
+          "release_size": 3,
+          "clauses": 13,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.153,
+            "branches": 1321,
+            "conflicts": 2,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 27
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 27,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.007971554
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 14,
+          "release_size": 3,
+          "clauses": 14,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.245,
+            "branches": 1516,
+            "conflicts": 13,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 47
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 47,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.008056444000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 15,
+          "release_size": 3,
+          "clauses": 15,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.214,
+            "branches": 1507,
+            "conflicts": 8,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 41
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 41,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.007930585
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 16,
+          "release_size": 3,
+          "clauses": 16,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.217,
+            "branches": 1586,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 54
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 54,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.009692053
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 17,
+          "release_size": 3,
+          "clauses": 17,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.218,
+            "branches": 1546,
+            "conflicts": 10,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 48
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 48,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.009084991
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 18,
+          "release_size": 3,
+          "clauses": 18,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.173,
+            "branches": 1381,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 33
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 33,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.009550541000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 19,
+          "release_size": 3,
+          "clauses": 19,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.229,
+            "branches": 1544,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 50
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 50,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.010359415
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 20,
+          "release_size": 3,
+          "clauses": 20,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.171,
+            "branches": 1365,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 33
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 33,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.011039116
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 21,
+          "release_size": 3,
+          "clauses": 21,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.236,
+            "branches": 1490,
+            "conflicts": 15,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 40
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 40,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.011325645
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 22,
+          "release_size": 3,
+          "clauses": 22,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.181,
+            "branches": 1395,
+            "conflicts": 2,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 30
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 30,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.010539882
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 23,
+          "release_size": 3,
+          "clauses": 23,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.195,
+            "branches": 1383,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 35
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 35,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.010375389
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 24,
+          "release_size": 3,
+          "clauses": 24,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.276,
+            "branches": 1525,
+            "conflicts": 14,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 49
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 49,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.011084013
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 25,
+          "release_size": 3,
+          "clauses": 25,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.229,
+            "branches": 1513,
+            "conflicts": 16,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 45
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 45,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.011282341000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 26,
+          "release_size": 3,
+          "clauses": 26,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.164,
+            "branches": 1321,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 29
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 29,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.011774209
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 27,
+          "release_size": 3,
+          "clauses": 27,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.19,
+            "branches": 1456,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 34
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 34,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.012331945
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 28,
+          "release_size": 3,
+          "clauses": 28,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.298,
+            "branches": 1635,
+            "conflicts": 12,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 54
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 54,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.012004986
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 29,
+          "release_size": 3,
+          "clauses": 29,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.243,
+            "branches": 1591,
+            "conflicts": 11,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 52
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 52,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.012161801000000002
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 30,
+          "release_size": 3,
+          "clauses": 30,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.254,
+            "branches": 1560,
+            "conflicts": 17,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 44
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 44,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.011564325
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 31,
+          "release_size": 3,
+          "clauses": 31,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.212,
+            "branches": 1525,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 45
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 45,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.011896623
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 32,
+          "release_size": 3,
+          "clauses": 32,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.267,
+            "branches": 1505,
+            "conflicts": 15,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 45
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 45,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.011815271
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 33,
+          "release_size": 3,
+          "clauses": 33,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.3,
+            "branches": 1503,
+            "conflicts": 15,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 41
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 41,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.012186188
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 34,
+          "release_size": 3,
+          "clauses": 34,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.241,
+            "branches": 1502,
+            "conflicts": 8,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 40
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 40,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.011274344
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 35,
+          "release_size": 3,
+          "clauses": 35,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.272,
+            "branches": 1531,
+            "conflicts": 16,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 47
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 47,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.012160239000000002
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 36,
+          "release_size": 3,
+          "clauses": 36,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.257,
+            "branches": 1526,
+            "conflicts": 18,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 40
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 40,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.012841482000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 37,
+          "release_size": 3,
+          "clauses": 37,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.298,
+            "branches": 1573,
+            "conflicts": 20,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 47
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 47,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.013061412000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 38,
+          "release_size": 3,
+          "clauses": 38,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.174,
+            "branches": 1383,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 36
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 36,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.014768585
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 39,
+          "release_size": 3,
+          "clauses": 39,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.216,
+            "branches": 1435,
+            "conflicts": 9,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 41
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 41,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.013341723000000002
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 40,
+          "release_size": 3,
+          "clauses": 40,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.212,
+            "branches": 1392,
+            "conflicts": 12,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 34
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 34,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.013413931
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 41,
+          "release_size": 3,
+          "clauses": 41,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.273,
+            "branches": 1552,
+            "conflicts": 17,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 43
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 43,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.012190775000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 42,
+          "release_size": 3,
+          "clauses": 42,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.207,
+            "branches": 1455,
+            "conflicts": 10,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 37
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 37,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.014208755000000002
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 43,
+          "release_size": 3,
+          "clauses": 43,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.208,
+            "branches": 1477,
+            "conflicts": 12,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 44
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 44,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.013821704
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 44,
+          "release_size": 3,
+          "clauses": 44,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.218,
+            "branches": 1524,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 44
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 44,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.013363386000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 45,
+          "release_size": 3,
+          "clauses": 45,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.225,
+            "branches": 1454,
+            "conflicts": 12,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 40
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 40,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.012998528
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 46,
+          "release_size": 3,
+          "clauses": 46,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.168,
+            "branches": 1346,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 30
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 30,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.014878170000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 47,
+          "release_size": 3,
+          "clauses": 47,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.168,
+            "branches": 1347,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 29
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 29,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.015324381000000002
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 3
+        },
+        {
+          "iteration": 48,
+          "release_size": 4,
+          "clauses": 48,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.238,
+            "branches": 1543,
+            "conflicts": 12,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 48
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 48,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.014501093000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 49,
+          "release_size": 4,
+          "clauses": 49,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.188,
+            "branches": 1443,
+            "conflicts": 1,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 40
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 40,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.015677
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 50,
+          "release_size": 4,
+          "clauses": 50,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.239,
+            "branches": 1418,
+            "conflicts": 14,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 35
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 35,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.014710578
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 51,
+          "release_size": 4,
+          "clauses": 51,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.216,
+            "branches": 1531,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 49
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 49,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.014111357000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 52,
+          "release_size": 4,
+          "clauses": 52,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.229,
+            "branches": 1497,
+            "conflicts": 8,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 48
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 48,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.014947134
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 53,
+          "release_size": 4,
+          "clauses": 53,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.289,
+            "branches": 1561,
+            "conflicts": 17,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 48
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 48,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.015072833
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 54,
+          "release_size": 4,
+          "clauses": 54,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.245,
+            "branches": 1483,
+            "conflicts": 13,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 43
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 43,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.015077319
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 55,
+          "release_size": 4,
+          "clauses": 55,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.321,
+            "branches": 1533,
+            "conflicts": 20,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 45
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 45,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.025185517
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 56,
+          "release_size": 4,
+          "clauses": 56,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.308,
+            "branches": 1759,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 66
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 66,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.015152473000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 57,
+          "release_size": 4,
+          "clauses": 57,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.21,
+            "branches": 1533,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 39
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 39,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.048748522
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 58,
+          "release_size": 4,
+          "clauses": 58,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.283,
+            "branches": 1527,
+            "conflicts": 15,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 43
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 43,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.017415634000000003
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 59,
+          "release_size": 4,
+          "clauses": 59,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.347,
+            "branches": 1569,
+            "conflicts": 25,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 47
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 47,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.017903729
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 60,
+          "release_size": 4,
+          "clauses": 60,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.352,
+            "branches": 1525,
+            "conflicts": 27,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 45
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 45,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.015663991000000002
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 61,
+          "release_size": 4,
+          "clauses": 61,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.247,
+            "branches": 1573,
+            "conflicts": 13,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 49
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 49,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.024918569
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 62,
+          "release_size": 4,
+          "clauses": 62,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.231,
+            "branches": 1496,
+            "conflicts": 12,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 43
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 43,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.024716266
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 63,
+          "release_size": 4,
+          "clauses": 63,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.208,
+            "branches": 1484,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 38
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 38,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.022651232
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 64,
+          "release_size": 4,
+          "clauses": 64,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.189,
+            "branches": 1435,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 40
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 40,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.020574081
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 65,
+          "release_size": 4,
+          "clauses": 65,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.24,
+            "branches": 1529,
+            "conflicts": 15,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 46
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 46,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.018017338
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 66,
+          "release_size": 4,
+          "clauses": 66,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.177,
+            "branches": 1388,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 34
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 34,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.018706884
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 67,
+          "release_size": 4,
+          "clauses": 67,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.251,
+            "branches": 1489,
+            "conflicts": 17,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 46
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 46,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.017118768
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 68,
+          "release_size": 4,
+          "clauses": 68,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.252,
+            "branches": 1522,
+            "conflicts": 10,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 45
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 45,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.030994853000000003
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 69,
+          "release_size": 4,
+          "clauses": 69,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.239,
+            "branches": 1619,
+            "conflicts": 8,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 52
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 52,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.031007842
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 70,
+          "release_size": 4,
+          "clauses": 70,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.298,
+            "branches": 1626,
+            "conflicts": 22,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 52
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 52,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.023453158
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 71,
+          "release_size": 4,
+          "clauses": 71,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.318,
+            "branches": 1554,
+            "conflicts": 17,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 50
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 50,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.018349537000000003
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 72,
+          "release_size": 4,
+          "clauses": 72,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.239,
+            "branches": 1409,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 38
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 38,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.024264547
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 73,
+          "release_size": 4,
+          "clauses": 73,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.263,
+            "branches": 1541,
+            "conflicts": 15,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 42
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 42,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.029178952
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 74,
+          "release_size": 4,
+          "clauses": 74,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.31,
+            "branches": 1595,
+            "conflicts": 12,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 55
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 55,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.051817294
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 75,
+          "release_size": 4,
+          "clauses": 75,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.214,
+            "branches": 1505,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 44
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 44,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.019027769
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 76,
+          "release_size": 4,
+          "clauses": 76,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.278,
+            "branches": 1565,
+            "conflicts": 15,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 51
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 51,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.032733464000000004
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 77,
+          "release_size": 4,
+          "clauses": 77,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.305,
+            "branches": 1596,
+            "conflicts": 26,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 47
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 47,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.039052352000000005
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 78,
+          "release_size": 4,
+          "clauses": 78,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.296,
+            "branches": 1542,
+            "conflicts": 16,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 46
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 46,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.032046898000000004
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 79,
+          "release_size": 4,
+          "clauses": 79,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.208,
+            "branches": 1503,
+            "conflicts": 12,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 42
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 42,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.029166441
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 80,
+          "release_size": 4,
+          "clauses": 80,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.283,
+            "branches": 1550,
+            "conflicts": 12,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 48
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 48,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.039421166
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 81,
+          "release_size": 4,
+          "clauses": 81,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.275,
+            "branches": 1607,
+            "conflicts": 14,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 50
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 50,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.041356004
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 82,
+          "release_size": 4,
+          "clauses": 82,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.266,
+            "branches": 1554,
+            "conflicts": 12,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 51
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 51,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.041819047000000005
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 83,
+          "release_size": 4,
+          "clauses": 83,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.298,
+            "branches": 1519,
+            "conflicts": 8,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 49
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 49,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.029450449000000004
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 84,
+          "release_size": 4,
+          "clauses": 84,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.255,
+            "branches": 1561,
+            "conflicts": 15,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 49
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 49,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.066789926
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 85,
+          "release_size": 4,
+          "clauses": 85,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.165,
+            "branches": 1325,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 30
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 30,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.025872309000000003
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 86,
+          "release_size": 4,
+          "clauses": 86,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.206,
+            "branches": 1503,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 48
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 48,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.042769350000000005
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 87,
+          "release_size": 4,
+          "clauses": 87,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.159,
+            "branches": 1326,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 26
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 26,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.035075106
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 88,
+          "release_size": 4,
+          "clauses": 88,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.27,
+            "branches": 1610,
+            "conflicts": 22,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 49
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 49,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.038684215
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 89,
+          "release_size": 4,
+          "clauses": 89,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.208,
+            "branches": 1498,
+            "conflicts": 10,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 40
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 40,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.032415834000000004
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 90,
+          "release_size": 4,
+          "clauses": 90,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.257,
+            "branches": 1516,
+            "conflicts": 13,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 48
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 48,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.046229118
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 91,
+          "release_size": 4,
+          "clauses": 91,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.185,
+            "branches": 1415,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 34
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 34,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.039768384000000004
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 92,
+          "release_size": 4,
+          "clauses": 92,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.236,
+            "branches": 1464,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 41
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 41,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.041074587
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 93,
+          "release_size": 4,
+          "clauses": 93,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.303,
+            "branches": 1704,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 75
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 75,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.034976369
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 94,
+          "release_size": 4,
+          "clauses": 94,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.286,
+            "branches": 1586,
+            "conflicts": 20,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 47
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 47,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.038804195
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 95,
+          "release_size": 4,
+          "clauses": 95,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.334,
+            "branches": 1651,
+            "conflicts": 16,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 58
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 58,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.048888234
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 96,
+          "release_size": 4,
+          "clauses": 96,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.211,
+            "branches": 1414,
+            "conflicts": 9,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 37
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 37,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.059081266
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 97,
+          "release_size": 4,
+          "clauses": 97,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.322,
+            "branches": 1647,
+            "conflicts": 23,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 57
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 57,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.053843496000000005
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 98,
+          "release_size": 4,
+          "clauses": 98,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.226,
+            "branches": 1519,
+            "conflicts": 9,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 44
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 44,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.027397378
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 99,
+          "release_size": 4,
+          "clauses": 99,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.22,
+            "branches": 1490,
+            "conflicts": 9,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 43
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 43,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.067775967
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        }
+      ],
+      "outcome": "ITERATION_LIMIT",
+      "necessary_clause_category_counts": {
+        "hard_resource_unsat_core": 100
+      }
+    },
+    {
+      "root": 258,
+      "machine": 8,
+      "initial_slack": 0,
+      "preliminary": {
+        "cycle_cut_arcs": [],
+        "deadline_cut_rounds": [],
+        "initial_released_arcs": 1,
+        "initial_new_order_lb": 1887
+      },
+      "iterations": [
+        {
+          "iteration": 0,
+          "release_size": 1,
+          "clauses": 0,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.196,
+            "branches": 1406,
+            "conflicts": 11,
+            "num_assumed_resource_arcs": 579,
+            "sufficient_core_size": 36
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 36,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.0025152100000000004
+          },
+          "released_from_previous_set": 0,
+          "newly_released": 1
+        },
+        {
+          "iteration": 1,
+          "release_size": 2,
+          "clauses": 1,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.179,
+            "branches": 1406,
+            "conflicts": 8,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 35
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 35,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.002863534
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 2,
+          "release_size": 2,
+          "clauses": 2,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.176,
+            "branches": 1362,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 32
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 32,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.0047364090000000005
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 3,
+          "release_size": 2,
+          "clauses": 3,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.159,
+            "branches": 1305,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 23
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 23,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 2,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.004318071000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 4,
+          "release_size": 2,
+          "clauses": 4,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.158,
+            "branches": 1277,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 578,
+            "sufficient_core_size": 19
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 19,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.00419803
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 2
+        },
+        {
+          "iteration": 5,
+          "release_size": 3,
+          "clauses": 5,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.248,
+            "branches": 1503,
+            "conflicts": 12,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 42
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 42,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.005451593
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 6,
+          "release_size": 3,
+          "clauses": 6,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.177,
+            "branches": 1403,
+            "conflicts": 1,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 32
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 32,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.006507842000000001
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 7,
+          "release_size": 3,
+          "clauses": 7,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.166,
+            "branches": 1327,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 23
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 23,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.005365965
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 8,
+          "release_size": 3,
+          "clauses": 8,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.156,
+            "branches": 1296,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 21
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 21,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.005603872
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 9,
+          "release_size": 3,
+          "clauses": 9,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.159,
+            "branches": 1300,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 23
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 23,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.006715162
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 10,
+          "release_size": 3,
+          "clauses": 10,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.183,
+            "branches": 1424,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 36
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 36,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.0056904220000000005
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 11,
+          "release_size": 3,
+          "clauses": 11,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.208,
+            "branches": 1453,
+            "conflicts": 10,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 40
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 40,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.006579118
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 12,
+          "release_size": 3,
+          "clauses": 12,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.167,
+            "branches": 1337,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 26
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 26,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.007002004
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 13,
+          "release_size": 3,
+          "clauses": 13,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.186,
+            "branches": 1408,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 31
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 31,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.006260890000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 14,
+          "release_size": 3,
+          "clauses": 14,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.193,
+            "branches": 1434,
+            "conflicts": 9,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 36
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 36,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.006138236
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 15,
+          "release_size": 3,
+          "clauses": 15,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.19,
+            "branches": 1422,
+            "conflicts": 10,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 33
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 33,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.007053781
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 16,
+          "release_size": 3,
+          "clauses": 16,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.158,
+            "branches": 1304,
+            "conflicts": 2,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 23
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 23,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.0066223340000000006
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 17,
+          "release_size": 3,
+          "clauses": 17,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.171,
+            "branches": 1373,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 34
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 34,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.008093955
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 18,
+          "release_size": 3,
+          "clauses": 18,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.199,
+            "branches": 1424,
+            "conflicts": 10,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 39
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 39,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.008546625
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 19,
+          "release_size": 3,
+          "clauses": 19,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.178,
+            "branches": 1387,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 32
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 32,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.008552608
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 20,
+          "release_size": 3,
+          "clauses": 20,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.16,
+            "branches": 1306,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 24
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 24,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.006710446
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 21,
+          "release_size": 3,
+          "clauses": 21,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.255,
+            "branches": 1505,
+            "conflicts": 13,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 42
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 42,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.0069572670000000005
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 22,
+          "release_size": 3,
+          "clauses": 22,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.189,
+            "branches": 1402,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 33
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 33,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.008163129
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 23,
+          "release_size": 3,
+          "clauses": 23,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.203,
+            "branches": 1416,
+            "conflicts": 9,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 38
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 38,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.00810374
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 24,
+          "release_size": 3,
+          "clauses": 24,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.171,
+            "branches": 1375,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 26
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 26,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.007161143
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 25,
+          "release_size": 3,
+          "clauses": 25,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.245,
+            "branches": 1459,
+            "conflicts": 15,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 37
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 37,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.008699795
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 26,
+          "release_size": 3,
+          "clauses": 26,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.193,
+            "branches": 1390,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 36
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 36,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.00892656
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 27,
+          "release_size": 3,
+          "clauses": 27,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.19,
+            "branches": 1464,
+            "conflicts": 2,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 35
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 35,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 3,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.008563968
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 28,
+          "release_size": 3,
+          "clauses": 28,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.207,
+            "branches": 1484,
+            "conflicts": 10,
+            "num_assumed_resource_arcs": 577,
+            "sufficient_core_size": 46
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 46,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.089331503
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 3
+        },
+        {
+          "iteration": 29,
+          "release_size": 4,
+          "clauses": 29,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.174,
+            "branches": 1354,
+            "conflicts": 8,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 28
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 28,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.00995971
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 30,
+          "release_size": 4,
+          "clauses": 30,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.154,
+            "branches": 1298,
+            "conflicts": 2,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 22
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 22,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.009316843
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 31,
+          "release_size": 4,
+          "clauses": 31,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.156,
+            "branches": 1302,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 23
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 23,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.008120565
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 32,
+          "release_size": 4,
+          "clauses": 32,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.179,
+            "branches": 1357,
+            "conflicts": 1,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 31
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 31,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.010176835
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 33,
+          "release_size": 4,
+          "clauses": 33,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.186,
+            "branches": 1372,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 28
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 28,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.009839619
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 34,
+          "release_size": 4,
+          "clauses": 34,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.199,
+            "branches": 1426,
+            "conflicts": 8,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 35
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 35,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.011158711
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 35,
+          "release_size": 4,
+          "clauses": 35,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.164,
+            "branches": 1357,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 25
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 25,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.009209797
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 36,
+          "release_size": 4,
+          "clauses": 36,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.199,
+            "branches": 1389,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 38
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 38,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.013448054000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 37,
+          "release_size": 4,
+          "clauses": 37,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.199,
+            "branches": 1464,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 42
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 42,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.010658582000000002
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 38,
+          "release_size": 4,
+          "clauses": 38,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.248,
+            "branches": 1541,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 49
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 49,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.012794943000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 39,
+          "release_size": 4,
+          "clauses": 39,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.208,
+            "branches": 1537,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 44
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 44,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.015924675000000003
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 40,
+          "release_size": 4,
+          "clauses": 40,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.163,
+            "branches": 1363,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 25
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 25,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.022730879000000002
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 41,
+          "release_size": 4,
+          "clauses": 41,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.169,
+            "branches": 1366,
+            "conflicts": 3,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 24
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 24,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.014436609000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 42,
+          "release_size": 4,
+          "clauses": 42,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.213,
+            "branches": 1483,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 38
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 38,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.012883086
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 43,
+          "release_size": 4,
+          "clauses": 43,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.216,
+            "branches": 1411,
+            "conflicts": 10,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 39
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 39,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.019664513
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 44,
+          "release_size": 4,
+          "clauses": 44,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.238,
+            "branches": 1473,
+            "conflicts": 16,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 38
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 38,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.026485541
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 45,
+          "release_size": 4,
+          "clauses": 45,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.262,
+            "branches": 1541,
+            "conflicts": 10,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 46
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 46,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.028777284
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 46,
+          "release_size": 4,
+          "clauses": 46,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.195,
+            "branches": 1461,
+            "conflicts": 6,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 41
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 41,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.01736659
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 47,
+          "release_size": 4,
+          "clauses": 47,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.293,
+            "branches": 1528,
+            "conflicts": 19,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 47
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 47,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.017684712000000002
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 48,
+          "release_size": 4,
+          "clauses": 48,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.185,
+            "branches": 1434,
+            "conflicts": 4,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 38
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 38,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.020786685000000003
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 49,
+          "release_size": 4,
+          "clauses": 49,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.227,
+            "branches": 1522,
+            "conflicts": 17,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 45
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 45,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.028531003000000003
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 50,
+          "release_size": 4,
+          "clauses": 50,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.191,
+            "branches": 1381,
+            "conflicts": 9,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 32
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 32,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.014213063000000001
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 51,
+          "release_size": 4,
+          "clauses": 51,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.149,
+            "branches": 1275,
+            "conflicts": 5,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 18
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 18,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.028139223
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 52,
+          "release_size": 4,
+          "clauses": 52,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.287,
+            "branches": 1614,
+            "conflicts": 14,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 57
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 57,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.0188905
+          },
+          "released_from_previous_set": 1,
+          "newly_released": 1
+        },
+        {
+          "iteration": 53,
+          "release_size": 4,
+          "clauses": 53,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.255,
+            "branches": 1549,
+            "conflicts": 14,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 45
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 45,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.01622011
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 54,
+          "release_size": 4,
+          "clauses": 54,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.271,
+            "branches": 1665,
+            "conflicts": 12,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 60
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 60,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.024843082000000002
+          },
+          "released_from_previous_set": 2,
+          "newly_released": 2
+        },
+        {
+          "iteration": 55,
+          "release_size": 4,
+          "clauses": 55,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.155,
+            "branches": 1309,
+            "conflicts": 7,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 20
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 20,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.016459548
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 56,
+          "release_size": 4,
+          "clauses": 56,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.237,
+            "branches": 1515,
+            "conflicts": 17,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 45
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 45,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.022175775000000002
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 57,
+          "release_size": 4,
+          "clauses": 57,
+          "completion": {
+            "status": "INFEASIBLE",
+            "wall_seconds": 0.339,
+            "branches": 1607,
+            "conflicts": 20,
+            "num_assumed_resource_arcs": 576,
+            "sufficient_core_size": 53
+          },
+          "category": "hard_resource_unsat_core",
+          "necessary_clause_size": 53,
+          "hitting_set": {
+            "status": "OPTIMAL",
+            "selected_arc_count": 4,
+            "exact_minimum_cardinality_proven": true,
+            "solver_seconds": 0.02468831
+          },
+          "released_from_previous_set": 3,
+          "newly_released": 3
+        },
+        {
+          "iteration": 58,
+          "release_size": 4,
+          "clauses": 58,
+          "completion": {
+            "status": "OPTIMAL",
+            "wall_seconds": 0.129,
+            "branches": 1718,
+            "conflicts": 0,
+            "num_assumed_resource_arcs": 576,
+            "independent_makespan": 1887
+          },
+          "candidate_makespan": 1887
+        }
+      ],
+      "outcome": "IMPROVED",
+      "necessary_clause_category_counts": {
+        "hard_resource_unsat_core": 58
+      }
+    }
+  ],
+  "status": "IMPROVED"
+}
