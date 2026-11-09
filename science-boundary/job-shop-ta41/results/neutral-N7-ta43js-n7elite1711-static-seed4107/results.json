@@ -1,0 +1,50 @@
+{
+  "instance": "ta43js-n7elite1711",
+  "original_makespan": 1888,
+  "source_n7_revision": "Qiming01/Job-Shop-Scheduling@7e120ebada21cb604c871e0657814bf6e32611f8",
+  "original_author_N7_search_unchanged": true,
+  "oracle_never_loaded_by_optimizer": true,
+  "policy": "static",
+  "seed": 4107,
+  "comparison": "neutral CP+source-faithful N7 vs source-faithful N7 alone at same total planning budget",
+  "total_time_budget": 14,
+  "control_only_N7": {
+    "score": 1887,
+    "native_seconds": 14.0,
+    "iterations": 789772,
+    "independently_audited_600_records": true
+  },
+  "neutral_cp": {
+    "status": "OPTIMAL",
+    "cp_wall_seconds": 0.156,
+    "cp_conflicts": 0,
+    "free_machines": [
+      1,
+      4,
+      6,
+      7,
+      8,
+      15,
+      17,
+      18
+    ],
+    "required_changed_machines": 2,
+    "required_original_adjacent_pair_reversals": 3,
+    "gateway_reversal_hard_required": false,
+    "neutral_makespan": 1888,
+    "changed_machines": 2,
+    "reversed_original_adjacent_pairs": 3,
+    "reversed_mandatory_gateway_pairs": 0
+  },
+  "hybrid_remaining_N7_seconds": 13,
+  "hybrid_CP_then_N7": {
+    "score": 1884,
+    "native_seconds": 13.0,
+    "iterations": 731442,
+    "independently_audited_600_records": true
+  },
+  "hybrid_better_than_direct_N7": true,
+  "hybrid_equal_to_direct_N7": false,
+  "complete": true,
+  "total_actual_wall_seconds": 27.207
+}
