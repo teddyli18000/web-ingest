@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - .github/workflows/temp-labs-ai4s-hidden-C-train.yml
+      - science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/make_scenarios.py
   workflow_dispatch:
 permissions:
   contents: write
@@ -30,8 +31,8 @@ jobs:
         run: |
           set -euo pipefail
           cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
-          python3 make_scenarios.py ../../../data/combined/combined10.tsv --lengths 46 --out results/train46 --reps 8
-          python3 make_scenarios.py ../../../data/combined/combined10.tsv --lengths 47 --out results/validation47 --reps 4
+          python3 make_scenarios.py ../../data/combined/combined10.tsv --lengths 46 --out results/train46 --reps 8
+          python3 make_scenarios.py ../../data/combined/combined10.tsv --lengths 47 --out results/validation47 --reps 4
           test ! -d results/test50
       - name: Actual native 64-step Tabu and steepest results for each pre-repair candidate
         shell: bash
