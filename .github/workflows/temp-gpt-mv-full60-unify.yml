@@ -4,12 +4,13 @@ on:
   push:
     paths:
       - "temp-work/gpt-mv-code-native/src/main.js"
-      - "temp-work/gpt-mv-code-native/src/scenes/opening_v10.js"
-      - "temp-work/gpt-mv-code-native/src/scenes/drafts_v12.js"
+      - "temp-work/gpt-mv-code-native/src/scenes/opening_v11.js"
+      - "temp-work/gpt-mv-code-native/src/scenes/drafts_v13.js"
       - "temp-work/gpt-mv-code-native/src/scenes/construct_v6.js"
       - "temp-work/gpt-mv-code-native/src/scenes/construct_v5.js"
       - "temp-work/gpt-mv-code-native/src/scenes/ending_v3.js"
       - "temp-work/gpt-mv-code-native/src/components/gpt_art.js"
+      - "temp-work/gpt-mv-code-native/src/components/gpt_bust_plate.js"
       - "temp-work/gpt-mv-code-native/src/components/gpt_poses.js"
       - "temp-work/gpt-mv-code-native/assets/gpt/**"
       - "temp-work/gpt-mv-code-native/export/render.mjs"
@@ -47,7 +48,7 @@ jobs:
           test -n "$CHROME"
           echo "CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
       - name: Render full 0-60s visual gate
-        run: node export/render.mjs --start 0 --end 60 --width 960 --height 540 --fps 15 --art-source reach-hq --out out/gpt_full60_unify.mp4
+        run: node export/render.mjs --start 0 --end 60 --width 960 --height 540 --fps 15 --art-source reach-hq --bust-source gpt-bust-matted-v4 --out out/gpt_full60_unify.mp4
       - name: Validate media
         run: |
           set -euo pipefail
