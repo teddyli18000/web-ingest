@@ -1,0 +1,58 @@
+name: temp-ta41-fixed-iteration-neutral-ablation
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-fixed-iteration-neutral-ablation.yml'
+      - 'science-boundary/job-shop-ta41/audit_neutral_machine_interaction_fixed.py'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-fixed-iteration-neutral-ablation
+  cancel-in-progress: false
+jobs:
+  fixed:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [4107,4113,5001,5002]
+        repeat: [0,1]
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin unchanged author N7 fixed-work search and verify Python scorer
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/audit_neutral_machine_interaction_fixed.py
+          git clone --depth=1 https://github.com/Qiming01/Job-Shop-Scheduling.git /tmp/n7
+          git -C /tmp/n7 fetch --depth=1 origin 7e120ebada21cb604c871e0657814bf6e32611f8
+          git -C /tmp/n7 checkout --detach 7e120ebada21cb604c871e0657814bf6e32611f8
+          python3 science-boundary/job-shop-ta41/patch_original_n7_warmstart.py /tmp/n7
+          g++ -std=c++20 -O3 -include climits -DN7_WARMSTART_SUPPORT -I/tmp/n7/include \
+            science-boundary/job-shop-ta41/original_n7_fixed_iterations_driver.cpp \
+            /tmp/n7/src/graph.cpp /tmp/n7/src/instance.cpp /tmp/n7/src/schedule.cpp /tmp/n7/src/tabu_search.cpp \
+            -o /tmp/n7_fixed
+      - name: Repeat exact 800000 N7 iterations from original and 3 neutral variants, under same seed
+        run: |
+          python3 science-boundary/job-shop-ta41/audit_neutral_machine_interaction_fixed.py \
+            --driver /tmp/n7_fixed --seed '${{ matrix.seed }}' --iterations 800000 \
+            --out 'science-boundary/job-shop-ta41/results/neutral-factorial-fixed-seed${{ matrix.seed }}-rep${{ matrix.repeat }}'
+      - name: Preserve source and independently validated full machine sequence outcomes
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/neutral-factorial-fixed-seed${{ matrix.seed }}-rep${{ matrix.repeat }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): fixed iteration native N7 neutral factorial seed${{ matrix.seed }} replicate${{ matrix.repeat }}'
+          for i in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
