@@ -1,0 +1,70 @@
+{
+  "instance": "ta46js-machine-2043",
+  "baseline": 2043,
+  "target": 2042,
+  "policy": "dynamic",
+  "search_representation": "whole-machine ordering completely free if selected; all 20 NoOverlap unconditional; job arcs hard",
+  "independent_15_machine_distance_proof_used": false,
+  "ta41_known_gateway_machine_sets": [],
+  "stages": [
+    2,
+    3,
+    4,
+    5,
+    7,
+    10,
+    15,
+    20
+  ],
+  "success": true,
+  "complete": true,
+  "trials": [
+    {
+      "size": 2,
+      "attempt": 0,
+      "open": [
+        1,
+        17
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.005548268
+      },
+      "cores_known": 0,
+      "completion": {
+        "status": "OPTIMAL",
+        "seconds": 0.076,
+        "conflicts": 0,
+        "branches": 547,
+        "fixed_machines": [
+          0,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          18,
+          19
+        ],
+        "independently_reproduced_makespan": 2042
+      }
+    }
+  ],
+  "status": "CONSTRUCTIVE_IMPROVEMENT",
+  "verified_makespan": 2042,
+  "groups_opened": [
+    1,
+    17
+  ],
+  "wall_seconds": 0.11
+}
