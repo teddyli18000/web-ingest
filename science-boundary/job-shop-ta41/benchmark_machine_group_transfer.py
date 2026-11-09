@@ -18,7 +18,7 @@ from types import SimpleNamespace
 ROOT=Path(__file__).resolve().parent
 
 def main(a):
-    cases=sorted(a.cases_dir.glob(f'ta*js-n7elite{a.initial_seed}/start.txt'))
+    cases=sorted(a.cases_dir.glob(f'*-n7elite{a.initial_seed}/start.txt'))
     assert len(cases)==a.expected_instances,len(cases)
     a.out.mkdir(parents=True,exist_ok=True)
     trials=[]
