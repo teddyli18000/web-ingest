@@ -15,7 +15,7 @@ An original GPT/ChatGPT character short film built from deterministic Canvas sce
 
 **Integrated first 30 seconds:** [run 42587589396](https://github.com/teddyli18000/web-ingest/actions/runs/42587589396), passed at 960×540, 15fps, H.264/AAC, 30 seconds. We inspected 10 actual 1080p frames across the 15s and 30s boundaries. Adjacent 14.95→15.02s and 29.95→30.03s frames are continuous; the cut is made by the authored paper wipes.
 
-**Full 60-second review:** [run 42588006788](https://github.com/teddyli18000/web-ingest/actions/runs/42588006788), initiated to validate the newly assembled timeline. The last *previous* full-film CI was [42571760984](https://github.com/teddyli18000/web-ingest/actions/runs/42571760984) before the director rewrite. Do not report the current full film as validated until the new run finishes and the artifact is reviewed.
+**Full 60-second technical review:** [run 42588006788](https://github.com/teddyli18000/web-ingest/actions/runs/42588006788), **success**: 960×540, 15fps, 60.000s, H.264/AAC; full media decode and black-frame checks passed. SHA-256 of the MP4: `b71f578c111bfaadc08f1c5c8df004fdcce9752b9961acaae0e2e809979ff434`. The 60s contact sheet was examined. The earlier [run 42571760984](https://github.com/teddyli18000/web-ingest/actions/runs/42571760984) refers to the pre-rewrite timeline.
 
 ## Character art and renderer
 
@@ -33,9 +33,9 @@ An original GPT/ChatGPT character short film built from deterministic Canvas sce
 
 ## Next work
 
-1. Inspect the current full 60s video and its critical 15/30/45s cuts. Record the artifact and hash after success.
+1. Re-direct 30–60s. The full-reel contact sheet shows 30–45s remains a comparatively simple paper city and 45–60s returns to product/chart boards. These scenes need the same scene-scale, character-action and physical-depth redesign as V12/V14.
 2. Choose and design an original audio track, cue sheet and beat-by-beat shot timings; the renderer's current synthesized tones are a **technical sound fixture**, not a finished MV soundtrack.
 3. Bring 30–60s to the same directed standard and deepen GPT performance. Keep original code-native staging, not more generic explanatory graphics.
-4. Remove temporary `temp-gpt-mv-*.yml` review workflows after the validation gates. The scene source and handoff records remain in this workspace until the project is promoted or allowed to expire under repository cleanup policy.
+4. The four one-off review workflows for this pass have been removed after validation; source, artworks, and this handoff remain until promotion or ordinary repository cleanup.
 
 All task files are isolated to this temporary workspace; GitHub Actions only supplies build and review compute.
