@@ -267,6 +267,7 @@ void deploy(const vector<Scenario>&data,const map<string,Model>&models,
  }
  cout<<"PASS zero-oracle-costed deployment "<<data.size()<<" matched states, 6 arms\n";
 }
+#ifndef HIDDEN_REPAIR_NO_MAIN
 int main(int argc,char**argv){
  if(argc<2)throw runtime_error("mode harvest|deploy|selftest");
  string mode=argv[1];
@@ -291,3 +292,4 @@ int main(int argc,char**argv){
  }
  throw runtime_error("usage: harvest INPUT OUT ROUNDS | deploy INPUT FROZEN_MODELS EVENTS SUMMARY BUDGET_MS");
 }
+#endif  // HIDDEN_REPAIR_NO_MAIN
