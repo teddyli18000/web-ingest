@@ -135,20 +135,22 @@ function shotRed(d,t){
 }
 function shotNotice(d,t,plate){
   const u=unit(t,3);set(d,t,true);
-  // GPT is seen only through a thick die-cut viewing aperture, never a floating card.
-  d.glow(1170,520,860,GOLD,.19);
-  lens(d,1160,555,460,()=>{
-    plate.draw(d.g,{x:540-110*u,y:-20,w:1200,h:1210},{crop:'face',alpha:.97,rot:.008*u});
-  });
-  d.save(()=>{const g=d.g;g.globalAlpha=.84;g.strokeStyle='#eed8b8';g.lineWidth=108;
-    g.beginPath();g.ellipse(1160,555,470,368,-.09,0,Math.PI*2);g.stroke();
-    g.strokeStyle='#263853';g.lineWidth=18;g.beginPath();g.ellipse(1160,555,518,407,-.09,0,Math.PI*2);g.stroke();
-  });
-  // The human thread moves across the foreground edge of the frame.
-  strip(d,[[-150,930],[275,846],[610,770],[775,728]],55,easeOut(prog(u,.22,.92)),[GOLD,YELLOW,'#b88920']);
-  label(d,'I MISREAD',110,215,68,WHITE,.83);
-  label(d,'THE FOLD.',110,300,68,WHITE,.83);
-  poly(d,[[-120,880],[420,825],[475,1230],[-140,1230]],'#2d384a',.66,.66);
+  // A bold performance close-up within the world, not a circular portrait badge.
+  d.glow(1240,350,900,GOLD,.22);
+  poly(d,[[-130,-70],[490,-110],[540,1200],[-150,1220]],'#2b374d',.84);
+  poly(d,[[355,-40],[805,-100],[570,1190],[220,1190]],'#6d7788',.35,.48);
+  plate.silhouette(d.g,{x:850-65*u,y:-120,w:1100,h:1220},{color:'#1b347d',alpha:.15});
+  plate.draw(d.g,{x:820-105*u,y:-135+55*u,w:1120,h:1230},{alpha:.98,rot:-.012+.018*u});
+  // A broad, tilted physical page occludes the bust below her shoulder line.
+  poly(d,[[-80,900],[2260,685],[2260,1250],[-140,1250]],'#8c8176',.8);
+  poly(d,[[-85,888],[2260,681],[2260,781],[-100,995]],'#dbcdb9',.3);
+  strip(d,[[-190,1020],[270,940],[620,855],[1030,775]],53,easeOut(prog(u,.12,.90)),
+    [GOLD,YELLOW,'#b8912c']);
+  // The correction note sits on the real paper surface, not inside a UI box.
+  label(d,'I MISREAD',120,250,81,WHITE,.90);
+  label(d,'THE FOLD.',126,343,81,WHITE,.90);
+  line(d,[[126,372],[640,351]],GOLD,4,.37);
+  poly(d,[[1640,-70],[2050,-70],[2020,320],[1810,290]],'#222e41',.57,.57);
 }
 function shotRepair(d,t){
   const u=unit(t,4);set(d,t);
@@ -170,43 +172,58 @@ function shotRepair(d,t){
 }
 function shotAlign(d,t){
   const u=unit(t,5);set(d,t,true);
-  const align=easeOut(prog(u,.18,.86));
-  // Three perspective paper proofs physically line up in depth.
-  const layers=[
-    {x:480,y:540,s:.73,ang:-.19,face:'#c2b5a4',line:RED},
-    {x:1020,y:600,s:.88,ang:.09,face:'#e5d7c5',line:GOLD},
-    {x:1400,y:520,s:1.0,ang:-.05,face:WHITE,line:BLUE}
-  ];
-  layers.forEach((p,i)=>{
-    d.save(()=>{d.g.translate(p.x+(-1+i)*160*(1-align),p.y+(i-1)*110*(1-align));
-      d.g.rotate(p.ang*(1-align));d.g.scale(p.s,p.s);
-      poly(d,[[-470,-330],[470,-330],[470,320],[-470,320]],p.face,.76);
-      for(let j=0;j<8;j++)d.line(-385,-150+j*52,330,-150+j*52,{color:DARK,width:2,alpha:.055});
-      line(d,[[-370,-206],[355,-206]],p.line,10,.42);
-      for(let j=0;j<4;j++)d.circle(-280+j*135,40+(j%2)*26,14,{fill:p.line,alpha:.18+.12*align});
-    });
+  const q=easeOut(prog(u,.10,.82));
+  // Oversized material planes fill the lens: two draft layers overlap as they register.
+  d.save(()=>{d.g.translate(360+210*q,500+90*q);d.g.rotate(-.31+.18*q);
+    poly(d,[[-980,-660],[530,-660],[530,850],[-980,850]],'#c7b9a7',.9);
+    for(let j=0;j<24;j++)d.line(-800,-540+j*62,380,-540+j*62,
+      {color:DARK,width:1.3,alpha:.065});
+    line(d,[[-760,-250],[350,-250]],RED,20,.27*(1-q));
+    line(d,[[-650,330],[310,330]],GOLD,13,.35);
   });
-  strip(d,[[-160,1030],[350,915],[760,770],[1220,650],[1730,530]],56,
-    easeOut(prog(u,.4,1)),[GOLD,YELLOW,BLUE2,BLUE]);
-  label(d,'ALIGNED.',100,155,105,WHITE,.8*align);
-  poly(d,[[-100,1040],[570,940],[660,1200],[-100,1200]],'#444753',.45,.82);
+  d.save(()=>{d.g.translate(1460-350*q,510+80*q);d.g.rotate(.31-.26*q);
+    poly(d,[[-490,-740],[1010,-740],[1010,880],[-490,880]],WHITE,.88);
+    poly(d,[[880,-740],[1020,-740],[1020,880],[880,880]],'#b4a897',.2,.86);
+    for(let j=0;j<19;j++)d.line(-370,-520+j*69,820,-520+j*69,
+      {color:DARK,width:1,alpha:.058});
+    line(d,[[-360,-260],[810,-260]],BLUE,17,.42);
+    for(let j=0;j<7;j++){
+      const x=-285+j*160,y=90+(j%3)*34;
+      d.circle(x,y,14,{fill:j%2?GOLD:BLUE,alpha:.14+.2*q});
+    }
+  });
+  // Tracing paper briefly crosses the near lens to make alignment a 3D action.
+  const near=easeOut(prog(u,.24,.92));
+  d.save(()=>{d.g.translate(-250+820*near,1000-120*near);d.g.rotate(-.18);
+    poly(d,[[-500,-110],[1530,-110],[1530,110],[-500,110]],'#f3e9d7',.54,.62);
+    line(d,[[-330,-12],[1250,-12]],BLUE,9,.24);
+  });
+  strip(d,[[-120,990],[310,860],[720,755],[1100,675],[1660,505]],52,near,
+    [GOLD,YELLOW,BLUE2,BLUE]);
+  label(d,'ALIGNED.',110,158,92,WHITE,.8*near);
+  poly(d,[[-110,1040],[620,915],[685,1210],[-120,1210]],'#343d4b',.6,.83);
 }
 function shotGive(d,t){
   const u=unit(t,6);set(d,t,true);
-  // The finished proof crosses the frame between two cropped physical table surfaces.
-  poly(d,[[-130,810],[900,720],[1040,1250],[-150,1250]],'#b0a18d',.52);
-  poly(d,[[960,780],[2080,660],[2120,1270],[940,1270]],'#9b8d7c',.60);
-  const arrive=easeOut(prog(u,.11,.90)),x=1560-1040*arrive,y=565+130*arrive;
-  d.save(()=>{d.g.translate(x,y);d.g.rotate(-.18+arrive*.13);
-    poly(d,[[-345,-220],[345,-220],[345,220],[-345,220]],WHITE,.82);
-    line(d,[[-260,-144],[260,-144]],BLUE,9,.48);
-    line(d,[[-260,-75],[190,-75]],GOLD,7,.44);
-    for(let j=0;j<6;j++)d.line(-240,-8+j*32,120,-8+j*32,{color:DARK,width:2,alpha:.11});
+  // A proof physically unfolds between both contributors, not a floating document card.
+  poly(d,[[-150,900],[845,730],[1050,1260],[-170,1260]],'#958674',.67);
+  poly(d,[[900,770],[2100,640],[2150,1260],[890,1260]],'#a79a86',.68);
+  const k=easeOut(prog(u,.08,.87));
+  strip(d,[[2160,1040],[1750,930],[1400,830],[1110,710],[870,640]],87,k,
+    [BLUE,BLUE2,BLUE,'#253e95']);
+  strip(d,[[-180,1100],[270,950],[635,825],[940,705],[1180,625]],82,k,
+    [GOLD,YELLOW,GOLD,'#bb922b']);
+  const open=easeOut(prog(u,.29,.88));
+  d.save(()=>{d.g.translate(1030,690-115*(1-open));d.g.rotate(-.65+.53*open);
+    poly(d,[[-230,-20],[0,-158],[245,-18],[0,130]],WHITE,.9,open);
+    poly(d,[[-230,-20],[0,-158],[0,130]],'#ece0ce',.26,.91*open);
+    poly(d,[[0,-158],[245,-18],[0,130]],'#d9c9b3',.26,.90*open);
+    line(d,[[-175,-24],[169,-24]],BLUE,11,.46*open);
+    line(d,[[-110,22],[114,22]],GOLD,8,.44*open);
   });
-  strip(d,[[2000,930],[1560,810],[1110,710],[680,640]],67,easeOut(prog(u,.2,.91)),[BLUE,BLUE2,BLUE]);
-  strip(d,[[-150,1040],[350,920],[660,780],[950,700]],59,easeOut(prog(u,.28,.95)),[GOLD,YELLOW,GOLD]);
-  label(d,'TAKE THIS.',100,195,115,WHITE,.8);
-  d.glow(960,700,560,GOLD,.14);
+  d.glow(1010,700,570,GOLD,.08+.12*open);
+  label(d,'TAKE THIS.',95,200,104,WHITE,.86);
+  poly(d,[[-150,990],[260,915],[400,1280],[-180,1280]],'#404450',.35,.71);
 }
 function shotRebuild(d,t,model,poses,plate){
   const u=unit(t,7);set(d,t,true);
