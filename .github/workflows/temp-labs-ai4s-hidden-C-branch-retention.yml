@@ -1,0 +1,110 @@
+name: temp-labs-ai4s-hidden-C-branch-retention
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-hidden-C-branch-retention.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-hidden-C-branch-retention
+  cancel-in-progress: false
+jobs:
+  two_state_reachability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Recheck 6480 completed single-state-bank source and frozen model
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 - <<'PY'
+          import json,hashlib,pathlib
+          d=pathlib.Path('results')
+          for n in ('train46','validation47','test50_forced_v1'):
+            v=json.loads((d/('bank_'+n)/'bank_reachability.json').read_text())
+            assert v['candidate_repairs']==2160 and v['state_count']==144
+          mod=json.loads((d/'forced_models_v1/training_audit.json').read_text())
+          assert mod['model_sha256']=='2abb727677b9c065b624322f1446fc950987d2c64fc41396e4b90e80c5ad576b'
+          assert hashlib.sha256((d/'forced_models_v1/frozen_models.tsv').read_bytes()).hexdigest()==mod['model_sha256']
+          print('PASS prior source-corrected bank verified, C labels unavailable to solver')
+          PY
+          g++ -std=c++17 -O3 probe_branch_retention.cpp -o /tmp/labs_C_two_branch
+      - name: Controlled original-X retention vs greedy repaired-state replacement, no C file access
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          for name in train46 validation47 test50_forced_v1; do
+            mkdir -p "results/branch_${name}"
+            /tmp/labs_C_two_branch "results/${name}/scenario-input.tsv" \
+              results/forced_models_v1/frozen_models.tsv \
+              "results/branch_${name}/branches_raw.tsv"
+          done
+      - name: Split and independently verify every raw and postrepair LABS event, C only here
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 - <<'PY'
+          import csv,pathlib
+          for n in ('train46','validation47','test50_forced_v1'):
+            root=pathlib.Path('results')/('branch_'+n)
+            with (root/'branches_raw.tsv').open(newline='') as f:
+              rr=list(csv.DictReader(f,delimiter='\t'))
+            assert len(rr)==4320
+            for branch,name in [('0','greedy'),('1','retained_X')]:
+              rows=[r for r in rr if r['branch']==branch]
+              assert len(rows)==2160
+              with (root/(name+'_bank.tsv')).open('w',newline='') as f:
+                w=csv.DictWriter(f,fieldnames=list(rows[0]),delimiter='\t')
+                w.writeheader();w.writerows(rows)
+          PY
+          for name in train46 validation47 test50_forced_v1; do
+            for branch in greedy retained_X; do
+              python3 verify_probe.py \
+                --input "results/${name}/scenario-input.tsv" \
+                --vault "results/${name}/target-vault.tsv" \
+                --bank "results/branch_${name}/${branch}_bank.tsv" \
+                --out "results/branch_${name}/${branch}"
+            done
+            python3 compare_branches.py \
+              --input "results/${name}/scenario-input.tsv" \
+              --vault "results/${name}/target-vault.tsv" \
+              --first "results/branch_${name}/greedy/bank_verified_trials.tsv" \
+              --retained "results/branch_${name}/retained_X/bank_verified_trials.tsv" \
+              --raw-bank "results/branch_${name}/branches_raw.tsv" \
+              --out "results/branch_${name}"
+          done
+          python3 - <<'PY'
+          import json,pathlib
+          for name in ('train46','validation47','test50_forced_v1'):
+            p=pathlib.Path('results')/('branch_'+name)
+            r=json.loads((p/'branch_causal_diagnostic.json').read_text())
+            assert r['states']==144 and r['paired_repair_branches']==432
+            for branch in ('greedy','retained_X'):
+              v=json.loads((p/branch/'bank_reachability.json').read_text())
+              assert v['candidate_repairs']==2160
+            print('VERIFIED two branch choices',name,r['by_tier']['C_shell'])
+          PY
+      - name: Persist all exact scored state-retention counterfactual results
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/branch_train46
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/branch_validation47
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/branch_test50_forced_v1
+          git commit -m 'research(labs-ai4s): certify 12960 original-X vs greedy repaired-state candidate fates under sealed C oracle'
+          ok=0
+          for attempt in 1 2 3 4 5 6; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then ok=1; break; fi
+          done
+          test "$ok" -eq 1
