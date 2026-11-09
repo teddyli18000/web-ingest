@@ -33,6 +33,10 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           echo "CHROME_PATH=$(which google-chrome)" >> "$GITHUB_ENV"
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg >/dev/null
+          fi
       - name: Render opening bust shot
         run: node export/render.mjs --start 3.4 --end 7.15 --width 960 --height 540 --fps 12 --art-source reach-hq --bust-source gpt-bust-matted-v5 --out out/bust_opening.mp4
       - name: Render world bust shot
