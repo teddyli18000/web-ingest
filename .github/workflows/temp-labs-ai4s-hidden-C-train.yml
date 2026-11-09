@@ -1,0 +1,83 @@
+name: temp-labs-ai4s-hidden-C-train
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-hidden-C-train.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-hidden-C-train
+  cancel-in-progress: false
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 17
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Compile strictly C-blind classical repair and model data collector
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          g++ -std=c++17 -O3 -Wall -Wextra hidden_repair.cpp -o /tmp/labs_hidden_repair
+          /tmp/labs_hidden_repair selftest
+      - name: Make independent length-disjoint training and model-selection scenarios
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 make_scenarios.py ../../../data/combined/combined10.tsv --lengths 46 --out results/train46 --reps 8
+          python3 make_scenarios.py ../../../data/combined/combined10.tsv --lengths 47 --out results/validation47 --reps 4
+          test ! -d results/test50
+      - name: Actual native 64-step Tabu and steepest results for each pre-repair candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          /tmp/labs_hidden_repair harvest results/train46/scenario-input.tsv results/train46/harvest.tsv 4
+          /tmp/labs_hidden_repair harvest results/validation47/scenario-input.tsv results/validation47/harvest.tsv 4
+          python3 verify_hidden.py harvest --input results/train46/scenario-input.tsv \
+            --vault results/train46/target-vault.tsv --data results/train46/harvest.tsv \
+            --output results/train46/harvest_exact_verification.json
+          python3 verify_hidden.py harvest --input results/validation47/scenario-input.tsv \
+            --vault results/validation47/target-vault.tsv --data results/validation47/harvest.tsv \
+            --output results/validation47/harvest_exact_verification.json
+      - name: Fit N46 repair outcome representation and choose hyperparameters only on N47
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install -q --disable-pip-version-check numpy pandas scikit-learn
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 train_policy.py --train results/train46/harvest.tsv \
+            --validation results/validation47/harvest.tsv --output-dir results/frozen_models
+          python3 - <<'PY'
+          import json,pathlib,csv,hashlib
+          root=pathlib.Path('results')
+          tr=json.loads((root/'train46/harvest_exact_verification.json').read_text())
+          va=json.loads((root/'validation47/harvest_exact_verification.json').read_text())
+          model=json.loads((root/'frozen_models/training_audit.json').read_text())
+          assert tr['N']==46 and va['N']==47
+          assert tr['cases']==va['cases']==144
+          assert tr['candidate_rows']==va['candidate_rows']==3456
+          assert model['train_N']==[46] and model['validation_N']==[47] and model['test_N']==[50]
+          assert model['C_target_labels_used_in_training_or_validation'] is False
+          assert not (root/'test50').exists()
+          assert hashlib.sha256((root/'frozen_models/frozen_models.tsv').read_bytes()).hexdigest()==model['model_sha256']
+          print('PASS target-free frozen model trained N46, chosen N47, N50 withheld')
+          PY
+      - name: Publish exact training and frozen coefficient hash prior to any N50 test
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/train46
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/validation47
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/frozen_models
+          git commit -m 'research(labs-ai4s): independently verify C-free N46 train N47 validation and frozen feature models'
+          git pull --rebase origin main
+          git push origin HEAD:main
