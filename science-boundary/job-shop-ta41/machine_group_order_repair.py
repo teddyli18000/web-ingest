@@ -201,6 +201,29 @@ def run(a):
         state['wall_seconds']=round(time.monotonic()-begin,3)
         state['complete']=done
         (a.out/'results.json').write_text(json.dumps(state,indent=2)+'\n')
+    if a.fixed_open_machines:
+        # Explicit oracle-aware representation CAPACITY check only.
+        # NEVER count this as blind discovery or comparative evaluation.
+        opened=set(a.fixed_open_machines)
+        assert len(opened)==len(a.fixed_open_machines)
+        assert all(0<=m<20 for m in opened)
+        state['oracle_aware_diagnostic_only']=True
+        state['fixed_open_machines']=sorted(opened)
+        result,schedule,core=full_cp(orders,pos,dur,opened,target,a.policy,
+                                     a.seed,a.cp_seconds)
+        traces.append(dict(stage=len(opened),trial=0,
+                           opened=sorted(opened),completion=result))
+        if schedule is not None:
+            state['status']='DIAGNOSTIC_FEASIBLE'
+            state['verified_makespan']=evaluate(schedule,pos,dur)
+            (a.out/'certificate.json').write_text(
+                json.dumps({'machines':schedule},separators=(',',':'))+'\n')
+        else:
+            state['outcome']=result['status']
+        flush(True)
+        print('DIAGNOSTIC',state['instance'],result['status'],
+              state.get('verified_makespan'),flush=True)
+        return
     for stage_index,k in enumerate(stages):
         unknown_masks=[]
         for iteration in range(a.trials_per_stage):
@@ -268,6 +291,7 @@ if __name__=='__main__':
     p.add_argument('--seed',type=int,default=4107)
     p.add_argument('--trials-per-stage',type=int,default=12)
     p.add_argument('--only-groups',nargs='+',type=int,default=[])
+    p.add_argument('--fixed-open-machines',nargs='+',type=int,default=[])
     p.add_argument('--cp-seconds',type=float,default=1.5)
     p.add_argument('--master-seconds',type=float,default=.3)
     p.add_argument('--total-seconds',type=float,default=120)
