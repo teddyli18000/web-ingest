@@ -1,0 +1,129 @@
+name: temp-labs-ai4s-hidden-C-forced-replay
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-hidden-C-forced-replay.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-hidden-C-forced-replay
+  cancel-in-progress: false
+jobs:
+  posthoc-forced:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Assert distinct model identity frozen in main and explicit posthoc test disclosure
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 - <<'PY'
+          import json,hashlib,pathlib
+          old=json.load(open('results/frozen_models/training_audit.json'))
+          new=json.load(open('results/forced_models_v1/training_audit.json'))
+          protocol=json.load(open('results/forced_models_v1/frozen_protocol.json'))
+          assert old['model_sha256']=='b47759a27123c3ef066c3e345f9eafbf32eb650a9f92aef4a55010230096cba9'
+          assert new['model_sha256']=='2abb727677b9c065b624322f1446fc950987d2c64fc41396e4b90e80c5ad576b'
+          assert protocol['old_sealed_N50_results_already_known'] is True
+          assert protocol['test_state_seed_indices_to_use']==list(range(8,16))
+          assert not pathlib.Path('results/test50_forced_v1').exists()
+          assert hashlib.sha256(pathlib.Path('results/forced_models_v1/frozen_models.tsv').read_bytes()).hexdigest()==new['model_sha256']
+          print('PASS frozen second model: N50 replay exploratory ONLY, not a freshly sealed test')
+          PY
+          g++ -std=c++17 -O3 hidden_repair.cpp -o /tmp/labs_hidden_C_forced
+          /tmp/labs_hidden_C_forced selftest
+      - name: Construct fresh independent N50 contexts after model already frozen
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 make_scenarios.py ../../data/combined/combined10.tsv \
+            --lengths 50 --out results/test50_forced_v1 --reps 8 --rep-offset 8
+          python3 - <<'PY'
+          import csv,pathlib
+          p=pathlib.Path('results/test50_forced_v1/scenario-input.tsv')
+          rows=list(csv.DictReader(p.open(),delimiter='\t'))
+          assert len(rows)==144 and {int(z['rep']) for z in rows}==set(range(8,16))
+          assert set(z['mode'] for z in rows)=={'AB_blind','C_shell'}
+          assert all('C' not in z for z in rows)
+          print('PASS N50 independent state-seed 8..15, no C in solver input')
+          PY
+      - name: Five true nonzero proposals per candidate bank, all policies costed end-to-end
+        shell: bash
+        env:
+          LABS_FORCE_NONZERO: "1"
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          /tmp/labs_hidden_C_forced deploy \
+            results/test50_forced_v1/scenario-input.tsv \
+            results/forced_models_v1/frozen_models.tsv \
+            results/test50_forced_v1/events.tsv \
+            results/test50_forced_v1/sessions.tsv 150
+      - name: Independently exact-score every candidate and recovered canonical C orbit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 verify_hidden.py deploy \
+            --input results/test50_forced_v1/scenario-input.tsv \
+            --vault results/test50_forced_v1/target-vault.tsv \
+            --events results/test50_forced_v1/events.tsv \
+            --sessions results/test50_forced_v1/sessions.tsv \
+            --output results/test50_forced_v1
+          python3 - <<'PY'
+          import csv,json,pathlib
+          p=pathlib.Path('results/test50_forced_v1')
+          verdict=json.loads((p/'verdict.json').read_text())
+          trials=list(csv.DictReader((p/'verified_trials.tsv').open(),delimiter='\t'))
+          assert verdict['n']==[50] and verdict['states']==144 and verdict['run_rows']==864
+          assert len(trials)==864 and {int(t['rep']) for t in trials}==set(range(8,16))
+          assert all(float(t['wall_ms'])>=150. for t in trials)
+          assert all(float(t['model_ms'])>=0 for t in trials)
+          print('PASS 864 independently exact-scored forced-move C-blind N50 runs')
+          PY
+      - name: Losslessly archive full event trace with independently matched SHA256
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 - <<'PY'
+          import gzip,hashlib,json,pathlib,shutil
+          p=pathlib.Path('results/test50_forced_v1');raw=p/'events.tsv';gz=p/'events.tsv.gz'
+          report=json.loads((p/'verdict.json').read_text())
+          assert hashlib.sha256(raw.read_bytes()).hexdigest()==report['hashes']['events']
+          with raw.open('rb') as inp,gz.open('wb') as fout:
+            with gzip.GzipFile(filename='',fileobj=fout,mode='wb',compresslevel=6,mtime=0) as stream:
+              shutil.copyfileobj(inp,stream,1024*1024)
+          assert gz.stat().st_size<90*1024*1024, 'compression cannot fit single GitHub file'
+          hh=hashlib.sha256()
+          with gzip.open(gz,'rb') as stream:
+            for block in iter(lambda:stream.read(1024*1024),b''):hh.update(block)
+          assert hh.hexdigest()==report['hashes']['events']
+          (p/'lossless_archive_provenance.json').write_text(json.dumps({
+            'original_events_sha256':hh.hexdigest(),
+            'compressed_events_sha256':hashlib.sha256(gz.read_bytes()).hexdigest(),
+            'events':report['events'],'raw_bytes':raw.stat().st_size,
+            'archive_bytes':gz.stat().st_size,'gzip_deterministic_mtime':0},indent=2)+'\n')
+          raw.unlink()
+          PY
+      - name: Commit exact verified amended experiment and explicit exposed-test provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/test50_forced_v1
+          git commit -m 'research(labs-ai4s): verify full-cost nonzero proposal N50 exploratory hidden-C recovery'
+          ok=0
+          for attempt in 1 2 3 4 5 6 7 8; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then ok=1; break; fi
+          done
+          test "$ok" -eq 1
