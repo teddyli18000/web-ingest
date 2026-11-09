@@ -168,33 +168,73 @@ function shotE(d,t){
 }
 function buildings(d,t,k){
   paper(d,t,{night:true});
-  polygon(d,[[-80,310],[2030,280],[2040,1170],[-80,1170]],'#c2b4a3',.25);
-  d.gradRect(0,292,W,820,[[0,'#9f9283'],[.5,'#c7baaa'],[1,'#746d66']],true);
-  for(let i=0;i<11;i++)d.line(1030,283,lerp(-500,2470,i/10),1140,{color:NAVY,width:2,alpha:.075});
-  for(let i=1;i<8;i++)d.line(-30,lerp(310,1160,(i/8)**1.7),1950,lerp(310,1160,(i/8)**1.7),{color:NAVY,width:2,alpha:.07});
-  const blocks=[[200,945,345,610],[685,870,270,480],[1150,810,300,420],[1580,765,265,510],[1930,715,280,570]];
-  for(let i=0;i<blocks.length;i++){
-    const [x,y,w,h]=blocks[i],p=easeOut(prog(k,i*.13,.40+i*.13));
-    if(!p)continue;const top=y-h*p;
-    polygon(d,[[x,y],[x+w,y-10],[x+w,top],[x,top+10]],i%2?'#d6c8b8':WHITE,.36);
-    polygon(d,[[x+w,y-10],[x+w+55,y-45],[x+w+55,top-35],[x+w,top]],'#968d83',.18);
-    polygon(d,[[x,top+10],[x+w,top],[x+w+55,top-35],[x+55,top-23]],'#fff0d2',.2);
-    polygon(d,[[x+w*.36,y-10],[x+w*.36,y-150*p],[x+w*.67,y-150*p],[x+w*.67,y-10]],'#93877b',.1,.55*p);
-    d.line(x+30,top+83,x+w-35,top+83,{color:i%2?BLUE:GOLD,width:8,alpha:.46*p});
+  polygon(d,[[-90,294],[2020,276],[2040,1160],[-90,1160]],'#b3a492',.34);
+  d.gradRect(0,290,W,830,[[0,'#958778'],[.45,'#d1c0a7'],[1,'#625d5b']],true);
+  const vanishing=[1030,288];
+  for(let i=0;i<13;i++)d.line(vanishing[0],vanishing[1],lerp(-630,2520,i/12),1150,
+    {color:NAVY,width:2,alpha:.07});
+  for(let i=1;i<10;i++){
+    const y=lerp(300,1170,(i/10)**1.65);
+    d.line(-30,y,1960,y,{color:NAVY,width:2,alpha:.068});
   }
-  polygon(d,[[-180,1100],[-50,1100],[-50,255],[180,30],[520,-60],[650,-60],[470,70],[180,335],[180,1100]],'#353c47',.88);
-  polygon(d,[[1640,1110],[2080,1110],[2080,-40],[1860,-40],[1720,240],[1720,1110]],'#50525a',.85);
-  d.glow(1060,385,610,GOLD,.10);
+  // A paper city assembled from actual dimensional facets: soffits, arches, cutaways.
+  const buildings=[
+    [110,950,340,620,100],[555,855,285,470,65],[980,820,290,530,85],
+    [1370,785,255,430,70],[1730,765,350,620,100]
+  ];
+  for(let i=0;i<buildings.length;i++){
+    const [x,y,w,h,depth]=buildings[i];
+    const q=easeOut(prog(k,i*.10,.44+i*.10));if(q<=0)continue;
+    const top=y-h*q;
+    polygon(d,[[x,y],[x+w,y-6],[x+w,top],[x,top+12]],i%2?'#e3d5c0':WHITE,.45);
+    polygon(d,[[x+w,y-6],[x+w+depth,y-48],[x+w+depth,top-48],[x+w,top]],'#807b75',.24);
+    polygon(d,[[x,top+12],[x+w,top],[x+w+depth,top-48],[x+depth,top-30]],'#fff1d7',.24);
+    // Recessed arch, with its inside wall deliberately darker than the outside paper.
+    const cx=x+w*.54,r=w*.21,base=y-9,apex=base-Math.min(230,230*q);
+    d.save(()=>{
+      const g=d.g;g.globalAlpha=q;g.fillStyle='#857e74';g.strokeStyle='#a79b89';g.lineWidth=7;
+      g.beginPath();g.moveTo(cx-r,base);g.lineTo(cx-r,apex+r*.38);
+      g.quadraticCurveTo(cx-r,apex-r*.75,cx,apex-r*.85);
+      g.quadraticCurveTo(cx+r,apex-r*.75,cx+r,apex+r*.38);
+      g.lineTo(cx+r,base);g.closePath();g.fill();g.stroke();
+    });
+    // Behind the cut-out: a second warm folded surface moves independently.
+    polygon(d,[[cx-r+20,base],[cx+r-20,base],[cx+r-20,base-76*q],[cx-r+20,base-76*q]],
+      i%2?'#aea28d':'#b1a18b',.09,.48*q);
+    for(let j=0;j<3;j++){
+      const xx=x+35+j*65,yy=top+75+j*3;
+      polygon(d,[[xx,yy],[xx+24,yy-2],[xx+24,yy+61],[xx,yy+63]],'#766f69',.1,.28*q);
+      d.line(xx+5,yy+12,xx+21,yy+11,{color:GOLD,width:3,alpha:.45*q});
+    }
+    // Offset print marks and the raw paper-stock fold lines.
+    d.line(x+24,top+44,x+w-35,top+36,{color:i%2?BLUE:GOLD,width:9,alpha:.56*q});
+    d.line(x+w-6,top+22,x+w-6,y-27,{color:NAVY,width:3,alpha:.16*q});
+    for(let j=1;j<5;j++)d.line(x+w+10,top+30+j*52,x+w+depth-13,top+5+j*52,
+      {color:'#564e46',width:2,alpha:.11*q});
+    if(i===1||i===3){
+      polygon(d,[[x-25,top+175],[x+w/2,top+80],[x+w+30,top+175],[x+w/2,top+218]],
+        '#f5e8cb',.4,q);
+      polygon(d,[[x+w/2,top+218],[x+w+30,top+175],[x+w+8,top+221],[x+w/2,top+250]],
+        '#a89a87',.12,.68*q);
+    }
+  }
+  // Low-angle silhouettes crop the frame, not float in the midground.
+  polygon(d,[[-200,1100],[-55,1100],[-55,260],[185,15],[495,-65],[650,-65],
+    [470,75],[185,335],[185,1100]],'#303b4b',.96);
+  polygon(d,[[1650,1120],[2080,1120],[2080,-45],[1905,-45],[1738,242],[1738,1120]],
+    '#454d58',.84);
+  polygon(d,[[1640,1100],[1724,1078],[1724,270],[1795,190],[1795,1100]],'#78818a',.3,.23);
+  d.glow(1060,380,670,GOLD,.14);
 }
 function shotF(d,t){
-  const u=local(t,5),open=easeInOut(prog(u,.19,.85));
+  const u=local(t,5),open=easeInOut(prog(u,.02,.56));
   buildings(d,t,open);
-  d.save(()=>{d.g.translate(230,-970*open);d.g.rotate(.07+.09*open);
-    polygon(d,[[-340,-520],[2250,-520],[2290,1430],[-350,1450]],WHITE,.85,1-open*.95);
+  d.save(()=>{d.g.translate(230,-1390*open);d.g.rotate(.07+.09*open);
+    polygon(d,[[-340,-520],[2250,-520],[2290,1430],[-350,1450]],WHITE,.85,1-open*.99);
     seam(d,[70,320],[1720,595],BLUE,.25*(1-open));
     ink(d,'FOLD',350,660,205,{alpha:.30*(1-open)});
   });
-  const k=easeOut(prog(u,.53,.99));
+  const k=easeOut(prog(u,.34,.94));
   ribbon(d,[[15,1080],[405,925],[800,820],[1110,711]],68,k,[GOLD,YELLOW,GOLD]);
   ribbon(d,[[2020,970],[1580,825],[1250,740],[1100,710]],64,k,[BLUE,BLUE2,BLUE]);
   d.circle(1100,710,13*k,{fill:YELLOW,alpha:.82});
@@ -217,7 +257,17 @@ function shotG(d,t,model,poses,plate){
       handoffDraw=new Draw(handoffCanvas.getContext('2d'),W,H);}
     handoffDraw.g.setTransform(1,0,0,1,0,0);handoffDraw.g.clearRect(0,0,W,H);
     renderDraftsV13(handoffDraw,15,model,poses,plate);
-    d.save(()=>{d.g.globalAlpha=fade;d.g.drawImage(handoffCanvas,0,0);});
+    // A travelling diagonal page fold hands the stage to act II without ghosted double exposure.
+    const x=lerp(-300,2200,fade);
+    d.save(()=>{
+      const g=d.g;g.beginPath();g.moveTo(-100,-100);g.lineTo(x-230,-100);
+      g.lineTo(x+260,1200);g.lineTo(-100,1200);g.closePath();g.clip();
+      g.drawImage(handoffCanvas,0,0);
+    });
+    d.save(()=>{d.g.translate(x,540);d.g.rotate(-.36);
+      polygon(d,[[-38,-800],[40,-800],[42,800],[-36,800]],'#fff0b4',.24,.62);
+      path(d,[[18,-800],[18,800]],BLUE,7,.34);
+    });
   }
 }
 export function renderOpeningV12(d,t,model,plate,poses){
