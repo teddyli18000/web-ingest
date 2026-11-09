@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - '.github/workflows/temp-ta41-neutral-CP-source-N7-hybrid.yml'
+      - 'science-boundary/job-shop-ta41/neutral_machine_cp_then_original_n7.py'
   workflow_dispatch:
 permissions:
   contents: write
@@ -33,7 +34,7 @@ jobs:
             science-boundary/job-shop-ta41/original_n7_blind_driver.cpp \
             /tmp/n7/src/graph.cpp /tmp/n7/src/instance.cpp /tmp/n7/src/schedule.cpp /tmp/n7/src/tabu_search.cpp \
             -o /tmp/n7_true_blind
-      - name: Matched search time: CP neutral 5 sec plus N7 9 sec, versus direct native N7 14 sec
+      - name: 'Matched search time: CP neutral 5 sec plus N7 9 sec, versus direct native N7 14 sec'
         run: |
           set -euo pipefail
           c='${{ matrix.case }}'
