@@ -141,12 +141,40 @@ def augmented_release_ranking(clauses,chosen,mutable,original_slack,
     return sorted((i for i in range(580) if i not in chosen),
                   key=lambda i:-rating(i))
 
+def certified_ta41_gateway_roots(orders):
+    """All target-2005 schedules MUST reverse >=1 of these 21 arcs.
+
+    Source proof is a full 600-operation, 20-NoOverlap CP-SAT UNSAT of
+    the 21 baseline-adjacent machine order assumptions, NOT a learned
+    claim based only on Taillard local criticality. No target schedule,
+    hidden oracle, or 2005 historical certificate is needed.
+    """
+    raw=json.loads((ROOT/'results'/'consensus-five-parents'/
+        'consensus-analysis.json').read_text())
+    assert raw['instance']=='ta41' and raw['target']==2005
+    assert raw['status']=='INFEASIBLE'
+    assert raw['all_parents_independently_verified_2006']
+    arcs=raw['proven_unsat_core']
+    assert len(arcs)==21 and raw['unsat_core_size']==21
+    roots=[]
+    for item in arcs:
+        m=item['machine']
+        p=orders[m].index(item['from_job'])
+        q=orders[m].index(item['to_job'])
+        assert q==p+1,(m,p,q,item)
+        roots.append(m*29+p)
+    assert len(set(roots))==21 and len(set(x//29 for x in roots))==5
+    return sorted(roots)
+
 def run(args):
     orders,pos,dur,initial=parse_case(args.start)
     target=initial-1
     mutable=immutable_and_resource(orders,pos)
     roots,static_slack=choose_roots(dur,mutable,orders,args.seed,
          max(args.roots,args.root_pool))
+    if args.root_policy=='certified-core':
+        assert args.start=='ta41' and not args.root_ids
+        roots=certified_ta41_gateway_roots(orders)
     if args.root_ids:
         roots=args.root_ids
     rng=random.Random(args.seed)
@@ -166,14 +194,24 @@ def run(args):
             len(prelim[root][0][0]) if prelim[root][0] is not None else 999,
             prelim[root][0][1]['lb'] if prelim[root][0] is not None else 999999,
             static_slack[root],jitter[root]))
-        roots=roots[:args.roots]
+        if args.root_policy=='certified-core':
+            assert 0<=args.gateway_shard<7
+            # Seven independent, disjoint 3-root shards cover ALL 21
+            # mathematically necessary resource gateway reversals.
+            roots=roots[args.gateway_shard*3:(args.gateway_shard+1)*3]
+            assert len(roots)==3
+        else:
+            roots=roots[:args.roots]
     begin=time.monotonic()
     output=dict(instance=('ta41' if args.start=='ta41'
             else Path(args.start).parent.name),
         target=target,incumbent=initial,policy=args.policy,
         experimental_design='counterfactual reversal, online path cycle/deadline/resource UNSAT clauses, reoptimized nonmonotone joint hitting set, complete full NoOverlap CP',
         root_selection=('FIXED ORACLE-AWARE DIAGNOSTIC: NOT BLIND' if args.root_ids
-            else 'oracle-blind near-critical root set reordered by minimal counterfactual cycle+deadline closure'),
+            else ('CERTIFIED CORE: every 2005 requires reversing >=1 of the 21 adjacent gateway arcs; exact source-only CP proof, no oracle'
+                  if args.root_policy=='certified-core' else
+                  'oracle-blind near-critical root set reordered by minimal counterfactual cycle+deadline closure')),
+        root_policy=args.root_policy,gateway_shard=(args.gateway_shard if args.root_policy=='certified-core' else None),
         root_ids=roots,root_screened=len(prelim),root_limit=args.roots,max_iterations_per_root=args.iterations,
         full_CP_seconds=args.cp_seconds,hitting_set_seconds=args.hit_seconds,
         global_wall_budget=args.seconds,records=[],
@@ -333,6 +371,8 @@ if __name__=='__main__':
     p.add_argument('--roots',type=int,default=18)
     p.add_argument('--root-pool',type=int,default=80)
     p.add_argument('--root-ids',type=int,nargs='*',default=[])
+    p.add_argument('--root-policy',choices=['near-critical','certified-core'],default='near-critical')
+    p.add_argument('--gateway-shard',type=int,default=0)
     p.add_argument('--iterations',type=int,default=80)
     p.add_argument('--cp-seconds',type=float,default=1.0)
     p.add_argument('--hit-seconds',type=float,default=1.0)
