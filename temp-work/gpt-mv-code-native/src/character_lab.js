@@ -16,7 +16,7 @@ const plate=await loadGPTBustPlate();
 rect(0,0,W,H,'#d8d0c5');
 const glow=g.createRadialGradient(1480,180,40,1480,180,660);glow.addColorStop(0,'rgba(232,185,40,.16)');glow.addColorStop(1,'rgba(232,185,40,0)');g.fillStyle=glow;g.fillRect(0,0,W,H);
 text('GPT / CHARACTER PLATE LAB',62,66,23,{color:INK,weight:700,alpha:.62});
-text('bust-colour-v3 · cutout candidate · edge QA pending',62,101,18,{color:INK2,alpha:.38});
+text('bust-v4 · original art · code matte + edge QA',62,101,18,{color:INK2,alpha:.38});
 line(62,124,760,124,BLUE,5,.60);
 
 panel(58,155,855,380);cropMarks(58,155,855,380);heading(90,198,'01 / RAW PRINT','paper field · intended working scale');
@@ -39,7 +39,7 @@ text(plate.source,1828,984,15,{color:'#aeb8ca',align:'right',alpha:.38});
 
 function inspectAlpha(img){
   const c=document.createElement('canvas');
-  c.width=img.naturalWidth;c.height=img.naturalHeight;
+  c.width=img.width;c.height=img.height;
   const cg=c.getContext('2d',{willReadFrequently:true});
   cg.drawImage(img,0,0);
   const pixels=cg.getImageData(0,0,c.width,c.height).data;
@@ -48,10 +48,15 @@ function inspectAlpha(img){
   let fullWidthRows=0;
   const fullWidthRowExamples=[];
   let topVisible=0,bottomVisible=0;
+  let topNavyPixels=0,bottomNavyPixels=0;
   for(let y=0;y<c.height;y++){
     let rowVisible=0;
     for(let x=0;x<c.width;x++){
-      const a=pixels[(y*c.width+x)*4+3];
+      const i=(y*c.width+x)*4,a=pixels[i];
+      const r=pixels[i],g=pixels[i+1],b=pixels[i+2];
+      const navy=b>r+12&&b>g+5&&r<125&&g<130&&b<169&&a>64;
+      if(navy&&y<190&&x>230)topNavyPixels++;
+      if(navy&&y>415&&x>350)bottomNavyPixels++;
       if(a===0)transparent++;
       else if(a===255)opaque++;
       else partial++;
@@ -75,10 +80,10 @@ function inspectAlpha(img){
   };
   const edge={
     topCoverage:topVisible/c.width,bottomCoverage:bottomVisible/c.width,
-    fullWidthRows,fullWidthRowExamples,corners,
+    fullWidthRows,fullWidthRowExamples,corners,topNavyPixels,bottomNavyPixels,
   };
-  // Full-width opaque rows are background remnants, not a character silhouette.
-  const edgeLeakLikely=fullWidthRows>12||
+  // A wide opaque silhouette row is valid; reject characteristic navy residue instead.
+  const edgeLeakLikely=topNavyPixels>400||bottomNavyPixels>400||
     edge.topCoverage>.8||edge.bottomCoverage>.8||
     Object.values(corners).filter(a=>a>16).length>=3;
   return {width:c.width,height:c.height,transparent,opaque,partial,bounds:[left,top,right,bottom],edge,edgeLeakLikely};
