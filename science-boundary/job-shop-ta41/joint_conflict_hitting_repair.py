@@ -108,7 +108,8 @@ def run(args):
     orders,pos,dur,initial=parse_case(args.start)
     target=initial-1
     mutable=immutable_and_resource(orders,pos)
-    roots,static_slack=choose_roots(dur,mutable,orders,args.seed,args.roots)
+    roots,static_slack=choose_roots(dur,mutable,orders,args.seed,
+         max(args.roots,args.root_pool))
     if args.root_ids:
         roots=args.root_ids
     rng=random.Random(args.seed)
@@ -128,6 +129,7 @@ def run(args):
             len(prelim[root][0][0]) if prelim[root][0] is not None else 999,
             prelim[root][0][1]['lb'] if prelim[root][0] is not None else 999999,
             static_slack[root],jitter[root]))
+        roots=roots[:args.roots]
     begin=time.monotonic()
     output=dict(instance=('ta41' if args.start=='ta41'
             else Path(args.start).parent.name),
@@ -135,7 +137,7 @@ def run(args):
         experimental_design='counterfactual reversal, online path cycle/deadline/resource UNSAT clauses, reoptimized nonmonotone joint hitting set, complete full NoOverlap CP',
         root_selection=('FIXED ORACLE-AWARE DIAGNOSTIC: NOT BLIND' if args.root_ids
             else 'oracle-blind near-critical root set reordered by minimal counterfactual cycle+deadline closure'),
-        root_ids=roots,root_limit=args.roots,max_iterations_per_root=args.iterations,
+        root_ids=roots,root_screened=len(prelim),root_limit=args.roots,max_iterations_per_root=args.iterations,
         full_CP_seconds=args.cp_seconds,hitting_set_seconds=args.hit_seconds,
         global_wall_budget=args.seconds,records=[],
         status='UNRESOLVED')
@@ -251,6 +253,7 @@ if __name__=='__main__':
     p.add_argument('--policy',choices=['dynamic','static','random'],required=True)
     p.add_argument('--seed',type=int,default=333)
     p.add_argument('--roots',type=int,default=18)
+    p.add_argument('--root-pool',type=int,default=80)
     p.add_argument('--root-ids',type=int,nargs='*',default=[])
     p.add_argument('--iterations',type=int,default=80)
     p.add_argument('--cp-seconds',type=float,default=1.0)
