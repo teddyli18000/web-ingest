@@ -227,7 +227,8 @@ def run(a):
     for stage_index,k in enumerate(stages):
         unknown_masks=[]
         for iteration in range(a.trials_per_stage):
-            if time.monotonic()-begin>=a.total_seconds:
+            remaining=a.total_seconds-(time.monotonic()-begin)
+            if remaining<=0.03:
                 state['outcome']='GLOBAL_TIME_LIMIT';flush(True);return
             degree=Counter()
             for core in learned:
@@ -243,17 +244,21 @@ def run(a):
                 k,sorted(learned,key=lambda c:(len(c),sorted(c))),
                 unknown_masks,priority,a.policy,
                 a.seed+10007*stage_index+iteration*193,
-                a.master_seconds)
+                min(a.master_seconds,max(0.01,remaining-0.01)))
             row=dict(stage=k,trial=iteration,master=machine_info,
                      known_proven_machine_clauses=len(learned))
             traces.append(row)
             if chosen is None:
                 row['outcome']='MASTER_INFEASIBLE_OR_UNKNOWN'
                 break
+            remaining=a.total_seconds-(time.monotonic()-begin)
+            if remaining<=0.03:
+                row['outcome']='GLOBAL_TIME_LIMIT_BEFORE_CP'
+                state['outcome']='GLOBAL_TIME_LIMIT';flush(True);return
             result,schedule,core=full_cp(
                 orders,pos,dur,chosen,target,a.policy,
                 a.seed*7+stage_index*1009+iteration*11,
-                a.cp_seconds)
+                min(a.cp_seconds,max(0.01,remaining-0.01)))
             row['completion']=result
             if schedule is not None:
                 v=evaluate(schedule,pos,dur)
