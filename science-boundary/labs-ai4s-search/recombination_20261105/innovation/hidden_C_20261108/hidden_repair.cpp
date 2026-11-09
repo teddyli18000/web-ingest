@@ -194,7 +194,7 @@ void deploy(const vector<Scenario>&data,const map<string,Model>&models,
             const string&events,const string&summary,int budget){
  ofstream ev(events),out(summary);if(!ev||!out)throw runtime_error("deploy outputs open");
  ev<<"id\tn\tmode\tdamage\trep\tarm\titeration\tt_ms\tpostE\tpostBits\tpostCanon\t"
-   "rawE\tselection_ms\trepair_ms\tcurrentE\tcandidate_count\n";
+   "rawE\trawBits\tselection_ms\trepair_ms\tcurrentE\tcandidate_count\n";
  out<<"id\tn\tmode\tdamage\trep\tarm\tbudget_ms\twall_ms\tsteps\t"
     "bestE\tbestBits\tbestCanon\tbestNonA_E\tbestNonA_Bits\tbestNonA_Canon\t"
     "source_returns\tfull_repair_calls\tmodel_cost_ms\traw_energy_calls\n";
@@ -202,7 +202,7 @@ void deploy(const vector<Scenario>&data,const map<string,Model>&models,
  for(const Scenario&s:data){
   L B=parse(align_donor(s.astr,s.bstr));const string BC=canon(bits(B));
   for(int arm=0;arm<6;arm++){
-   mt19937_64 rng(hashseed(s.seed^0xdff00ULL+uint64_t(arm)*10007ULL));
+   mt19937_64 rng(hashseed(s.seed^0xdff00ULL)); // shared proposal RNG until policies diverge
    L donor=(arm==1||arm==3||arm==4)?B:arm==2?make_fake(s,s.seed):s.A;
    L current=s.X;History history(current.e);
    int bestE=INT_MAX,bestNonA=INT_MAX,sourceReturns=0,repairs=0,iterations=0,rawCount=0;
@@ -214,7 +214,7 @@ void deploy(const vector<Scenario>&data,const map<string,Model>&models,
      double t=1000*dur(start);
      ev<<s.id<<"\t"<<s.n<<"\t"<<s.mode<<"\t"<<s.damage<<"\t"<<s.rep
        <<"\t"<<arm<<"\t"<<iteration<<"\t"<<t<<"\t"<<repaired.e<<"\t"
-       <<word<<"\t"<<can<<"\t"<<raw.e<<"\t"<<selectms<<"\t"<<repairms
+       <<word<<"\t"<<can<<"\t"<<raw.e<<"\t"<<bits(raw)<<"\t"<<selectms<<"\t"<<repairms
        <<"\t"<<current.e<<"\t"<<count<<"\n";
      repairs++;if(can==s.ac)sourceReturns++;
      if(repaired.e<bestE){bestE=repaired.e;bestWord=word;bestCan=can;}
