@@ -1,0 +1,53 @@
+name: temp-ta41-heldout-n7-elite-generator
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-heldout-n7-elite-generator.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-heldout-n7-elite-generator
+  cancel-in-progress: false
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Freeze original author's N7 engine and public Taillard reference
+        run: |
+          git clone --depth=1 https://github.com/Qiming01/Job-Shop-Scheduling.git /tmp/n7
+          git -C /tmp/n7 fetch --depth=1 origin 7e120ebada21cb604c871e0657814bf6e32611f8
+          git -C /tmp/n7 checkout --detach 7e120ebada21cb604c871e0657814bf6e32611f8
+          git clone --depth=1 https://github.com/ScheduleOpt/benchmarks.git /tmp/scheduleopt
+          git -C /tmp/scheduleopt rev-parse HEAD
+          g++ -std=c++20 -O3 -include climits -I/tmp/n7/include \
+            science-boundary/job-shop-ta41/original_n7_cold_30x20_driver.cpp \
+            /tmp/n7/src/graph.cpp /tmp/n7/src/instance.cpp /tmp/n7/src/schedule.cpp /tmp/n7/src/tabu_search.cpp \
+            -o /tmp/n7_cold
+      - name: Create six independent source-N7 strong elite schedules from previously untested ta48–ta50, hide 600-operation reference order
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/create_independent_n7_positive.py
+          python3 science-boundary/job-shop-ta41/create_independent_n7_positive.py \
+            --reference-root /tmp/scheduleopt --driver /tmp/n7_cold \
+            --instances ta48js ta49js ta50js --seconds 20 --seeds 1801 1811 \
+            --out science-boundary/job-shop-ta41/positive-n7-holdout-data
+      - name: Persist independently scored source-N7 starts and holdout manifests
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/positive-n7-holdout-data'
+          if ! test -f "$dir/manifest.json"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): 2026 untouched ta48–ta50 independent 30x20 N7 strong elite holdout seeds'
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
