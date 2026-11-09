@@ -111,7 +111,7 @@ def machine_master(k,clauses,exploration_nogoods,prior_score,policy,seed,budget)
     return opened,dict(status=slv.status_name(status),
         wall_seconds=slv.wall_time,opened=sorted(opened),master_heuristic_score=int(slv.objective_value))
 
-def full_cp(orders,pos,dur,opened,L,policy,seed,seconds):
+def full_cp(orders,pos,dur,opened,L,policy,seed,seconds,repair_objective='minimal-change'):
     """Honest full-resource completion with ONLY group-level frozen orders."""
     mdl=cp_model.CpModel()
     start=[mdl.new_int_var(0,L-dur[i],f's{i}') for i in range(600)]
@@ -141,7 +141,10 @@ def full_cp(orders,pos,dur,opened,L,policy,seed,seconds):
             flips.append((m,f))
     # Every open machine can form any permutation. Cost is a preference,
     # never restricts a machine order.
-    mdl.minimize(sum(bit for m,bit in flips))
+    if repair_objective=='minimal-change':
+        mdl.minimize(sum(bit for m,bit in flips))
+    elif repair_objective!='feasibility':
+        raise ValueError('unknown repair objective: '+str(repair_objective))
     solver=cp_model.CpSolver()
     solver.parameters.num_search_workers=1 if closed_literals else 4
     solver.parameters.random_seed=int(seed%2147483647)
@@ -210,7 +213,7 @@ def run(a):
         state['oracle_aware_diagnostic_only']=True
         state['fixed_open_machines']=sorted(opened)
         result,schedule,core=full_cp(orders,pos,dur,opened,target,a.policy,
-                                     a.seed,a.cp_seconds)
+                                     a.seed,a.cp_seconds,a.repair_objective)
         traces.append(dict(stage=len(opened),trial=0,
                            opened=sorted(opened),completion=result))
         if schedule is not None:
@@ -258,7 +261,8 @@ def run(a):
             result,schedule,core=full_cp(
                 orders,pos,dur,chosen,target,a.policy,
                 a.seed*7+stage_index*1009+iteration*11,
-                min(a.cp_seconds,max(0.01,remaining-0.01)))
+                min(a.cp_seconds,max(0.01,remaining-0.01)),
+                a.repair_objective)
             row['completion']=result
             if schedule is not None:
                 v=evaluate(schedule,pos,dur)
@@ -296,6 +300,7 @@ if __name__=='__main__':
     p.add_argument('--seed',type=int,default=4107)
     p.add_argument('--trials-per-stage',type=int,default=12)
     p.add_argument('--only-groups',nargs='+',type=int,default=[])
+    p.add_argument('--repair-objective',choices=['minimal-change','feasibility'],default='minimal-change')
     p.add_argument('--fixed-open-machines',nargs='+',type=int,default=[])
     p.add_argument('--cp-seconds',type=float,default=1.5)
     p.add_argument('--master-seconds',type=float,default=.3)
