@@ -1,0 +1,102 @@
+name: temp-ta41-blind-job-radius-ladder
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-blind-job-radius-ladder.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-blind-job-radius-ladder
+  cancel-in-progress: false
+jobs:
+  positives:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [4107, 4113]
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin CP and check joint release benchmark sources
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/blind_job_radius_ladder.py
+          test "$(find science-boundary/job-shop-ta41/positive-n7-elite-data -name start.txt | wc -l)" -eq 12
+      - name: Benchmark exact same 12 independent native N7 elite starting schedules at five-second CP budget each
+        run: |
+          python3 science-boundary/job-shop-ta41/blind_job_radius_ladder.py \
+            --seeds '${{ matrix.seed }}' \
+            --radii 2 4 5 7 10 --time-caps 0.8 1 1 1.1 1.1 \
+            --out 'science-boundary/job-shop-ta41/results/job-radius-ladder-s${{ matrix.seed }}'
+      - name: Persist independently scored legal completions and controlled budget traces
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/job-radius-ladder-s${{ matrix.seed }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): five-second source-independent job-radius ladder s${{ matrix.seed }}'
+          for attempt in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+  ta41:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin source-only CP
+        run: python3 -m pip install 'ortools==9.14.6206'
+      - name: Test hard target 2005 under same five-second self-selected multi-job release radius ladder
+        run: |
+          python3 science-boundary/job-shop-ta41/blind_job_radius_ladder.py \
+            --only 'unmatched-no-cases' --ta41 --seeds 4107 4113 \
+            --radii 2 4 5 7 10 --time-caps 0.8 1 1 1.1 1.1 \
+            --out science-boundary/job-shop-ta41/results/job-radius-ta41
+      - name: Official verify if any improved ta41 certificate was constructed
+        if: always()
+        run: |
+          set -euo pipefail
+          dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/job-radius-ta41"
+          if test -d "$dir" && find "$dir" -name '*-certificate.json' | grep -q .; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p "$dir/official"
+            for f in "$dir"/*-certificate.json; do
+              name=$(basename "$f" -certificate.json)
+              mkdir -p "$dir/official/$name"
+              cp "$f" "$dir/official/$name/certificate.json"
+              (cd /tmp/few-shots && python3 problems/p009-job-shop-ta41/verify/verify.py "$dir/official/$name") | tee "$dir/official/$name/upstream-verdict.json"
+              python3 - "$dir/official/$name/upstream-verdict.json" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);d=json.loads(p.read_text())
+          assert d['valid'] and int(d['score'])<=2005,d
+          PY
+            done
+          fi
+      - name: Persist ta41 source-only verified result or honest UNKNOWN
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/job-radius-ta41'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): five-second exact target job-release radius ladder'
+          for attempt in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
