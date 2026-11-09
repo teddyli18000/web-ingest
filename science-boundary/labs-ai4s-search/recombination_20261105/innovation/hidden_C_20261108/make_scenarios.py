@@ -74,7 +74,7 @@ def main():
                             A_id=A['id'],B_id=B['id'],mode=mode,damage=k,
                             rep=rep,seed=seed,EX=e,
                             dA=min(map(lambda s:hamming(s,X),orbit(A['bits']))),
-                            dB=min(map(lambda s:hamming(s,X),orbit(B['bits']))))
+                            dB=min(map(lambda s:hamming(s,X),orbit(B['bits'])))))
                         vault.append(dict(id=sid,n=n,C_id=C['id'],C=C['bits'],
                             C_orbit=C['canonical'],C_energy=int(C['E']),
                             dC=min(map(lambda s:hamming(s,X),orbit(C['bits'])))))
