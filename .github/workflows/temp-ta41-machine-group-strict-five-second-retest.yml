@@ -1,0 +1,50 @@
+name: temp-ta41-machine-group-strict-five-second-retest
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-machine-group-strict-five-second-retest.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-machine-group-strict-five-second-retest
+  cancel-in-progress: false
+jobs:
+  transfer:
+    strategy:
+      fail-fast: false
+      matrix:
+        policy: [dynamic, static, random]
+        initial_N7_seed: [1701, 1711]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin solver and validate syntax
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/machine_group_order_repair.py science-boundary/job-shop-ta41/benchmark_machine_group_transfer.py
+      - name: 5-second per-trial deadline with no oracle access
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_machine_group_transfer.py \
+            --policy '${{ matrix.policy }}' --initial-seed '${{ matrix.initial_N7_seed }}' \
+            --total-seconds 5 --cp-seconds 0.7 --master-seconds 0.15 \
+            --out 'science-boundary/job-shop-ta41/results/machine-group-transfer-strict-${{ matrix.initial_N7_seed }}-${{ matrix.policy }}'
+      - name: Preserve independently DAG-verified before-after metrics
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/machine-group-transfer-strict-${{ matrix.initial_N7_seed }}-${{ matrix.policy }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): strict five-second group transfer ${{ matrix.initial_N7_seed }} ${{ matrix.policy }}'
+          for i in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
