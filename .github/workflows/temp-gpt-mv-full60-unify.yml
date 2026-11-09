@@ -48,7 +48,7 @@ jobs:
           test -n "$CHROME"
           echo "CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
       - name: Render full 0-60s visual gate
-        run: node export/render.mjs --start 0 --end 60 --width 960 --height 540 --fps 15 --art-source reach-hq --bust-source gpt-bust-matted-v4 --out out/gpt_full60_unify.mp4
+        run: node export/render.mjs --start 0 --end 60 --width 960 --height 540 --fps 15 --art-source reach-hq --bust-source gpt-bust-matted-v5 --out out/gpt_full60_unify.mp4
       - name: Validate media
         run: |
           set -euo pipefail
