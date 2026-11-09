@@ -1,0 +1,56 @@
+name: temp-ta41-native-n7-10second-portfolio-control
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-native-n7-10second-portfolio-control.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-native-n7-10second-portfolio-control
+  cancel-in-progress: false
+jobs:
+  reference:
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [4107, 4113]
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Recreate pinned 2025 author N7 source with only initialization hook
+        run: |
+          git clone --depth=1 https://github.com/Qiming01/Job-Shop-Scheduling.git /tmp/n7
+          git -C /tmp/n7 fetch --depth=1 origin 7e120ebada21cb604c871e0657814bf6e32611f8
+          git -C /tmp/n7 checkout --detach 7e120ebada21cb604c871e0657814bf6e32611f8
+          python3 science-boundary/job-shop-ta41/patch_original_n7_warmstart.py /tmp/n7
+          g++ -std=c++20 -O3 -include climits -DN7_WARMSTART_SUPPORT -I/tmp/n7/include \
+            science-boundary/job-shop-ta41/original_n7_blind_driver.cpp \
+            /tmp/n7/src/graph.cpp /tmp/n7/src/instance.cpp /tmp/n7/src/schedule.cpp /tmp/n7/src/tabu_search.cpp \
+            -o /tmp/native_n7
+          python3 -m py_compile science-boundary/job-shop-ta41/benchmark_true_n7_positive.py
+      - name: Genuine author N7 given full 10 seconds from same independently generated starting schedules
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_true_n7_positive.py \
+            --cases science-boundary/job-shop-ta41/positive-n7-elite-data \
+            --driver /tmp/native_n7 --seconds 10 --seeds '${{ matrix.seed }}' \
+            --out 'science-boundary/job-shop-ta41/results/positive-independent-true-n7-10s-s${{ matrix.seed }}'
+      - name: Save independently replayed 600-operation native strong reference
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/positive-independent-true-n7-10s-s${{ matrix.seed }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): genuine published N7 10-second head-to-head control s${{ matrix.seed }}'
+          for attempt in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
