@@ -39,6 +39,14 @@ def solve_master(clauses,weights,seconds,seed,min_jobs=0,forbidden=()):
     z=[mdl.new_bool_var(f'release_job_{j}') for j in range(30)]
     for clause in clauses:
         mdl.add(sum(z[j] for j in clause)>=1)
+    if min_jobs>0:
+        mdl.add(sum(z)>=min_jobs)
+    # A CP UNKNOWN is NOT UNSAT. Optional exact-set no-goods diversify
+    # the search without being interpreted as necessary repair clauses.
+    for blocked in forbidden:
+        chosen=set(blocked)
+        mdl.add(sum(z[j] if j in chosen else 1-z[j]
+                    for j in range(30))<=29)
     # All weights 0..25. Dominance is guaranteed: 30*25 < 1000.
     mdl.minimize(1000*sum(z)+sum(weights[j]*z[j] for j in range(30)))
     slv=cp_model.CpSolver()
@@ -49,6 +57,7 @@ def solve_master(clauses,weights,seconds,seed,min_jobs=0,forbidden=()):
     if stat not in (cp_model.FEASIBLE,cp_model.OPTIMAL):
         return None,dict(status=slv.status_name(stat))
     chosen={j for j in range(30) if slv.value(z[j])}
+    assert len(chosen)>=min_jobs,(len(chosen),min_jobs)
     assert all(chosen.intersection(c) for c in clauses)
     return chosen,dict(status=slv.status_name(stat),num_jobs=len(chosen),
              exact_master_optimal=(stat==cp_model.OPTIMAL),
