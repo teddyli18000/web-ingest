@@ -18,8 +18,8 @@ from types import SimpleNamespace
 ROOT=Path(__file__).resolve().parent
 
 def main(a):
-    cases=sorted((ROOT/'positive-n7-elite-data').glob(f'ta*js-n7elite{a.initial_seed}/start.txt'))
-    assert len(cases)==6,len(cases)
+    cases=sorted(a.cases_dir.glob(f'ta*js-n7elite{a.initial_seed}/start.txt'))
+    assert len(cases)==a.expected_instances,len(cases)
     a.out.mkdir(parents=True,exist_ok=True)
     trials=[]
     for case in cases:
@@ -56,9 +56,9 @@ def main(a):
                 dict(complete=False,trials=trials),indent=2)+'\n')
             print('TRIAL',a.policy,trial['case'],seed,initial,'=>',best,
                 'seconds',trial['wall_seconds'],flush=True)
-    assert len(trials)==12
+    assert len(trials)==2*a.expected_instances
     result=dict(policy=a.policy,initial_N7_seed=a.initial_seed,
-        second_stage_seeds=[4107,4113],cases_per_seed=6,
+        second_stage_seeds=[4107,4113],cases_per_seed=a.expected_instances,
         trial_count=len(trials),wall_seconds_per_trial=a.total_seconds,
         improved=sum(x['gain']>0 for x in trials),
         mean_improvement=statistics.mean(x['gain'] for x in trials),
@@ -70,7 +70,9 @@ def main(a):
 if __name__=='__main__':
     p=argparse.ArgumentParser()
     p.add_argument('--policy',choices=['dynamic','static','random'],required=True)
-    p.add_argument('--initial-seed',type=int,choices=[1701,1711],required=True)
+    p.add_argument('--initial-seed',type=int,required=True)
+    p.add_argument('--cases-dir',type=Path,default=ROOT/'positive-n7-elite-data')
+    p.add_argument('--expected-instances',type=int,default=6)
     p.add_argument('--total-seconds',type=float,default=5.0)
     p.add_argument('--cp-seconds',type=float,default=0.7)
     p.add_argument('--master-seconds',type=float,default=0.15)
