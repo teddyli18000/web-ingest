@@ -291,7 +291,7 @@ def run(args):
                         val=evaluate(found,pos,dur)
                         assert val<initial and val<=target
                         (args.out/'certificate.json').write_text(
-                            json.dumps({'machines':found},separators=(',',':'))+'\\n')
+                            json.dumps({'machines':found},separators=(',',':'))+'\n')
                         output['status']='IMPROVED'
                         record['outcome']='AUGMENTED_CONSTRUCTIVE_IMPROVEMENT'
                         trace['candidate_makespan']=val
