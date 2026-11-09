@@ -1,0 +1,111 @@
+name: temp-ta41-whole-machine-order-release
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-whole-machine-order-release.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-whole-machine-order-release
+  cancel-in-progress: false
+jobs:
+  diagnostic:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - case: ta43js-n7elite1711
+            known_groups: '5 6 8'
+          - case: ta46js-n7elite1701
+            known_groups: '1 3 5 6 7 10 14 16 18'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin CP-SAT and validate syntax
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/machine_group_order_repair.py
+      - name: Oracle-informed capacity control (NOT BLIND), test full machine-order representational adequacy
+        run: |
+          python3 science-boundary/job-shop-ta41/machine_group_order_repair.py \
+            --start 'science-boundary/job-shop-ta41/positive-n7-elite-data/${{ matrix.case }}/start.txt' \
+            --policy static --seed 4107 --cp-seconds 40 \
+            --fixed-open-machines ${{ matrix.known_groups }} \
+            --out 'science-boundary/job-shop-ta41/results/group-order-diagnostic-${{ matrix.case }}'
+      - name: Store oracle-informed diagnostic with explicit label
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/group-order-diagnostic-${{ matrix.case }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): oracle-informed group representation capacity control ${{ matrix.case }}'
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+  blind:
+    strategy:
+      fail-fast: false
+      matrix:
+        case: [ta41, ta43js-n7elite1711, ta46js-n7elite1701]
+        policy: [dynamic, static, random]
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pinned CP-SAT and structural verification
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/machine_group_order_repair.py
+      - name: BLIND whole-machine group release, independent real positive N7 elites and ta41
+        run: |
+          c='${{ matrix.case }}'
+          if test "$c" = ta41; then input=ta41; else input="science-boundary/job-shop-ta41/positive-n7-elite-data/$c/start.txt"; fi
+          python3 science-boundary/job-shop-ta41/machine_group_order_repair.py \
+            --start "$input" --policy '${{ matrix.policy }}' --seed 4107 \
+            --trials-per-stage 8 --cp-seconds 2.5 --master-seconds 0.35 \
+            --total-seconds 155 \
+            --out 'science-boundary/job-shop-ta41/results/group-order-blind-${{ matrix.case }}-${{ matrix.policy }}'
+      - name: Official Few Shots p009 verifier on any ta41 score improvement
+        if: always()
+        run: |
+          set -euo pipefail
+          dir="$GITHUB_WORKSPACE/science-boundary/job-shop-ta41/results/group-order-blind-${{ matrix.case }}-${{ matrix.policy }}"
+          if test '${{ matrix.case }}' = ta41 && test -f "$dir/certificate.json"; then
+            git clone --depth=1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            cd /tmp/few-shots
+            python3 problems/p009-job-shop-ta41/verify/verify.py "$dir" | tee "$dir/upstream-verdict.json"
+            python3 - "$dir" <<'PY'
+          import json,sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);v=json.loads((p/'upstream-verdict.json').read_text())
+          assert v['valid'] and int(v['score'])<=2005,v
+          PY
+          fi
+      - name: Preserve independent DAG scores and all exact partial-model responses
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/group-order-blind-${{ matrix.case }}-${{ matrix.policy }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): blind whole-machine CP release ${{ matrix.case }} ${{ matrix.policy }}'
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
