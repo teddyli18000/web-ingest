@@ -1,0 +1,2352 @@
+{
+  "instance": "ta41",
+  "baseline": 2006,
+  "target": 2005,
+  "policy": "dynamic",
+  "search_representation": "whole-machine ordering completely free if selected; all 20 NoOverlap unconditional; job arcs hard",
+  "independent_15_machine_distance_proof_used": true,
+  "ta41_known_gateway_machine_sets": [
+    [
+      3,
+      5,
+      11,
+      15,
+      16
+    ],
+    [
+      1,
+      10,
+      13,
+      15,
+      17,
+      19
+    ]
+  ],
+  "stages": [
+    15,
+    17,
+    19,
+    20
+  ],
+  "success": false,
+  "complete": true,
+  "trials": [
+    {
+      "size": 15,
+      "attempt": 0,
+      "open": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        15,
+        16,
+        17,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0026237540000000003
+      },
+      "cores_known": 2,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.075,
+        "conflicts": 2,
+        "branches": 24,
+        "fixed_machines": [
+          0,
+          4,
+          7,
+          14,
+          18
+        ],
+        "necessary_release_machine_core": [
+          0,
+          4,
+          7,
+          14,
+          18
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 1,
+      "open": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        7,
+        10,
+        11,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.005257539
+      },
+      "cores_known": 3,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.061,
+        "conflicts": 2,
+        "branches": 16,
+        "fixed_machines": [
+          2,
+          6,
+          8,
+          9,
+          12
+        ],
+        "necessary_release_machine_core": [
+          2,
+          6,
+          8
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 2,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        11,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002326986
+      },
+      "cores_known": 4,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.102,
+        "conflicts": 17,
+        "branches": 173,
+        "fixed_machines": [
+          9,
+          10,
+          12,
+          13,
+          19
+        ],
+        "necessary_release_machine_core": [
+          9,
+          10,
+          12,
+          13,
+          19
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 3,
+      "open": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.001545151
+      },
+      "cores_known": 5,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.066,
+        "conflicts": 3,
+        "branches": 22,
+        "fixed_machines": [
+          0,
+          4,
+          7,
+          17,
+          18
+        ],
+        "necessary_release_machine_core": [
+          0,
+          4,
+          17,
+          18
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 4,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        6,
+        8,
+        9,
+        10,
+        13,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0023286400000000003
+      },
+      "cores_known": 6,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.067,
+        "conflicts": 2,
+        "branches": 19,
+        "fixed_machines": [
+          5,
+          7,
+          11,
+          12,
+          14
+        ],
+        "necessary_release_machine_core": [
+          5,
+          7,
+          11,
+          12
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 5,
+      "open": [
+        0,
+        2,
+        4,
+        5,
+        6,
+        7,
+        10,
+        11,
+        12,
+        13,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002442047
+      },
+      "cores_known": 7,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.061,
+        "conflicts": 2,
+        "branches": 16,
+        "fixed_machines": [
+          1,
+          3,
+          8,
+          9,
+          14
+        ],
+        "necessary_release_machine_core": [
+          1,
+          3,
+          8
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 6,
+      "open": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        7,
+        8,
+        10,
+        11,
+        12,
+        13,
+        15,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0024114
+      },
+      "cores_known": 8,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.054,
+        "conflicts": 2,
+        "branches": 16,
+        "fixed_machines": [
+          2,
+          6,
+          9,
+          14,
+          16
+        ],
+        "necessary_release_machine_core": [
+          2,
+          6,
+          9
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 7,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        17,
+        18
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0024560520000000002
+      },
+      "cores_known": 9,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.073,
+        "conflicts": 4,
+        "branches": 22,
+        "fixed_machines": [
+          13,
+          14,
+          15,
+          16,
+          19
+        ],
+        "necessary_release_machine_core": [
+          14,
+          16,
+          19
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 8,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        14,
+        16,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002467171
+      },
+      "cores_known": 10,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 662,
+        "branches": 2569,
+        "fixed_machines": [
+          4,
+          10,
+          13,
+          15,
+          17
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 15,
+      "attempt": 9,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        14,
+        16,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.00330698
+      },
+      "cores_known": 10,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1164,
+        "branches": 4745,
+        "fixed_machines": [
+          10,
+          13,
+          15,
+          17,
+          18
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 15,
+      "attempt": 10,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        14,
+        16,
+        17,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0044311640000000005
+      },
+      "cores_known": 10,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.147,
+        "conflicts": 39,
+        "branches": 221,
+        "fixed_machines": [
+          4,
+          10,
+          13,
+          15,
+          18
+        ],
+        "necessary_release_machine_core": [
+          4,
+          10,
+          13,
+          15,
+          18
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 11,
+      "open": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        16,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002254196
+      },
+      "cores_known": 11,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.069,
+        "conflicts": 3,
+        "branches": 21,
+        "fixed_machines": [
+          0,
+          5,
+          7,
+          12,
+          17
+        ],
+        "necessary_release_machine_core": [
+          0,
+          5,
+          7,
+          17
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 12,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        10,
+        13,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0034982930000000004
+      },
+      "cores_known": 12,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.075,
+        "conflicts": 2,
+        "branches": 24,
+        "fixed_machines": [
+          8,
+          9,
+          11,
+          12,
+          14
+        ],
+        "necessary_release_machine_core": [
+          8,
+          9,
+          11,
+          12,
+          14
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 13,
+      "open": [
+        0,
+        4,
+        5,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.003864858
+      },
+      "cores_known": 13,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.052,
+        "conflicts": 2,
+        "branches": 16,
+        "fixed_machines": [
+          1,
+          2,
+          3,
+          6,
+          16
+        ],
+        "necessary_release_machine_core": [
+          1,
+          2,
+          6
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 14,
+      "open": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        14,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.003407091
+      },
+      "cores_known": 14,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.062,
+        "conflicts": 3,
+        "branches": 21,
+        "fixed_machines": [
+          3,
+          10,
+          13,
+          15,
+          16
+        ],
+        "necessary_release_machine_core": [
+          3,
+          10,
+          13,
+          16
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 15,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        16,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0033943230000000003
+      },
+      "cores_known": 15,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 1.299,
+        "conflicts": 545,
+        "branches": 1700,
+        "fixed_machines": [
+          4,
+          12,
+          15,
+          17,
+          18
+        ],
+        "necessary_release_machine_core": [
+          4,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 16,
+      "open": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        8,
+        9,
+        10,
+        12,
+        13,
+        15,
+        16,
+        17,
+        18
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0038432870000000004
+      },
+      "cores_known": 16,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.068,
+        "conflicts": 3,
+        "branches": 21,
+        "fixed_machines": [
+          0,
+          7,
+          11,
+          14,
+          19
+        ],
+        "necessary_release_machine_core": [
+          0,
+          7,
+          11,
+          19
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 15,
+      "attempt": 17,
+      "open": [
+        0,
+        1,
+        2,
+        4,
+        6,
+        7,
+        10,
+        11,
+        12,
+        13,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.004019012000000001
+      },
+      "cores_known": 17,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.063,
+        "conflicts": 3,
+        "branches": 18,
+        "fixed_machines": [
+          3,
+          5,
+          8,
+          9,
+          14
+        ],
+        "necessary_release_machine_core": [
+          3,
+          5,
+          9
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 17,
+      "attempt": 0,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12,
+        13,
+        15,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0025144710000000003
+      },
+      "cores_known": 18,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1551,
+        "branches": 6788,
+        "fixed_machines": [
+          8,
+          14,
+          16
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 17,
+      "attempt": 1,
+      "open": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12,
+        13,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0028152650000000004
+      },
+      "cores_known": 18,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.152,
+        "conflicts": 35,
+        "branches": 70,
+        "fixed_machines": [
+          1,
+          8,
+          14
+        ],
+        "necessary_release_machine_core": [
+          1,
+          8,
+          14
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 17,
+      "attempt": 2,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002618493
+      },
+      "cores_known": 19,
+      "completion": {
+        "status": "INFEASIBLE",
+        "seconds": 0.041,
+        "conflicts": 2,
+        "branches": 12,
+        "fixed_machines": [
+          6,
+          15,
+          16
+        ],
+        "necessary_release_machine_core": [
+          6,
+          15,
+          16
+        ]
+      },
+      "outcome": "NEW_MACHINE_CORE"
+    },
+    {
+      "size": 17,
+      "attempt": 3,
+      "open": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0024959310000000003
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1087,
+        "branches": 5045,
+        "fixed_machines": [
+          2,
+          10,
+          13
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 17,
+      "attempt": 4,
+      "open": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0024696590000000004
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.403,
+        "conflicts": 845,
+        "branches": 2229,
+        "fixed_machines": [
+          2,
+          10,
+          18
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 17,
+      "attempt": 5,
+      "open": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.004411591
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.401,
+        "conflicts": 1067,
+        "branches": 2891,
+        "fixed_machines": [
+          2,
+          12,
+          13
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 17,
+      "attempt": 6,
+      "open": [
+        0,
+        1,
+        3,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0037926740000000002
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 908,
+        "branches": 4142,
+        "fixed_machines": [
+          2,
+          4,
+          10
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 17,
+      "attempt": 7,
+      "open": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0038902480000000002
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1232,
+        "branches": 4154,
+        "fixed_machines": [
+          2,
+          10,
+          17
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 17,
+      "attempt": 8,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        14,
+        15,
+        16,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.003513506
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1158,
+        "branches": 4005,
+        "fixed_machines": [
+          10,
+          13,
+          17
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 17,
+      "attempt": 9,
+      "open": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0039348510000000005
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 787,
+        "branches": 3459,
+        "fixed_machines": [
+          2,
+          10,
+          12
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 17,
+      "attempt": 10,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        14,
+        15,
+        16,
+        17,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0037512440000000004
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 993,
+        "branches": 3545,
+        "fixed_machines": [
+          10,
+          13,
+          18
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 17,
+      "attempt": 11,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0038907720000000002
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1134,
+        "branches": 4878,
+        "fixed_machines": [
+          10,
+          12,
+          13
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 17,
+      "attempt": 12,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.003903932
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1256,
+        "branches": 5073,
+        "fixed_machines": [
+          4,
+          10,
+          13
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 17,
+      "attempt": 13,
+      "open": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        14,
+        15,
+        16,
+        17,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.005083313
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1075,
+        "branches": 2959,
+        "fixed_machines": [
+          2,
+          13,
+          18
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 17,
+      "attempt": 14,
+      "open": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        16,
+        17,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.005152895
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1157,
+        "branches": 5169,
+        "fixed_machines": [
+          2,
+          12,
+          18
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 17,
+      "attempt": 15,
+      "open": [
+        0,
+        1,
+        3,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.00330749
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1211,
+        "branches": 5016,
+        "fixed_machines": [
+          2,
+          4,
+          13
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 17,
+      "attempt": 16,
+      "open": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        14,
+        15,
+        16,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.004718012000000001
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1107,
+        "branches": 4522,
+        "fixed_machines": [
+          2,
+          13,
+          17
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 17,
+      "attempt": 17,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0043709740000000006
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 900,
+        "branches": 3574,
+        "fixed_machines": [
+          4,
+          10,
+          18
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 0,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002134094
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1117,
+        "branches": 6808,
+        "fixed_machines": [
+          10
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 1,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.00225661
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1208,
+        "branches": 5983,
+        "fixed_machines": [
+          13
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 2,
+      "open": [
+        0,
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002173294
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 951,
+        "branches": 4075,
+        "fixed_machines": [
+          2
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 3,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002273849
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1026,
+        "branches": 5194,
+        "fixed_machines": [
+          18
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 4,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002336047
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1213,
+        "branches": 4728,
+        "fixed_machines": [
+          12
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 5,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002421309
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.403,
+        "conflicts": 1184,
+        "branches": 6914,
+        "fixed_machines": [
+          4
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 6,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002526181
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.401,
+        "conflicts": 1111,
+        "branches": 5353,
+        "fixed_machines": [
+          17
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 7,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002459272
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1096,
+        "branches": 4838,
+        "fixed_machines": [
+          19
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 8,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0025040590000000003
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1254,
+        "branches": 3559,
+        "fixed_machines": [
+          11
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 9,
+      "open": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002532987
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1263,
+        "branches": 6074,
+        "fixed_machines": [
+          0
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 10,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002584795
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1087,
+        "branches": 2746,
+        "fixed_machines": [
+          7
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 11,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002630416
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1197,
+        "branches": 5550,
+        "fixed_machines": [
+          14
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 12,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.00256099
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1274,
+        "branches": 5169,
+        "fixed_machines": [
+          5
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 13,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002753801
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 997,
+        "branches": 5558,
+        "fixed_machines": [
+          9
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 14,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002598973
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 924,
+        "branches": 8326,
+        "fixed_machines": [
+          8
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 15,
+      "open": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.0025841360000000003
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 791,
+        "branches": 5304,
+        "fixed_machines": [
+          3
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 16,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002628637
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 1317,
+        "branches": 4912,
+        "fixed_machines": [
+          16
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 19,
+      "attempt": 17,
+      "open": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002624094
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 975,
+        "branches": 2379,
+        "fixed_machines": [
+          1
+        ]
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 20,
+      "attempt": 0,
+      "open": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "master": {
+        "status": "OPTIMAL",
+        "wall": 0.002098027
+      },
+      "cores_known": 20,
+      "completion": {
+        "status": "UNKNOWN",
+        "seconds": 1.402,
+        "conflicts": 812,
+        "branches": 7627,
+        "fixed_machines": []
+      },
+      "outcome": "CP_UNKNOWN_DOES_NOT_EXCLUDE_ANY_SCHEDULE"
+    },
+    {
+      "size": 20,
+      "attempt": 1,
+      "open": [],
+      "master": {
+        "status": "INFEASIBLE",
+        "wall": 0.000174773
+      },
+      "cores_known": 20,
+      "outcome": "MASTER_NO_MORE_CHOICES_OR_TIMEOUT"
+    }
+  ],
+  "wall_seconds": 55.77,
+  "status": "NO_IMPROVEMENT_WITHIN_FINITE_SEARCH_BUDGET"
+}
