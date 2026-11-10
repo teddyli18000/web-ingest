@@ -117,7 +117,8 @@ def main():
                 assert len(cases)==len(scenarios)//2
                 details={}
                 for endpoint in ('5','10','global5','global10','diverse5','diverse10'):
-                    fullfield='all'+endpoint;postfield='after'+endpoint
+                    suffix=endpoint if endpoint in ('5','10') else '_'+endpoint
+                    fullfield='all'+suffix;postfield='after'+suffix
                     # Do not count shared baseline target as incremental.
                     details[endpoint]={
                         'cases_with_any_near':sum(bool(v[fullfield]) for sid,v in cases),
