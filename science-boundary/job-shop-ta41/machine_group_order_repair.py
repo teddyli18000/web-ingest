@@ -150,7 +150,7 @@ def machine_master(k,clauses,exploration_nogoods,prior_score,policy,seed,budget)
     return opened,dict(status=slv.status_name(status),
         wall_seconds=slv.wall_time,opened=sorted(opened),master_heuristic_score=int(slv.objective_value))
 
-def full_cp(orders,pos,dur,opened,L,policy,seed,seconds,repair_objective='minimal-change',core_probe_seconds=0.0):
+def full_cp(orders,pos,dur,opened,L,policy,seed,seconds,repair_objective='minimal-change',core_probe_seconds=0.0,reuse_core_model=False):
     """Honest full-resource completion with ONLY group-level frozen orders."""
     mdl=cp_model.CpModel()
     start=[mdl.new_int_var(0,L-dur[i],f's{i}') for i in range(600)]
@@ -220,11 +220,37 @@ def full_cp(orders,pos,dur,opened,L,policy,seed,seconds,repair_objective='minima
             elapsed=time.monotonic()-t
             probe_budget=min(core_probe_seconds,max(0.0,seconds-elapsed))
             if probe_budget>=0.025:
-                explanation,_,candidate_core=full_cp(
-                    orders,pos,dur,opened,L,policy,seed+1009,
-                    probe_budget,'feasibility',0.0)
-                trace['explanation_probe_status']=explanation['status']
-                trace['explanation_probe_seconds']=explanation['wall_seconds']
+                if reuse_core_model:
+                    # OR-Tools CpModel.clear_objective() is supported
+                    # in pinned OR-Tools v9.14. This keeps the SAME
+                    # 600 intervals and 580 reified original resource
+                    # orientations; only removes the objective. It
+                    # avoids expensive model rebuilding per attempted
+                    # failure explanation.
+                    mdl.clear_objective()
+                    explain_solver=cp_model.CpSolver()
+                    explain_solver.parameters.num_search_workers=1
+                    explain_solver.parameters.random_seed=int((seed+1009)%2147483647)
+                    explain_solver.parameters.max_time_in_seconds=probe_budget
+                    begin_probe=time.monotonic()
+                    proof_status=explain_solver.solve(mdl)
+                    explain_status=explain_solver.status_name(proof_status)
+                    explain_time=time.monotonic()-begin_probe
+                    candidate_core=None
+                    if proof_status==cp_model.INFEASIBLE:
+                        literals=explain_solver.sufficient_assumptions_for_infeasibility()
+                        assert all(x in closed_literals for x in literals)
+                        candidate_core=frozenset(closed_literals[x] for x in literals)
+                    trace['explanation_reused_original_model']=True
+                else:
+                    explanation,_,candidate_core=full_cp(
+                        orders,pos,dur,opened,L,policy,seed+1009,
+                        probe_budget,'feasibility',0.0)
+                    explain_status=explanation['status']
+                    explain_time=explanation['wall_seconds']
+                    trace['explanation_reused_original_model']=False
+                trace['explanation_probe_status']=explain_status
+                trace['explanation_probe_seconds']=round(explain_time,4)
                 trace['explanation_probe_budget']=round(probe_budget,4)
                 if candidate_core is not None and len(candidate_core)<len(core):
                     core=candidate_core
@@ -264,7 +290,7 @@ def run(a):
     traces=[]
     state=dict(instance='ta41' if istarget else Path(a.start).parent.name,
         incumbent=C,target=target,target_drop=target_drop,policy=a.policy,
-        precise_core_probe_budget_seconds=(a.core_probe_seconds if a.policy=='precise-core' else 0),
+        precise_core_probe_budget_seconds=(a.core_probe_seconds if a.policy in ('precise-core','precise-inline') else 0),
         auxiliary_mode=auxiliary_mode,auxiliary_weight=auxiliary_weight,
         auxiliary_parent_source=(str(auxiliary) if auxiliary else None),
         auxiliary_disagreement_count_by_machine=aux_disagreement_counts,
@@ -316,7 +342,7 @@ def run(a):
             for core in learned:
                 weight=1/(len(core)**0.5)
                 for m in core:degree[m]+=weight
-            if a.policy in ('dynamic','precise-core'):
+            if a.policy in ('dynamic','precise-core','precise-inline'):
                 priority=[static[m]*0.12+2.5*degree[m]+
                     auxiliary_weight*extra_signal[m] for m in range(20)]
             elif a.policy=='static':
@@ -350,7 +376,8 @@ def run(a):
                 a.seed*7+stage_index*1009+iteration*11,
                 min(a.cp_seconds,max(0.01,remaining-0.01)),
                 a.repair_objective,
-                a.core_probe_seconds if a.policy=='precise-core' else 0.0)
+                a.core_probe_seconds if a.policy in ('precise-core','precise-inline') else 0.0,
+                a.policy=='precise-inline')
             row['completion']=result
             if schedule is not None:
                 v=evaluate(schedule,pos,dur)
@@ -392,7 +419,7 @@ def run(a):
 if __name__=='__main__':
     p=argparse.ArgumentParser()
     p.add_argument('--start',required=True)
-    p.add_argument('--policy',choices=['dynamic','precise-core','static','random','novelty'],required=True)
+    p.add_argument('--policy',choices=['dynamic','precise-core','precise-inline','static','random','novelty'],required=True)
     p.add_argument('--seed',type=int,default=4107)
     p.add_argument('--target-drop',type=int,default=1)
     p.add_argument('--auxiliary-start',type=Path,default=None)
