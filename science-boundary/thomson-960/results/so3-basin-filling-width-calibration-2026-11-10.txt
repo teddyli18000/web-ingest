@@ -1,0 +1,90 @@
+Thomson p007 SO(3)-invariant adaptive basin-filling: measured length-scale correction
+Date: 2026-11-10, source Action 42851511543
+
+The user objective remains actual physically relaxed 960-point Coulomb
+energy <444368.3924051973, the exact Few Shots p007 winning threshold.
+Our source current incumbent remains 444368.3924061973 (Ronnie2025 C3).
+
+What changed conceptually:
+A history-dependent SO(3)-gauge-removed Gaussian bias raises previously
+visited positional basins while preserving the actual Coulomb energy
+as the only candidate scoring rule. Unlike Riesz exponent/anisotropic
+potential paths, this does not modify physical pair interactions.
+Actual bias V=sum_h H_h exp[-d(X,Ph)^2/(2sigma_h^2)], where d is
+mean-square Euclidean chord displacement after best proper Kabsch
+rotation with tracked particle labels. Analytic gradient uses the
+envelope theorem, verified against 12-point angular central finite
+differences. Global 3D rotation is a true invariance of d.
+
+SMOKE and first completed N960 search:
+Action https://github.com/teddyli18000/web-ingest/actions/runs/42851511543
+Seed 55202 successful (105 true physical N960 candidate quenches).
+The signed gradient selftest passed:
+  finite_difference_max_scaled_error = 1.5439397475454819e-10
+  identity_bias = 0.900000000000...
+True Coulomb source energies independently polished and confirmed:
+  R = 444368.3924061973
+  A = 444368.3956862257
+  B = 444368.4029728612
+  W = 444368.42162124.
+Distances (after SO3 alignment; particle-label tracked):
+  d(R,R) 3.05e-16
+  d(R,A) 0.003868742311
+  d(R,B) 0.005359735354
+  d(R,W) 0.005478858584.
+
+First seed 55202 actual outcomes:
+  105 trials, 18 ordinary Coulomb direct controls, 87 biased trials.
+  21 energy-distinct full-N960 returned solutions, 20 from biased.
+  zero below accepted record; best numerical score remains R.
+  Lowest *different-from-seed* energy returned
+     444368.47178350494 (R+0.079377308),
+  above previously discovered W (R+0.029215043).
+  CAUTION: energy-only distinctness cannot establish independent
+  stationary geometry. The 444368.47178350494 energy lies within
+  about 5e-6 of prior elite 444368.47177837125 and could be a
+  not fully polished duplicate. No new verified near-record basin.
+  In 105-cycle run adaptive hills mostly revisited existing A
+  (35 visits), B (13), W (10), and R (2), showing saturation.
+
+DIAGNOSED ROOT CAUSE AND FIRST-PRINCIPLES CALIBRATION
+  First Gaussian width sigma=0.021 vs observed nearest
+  inter-basin d(R,A)=0.0038687: width is 5.43x the nearest
+  separation. Thus an individual Gaussian overlaps almost all
+  R/A/B/W wells, and does not sharply discriminate an already
+  known basin. At d=.0038687/sigma=.021 the Gaussian value
+  exp(-0.5*(d/sigma)^2)=0.983.
+  Even repeated increases in hill height can have poor
+  selectivity, causing returns to the same known low wells.
+
+  Instead choose sigma=0.003 and 0.005, bracketing real
+  R/A/B/W separations. To keep approximately constant physical
+  Hessian curvature h/(N sigma^2), scale the initial height as
+      H0=min(0.24,0.075*(sigma/0.0035)^2)
+  so H0=0.0551 at sigma=.003 and H0=0.1531 at sigma=.005.
+  Adaptive increments and newly deposited hills use H0 as
+  their energy scale, rather than the old fixed absolute heights.
+  The narrower bias now discriminates neighboring minima rather
+  than penalizing the entire near-record valley nearly uniformly.
+  This is a materially new representation test motivated by
+  measured geometry, not blindly adding more trials.
+
+Revised code:
+ science-boundary/thomson-960/code/search_alignment_basin_filling.py
+New two-seed/width experiment:
+ https://github.com/teddyli18000/web-ingest/actions/runs/42853537615
+ Seeds 55301 sigma .003, 55302 sigma .005; each 4-cycle smoke
+ with source/analytic-gradient verification, then 110
+ full physical N960 trials and ordinary physical controls.
+
+Evidence strength:
+  One completed older-width seed (55202) has been fully inspected.
+  Other original width seed (55201) still in progress at this
+  snapshot. The new calibrated experiment was queued.
+  No record improvement is claimed.
+
+References:
+  Metadynamics bias/collective-variable overview:
+  https://doi.org/10.1038/s42254-020-0153-0
+  Primary Thomson 2026 low-energy method:
+  https://doi.org/10.1063/5.0355867
