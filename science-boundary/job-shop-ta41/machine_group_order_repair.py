@@ -283,6 +283,7 @@ def run(a):
         print('DIAGNOSTIC',state['instance'],result['status'],
               state.get('verified_makespan'),flush=True)
         return
+    closed_novelty=Counter()
     for stage_index,k in enumerate(stages):
         unknown_masks=[]
         for iteration in range(a.trials_per_stage):
@@ -298,6 +299,13 @@ def run(a):
                     auxiliary_weight*extra_signal[m] for m in range(20)]
             elif a.policy=='static':
                 priority=static
+            elif a.policy=='novelty':
+                # Matched exploration-only baseline. Each previously
+                # NOT-opened machine gains an exposure score, whether
+                # or not the CP solver was able to prove infeasibility.
+                # Never read a returned resource UNSAT core here.
+                priority=[static[m]*0.12+2.5*closed_novelty[m]
+                          for m in range(20)]
             else:
                 priority=[0.0]*20
             chosen,machine_info=machine_master(
@@ -332,6 +340,14 @@ def run(a):
                 print('IMPROVE',state['instance'],a.policy,'groups',k,
                       'trial',iteration,'score',v,flush=True)
                 return
+            if a.policy=='novelty':
+                # Normalize by cohort size, matching the dynamical
+                # core-frequency 1/sqrt(core size) when cores are the
+                # uninformative full complement of opened machines.
+                closed_novelty.update({
+                    m:1/(max(1,20-k)**0.5)
+                    for m in range(20) if m not in chosen
+                })
             if core is not None:
                 if not core:
                     row['outcome']='UNCONDITIONAL_FULL_RESOURCE_INFEASIBLE_CERTIFIED'
@@ -353,7 +369,7 @@ def run(a):
 if __name__=='__main__':
     p=argparse.ArgumentParser()
     p.add_argument('--start',required=True)
-    p.add_argument('--policy',choices=['dynamic','static','random'],required=True)
+    p.add_argument('--policy',choices=['dynamic','static','random','novelty'],required=True)
     p.add_argument('--seed',type=int,default=4107)
     p.add_argument('--target-drop',type=int,default=1)
     p.add_argument('--auxiliary-start',type=Path,default=None)
