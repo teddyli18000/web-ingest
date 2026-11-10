@@ -1,0 +1,61 @@
+name: temp-ta41-crossfamily-target-horizon-ablation
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-crossfamily-target-horizon-ablation.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-crossfamily-target-horizon-ablation
+  cancel-in-progress: false
+jobs:
+  paired_horizons:
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: [dmu16-20, dmu56-60]
+        source_seed: [1901, 1911]
+        config:
+          - policy: dynamic
+            target_drop: 2
+          - policy: dynamic
+            target_drop: 4
+          - policy: dynamic
+            target_drop: 8
+          - policy: random
+            target_drop: 4
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check source-only horizon objective and pinned solver
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/machine_group_order_repair.py science-boundary/job-shop-ta41/benchmark_machine_group_transfer.py
+      - name: Fixed hard target C-d, no oracle knowledge, same 5-second budget
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_machine_group_transfer.py \
+            --policy '${{ matrix.config.policy }}' --target-drop '${{ matrix.config.target_drop }}' \
+            --initial-seed '${{ matrix.source_seed }}' \
+            --cases-dir 'science-boundary/job-shop-ta41/positive-n7-${{ matrix.batch }}' \
+            --expected-instances 5 --total-seconds 5 --cp-seconds 0.7 --master-seconds 0.15 \
+            --out 'science-boundary/job-shop-ta41/results/dmu-target-${{ matrix.batch }}-${{ matrix.source_seed }}-${{ matrix.config.policy }}-drop${{ matrix.config.target_drop }}'
+      - name: Persist all independently scored complete machine permutations and conditional conflicts
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/dmu-target-${{ matrix.batch }}-${{ matrix.source_seed }}-${{ matrix.config.policy }}-drop${{ matrix.config.target_drop }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): controlled target drop ${{ matrix.config.target_drop }} ${{ matrix.batch }} ${{ matrix.source_seed }} ${{ matrix.config.policy }}'
+          for i in $(seq 1 70); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
