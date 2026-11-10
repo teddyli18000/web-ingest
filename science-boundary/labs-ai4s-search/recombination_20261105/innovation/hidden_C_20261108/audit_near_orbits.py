@@ -140,7 +140,7 @@ def main():
             for arm in range(6):
                 z={}
                 for endpoint in ('5','10','diverse5','diverse10','global5','global10'):
-                    start='all'+endpoint
+                    start='all'+(endpoint if endpoint in ('5','10') else '_'+endpoint)
                     diffs=[int(bool(outputs[tag][(sid,arm)][start]))-
                            int(bool(outputs['control'][(sid,arm)][start]))
                            for sid in scenarios if scenarios[sid]['mode']==mode]
