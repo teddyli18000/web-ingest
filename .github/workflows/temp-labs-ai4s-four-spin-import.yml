@@ -1,0 +1,70 @@
+name: LABS four-spin immutable artifact archival
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-four-spin-import.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Retrieve 3 completed, independently verified science artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          for n in 46 47 50; do
+            out=results/four_spin_N$n
+            test ! -d "$out"
+            mkdir -p "$out"
+            gh run download 42781655683 --repo teddyli18000/web-ingest --name fourspin-$n --dir "$out"
+            test -s "$out/four_spin_verified.json"
+          done
+      - name: Independently repeat exact LABS score and full symmetry oracle verification
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          for n in 46 47 50; do
+            if [ "$n" = 50 ]; then src=test50_forced_v1; else src=states_new_N$n; fi
+            out=results/four_spin_N$n
+            python3 verify_four_spin.py --input results/$src/scenario-input.tsv --vault results/$src/target-vault.tsv --parents ../../data/combined/combined10.tsv --events "$out/events.tsv" --sessions "$out/sessions.tsv" --output "$out"
+          done
+          python3 - <<'PY'
+          import pathlib,json,hashlib
+          for n in (46,47,50):
+            p=pathlib.Path('results')/('four_spin_N'+str(n))
+            q=json.loads((p/'four_spin_verified.json').read_text())
+            assert q['n']==n and q['cases']==144 and q['sessions']==864
+            (p/'frozen_run_provenance.json').write_text(json.dumps({
+              'source_github_run':'42781655683',
+              'source_run_status':'success: independently verified per N',
+              'archived_original_events_sha256':q['hashes']['events'],
+              'archived_original_sessions_sha256':q['hashes']['summary'],
+              'paper':'arxiv 2610.14361v3 paper-inspired n4 not authors code',
+              'target_C_only_posthoc_score':True,'150ms_per_arm':True,
+              'original_state_population_already_seen_during_hypothesis_development':True
+            },indent=2)+'\n')
+            print('VERIFIED imported N',n,'rows=',q['record_events'])
+          PY
+      - name: Commit final independent exact scientific artifacts to main
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/four_spin_N46
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/four_spin_N47
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/four_spin_N50
+          git commit -m 'research(labs-ai4s): persist all three completed exact four-spin competitive classical benchmarks'
+          for i in 1 2 3 4 5 6; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          exit 1
