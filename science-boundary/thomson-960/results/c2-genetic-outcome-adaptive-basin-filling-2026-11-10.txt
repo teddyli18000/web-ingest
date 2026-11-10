@@ -7,6 +7,18 @@ CURRENT OFFICIAL FEW SHOTS RECORD
   in few-shots/few-shots/data/board.json; no open p007 PR.
   Valid winning score <= 444368.3924051973 (epsilon 1e-6).
 
+IMPORTANT INDEPENDENT CORRECTION (same day, Action 42852498655):
+  The logged energy 444368.404283112 is *not* a new constrained C2
+  minimum. Retrieving its exact 960-point coordinates from source
+  Action 42500890656 and independently C2-repolishing with 1800
+  L-BFGS iterations gives known D2 E=444368.40408053045.
+  Therefore it was an underconverged point and must NOT be used
+  to claim a new basin or stationary saddle. The attempted full
+  Hessian analysis was correctly stopped at failed stationarity
+  check. Authoritative audit:
+    results/c2-near-d2-underconvergence-audit-2026-11-10.txt
+  Any earlier "new C2 near-D2" phrasing below is superseded.
+  
 COMPLETED SUCCESSFULLY C2 DIFFERENT-TOPOLOGY GENETIC SEARCH:
   action: https://github.com/teddyli18000/web-ingest/actions/runs/42500890656
   source: code/search_c2_cross_topology_genetic.py
