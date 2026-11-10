@@ -76,7 +76,7 @@ def main(a):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser()
-    p.add_argument('--policy',choices=['dynamic','static','random'],required=True)
+    p.add_argument('--policy',choices=['dynamic','static','random','novelty'],required=True)
     p.add_argument('--initial-seed',type=int,required=True)
     p.add_argument('--cases-dir',type=Path,default=ROOT/'positive-n7-elite-data')
     p.add_argument('--expected-instances',type=int,default=6)
