@@ -108,3 +108,22 @@ Paired real-vs-fake: **5 real wins /30 ties /5 real losses**, real vs no B **5/2
 Found and visually inspected original 2015 Vilím, Laborie, Shaw CPAIOR [`Failure-directed Search for Constraint-based Scheduling — Detailed Experimental Results`](https://vilim.eu/petr/cpaior2015-results.pdf), page 2: **tail41 LB1906 UB2005** in the authors' own table. The companion [primary research paper](https://vilim.eu/petr/cpaior2015.pdf) (DOI `10.1007/978-3-319-18008-3_30`) describes using LNS as plan A and FDS as plan B once LNS plateaus, with **binary start-time domain choices** that force a bound change and branch preference for likely failure. This avoids re-running the same limited local-neighborhood search when progress stalls. The table contains NO 600-operation order/time certificate; 2005 is a **published claim, not an independently verified Few Shots submission**. Do not conflate with available score-2006 valid schedule. Thomas Weise's independently maintained literature table also attributes 2005 to the same VLS 2015 appendix, not an independent valid raw witness.
 
 New, concretely distinct construction underway: published source N7 as plan A for 4 seconds **then** CP group repair as plan B within remaining ~1 second, compared at matched starting A and source-N7 seed against published true N7 alone for 5 seconds. Distinct from prior neutral CP -> N7 studies. Source `n7_then_group_cp.py`, Action `temp-ta41-original-n7-then-constructive-cp.yml`. Demand positive out-of-family objective gains (not merely success counts), and keep exact 600-operation verifier before claiming anything. This simple hybrid is standard methods in combination, not yet a new FDS algorithm.
+
+## Completed 4s native N7 then 1s CP constructive plan-B test
+
+The first source-only hybrid full-score test completed, Action `42773231197`, 8 matrix jobs and 40 paired DMU trials. The original author N7 kernel was left unchanged, with its existing verified warm-start loading adapter; each initial 30x20 N7 elite A underwent native 4-second N7 search, then the resulting independently verified complete N7 incumbent was supplied **only as a current CP parent** (not an oracle) for a 1-second group joint repair at Cmax(parent)-1.
+
+| Search strategy | 40 matched starts, mean score improvement from A |
+|---|---:|
+| Native N7 4s without last CP phase | 7.55 |
+| Native N7 4s **then dynamic group CP 1s** | 8.00 |
+| Native N7 4s **then random group CP 1s** | 7.80 |
+| Native N7 alone 5s, same seed, independent runner | **8.80** |
+
+- Dynamic CP improved the already optimized 4s N7 schedule **9/40** times, mean additional score decrease **0.45**, max additional gain **4**. Random CP had **7/40**, mean extra **0.325**.
+- Paired hybrid against native 5s N7: dynamic **9 wins /27 ties /4 losses**, but overall mean makespan score **0.8 worse** than 5s N7; random **7/28/5**, mean 1.0 worse. Dynamic vs random hybrid **4/35/1**.
+- Actual hybrid wall average 4.866s dynamic, 4.916s random; N7 source C++ uses one worker while CP master uses up to four, so 5s wall-time comparison is approximate not matched CPU. N7 four-second and five-second runs were on independent GitHub runners so can differ by hardware speed and time-based stopped iteration count despite same seed: interpret paired scores as comparative samples, not literal continuation from the identical internal N7 state.
+- Full 600-operation time CSV from native source and the final CP machine order were independently DAG scored; all scores used in comparisons were verified.
+- Raw `n7_then_group_cp.py`, `results/n7four-then-CPone-{dmu16-20,dmu56-60}-{1901,1911}-{dynamic,random}/summary.json`, original native N7 5s control `results/dmu-original-n7-*/results.json`.
+
+**Decision:** There is genuine local complementarity (CP can complete additional joint improvements after original N7), but replacing one second of N7 by basic CP repair does not raise mean objective quality. This is a constructive *positive plus negative* under matched starts, not a newly competitive method. To test a cost-honest portfolio, run distinct techniques on separate cores against a two-native-N7 portfolio with equal total CPUs; do not claim single-core superiority or repeat ta41 95s UNKNOWN blind without a mechanism change.
