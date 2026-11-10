@@ -1,0 +1,51 @@
+name: temp-labs-ai4s-hidden-C-forensics
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-hidden-C-forensics.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  forensic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Verify first hidden-C exact basins and their origin from archived independent searches
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 forensic_recovered_C.py \
+            --input results/test50_forced_v1/scenario-input.tsv \
+            --vault results/test50_forced_v1/target-vault.tsv \
+            --control results/branch_deploy_v1/control/events.tsv.gz \
+            --retained results/branch_deploy_v1/retained_X/events.tsv.gz \
+            --out results/branch_deploy_v1/C_recovery_forensics.json
+          python3 - <<'PY'
+          import json
+          r=json.load(open('results/branch_deploy_v1/C_recovery_forensics.json'))
+          assert r['states']==144 and r['pair_arm_runs']==864
+          assert r['events_control']==599318 and r['events_retained']==587743
+          assert len(r['AB_blind_post_first_witnesses'])==2
+          assert set(z['source_C_orbit'] for z in r['AB_blind_post_first_witnesses'])=={'c50_1'}
+          assert {z['arm'] for z in r['AB_blind_post_first_witnesses']}=={1,5}
+          print('PASS complete C-blind source route after post-hoc exact verification')
+          PY
+      - name: Preserve compact exact source-origin causal evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/branch_deploy_v1/C_recovery_forensics.json
+          git commit -m 'research(labs-ai4s): identify true C first-recovery origins after 1.18M verified costed events'
+          ok=0
+          for attempt in 1 2 3 4 5; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then ok=1; break; fi
+          done
+          test "$ok" -eq 1
