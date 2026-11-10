@@ -1,0 +1,50 @@
+name: temp-labs-ai4s-hidden-C-all-X-forensics
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-hidden-C-all-X-forensics.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  forensic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Independent exact source-hidden-C route study for classical fixed-X restarts
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 forensic_recovered_C.py \
+            --input results/test50_forced_v1/scenario-input.tsv \
+            --vault results/test50_forced_v1/target-vault.tsv \
+            --control results/branch_deploy_v1/control/events.tsv.gz \
+            --retained results/all_x_20261109/events.tsv.gz \
+            --out results/all_x_20261109/C_first_return_forensics.json
+          python3 - <<'PY'
+          import json
+          r=json.load(open('results/all_x_20261109/C_first_return_forensics.json'))
+          assert r['source_N']==[50] and r['states']==144 and r['pair_arm_runs']==864
+          w=r['AB_blind_post_first_witnesses']
+          assert len(w)==1 and w[0]['arm']==1
+          assert w[0]['source_C_orbit']=='c50_2'
+          assert w[0]['from_original_X'] is True
+          print('PASS exact source C-blind new target-forensic certificate')
+          PY
+      - name: Persist trace-derived compact C-orbit certificate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/all_x_20261109/C_first_return_forensics.json
+          git commit -m 'research(labs-ai4s): independently certify fixed-X full-search blind hidden C target trajectory'
+          for i in 1 2 3 4 5 6; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          exit 1
