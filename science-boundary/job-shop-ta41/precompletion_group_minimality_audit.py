@@ -64,6 +64,28 @@ def source_only_partial_rank(orders, pos, dur, score):
             "newly_critical_old_resource_arcs": len(new_replacement),
             "static_slack_weight": round(static[m], 8),
         })
+    # SECOND-ORDER COMPLEMENTARITY: a pair of machine releases may lower
+    # the optimistic partial-DAG bound even when either singleton cannot.
+    # This uses only original source arcs + job paths; NO better solution.
+    singles = [data[m]["optimistic_longest_path_drop"] for m in range(20)]
+    pair_degree = [0] * 20
+    pair_synergy = []
+    positive_total = 0
+    for m in range(20):
+        for n in range(m + 1, 20):
+            removed = set(range(m * 29, (m + 1) * 29))
+            removed.update(range(n * 29, (n + 1) * 29))
+            g = dag_graph(dur, arcs, removed)
+            assert g is not None
+            gain = score - g["lb"]
+            synergy = gain - singles[m] - singles[n]
+            if synergy > 0:
+                pair_degree[m] += synergy
+                pair_degree[n] += synergy
+                pair_synergy.append((m, n, synergy))
+                positive_total += synergy
+    pair_synergy.sort(key=lambda x: (-x[2], x[0], x[1]))
+    rank_pair = sorted(range(20), key=lambda m: (-pair_degree[m], -static[m], m))
     # Predefine rankings; no reading or tuning on observed corrective sets.
     rank_static = sorted(range(20), key=lambda m: (-static[m], m))
     rank_relaxed = sorted(range(20), key=lambda m: (
@@ -73,7 +95,12 @@ def source_only_partial_rank(orders, pos, dur, score):
     ))
     return {"features": data,
             "rank_static": rank_static, "rank_partial_counterfactual": rank_relaxed,
-            "feature_scope": "optimistic precedence-only machine removal; not resource-feasible"}
+            "rank_positive_pair_synergy": rank_pair,
+            "positive_pair_count": len(pair_synergy),
+            "positive_pair_total_weight": positive_total,
+            "positive_pair_machine_degree": pair_degree,
+            "positive_pair_interactions": pair_synergy,
+            "feature_scope": "optimistic precedence-only singleton/pair machine releases; not resource-feasible"}
 
 def feasibility(orders, pos, dur, horizon, opened, seconds, seed):
     model = cp_model.CpModel()
@@ -160,6 +187,14 @@ def main(args):
             print("SHRINK", label, m, verdict, flush=True)
         proven_inclusion_minimal = all(
             x["deletion_verdict"] != "NOT_RESOLVED" for x in shrink_log)
+        # Compare PRECOMPUTED SOURCE-ONLY signals against conditional
+        # supports ONLY after proofs and witness reading, as an offline pilot.
+        supported = sorted(retained)
+        synergy_total = sum(v for m, n, v in proposed["positive_pair_interactions"]
+                            if m in retained and n in retained)
+        ksmall = len(supported)
+        random_expectation = (proposed["positive_pair_total_weight"]
+            * (ksmall * (ksmall - 1) / (20 * 19))) if ksmall >= 2 else 0
         row = {
             "case": label, "source_makespan": initial,
             "verified_completed_makespan": target,
@@ -168,6 +203,17 @@ def main(args):
             "source_only_rankings": proposed,
             "top_k_static_hits_observed": len(set(proposed["rank_static"][:k]) & set(changed)),
             "top_k_partial_hits_observed": len(set(proposed["rank_partial_counterfactual"][:k]) & set(changed)),
+            "top_k_pair_hits_observed": len(set(proposed["rank_positive_pair_synergy"][:k]) & set(changed)),
+            "minimal_group_pair_synergy_sum": synergy_total,
+            "minimal_group_random_expected_pair_synergy_sum": random_expectation,
+            "minimal_group_synergy_enrichment_over_random":
+                (synergy_total / random_expectation if random_expectation > 0 else None),
+            "minimal_group_pair_rank_hits": len(
+                set(proposed["rank_positive_pair_synergy"][:ksmall]) & retained),
+            "minimal_group_static_rank_hits": len(
+                set(proposed["rank_static"][:ksmall]) & retained),
+            "minimal_group_single_relax_rank_hits": len(
+                set(proposed["rank_partial_counterfactual"][:ksmall]) & retained),
             "individual_machine_deletion_tests": checks,
             "all_single_deletions_infeasible": conditional,
             "conditional_inclusion_minimality_certified": conditional,
@@ -190,6 +236,11 @@ def main(args):
           {"case": x["case"], "group": x["posthoc_observed_changed_machine_set"],
            "static_hits": x["top_k_static_hits_observed"],
            "partial_hits": x["top_k_partial_hits_observed"],
+           "pair_hits": x["top_k_pair_hits_observed"],
+           "minimal_pair_hits": x["minimal_group_pair_rank_hits"],
+           "minimal_static_hits": x["minimal_group_static_rank_hits"],
+           "synergy_enrichment": x["minimal_group_synergy_enrichment_over_random"],
+           "positive_pairs": x["source_only_rankings"]["positive_pair_count"],
            "minimal": x["conditional_inclusion_minimality_certified"],
            "shrunk": x["greedy_shrunken_machine_set"],
            "shrunk_proved": x["greedy_inclusion_minimality_certified"],
