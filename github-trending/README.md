@@ -12,27 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-11-09** | **4,415** | **2,568** |
+| **2014-08-09** | **2026-11-10** | **4,416** | **2,569** |
 
-### Latest All-Languages snapshot — 2026-11-09
+### Latest All-Languages snapshot — 2026-11-10
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [sherlock-project/sherlock](https://github.com/sherlock-project/sherlock) | Python | 2,373 |
-| 2 | [dsx-ai-factory/nvke](https://github.com/dsx-ai-factory/nvke) | Go | 345 |
-| 3 | [milind-soni/OpenMausBot](https://github.com/milind-soni/OpenMausBot) | TypeScript | 1,439 |
-| 4 | [anthropics/claude-quickstarts](https://github.com/anthropics/claude-quickstarts) | Python | 32 |
-| 5 | [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) | Rust | 815 |
-| 6 | [meta/astryx](https://github.com/meta/astryx) | TypeScript | 875 |
-| 7 | [anthropics/skills](https://github.com/anthropics/skills) | Python | 792 |
-| 8 | [google-deepmind/mujoco](https://github.com/google-deepmind/mujoco) | C++ | 41 |
-| 9 | [ranxianglei/billion-context](https://github.com/ranxianglei/billion-context) | TypeScript | 460 |
+| 1 | [anthropics/skills](https://github.com/anthropics/skills) | Python | 1,038 |
+| 2 | [meta/astryx](https://github.com/meta/astryx) | TypeScript | 3,278 |
+| 3 | [sherlock-project/sherlock](https://github.com/sherlock-project/sherlock) | Python | 4,267 |
+| 4 | [google-deepmind/mujoco](https://github.com/google-deepmind/mujoco) | C++ | 574 |
+| 5 | [anthropics/claude-quickstarts](https://github.com/anthropics/claude-quickstarts) | Python | 551 |
+| 6 | [garrytan/gbrain](https://github.com/garrytan/gbrain) | TypeScript | 216 |
+| 7 | [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) | Rust | 916 |
+| 8 | [ruvnet/RuView](https://github.com/ruvnet/RuView) | Rust | 172 |
+| 9 | [ZhuLinsen/daily_stock_analysis](https://github.com/ZhuLinsen/daily_stock_analysis) | Python | 506 |
+| 10 | [homeassistant-ai/ha-mcp](https://github.com/homeassistant-ai/ha-mcp) | Python | 31 |
 
-[Open full snapshot →](data/2026/11/09/trending.json)
+[Open full snapshot →](data/2026/11/10/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 313 days  
+[`2026`](data/2026/) · 314 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
