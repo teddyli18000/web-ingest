@@ -1,0 +1,63 @@
+Thomson p007 -- independent convergence audit of apparent near-D2 C2 elite
+Date: 2026-11-10
+
+The completed cross-topology C2 genetic run 42500890656 seed 84201
+reported C2 energy 444368.404283112 and initially classified it as
+a distinct low C2 constrained minimum about 0.000202582 above D2
+= 444368.4040805305.
+
+EXACT REPRODUCTION SOURCE:
+  Artifact thomson-c2-ga-cross-topology-84201 from successful run
+  https://github.com/teddyli18000/web-ingest/actions/runs/42500890656
+  Artifact out/result.json, c2_pool entry energy=444368.404283112,
+  tag="66-0-flow", 960 full Cartesian points in C2 orbit order.
+
+INDEPENDENT CHECK:
+  Workflow https://github.com/teddyli18000/web-ingest/actions/runs/42852498655
+  downloaded the exact 960 coordinates and checked source integrity
+  (all shape and elite-energy assertions passed). Then
+  code/search_c2_near_d2_unstable_portal.py
+  called c2.c2_polish() on the 480 C2 representatives using
+  1800 L-BFGS iterations and an energy-stable pairwise difference
+  kernel (source c2.c2_polish() in
+  code/search_c2_defect_replica_exchange.py).
+  The independently repolished energy was:
+    444368.40408053045
+  This is the existing D2 minimum, NOT a distinct C2 stationary point.
+  Assertion checking proximity to 444368.404283112 correctly failed.
+
+CONCLUSION:
+  The original 444368.404283112 was UNDERCONVERGED; it must not be
+  counted as a new C2 constrained minimum, transition state, basin
+  boundary, or new scientifically valuable stationary source.
+  Therefore no physical transverse Hessian was calculated, and no
+  mode-specific new N960 descendants were produced by this attempt.
+  The scheduled Hessian-release operation is retired rather than
+  analyzing a nonstationary geometric snapshot as if it were a
+  certified stationary point.
+
+CORRECTED SCIENTIFIC INTERPRETATION:
+  C2 cross-topology genetic search 42500890656 succeeded operationally
+  (2x85 six-replica sweeps, 229 physical N960 releases) and failed
+  to improve the Few Shots p007 record R=444368.3924061973.
+  The lowest *verified* C2 restricted minimum remains the independent
+  D2 20-dislocation configuration 444368.4040805305.
+  The previously reported 444368.404283112 is only a transient
+  underoptimized state.
+  Its cost difference = 0.0002025815 from D2 is optimization
+  residual, not a different local minimum.
+  Other C2 energy-distinct near-D2 states in these runs also
+  require independent tighter repolishing to qualify as distinct.
+
+ACTIVE ALTERNATIVE CONSTRUCTIVE MECHANISM:
+  Full-space SO(3)-invariant adaptive positional basin filling,
+  run https://github.com/teddyli18000/web-ingest/actions/runs/42851511543
+  (two independent N960 search jobs). Both jobs passed independent
+  source, analytic-gradient finite-difference and smoke checks.
+  This is the next experiment to evaluate for quality of genuinely
+  new post-quench N960 minima rather than C2 quotient artifacts.
+
+Research discipline: Distinct minimizer energies (especially close
+to one another) are not sufficient evidence for distinct stationary
+basins. Future elite collection should require tight physical
+gradient tolerance and re-polishing, not merely L-BFGS termination.
