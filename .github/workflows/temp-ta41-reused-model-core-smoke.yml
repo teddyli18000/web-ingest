@@ -1,0 +1,61 @@
+name: temp-ta41-reused-model-core-smoke
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-reused-model-core-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-reused-model-core-smoke
+  cancel-in-progress: false
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - case: ta43js-n7elite1711
+            dirname: positive-n7-elite-data
+          - case: dmu17-n7elite1901
+            dirname: positive-n7-dmu16-20
+          - case: dmu60-n7elite1911
+            dirname: positive-n7-dmu56-60
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify CpModel.clear_objective exists and dual-model code compiles in OR-Tools 9.14
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/machine_group_order_repair.py
+          python3 - <<'PY'
+          from ortools.sat.python import cp_model
+          assert hasattr(cp_model.CpModel(),'clear_objective')
+          PY
+      - name: Construct with optimization CP and reuse the same model for objective-free minimal cores
+        run: |
+          python3 science-boundary/job-shop-ta41/machine_group_order_repair.py \
+            --start 'science-boundary/job-shop-ta41/${{ matrix.dirname }}/${{ matrix.case }}/start.txt' \
+            --policy precise-inline --core-probe-seconds 0.35 \
+            --repair-objective minimal-change --cp-seconds 0.7 \
+            --total-seconds 7 --master-seconds 0.15 \
+            --out 'science-boundary/job-shop-ta41/results/precise-inline-smoke-${{ matrix.case }}'
+      - name: Preserve actual CP proof core size reduction, true unknown status, or legal better candidate
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/precise-inline-smoke-${{ matrix.case }}'
+          if ! test -f "$dir/results.json"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): same-model objective-free CP assumption core pilot ${{ matrix.case }}'
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
