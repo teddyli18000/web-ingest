@@ -27,6 +27,7 @@ jobs:
         run: |
           case='${{ matrix.case }}'
           if test "$case" = ta41; then src=ta41
+          elif [[ "$case" == dmu6* ]]; then src="science-boundary/job-shop-ta41/positive-n7-dmu56-60/$case/start.txt"
           elif [[ "$case" == dmu* ]]; then src="science-boundary/job-shop-ta41/positive-n7-dmu16-20/$case/start.txt"
           else src="science-boundary/job-shop-ta41/positive-n7-elite-data/$case/start.txt"
           fi
