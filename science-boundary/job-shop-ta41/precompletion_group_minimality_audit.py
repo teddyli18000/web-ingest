@@ -158,7 +158,7 @@ def main(args):
     output["complete"] = True
     args.out.write_text(json.dumps(output, indent=2) + "\n")
     print("RESULT", json.dumps({"count": len(output["cases"]), "rows": [
-          {"case": x["case"], "group": x["observed_changed_machine_set"],
+          {"case": x["case"], "group": x["posthoc_observed_changed_machine_set"],
            "static_hits": x["top_k_static_hits_observed"],
            "partial_hits": x["top_k_partial_hits_observed"],
            "minimal": x["conditional_inclusion_minimality_certified"],
