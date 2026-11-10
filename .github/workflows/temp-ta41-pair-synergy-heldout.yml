@@ -1,0 +1,38 @@
+name: temp-ta41-pair-synergy-heldout
+on:
+  push:
+    branches:
+      - research/p009-precompletion-joint-repair-audit-20261110
+    paths:
+      - .github/workflows/temp-ta41-pair-synergy-heldout.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  paired-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        family: [ta48, ta49, ta50]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned CP-SAT
+        run: python3 -m pip install 'ortools==9.14.6206'
+      - name: Validate and run fixed source-only pairwise release feature vs unchanged static CP search
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/prospective_pair_synergy_transfer.py
+          python3 science-boundary/job-shop-ta41/prospective_pair_synergy_transfer.py \
+            --family '${{ matrix.family }}' --mode pair --seconds 5 --seeds 4107 4113 \
+            --out science-boundary/job-shop-ta41/results/branch-pair-synergy-${{ matrix.family }}-pair
+          python3 science-boundary/job-shop-ta41/prospective_pair_synergy_transfer.py \
+            --family '${{ matrix.family }}' --mode static --seconds 5 --seeds 4107 4113 \
+            --out science-boundary/job-shop-ta41/results/branch-pair-synergy-${{ matrix.family }}-static
+      - name: Preserve paired source-only outcome summaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p009-heldout-pair-${{ matrix.family }}
+          path: science-boundary/job-shop-ta41/results/branch-pair-synergy-${{ matrix.family }}-*/summary.json
+          if-no-files-found: warn
