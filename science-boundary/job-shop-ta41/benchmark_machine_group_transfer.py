@@ -31,7 +31,7 @@ def main(a):
                 only_groups=[],fixed_open_machines=[],
                 cp_seconds=a.cp_seconds,repair_objective=a.repair_objective,
                 master_seconds=a.master_seconds,
-                total_seconds=a.total_seconds,
+                total_seconds=a.total_seconds,target_drop=a.target_drop,
                 out=folder)
             original,pos,duration,initial=parse_case(str(case))
             run(params)
@@ -74,6 +74,7 @@ if __name__=='__main__':
     p.add_argument('--cases-dir',type=Path,default=ROOT/'positive-n7-elite-data')
     p.add_argument('--expected-instances',type=int,default=6)
     p.add_argument('--total-seconds',type=float,default=5.0)
+    p.add_argument('--target-drop',type=int,default=1)
     p.add_argument('--cp-seconds',type=float,default=0.7)
     p.add_argument('--repair-objective',choices=['minimal-change','feasibility'],default='minimal-change')
     p.add_argument('--master-seconds',type=float,default=0.15)
