@@ -8,7 +8,19 @@ Can the AES S-box be implemented with at most **100** two-input gates over the e
 
 Before substantial p008 work, re-check the live Few Shots board, recent/open p008 PRs, and every newer record's complete `SHOT.md` including dead ends. Do not extrapolate a restricted exact exclusion into a global lower bound.
 
-## Current state — constructive search, 2026-11-07
+## Current state — verified 2026-11-10
+
+- **Best public verified AES S-box remains 101 AND/XOR/XNOR gates** (Few Shots PR #31). A genuinely changed nonlinear AND basis can be constructed at 102 using the bilinear shear, but no legal <=100 certificate exists yet.
+- Stronger full-circuit constructive search, *not* more exclusion: corrected, positive-controlled cross-cone LNS reoptimized 1,434 neighborhoods and produced **290 newly valid 101/102 topologies**, without reducing size: [102-shear LNS](https://github.com/teddyli18000/web-ingest/actions/runs/42852408863) and [101-frontier LNS](https://github.com/teddyli18000/web-ingest/actions/runs/42852415878).
+- Full-output care-equivalent cone evolution from the shifted 102 seed generated **valid 101 circuits only after reverting to the old AND truth-function set**; all 38 archived new-basis candidates still need 102 gates: [Action 42852732598](https://github.com/teddyli18000/web-ingest/actions/runs/42852732598).
+- Cooperative two-site retargeting allows the first intermediate function to become wrong and a later function to restore the *complete* AES truth table. [Actions 42853442003](https://github.com/teddyli18000/web-ingest/actions/runs/42853442003), [42853790117](https://github.com/teddyli18000/web-ingest/actions/runs/42853790117) generated only neutral valid states, not <=100.
+- Global co-synthesis of shifted-AND 102 parent circuits with 0/48/100 novel one-gate helpers gave respectively **OPTIMAL 102 in the finite old-helper graph / FEASIBLE 102 / FEASIBLE 102**, with no improved size: [Action 42854598394](https://github.com/teddyli18000/web-ingest/actions/runs/42854598394).
+- **Representation reset**: run mature independent [mockturtle XAG](https://github.com/lsils/mockturtle) resubstitution on verified AES circuits and test whether an optimized XAG can be legalized to the strict p008 two-input gate basis. Free XAG NOT edges are *not* legal; phase-aware lowering and all-256 independent checking are mandatory. [Action 42857032697](https://github.com/teddyli18000/web-ingest/actions/runs/42857032697) is the current compiler/test probe, with an initial compile-only failure fixed.
+- Next constructive direction: if XAG logic optimization cannot produce legal savings, return to jointly optimized semilinear coordinate transforms, independent quadratic product-plane orientations and total pre/middle/core/output sharing described in the successful 101 SHOT, not more fixed local-neighborhood enumeration.
+
+Full current audit: [November 10 constructive checkpoint](notes/constructive-checkpoint-2026-11-10.md).
+
+## Previous checkpoint — 2026-11-07
 
 - **Live Few Shots record remains 101 gates** (PR #31); no open p008 PR at the latest check.
 - A fully AES-verified 102-gate circuit changes the **unordered nonlinear AND-function set** (symmetric difference 2) by a bilinear AND shear. See `make_and_shear_102.py`.
