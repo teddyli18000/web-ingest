@@ -376,7 +376,8 @@ def run(a):
                 a.seed*7+stage_index*1009+iteration*11,
                 min(a.cp_seconds,max(0.01,remaining-0.01)),
                 a.repair_objective,
-                a.core_probe_seconds if a.policy in ('precise-core','precise-inline') else 0.0,
+                (a.core_probe_seconds if a.policy in ('precise-core','precise-inline')
+                  and (len(traces)-1)%a.core_probe_every==0 else 0.0),
                 a.policy=='precise-inline')
             row['completion']=result
             if schedule is not None:
@@ -431,6 +432,7 @@ if __name__=='__main__':
     p.add_argument('--fixed-open-machines',nargs='+',type=int,default=[])
     p.add_argument('--cp-seconds',type=float,default=1.5)
     p.add_argument('--core-probe-seconds',type=float,default=0.20)
+    p.add_argument('--core-probe-every',type=int,default=1)
     p.add_argument('--master-seconds',type=float,default=.3)
     p.add_argument('--total-seconds',type=float,default=120)
     p.add_argument('--out',type=Path,required=True)
