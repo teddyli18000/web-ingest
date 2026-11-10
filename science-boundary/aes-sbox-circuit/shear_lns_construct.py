@@ -171,9 +171,13 @@ def solve_neighbor(seed,edges,nodes,outputs,required_and,
     outs=[make(x) for x in outputs]
     candidate=ras.prune({'gates':gates,'outputs':outs})
     assert ras.independent_check(candidate)[0],('incorrect CP-SAT reconstruction',report)
-    assert set(sf.describe(candidate)[1])==set(required_and),('AND basis changed despite constraints',report)
+    # Forced AND atoms may be disconnected by the solver and vanish during
+    # reachability pruning. That is still a valid constructive circuit, but
+    # it must not be misreported as the original 33-AND basis.
+    actual_and=sf.describe(candidate)[1]
     report.update(objective=solver.ObjectiveValue(),gates=len(candidate['gates']),
-                  independent_all_256=True)
+                  retained_AND_atoms=len(actual_and&required_and),
+                  verified_AND_atoms=len(actual_and),independent_all_256=True)
     return candidate,report
 
 def main():
