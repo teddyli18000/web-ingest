@@ -1,0 +1,88 @@
+name: temp-ta41-amortized-precise-core-transfer
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-amortized-precise-core-transfer.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-amortized-precise-core-transfer
+  cancel-in-progress: false
+jobs:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - family: taillard-dev
+            dir: positive-n7-elite-data
+            expected: 6
+            seed: 1701
+          - family: taillard-dev
+            dir: positive-n7-elite-data
+            expected: 6
+            seed: 1711
+          - family: taillard-holdout
+            dir: positive-n7-holdout-data
+            expected: 3
+            seed: 1801
+          - family: taillard-holdout
+            dir: positive-n7-holdout-data
+            expected: 3
+            seed: 1811
+          - family: dmu16-20
+            dir: positive-n7-dmu16-20
+            expected: 5
+            seed: 1901
+          - family: dmu16-20
+            dir: positive-n7-dmu16-20
+            expected: 5
+            seed: 1911
+          - family: dmu56-60
+            dir: positive-n7-dmu56-60
+            expected: 5
+            seed: 1901
+          - family: dmu56-60
+            dir: positive-n7-dmu56-60
+            expected: 5
+            seed: 1911
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin CP-SAT v9.14 and check source-only objective-free core cadence is valid
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/machine_group_order_repair.py science-boundary/job-shop-ta41/benchmark_machine_group_transfer.py
+          python3 - <<'PY'
+          from ortools.sat.python import cp_model
+          assert hasattr(cp_model.CpModel(),'clear_objective')
+          PY
+      - name: Fixed 5s, every fourth UNSAT full optimization uses SAME model without objective to learn reduced machine core
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_machine_group_transfer.py \
+            --cases-dir 'science-boundary/job-shop-ta41/${{ matrix.dir }}' \
+            --expected-instances '${{ matrix.expected }}' \
+            --initial-seed '${{ matrix.seed }}' \
+            --policy precise-inline --core-probe-seconds 0.35 --core-probe-every 4 \
+            --total-seconds 5 --cp-seconds 0.7 --master-seconds 0.15 \
+            --out 'science-boundary/job-shop-ta41/results/amortized-precise-core-${{ matrix.family }}-${{ matrix.seed }}'
+      - name: Preserve all independent full-DAG score data and proof origin
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/amortized-precise-core-${{ matrix.family }}-${{ matrix.seed }}'
+          if ! test -f "$dir/summary.json"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): amortized every-fourth full machine resource core after constructive CP ${{ matrix.family }} ${{ matrix.seed }}'
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
