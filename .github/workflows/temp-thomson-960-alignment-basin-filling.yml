@@ -1,0 +1,85 @@
+name: temp Thomson 960 SO3-aligned basin-filling record hunt
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-alignment-basin-filling.yml'
+
+jobs:
+  basin-fill:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 185
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [55201, 55202]
+    permissions:
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: few-shots/few-shots
+          path: few-shots
+          persist-credentials: false
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy numba
+      - name: Check alignment-invariant bias gradient and known R/A/B/W energies
+        run: |
+          python3 -m py_compile science-boundary/thomson-960/code/search_alignment_basin_filling.py
+          python3 science-boundary/thomson-960/code/search_alignment_basin_filling.py \
+            few-shots \
+            --a-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --b-json science-boundary/thomson-960/data/basin-b-010566.json \
+            --w-json science-boundary/thomson-960/data/scar-braid-elites-2202-2026-11-06.json \
+            --seed ${{ matrix.seed }} --cycles 3 --maxiter 350 \
+            --out "$RUNNER_TEMP/smoke"
+      - name: Search low energy 960 via adaptive metadynamics-style well filling
+        run: |
+          python3 science-boundary/thomson-960/code/search_alignment_basin_filling.py \
+            few-shots \
+            --a-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --b-json science-boundary/thomson-960/data/basin-b-010566.json \
+            --w-json science-boundary/thomson-960/data/scar-braid-elites-2202-2026-11-06.json \
+            --seed ${{ matrix.seed }} --cycles 105 --maxiter 620 \
+            --out "$RUNNER_TEMP/out"
+      - name: Report actual unbiased N960 improvements versus physical controls
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json,os,pathlib
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])
+          for name in ['smoke','out']:
+              file=root/name/'result.json'
+              if not file.exists():
+                  print('NO_RESULT',name);continue
+              d=json.loads(file.read_text())
+              rows=d['rows']
+              print('RESULT',name,'seed',d['seed'],
+                    'cycles',d['cycles_done'],
+                    'best_physically_unbiased',d['best_record_candidate'],
+                    'new_full_N960',d['new_unconstrained_basins'],
+                    'winning',d['winning_candidates'],
+                    'hills',len(d['hills']))
+              print('SELFTEST',d['selftest'])
+              for ctrl in [True,False]:
+                  z=[r for r in rows if r['control']==ctrl]
+                  print('CTRL',ctrl,'n',len(z),
+                        'best',min((r['true_coulomb_E'] for r in z),default=None),
+                        'new',sum(r['new_basin'] for r in z))
+              print('BEST_ELITES',[(r['energy'],r['tag']) for r in d['elites']])
+              print('HILL_VISITS',[(r['tag'],r['visits'],r['height']) for r in d['hills']])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-so3-basin-filling-${{ matrix.seed }}
+          path: |
+            ${{ runner.temp }}/out
+            ${{ runner.temp }}/smoke
+          retention-days: 10
