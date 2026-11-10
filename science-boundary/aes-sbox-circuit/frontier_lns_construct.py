@@ -163,7 +163,7 @@ def solve_neighbor(seed,edges,nodes,outputs,required_and,
             'free':len(free),'cap':upper_bound}
     if status not in (cp_model.FEASIBLE,cp_model.OPTIMAL):
         return None,report
-    chosen_defs={f:edges[i] for i in range(len(edges)) if solver.Value(chosen[i])}
+    chosen_defs={edges[i][0]:edges[i] for i in range(len(edges)) if solver.Value(chosen[i])}
     produced={tv:wire for wire,tv in INPUTS.items()};gates=[]
     def make(f):
         if f in produced:return produced[f]
