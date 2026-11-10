@@ -1,0 +1,62 @@
+name: temp-ta41-original-n7-then-constructive-cp
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-original-n7-then-constructive-cp.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-original-n7-then-constructive-cp
+  cancel-in-progress: false
+jobs:
+  paired_hybrid:
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: [dmu16-20, dmu56-60]
+        source_seed: [1901, 1911]
+        policy: [dynamic, random]
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile authentic author 2025 N7 search, no neighborhood or tabu modifications
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/n7_then_group_cp.py
+          git clone --depth=1 https://github.com/Qiming01/Job-Shop-Scheduling.git /tmp/n7
+          git -C /tmp/n7 fetch --depth=1 origin 7e120ebada21cb604c871e0657814bf6e32611f8
+          git -C /tmp/n7 checkout --detach 7e120ebada21cb604c871e0657814bf6e32611f8
+          python3 science-boundary/job-shop-ta41/patch_original_n7_warmstart.py /tmp/n7
+          g++ -std=c++20 -O3 -include climits -DN7_WARMSTART_SUPPORT -I/tmp/n7/include \
+            science-boundary/job-shop-ta41/original_n7_blind_driver.cpp \
+            /tmp/n7/src/graph.cpp /tmp/n7/src/instance.cpp /tmp/n7/src/schedule.cpp /tmp/n7/src/tabu_search.cpp \
+            -o /tmp/n7_true_blind
+      - name: Matching independent DMU starts - genuine N7 for 4s then target CP for remaining 1s
+        run: |
+          python3 science-boundary/job-shop-ta41/n7_then_group_cp.py \
+            --driver /tmp/n7_true_blind \
+            --cases-dir 'science-boundary/job-shop-ta41/positive-n7-${{ matrix.batch }}' \
+            --initial-seed '${{ matrix.source_seed }}' --expected-instances 5 \
+            --n7-seconds 4 --cp-seconds 1 --target-drop 1 \
+            --policy '${{ matrix.policy }}' \
+            --out 'science-boundary/job-shop-ta41/results/n7four-then-CPone-${{ matrix.batch }}-${{ matrix.source_seed }}-${{ matrix.policy }}'
+      - name: Preserve complete score-verified outputs and compare afterward with unmodified N7 5s control
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/n7four-then-CPone-${{ matrix.batch }}-${{ matrix.source_seed }}-${{ matrix.policy }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): true N7 four seconds + one second source-only group repair ${{ matrix.batch }} ${{ matrix.source_seed }} ${{ matrix.policy }}'
+          for i in $(seq 1 60); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
