@@ -36,6 +36,7 @@ def main(a):
                 only_groups=[],fixed_open_machines=[],
                 cp_seconds=a.cp_seconds,repair_objective=a.repair_objective,
                 core_probe_seconds=a.core_probe_seconds,
+                core_probe_every=a.core_probe_every,
                 auxiliary_start=partner,auxiliary_mode=a.auxiliary_mode,
                 auxiliary_weight=a.auxiliary_weight,
                 master_seconds=a.master_seconds,
@@ -88,6 +89,7 @@ if __name__=='__main__':
     p.add_argument('--auxiliary-weight',type=float,default=3.)
     p.add_argument('--cp-seconds',type=float,default=0.7)
     p.add_argument('--core-probe-seconds',type=float,default=0.20)
+    p.add_argument('--core-probe-every',type=int,default=1)
     p.add_argument('--repair-objective',choices=['minimal-change','feasibility'],default='minimal-change')
     p.add_argument('--master-seconds',type=float,default=0.15)
     p.add_argument('--trials-per-stage',type=int,default=8)
