@@ -176,7 +176,8 @@ def full_cp(orders,pos,dur,opened,L,policy,seed,seconds,repair_objective='minima
 
 def run(a):
     orders,pos,dur,C=parse_case(a.start)
-    target=C-1
+    target=C-a.target_drop
+    assert a.target_drop>=1 and target>max(dur)
     istarget=a.start=='ta41'
     static=group_static_slack(orders,dur,pos)
     prior_cores,gateways=(verified_ta41_sources(orders)
@@ -190,7 +191,7 @@ def run(a):
     learned=set(prior_cores)
     traces=[]
     state=dict(instance='ta41' if istarget else Path(a.start).parent.name,
-        incumbent=C,target=target,policy=a.policy,
+        incumbent=C,target=target,target_drop=a.target_drop,policy=a.policy,
         group_released_all_29_resource_adjacencies=True,
         complete_NoOverlap_and_job_precedence_hard=True,
         all_open_machine_permutations_allowed=True,
@@ -298,6 +299,7 @@ if __name__=='__main__':
     p.add_argument('--start',required=True)
     p.add_argument('--policy',choices=['dynamic','static','random'],required=True)
     p.add_argument('--seed',type=int,default=4107)
+    p.add_argument('--target-drop',type=int,default=1)
     p.add_argument('--trials-per-stage',type=int,default=12)
     p.add_argument('--only-groups',nargs='+',type=int,default=[])
     p.add_argument('--repair-objective',choices=['minimal-change','feasibility'],default='minimal-change')
