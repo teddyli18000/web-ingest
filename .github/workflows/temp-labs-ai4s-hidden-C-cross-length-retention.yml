@@ -1,0 +1,126 @@
+name: temp-labs-ai4s-hidden-C-cross-length-retention
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-hidden-C-cross-length-retention.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-labs-ai4s-hidden-C-cross-length-retention
+  cancel-in-progress: false
+jobs:
+  held_state_seeds:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - n: 46
+            reps: 8
+            offset: 8
+            orbits: 3
+          - n: 47
+            reps: 4
+            offset: 4
+            orbits: 6
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - name: Verify C-free frozen model and build exact full original repair solver
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 - <<'PY'
+          import pathlib,json,hashlib
+          root=pathlib.Path('results')
+          model=json.loads((root/'forced_models_v1/training_audit.json').read_text())
+          expected='2abb727677b9c065b624322f1446fc950987d2c64fc41396e4b90e80c5ad576b'
+          assert model['model_sha256']==expected
+          assert hashlib.sha256((root/'forced_models_v1/frozen_models.tsv').read_bytes()).hexdigest()==expected
+          assert model['excluded_trivial_original_candidate'] is True
+          assert (root/'branch_deploy_v1/retention_search_verdict.json').exists()
+          print('MODEL PRIOR FROZEN SHA',expected,'target C never passed to search')
+          PY
+          g++ -std=c++17 -O3 hidden_repair.cpp -o /tmp/labs_hidden_C_research
+          /tmp/labs_hidden_C_research selftest
+      - name: Generate source-blind and explicitly C-conditioned diagnostic states only from fixed optimum orbit library
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 make_scenarios.py ../../data/combined/combined10.tsv \
+            --lengths ${{ matrix.n }} --out results/states_new_N${{ matrix.n }} \
+            --reps ${{ matrix.reps }} --rep-offset ${{ matrix.offset }}
+          python3 - <<'PY'
+          import json,pathlib
+          N=int('${{ matrix.n }}')
+          r=json.loads((pathlib.Path('results')/('states_new_N'+str(N))/'manifest.json').read_text())
+          assert r['count']==144 and r['regimes']=={'AB_blind':72,'C_shell':72}
+          assert r['rep_range']==[int('${{ matrix.offset }}'),int('${{ matrix.offset }}')+int('${{ matrix.reps }}')-1]
+          print('PASS independent damaged-state seeds',N)
+          PY
+      - name: Execute two 864-session full-time searches and only afterwards independent C-orbit scoring
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 run_retention_by_length.py \
+            --exe /tmp/labs_hidden_C_research \
+            --scenario results/states_new_N${{ matrix.n }} \
+            --source-length ${{ matrix.n }} \
+            --source-orbit-count ${{ matrix.orbits }} \
+            --output results/branch_fresh_N${{ matrix.n }} \
+            --budget-ms 150
+          python3 - <<'PY'
+          import json,pathlib
+          n=int('${{ matrix.n }}');r=pathlib.Path('results')/('branch_fresh_N'+str(n))
+          v=json.loads((r/'retention_search_verdict.json').read_text())
+          assert v['N']==n and v['states']==144 and v['paired_arm_runs']==864
+          for arm in ('control','retained_X'):
+            e=json.loads((r/arm/'verdict.json').read_text())
+            assert e['n']==[n] and e['run_rows']==864 and e['events']>1000
+            assert (r/arm/'events.tsv.gz').exists()
+          print('PASS complete separate total-cost 150ms source-paired exact outcomes')
+          PY
+      - name: Record source commit and independently verified exact SHA reproducibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json,subprocess,pathlib,platform
+          n=int('${{ matrix.n }}')
+          root=pathlib.Path('science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results')/('branch_fresh_N'+str(n))
+          original=json.loads((root/'control/verdict.json').read_text())
+          retained=json.loads((root/'retained_X/verdict.json').read_text())
+          (root/'source_provenance.json').write_text(json.dumps({
+            'source_git_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+            'compiler':subprocess.check_output(['g++','--version'],text=True).splitlines()[0],
+            'runner':platform.platform(),'N':n,
+            'all_repair_events_certified':original['events']+retained['events'],
+            'only_C_oracle_posthoc':True,
+            'not_new_optimum_orbit_holdout':True,
+            'stated_caveat':'C-shell starting states generated with C, not A/B-blind discovery',
+            'control_source_hashes':original['hashes'],
+            'retained_source_hashes':retained['hashes']
+          },indent=2)+'\n')
+          PY
+      - name: Persist only verified research data to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/states_new_N${{ matrix.n }}
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/branch_fresh_N${{ matrix.n }}
+          git commit -m 'research(labs-ai4s): source-blind N${{ matrix.n }} two-state search exact audited fresh-damage-seed replication'
+          ok=0
+          for attempt in 1 2 3 4 5 6 7 8; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then ok=1; break; fi
+          done
+          test "$ok" -eq 1
