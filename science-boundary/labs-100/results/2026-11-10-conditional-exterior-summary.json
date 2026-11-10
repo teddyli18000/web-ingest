@@ -1,0 +1,76 @@
+{
+  "date": "2026-11-10",
+  "status": "NO_N100_RECORD",
+  "official_record_energy": 578,
+  "required_improvement_energy": 574,
+  "scope": "planted known damaged core, 20 flipped inside 50 and 1 flipped exterior; ranking teacher-blind but core site set supplied",
+  "scored_proposals_per_case": {
+    "conditional": 750050,
+    "full_tabu": 750000,
+    "full_tabu_10x_restart": 750000
+  },
+  "completed": {
+    "E578": {
+      "seeds": [
+        11,
+        12,
+        13
+      ],
+      "trials": 80,
+      "conditional_top5": 40,
+      "raw_top5": 17,
+      "conditional_recoveries": 8,
+      "full_tabu_recoveries": 0,
+      "ten_restart_recoveries": 0
+    },
+    "E606": {
+      "seeds": [
+        11,
+        12
+      ],
+      "trials": 50,
+      "conditional_top5": 43,
+      "raw_top5": 7,
+      "conditional_recoveries": 6,
+      "full_tabu_recoveries": 0,
+      "ten_restart_recoveries": 0
+    }
+  },
+  "exploratory_two_outer_errors": {
+    "trials_each_seed": 8,
+    "paired_evals_per_trial": 6210778,
+    "E578": {
+      "seed15_hits": 0,
+      "seed16_hits": 0
+    },
+    "E606": {
+      "seed15_hits": 2,
+      "seed16_hits": 0
+    },
+    "E606_seed15_full_tabu_baselines_hits": {
+      "one_start": 0,
+      "ten_starts": 0,
+      "thirty_starts": 0
+    }
+  },
+  "direct_intact_N100": {
+    "E578": {
+      "proposal_count": 1440,
+      "evals": 37601440,
+      "best_departure_energy": 686
+    },
+    "E606": {
+      "proposal_count": 1440,
+      "evals": 37601440,
+      "best_departure_energy": 698
+    }
+  },
+  "caveats": [
+    "The source teacher and correct damaged core index set are known in case construction, not operator ranking",
+    "Only two source N100 orbits; case replicates are not independent orbits",
+    "Proposals are matched but CPU runtime is not",
+    "The longer E606 seed13 full-control run timed out and is excluded",
+    "No independent modern GPU MTS or partition SAW comparison",
+    "No Few Shots shot submitted"
+  ]
+}
