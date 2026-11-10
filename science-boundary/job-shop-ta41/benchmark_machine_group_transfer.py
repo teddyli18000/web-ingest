@@ -35,6 +35,7 @@ def main(a):
                 trials_per_stage=a.trials_per_stage,
                 only_groups=[],fixed_open_machines=[],
                 cp_seconds=a.cp_seconds,repair_objective=a.repair_objective,
+                core_probe_seconds=a.core_probe_seconds,
                 auxiliary_start=partner,auxiliary_mode=a.auxiliary_mode,
                 auxiliary_weight=a.auxiliary_weight,
                 master_seconds=a.master_seconds,
@@ -76,7 +77,7 @@ def main(a):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser()
-    p.add_argument('--policy',choices=['dynamic','static','random','novelty'],required=True)
+    p.add_argument('--policy',choices=['dynamic','precise-core','static','random','novelty'],required=True)
     p.add_argument('--initial-seed',type=int,required=True)
     p.add_argument('--cases-dir',type=Path,default=ROOT/'positive-n7-elite-data')
     p.add_argument('--expected-instances',type=int,default=6)
@@ -86,6 +87,7 @@ if __name__=='__main__':
     p.add_argument('--auxiliary-partner-seed',type=int,default=0)
     p.add_argument('--auxiliary-weight',type=float,default=3.)
     p.add_argument('--cp-seconds',type=float,default=0.7)
+    p.add_argument('--core-probe-seconds',type=float,default=0.20)
     p.add_argument('--repair-objective',choices=['minimal-change','feasibility'],default='minimal-change')
     p.add_argument('--master-seconds',type=float,default=0.15)
     p.add_argument('--trials-per-stage',type=int,default=8)
