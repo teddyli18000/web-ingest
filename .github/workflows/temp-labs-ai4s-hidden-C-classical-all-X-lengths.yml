@@ -1,0 +1,68 @@
+name: temp-labs-ai4s-hidden-C-classical-all-X-lengths
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-hidden-C-classical-all-X-lengths.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  all_X:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - n: 46
+            orbits: 3
+          - n: 47
+            orbits: 6
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Verify source fixed model and original exact scoring
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          g++ -std=c++17 -O3 hidden_repair.cpp -o /tmp/labs_C_allX_lengths
+          /tmp/labs_C_allX_lengths selftest
+      - name: Costed C-blind all-X restart from fresh N46/N47 source inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 run_all_x_by_length.py \
+            --exe /tmp/labs_C_allX_lengths \
+            --source-N ${{ matrix.n }} \
+            --source-orbits ${{ matrix.orbits }} \
+            --scenario results/states_new_N${{ matrix.n }} \
+            --prior results/branch_fresh_N${{ matrix.n }} \
+            --out results/all_x_fresh_N${{ matrix.n }} \
+            --budget-ms 150
+          python3 - <<'PY'
+          import json,pathlib
+          n=int('${{ matrix.n }}')
+          p=pathlib.Path('results')/('all_x_fresh_N'+str(n))
+          a=json.loads((p/'all_X_vs_alternating_verdict.json').read_text())
+          assert a['source_N']==n and a['states']==144 and a['paired_strategy_sessions']==864
+          v=json.loads((p/'verdict.json').read_text())
+          assert v['n']==[n] and v['run_rows']==864 and v['events']>1000
+          assert (p/'events.tsv.gz').exists()
+          print('PASS exact full-cost all-X classical restart across source orbit cohorts',n)
+          PY
+      - name: Commit independent exact verified all-X replication to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/all_x_fresh_N${{ matrix.n }}
+          git commit -m 'research(labs-ai4s): certify N${{ matrix.n }} full-cost all-X classical multistart control'
+          for attempt in 1 2 3 4 5 6 7 8; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then exit 0; fi
+          done
+          exit 1
