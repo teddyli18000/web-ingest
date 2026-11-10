@@ -1,0 +1,96 @@
+name: temp-ta41-crossfamily-dmu-transfer-5s
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-crossfamily-dmu-transfer-5s.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-crossfamily-dmu-transfer-5s
+  cancel-in-progress: false
+jobs:
+  machine_group:
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: [dmu16-20, dmu56-60]
+        source_seed: [1901, 1911]
+        policy: [dynamic, static, random]
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify pinned CP and independent original N7 source 30x20 starts
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/benchmark_machine_group_transfer.py science-boundary/job-shop-ta41/machine_group_order_repair.py
+          test "$(find science-boundary/job-shop-ta41/positive-n7-${{ matrix.batch }} -name start.txt | wc -l)" -eq 10
+      - name: Oracle-blind five-second machine-group search on previously unseen DMU cases
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_machine_group_transfer.py \
+            --policy '${{ matrix.policy }}' --initial-seed '${{ matrix.source_seed }}' \
+            --cases-dir science-boundary/job-shop-ta41/positive-n7-${{ matrix.batch }} \
+            --expected-instances 5 --total-seconds 5 --cp-seconds 0.7 --master-seconds 0.15 \
+            --out 'science-boundary/job-shop-ta41/results/dmu-blind-${{ matrix.batch }}-${{ matrix.source_seed }}-${{ matrix.policy }}'
+      - name: Preserve verified complete 600-operation schedules and core inference traces
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/dmu-blind-${{ matrix.batch }}-${{ matrix.source_seed }}-${{ matrix.policy }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): fresh DMU 30x20 source-N7 blind machine-group ${{ matrix.batch }} ${{ matrix.source_seed }} ${{ matrix.policy }}'
+          for i in $(seq 1 60); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+  source_n7:
+    strategy:
+      fail-fast: false
+      matrix:
+        batch: [dmu16-20, dmu56-60]
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build genuine N7 author kernel with warm start hook only at pinned commit
+        run: |
+          git clone --depth=1 https://github.com/Qiming01/Job-Shop-Scheduling.git /tmp/n7
+          git -C /tmp/n7 fetch --depth=1 origin 7e120ebada21cb604c871e0657814bf6e32611f8
+          git -C /tmp/n7 checkout --detach 7e120ebada21cb604c871e0657814bf6e32611f8
+          python3 science-boundary/job-shop-ta41/patch_original_n7_warmstart.py /tmp/n7
+          g++ -std=c++20 -O3 -include climits -DN7_WARMSTART_SUPPORT -I/tmp/n7/include \
+            science-boundary/job-shop-ta41/original_n7_blind_driver.cpp \
+            /tmp/n7/src/graph.cpp /tmp/n7/src/instance.cpp /tmp/n7/src/schedule.cpp /tmp/n7/src/tabu_search.cpp \
+            -o /tmp/n7_true_blind
+      - name: Original N7 5 seconds per same blind source-elite, independently score every completed schedule
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_true_n7_positive.py \
+            --cases 'science-boundary/job-shop-ta41/positive-n7-${{ matrix.batch }}' \
+            --driver /tmp/n7_true_blind --seconds 5 --seeds 4107 4113 \
+            --out 'science-boundary/job-shop-ta41/results/dmu-original-n7-${{ matrix.batch }}'
+      - name: Persist exact control trial scores
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/dmu-original-n7-${{ matrix.batch }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): authentic N7 native 5-second DMU 30x20 matched benchmark ${{ matrix.batch }}'
+          for i in $(seq 1 60); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
