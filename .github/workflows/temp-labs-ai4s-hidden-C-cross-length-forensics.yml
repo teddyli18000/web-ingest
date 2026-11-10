@@ -1,0 +1,53 @@
+name: temp-labs-ai4s-hidden-C-cross-length-forensics
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-hidden-C-cross-length-forensics.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  forensic:
+    strategy:
+      fail-fast: false
+      matrix:
+        n: [46, 47]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Independent first-C route extraction from exact-scored gzip event archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          python3 forensic_recovered_C.py \
+            --input results/states_new_N${{ matrix.n }}/scenario-input.tsv \
+            --vault results/states_new_N${{ matrix.n }}/target-vault.tsv \
+            --control results/branch_fresh_N${{ matrix.n }}/control/events.tsv.gz \
+            --retained results/branch_fresh_N${{ matrix.n }}/retained_X/events.tsv.gz \
+            --out results/branch_fresh_N${{ matrix.n }}/C_recovery_forensics.json
+          python3 - <<'PY'
+          import json,pathlib
+          n=int('${{ matrix.n }}')
+          z=json.loads((pathlib.Path('results')/('branch_fresh_N'+str(n))/'C_recovery_forensics.json').read_text())
+          assert z['source_N']==[n] and z['states']==144 and z['pair_arm_runs']==864
+          assert z['events_control']>1000 and z['events_retained']>1000
+          print('PASS source-independent exact C return recovery origin audit',n)
+          PY
+      - name: Commit reproducible compact forensic results
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/branch_fresh_N${{ matrix.n }}/C_recovery_forensics.json
+          git commit -m 'research(labs-ai4s): audit N${{ matrix.n }} first hidden optimum C recovery origins'
+          ok=0
+          for i in 1 2 3 4 5 6; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then ok=1; break; fi
+          done
+          test "$ok" -eq 1
