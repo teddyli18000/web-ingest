@@ -1,0 +1,46 @@
+name: temp-aes-shear-care-cone-evolution
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/shear_care_cone_evolution.py'
+      - '.github/workflows/temp-aes-shear-care-cone-evolution.yml'
+permissions:
+  contents: read
+jobs:
+  evolve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      matrix:
+        rng: [41,42,43,44]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Evolve fully validated altered-nonlinear AES circuits
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/shear_care_cone_evolution.py
+          python science-boundary/aes-sbox-circuit/shear_care_cone_evolution.py \
+            --seed and-shear-102 --rng '${{ matrix.rng }}' --seconds 380 \
+            --max-pool 110 --roots-per-step 8 --solutions-per-cone 65 \
+            --target 100 --out result | tee run.log
+          python -c "import json; d=json.load(open('result/summary.json')); assert d['best_all_256']; print(d['best_gates'],d['AND_truth_set_difference_from_public_101'])"
+      - name: Official 100-gate verification if constructed
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-shear-care-evolution-${{ matrix.rng }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
