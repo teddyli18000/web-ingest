@@ -1,0 +1,85 @@
+name: temp-ta41-precise-machine-core-dualsolver-transfer
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-precise-machine-core-dualsolver-transfer.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-precise-machine-core-dualsolver-transfer
+  cancel-in-progress: false
+jobs:
+  precise_core:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - family: taillard-dev
+            dir: positive-n7-elite-data
+            expected: 6
+            parent_seed: 1701
+          - family: taillard-dev
+            dir: positive-n7-elite-data
+            expected: 6
+            parent_seed: 1711
+          - family: taillard-holdout
+            dir: positive-n7-holdout-data
+            expected: 3
+            parent_seed: 1801
+          - family: taillard-holdout
+            dir: positive-n7-holdout-data
+            expected: 3
+            parent_seed: 1811
+          - family: dmu16-20
+            dir: positive-n7-dmu16-20
+            expected: 5
+            parent_seed: 1901
+          - family: dmu16-20
+            dir: positive-n7-dmu16-20
+            expected: 5
+            parent_seed: 1911
+          - family: dmu56-60
+            dir: positive-n7-dmu56-60
+            expected: 5
+            parent_seed: 1901
+          - family: dmu56-60
+            dir: positive-n7-dmu56-60
+            expected: 5
+            parent_seed: 1911
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin exact CP-SAT and compile-check independently sourced witness pipeline
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/machine_group_order_repair.py science-boundary/job-shop-ta41/benchmark_machine_group_transfer.py
+      - name: Blinded dual solver machine core learning against unchanged group selection and 5 second cap
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_machine_group_transfer.py \
+            --cases-dir 'science-boundary/job-shop-ta41/${{ matrix.dir }}' \
+            --expected-instances '${{ matrix.expected }}' \
+            --initial-seed '${{ matrix.parent_seed }}' \
+            --policy precise-core --core-probe-seconds 0.20 \
+            --repair-objective minimal-change \
+            --total-seconds 5 --cp-seconds 0.7 --master-seconds 0.15 \
+            --out 'science-boundary/job-shop-ta41/results/precise-core-${{ matrix.family }}-${{ matrix.parent_seed }}'
+      - name: Preserve independently full-DAG rescored constructive results and minimized CP machine-core proof traces
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/precise-core-${{ matrix.family }}-${{ matrix.parent_seed }}'
+          if ! test -f "$dir/summary.json"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): true CP explanation cores versus implicit exploration novelty ${{ matrix.family }} ${{ matrix.parent_seed }}'
+          for i in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
