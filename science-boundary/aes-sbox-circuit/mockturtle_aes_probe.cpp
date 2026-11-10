@@ -24,7 +24,9 @@ int main(int argc, char** argv) {
   std::ifstream in(argv[1]);
   if (!in) throw std::runtime_error("missing input");
   int n=0; in >> n;
+  std::cerr << "[stage] parsed gate count " << n << "\n";
   xag_network xag;
+  std::cerr << "[stage] constructed native XAG\n";
   std::vector<xag_network::signal> wires;
   for (int k=0;k<8;k++) wires.push_back(xag.create_pi());
   for (int k=0;k<n;k++){
@@ -38,8 +40,10 @@ int main(int argc, char** argv) {
     else if(op=='N') next=xag.create_xnor(wires[a],wires[b]);
     else throw std::runtime_error("bad op");
     wires.push_back(next);
+    if ((k%10)==0 || k+1==n) std::cerr << "[stage] imported " << (k+1) << "/" << n << " gates\n";
   }
   for(int k=0;k<8;k++){int idx;in>>idx;if(!in || idx>=static_cast<int>(wires.size()))throw std::runtime_error("bad PO");xag.create_po(wires[idx]);}
+  std::cerr << "[stage] imported all outputs\n";
   xag=cleanup_dangling(xag);
   std::cerr << "[stage] initial XAG built, gates " << xag.num_gates() << "\n";
   const uint32_t before=xag.num_gates();
