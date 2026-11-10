@@ -1,0 +1,34 @@
+{
+  "original_frozen_model_sha256": "2abb727677b9c065b624322f1446fc950987d2c64fc41396e4b90e80c5ad576b",
+  "source_orbit_population_not_fresh_holdout": true,
+  "source_length": 47,
+  "source_orbit_count": 6,
+  "source_manifest": {
+    "lengths": [
+      47
+    ],
+    "count": 144,
+    "reps": 4,
+    "rep_range": [
+      4,
+      7
+    ],
+    "regimes": {
+      "AB_blind": 72,
+      "C_shell": 72
+    },
+    "input_sha256": "fae4361c3184ebd2ea2e36f2e2d64d7ddbe5575695bf77c9dc3aeb0e53718629",
+    "vault_sha256": "8d76dbd2a086a1f18db95a55c5bf7654a18a8a48f897daa93f0764375a9464b7",
+    "warning": "C_shell is a privileged oracle-rooted denoising control, not blind basin discovery; never pass vault to solver"
+  },
+  "two_branch_only_difference": "retain original X as alternate proposal anchor every odd iteration",
+  "tested_modes": [
+    "control",
+    "retained_X"
+  ],
+  "all_costed_wall_budget_ms": 150,
+  "C_never_given_to_search_binary": true,
+  "posthoc_vault_only_for_external_independent_verifier": true,
+  "paired_scenarios": 144,
+  "paired_arm_treatments": 864
+}
