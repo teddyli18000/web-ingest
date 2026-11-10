@@ -146,16 +146,16 @@ def pool_insert(pool,E,x,tag,maxlen=28):
     return True
 
 
-def update_hills(hills,E,x,seed,rng,base_sigma,max_hills=20):
+def update_hills(hills,E,x,seed,rng,base_sigma,base_height,max_hills=20):
     matches=[(i,h) for i,h in enumerate(hills)
              if h["energy"] is not None and abs(h["energy"]-E)<3e-6]
     if matches:
         j,h=matches[0]
-        h["height"]=min(1.7,h["height"]+float(rng.uniform(.045,.14)))
+        h["height"]=min(base_height*8,h["height"]+float(rng.uniform(.20,.52))*base_height)
         h["visits"]+=1
         return False,j
     if E<RECORD+.20:
-        hill={"points":x.copy(),"height":float(rng.uniform(.11,.23)),
+        hill={"points":x.copy(),"height":float(rng.uniform(.70,1.25))*base_height,
               "sigma":float(base_sigma*rng.uniform(.70,1.40)),
               "energy":float(E),"visits":1,"tag":f"cycle-{seed}"}
         hills.append(hill)
@@ -186,11 +186,21 @@ def main():
     baseline=pool[0]["points"]
     check=selftest(baseline,pool[1]["points"])
     print("BIAS_SELFTEST",check,flush=True)
-    print("INITIAL_DISTANCES",{
-        q["tag"]:align_distance(baseline,q["points"]) for q in pool},flush=True)
+    distances={q["tag"]:align_distance(baseline,q["points"]) for q in pool}
+    print("INITIAL_DISTANCES",distances,flush=True)
+    # The first campaign used sigma=.021, while the actual R->A/B/W
+    # aligned collective RMS distances are only 0.0039-0.0055.
+    # At that width the bias hills overlap nearly completely.
+    # Set height proportional to sigma^2, preserving approximate
+    # physical tangent curvature while narrowing basins to the
+    # empirically measured separation scale.
+    base_height=min(.24,.075*(args.sigma/.0035)**2)
+    print("HILL_GEOMETRY","sigma",args.sigma,"height",base_height,
+          "nearest_parent_gap",min(v for k,v in distances.items() if k!="R"),
+          flush=True)
     # All existing known near-R states are filled at start to discourage
     # repeatedly falling back into already characterized low basins.
-    hills=[{"points":p["points"].copy(),"height":.24,
+    hills=[{"points":p["points"].copy(),"height":base_height,
             "sigma":args.sigma,"energy":p["energy"],"visits":1,
             "tag":p["tag"]} for p in pool]
     best=RECORD
@@ -239,7 +249,7 @@ def main():
                   "source",parent["tag"],"control",direct,flush=True)
         if not direct:
             hillnew,hillidx=update_hills(
-                hills,Ef,Q,t,rng,args.sigma)
+                hills,Ef,Q,t,rng,args.sigma,base_height)
         else:
             hillnew=False;hillidx=-1
         if Ef<best-2e-7:
@@ -269,6 +279,8 @@ def main():
                "control_count":control_runs,
                "winning_candidates":candidates,
                "selftest":check,
+               "bias_width":args.sigma,"base_height":base_height,
+               "initial_parent_distances":distances,
                "hills":[{"height":h["height"],"sigma":h["sigma"],
                          "energy":h["energy"],"visits":h["visits"],
                          "tag":h["tag"]} for h in hills],
