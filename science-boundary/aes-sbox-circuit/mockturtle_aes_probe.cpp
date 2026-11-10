@@ -41,6 +41,7 @@ int main(int argc, char** argv) {
   }
   for(int k=0;k<8;k++){int idx;in>>idx;if(!in || idx>=static_cast<int>(wires.size()))throw std::runtime_error("bad PO");xag.create_po(wires[idx]);}
   xag=cleanup_dangling(xag);
+  std::cerr << "[stage] initial XAG built, gates " << xag.num_gates() << "\n";
   const uint32_t before=xag.num_gates();
   resubstitution_params ps;
   ps.max_pis=max_pis;
@@ -52,8 +53,11 @@ int main(int argc, char** argv) {
   ps.use_dont_cares=(odc_levels!=0);
   depth_view depth_xag{ xag };
   fanout_view fanout_xag{ depth_xag };
+  std::cerr << "[stage] wrapped fanout/depth views\n";
   xag_resubstitution(fanout_xag, ps);
+  std::cerr << "[stage] xag_resubstitution returned\n";
   xag=cleanup_dangling(fanout_xag);
+  std::cerr << "[stage] cleaned, gates " << xag.num_gates() << "\n";
   std::ofstream out(argv[2]);
   out << "C " << xag.num_gates() << " " << before << "\n";
   xag.foreach_pi([&](auto const& node){out << "I " << node << "\n";});
