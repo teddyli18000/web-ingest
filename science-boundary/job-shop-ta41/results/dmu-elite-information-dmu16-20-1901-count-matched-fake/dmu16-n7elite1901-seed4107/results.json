@@ -1,0 +1,1635 @@
+{
+  "instance": "dmu16-n7elite1901",
+  "incumbent": 3797,
+  "target": 3793,
+  "target_drop": 4,
+  "policy": "dynamic",
+  "auxiliary_mode": "count-matched-fake",
+  "auxiliary_weight": 3.0,
+  "auxiliary_parent_source": "science-boundary/job-shop-ta41/positive-n7-dmu16-20/dmu16-n7elite1911/start.txt",
+  "auxiliary_disagreement_count_by_machine": [
+    10,
+    11,
+    8,
+    9,
+    10,
+    12,
+    13,
+    9,
+    12,
+    10,
+    8,
+    11,
+    9,
+    8,
+    9,
+    11,
+    10,
+    11,
+    12,
+    11
+  ],
+  "auxiliary_critical_disagreement_scores": [
+    1.1840227687543894,
+    1.6357940862207196,
+    0.8269652980833255,
+    0.3361589101367424,
+    1.71269187609032,
+    7.368620542537666,
+    2.039167413671126,
+    2.2064197327381656,
+    1.0944494394881716,
+    2.979244304198083,
+    1.506646258296709,
+    7.706260506290925,
+    1.284793507016626,
+    1.4357252479942644,
+    1.4518710159898203,
+    1.9705368548121536,
+    3.9493111821752556,
+    1.6672148753105822,
+    2.2671472077399475,
+    1.5256813021460511
+  ],
+  "group_released_all_29_resource_adjacencies": true,
+  "complete_NoOverlap_and_job_precedence_hard": true,
+  "all_open_machine_permutations_allowed": true,
+  "ta41_minimum_changed_machines_independently_proved": null,
+  "initial_valid_machine_conflict_count": 0,
+  "mandatory_ta41_adjacent_gateway_ids": [],
+  "stages": [
+    3,
+    5,
+    8,
+    12,
+    16,
+    20
+  ],
+  "traces": [
+    {
+      "stage": 3,
+      "trial": 0,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.005119409,
+        "opened": [
+          5,
+          11,
+          16
+        ],
+        "master_heuristic_score": 12755
+      },
+      "known_proven_machine_clauses": 0,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.026,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 3,
+        "closed_machine_assumptions": 17,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          9,
+          10,
+          12,
+          13,
+          14,
+          15,
+          17,
+          18,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 3,
+      "trial": 1,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0009150610000000001,
+        "opened": [
+          5,
+          9,
+          11
+        ],
+        "master_heuristic_score": 12264
+      },
+      "known_proven_machine_clauses": 1,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.01,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 3,
+        "closed_machine_assumptions": 17,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 3,
+      "trial": 2,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.001634273,
+        "opened": [
+          5,
+          7,
+          11
+        ],
+        "master_heuristic_score": 11948
+      },
+      "known_proven_machine_clauses": 2,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.01,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 3,
+        "closed_machine_assumptions": 17,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6,
+          8,
+          9,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 3,
+      "trial": 3,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0023802050000000003,
+        "opened": [
+          5,
+          11,
+          18
+        ],
+        "master_heuristic_score": 11981
+      },
+      "known_proven_machine_clauses": 3,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.01,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 3,
+        "closed_machine_assumptions": 17,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          9,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 3,
+      "trial": 4,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.002714166,
+        "opened": [
+          5,
+          11,
+          15
+        ],
+        "master_heuristic_score": 11948
+      },
+      "known_proven_machine_clauses": 4,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.01,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 3,
+        "closed_machine_assumptions": 17,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          9,
+          10,
+          12,
+          13,
+          14,
+          16,
+          17,
+          18,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 3,
+      "trial": 5,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.002569324,
+        "opened": [
+          5,
+          6,
+          11
+        ],
+        "master_heuristic_score": 12070
+      },
+      "known_proven_machine_clauses": 5,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.01,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 3,
+        "closed_machine_assumptions": 17,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          8,
+          9,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 3,
+      "trial": 6,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.002906081,
+        "opened": [
+          4,
+          5,
+          11
+        ],
+        "master_heuristic_score": 12018
+      },
+      "known_proven_machine_clauses": 6,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.01,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 3,
+        "closed_machine_assumptions": 17,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          6,
+          7,
+          8,
+          9,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 3,
+      "trial": 7,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.001424682,
+        "opened": [
+          5,
+          11,
+          17
+        ],
+        "master_heuristic_score": 11978
+      },
+      "known_proven_machine_clauses": 7,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.024,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 3,
+        "closed_machine_assumptions": 17,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          9,
+          10,
+          12,
+          13,
+          14,
+          15,
+          16,
+          18,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 5,
+      "trial": 0,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0025554230000000002,
+        "opened": [
+          5,
+          7,
+          9,
+          11,
+          16
+        ],
+        "master_heuristic_score": 18893
+      },
+      "known_proven_machine_clauses": 8,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.027,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 5,
+        "closed_machine_assumptions": 15,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6,
+          8,
+          10,
+          12,
+          13,
+          14,
+          15,
+          17,
+          18,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 5,
+      "trial": 1,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0017860250000000001,
+        "opened": [
+          5,
+          9,
+          11,
+          16,
+          18
+        ],
+        "master_heuristic_score": 18888
+      },
+      "known_proven_machine_clauses": 9,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.028,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 5,
+        "closed_machine_assumptions": 15,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          10,
+          12,
+          13,
+          14,
+          15,
+          17,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 5,
+      "trial": 2,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.002799507,
+        "opened": [
+          5,
+          6,
+          9,
+          11,
+          16
+        ],
+        "master_heuristic_score": 19060
+      },
+      "known_proven_machine_clauses": 10,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.028,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 5,
+        "closed_machine_assumptions": 15,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          7,
+          8,
+          10,
+          12,
+          13,
+          14,
+          15,
+          17,
+          18,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 5,
+      "trial": 3,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0028715380000000003,
+        "opened": [
+          5,
+          9,
+          11,
+          15,
+          16
+        ],
+        "master_heuristic_score": 19063
+      },
+      "known_proven_machine_clauses": 11,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.027,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 5,
+        "closed_machine_assumptions": 15,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          10,
+          12,
+          13,
+          14,
+          17,
+          18,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 5,
+      "trial": 4,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.002699454,
+        "opened": [
+          5,
+          7,
+          11,
+          16,
+          18
+        ],
+        "master_heuristic_score": 19317
+      },
+      "known_proven_machine_clauses": 12,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.027,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 5,
+        "closed_machine_assumptions": 15,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6,
+          8,
+          9,
+          10,
+          12,
+          13,
+          14,
+          15,
+          17,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 5,
+      "trial": 5,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0020867060000000002,
+        "opened": [
+          5,
+          9,
+          11,
+          16,
+          19
+        ],
+        "master_heuristic_score": 19443
+      },
+      "known_proven_machine_clauses": 13,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.027,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 5,
+        "closed_machine_assumptions": 15,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          10,
+          12,
+          13,
+          14,
+          15,
+          17,
+          18
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 5,
+      "trial": 6,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0010180690000000001,
+        "opened": [
+          1,
+          5,
+          9,
+          11,
+          16
+        ],
+        "master_heuristic_score": 19509
+      },
+      "known_proven_machine_clauses": 14,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.027,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 5,
+        "closed_machine_assumptions": 15,
+        "sufficient_machine_conflict": [
+          0,
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          10,
+          12,
+          13,
+          14,
+          15,
+          17,
+          18,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 5,
+      "trial": 7,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.001981805,
+        "opened": [
+          5,
+          7,
+          11,
+          15,
+          16
+        ],
+        "master_heuristic_score": 19697
+      },
+      "known_proven_machine_clauses": 15,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.026,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 5,
+        "closed_machine_assumptions": 15,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6,
+          8,
+          9,
+          10,
+          12,
+          13,
+          14,
+          17,
+          18,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 8,
+      "trial": 0,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.002121539,
+        "opened": [
+          5,
+          6,
+          7,
+          9,
+          11,
+          13,
+          16,
+          18
+        ],
+        "master_heuristic_score": 29134
+      },
+      "known_proven_machine_clauses": 16,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.03,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 8,
+        "closed_machine_assumptions": 12,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          8,
+          10,
+          12,
+          14,
+          15,
+          17,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 8,
+      "trial": 1,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.003049,
+        "opened": [
+          1,
+          4,
+          5,
+          6,
+          9,
+          11,
+          14,
+          16
+        ],
+        "master_heuristic_score": 29535
+      },
+      "known_proven_machine_clauses": 17,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.03,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 8,
+        "closed_machine_assumptions": 12,
+        "sufficient_machine_conflict": [
+          0,
+          2,
+          3,
+          7,
+          8,
+          10,
+          12,
+          13,
+          15,
+          17,
+          18,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 8,
+      "trial": 2,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.00206377,
+        "opened": [
+          5,
+          10,
+          11,
+          12,
+          15,
+          16,
+          17,
+          18
+        ],
+        "master_heuristic_score": 30263
+      },
+      "known_proven_machine_clauses": 18,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.028,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 8,
+        "closed_machine_assumptions": 12,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          8,
+          9,
+          13,
+          14,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 8,
+      "trial": 3,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.002271599,
+        "opened": [
+          1,
+          4,
+          5,
+          11,
+          13,
+          14,
+          16,
+          19
+        ],
+        "master_heuristic_score": 30569
+      },
+      "known_proven_machine_clauses": 19,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.029,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 8,
+        "closed_machine_assumptions": 12,
+        "sufficient_machine_conflict": [
+          0,
+          2,
+          3,
+          6,
+          7,
+          8,
+          9,
+          10,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 8,
+      "trial": 4,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.002167829,
+        "opened": [
+          0,
+          5,
+          6,
+          7,
+          10,
+          11,
+          16,
+          18
+        ],
+        "master_heuristic_score": 31003
+      },
+      "known_proven_machine_clauses": 20,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.027,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 8,
+        "closed_machine_assumptions": 12,
+        "sufficient_machine_conflict": [
+          1,
+          2,
+          3,
+          4,
+          8,
+          9,
+          12,
+          13,
+          14,
+          15,
+          17,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 8,
+      "trial": 5,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0009898560000000001,
+        "opened": [
+          5,
+          8,
+          9,
+          11,
+          15,
+          16,
+          17,
+          19
+        ],
+        "master_heuristic_score": 31543
+      },
+      "known_proven_machine_clauses": 21,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.026,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 8,
+        "closed_machine_assumptions": 12,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          6,
+          7,
+          10,
+          12,
+          13,
+          14,
+          18
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 8,
+      "trial": 6,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0031007580000000003,
+        "opened": [
+          4,
+          5,
+          11,
+          12,
+          13,
+          14,
+          17,
+          19
+        ],
+        "master_heuristic_score": 32000
+      },
+      "known_proven_machine_clauses": 22,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.029,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 8,
+        "closed_machine_assumptions": 12,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          3,
+          6,
+          7,
+          8,
+          9,
+          10,
+          15,
+          16,
+          18
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 8,
+      "trial": 7,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0023886280000000003,
+        "opened": [
+          0,
+          1,
+          5,
+          6,
+          7,
+          11,
+          15,
+          18
+        ],
+        "master_heuristic_score": 32558
+      },
+      "known_proven_machine_clauses": 23,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.027,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 8,
+        "closed_machine_assumptions": 12,
+        "sufficient_machine_conflict": [
+          2,
+          3,
+          4,
+          8,
+          9,
+          10,
+          12,
+          13,
+          14,
+          16,
+          17,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 12,
+      "trial": 0,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.001339932,
+        "opened": [
+          0,
+          4,
+          5,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          16,
+          17,
+          18
+        ],
+        "master_heuristic_score": 48179
+      },
+      "known_proven_machine_clauses": 24,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.034,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 12,
+        "closed_machine_assumptions": 8,
+        "sufficient_machine_conflict": [
+          1,
+          2,
+          3,
+          6,
+          7,
+          14,
+          15,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 12,
+      "trial": 1,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.002107237,
+        "opened": [
+          1,
+          2,
+          5,
+          6,
+          7,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          19
+        ],
+        "master_heuristic_score": 49184
+      },
+      "known_proven_machine_clauses": 25,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.01,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 12,
+        "closed_machine_assumptions": 8,
+        "sufficient_machine_conflict": [
+          0,
+          3,
+          4,
+          8,
+          9,
+          16,
+          17,
+          18
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 12,
+      "trial": 2,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0016337620000000002,
+        "opened": [
+          0,
+          5,
+          6,
+          8,
+          9,
+          10,
+          11,
+          14,
+          16,
+          17,
+          18,
+          19
+        ],
+        "master_heuristic_score": 49531
+      },
+      "known_proven_machine_clauses": 26,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.03,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 12,
+        "closed_machine_assumptions": 8,
+        "sufficient_machine_conflict": [
+          1,
+          2,
+          3,
+          4,
+          7,
+          12,
+          13,
+          15
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 12,
+      "trial": 3,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.001115438,
+        "opened": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          8,
+          9,
+          11,
+          13,
+          15,
+          16
+        ],
+        "master_heuristic_score": 50608
+      },
+      "known_proven_machine_clauses": 27,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.03,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 12,
+        "closed_machine_assumptions": 8,
+        "sufficient_machine_conflict": [
+          0,
+          6,
+          10,
+          12,
+          14,
+          17,
+          18,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 12,
+      "trial": 4,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.005279575000000001,
+        "opened": [
+          0,
+          1,
+          4,
+          5,
+          6,
+          7,
+          10,
+          11,
+          12,
+          14,
+          17,
+          18
+        ],
+        "master_heuristic_score": 51155
+      },
+      "known_proven_machine_clauses": 28,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.032,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 12,
+        "closed_machine_assumptions": 8,
+        "sufficient_machine_conflict": [
+          2,
+          3,
+          8,
+          9,
+          13,
+          15,
+          16,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 12,
+      "trial": 5,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.002209113,
+        "opened": [
+          2,
+          3,
+          4,
+          5,
+          8,
+          9,
+          10,
+          11,
+          12,
+          15,
+          16,
+          19
+        ],
+        "master_heuristic_score": 52342
+      },
+      "known_proven_machine_clauses": 29,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.031,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 12,
+        "closed_machine_assumptions": 8,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          6,
+          7,
+          13,
+          14,
+          17,
+          18
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 12,
+      "trial": 6,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0035250380000000003,
+        "opened": [
+          0,
+          1,
+          2,
+          5,
+          7,
+          11,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18
+        ],
+        "master_heuristic_score": 52877
+      },
+      "known_proven_machine_clauses": 30,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.031,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 12,
+        "closed_machine_assumptions": 8,
+        "sufficient_machine_conflict": [
+          3,
+          4,
+          6,
+          8,
+          9,
+          10,
+          12,
+          19
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 12,
+      "trial": 7,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0023729840000000003,
+        "opened": [
+          3,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          19
+        ],
+        "master_heuristic_score": 53587
+      },
+      "known_proven_machine_clauses": 31,
+      "completion": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.01,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 12,
+        "closed_machine_assumptions": 8,
+        "sufficient_machine_conflict": [
+          0,
+          1,
+          2,
+          4,
+          15,
+          16,
+          17,
+          18
+        ]
+      },
+      "outcome": "VALID_MACHINE_CORE"
+    },
+    {
+      "stage": 16,
+      "trial": 0,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0016657610000000002,
+        "opened": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          8,
+          11,
+          12,
+          13,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "master_heuristic_score": 72211
+      },
+      "known_proven_machine_clauses": 32,
+      "completion": {
+        "status": "UNKNOWN",
+        "wall_seconds": 0.704,
+        "conflicts": 2,
+        "branches": 390,
+        "open_machine_count": 16,
+        "closed_machine_assumptions": 4
+      },
+      "outcome": "UNKNOWN_SKIP_THIS_MASK_ONLY"
+    },
+    {
+      "stage": 16,
+      "trial": 1,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0032930330000000003,
+        "opened": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          8,
+          9,
+          11,
+          12,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "master_heuristic_score": 72099
+      },
+      "known_proven_machine_clauses": 32,
+      "completion": {
+        "status": "UNKNOWN",
+        "wall_seconds": 0.703,
+        "conflicts": 0,
+        "branches": 314,
+        "open_machine_count": 16,
+        "closed_machine_assumptions": 4
+      },
+      "outcome": "UNKNOWN_SKIP_THIS_MASK_ONLY"
+    },
+    {
+      "stage": 16,
+      "trial": 2,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0036418170000000003,
+        "opened": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          8,
+          9,
+          11,
+          13,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "master_heuristic_score": 71981
+      },
+      "known_proven_machine_clauses": 32,
+      "completion": {
+        "status": "UNKNOWN",
+        "wall_seconds": 0.704,
+        "conflicts": 6,
+        "branches": 388,
+        "open_machine_count": 16,
+        "closed_machine_assumptions": 4
+      },
+      "outcome": "UNKNOWN_SKIP_THIS_MASK_ONLY"
+    },
+    {
+      "stage": 16,
+      "trial": 3,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.0034027410000000004,
+        "opened": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          11,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "master_heuristic_score": 72028
+      },
+      "known_proven_machine_clauses": 32,
+      "completion": {
+        "status": "UNKNOWN",
+        "wall_seconds": 0.703,
+        "conflicts": 1,
+        "branches": 231,
+        "open_machine_count": 16,
+        "closed_machine_assumptions": 4
+      },
+      "outcome": "UNKNOWN_SKIP_THIS_MASK_ONLY"
+    },
+    {
+      "stage": 16,
+      "trial": 4,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.003188733,
+        "opened": [
+          0,
+          1,
+          2,
+          4,
+          5,
+          6,
+          8,
+          9,
+          11,
+          12,
+          13,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "master_heuristic_score": 72034
+      },
+      "known_proven_machine_clauses": 32,
+      "completion": {
+        "status": "UNKNOWN",
+        "wall_seconds": 0.217,
+        "conflicts": 0,
+        "branches": 0,
+        "open_machine_count": 16,
+        "closed_machine_assumptions": 4
+      },
+      "outcome": "UNKNOWN_SKIP_THIS_MASK_ONLY"
+    }
+  ],
+  "status": "UNRESOLVED",
+  "wall_seconds": 4.993,
+  "complete": true,
+  "outcome": "GLOBAL_TIME_LIMIT"
+}
