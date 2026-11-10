@@ -31,7 +31,7 @@ jobs:
           mkdir -p results
           for seed in fs-101 shear-102 nist-g103; do
             python science-boundary/aes-sbox-circuit/mockturtle_xag_bridge.py --seed "$seed" --export "results/${seed}.net"
-            for setting in "8 2 0" "10 3 0" "8 3 -1"; do
+            for setting in "8 1 0" "8 2 0" "8 3 -1"; do
               read -r pi inserts odc <<< "$setting"
               name="${seed}-p${pi}-i${inserts}-odc${odc}"
               /tmp/aes-mockturtle/build/aes_xag_probe "results/${seed}.net" "results/${name}.xag" "$pi" "$inserts" "$odc" | tee "results/${name}.engine.json"
