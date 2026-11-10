@@ -1,0 +1,80 @@
+{
+  "instance": "dmu57-n7elite1911",
+  "incumbent": 4866,
+  "target": 4865,
+  "target_drop": 1,
+  "policy": "dynamic",
+  "precise_core_probe_budget_seconds": 0,
+  "auxiliary_mode": "none",
+  "auxiliary_weight": 3.0,
+  "auxiliary_parent_source": null,
+  "auxiliary_disagreement_count_by_machine": null,
+  "auxiliary_critical_disagreement_scores": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "group_released_all_29_resource_adjacencies": true,
+  "complete_NoOverlap_and_job_precedence_hard": true,
+  "all_open_machine_permutations_allowed": true,
+  "ta41_minimum_changed_machines_independently_proved": null,
+  "initial_valid_machine_conflict_count": 0,
+  "mandatory_ta41_adjacent_gateway_ids": [],
+  "stages": [
+    3,
+    5,
+    8,
+    12,
+    16,
+    20
+  ],
+  "traces": [
+    {
+      "stage": 3,
+      "trial": 0,
+      "master": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.000984436,
+        "opened": [
+          0,
+          6,
+          15
+        ],
+        "master_heuristic_score": 1174
+      },
+      "known_proven_machine_clauses": 0,
+      "completion": {
+        "status": "OPTIMAL",
+        "wall_seconds": 0.064,
+        "conflicts": 1,
+        "branches": 1849,
+        "open_machine_count": 3,
+        "closed_machine_assumptions": 17,
+        "independent_makespan": 4865,
+        "changed_machine_permutations": 1,
+        "reversed_baseline_adjacent_relations": 2
+      }
+    }
+  ],
+  "status": "CONSTRUCTIVE_IMPROVEMENT",
+  "verified_makespan": 4865,
+  "wall_seconds": 0.09,
+  "complete": true
+}
