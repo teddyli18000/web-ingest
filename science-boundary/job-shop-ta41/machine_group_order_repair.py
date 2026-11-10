@@ -150,7 +150,7 @@ def machine_master(k,clauses,exploration_nogoods,prior_score,policy,seed,budget)
     return opened,dict(status=slv.status_name(status),
         wall_seconds=slv.wall_time,opened=sorted(opened),master_heuristic_score=int(slv.objective_value))
 
-def full_cp(orders,pos,dur,opened,L,policy,seed,seconds,repair_objective='minimal-change'):
+def full_cp(orders,pos,dur,opened,L,policy,seed,seconds,repair_objective='minimal-change',core_probe_seconds=0.0):
     """Honest full-resource completion with ONLY group-level frozen orders."""
     mdl=cp_model.CpModel()
     start=[mdl.new_int_var(0,L-dur[i],f's{i}') for i in range(600)]
@@ -209,7 +209,28 @@ def full_cp(orders,pos,dur,opened,L,policy,seed,seconds,repair_objective='minima
         ids=solver.sufficient_assumptions_for_infeasibility()
         assert all(idx in closed_literals for idx in ids)
         core=frozenset(closed_literals[idx] for idx in ids)
+        trace['unshrunk_machine_conflict_size']=len(core)
+        # Explain failure with a SEPARATE feasibility-only full CP
+        # model. An optimization objective usually leaves the original
+        # unsat core as the entire set of closed machines. The second
+        # CP call has the same NoOverlap/jobs/deadline, but NO objective,
+        # so the assumptions can be substantially reduced.
+        # Both calls share the original per-attempt CP time budget.
+        if core_probe_seconds>0 and repair_objective=='minimal-change' and len(core)>1:
+            elapsed=time.monotonic()-t
+            probe_budget=min(core_probe_seconds,max(0.0,seconds-elapsed))
+            if probe_budget>=0.025:
+                explanation,_,candidate_core=full_cp(
+                    orders,pos,dur,opened,L,policy,seed+1009,
+                    probe_budget,'feasibility',0.0)
+                trace['explanation_probe_status']=explanation['status']
+                trace['explanation_probe_seconds']=explanation['wall_seconds']
+                trace['explanation_probe_budget']=round(probe_budget,4)
+                if candidate_core is not None and len(candidate_core)<len(core):
+                    core=candidate_core
+                    trace['precise_core_independently_cp_proved']=True
         trace['sufficient_machine_conflict']=sorted(core)
+        trace['final_machine_conflict_size']=len(core)
         return trace,None,core
     return trace,None,None
 
@@ -243,6 +264,7 @@ def run(a):
     traces=[]
     state=dict(instance='ta41' if istarget else Path(a.start).parent.name,
         incumbent=C,target=target,target_drop=target_drop,policy=a.policy,
+        precise_core_probe_budget_seconds=(a.core_probe_seconds if a.policy=='precise-core' else 0),
         auxiliary_mode=auxiliary_mode,auxiliary_weight=auxiliary_weight,
         auxiliary_parent_source=(str(auxiliary) if auxiliary else None),
         auxiliary_disagreement_count_by_machine=aux_disagreement_counts,
@@ -294,7 +316,7 @@ def run(a):
             for core in learned:
                 weight=1/(len(core)**0.5)
                 for m in core:degree[m]+=weight
-            if a.policy=='dynamic':
+            if a.policy in ('dynamic','precise-core'):
                 priority=[static[m]*0.12+2.5*degree[m]+
                     auxiliary_weight*extra_signal[m] for m in range(20)]
             elif a.policy=='static':
@@ -327,7 +349,8 @@ def run(a):
                 orders,pos,dur,chosen,target,a.policy,
                 a.seed*7+stage_index*1009+iteration*11,
                 min(a.cp_seconds,max(0.01,remaining-0.01)),
-                a.repair_objective)
+                a.repair_objective,
+                a.core_probe_seconds if a.policy=='precise-core' else 0.0)
             row['completion']=result
             if schedule is not None:
                 v=evaluate(schedule,pos,dur)
@@ -369,7 +392,7 @@ def run(a):
 if __name__=='__main__':
     p=argparse.ArgumentParser()
     p.add_argument('--start',required=True)
-    p.add_argument('--policy',choices=['dynamic','static','random','novelty'],required=True)
+    p.add_argument('--policy',choices=['dynamic','precise-core','static','random','novelty'],required=True)
     p.add_argument('--seed',type=int,default=4107)
     p.add_argument('--target-drop',type=int,default=1)
     p.add_argument('--auxiliary-start',type=Path,default=None)
@@ -380,6 +403,7 @@ if __name__=='__main__':
     p.add_argument('--repair-objective',choices=['minimal-change','feasibility'],default='minimal-change')
     p.add_argument('--fixed-open-machines',nargs='+',type=int,default=[])
     p.add_argument('--cp-seconds',type=float,default=1.5)
+    p.add_argument('--core-probe-seconds',type=float,default=0.20)
     p.add_argument('--master-seconds',type=float,default=.3)
     p.add_argument('--total-seconds',type=float,default=120)
     p.add_argument('--out',type=Path,required=True)
