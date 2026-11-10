@@ -83,6 +83,10 @@ For a selected set of four spin indices, expand `E=sum_k C_k^2` into its Ising p
 
 We checked this formula independently on small N by averaging the full LABS energy over every assignment of the environment. For every tested subsystem assignment, the average full energy minus the formula was a subsystem-independent constant, as required.
 
+### 2026-11-10: projection versus pre-squared-edge deletion
+
+For the documented expanded-Ising projection, the even-gap two-spin term remains valid even if the pair's midpoint is outside the chosen four spins: `(s_i s_m)(s_m s_j)=s_i s_j`. Deleting cross-boundary correlation edges *before* squaring is a **different** operator, which would instead require a selected midpoint. These two definitions were conflated in [issue #23](https://github.com/teddyli18000/web-ingest/issues/23). A direct uniform average of full LABS energy over every exterior sign validates the original even-gap projection over **2,000** (N, subset, assignment) cases for N5–8; [independent regression](../code/check_isolated_n4_projection.py). The provisional midpoint-only modification was reverted after this audit. [Detailed argument](../results/2026-11-10-conditional-exterior-value.md). Paper authors' exact executable interpretation is not established by this local algebra check.
+
 ## Current local search code
 
 `code/search.cpp` is deliberately small and inspectable:
