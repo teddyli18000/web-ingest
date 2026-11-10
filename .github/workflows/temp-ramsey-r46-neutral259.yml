@@ -1,0 +1,89 @@
+name: temp Ramsey R46 neutral259 constructive diversification
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-neutral259.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-neutral259-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - {seed: 1001, depth: 7}
+          - {seed: 1002, depth: 10}
+          - {seed: 1003, depth: 13}
+          - {seed: 1004, depth: 16}
+          - {seed: 1005, depth: 7}
+          - {seed: 1006, depth: 10}
+          - {seed: 1007, depth: 13}
+          - {seed: 1008, depth: 16}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Search from the nonisomorphic 259-edge 12-defect elite
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/ramsey-neutral259"
+          python3 science-boundary/ramsey-r46/compound_repair_diverse.py \
+            --initial science-boundary/ramsey-r46/results/neutral-network-36-12-defects-259edges.json \
+            --out "$RUNNER_TEMP/ramsey-neutral259/best.json" \
+            --novel-out "$RUNNER_TEMP/ramsey-neutral259/diverse.json" \
+            --seed ${{ matrix.seed }} --depth ${{ matrix.depth }} \
+            --depth-jitter 12 --steps 30000 --seconds 145 \
+            --min-distance 12 --cross-rate 0.22 \
+            | tee "$RUNNER_TEMP/ramsey-neutral259/run.log"
+      - name: Independently verify candidate quality
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,os
+          d=Path(os.environ["RUNNER_TEMP"])/"ramsey-neutral259"
+          for p in (d/"best.json",d/"diverse.json"):
+              if not p.exists():continue
+              rows=json.loads(p.read_text())["adjacency"]
+              n=len(rows)
+              assert n==36 and all(len(r)==n for r in rows)
+              assert all(rows[i][i]=="0" and rows[i][j]==rows[j][i] for i in range(n) for j in range(n))
+              a=[sum(1<<j for j,c in enumerate(r) if c=="1") for r in rows]
+              full=(1<<n)-1
+              co=[full&~x&~(1<<i) for i,x in enumerate(a)]
+              def count(g,k,mask):
+                  if not k:return 1
+                  out=0
+                  while mask.bit_count()>=k:
+                      bit=mask&-mask;u=bit.bit_length()-1;mask^=bit
+                      out+=count(g,k-1,mask&g[u])
+                  return out
+              k4=count(a,4,full);i6=count(co,6,full)
+              assert k4+i6<=12
+              print("INDEPENDENT_VERIFIED",p.name,"K4",k4,"I6",i6,"edges",sum(x.bit_count() for x in a)//2)
+              if k4+i6==0:(d/"witness.json").write_text(json.dumps({"adjacency":rows}))
+          PY
+          if test -f "$RUNNER_TEMP/ramsey-neutral259/witness.json"; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+            mkdir -p "$RUNNER_TEMP/p003-verify"
+            cp "$RUNNER_TEMP/ramsey-neutral259/witness.json" "$RUNNER_TEMP/p003-verify/certificate.json"
+            python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/p003-verify"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-neutral259-${{ matrix.seed }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/ramsey-neutral259/
