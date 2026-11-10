@@ -1,0 +1,87 @@
+name: temp Thomson 960 physically calibrated SO3 basin-filling
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-calibrated-basin-filling.yml'
+
+jobs:
+  calibrated:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 190
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - seed: 55301
+            width: '0.0030'
+          - seed: 55302
+            width: '0.0050'
+    permissions:
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: few-shots/few-shots
+          path: few-shots
+          persist-credentials: false
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy numba
+      - name: Verify analytic SO3 well-filling force and R A B W source energies
+        run: |
+          python3 -m py_compile science-boundary/thomson-960/code/search_alignment_basin_filling.py
+          python3 science-boundary/thomson-960/code/search_alignment_basin_filling.py \
+            few-shots \
+            --a-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --b-json science-boundary/thomson-960/data/basin-b-010566.json \
+            --w-json science-boundary/thomson-960/data/scar-braid-elites-2202-2026-11-06.json \
+            --seed ${{ matrix.seed }} --cycles 4 --sigma ${{ matrix.width }} \
+            --maxiter 380 --out "$RUNNER_TEMP/smoke"
+      - name: Construct competitive N960 minima by calibrated and adaptive basin filling
+        run: |
+          python3 science-boundary/thomson-960/code/search_alignment_basin_filling.py \
+            few-shots \
+            --a-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --b-json science-boundary/thomson-960/data/basin-b-010566.json \
+            --w-json science-boundary/thomson-960/data/scar-braid-elites-2202-2026-11-06.json \
+            --seed ${{ matrix.seed }} --cycles 110 --sigma ${{ matrix.width }} \
+            --maxiter 640 --out "$RUNNER_TEMP/out"
+      - name: Report true unbiased energy distribution relative to R and W
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os,pathlib,json
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])
+          for item in ('smoke','out'):
+              p=root/item/'result.json'
+              if not p.exists():print('MISSING',p);continue
+              d=json.loads(p.read_text())
+              print('RESULT',item,'seed',d['seed'],
+                    'sigma',d['bias_width'],'height',d['base_height'],
+                    'cycles',d['cycles_done'],
+                    'best',d['best_record_candidate'],
+                    'new_basins',d['new_unconstrained_basins'],
+                    'candidates',d['winning_candidates'])
+              print('SOURCE_RMS_DISTANCES',d['initial_parent_distances'])
+              for ctrl in (False,True):
+                  z=[r for r in d['rows'] if r['control']==ctrl]
+                  print('CONTROL',ctrl,'n',len(z),
+                        'best',min((r['true_coulomb_E'] for r in z),default=None),
+                        'new',sum(r['new_basin'] for r in z))
+              print('ELITES',[(z['energy'],z['tag']) for z in d['elites']])
+              print('HILLS',[(z['tag'],z['height'],z['visits']) for z in d['hills']])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-calibrated-basinfill-${{ matrix.seed }}
+          path: |
+            ${{ runner.temp }}/out
+            ${{ runner.temp }}/smoke
+          retention-days: 14
