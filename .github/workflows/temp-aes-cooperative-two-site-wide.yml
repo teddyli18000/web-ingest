@@ -1,0 +1,45 @@
+name: temp-aes-cooperative-two-site-wide
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-aes-cooperative-two-site-wide.yml'
+permissions:
+  contents: read
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    strategy:
+      fail-fast: false
+      matrix:
+        source: [fs-101, shear-102]
+        shard: [0,1,2,3]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construct exact jointly compensated nonlocal AES rewrites
+        run: |
+          set -euxo pipefail
+          python science-boundary/aes-sbox-circuit/joint_two_retarget_construct.py \
+            --source '${{ matrix.source }}' --shard '${{ matrix.shard }}' --shards 4 \
+            --first-choices 650 --later-distance 100 --per-repair 30 \
+            --seconds 380 --out result | tee run.log
+          python -c "import json; d=json.load(open('result/summary.json')); assert d['full_256_verified']; print(d['best_gates'],d['best_AND_truth_set_delta'])"
+      - name: Independent official verifier for a valid <=100 candidate
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-cooperative-wide-${{ matrix.source }}-${{ matrix.shard }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
