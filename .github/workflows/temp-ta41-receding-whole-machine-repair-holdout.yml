@@ -1,0 +1,52 @@
+name: temp-ta41-receding-whole-machine-repair-holdout
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-receding-whole-machine-repair-holdout.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-receding-whole-machine-repair-holdout
+  cancel-in-progress: false
+jobs:
+  repeated_repair:
+    strategy:
+      fail-fast: false
+      matrix:
+        initial_seed: [1801, 1811]
+        policy: [dynamic, static, random]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin CP and validate receding solver syntactically
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/receding_machine_group_repair.py science-boundary/job-shop-ta41/machine_group_order_repair.py
+      - name: Rebuild and revalidate each improved incumbent as the next hidden-answer problem, 5s total per start
+        run: |
+          python3 science-boundary/job-shop-ta41/receding_machine_group_repair.py \
+            --cases-dir science-boundary/job-shop-ta41/positive-n7-holdout-data \
+            --initial-seed '${{ matrix.initial_seed }}' --expected-instances 3 \
+            --policy '${{ matrix.policy }}' --seconds 5 \
+            --window 1.5 --cp-seconds .55 --master-seconds .12 \
+            --out 'science-boundary/job-shop-ta41/results/receding-holdout-${{ matrix.initial_seed }}-${{ matrix.policy }}'
+      - name: Save all full 600-operation verified intermediate improvements and exact time traces
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/receding-holdout-${{ matrix.initial_seed }}-${{ matrix.policy }}'
+          if ! test -d "$dir"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): receding whole-machine 5s heldout ${{ matrix.initial_seed }} ${{ matrix.policy }}'
+          for i in $(seq 1 40); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
