@@ -84,3 +84,27 @@ A fixed original parent with high machine-distance lower bound suggests genuinel
 Perhaps **information content from a SECOND genuinely independent elite** (not merely marginals of generated UNSAT cores) helps identify critical machine groups before full schedule construction. Controlled trial `temp-ta41-real-vs-fake-second-elite-dmu.yml`: each current A receives ONLY a source-real B same-instance 20s independently optimized machine order for **machine group priority**, never as parent solution or CP order. Compare against a fake B that matches the exact number of A-adjacent pair disagreements **on every machine** but assigns disagreements to uniformly randomized pair positions. Both get target-drop 4, 5s, same source A and seed; original A-only dynamic4/random4 are already recorded. If real B is no better than count-matched fake B, individual A–B orientation information has no demonstrated transferable added value.
 
 **Next research direction after source-real/fake result:** If the source-real B improves validated hit-rate and quality, further test B-supplied branching/conditional compatibility rather than naively training a GNN. If not, shift to a construction that uses true N7's large-basin moves and CP's efficient small coordinated repairs, with strict 5s budget and full 600-operation independent schedule verification; no more marginal-score tuning on failed source family.
+
+## Completed source-real versus count-matched fake second elite B (2026-11-09 PST)
+
+The identical DMU 20 independent N7 elite A starts and 2 second-stage seeds each (40 paired searches per arm, target drop=4, 5 seconds) were rerun with:
+
+- `real`: provide genuinely independent second 20-second-source-N7 elite B of SAME JSSP instance to **machine group priority scores only**; CP completion always starts from A; never uses B as a target or machine fixed order.
+- `count-matched-fake`: for each machine preserve exactly the count of A-adjacent job-pair reversals observed in real B, but uniformly randomly assign which original adjacent positions carry that flag. Fake orientation positions need not correspond to a consistent complete schedule; only marginal counts are matched.
+- `none`: no B signal, A-only dynamic source-group criticality, same 5-second timing and target drop=4.
+- `random`: unchanged random group master, same CP completion with target drop=4.
+
+| Arm | improvement /40 | mean Cmax decrease |
+|---|---:|---:|
+| Real B | 21 | 2.65 |
+| Count-matched fake B | 22 | 2.85 |
+| No B | 21 | 2.80 |
+| Random machine group selection | **26** | **3.30** |
+
+Paired real-vs-fake: **5 real wins /30 ties /5 real losses**, real vs no B **5/28/7**, real vs random **6/22/12**. **No transferable incremental value of these tested detailed A-B adjacent orientation signals is established.** This is a falsification of a feature, NOT of all cross-elite linkage or learned representations. Source runs completed with success (Action `42771937010`), results in `results/dmu-elite-information-{dmu16-20,dmu56-60}-{1901,1911}-{real,count-matched-fake}/summary.json` and matched baseline `results/dmu-target-*/summary.json`.
+
+## Primary source for historical ta41=2005 and methodological pivot
+
+Found and visually inspected original 2015 Vilím, Laborie, Shaw CPAIOR [`Failure-directed Search for Constraint-based Scheduling — Detailed Experimental Results`](https://vilim.eu/petr/cpaior2015-results.pdf), page 2: **tail41 LB1906 UB2005** in the authors' own table. The companion [primary research paper](https://vilim.eu/petr/cpaior2015.pdf) (DOI `10.1007/978-3-319-18008-3_30`) describes using LNS as plan A and FDS as plan B once LNS plateaus, with **binary start-time domain choices** that force a bound change and branch preference for likely failure. This avoids re-running the same limited local-neighborhood search when progress stalls. The table contains NO 600-operation order/time certificate; 2005 is a **published claim, not an independently verified Few Shots submission**. Do not conflate with available score-2006 valid schedule. Thomas Weise's independently maintained literature table also attributes 2005 to the same VLS 2015 appendix, not an independent valid raw witness.
+
+New, concretely distinct construction underway: published source N7 as plan A for 4 seconds **then** CP group repair as plan B within remaining ~1 second, compared at matched starting A and source-N7 seed against published true N7 alone for 5 seconds. Distinct from prior neutral CP -> N7 studies. Source `n7_then_group_cp.py`, Action `temp-ta41-original-n7-then-constructive-cp.yml`. Demand positive out-of-family objective gains (not merely success counts), and keep exact 600-operation verifier before claiming anything. This simple hybrid is standard methods in combination, not yet a new FDS algorithm.
