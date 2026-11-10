@@ -1,0 +1,91 @@
+Thomson N960 — completed C2 20/24-dislocation genetic experiment and
+rotation-invariant adaptive basin-filling reformulation.
+Date: 2026-11-10, local America/Los_Angeles.
+
+CURRENT OFFICIAL FEW SHOTS RECORD
+  444368.3924061973 (Ronnie2025 C3), as confirmed again 2026-11-10
+  in few-shots/few-shots/data/board.json; no open p007 PR.
+  Valid winning score <= 444368.3924051973 (epsilon 1e-6).
+
+COMPLETED SUCCESSFULLY C2 DIFFERENT-TOPOLOGY GENETIC SEARCH:
+  action: https://github.com/teddyli18000/web-ingest/actions/runs/42500890656
+  source: code/search_c2_cross_topology_genetic.py
+  seed 84201: 85 six-replica sweeps, 103 fully unconstrained
+               N960 releases, no subrecord, best C2 incumbent D2
+               at 444368.4040805305.
+               Distinct LOW C2 constrained minimum 444368.4042831120
+               (~0.000202582 above D2) is newly captured in artifact.
+               After symmetry release this basin returned to D2.
+               Other released independent minima begin at
+               ~444368.4539121383, R+0.061505941.
+  seed 84202: 85 sweeps, 126 fully unconstrained N960 releases,
+               no subrecord, best C2 incumbent D2.
+               Nearest novel C2 state ~444368.4549507350.
+               Other released independent minima begin at
+               ~444368.4539121382, R+0.061505941.
+  Total 170 symmetry-quotient sweeps, 229 true physical N960 releases.
+  Both seed runs completed with green status and expected artifacts.
+  T parent 444368.4373479894 axis registration max ~6e-11;
+  D2 parent 444368.4040805305, D2 C2 fit max ~5.2e-7,
+  all source energy checks passed. Operators: 658 C2 scar flows,
+  362 randomcap, 245 cut-splice, 142 matched regional patches
+  (combined across two formal 85-sweep searches).
+  Note new C2 near-D2 energy is a constrained subspace state and
+  is NOT a better 960 unconstrained candidate; after release
+  it returns to D2. Record R remains the global incumbent
+  in runner scores because it is included as known reference only.
+
+THIS INVALIDATES THE SIMPLE HYPOTHESIS that retaining just a single
+2-fold symmetry while recombining a 20-dislocation D2 donor and a
+24-dislocation T donor will expose a lower-energy N960 basin by
+symmetry-constrained crossover. It is NOT an exclusion of all
+possible coupled topology/elasticity changes.
+The C3/C2 GA searches and 3-particle orbit experiments have
+produced many higher minima, but the best genuinely new
+independently physically repolished N960 basin from the earlier
+scar-braid method remains W=444368.42162124 = R + .02921504.
+
+CONSTRUCTIVE SEARCH-SPACE REFORMULATION
+  Prior work perturbed parents, varied interaction exponent/metric,
+  changed particle count, or recombined populations. Most
+  trajectories returned R/A/B/D2 or produced high-energy
+  dislocation defects. Instead we now *fill already known basins*
+  directly in the fully unsymmetrized 960-particle landscape and
+  repeatedly score true Coulomb quench endpoints. Specifically:
+      Ebiased(X) = ECoulomb(X)
+                   + sum_h height_h * exp(-dSO3(X,Ph)^2/(2 sigma_h^2)).
+  Here dSO3 is mean Euclidean squared chord distance after optimal
+  proper Kabsch rotation, retaining corresponding labelled particles
+  across actual search trajectories. The bias is not the scoring
+  objective and is removed completely before each real N960 quench.
+  SVD envelope theorem supplies the exact derivative of dSO3,
+  including a finite difference check of 12 random angular
+  coordinates and identity-point gradient near zero. Strong
+  known seeds are record R, A=444368.3956862257,
+  B=444368.4029728612 and independently new W=444368.42162124.
+  Visits to known basins increment Gaussian hills, discouraging
+  future repeated returns. Unlike a one-shot local kick, this
+  changes the search objective by feedback based on *actual
+  visited basins*.
+
+  Code: code/search_alignment_basin_filling.py
+  Run: https://github.com/teddyli18000/web-ingest/actions/runs/42851511543
+  Two independent 105-cycle runs, explicit 1/6 un-biased
+  classical control, exact N960 physically scored on all releases.
+  No record claim until the independent official p007 rational
+  verifier certifies >=1e-6 improvement.
+
+Scientific references:
+  Amore & Wales, J. Chem. Phys. 165, 164104 (2026),
+    DOI 10.1063/5.0355867 (independent symmetry seeds and
+    propagation across adjacent particle counts).
+  Valsson et al., Nat Rev Phys 2 (2020), Using metadynamics
+    to explore complex free-energy landscapes,
+    DOI 10.1038/s42254-020-0153-0.
+    This paper describes biasing along selected collective
+    variables; our algorithm implements a specific
+    rotation-invariant positional collective variable and
+    an adaptive basin-filling optimization search, *not*
+    a validated thermodynamic free-energy reconstruction.
+  Historical source in repo:
+    results/c3-genetic-triplet-results-c2-topology-pivot-2026-11-08.txt.
