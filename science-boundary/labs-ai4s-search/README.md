@@ -1,5 +1,13 @@
 # AI4S search-method discovery for low-autocorrelation binary sequences
 
+## Current research decision (2026-11-10)
+
+**Neural/generative LABS AI4S direction is deprioritized following a finite adversarial objective/strong-classical audit**, not declared mathematically impossible. Detailed independently verified report: [hidden third-optimum C / final target-correction and 4-spin control](recombination_20261105/innovation/hidden_C_20261108/FINAL_DECISION_20261110.md). This conclusion applies **only** to the separate `labs-ai4s-search/` track; it does not stop or modify the autonomous N100 record solver in `labs-100/`.
+
+Key corrections: earlier 9/16-feature Ridge predicted repaired energy rather than discovery of new high-quality eightfold symmetry orbits; exact C-shell reconstruction was over-counted as new search basin discovery; fixed candidate banks were C-unreachable even with an oracle, while original-X restarts recover C primarily by classic multistart and do **not** show stable real-B or learned-joint-feature advantage. Three independently exact-scored corrected *paper-inspired* isolated n4 LABS classical campaigns (N46/47/50, 2,592 150ms sessions) **generated zero source-registry-new ≤5% orbit** and trailed classic repeated-X Tabu in average elite-state search quality. A mathematical isolated two-body coefficient bug was found in a historical `labs-100` experimental source; owner notified via [#23](https://github.com/teddyli18000/web-ingest/issues/23), code left untouched. The 2026 Lau–Gangat study uses global optimum TTS scaling, not our costed warm-start basin discovery metric; no author-code equivalence claimed.
+
+**Reopen gate** requires C-blind, source-orbit-held-out *candidate support* plus learned value for newly discovered ≤5%-near-best orbit yield per total computation beyond modern strong classical baselines. No diffusion/dual-branch neural model justified until then. Preserve the classical observation that low-energy improvement can destroy the original anchor's future search value, but do not inflate it to a neural advance.
+
 ## Question
 
 Can learning or program discovery produce a **reproducible, transferable improvement in low-autocorrelation binary sequence (LABS) search**, especially at escaping difficult local minima or selecting promising search basins? A verified improvement at length 100 is an ambitious secondary outcome, not a claimed result.
