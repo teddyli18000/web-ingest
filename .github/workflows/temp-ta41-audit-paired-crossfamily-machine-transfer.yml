@@ -1,0 +1,60 @@
+name: temp-ta41-audit-paired-crossfamily-machine-transfer
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-audit-paired-crossfamily-machine-transfer.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-audit-paired-crossfamily-machine-transfer
+  cancel-in-progress: false
+jobs:
+  independent_audit:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - label: taillard-dev
+            source: positive-n7-elite-data
+            prefix: machine-group-transfer-strict
+            original: positive-independent-true-n7
+          - label: taillard-holdout
+            source: positive-n7-holdout-data
+            prefix: holdout-machine-group
+            original: holdout-original-n7
+          - label: dmu16-20
+            source: positive-n7-dmu16-20
+            prefix: dmu-transfer-dmu16-20
+            original: dmu-source-n7-dmu16-20
+          - label: dmu56-60
+            source: positive-n7-dmu56-60
+            prefix: dmu-transfer-dmu56-60
+            original: dmu-source-n7-dmu56-60
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Independently grade all source-verified paired makespans under same starts
+        run: |
+          python3 -m py_compile science-boundary/job-shop-ta41/judge_machine_group_generalization.py
+          python3 science-boundary/job-shop-ta41/judge_machine_group_generalization.py \
+            --source-data 'science-boundary/job-shop-ta41/${{ matrix.source }}' \
+            --group-summaries 'science-boundary/job-shop-ta41/results/${{ matrix.prefix }}' \
+            --true-n7-results 'science-boundary/job-shop-ta41/results/${{ matrix.original }}/results.json' \
+            --out 'science-boundary/job-shop-ta41/results/machine-group-crossfamily-judged-${{ matrix.label }}.json'
+      - name: Preserve paired blind score and family-level comparisons
+        run: |
+          set -euo pipefail
+          file='science-boundary/job-shop-ta41/results/machine-group-crossfamily-judged-${{ matrix.label }}.json'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$file"
+          git commit -m 'research(ta41): inspectable matched author-N7 and whole-machine 5s verdict ${{ matrix.label }}'
+          for attempt in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
