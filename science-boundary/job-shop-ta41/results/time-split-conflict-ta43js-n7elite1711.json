@@ -1,0 +1,1515 @@
+{
+  "case": "ta43js-n7elite1711",
+  "source_start_makespan": 1888,
+  "hard_target": 1887,
+  "original_machine_keeping_assumptions": 20,
+  "original_complete_600_operation_jobshop_hard_constraints": true,
+  "time_choices": "startOf(operation)<=earliestOriginalStart OR > earliestOriginalStart",
+  "source_only_critical_candidates": 24,
+  "direct_unsat_core": {
+    "status": "INFEASIBLE",
+    "wall_seconds": 0.0715,
+    "branches": 60,
+    "conflicts": 3,
+    "total_assumptions": 20,
+    "side": null,
+    "sufficient_machine_core": [
+      6,
+      8,
+      12,
+      15,
+      17,
+      18
+    ]
+  },
+  "split_tests": [
+    {
+      "op": 181,
+      "job": 9,
+      "job_step": 1,
+      "machine": 19,
+      "split_start_time": 42,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0742,
+        "branches": 62,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0766,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0529,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 182,
+      "job": 9,
+      "job_step": 2,
+      "machine": 0,
+      "split_start_time": 113,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0702,
+        "branches": 64,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.068,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0453,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 265,
+      "job": 13,
+      "job_step": 5,
+      "machine": 7,
+      "split_start_time": 258,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0737,
+        "branches": 64,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0688,
+        "branches": 57,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0468,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 266,
+      "job": 13,
+      "job_step": 6,
+      "machine": 1,
+      "split_start_time": 289,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0722,
+        "branches": 64,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.069,
+        "branches": 57,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0605,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 482,
+      "job": 24,
+      "job_step": 2,
+      "machine": 15,
+      "split_start_time": 378,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0705,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.07,
+        "branches": 57,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0464,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 164,
+      "job": 8,
+      "job_step": 4,
+      "machine": 15,
+      "split_start_time": 419,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0691,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.065,
+        "branches": 55,
+        "conflicts": 2,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          17,
+          18
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0449,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 448,
+      "job": 22,
+      "job_step": 8,
+      "machine": 15,
+      "split_start_time": 528,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0695,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0617,
+        "branches": 54,
+        "conflicts": 2,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          17,
+          18
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0428,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 449,
+      "job": 22,
+      "job_step": 9,
+      "machine": 18,
+      "split_start_time": 625,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0689,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0608,
+        "branches": 54,
+        "conflicts": 2,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          17,
+          18
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0425,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 5,
+      "job": 0,
+      "job_step": 5,
+      "machine": 12,
+      "split_start_time": 753,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0674,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0567,
+        "branches": 49,
+        "conflicts": 2,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8,
+          17,
+          18
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0422,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 6,
+      "job": 0,
+      "job_step": 6,
+      "machine": 18,
+      "split_start_time": 843,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0676,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0554,
+        "branches": 49,
+        "conflicts": 2,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8,
+          17,
+          18
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0442,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 194,
+      "job": 9,
+      "job_step": 14,
+      "machine": 18,
+      "split_start_time": 952,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0676,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.054,
+        "branches": 49,
+        "conflicts": 2,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8,
+          17,
+          18
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0447,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 472,
+      "job": 23,
+      "job_step": 12,
+      "machine": 18,
+      "split_start_time": 1040,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0685,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0563,
+        "branches": 49,
+        "conflicts": 2,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8,
+          17,
+          18
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0455,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 366,
+      "job": 18,
+      "job_step": 6,
+      "machine": 18,
+      "split_start_time": 1120,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0668,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0575,
+        "branches": 49,
+        "conflicts": 2,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8,
+          17,
+          18
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0454,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 576,
+      "job": 28,
+      "job_step": 16,
+      "machine": 18,
+      "split_start_time": 1140,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0683,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0582,
+        "branches": 49,
+        "conflicts": 2,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8,
+          17,
+          18
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0467,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 72,
+      "job": 3,
+      "job_step": 12,
+      "machine": 18,
+      "split_start_time": 1210,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0701,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0589,
+        "branches": 49,
+        "conflicts": 2,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8,
+          17,
+          18
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0435,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 313,
+      "job": 15,
+      "job_step": 13,
+      "machine": 18,
+      "split_start_time": 1281,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0689,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0543,
+        "branches": 46,
+        "conflicts": 2,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8,
+          17
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0428,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 391,
+      "job": 19,
+      "job_step": 11,
+      "machine": 17,
+      "split_start_time": 1371,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0673,
+        "branches": 57,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0522,
+        "branches": 46,
+        "conflicts": 2,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8,
+          17
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0425,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 291,
+      "job": 14,
+      "job_step": 11,
+      "machine": 17,
+      "split_start_time": 1420,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0665,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0518,
+        "branches": 42,
+        "conflicts": 1,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.042,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 76,
+      "job": 3,
+      "job_step": 16,
+      "machine": 8,
+      "split_start_time": 1447,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0679,
+        "branches": 58,
+        "conflicts": 2,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          7,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0488,
+        "branches": 42,
+        "conflicts": 1,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        7,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 7,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0471,
+        "branches": 34,
+        "conflicts": 3,
+        "total_assumptions": 7,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 54,
+      "job": 2,
+      "job_step": 14,
+      "machine": 8,
+      "split_start_time": 1519,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0679,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0551,
+        "branches": 42,
+        "conflicts": 1,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0441,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 254,
+      "job": 12,
+      "job_step": 14,
+      "machine": 8,
+      "split_start_time": 1548,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0695,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.055,
+        "branches": 42,
+        "conflicts": 1,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0465,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 277,
+      "job": 13,
+      "job_step": 17,
+      "machine": 8,
+      "split_start_time": 1559,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0685,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0529,
+        "branches": 42,
+        "conflicts": 1,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0462,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 116,
+      "job": 5,
+      "job_step": 16,
+      "machine": 8,
+      "split_start_time": 1676,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0697,
+        "branches": 60,
+        "conflicts": 2,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0519,
+        "branches": 42,
+        "conflicts": 1,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6,
+          8
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0473,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    },
+    {
+      "op": 238,
+      "job": 11,
+      "job_step": 18,
+      "machine": 6,
+      "split_start_time": 1809,
+      "early": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0699,
+        "branches": 60,
+        "conflicts": 3,
+        "total_assumptions": 20,
+        "side": "early",
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      },
+      "late": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0501,
+        "branches": 38,
+        "conflicts": 0,
+        "total_assumptions": 20,
+        "side": "late",
+        "sufficient_machine_core": [
+          6
+        ]
+      },
+      "logical_union_machine_release_clause": [
+        6,
+        8,
+        12,
+        15,
+        17,
+        18
+      ],
+      "union_core_size": 6,
+      "unbranched_independent_audit": {
+        "status": "INFEASIBLE",
+        "wall_seconds": 0.0456,
+        "branches": 29,
+        "conflicts": 2,
+        "total_assumptions": 6,
+        "side": null,
+        "sufficient_machine_core": [
+          6,
+          8,
+          12,
+          15,
+          17,
+          18
+        ]
+      }
+    }
+  ],
+  "fully_resolved_splits": 24,
+  "independently_reproduced_resolved_machine_cores": 24,
+  "no_hidden_schedule_used": true,
+  "source_concept": "Vilim/Laborie/Shaw 2015 FDS start-time choices + elementary resolution of conditional machine-core conflicts; NOT FDS reproduction",
+  "proven_global_impossibility_claimed": false,
+  "complete": true,
+  "elapsed_seconds": 5.353
+}
