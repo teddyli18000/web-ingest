@@ -194,7 +194,7 @@ void deploy(const vector<Scenario>&data,const map<string,Model>&models,
             const string&events,const string&summary,int budget){
  ofstream ev(events),out(summary);if(!ev||!out)throw runtime_error("deploy outputs open");
  ev<<"id\tn\tmode\tdamage\trep\tarm\titeration\tt_ms\tpostE\tpostBits\tpostCanon\t"
-   "rawE\trawBits\tselection_ms\trepair_ms\tcurrentE\tcandidate_count\tproposal_origin_E\tproposal_origin_bits\tretention_active\n";
+   "rawE\trawBits\tselection_ms\trepair_ms\tcurrentE\tcandidate_count\tproposal_origin_E\tproposal_origin_bits\tretention_active\talways_original\n";
  out<<"id\tn\tmode\tdamage\trep\tarm\tbudget_ms\twall_ms\tsteps\t"
     "bestE\tbestBits\tbestCanon\tbestNonA_E\tbestNonA_Bits\tbestNonA_Canon\t"
     "source_returns\tfull_repair_calls\tmodel_cost_ms\traw_energy_calls\n";
@@ -207,6 +207,7 @@ void deploy(const vector<Scenario>&data,const map<string,Model>&models,
    L current=s.X;History history(current.e);
    const bool forceRealChange=(getenv("LABS_FORCE_NONZERO") && string(getenv("LABS_FORCE_NONZERO"))=="1");
    const bool retainOriginal=(getenv("LABS_RETAIN_ORIGINAL_X") && string(getenv("LABS_RETAIN_ORIGINAL_X"))=="1");
+   const bool alwaysOriginal=(getenv("LABS_ALWAYS_ORIGINAL_X") && string(getenv("LABS_ALWAYS_ORIGINAL_X"))=="1");
    int bestE=INT_MAX,bestNonA=INT_MAX,sourceReturns=0,repairs=0,iterations=0,rawCount=0;
    double inferenceTime=0;
    string bestWord,bestCan,bestOtherWord,bestOtherCan;
@@ -217,7 +218,7 @@ void deploy(const vector<Scenario>&data,const map<string,Model>&models,
      ev<<s.id<<"\t"<<s.n<<"\t"<<s.mode<<"\t"<<s.damage<<"\t"<<s.rep
        <<"\t"<<arm<<"\t"<<iteration<<"\t"<<t<<"\t"<<repaired.e<<"\t"
        <<word<<"\t"<<can<<"\t"<<raw.e<<"\t"<<bits(raw)<<"\t"<<selectms<<"\t"<<repairms
-       <<"\t"<<current.e<<"\t"<<count<<"\t"<<origin.e<<"\t"<<bits(origin)<<"\t"<<int(retainOriginal)<<"\n";
+       <<"\t"<<current.e<<"\t"<<count<<"\t"<<origin.e<<"\t"<<bits(origin)<<"\t"<<int(retainOriginal)<<"\t"<<int(alwaysOriginal)<<"\n";
      repairs++;if(can==s.ac)sourceReturns++;
      if(repaired.e<bestE){bestE=repaired.e;bestWord=word;bestCan=can;}
      if(can!=s.ac && repaired.e<bestNonA){
@@ -235,7 +236,7 @@ void deploy(const vector<Scenario>&data,const map<string,Model>&models,
    while(1000*dur(start)<budget){
      iterations++;
      const auto t0=clk::now();
-     const L origin=(retainOriginal && (iterations%2==1))?s.X:current;
+     const L origin=(alwaysOriginal||(retainOriginal && (iterations%2==1)))?s.X:current;
      L chosen=origin;Feature cf{};double bestScore=1.e100;
      int candidateCount=(arm==5?1:(forceRealChange?K-1:K));
      for(int j=0;j<candidateCount;j++){
