@@ -98,6 +98,11 @@ def score_deployment(inputs,vault,events,summary,output):
             origin=e['proposal_origin_bits']
             assert len(origin)==n and E(origin)==int(e['proposal_origin_E'])
             assert e['retention_active'] in ('0','1')
+            if 'always_original' in e:
+                assert e['always_original'] in ('0','1')
+                if e['always_original']=='1':
+                    assert e['retention_active']=='0'
+                    assert origin==x[sid]['X']
             it=int(e['iteration'])
             delta=sum(q!=z for q,z in zip(origin,raw))
             if it==0:
