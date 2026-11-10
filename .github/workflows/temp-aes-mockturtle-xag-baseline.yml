@@ -1,0 +1,79 @@
+name: temp-aes-mockturtle-xag-baseline
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/mockturtle_aes_probe.cpp'
+      - 'science-boundary/aes-sbox-circuit/mockturtle_xag_bridge.py'
+      - 'science-boundary/aes-sbox-circuit/CMakeLists.mockturtle.txt'
+      - '.github/workflows/temp-aes-mockturtle-xag-baseline.yml'
+permissions:
+  contents: read
+jobs:
+  xag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build independent public XAG logic optimizer
+        run: |
+          set -euxo pipefail
+          git clone --depth 1 https://github.com/lsils/mockturtle.git /tmp/mockturtle
+          mkdir -p /tmp/aes-mockturtle
+          cp science-boundary/aes-sbox-circuit/CMakeLists.mockturtle.txt /tmp/aes-mockturtle/CMakeLists.txt
+          cp science-boundary/aes-sbox-circuit/mockturtle_aes_probe.cpp /tmp/aes-mockturtle/
+          cmake -S /tmp/aes-mockturtle -B /tmp/aes-mockturtle/build -DMOCKTURTLE_DIR=/tmp/mockturtle -DCMAKE_BUILD_TYPE=Release
+          cmake --build /tmp/aes-mockturtle/build --target aes_xag_probe --parallel 4
+          git -C /tmp/mockturtle rev-parse HEAD | tee mockturtle_commit.txt
+      - name: Try independently optimized XAG networks and all 256 AES test inputs
+        run: |
+          set -euxo pipefail
+          mkdir -p results
+          for seed in fs-101 shear-102 nist-g103; do
+            python science-boundary/aes-sbox-circuit/mockturtle_xag_bridge.py --seed "$seed" --export "results/${seed}.net"
+            for setting in "8 2 0" "10 3 0" "8 3 -1"; do
+              read -r pi inserts odc <<< "$setting"
+              name="${seed}-p${pi}-i${inserts}-odc${odc}"
+              /tmp/aes-mockturtle/build/aes_xag_probe "results/${seed}.net" "results/${name}.xag" "$pi" "$inserts" "$odc" | tee "results/${name}.engine.json"
+              mkdir -p "results/${name}"
+              python science-boundary/aes-sbox-circuit/mockturtle_xag_bridge.py \
+                --seed "$seed" --inspect "results/${name}.xag" --out "results/${name}" | tee "results/${name}.verified.json"
+            done
+          done
+          python - <<'PY'
+          import glob,json
+          files=glob.glob('results/*.verified.json')
+          assert len(files)==9
+          rows=[json.load(open(f)) for f in files]
+          assert all(r['raw_xag_all_256'] for r in rows)
+          print(json.dumps({'all_optimized_XAG_verified_on_256':len(rows),
+                            'optimistic_min_XAG':min(r['raw_xag_gates'] for r in rows),
+                            'legal_candidates':[{'name':f,'gates':r['legal_gates']} for f,r in zip(files,rows) if r['legal_translation_found']]}))
+          PY
+      - name: Official verifier if any legal <=100 circuit emerged
+        run: |
+          set -euxo pipefail
+          python - <<'PY'
+          import glob,json,pathlib
+          targets=[]
+          for f in glob.glob('results/*/legal.json'):
+              d=json.load(open(f));n=len(d['gates'])
+              if n<=100:targets.append((n,f))
+          pathlib.Path('official-target.txt').write_text(min(targets)[1] if targets else '')
+          print(json.dumps({'candidate':min(targets) if targets else None}))
+          PY
+          if [ -s official-target.txt ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/p008shot
+            cp "$(cat official-target.txt)" /tmp/p008shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/p008shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-mockturtle-xag-independent-baseline
+          path: |
+            results
+            official-verifier.jsonl
+            mockturtle_commit.txt
