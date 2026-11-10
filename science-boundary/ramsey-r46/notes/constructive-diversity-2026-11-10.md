@@ -32,3 +32,12 @@ Once the eight jobs finish, compare exact candidate scores **and** parent divers
 - Few Shots p003: https://github.com/few-shots/few-shots/tree/main/problems/p003-ramsey-r46
 - Exoo, *On the Ramsey Number R(4,6)* (2012), https://doi.org/10.37236/2102
 - Radziszowski, *Small Ramsey Numbers* (2026 revision): https://www.cs.rit.edu/~spr/ElJC/sur.pdf
+
+
+## Verified nonisomorphic elite from neutral-graph recentering
+
+An additional genuine graph structure was created by exact joint modifications of the first 12-defect parent. The saved candidate `results/neutral-network-36-12-defects-259edges.json` has **259 edges, 12 K4, zero independent six-sets**. The preceding 260-edge elite has the same total defect count but a different degree multiset: 260-edge `12^4 13^4 14^4 15^20 16^4` versus 259-edge `11 12^2 13^4 14^8 15^17 16^4`. It is therefore **provably nonisomorphic**, not a permutation duplicate. The labeled graph distance between these two elites is exactly 11 undirected edges. A second independently structured Python/bitset check was run against the *committed GitHub adjacency*, verifying K4=12, I6=0, n=36, and 259 edges. This is constructive diversity, **not** a verified <12 violation breakthrough.
+
+A targeted fixed-neighborhood threshold-SAT campaign from this second elite is [42855953376](https://github.com/teddyli18000/web-ingest/actions/runs/42855953376), and a second eight-seed compound-crossover population from the same elite is [42855688712](https://github.com/teddyli18000/web-ingest/actions/runs/42855688712). The original diverse compound campaign [42855098306](https://github.com/teddyli18000/web-ingest/actions/runs/42855098306) has four completed old-14-parent jobs with valid reconstructed 12-K4/0-I6 candidates; none beat 12. Their output divergences from the old 14-defect parent reached 31–34 labeled edges. Do not interpret labeled Hamming distance alone as proof of nonisomorphism; the saved 259-edge candidate is supported by an actual degree-distribution distinction.
+
+**Live decision rule:** Continue exploitation while truly different 12-defect parents emerge, but if all three campaigns leave the best defect count at 12, switch representation rather than extending the same flip-neighborhood tuning. The actual Ramsey lower bound remains unchanged until a 36-vertex K4=I6=0 graph passes the Few Shots verifier.
