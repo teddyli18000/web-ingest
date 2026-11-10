@@ -1,0 +1,95 @@
+{
+  "policy": "novelty",
+  "initial_N7_seed": 1801,
+  "second_stage_seeds": [
+    4107,
+    4113
+  ],
+  "cases_per_seed": 3,
+  "trial_count": 6,
+  "wall_seconds_per_trial": 5.0,
+  "improved": 5,
+  "mean_improvement": 2,
+  "complete": true,
+  "trials": [
+    {
+      "case": "ta48js-n7elite1801",
+      "seed": 4107,
+      "policy": "novelty",
+      "start_score": 1975,
+      "best_score": 1972,
+      "gain": 3,
+      "wall_seconds": 0.875,
+      "tested_machine_sets": 15,
+      "full_resource_unsat_group_clauses": 14,
+      "complete": true,
+      "hidden_archived_oracle_never_accessed": true
+    },
+    {
+      "case": "ta48js-n7elite1801",
+      "seed": 4113,
+      "policy": "novelty",
+      "start_score": 1975,
+      "best_score": 1972,
+      "gain": 3,
+      "wall_seconds": 1.366,
+      "tested_machine_sets": 20,
+      "full_resource_unsat_group_clauses": 19,
+      "complete": true,
+      "hidden_archived_oracle_never_accessed": true
+    },
+    {
+      "case": "ta49js-n7elite1801",
+      "seed": 4107,
+      "policy": "novelty",
+      "start_score": 1993,
+      "best_score": 1992,
+      "gain": 1,
+      "wall_seconds": 1.744,
+      "tested_machine_sets": 25,
+      "full_resource_unsat_group_clauses": 24,
+      "complete": true,
+      "hidden_archived_oracle_never_accessed": true
+    },
+    {
+      "case": "ta49js-n7elite1801",
+      "seed": 4113,
+      "policy": "novelty",
+      "start_score": 1993,
+      "best_score": 1993,
+      "gain": 0,
+      "wall_seconds": 4.997,
+      "tested_machine_sets": 38,
+      "full_resource_unsat_group_clauses": 33,
+      "complete": true,
+      "hidden_archived_oracle_never_accessed": true
+    },
+    {
+      "case": "ta50js-n7elite1801",
+      "seed": 4107,
+      "policy": "novelty",
+      "start_score": 1971,
+      "best_score": 1969,
+      "gain": 2,
+      "wall_seconds": 1.768,
+      "tested_machine_sets": 25,
+      "full_resource_unsat_group_clauses": 24,
+      "complete": true,
+      "hidden_archived_oracle_never_accessed": true
+    },
+    {
+      "case": "ta50js-n7elite1801",
+      "seed": 4113,
+      "policy": "novelty",
+      "start_score": 1971,
+      "best_score": 1968,
+      "gain": 3,
+      "wall_seconds": 1.176,
+      "tested_machine_sets": 21,
+      "full_resource_unsat_group_clauses": 20,
+      "complete": true,
+      "hidden_archived_oracle_never_accessed": true
+    }
+  ],
+  "caveat": "5-second timing is internal Python model and solver time, exclusive of dependency installation / GitHub runner startup. Genuine N7 is C++ 5-second native duration. All policies same machine-group CP model and budget."
+}
