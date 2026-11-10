@@ -25,7 +25,10 @@ def score_archive(name,path,scenarios,all_known):
               'all_global5':set(),'all_global10':set(),'after_global5':set(),
               'after_global10':set(),'all_diverse5':set(),'all_diverse10':set(),
               'after_diverse5':set(),'after_diverse10':set(),
-              'initial5':set(),'initial10':set(),'first5ms':None,'first10ms':None,
+              'initial5':set(),'initial10':set(),
+              'initialglobal5':set(),'initialglobal10':set(),
+              'initialdiverse5':set(),'initialdiverse10':set(),
+              'first5ms':None,'first10ms':None,
               'best_other_E':None,'full_repairs':0,'min_other_certificate':None}
     with gzip.open(path,'rt',newline='') as f:
         reader=csv.DictReader(f,delimiter='\t')
@@ -57,9 +60,11 @@ def score_archive(name,path,scenarios,all_known):
             if is_global:
                 a['all_global10'].add(co)
                 if it>0:a['after_global10'].add(co)
+                else:a['initialglobal10'].add(co)
             if diverse:
                 a['all_diverse10'].add(co)
                 if it>0:a['after_diverse10'].add(co)
+                else:a['initialdiverse10'].add(co)
             if e<=math.floor(1.05*opt):
                 if co not in a['all5'] and a['first5ms'] is None and it>0:
                     a['first5ms']=float(z['t_ms'])
@@ -69,9 +74,11 @@ def score_archive(name,path,scenarios,all_known):
                 if is_global:
                     a['all_global5'].add(co)
                     if it>0:a['after_global5'].add(co)
+                    else:a['initialglobal5'].add(co)
                 if diverse:
                     a['all_diverse5'].add(co)
                     if it>0:a['after_diverse5'].add(co)
+                    else:a['initialdiverse5'].add(co)
     assert all(v['full_repairs']>0 for v in states.values())
     return states
 
@@ -112,12 +119,9 @@ def main():
                 for endpoint in ('5','10','global5','global10','diverse5','diverse10'):
                     fullfield='all'+endpoint;postfield='after'+endpoint
                     # Do not count shared baseline target as incremental.
-                    filtered=[(sid,v) for sid,v in cases if not v['initial'+endpoint]]
-                    if endpoint not in ('5','10'):filtered=cases
                     details[endpoint]={
                         'cases_with_any_near':sum(bool(v[fullfield]) for sid,v in cases),
-                        'cases_with_new_after_first':sum(bool(v[postfield]-v['initial'+endpoint]) if endpoint in ('5','10')
-                                                       else bool(v[postfield]) for sid,v in cases),
+                        'cases_with_new_after_first':sum(bool(v[postfield]-v['initial'+endpoint]) for sid,v in cases),
                         'unique_orbits_all_sessions':len(set().union(*(v[fullfield] for sid,v in cases))),
                         'mean_distinct_orbits_per_case':statistics.mean(len(v[fullfield]) for sid,v in cases)}
                 methods[tag][mode][str(arm)]={
