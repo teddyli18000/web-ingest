@@ -1,0 +1,80 @@
+name: temp-aes-shear-anchored-lns
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/shear_lns_construct.py'
+      - '.github/workflows/temp-aes-shear-anchored-lns.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  lns:
+    runs-on: ubuntu-latest
+    timeout-minutes: 17
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - parents: 45
+            helpers: 48
+            seed: 21
+            extra: ''
+            widths: '12 20 32 48'
+          - parents: 100
+            helpers: 120
+            seed: 22
+            extra: ''
+            widths: '20 32 48 65'
+          - parents: 130
+            helpers: 180
+            seed: 23
+            extra: '--include-and'
+            widths: '24 40 60 80'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch verified 101 and 102 circuit parents
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 40996646594
+          github-token: ${{ github.token }}
+          pattern: aes-joint-factor-*
+          path: archive
+          merge-multiple: false
+      - name: Fetch verified 101 frontier mutations
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 42252448125
+          github-token: ${{ github.token }}
+          pattern: aes-care-cone-fs-101-*
+          path: archive
+          merge-multiple: false
+      - name: Construct across coupled distant cones
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet ortools
+          python -m py_compile science-boundary/aes-sbox-circuit/shear_lns_construct.py
+          python science-boundary/aes-sbox-circuit/shear_lns_construct.py \
+            --archive-dir archive --parents '${{ matrix.parents }}' \
+            --helpers '${{ matrix.helpers }}' ${{ matrix.extra }} --seed '${{ matrix.seed }}' \
+            --free-widths ${{ matrix.widths }} --seconds 550 --per-neighbor 6 \
+            --workers 4 --out result | tee run.log
+          python -c "import json; x=json.load(open('result/summary.json')); assert x['full_256_verified'] and x['model_control']['gates']==102; print(x['best_gates'])"
+      - name: Official Few Shots p008 verification if <=100 discovered
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-shear-lnsearch-${{ matrix.seed }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
