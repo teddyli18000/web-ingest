@@ -160,10 +160,11 @@ static void benchmark(const vector<Scenario>&states,const string&events,const st
         }
         bool newBest=z.e<best;
         if(newBest){best=z.e;bestword=w;bestcan=c;count.improvements++;}
+        bool newOther=false;
         if(c!=s.ac && c!=s.bc && z.e<bestOther){
-          bestOther=z.e;otherword=w;othercan=c;
+          bestOther=z.e;otherword=w;othercan=c;newOther=true;
         }
-        if(newBest||newElite||is_initial){
+        if(newBest||newOther||newElite||is_initial){
           ev<<s.id<<"\t"<<s.n<<"\t"<<s.mode<<"\t"<<s.damage<<"\t"<<s.rep
             <<"\t"<<arm<<"\t"<<it<<"\t"<<1000*dur(started)<<"\t"<<kind
             <<"\t"<<z.e<<"\t"<<w<<"\t"<<c<<"\t"<<(newElite?1:0)<<"\n";
