@@ -1,5 +1,5 @@
 // Experimental N=100 implementation of the n=4 kicked-descent idea from
-// Lau & Gangat, arXiv:2610.14361v2 (2026). This is a research probe with corrected midpoint support (2026-11-10), not the
+// Lau & Gangat, arXiv:2610.14361v2 (2026). This is a research probe, not the
 // authors' code and not a claim of exact implementation equivalence.
 
 #include <algorithm>
@@ -77,18 +77,15 @@ struct Proposal {
 
 // Assignment-dependent part of the exact isolated-subsystem Hamiltonian.
 // Expanding E=sum_k C_k^2 gives two-body terms when two same-k edges share a
-// vertex AND their midpoint is selected; four-body terms arise when\n// two disjoint same-k edges are both internal
+// vertex (which may lie outside the subsystem and cancels as s_mid^2=1);\n// four-body terms arise when two disjoint same-k edges are both internal
 // to the selected subsystem. Terms touching an environment variable vanish
-// when the subsystem is disconnected; additive constants are irrelevant.
+// after polynomial simplification; additive constants are irrelevant.\n// Important: deleting non-subsystem edges BEFORE squaring defines a different\n// subsystem Hamiltonian. Projection of the already-expanded full LABS E\n// retains 2*s_i*s_j for even-spaced endpoints even when their midpoint is\n// outside the selected sites. See code/check_isolated_n4_projection.py.
 static int isolated_objective(const std::array<int, 4>& p,
                               const std::array<int8_t, 4>& v) {
     int h = 0;
     for (int i = 0; i < 4; ++i) {
         for (int j = i + 1; j < 4; ++j) {
-            if (((p[j] - p[i]) & 1) == 0 &&
-                std::binary_search(p.begin(), p.end(), (p[i] + p[j]) / 2)) {
-                h += 2 * int(v[i]) * int(v[j]);
-            }
+            if (((p[j] - p[i]) & 1) == 0) h += 2 * int(v[i]) * int(v[j]);
         }
     }
     const int pairings[3][4] = {{0, 1, 2, 3}, {0, 2, 1, 3}, {0, 3, 1, 2}};
