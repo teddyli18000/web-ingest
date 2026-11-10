@@ -1,0 +1,47 @@
+name: temp-aes-cooperative-two-site-construction
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/joint_two_retarget_construct.py'
+      - '.github/workflows/temp-aes-cooperative-two-site-construction.yml'
+permissions:
+  contents: read
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      matrix:
+        source: [fs-101, shear-102]
+        shard: [0,1,2,3]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Jointly retarget two AES gates with exact full-output repair
+        run: |
+          set -euxo pipefail
+          python -m py_compile science-boundary/aes-sbox-circuit/joint_two_retarget_construct.py
+          python science-boundary/aes-sbox-circuit/joint_two_retarget_construct.py \
+            --source '${{ matrix.source }}' --shard '${{ matrix.shard }}' --shards 4 \
+            --first-choices 32 --later-distance 48 --per-repair 12 \
+            --seconds 300 --out result | tee run.log
+          python -c "import json; d=json.load(open('result/summary.json')); assert d['full_256_verified']; print(d['best_gates'],d['best_AND_truth_set_delta'])"
+      - name: Verify any <=100 circuit with official Few Shots checker
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-cooperative-${{ matrix.source }}-${{ matrix.shard }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
