@@ -1,0 +1,80 @@
+name: temp-aes-frontier-cross-cone-lns
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/frontier_lns_construct.py'
+      - '.github/workflows/temp-aes-frontier-cross-cone-lns.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - seed: 31
+            parents: 48
+            helpers: 48
+            flags: ''
+            widths: '12 20 32 48'
+          - seed: 32
+            parents: 100
+            helpers: 100
+            flags: '--allow-and-change --include-and'
+            widths: '20 32 48 65'
+          - seed: 33
+            parents: 140
+            helpers: 180
+            flags: '--allow-and-change --include-and'
+            widths: '28 42 60 80'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch independently verified parent circuit collection
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 40996646594
+          github-token: ${{ github.token }}
+          pattern: aes-joint-factor-*
+          path: archive
+          merge-multiple: false
+      - name: Fetch 101 neutral orbit diversity
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 42252448125
+          github-token: ${{ github.token }}
+          pattern: aes-care-cone-fs-101-*
+          path: archive
+          merge-multiple: false
+      - name: Construct <=100 AES circuits using anchored joint cone LNS
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet ortools
+          python -m py_compile science-boundary/aes-sbox-circuit/frontier_lns_construct.py
+          python science-boundary/aes-sbox-circuit/frontier_lns_construct.py \
+            --source fs101 --archive-dir archive \
+            --parents '${{ matrix.parents }}' --helpers '${{ matrix.helpers }}' \
+            --seed '${{ matrix.seed }}' ${{ matrix.flags }} --free-widths ${{ matrix.widths }} \
+            --seconds 520 --per-neighbor 6 --workers 4 --out result | tee run.log
+          python -c "import json; d=json.load(open('result/summary.json')); assert d['full_256_verified'] and d['model_control']['gates']==101; print(d['best_gates'])"
+      - name: Verify candidate with official Few Shots checker
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-frontier-lns-${{ matrix.seed }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
