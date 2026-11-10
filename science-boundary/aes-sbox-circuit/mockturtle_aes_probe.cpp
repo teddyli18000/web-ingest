@@ -4,6 +4,8 @@
 #include <mockturtle/algorithms/xag_resub.hpp>
 #include <mockturtle/algorithms/cleanup.hpp>
 #include <mockturtle/algorithms/resubstitution.hpp>
+#include <mockturtle/views/depth_view.hpp>
+#include <mockturtle/views/fanout_view.hpp>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -48,8 +50,10 @@ int main(int argc, char** argv) {
   ps.max_trials=200;
   ps.window_size=12;
   ps.use_dont_cares=(odc_levels!=0);
-  xag_resubstitution(xag, ps);
-  xag=cleanup_dangling(xag);
+  depth_view depth_xag{ xag };
+  fanout_view fanout_xag{ depth_xag };
+  xag_resubstitution(fanout_xag, ps);
+  xag=cleanup_dangling(fanout_xag);
   std::ofstream out(argv[2]);
   out << "C " << xag.num_gates() << " " << before << "\n";
   xag.foreach_pi([&](auto const& node){out << "I " << node << "\n";});
@@ -60,7 +64,7 @@ int main(int argc, char** argv) {
     out << "G " << node << " " << typ << " " << fs[0].index << " " << int(fs[0].complement)
         << " " << fs[1].index << " " << int(fs[1].complement) << "\n";
   });
-  xag.foreach_po([&](auto const& s){out << "O " << s.index << " " << int(s.complement) << "\n";});
+  xag.foreach_po([&](auto const& s){out << "O " << s.index << " " << int(s.weight) << "\n";});
   std::cout << "{\"initial_xag_gates\":" << before
             << ",\"optimized_xag_gates\":" << xag.num_gates()
             << ",\"max_pis\":" << max_pis
