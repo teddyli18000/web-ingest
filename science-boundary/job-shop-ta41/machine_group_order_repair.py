@@ -176,8 +176,9 @@ def full_cp(orders,pos,dur,opened,L,policy,seed,seconds,repair_objective='minima
 
 def run(a):
     orders,pos,dur,C=parse_case(a.start)
-    target=C-a.target_drop
-    assert a.target_drop>=1 and target>max(dur)
+    target_drop=getattr(a,'target_drop',1)
+    target=C-target_drop
+    assert target_drop>=1 and target>max(dur)
     istarget=a.start=='ta41'
     static=group_static_slack(orders,dur,pos)
     prior_cores,gateways=(verified_ta41_sources(orders)
@@ -191,7 +192,7 @@ def run(a):
     learned=set(prior_cores)
     traces=[]
     state=dict(instance='ta41' if istarget else Path(a.start).parent.name,
-        incumbent=C,target=target,target_drop=a.target_drop,policy=a.policy,
+        incumbent=C,target=target,target_drop=target_drop,policy=a.policy,
         group_released_all_29_resource_adjacencies=True,
         complete_NoOverlap_and_job_precedence_hard=True,
         all_open_machine_permutations_allowed=True,
