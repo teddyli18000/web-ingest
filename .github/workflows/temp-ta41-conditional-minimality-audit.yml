@@ -1,0 +1,32 @@
+name: temp-ta41-conditional-minimality-audit
+on:
+  push:
+    branches:
+      - research/p009-precompletion-joint-repair-audit-20261110
+    paths:
+      - .github/workflows/temp-ta41-conditional-minimality-audit.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned CP-SAT
+        run: python3 -m pip install 'ortools==9.14.6206'
+      - name: Check syntax
+        run: python3 -m py_compile science-boundary/job-shop-ta41/precompletion_group_minimality_audit.py
+      - name: Audit only post-hoc, no ta41 record claim
+        run: |
+          python3 science-boundary/job-shop-ta41/precompletion_group_minimality_audit.py \
+            --seconds 1.5 --seed 20261110 \
+            --out science-boundary/job-shop-ta41/results/precompletion-group-audit-20261110.json
+      - name: Preserve independent conditional proof and ranking diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ta41-precompletion-conditional-group-audit
+          path: science-boundary/job-shop-ta41/results/precompletion-group-audit-20261110.json
+          if-no-files-found: warn
