@@ -63,7 +63,7 @@ def main():
        '--vault',str(vault),'--new',str(root),'--old',str(previous),'--out',str(root)])
     summary=json.load(open(root/'all_X_vs_alternating_verdict.json'))
     assert summary['states']==144 and summary['paired_strategy_sessions']==864
-    assert all(s['states']==72 and s['shared_optimum_orbits']==3 and s['mean_always_X_wall_ms']>=z.budget_ms
+    assert all(s['states']==72 and s['shared_optimum_orbits']==z.source_orbits and s['mean_always_X_wall_ms']>=z.budget_ms
       for t in ('AB_blind','C_shell') for s in summary['by_tier'][t].values())
     (root/'protocol.json').write_text(json.dumps({
       'original_fixed_X_can_be_generated_without_C_vault':False,
