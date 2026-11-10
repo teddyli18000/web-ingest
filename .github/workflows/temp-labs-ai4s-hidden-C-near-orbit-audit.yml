@@ -1,0 +1,77 @@
+name: temp-labs-ai4s-hidden-C-near-orbit-audit
+on:
+  push:
+    paths:
+      - .github/workflows/temp-labs-ai4s-hidden-C-near-orbit-audit.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  near_source_frontier:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - n: 46
+            source: states_new_N46
+            histories: branch_fresh_N46
+          - n: 47
+            source: states_new_N47
+            histories: branch_fresh_N47
+          - n: 50
+            source: test50_forced_v1
+            histories: branch_deploy_v1
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Exact source-aware and whole-corpus novel-orbit history audit, posthoc only
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108
+          mkdir -p results/near_orbit_N${{ matrix.n }}
+          if [ "${{ matrix.n }}" = "50" ]; then
+            python3 audit_near_orbits.py \
+              --input results/${{ matrix.source }}/scenario-input.tsv \
+              --vault results/${{ matrix.source }}/target-vault.tsv \
+              --parents ../../data/combined/combined10.tsv \
+              --run control=results/${{ matrix.histories }}/control/events.tsv.gz \
+                  alternating_X=results/${{ matrix.histories }}/retained_X/events.tsv.gz \
+                  always_X=results/all_x_20261109/events.tsv.gz \
+              --out results/near_orbit_N${{ matrix.n }}/near_orbit_audit.json
+          else
+            python3 audit_near_orbits.py \
+              --input results/${{ matrix.source }}/scenario-input.tsv \
+              --vault results/${{ matrix.source }}/target-vault.tsv \
+              --parents ../../data/combined/combined10.tsv \
+              --run control=results/${{ matrix.histories }}/control/events.tsv.gz \
+                  alternating_X=results/${{ matrix.histories }}/retained_X/events.tsv.gz \
+              --out results/near_orbit_N${{ matrix.n }}/near_orbit_audit.json
+          fi
+          python3 - <<'PY'
+          import json,pathlib,math
+          n=int('${{ matrix.n }}')
+          p=pathlib.Path('results')/('near_orbit_N'+str(n))/'near_orbit_audit.json'
+          d=json.loads(p.read_text())
+          assert d['N']==n and d['states']==144 and d['diversity_cutoff_min_parent_orbit_hamming']==math.ceil(n/5)
+          assert set(d['outcomes'])==({'control','alternating_X','always_X'} if n==50 else {'control','alternating_X'})
+          assert all(all(z['states']==72 for z in arms.values()) for methods in d['outcomes'].values() for arms in methods.values())
+          print('PASS exact near-orbit, unique registry and parent-distance before scoring',n)
+          PY
+      - name: Save independently checked source-orbit outcomes for all 6 policies
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/labs-ai4s-search/recombination_20261105/innovation/hidden_C_20261108/results/near_orbit_N${{ matrix.n }}
+          git commit -m 'research(labs-ai4s): certify N${{ matrix.n }} near5/10 source-distinct and cross-orbit diversity in costed hidden-C searches'
+          ok=0
+          for i in 1 2 3 4 5 6; do
+            git pull --rebase origin main
+            if git push origin HEAD:main; then ok=1; break; fi
+          done
+          test "$ok" -eq 1
