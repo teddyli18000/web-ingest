@@ -80,6 +80,45 @@ def group_static_slack(orders,dur,pos):
     # the machine is influential, not merely a single fragile link.
     return [sum(1/(1+s/12)**2 for s in a) for a in vals]
 
+def parent_disagreement_signal(orders,pos,dur,second_parent,mode,seed):
+    """Source-only A/B critical disagreement, with exactly count-matched fake B.
+
+    On each machine m, inspect A's 29 adjacent job pairs. A real B flag
+    marks pairs whose relative order is reversed in a DIFFERENT independently
+    N7-generated elite machine permutation B for this same instance.
+    The fake B marks uniformly random pairs with the EXACT SAME number
+    of flags per machine, preserving marginal disagreement counts but
+    destroying the location of B's structural information. No archived
+    optimal certificate, target score, or reference start times are read.
+    """
+    assert mode in ('real','count-matched-fake')
+    alt,posb,durb,_=parse_case(str(second_parent))
+    assert posb==pos and durb==dur,'B must schedule the identical 30x20 instance'
+    g=dag_graph(dur,immutable_and_resource(orders,pos),set())
+    assert g is not None
+    C=g['lb']
+    rng=random.Random(seed*89101+53)
+    feature=[]
+    flip_counts=[]
+    # Compute the same source-only causal pressure along the original
+    # DAG critical/slack resource arcs for both true and fake B.
+    for m,seq in enumerate(orders):
+        ranks={j:i for i,j in enumerate(alt[m])}
+        actual=[k for k in range(29)
+                if ranks[seq[k]]>ranks[seq[k+1]]]
+        flip_counts.append(len(actual))
+        if mode=='real':selected=actual
+        else:selected=rng.sample(range(29),len(actual))
+        score=0.
+        for k in selected:
+            u=seq[k]*20+pos[seq[k]][m]
+            v=seq[k+1]*20+pos[seq[k+1]][m]
+            slack=C-(g['head'][u]+dur[u]+g['tail'][v])
+            assert slack>=0
+            score+=1/(1+max(0,slack)/12)**2
+        feature.append(score)
+    return feature,flip_counts
+
 def machine_master(k,clauses,exploration_nogoods,prior_score,policy,seed,budget):
     mdl=cp_model.CpModel()
     x=[mdl.new_bool_var(f'open_{m}') for m in range(MACHINES)]
@@ -181,6 +220,17 @@ def run(a):
     assert target_drop>=1 and target>max(dur)
     istarget=a.start=='ta41'
     static=group_static_slack(orders,dur,pos)
+    auxiliary=getattr(a,'auxiliary_start',None)
+    auxiliary_mode=getattr(a,'auxiliary_mode','none')
+    auxiliary_weight=getattr(a,'auxiliary_weight',3.)
+    if auxiliary_mode!='none':
+        assert auxiliary and a.policy=='dynamic'
+        extra_signal,aux_disagreement_counts=parent_disagreement_signal(
+            orders,pos,dur,auxiliary,auxiliary_mode,a.seed)
+    else:
+        assert not auxiliary
+        extra_signal=[0.]*20
+        aux_disagreement_counts=None
     prior_cores,gateways=(verified_ta41_sources(orders)
                           if istarget else ([],[]))
     # Target on known positives is one makespan unit below independent N7.
@@ -193,6 +243,10 @@ def run(a):
     traces=[]
     state=dict(instance='ta41' if istarget else Path(a.start).parent.name,
         incumbent=C,target=target,target_drop=target_drop,policy=a.policy,
+        auxiliary_mode=auxiliary_mode,auxiliary_weight=auxiliary_weight,
+        auxiliary_parent_source=(str(auxiliary) if auxiliary else None),
+        auxiliary_disagreement_count_by_machine=aux_disagreement_counts,
+        auxiliary_critical_disagreement_scores=extra_signal,
         group_released_all_29_resource_adjacencies=True,
         complete_NoOverlap_and_job_precedence_hard=True,
         all_open_machine_permutations_allowed=True,
@@ -240,7 +294,8 @@ def run(a):
                 weight=1/(len(core)**0.5)
                 for m in core:degree[m]+=weight
             if a.policy=='dynamic':
-                priority=[static[m]*0.12+2.5*degree[m] for m in range(20)]
+                priority=[static[m]*0.12+2.5*degree[m]+
+                    auxiliary_weight*extra_signal[m] for m in range(20)]
             elif a.policy=='static':
                 priority=static
             else:
@@ -301,6 +356,9 @@ if __name__=='__main__':
     p.add_argument('--policy',choices=['dynamic','static','random'],required=True)
     p.add_argument('--seed',type=int,default=4107)
     p.add_argument('--target-drop',type=int,default=1)
+    p.add_argument('--auxiliary-start',type=Path,default=None)
+    p.add_argument('--auxiliary-mode',choices=['none','real','count-matched-fake'],default='none')
+    p.add_argument('--auxiliary-weight',type=float,default=3.)
     p.add_argument('--trials-per-stage',type=int,default=12)
     p.add_argument('--only-groups',nargs='+',type=int,default=[])
     p.add_argument('--repair-objective',choices=['minimal-change','feasibility'],default='minimal-change')
