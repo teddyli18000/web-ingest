@@ -135,6 +135,31 @@ def main(args):
             checks.append({"machine_closed_again": m, "released_others": sorted(allow), **proof})
             print("DELETE", label, "m", m, proof["status"], flush=True)
         conditional = all(x["status"] == "INFEASIBLE" for x in checks)
+        # Construct an inclusion-minimal *conditional* release set.
+        # Sequential removals are valid because allowing more open machines
+        # can never reduce the set of feasible complete schedules. Each
+        # rejected single deletion remains infeasible after later removals.
+        retained = set(changed)
+        shrink_log = []
+        for m in changed:
+            if m not in retained:
+                continue
+            trial_group = retained - {m}
+            proof = feasibility(orders, pos, dur, target, trial_group,
+                                args.seconds, args.seed + 5000 + caseidx * 100 + m)
+            if proof["status"] in ("FEASIBLE", "OPTIMAL"):
+                retained.remove(m)
+                verdict = "DROPPED_WITH_VERIFIED_REPLACEMENT_COMPLETION"
+            elif proof["status"] == "INFEASIBLE":
+                verdict = "CONDITIONALLY_NECESSARY_WITHIN_FINAL_SUBSPACE"
+            else:
+                verdict = "NOT_RESOLVED"
+            shrink_log.append({"tested_machine": m,
+                               "remaining_after_test": sorted(retained),
+                               "deletion_verdict": verdict, **proof})
+            print("SHRINK", label, m, verdict, flush=True)
+        proven_inclusion_minimal = all(
+            x["deletion_verdict"] != "NOT_RESOLVED" for x in shrink_log)
         row = {
             "case": label, "source_makespan": initial,
             "verified_completed_makespan": target,
@@ -146,6 +171,10 @@ def main(args):
             "individual_machine_deletion_tests": checks,
             "all_single_deletions_infeasible": conditional,
             "conditional_inclusion_minimality_certified": conditional,
+            "greedy_shrunken_machine_set": sorted(retained),
+            "greedy_shrunk_group_count": len(retained),
+            "greedy_shrink_log": shrink_log,
+            "greedy_inclusion_minimality_certified": proven_inclusion_minimal,
             "logical_scope": "only schedules changing machine orders within the observed set S, with all other source machine sequences fixed; NOT a globally unique required set",
         }
         output["cases"].append(row)
@@ -162,6 +191,8 @@ def main(args):
            "static_hits": x["top_k_static_hits_observed"],
            "partial_hits": x["top_k_partial_hits_observed"],
            "minimal": x["conditional_inclusion_minimality_certified"],
+           "shrunk": x["greedy_shrunken_machine_set"],
+           "shrunk_proved": x["greedy_inclusion_minimality_certified"],
            "statuses": [s["status"] for s in x["individual_machine_deletion_tests"]]}
           for x in output["cases"]]}), flush=True)
 
