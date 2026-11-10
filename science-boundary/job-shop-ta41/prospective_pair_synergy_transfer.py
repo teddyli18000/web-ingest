@@ -89,7 +89,7 @@ def run_one(source, seed, mode, out, total):
             "search_clock_seconds":result.get("wall_seconds"),
             "source_only_precompletion_priority":True,
             "hidden_reference_absent":True,
-            "strict_total_wall_cap_seconds":total,
+            "requested_total_wall_budget_seconds":total,
             "matched_complete_cp_kernel":True}
     print("PROSPECTIVE",json.dumps(record,sort_keys=True),flush=True)
     return record
