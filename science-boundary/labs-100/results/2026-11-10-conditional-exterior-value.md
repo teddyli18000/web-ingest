@@ -60,6 +60,31 @@ The conditional score includes the capacity to cancel poor exterior correlations
 
 The next generator must change the **outer action support**, not merely score a larger number of single-site departures. Test a proposal that **jointly chooses several outer signs and a corresponding interior compensation**, retaining the signed multi-lag correlation cut term exactly; make its target distinct high-quality new-orbit yield per end-to-end compute, rather than return to the known teacher. Positive controls without privileged correct core windows, plus true native classical multi-start baselines, are required before expanding N100 computation.
 
+
+## Follow-up: two unknown exterior bits, joint proposals
+
+The simple q=1 positive control leaves the other 49 exterior bits correct. To test whether the conditional signal identifies coordinated corrections, we additionally corrupt **two** exterior sites, while keeping 20 inner corruptions. The search sees the same 50-core index set and no teacher bits. A one-flip conditional score is evaluated for each exterior site, the best 8 exterior sites are shortlisted, and all unique two-exterior-bit proposals that touch the shortlist are conditionally repaired for 300 inner steps. This produces **364** jointly corrected exterior pairs per trial, rather than 1,225 complete pairs. A teacher's true two-error pair is used only in offline assessment.
+
+**One-flip shortlist coverage**, seed 14, 25 independent perturbations per N100 source:
+
+| Source | At least one true site in top-8 | Both true sites in top-8 | Mean best true-site rank | Mean best raw-gradient true-site rank |
+|---|---:|---:|---:|---:|
+| E578 | 20/25 | 9/25 | 4.56 | 11.52 |
+| E606 | 23/25 | 15/25 | 3.64 | 11.96 |
+
+**Two-site conditional repair** (8 cases per source and seed, 6,210,778 scored proposals per case):
+
+| Source | Seed | True two-site pair retained in bank | Best complete E | Teacher energy recovered |
+|---|---:|---:|---:|---:|
+| E578 | 15 | 7/8 | 978 | 0/8 |
+| E578 | 16 | 6/8 | 918 | 0/8 |
+| E606 | 15 | 6/8 | 606 | **2/8** |
+| E606 | 16 | 6/8 | 966 | **0/8** |
+
+On the E606 seed-15 cases, matching the **same 6,210,778-proposal-per-trial** budget, unrestricted full tabu with 1, 10, or 30 resets each recovered the target in **0/8**. This is an exploratory, seed-dependent two-site recovery signal, **not a robust cross-source advantage** and not a new elite discovery. Increasing the exterior error count from 1 to 2 already sharply reduces actual recovery even when the candidate bank covers the correct pair. More trials in the same planted family alone do not answer the N100 construction question.
+
+Frozen local search sources (`nested_outer_inner.cpp`, `double_boundary_rank.cpp`, `two_outer_conditional.cpp`, `q2_baseline.cpp`) and stdout transcripts are preserved with the session output bundle; the published in-repository single-exterior benchmark above is self-contained with the existing core solver.
+
 ## Correctness audit: isolated n=4 ambiguity
 
 On 2026-11-10 a sibling AI4S agent opened [issue #23](https://github.com/teddyli18000/web-ingest/issues/23) suggesting the older [isolated n4 probe](../code/isosubsys.cpp) had an erroneous even-distance two-body term and needed the shared midpoint inside the chosen four sites. The claim depends on the *order* of polynomial expansion versus edge deletion:
