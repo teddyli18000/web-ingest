@@ -1,0 +1,89 @@
+name: temp-ta41-dmu-target-depth-ablations
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-ta41-dmu-target-depth-ablations.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: temp-ta41-dmu-target-depth-ablations
+  cancel-in-progress: false
+jobs:
+  compare:
+    strategy:
+      fail-fast: false
+      matrix:
+        drop: [5, 10, 20]
+        include:
+          - drop: 5
+            batch: dmu16-20
+            seed: 1901
+          - drop: 5
+            batch: dmu16-20
+            seed: 1911
+          - drop: 5
+            batch: dmu56-60
+            seed: 1901
+          - drop: 5
+            batch: dmu56-60
+            seed: 1911
+          - drop: 10
+            batch: dmu16-20
+            seed: 1901
+          - drop: 10
+            batch: dmu16-20
+            seed: 1911
+          - drop: 10
+            batch: dmu56-60
+            seed: 1901
+          - drop: 10
+            batch: dmu56-60
+            seed: 1911
+          - drop: 20
+            batch: dmu16-20
+            seed: 1901
+          - drop: 20
+            batch: dmu16-20
+            seed: 1911
+          - drop: 20
+            batch: dmu56-60
+            seed: 1901
+          - drop: 20
+            batch: dmu56-60
+            seed: 1911
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exact same original source-N7 starts and model; only target deadline stricter
+        run: |
+          python3 -m pip install 'ortools==9.14.6206'
+          python3 -m py_compile science-boundary/job-shop-ta41/benchmark_machine_group_transfer.py
+      - name: Fixed 5-second search, same dynamic group selection but target current minus 5/10/20
+        run: |
+          python3 science-boundary/job-shop-ta41/benchmark_machine_group_transfer.py \
+            --cases-dir 'science-boundary/job-shop-ta41/positive-n7-${{ matrix.batch }}' \
+            --expected-instances 5 --initial-seed '${{ matrix.seed }}' \
+            --policy dynamic --repair-objective minimal-change \
+            --target-drop '${{ matrix.drop }}' \
+            --total-seconds 5 --cp-seconds 0.7 --master-seconds 0.15 \
+            --out 'science-boundary/job-shop-ta41/results/dmu-target-drop${{ matrix.drop }}-${{ matrix.batch }}-${{ matrix.seed }}'
+      - name: Save 600-operation independent DAG scores for developmental target-quality test
+        if: always()
+        run: |
+          set -euo pipefail
+          dir='science-boundary/job-shop-ta41/results/dmu-target-drop${{ matrix.drop }}-${{ matrix.batch }}-${{ matrix.seed }}'
+          if ! test -f "$dir/summary.json"; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "$dir"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m 'research(ta41): 5s source-N7 DMU target-depth ablation Cmax-minus-${{ matrix.drop }} ${{ matrix.batch }} ${{ matrix.seed }}'
+          for i in $(seq 1 35); do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then exit 0; fi
+            sleep 2
+          done
+          exit 1
