@@ -1,5 +1,16 @@
 # Job-shop scheduling — Taillard ta41 (Few Shots p009)
 
+## 2026-11-09 — external DMU transfer and causal correction of machine-core guidance
+
+[Full verified evidence and scientific interpretation](cross-family-dmu-transfer-and-core-information-2026-11-09.md).
+
+**No ta41 <=2005 machine-order certificate; best independently verified p009 score remains 2006.** Whole-machine sequence-release CP construction shows broad *constructive*, but not quality-dominant transfer: on **20 truly independent source-N7 elite starts from a different 30×20 DMU instance family**, with two matched 5-second continuation seeds per start, dynamic opening improves **29/40** (aggregate makespan gain **59**), static **22/40** (gain **38**), random **27/40** (gain **53**). The untouched published author N7 improves **28/40** but wins strongly on quality (**320** total gain; **25 wins / 5 ties / 10 losses vs dynamic** in paired final makespan). All candidates are full 600-operation independent-DAG-valid schedules; original oracle orders withheld.
+
+**Causal correction:** a baseline rewarding only previously unvisited closed-machine groups, not weighting CP conflict-core membership, gives **56/76** improvements pooled across Taillard and DMU tests versus **53/76** for dynamic core weighting; thus present data **do not demonstrate predictive added value of the returned group UNSAT cores**. Under the optimization objective, unshrunk cores often equal *all closed machines* and convey only a previously attempted mask. Feasibility-only CP can independently shrink cores to 3–9 machine guards, but a 5-second dual-solver implementation found fewer improvements due partly to diagnostic time costs. The established gain is whole-machine joint release **plus soft preservation of incumbent orientations**: deleting that soft objective dropped development performance from 15/24 to 2/24 and Taillard heldout from 9/12 to 2/12.
+
+**Next scientific target:** a genuinely useful, calibrated source-only signal for *joint machine-subset selection* or *greater improvement depth* that beats both trivial mask diversification and original author N7 under controlled time and CPU budget. Target-depth, receding search, CP–N7 hybrids and real-vs-fake second elite controls are already being tested by parallel work in this same topic; read their finished reports before repeating. Do not merely scale 2005 UNKNOWN CP runs.
+
+
 ## Current state — 2026-11-09 PST: DMU crossfamily blind falsification, historical 2005 primary source, and constructive N7→CP complementarity
 
 **No ta41 ≤2005 candidate or Few Shots submission**. The best independently verified complete original ta41 schedule remains **2006**. However the **2015 original authors** Vilím/Laborie/Shaw explicitly list historical **tail41 upper bound 2005** in their [Failure-Directed Search detailed appendix](https://vilim.eu/petr/cpaior2015-results.pdf), page 2, and their [primary paper](https://vilim.eu/petr/cpaior2015.pdf) introduces a materially different LNS plan-A / time-domain **failure-directed search plan-B**. No raw 600-operation machine order is included in that appendix. This is historical published evidence, **not** a verified submission certificate. Secondary Thomas Weise table reproduces the same 2015 source; separately van Hoorn (2016) cites Nagata/Ono (2013) for 2005, also without available witness.
