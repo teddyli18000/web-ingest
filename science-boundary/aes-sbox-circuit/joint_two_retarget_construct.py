@@ -220,6 +220,7 @@ def main():
                         _,op,a,b=candidate
                         updated=apply(c,i,first,j,second=(op,a,b))
                     if len(updated['gates'])>len(c['gates']):continue
+                    if any(g['a']==g['b'] for g in updated['gates']):continue
                     if not ras.independent_check(updated)[0]:
                         raise AssertionError(('cofactor matched but full AES failed',i,j,first,candidate))
                     h=signature(updated)
