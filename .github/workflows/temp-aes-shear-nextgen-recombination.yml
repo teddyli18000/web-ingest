@@ -1,0 +1,74 @@
+name: temp-aes-shear-nextgen-recombination
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/aes-sbox-circuit/semantic_shear_nextgen.py'
+      - '.github/workflows/temp-aes-shear-nextgen-recombination.yml'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - parents: 60
+            helpers: 0
+            seconds: 80
+          - parents: 100
+            helpers: 48
+            seconds: 360
+          - parents: 130
+            helpers: 100
+            seconds: 360
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download 38 verified novel-AND 102 gate circuits
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 42852732598
+          github-token: ${{ github.token }}
+          pattern: aes-shear-care-evolution-*
+          path: parent-archive
+          merge-multiple: false
+      - name: Download 11 alternative-factorization 102-gate circuits
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 42456112245
+          github-token: ${{ github.token }}
+          pattern: aes-shear-joint-and-*
+          path: parent-archive
+          merge-multiple: false
+      - name: Global construction with different nonlinear parent architectures
+        run: |
+          set -euxo pipefail
+          python -m pip install --quiet ortools
+          python -m py_compile science-boundary/aes-sbox-circuit/semantic_shear_nextgen.py
+          python science-boundary/aes-sbox-circuit/semantic_shear_nextgen.py \
+            --archive-dir parent-archive --max-source-gates 102 \
+            --max-parents '${{ matrix.parents }}' --new-helpers '${{ matrix.helpers }}' \
+            --max-gates 102 --warm-shear --force-new-and \
+            --seconds '${{ matrix.seconds }}' --workers 4 --rng '${{ matrix.helpers }}' --out result | tee run.log
+          python -c "import json; d=json.load(open('result/summary.json')); assert d['verified_all_256'] and d['best_gates']<=102; print(d['best_gates'],d['solver']['solver_status'])"
+      - name: Official Few Shots verifier if <=100 is actually constructed
+        run: |
+          set -euxo pipefail
+          if [ -f result/candidate.json ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/shot
+            cp result/candidate.json /tmp/shot/certificate.json
+            python /tmp/few-shots/problems/p008-aes-sbox-circuit/verify/verify.py /tmp/shot | tee official-verifier.jsonl
+          else
+            echo '{"candidate":null}' | tee official-verifier.jsonl
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aes-novel-and-102-recombine-${{ matrix.helpers }}
+          path: |
+            result
+            run.log
+            official-verifier.jsonl
