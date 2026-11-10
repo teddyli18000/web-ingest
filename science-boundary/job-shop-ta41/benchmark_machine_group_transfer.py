@@ -25,11 +25,18 @@ def main(a):
     for case in cases:
         for seed in (4107,4113):
             folder=a.out/f'{case.parent.name}-seed{seed}'
+            partner=(Path(str(case).replace(
+                f'n7elite{a.initial_seed}',f'n7elite{a.auxiliary_partner_seed}'))
+                if a.auxiliary_mode!='none' else None)
+            if partner is not None:
+                assert partner!=case and partner.is_file(),(case,partner)
             params=SimpleNamespace(
                 start=str(case),policy=a.policy,seed=seed,
                 trials_per_stage=a.trials_per_stage,
                 only_groups=[],fixed_open_machines=[],
                 cp_seconds=a.cp_seconds,repair_objective=a.repair_objective,
+                auxiliary_start=partner,auxiliary_mode=a.auxiliary_mode,
+                auxiliary_weight=a.auxiliary_weight,
                 master_seconds=a.master_seconds,
                 total_seconds=a.total_seconds,target_drop=a.target_drop,
                 out=folder)
@@ -75,6 +82,9 @@ if __name__=='__main__':
     p.add_argument('--expected-instances',type=int,default=6)
     p.add_argument('--total-seconds',type=float,default=5.0)
     p.add_argument('--target-drop',type=int,default=1)
+    p.add_argument('--auxiliary-mode',choices=['none','real','count-matched-fake'],default='none')
+    p.add_argument('--auxiliary-partner-seed',type=int,default=0)
+    p.add_argument('--auxiliary-weight',type=float,default=3.)
     p.add_argument('--cp-seconds',type=float,default=0.7)
     p.add_argument('--repair-objective',choices=['minimal-change','feasibility'],default='minimal-change')
     p.add_argument('--master-seconds',type=float,default=0.15)
