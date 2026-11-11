@@ -134,6 +134,7 @@ def main():
     ap.add_argument("--target", type=int, default=11)
     ap.add_argument("--seconds", type=int, default=180)
     ap.add_argument("--check-only", action="store_true")
+    ap.add_argument("--hard-degree", action="store_true")
     ap.add_argument("--outdir", type=Path, required=True)
     args = ap.parse_args()
     args.outdir.mkdir(parents=True, exist_ok=True)
@@ -146,18 +147,19 @@ def main():
     counters = {"k4":0,"i6":0,"fixed_bad":0,"degree_clauses":0}
     with Glucose4() as s:
         top = len(v)
-        for vertex in range(N):
-            base = sum(int(z) for e,z in fixed.items() if vertex in e)
-            inc = [num for e,num in v.items() if vertex in e]
-            lo, hi = max(0,11-base), min(len(inc),17-base)
-            if lo>len(inc) or hi<0:
-                s.add_clause([])
-                continue
-            for fn, bound in ((CardEnc.atleast,lo),(CardEnc.atmost,hi)):
-                cnf=fn(lits=inc,bound=bound,top_id=top,encoding=EncType.seqcounter)
-                s.append_formula(cnf.clauses)
-                top=max(top,cnf.nv)
-                counters["degree_clauses"]+=len(cnf.clauses)
+        if args.hard_degree:
+            for vertex in range(N):
+                base = sum(int(z) for e,z in fixed.items() if vertex in e)
+                inc = [num for e,num in v.items() if vertex in e]
+                lo, hi = max(0,11-base), min(len(inc),17-base)
+                if lo>len(inc) or hi<0:
+                    s.add_clause([])
+                    continue
+                for fn, bound in ((CardEnc.atleast,lo),(CardEnc.atmost,hi)):
+                    cnf=fn(lits=inc,bound=bound,top_id=top,encoding=EncType.seqcounter)
+                    s.append_formula(cnf.clauses)
+                    top=max(top,cnf.nv)
+                    counters["degree_clauses"]+=len(cnf.clauses)
         penalty = []
         for k in (4,6):
             for subset in itertools.combinations(range(N),k):
@@ -190,7 +192,7 @@ def main():
                     selection=selection,red=args.red,repair=args.repair,
                     variable_edges=len(edges),ramsey_soft=len(penalty),
                     fixed_bad=counters["fixed_bad"],degree_clauses=counters["degree_clauses"],
-                    budget=budget,top_var=top,elapsed_prep=round(time.monotonic()-start,2))
+                    budget=budget,top_var=top,hard_degree=args.hard_degree,elapsed_prep=round(time.monotonic()-start,2))
         print("MODEL_READY",json.dumps(stat,sort_keys=True),flush=True)
         if args.check_only:
             assumptions=[num if (a[e[0]] >> e[1] & 1) else -num
