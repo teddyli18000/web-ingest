@@ -1,0 +1,66 @@
+name: temp Ramsey R46 hidden-better 14-to-12 calibration
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-hidden-better-core-guided.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-hidden-better-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  calibrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - {seed: 1401, release: 3}
+          - {seed: 1402, release: 8}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PySAT
+        run: python3 -m pip install --disable-pip-version-check -q python-sat
+      - name: Recover hidden 12-defect quality starting only from 14-defect graph
+        run: |
+          python3 science-boundary/ramsey-r46/core_guided_defect_cascade.py \
+            --parent science-boundary/ramsey-r46/results/algorithm22-calibration-best-14.json \
+            --seed ${{ matrix.seed }} --target 12 \
+            --release ${{ matrix.release }} --max-free 200 \
+            --round-seconds 12 --seconds 270 \
+            --outdir "$RUNNER_TEMP/p003-hidden-better"
+      - name: Independent recount if construction candidate produced
+        if: always()
+        run: |
+          if test -f "$RUNNER_TEMP/p003-hidden-better/summary.json"; then cat "$RUNNER_TEMP/p003-hidden-better/summary.json"; fi
+          if test -f "$RUNNER_TEMP/p003-hidden-better/best36.json"; then
+            python3 - <<'PY'
+          import json,itertools,os
+          d=os.environ["RUNNER_TEMP"]+"/p003-hidden-better"
+          a=json.load(open(d+"/best36.json"))["adjacency"]
+          assert len(a)==36 and all(len(r)==36 for r in a)
+          assert all(a[i][i]=="0" and a[i][j]==a[j][i] for i in range(36) for j in range(36))
+          k4=sum(all(a[i][j]=="1" for i,j in itertools.combinations(s,2))
+                 for s in itertools.combinations(range(36),4))
+          i6=sum(all(a[i][j]=="0" for i,j in itertools.combinations(s,2))
+                 for s in itertools.combinations(range(36),6))
+          summary=json.load(open(d+"/summary.json"))
+          assert k4+i6==summary["best_defects"]<14
+          print("INDEPENDENT_RECOUNT",k4,i6)
+          PY
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-hidden14-${{ matrix.seed }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/p003-hidden-better/
