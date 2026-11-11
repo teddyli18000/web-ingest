@@ -90,6 +90,7 @@ def main():
     p.add_argument("--release",type=int,default=5)
     p.add_argument("--max-free",type=int,default=200)
     p.add_argument("--max-distance",type=int,default=0)
+    p.add_argument("--root",type=int)
     p.add_argument("--witness-cap",type=int,default=450)
     p.add_argument("--control",action="store_true")
     args=p.parse_args()
@@ -104,7 +105,23 @@ def main():
         args.target=initial_defects
     original_values={q:(q if original[e[0]]>>e[1]&1 else -q)
                      for e,q in VARS.items()}
-    frozen=original_values.copy()
+    hard_fixed=[]
+    if args.root is None:
+        frozen=original_values.copy()
+    else:
+        root=args.root
+        near={u for u in range(N) if original[root]>>u&1}
+        far=set(range(N))-{root}-near
+        # Preserve the exact valid local rooted A/B structure, including
+        # all edges touching the chosen root.
+        assert all(root not in w for w in enumerate_cliques(original,4,10000))
+        assert all(any(u in near for u in w) and any(u in far for u in w)
+                   for w in enumerate_cliques(original,4,10000))
+        cross={VARS[(u,v) if u<v else (v,u)]
+               for u in near for v in far}
+        hard_fixed=[lit for q,lit in original_values.items() if q not in cross]
+        frozen={q:lit for q,lit in original_values.items() if q in cross}
+    permitted_count=len(frozen)
     known=set()
     for k,g in ((4,original),(6,complement(original))):
         for w in enumerate_cliques(g,k,100000):
@@ -121,6 +138,8 @@ def main():
         penalties=[len(VARS)+i+1 for i in range(len(witness_list))]
         top=len(VARS)+len(penalties)
         with Glucose4() as solver:
+            for lit in hard_fixed:
+                solver.add_clause([lit])
             for (k,vertices),pvar in zip(witness_list,penalties):
                 clause=[-VARS[e] if k==4 else VARS[e]
                         for e in itertools.combinations(vertices,2)]
@@ -145,7 +164,7 @@ def main():
             if sat is False:
                 stats["UNSAT"]+=1
                 core=solver.get_core() or []
-                if not core or len(frozen)==0 or len(VARS)-len(frozen)>=args.max_free:
+                if not core or len(frozen)==0 or permitted_count-len(frozen)>=args.max_free:
                     summary["status"]="RELAXATION_LIMIT"
                     break
                 impact=Counter()
@@ -156,13 +175,13 @@ def main():
                 rng.shuffle(core_unique)
                 core_unique.sort(key=lambda x:impact[x],reverse=True)
                 chosen=core_unique[:min(args.release,len(core_unique),
-                                         args.max_free-(len(VARS)-len(frozen)))]
+                                         args.max_free-(permitted_count-len(frozen)))]
                 for q in chosen:
                     del frozen[q]
                 stats["released"]+=len(chosen)
                 if roundnum<8 or roundnum%5==0:
                     print("RELAX",json.dumps({"round":roundnum,"core":len(core),
-                        "released":chosen,"free_edges":len(VARS)-len(frozen),
+                        "released":chosen,"free_edges":permitted_count-len(frozen),
                         "known_witnesses":len(known)}),flush=True)
                 continue
             if sat is None:
@@ -177,7 +196,7 @@ def main():
                 rng.shuffle(ranking)
                 ranking.sort(key=lambda q:impact[q],reverse=True)
                 chosen=ranking[:min(args.release,args.max_free-
-                                      (len(VARS)-len(frozen)))]
+                                      (permitted_count-len(frozen)))]
                 for q in chosen:
                     del frozen[q]
                 stats["released"]+=len(chosen)
@@ -210,7 +229,7 @@ def main():
                 (args.outdir/"best36.json").write_text(
                     json.dumps({"adjacency":rows},indent=2)+"\n")
                 print("IMPROVED",json.dumps({"round":roundnum,"K4":k4,"I6":i6,
-                    "free":len(VARS)-len(frozen),"elapsed":round(time.monotonic()-start,2)}),
+                    "free":permitted_count-len(frozen),"elapsed":round(time.monotonic()-start,2)}),
                     flush=True)
             if exact and sampled_total<=args.target:
                 summary["status"]="CONSTRUCTED"
@@ -224,7 +243,7 @@ def main():
             stats["new_witnesses"]+=len(fresh)
             if roundnum<10 or roundnum%5==0:
                 print("SEPARATE",json.dumps({"round":roundnum,
-                    "free_edges":len(VARS)-len(frozen),"k4_sample":len(witness4),
+                    "free_edges":permitted_count-len(frozen),"k4_sample":len(witness4),
                     "i6_sample":len(witness6),"added":len(fresh),
                     "known_total":len(known),"distance":distance,
                     "elapsed":round(time.monotonic()-start,1)}),
@@ -236,10 +255,11 @@ def main():
         summary["status"]="BUDGET_EXHAUSTED"
     summary.update(campaign="core-guided-exact-score-counterexample-construction",
         seed=args.seed,source=str(args.parent),target=args.target,
-        max_distance=args.max_distance,
+        max_distance=args.max_distance,root=args.root,
+        permitted_free_edges=permitted_count,
         initial_defects=initial_defects,initial_K4=original_counts[0],
         initial_I6=original_counts[1],
-        rounds=roundnum,free_edges=len(VARS)-len(frozen),
+        rounds=roundnum,free_edges=permitted_count-len(frozen),
         known_witnesses=len(known),best_defects=best,stats=dict(stats),
         seconds=round(time.monotonic()-start,2))
     (args.outdir/"summary.json").write_text(json.dumps(summary,indent=2)+"\n")
