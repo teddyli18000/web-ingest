@@ -1,0 +1,95 @@
+name: temp Ramsey R46 degree-free linked K4-I6 construction
+# Search true forbidden-set score <=11, without degree requirements on near misses.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-degreefree-linked.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-degreefree-linked-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - {parent: p257, red: 26, repair: 18, seed: 21}
+          - {parent: p257, red: 35, repair: 28, seed: 22}
+          - {parent: p257, red: 45, repair: 38, seed: 23}
+          - {parent: p257, red: 55, repair: 50, seed: 24}
+          - {parent: p259, red: 26, repair: 18, seed: 31}
+          - {parent: p259, red: 35, repair: 28, seed: 32}
+          - {parent: p259, red: 45, repair: 38, seed: 33}
+          - {parent: p259, red: 55, repair: 50, seed: 34}
+          - {parent: p260, red: 26, repair: 18, seed: 41}
+          - {parent: p260, red: 35, repair: 28, seed: 42}
+          - {parent: p260, red: 45, repair: 38, seed: 43}
+          - {parent: p260, red: 55, repair: 50, seed: 44}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PySAT and check syntax
+        run: |
+          python3 -m pip install --disable-pip-version-check -q python-sat
+          python3 -m py_compile science-boundary/ramsey-r46/linked_conflict_sat.py
+      - name: Construct graph with K4 deletion and I6 repair edges coupled
+        shell: bash
+        run: |
+          case '${{ matrix.parent }}' in
+            p257) SEED=science-boundary/ramsey-r46/results/neutral-network-36-12-defects-257edges.json ;;
+            p259) SEED=science-boundary/ramsey-r46/results/neutral-network-36-12-defects-259edges.json ;;
+            p260) SEED=science-boundary/ramsey-r46/results/compound-repair-36-12-defects.json ;;
+          esac
+          python3 science-boundary/ramsey-r46/linked_conflict_sat.py \
+            --elite "$SEED" --red ${{ matrix.red }} --repair ${{ matrix.repair }} \
+            --rng ${{ matrix.seed }} --target 11 --seconds 240 \
+            --outdir "$RUNNER_TEMP/p003-linked-sat"
+      - name: Independent graph verification
+        if: always()
+        shell: bash
+        run: |
+          if test -f "$RUNNER_TEMP/p003-linked-sat/summary.json"; then
+            cat "$RUNNER_TEMP/p003-linked-sat/summary.json"
+          fi
+          if test -f "$RUNNER_TEMP/p003-linked-sat/candidate36.json"; then
+            python3 - <<'PY'
+          import os,json,itertools
+          d=os.environ["RUNNER_TEMP"]+"/p003-linked-sat/"
+          g=json.load(open(d+"candidate36.json"))["adjacency"]
+          assert len(g)==36 and all(len(r)==36 for r in g)
+          assert all(g[i][i]=='0' and g[i][j]==g[j][i] for i in range(36) for j in range(36))
+          k4=sum(all(g[i][j]=='1' for i,j in itertools.combinations(sub,2))
+                 for sub in itertools.combinations(range(36),4))
+          i6=sum(all(g[i][j]=='0' for i,j in itertools.combinations(sub,2))
+                 for sub in itertools.combinations(range(36),6))
+          summary=json.load(open(d+"summary.json"))
+          assert (k4,i6)==(summary["K4"],summary["I6"])
+          assert k4+i6<=11
+          print("INDEPENDENT_VERIFIED K4",k4,"I6",i6,"defects",k4+i6)
+          if not (k4+i6):
+              open(d+"witness.json","w").write(json.dumps({"adjacency":g}))
+          PY
+            if test -f "$RUNNER_TEMP/p003-linked-sat/witness.json"; then
+              git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+              mkdir -p "$RUNNER_TEMP/p003-verify"
+              cp "$RUNNER_TEMP/p003-linked-sat/witness.json" "$RUNNER_TEMP/p003-verify/certificate.json"
+              python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/p003-verify"
+            fi
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-degreefree-${{ matrix.parent }}-${{ matrix.seed }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/p003-linked-sat/
