@@ -95,10 +95,12 @@ def main():
     args.outdir.mkdir(parents=True,exist_ok=True)
     rng=random.Random(args.seed)
     original=read(args.parent)
-    assert (count_cliques(original,4,FULL),
-            count_cliques(complement(original),6,FULL))==(12,0)
+    original_counts=(count_cliques(original,4,FULL),
+                     count_cliques(complement(original),6,FULL))
+    initial_defects=sum(original_counts)
+    assert 1<=initial_defects<=100
     if args.control:
-        args.target=12
+        args.target=initial_defects
     original_values={q:(q if original[e[0]]>>e[1]&1 else -q)
                      for e,q in VARS.items()}
     frozen=original_values.copy()
@@ -106,10 +108,10 @@ def main():
     for k,g in ((4,original),(6,complement(original))):
         for w in enumerate_cliques(g,k,100000):
             known.add((k,w))
-    assert len(known)==12
+    assert len(known)==initial_defects
     start=time.monotonic()
     roundnum=0
-    best=12
+    best=initial_defects
     stats=Counter()
     summary={}
     while time.monotonic()-start<args.seconds and roundnum<1000:
@@ -217,6 +219,8 @@ def main():
         summary["status"]="BUDGET_EXHAUSTED"
     summary.update(campaign="core-guided-exact-score-counterexample-construction",
         seed=args.seed,source=str(args.parent),target=args.target,
+        initial_defects=initial_defects,initial_K4=original_counts[0],
+        initial_I6=original_counts[1],
         rounds=roundnum,free_edges=len(VARS)-len(frozen),
         known_witnesses=len(known),best_defects=best,stats=dict(stats),
         seconds=round(time.monotonic()-start,2))
