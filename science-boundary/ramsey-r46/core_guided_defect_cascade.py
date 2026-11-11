@@ -89,6 +89,7 @@ def main():
     p.add_argument("--round-seconds",type=int,default=12)
     p.add_argument("--release",type=int,default=5)
     p.add_argument("--max-free",type=int,default=200)
+    p.add_argument("--max-distance",type=int,default=0)
     p.add_argument("--witness-cap",type=int,default=450)
     p.add_argument("--control",action="store_true")
     args=p.parse_args()
@@ -127,6 +128,13 @@ def main():
             card=CardEnc.atmost(lits=penalties,bound=args.target,
                                 top_id=top,encoding=EncType.seqcounter)
             solver.append_formula(card.clauses)
+            if args.max_distance:
+                flip_lits=[-q if original[e[0]]>>e[1]&1 else q
+                           for e,q in VARS.items()]
+                distcard=CardEnc.atmost(
+                    lits=flip_lits,bound=args.max_distance,
+                    top_id=card.nv,encoding=EncType.seqcounter)
+                solver.append_formula(distcard.clauses)
             assumption=list(frozen.values())
             # Prefer the parent structure without freezing it permanently.
             solver.set_phases(list(original_values.values()))
@@ -183,6 +191,14 @@ def main():
             witness6=enumerate_cliques(complement(candidate),6,args.witness_cap)
             exact=len(witness4)<args.witness_cap and len(witness6)<args.witness_cap
             sampled_total=len(witness4)+len(witness6)
+            distance=sum((candidate[i]^original[i]).bit_count()
+                         for i in range(N))//2
+            if args.max_distance:
+                assert distance<=args.max_distance
+            if exact:
+                if "min_candidate_score" not in summary or sampled_total<summary["min_candidate_score"]:
+                    summary["min_candidate_score"]=sampled_total
+                    summary["min_candidate_distance"]=distance
             if exact and sampled_total<best:
                 k4=count_cliques(candidate,4,FULL)
                 i6=count_cliques(complement(candidate),6,FULL)
@@ -210,7 +226,8 @@ def main():
                 print("SEPARATE",json.dumps({"round":roundnum,
                     "free_edges":len(VARS)-len(frozen),"k4_sample":len(witness4),
                     "i6_sample":len(witness6),"added":len(fresh),
-                    "known_total":len(known),"elapsed":round(time.monotonic()-start,1)}),
+                    "known_total":len(known),"distance":distance,
+                    "elapsed":round(time.monotonic()-start,1)}),
                     flush=True)
             if args.control:
                 summary["status"]="CONTROL_PASSED"
@@ -219,6 +236,7 @@ def main():
         summary["status"]="BUDGET_EXHAUSTED"
     summary.update(campaign="core-guided-exact-score-counterexample-construction",
         seed=args.seed,source=str(args.parent),target=args.target,
+        max_distance=args.max_distance,
         initial_defects=initial_defects,initial_K4=original_counts[0],
         initial_I6=original_counts[1],
         rounds=roundnum,free_edges=len(VARS)-len(frozen),
