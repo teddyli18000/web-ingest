@@ -80,7 +80,7 @@ def choose_edges(a, red_n, blue_n, seed, parents):
     red = set()
     while uncovered:
         e = max(support, key=lambda x: (
-            sum(e[0] in q and e[1] in q for q in uncovered),
+            sum(x[0] in q and x[1] in q for q in uncovered),
             -rng.random()))
         red.add(e)
         uncovered = [q for q in uncovered if not (e[0] in q and e[1] in q)]
@@ -133,6 +133,7 @@ def main():
     ap.add_argument("--rng", type=int, required=True)
     ap.add_argument("--target", type=int, default=11)
     ap.add_argument("--seconds", type=int, default=180)
+    ap.add_argument("--check-only", action="store_true")
     ap.add_argument("--outdir", type=Path, required=True)
     args = ap.parse_args()
     args.outdir.mkdir(parents=True, exist_ok=True)
@@ -191,6 +192,17 @@ def main():
                     fixed_bad=counters["fixed_bad"],degree_clauses=counters["degree_clauses"],
                     budget=budget,top_var=top,elapsed_prep=round(time.monotonic()-start,2))
         print("MODEL_READY",json.dumps(stat,sort_keys=True),flush=True)
+        if args.check_only:
+            assumptions=[num if (a[e[0]] >> e[1] & 1) else -num
+                         for e,num in v.items()]
+            assert args.target>=12
+            assert s.solve(assumptions=assumptions) is True
+            stat["status"]="POSITIVE_CONTROL_PASSED"
+            (args.outdir/"summary.json").write_text(
+                json.dumps(stat,indent=2)+"\n")
+            print("POSITIVE_CONTROL_PASSED",json.dumps(stat,sort_keys=True),
+                  flush=True)
+            return
         timer=threading.Timer(args.seconds,s.interrupt)
         timer.start()
         result=s.solve_limited(expect_interrupt=True)
