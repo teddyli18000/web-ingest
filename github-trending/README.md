@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-11-10** | **4,416** | **2,569** |
+| **2014-08-09** | **2026-11-11** | **4,417** | **2,570** |
 
-### Latest All-Languages snapshot — 2026-11-10
+### Latest All-Languages snapshot — 2026-11-11
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [anthropics/skills](https://github.com/anthropics/skills) | Python | 1,038 |
-| 2 | [meta/astryx](https://github.com/meta/astryx) | TypeScript | 3,278 |
-| 3 | [sherlock-project/sherlock](https://github.com/sherlock-project/sherlock) | Python | 4,267 |
-| 4 | [google-deepmind/mujoco](https://github.com/google-deepmind/mujoco) | C++ | 574 |
-| 5 | [anthropics/claude-quickstarts](https://github.com/anthropics/claude-quickstarts) | Python | 551 |
-| 6 | [garrytan/gbrain](https://github.com/garrytan/gbrain) | TypeScript | 216 |
-| 7 | [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) | Rust | 916 |
-| 8 | [ruvnet/RuView](https://github.com/ruvnet/RuView) | Rust | 172 |
-| 9 | [ZhuLinsen/daily_stock_analysis](https://github.com/ZhuLinsen/daily_stock_analysis) | Python | 506 |
-| 10 | [homeassistant-ai/ha-mcp](https://github.com/homeassistant-ai/ha-mcp) | Python | 31 |
+| 1 | [meta/astryx](https://github.com/meta/astryx) | TypeScript | 3,108 |
+| 2 | [anthropics/skills](https://github.com/anthropics/skills) | Python | 1,679 |
+| 3 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | JavaScript | 465 |
+| 4 | [anthropics/claude-quickstarts](https://github.com/anthropics/claude-quickstarts) | Python | 531 |
+| 5 | [google-deepmind/mujoco](https://github.com/google-deepmind/mujoco) | C++ | 456 |
+| 6 | [we-promise/sure](https://github.com/we-promise/sure) | Ruby | 159 |
+| 7 | [homeassistant-ai/ha-mcp](https://github.com/homeassistant-ai/ha-mcp) | Python | 790 |
+| 8 | [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) | Rust | 780 |
+| 9 | [sherlock-project/sherlock](https://github.com/sherlock-project/sherlock) | Python | 2,393 |
+| 10 | [tokio-rs/topcoat](https://github.com/tokio-rs/topcoat) | Rust | 192 |
 
-[Open full snapshot →](data/2026/11/10/trending.json)
+[Open full snapshot →](data/2026/11/11/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 314 days  
+[`2026`](data/2026/) · 315 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
