@@ -1,0 +1,105 @@
+name: temp Ramsey R46 rooted interface constructive repair
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-rooted-core-guided.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-rooted-core-guided-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  positive-control:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SAT
+        run: python3 -m pip install --disable-pip-version-check -q python-sat
+      - name: Ensure the frozen valid score-12 model is accepted
+        run: |
+          python3 -m py_compile science-boundary/ramsey-r46/core_guided_defect_cascade.py
+          python3 science-boundary/ramsey-r46/core_guided_defect_cascade.py \
+            --parent science-boundary/ramsey-r46/results/neutral-network-36-12-defects-257edges.json \
+            --control --root 27 --target 12 --seed 5 --seconds 60 --round-seconds 10 --max-distance 20 \
+            --outdir "$RUNNER_TEMP/ramsey-control"
+          python3 - <<'PY'
+          import json,os
+          a=json.load(open(os.environ["RUNNER_TEMP"]+"/ramsey-control/summary.json"))
+          assert a["status"]=="CONSTRUCTED" and a["best_defects"]==12 and a["rounds"]==1,a
+          print("Control passed: exact 12-defect model satisfies all active clauses")
+          PY
+  construct:
+    needs: positive-control
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - {parent: p257, seed: 2701, release: 4, distance: 18, root: 27}
+          - {parent: p257, seed: 3001, release: 7, distance: 30, root: 30}
+          - {parent: p259, seed: 2702, release: 4, distance: 18, root: 27}
+          - {parent: p259, seed: 3002, release: 7, distance: 30, root: 30}
+          - {parent: p260, seed: 2703, release: 4, distance: 18, root: 27}
+          - {parent: p260, seed: 3003, release: 7, distance: 30, root: 30}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install SAT
+        run: python3 -m pip install --disable-pip-version-check -q python-sat
+      - name: Alternate conflict cores, free edges, and exact forbidden-set witnesses
+        shell: bash
+        run: |
+          case '${{ matrix.parent }}' in
+            p257) PARENT=science-boundary/ramsey-r46/results/neutral-network-36-12-defects-257edges.json ;;
+            p259) PARENT=science-boundary/ramsey-r46/results/neutral-network-36-12-defects-259edges.json ;;
+            p260) PARENT=science-boundary/ramsey-r46/results/compound-repair-36-12-defects.json ;;
+          esac
+          python3 science-boundary/ramsey-r46/core_guided_defect_cascade.py \
+            --parent "$PARENT" --seed ${{ matrix.seed }} --target 11 \
+            --release ${{ matrix.release }} --max-free 180 \
+            --round-seconds 9 --seconds 235 --max-distance ${{ matrix.distance }} --root ${{ matrix.root }} \
+            --outdir "$RUNNER_TEMP/p003-core-guided"
+      - name: Independent complete forbidden set recount
+        if: always()
+        shell: bash
+        run: |
+          if test -f "$RUNNER_TEMP/p003-core-guided/summary.json"; then cat "$RUNNER_TEMP/p003-core-guided/summary.json"; fi
+          if test -f "$RUNNER_TEMP/p003-core-guided/best36.json"; then
+            python3 - <<'PY'
+          import json,os,itertools
+          d=os.environ["RUNNER_TEMP"]+"/p003-core-guided"
+          g=json.load(open(d+"/best36.json"))["adjacency"]
+          assert len(g)==36 and all(len(r)==36 for r in g)
+          assert all(g[i][i]=="0" and g[i][j]==g[j][i] for i in range(36) for j in range(36))
+          k4=sum(all(g[i][j]=="1" for i,j in itertools.combinations(s,2))
+                 for s in itertools.combinations(range(36),4))
+          i6=sum(all(g[i][j]=="0" for i,j in itertools.combinations(s,2))
+                 for s in itertools.combinations(range(36),6))
+          summary=json.load(open(d+"/summary.json"))
+          assert summary["best_defects"]==k4+i6<=11
+          print("INDEPENDENT VERIFIED K4",k4,"I6",i6)
+          if k4+i6==0:
+              open(d+"/certificate.json","w").write(json.dumps({"adjacency":g}))
+          PY
+            if test -f "$RUNNER_TEMP/p003-core-guided/certificate.json"; then
+              git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+              mkdir -p "$RUNNER_TEMP/p003-verify"
+              cp "$RUNNER_TEMP/p003-core-guided/certificate.json" "$RUNNER_TEMP/p003-verify/certificate.json"
+              python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/p003-verify"
+            fi
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-rooted-${{ matrix.root }}-${{ matrix.parent }}-${{ matrix.seed }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/p003-core-guided/
