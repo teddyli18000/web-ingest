@@ -19,6 +19,10 @@ def solve(a, seed, secs, outdir):
     model=cp_model.CpModel()
     X=[model.NewIntVar(0,N,f"X_{i}") for i in range(len(XX))]
     Y=[model.NewIntVar(0,N,f"Y_{i}") for i in range(len(YY))]
+    for i,v in enumerate(XX):
+        model.AddHint(X[i],v)
+    for i,v in enumerate(YY):
+        model.AddHint(Y[i],v)
     for v in (X,Y):
         model.Add(v[0]==0)
         model.Add(v[-1]==N)
@@ -49,8 +53,6 @@ def solve(a, seed, secs, outdir):
         area=model.NewIntVar(a,a+17,f"area{i}")
         model.AddMultiplicationEquality(area,[wi,hi])
         areas.append(area)
-        model.AddHint(X[xidx[x]],x)
-        model.AddHint(Y[yidx[y]],y)
     model.AddAllDifferent(keys)
     model.Add(sum(areas)==N*N)
     s=cp_model.CpSolver()
