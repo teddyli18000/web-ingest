@@ -25,6 +25,8 @@ This workspace is permanent. It is **not** part of `temp-work/` and is not subje
 Keep this table short and human-readable. Add one row when a genuinely new direction is opened. Detailed state belongs inside that direction.
 | [`covering-15-9-7/`](covering-15-9-7/) | Can a verified C(15,9,7) covering improve the 270-block public construction? | Active — exact residual-repair experiments launched; no verified improvement yet. |
 
+| [`lop-be75eec-500/`](lop-be75eec-500/) | Can the xLOLIB2 N-be75eec_500 linear ordering score exceed the 33,489,269 published best? | Active — parallel iterated insertion search launched; no verified improvement yet. |
+
 ## Layout
 
 ```text
