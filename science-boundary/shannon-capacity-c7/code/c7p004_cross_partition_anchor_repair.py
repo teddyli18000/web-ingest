@@ -161,6 +161,10 @@ def main():
     state=extract(original,axes)
     initial=set(original)
     alternatives=set().union(*(set(x) for x in allwords))
+    # Target only missing, high-quality points from independently valid
+    # record-level solutions; the full union is >96% already occupied.
+    missing=sorted(alternatives-initial)
+    assert 4000<=len(missing)<=5000, len(missing)
     current=134753
     winner=None
     moves=0
@@ -181,9 +185,7 @@ def main():
         if rng.random()<.35:
             candidate=perturb(materialize(state,axes) if step%50==0 else rng.choice(allwords),rng)
         else:
-            candidate=rng.choice(allwords[rng.randrange(4)])
-            if rng.random()<.6:
-                candidate=rng.choice(tuple(alternatives))
+            candidate=rng.choice(missing)
         u,v=xy(candidate,axes)
         if v in state.get(u,()):continue
         blocked={int(w) for w in NBR[u] if rowmask.get(int(w),0)&NEIGH[v]}
@@ -206,7 +208,7 @@ def main():
             winner=trial;state=candidate_rows
             print('FOUND',trial,'step',step,flush=True)
             break
-        if trial>=134753 or (trial==134752 and rng.random()<.12):
+        if solved['changed'] and (trial>=134753 or (trial==134752 and rng.random()<.12)):
             state=solved['state']
             current=trial
             moves+=1
@@ -227,6 +229,7 @@ def main():
         (a.output/'neutral.json').write_text(json.dumps({'points':words},separators=(',',':'))+'\n')
     result={'method':'cross-partition-forced-anchor-dynamic-row-repair',
             'input_source':a.source,'seed':a.seed,'steps_requested':a.steps,
+            'missing_parent_candidate_count':len(missing),
             'best':winner or 134753,'current':current,'accepted_moves':moves,
             'max_single_move_symmetric_difference':maxchanged,
             'solver_statuses':dict(statuses),'candidate_134754':winner is not None,
