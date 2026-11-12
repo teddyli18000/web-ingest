@@ -8,7 +8,7 @@ All cron expressions are stored in UTC. Human-facing times below use Asia/Singap
 
 | Workflow | Local schedule | Timeout | Purpose |
 | --- | --- | ---: | --- |
-| `ai-daily-warm.yml` | runner acquisition 04:37 / 05:07 | 230 min | Acquire an AI Daily runner hours before publication and keep it alive across 08:00 |
+| `ai-daily-warm.yml` | runner acquisition 02:27 / 02:53 | 359 min | Acquire an AI Daily runner hours before publication and keep it alive across 08:00 |
 | `ai-daily.yml` | recovery 09:13 / 10:13 / 11:13 / 11:37 | 3 min | Short recovery opportunities before downstream retries, plus manual backfill |
 | `github-trending.yml` | 09:31 / 10:43 / 11:55 daily | 15 min | Three retry opportunities; first valid snapshot wins |
 | `google-trending.yml` | 12:37 / 13:49 daily | 15 min | Capture SG + US + GB + HK Trending Now; second slot is retry/no-op |
@@ -17,13 +17,15 @@ All cron expressions are stored in UTC. Human-facing times below use Asia/Singap
 
 AI Daily is intentionally different from the other collectors because punctuality around an external publication time matters. Its known downstream consumer checks the mirror at 08:15 and then hourly through 12:15.
 
+On **2026-11-12**, the nominal 04:37 / 05:07 warm events were not created until **09:58 / 10:11** Asia/Singapore, while AIHOT had generated the report at **08:00:14**. The first successful mirror commit landed at **09:59:01**. That incident exceeded the delay budget of the 04:37 design, so warm acquisition was moved to 02:27 / 02:53 rather than adding more near-deadline retries.
+
 Two consecutive days showed that several nearby GitHub `schedule` events can be delayed together. On 2026-09-03 the nominal 07:21 / 07:43 / 07:53 / 08:03 AI Daily warm events did not actually start until roughly 09:07 / 09:25 / 09:30 / 10:49, even though AIHOT had generated the report at 08:00. Near-deadline cron hedging is therefore not treated as a reliable way to meet the 08:15 objective.
 
-The warm workflow asks for a runner at **04:37**, with a **05:07** fallback. Both use the same `ai-daily-aihot` concurrency group with `cancel-in-progress: false`. Once one run is executing it remains alive until the publication boundary. At **07:59:45** it starts polling the date-specific AIHOT daily endpoint every **5 seconds**, with each HTTP request bounded to **5 seconds**, through **08:14**. The 230-minute timeout is intentional: acquiring a runner hours early provides enough dispatch-delay budget to absorb scheduler lag comparable to the incidents already observed.
+The warm workflow asks for a runner at **02:27**, with a **02:53** fallback. Both use the same `ai-daily-aihot` concurrency group with `cancel-in-progress: false`. Once one run is executing it remains alive until the publication boundary. At **07:59:45** it starts polling the date-specific AIHOT daily endpoint every **5 seconds**, with each HTTP request bounded to **5 seconds**, through **08:14**. The 359-minute timeout is intentional: the earlier acquisition request is meant to survive multi-hour GitHub scheduler lag while still holding an already-acquired runner across publication.
 
 The publication watcher is failure-visible. If the whole warm window ends without a complete validated API + HTML snapshot, the job fails instead of reporting a green no-op. Live 404 responses are treated as pre-publication state and retried; 429 honors `Retry-After`; transient 5xx/network failures use bounded backoff. The task README owns the detailed fetch contract.
 
-The 05:07 nominal start plus the workflow timeout and repository's 15-minute planning buffer reserves AI Daily through **09:12**. Recovery therefore begins at **09:13**, then runs at 10:13 / 11:13 / 11:37 with a short 3-minute timeout. These windows remain clear of GitHub Trending's declared schedule.
+The 02:53 nominal fallback plus the workflow timeout and repository's 15-minute planning buffer reserves AI Daily through **09:07**. Recovery therefore begins at **09:13**, then runs at 10:13 / 11:13 / 11:37 with a short 3-minute timeout. These windows remain clear of GitHub Trending's declared schedule.
 
 This long warm hold is a documented exception to the normal preference against idle Actions. `web-ingest` is public, and retaining a runner already acquired materially improves the reliability of a time-sensitive collector.
 

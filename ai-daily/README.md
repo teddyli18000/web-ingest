@@ -40,8 +40,8 @@ The durable conclusion is that several nearby `schedule` events can be delayed t
 
 The warm workflow has two nominal acquisition opportunities:
 
-- **04:37** Asia/Singapore / Beijing — primary early runner.
-- **05:07** — fallback if the first schedule is dropped or unusually delayed.
+- **02:27** Asia/Singapore / Beijing — primary early runner.
+- **02:53** — fallback if the first schedule is dropped or unusually delayed.
 
 Both use the same `ai-daily-aihot` concurrency group with `cancel-in-progress: false`. At most one run executes in the group. If an early run is already alive, the later opportunity remains only a fallback and does not become a parallel writer.
 
@@ -55,7 +55,7 @@ Once a warm run actually starts:
 6. after the push succeeds it confirms both public raw files are readable and dispatches the fixed downstream archive workflow;
 7. if the entire warm publication window ends without a complete snapshot, or if post-push handoff fails, the workflow fails instead of reporting a misleading green success.
 
-The warm job has a **230-minute timeout**. A punctual 04:37 runner can stay alive through the publication window, while that early start gives the scheduler several hours of delay budget. The 05:07 fallback still reaches the publication window under delays comparable to the worst observed on 2026-09-03.
+The warm job has a **359-minute timeout**. A punctual 02:27 runner can stay alive through the publication window, while the much earlier acquisition request absorbs roughly five and a half hours of scheduler delay before the 08:00 publication boundary. The 02:53 fallback gives a second independent schedule event without creating a parallel writer.
 
 Each scheduled warm run records its triggering cron, actual runner-acquisition time, planned first-fetch time, warm deadline, and run URL in the Step Summary.
 

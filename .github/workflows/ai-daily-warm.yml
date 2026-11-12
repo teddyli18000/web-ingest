@@ -5,8 +5,8 @@ on:
     # Acquire a runner hours before the 08:15 downstream deadline so correlated GitHub
     # scheduler delay can be absorbed while a live runner waits across publication.
     # Local times are Asia/Singapore / Beijing (UTC+8).
-    - cron: "37 20 * * *" # 04:37 local on the following calendar day
-    - cron: "7 21 * * *"  # 05:07 local on the following calendar day
+    - cron: "27 18 * * *" # 02:27 local on the following calendar day
+    - cron: "53 18 * * *" # 02:53 local on the following calendar day
   workflow_dispatch:
 
 permissions:
@@ -19,7 +19,7 @@ concurrency:
 jobs:
   collect:
     runs-on: ubuntu-latest
-    timeout-minutes: 230
+    timeout-minutes: 359
     steps:
       - name: Record schedule timing
         if: github.event_name == 'schedule'

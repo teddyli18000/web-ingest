@@ -14,15 +14,22 @@ This file is a compact manager-facing record for repository-wide decisions. It i
 
 | Task | Asia/Singapore schedule | Declared timeout |
 | --- | --- | ---: |
-| `ai-daily` | primary 07:51 / 07:57 / 08:03 / 08:09 / 08:13; recovery 08:29 / 09:03 / 10:11 / 11:27 | 13 min |
+| `ai-daily` | warm 02:27 / 02:53; recovery 09:13 / 10:13 / 11:13 / 11:37 | 359 min warm; 3 min recovery |
 | `github-trending` | 09:31 / 10:43 / 11:55 | 15 min |
 | `google-trending` | 12:37 / 13:49 | 15 min |
 
 The minute values are deliberately varied rather than copied between bots. AI Daily is the punctuality-sensitive collector. Its known downstream GPT automation checks the mirror at **08:15**, then retries at **09:15 / 10:15 / 11:15 / 12:15**. Operational priority is therefore: get the complete HTML + JSON snapshot onto `main` before the first 08:15 consumer check whenever AIHOT publishes on its normal schedule; only keep recovery work that can still be consumed by the remaining retry window.
 
-AI Daily runs that begin before 08:15 poll every 10 seconds. Multiple independent primary schedule events reduce dependence on one GitHub cron. A complete snapshot makes all later events no-op against latest `main`. Afternoon/evening recovery after the downstream retry window is intentionally not scheduled.
+AI Daily warm runs hold an acquired runner until 07:59:45 and then poll every 5 seconds through 08:14. Multiple independent warm schedule events reduce dependence on one GitHub cron. A complete snapshot makes all later events no-op against latest `main`. Afternoon/evening recovery after the downstream retry window is intentionally not scheduled.
 
-Under the timeout + 15-minute planning-buffer policy, the 09:03 AI Daily slot reserves through 09:31, the 10:11 slot through 10:39, and the 11:27 slot through 11:55. These boundaries are intentionally adjacent to but non-overlapping with GitHub Trending at 09:31 / 10:43 / 11:55. `google-trending` remains at 12:37 / 13:49.
+Under the timeout + 15-minute planning-buffer policy, the 02:53 warm fallback reserves through 09:07. The 09:13 recovery reserves through 09:31, and the 11:37 recovery reserves through 11:55; these boundaries are intentionally adjacent to but non-overlapping with GitHub Trending at 09:31 / 10:43 / 11:55. `google-trending` remains at 12:37 / 13:49.
+
+### AI Daily scheduler incident — 2026-11-12
+
+- AIHOT generated the report at **00:00:14Z / 08:00:14 UTC+8**.
+- The nominal **04:37 / 05:07** warm events were not created until **09:58 / 10:11 UTC+8**.
+- The first mirror commit landed at **09:59:01 UTC+8**, almost two hours after publication.
+- Response: move warm acquisition to **02:27 / 02:53**, extend the warm job to **359 minutes**, and keep the 07:59:45 fetch boundary unchanged. This targets the scheduler delay rather than polling AIHOT earlier than it publishes.
 
 ### AI Daily scheduler incident — 2026-09-01
 
