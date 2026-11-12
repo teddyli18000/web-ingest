@@ -1,0 +1,61 @@
+name: Temporary p015 dynamic ejection chains
+on:
+  push:
+    paths:
+      - .github/workflows/temp-p015-chain.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-p015-chain
+  cancel-in-progress: false
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build C++ ejection-chain search and authoritative checker
+        run: |
+          g++ -O3 -std=c++17 -o /tmp/p015-chain science-boundary/covering-15-9-7/ejection_chain.cpp
+          curl -fsSL https://raw.githubusercontent.com/few-shots/few-shots/main/problems/p015-covering-15-9-7/baseline/certificate.json -o /tmp/p015-base.json
+          curl -fsSL https://raw.githubusercontent.com/few-shots/few-shots/main/problems/p015-covering-15-9-7/verify/verify.py -o /tmp/p015-verify.py
+          python - <<'PY'
+          import json
+          blocks=json.load(open('/tmp/p015-base.json'))['blocks']
+          with open('/tmp/p015-input.txt','w') as f:
+              for b in blocks:f.write(' '.join(map(str,b))+'\n')
+          PY
+      - name: Four concurrent dynamic repair beams
+        run: |
+          mkdir -p p015-chain
+          for seed in 41 421 4311 2026; do
+            /tmp/p015-chain /tmp/p015-input.txt "p015-chain/near$seed.json" 580 "$seed" 96 6 >"p015-chain/run$seed.log" 2>&1 &
+          done
+          wait
+          python - <<'PY'
+          import itertools,json,pathlib
+          S=set(itertools.combinations(range(15),7))
+          candidates=[]
+          for f in pathlib.Path('p015-chain').glob('near*.json'):
+              blocks=json.loads(f.read_text())['blocks']
+              unseen=len(S-{tuple(t) for b in blocks for t in itertools.combinations(sorted(b),7)})
+              assert len(blocks)==269
+              candidates.append((unseen,str(f),blocks))
+          candidates.sort()
+          print('near candidates',[(m,f) for m,f,_ in candidates],flush=True)
+          pathlib.Path('p015-chain/state.json').write_text(json.dumps({'best_missing':candidates[0][0], 'file':candidates[0][1]}))
+          if candidates[0][0]==0:
+              blocks=candidates[0][2]
+          else:
+              blocks=json.load(open('/tmp/p015-base.json'))['blocks']
+          pathlib.Path('p015-chain/certificate.json').write_text(json.dumps({'blocks':blocks},separators=(',',':')))
+          PY
+          python /tmp/p015-verify.py p015-chain | tee p015-chain/upstream-verdict.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p015-dynamic-chains
+          path: |
+            p015-chain/*.json
+            p015-chain/*.log
