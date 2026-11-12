@@ -1,0 +1,69 @@
+name: temp-google-trending-primary-recover
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-google-trending-primary-recover.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: google-trending-primary-recover
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Capture full primary dataset
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile google-trending/*.py
+          python -m unittest discover -s google-trending/tests -v
+          python google-trending/capture.py
+
+          DAY="$(TZ=Asia/Singapore date +%F)"
+          FILE="google-trending/data/${DAY:0:4}/${DAY:5:2}/${DAY:8:2}/trending.json"
+          python - "$FILE" <<'PY'
+          import json, sys
+          path = sys.argv[1]
+          data = json.load(open(path, encoding="utf-8"))
+          for geo in ("SG", "US", "GB", "HK"):
+              region = data["regions"][geo]
+              count = len(region["items"])
+              source = region["source"]
+              print(f"{geo}: {source} {count}")
+              if source != "google_trending_now" or count <= 10:
+                  raise SystemExit(f"{geo}: primary capture not restored")
+          PY
+
+          python google-trending/validate_archive.py
+          python google-trending/render_readme.py
+
+      - name: Commit upgraded snapshot and remove probes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add google-trending/data google-trending/README.md
+          git rm -f \
+            .github/workflows/temp-google-trending-html-probe.yml \
+            .github/workflows/temp-google-trending-primary-recover.yml
+
+          git commit -m "data(google-trending): restore full primary capture"
+          git pull --rebase origin main
+          git push origin HEAD:main
