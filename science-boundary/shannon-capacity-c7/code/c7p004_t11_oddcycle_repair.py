@@ -33,7 +33,7 @@ def main():
     ap.add_argument('frozen',type=Path);ap.add_argument('tandon',type=Path)
     ap.add_argument('family',type=Path);ap.add_argument('output',type=Path)
     ap.add_argument('--state',type=int,required=True)
-    ap.add_argument('--mode',choices=('double','triple'),required=True)
+    ap.add_argument('--mode',choices=('double','triple','quad','quint'),required=True)
     ap.add_argument('--max-cases',type=int,default=8000)
     ap.add_argument('--seed',type=int,default=202611121)
     a=ap.parse_args();a.output.mkdir(parents=True,exist_ok=True)
@@ -50,12 +50,26 @@ def main():
         release=set(k for k in supports if len(k)==2)
         one_owners=[k[0] for k in supports if len(k)==1]
         release.update(itertools.combinations(one_owners,2))
-    else:
+    elif a.mode=='triple':
         release=set(k for k in supports if len(k)==3)
         for pair in (k for k in supports if len(k)==2):
             for third in omitted:
                 if third not in pair:release.add(tuple(sorted((*pair,third))))
-    release=sorted(release,key=lambda k:(-len(set(k)&omitted),rng.random()))
+    else:
+        cardinality=4 if a.mode=='quad' else 5
+        release=set(itertools.combinations(sorted(initial),cardinality))
+    # Target odd-cycle repair by releasing owners responsible for private-neighbor
+    # clash edges, not merely by replacing randomly chosen parent words.
+    edges=[]
+    for a0,va in initial.items():
+        for b0,vb in initial.items():
+            if b0>a0 and any(conf(x,y) for x in va for y in vb):
+                edges.append((a0,b0))
+    def rank(k):
+        K=set(k)
+        covered=sum(a0 in K or b0 in K for a0,b0 in edges)
+        return (-covered,-len(K&omitted),rng.random())
+    release=sorted(release,key=rank)
     src=json.loads((a.tandon/'data/base_c7.json').read_text())
     fam=json.loads((a.family/'data/family-f.json').read_text())
     auxiliaries=[('I0',set(src['I0'])),('X',set(src['X']))]
