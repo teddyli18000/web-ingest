@@ -1,0 +1,99 @@
+name: temp-google-trending-rpc-probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-google-trending-rpc-probe.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Probe i0OFE request variants
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/probe.mjs" <<'NODE'
+          function extractJsonArrays(text) {
+            const arrays = [];
+            for (let i = 0; i < text.length; i++) {
+              if (text[i] !== "[") continue;
+              let depth = 0, inString = false, escaped = false;
+              const start = i;
+              for (; i < text.length; i++) {
+                const c = text[i];
+                if (inString) {
+                  if (escaped) escaped = false;
+                  else if (c === "\\") escaped = true;
+                  else if (c === '"') inString = false;
+                  continue;
+                }
+                if (c === '"') inString = true;
+                else if (c === "[") depth++;
+                else if (c === "]" && --depth === 0) {
+                  arrays.push(text.slice(start, i + 1));
+                  break;
+                }
+              }
+            }
+            return arrays;
+          }
+
+          function rpcPayload(text) {
+            for (const chunk of extractJsonArrays(String(text).trim().replace(/^\)\]\}'/, ""))) {
+              try {
+                const x = JSON.parse(chunk);
+                if (!Array.isArray(x)) continue;
+                const e = x.find(v => Array.isArray(v) && v[0] === "wrb.fr" && v[1] === "i0OFE");
+                if (e) return JSON.parse(e[2]);
+              } catch {}
+            }
+            return null;
+          }
+
+          async function run(geo, args, rt) {
+            const q = new URLSearchParams({rpcids:"i0OFE","source-path":"/trending",hl:"en-US"});
+            if (rt) q.set("rt","c");
+            const req = [[["i0OFE", JSON.stringify(args), null, "generic"]]];
+            const body = new URLSearchParams({"f.req":JSON.stringify(req)});
+            const res = await fetch("https://trends.google.com/_/TrendsUi/data/batchexecute?"+q, {
+              method:"POST",
+              headers:{
+                "accept":"*/*",
+                "content-type":"application/x-www-form-urlencoded;charset=UTF-8",
+                "origin":"https://trends.google.com",
+                "referer":"https://trends.google.com/trending?geo="+geo+"&hl=en-US"
+              },
+              body
+            });
+            const text = await res.text();
+            const payload = rpcPayload(text);
+            const rows = Array.isArray(payload?.[1]) ? payload[1] : [];
+            console.log(JSON.stringify({
+              geo,
+              args_len: args.length,
+              rt,
+              http: res.status,
+              payload_shape: Array.isArray(payload) ? payload.map(v => Array.isArray(v) ? v.length : typeof v) : null,
+              row_count: rows.length,
+              first_row_shape: Array.isArray(rows[0]) ? rows[0].length : null,
+              payload_prefix: rows.length ? null : JSON.stringify(payload).slice(0,500)
+            }));
+          }
+
+          for (const geo of ["SG","US","GB","HK"]) {
+            await run(geo, [null,null,geo,0,"en-US",24,1], false);
+            await run(geo, [null,null,geo,0,"en-US",24], false);
+            await run(geo, [null,null,geo,0,"en-US",24,1], true);
+            await run(geo, [null,null,geo,0,"en-US",24], true);
+          }
+          NODE
+          node "$RUNNER_TEMP/probe.mjs"
