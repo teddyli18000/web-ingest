@@ -95,6 +95,13 @@ def run():
             if score is not None:
                 counts[1] += 1
                 best = min(best,score)
+    for inds in combinations(range(len(GROUPS)),4):
+        for signs in product((-1,1),repeat=4):
+            score = check(list(zip(inds,signs)))
+            counts[0] += 1
+            if score is not None:
+                counts[1] += 1
+                best = min(best,score)
     print(dict(coordinate_classes=len(GROUPS),trials=counts[0],
                valid=counts[1],best=best))
 if __name__ == "__main__":
