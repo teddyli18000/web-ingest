@@ -2,8 +2,9 @@
 using namespace std;
 constexpr int N=500;
 int D[N][N];
+int W[N][N];
 using Perm=array<int,N>;
-long long score(const Perm &p){long long s=0;for(int i=0;i<N;i++)for(int j=i+1;j<N;j++)s+=D[p[i]][p[j]];return s;}
+long long score(const Perm &p){long long s=0;for(int i=0;i<N;i++)for(int j=i+1;j<N;j++)s+=W[p[i]][p[j]];return s;}
 void move_at(Perm &p,int i,int j){int v=p[i];if(i<j)for(int k=i;k<j;k++)p[k]=p[k+1];else for(int k=i;k>j;k--)p[k]=p[k-1];p[j]=v;}
 int descent(Perm &p,mt19937_64 &rng){
   int iterations=0;
@@ -35,10 +36,9 @@ void perturb(Perm &p,mt19937_64 &rng,int type,int strength){
     shuffle(removed.begin(),removed.end(),rng);
     for(int v:removed){
       int gain=0,best=INT_MIN,bpos=0;
-      for(int x:q)gain+=D[x][v]-D[v][x];
       for(int j=0;j<=(int)q.size();j++){
         if(gain>best){best=gain;bpos=j;}
-        if(j<(int)q.size())gain+=2*(D[v][q[j]]-D[q[j]][v]);
+        if(j<(int)q.size())gain-=D[v][q[j]];
       }
       q.insert(q.begin()+bpos,v);
     }
@@ -89,7 +89,7 @@ int main(int argc,char **argv){
   ifstream f(argv[1]);int n;f>>n;if(n!=N)return 3;
   long long M[N][N];
   for(int i=0;i<N;i++)for(int j=0;j<N;j++)f>>M[i][j];
-  for(int i=0;i<N;i++)for(int j=0;j<N;j++)D[i][j]=int(M[i][j]-M[j][i]);
+  for(int i=0;i<N;i++)for(int j=0;j<N;j++){W[i][j]=int(M[i][j]);D[i][j]=int(M[i][j]-M[j][i]);}
   Perm p;ifstream g(argv[2]);for(int &x:p)g>>x;
   output=argv[3];best_score=score(p);global_best=p;
   cerr<<"INITIAL "<<best_score<<endl;
