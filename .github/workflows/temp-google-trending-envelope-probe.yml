@@ -1,0 +1,70 @@
+name: temp-google-trending-envelope-probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-google-trending-envelope-probe.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Inspect npm raw payload and direct response
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          npx --yes google-trends-now@1.1.1 trending \
+            --geo US --hours 24 --sort relevance --limit all \
+            --format json --fallback none --include-raw \
+            --retries 0 --timeout-ms 30000 > "$RUNNER_TEMP/pkg.json"
+
+          node - "$RUNNER_TEMP/pkg.json" <<'NODE'
+          const fs = require("fs");
+          const x = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
+          console.log("PACKAGE", JSON.stringify({
+            source:x.source,
+            fetch_status:x.fetch_status,
+            error:x.error ?? null,
+            item_count:Array.isArray(x.items)?x.items.length:null,
+            raw_type:Array.isArray(x.raw)?"array":typeof x.raw,
+            raw_shape:Array.isArray(x.raw)?x.raw.map(v=>Array.isArray(v)?v.length:typeof v):null,
+            raw_prefix:JSON.stringify(x.raw).slice(0,1500)
+          }));
+          NODE
+
+          cat > "$RUNNER_TEMP/direct.mjs" <<'NODE'
+          const geo="US", hl="en-US";
+          const args=[null,null,geo,0,hl,24,1];
+          const q=new URLSearchParams({rpcids:"i0OFE","source-path":"/trending",hl,rt:"c"});
+          const req=[[["i0OFE",JSON.stringify(args),null,"generic"]]];
+          const body=new URLSearchParams({"f.req":JSON.stringify(req)});
+          const res=await fetch("https://trends.google.com/_/TrendsUi/data/batchexecute?"+q,{
+            method:"POST",
+            headers:{
+              accept:"*/*",
+              "content-type":"application/x-www-form-urlencoded;charset=UTF-8",
+              origin:"https://trends.google.com",
+              referer:"https://trends.google.com/trending?geo=US&hl=en-US"
+            },
+            body
+          });
+          const text=await res.text();
+          const ids=[...text.matchAll(/"([A-Za-z0-9_-]{4,12})"/g)].map(m=>m[1]);
+          console.log("DIRECT", JSON.stringify({
+            status:res.status,
+            content_type:res.headers.get("content-type"),
+            length:text.length,
+            prefix:text.slice(0,2000).replace(/\n/g,"\\n"),
+            rpcish:[...new Set(ids)].slice(0,80)
+          }));
+          NODE
+          node "$RUNNER_TEMP/direct.mjs"
