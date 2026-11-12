@@ -1,0 +1,81 @@
+name: temp Thomson 960 cooperative dynamic scar glides
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-thomson-960-joint-dynamic-glides.yml'
+
+jobs:
+  joint-glides:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 210
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [66301, 66302]
+    permissions:
+      contents: read
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: few-shots/few-shots
+          path: few-shots
+          persist-credentials: false
+      - run: python3 -m pip install --disable-pip-version-check -q numpy scipy numba
+      - name: Source, 78-glide enumeration, and independent analytic gradient smoke tests
+        run: |
+          python3 -m py_compile science-boundary/thomson-960/code/search_joint_dynamic_glides.py
+          python3 science-boundary/thomson-960/code/search_joint_dynamic_glides.py \
+            few-shots \
+            --a-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --b-json science-boundary/thomson-960/data/basin-b-010566.json \
+            --w-json science-boundary/thomson-960/data/scar-braid-elites-2202-2026-11-06.json \
+            --seed ${{ matrix.seed }} --cycles 2 --maxiter 350 \
+            --out "$RUNNER_TEMP/smoke"
+      - name: Construct N960 minima by joint nonlocal scar-glide bias and dynamic follow-on glides
+        run: |
+          python3 science-boundary/thomson-960/code/search_joint_dynamic_glides.py \
+            few-shots \
+            --a-json science-boundary/thomson-960/data/neighbor-soft-003280.json \
+            --b-json science-boundary/thomson-960/data/basin-b-010566.json \
+            --w-json science-boundary/thomson-960/data/scar-braid-elites-2202-2026-11-06.json \
+            --seed ${{ matrix.seed }} --cycles 65 --maxiter 550 \
+            --out "$RUNNER_TEMP/out"
+      - name: Report actual independent physically scored N960 offspring
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os,json,pathlib
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])
+          for sub in ('smoke','out'):
+              file=root/sub/'result.json'
+              if not file.exists():
+                  print('MISSING_RESULT',file);continue
+              d=json.loads(file.read_text())
+              rows=d['rows']
+              print('RESULT',sub,'seed',d['seed'],
+                    'cycles',d['cycles_done'],'best',d['best'],
+                    'new',d['new_basins'],'winners',d['winners'],
+                    'gradient_check',d['gradient_test'])
+              for mode in (True,False):
+                  x=[r for r in rows if r['control']==mode]
+                  print('CONTROL',mode,'trials',len(x),
+                        'best',min((r['energy'] for r in x),default=None),
+                        'new',sum(r['new'] for r in x),
+                        'mean_dynamic_flips',sum(r['after_flipped'] for r in x)/max(1,len(x)))
+              print('ELITES',[(x['energy'],x['tag']) for x in d['pool']])
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: thomson-dynamic-coupled-glides-${{ matrix.seed }}
+          path: |
+            ${{ runner.temp }}/out
+            ${{ runner.temp }}/smoke
+          retention-days: 10
