@@ -24,6 +24,12 @@ the only attack is enumerating candidates. `crack.c` does that at roughly
 - `plan.py` — the ordered list of candidate spaces plus the wave/shard window
   arithmetic. `window` resolves one shard's range; `advance` resolves the next
   wave (or the next space, or a retry with a smaller span after a `BUDGET`).
+- `dispatch.sh` — dispatches one wave; used by both the driver and the watcher.
+- `watchdog.sh` — restarts the chain when a wave dies without any shard failing.
+  On 2026-11-11 one wave ended with `Internal server error. Correlation ID: ...`
+  after all 20 shards had succeeded, so the advance job never ran and the chain
+  stopped for 21 hours. The window travels in `run-name` (`s= i= p= a=`) so the
+  watcher can resume from the right cursor without any repository state.
 
 ## Public-repository boundary
 
