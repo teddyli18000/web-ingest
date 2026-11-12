@@ -4,8 +4,12 @@ name: temp-pdfcrack
 # One dispatch = one wave of WAVE_SHARDS parallel shards over one index window of
 # one candidate space. The advance job dispatches the next wave automatically, so
 # the chain keeps running until a shard reports a hit or the plan is exhausted.
+# temp-pdfcrack-watchdog.yml restarts the chain if a run dies without any shard
+# failing (GitHub-side internal error), so the window is carried in run-name.
 #
 # Public-repository boundary: a hit is reported as an index, never as a password.
+
+run-name: pdfcrack s=${{ inputs.space }} i=${{ inputs.start }} p=${{ inputs.span }} a=${{ inputs.attempt }}
 
 on:
   workflow_dispatch:
@@ -57,6 +61,7 @@ env:
 
 jobs:
   shard:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 350
     strategy:
@@ -134,7 +139,7 @@ jobs:
 
   advance:
     needs: shard
-    if: always()
+    if: always() && github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -225,42 +230,18 @@ jobs:
         if: steps.next.outputs.stop != 'true'
         shell: bash
         env:
-          DISPATCH_TOKEN: ${{ secrets.AI_DAILY_DISPATCH_TOKEN }}
           GH_TOKEN: ${{ github.token }}
+          DISPATCH_TOKEN: ${{ secrets.AI_DAILY_DISPATCH_TOKEN }}
           NEXT_SPACE: ${{ steps.next.outputs.next_space }}
           NEXT_START: ${{ steps.next.outputs.next_start }}
           NEXT_SPAN: ${{ steps.next.outputs.next_span }}
           BUMP: ${{ steps.next.outputs.bump_attempt }}
         run: |
           set -uo pipefail
-
           if [ "${BUMP}" = "true" ]; then
             attempt=$(( ${{ inputs.attempt }} + 1 ))
           else
             attempt=0
           fi
-
-          dispatch_wave() {
-            gh workflow run temp-pdfcrack.yml \
-              --repo "${GITHUB_REPOSITORY}" \
-              -f "space=${NEXT_SPACE}" \
-              -f "start=${NEXT_START}" \
-              -f "span=${NEXT_SPAN}" \
-              -f "budget_seconds=${PLAN_BUDGET}" \
-              -f "attempt=${attempt}"
-          }
-
-          if message="$(dispatch_wave 2>&1)"; then
-            echo "Dispatched next wave with the repository token (attempt ${attempt})."
-            exit 0
-          fi
-          echo "Repository token refused to dispatch: ${message}"
-
-          if [ -n "${DISPATCH_TOKEN:-}" ] \
-            && message="$(GH_TOKEN="${DISPATCH_TOKEN}" dispatch_wave 2>&1)"; then
-            echo "Dispatched next wave with the dispatch token (attempt ${attempt})."
-            exit 0
-          fi
-
-          echo "::error::could not dispatch the next wave; the chain stopped here"
-          exit 1
+          bash temp-work/pdfcrack/dispatch.sh \
+            "${NEXT_SPACE}" "${NEXT_START}" "${NEXT_SPAN}" "${attempt}" "${PLAN_BUDGET}"
