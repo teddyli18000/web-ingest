@@ -89,7 +89,8 @@ def solve(rows,block,anchor,randomizer,limit,maxdomain=350,maxvars=1050):
     if any(m.bit_count()>maxdomain for m in dom.values()):return None
     cand=[(u,v) for u in block for v in bits(dom[u])]
     n=len(cand)
-    if n>maxvars or anchor not in cand:return None
+    anchors=[anchor] if isinstance(anchor,tuple) else list(anchor)
+    if n>maxvars or any(p not in cand for p in anchors):return None
     ix={p:i for i,p in enumerate(cand)}
     er=[];ec=[]
     for u in block:
@@ -109,15 +110,16 @@ def solve(rows,block,anchor,randomizer,limit,maxdomain=350,maxvars=1050):
     row=np.repeat(np.arange(m),2)
     col=np.column_stack((er,ec)).ravel()
     # Force one genuinely absent candidate while jointly solving all row conflicts.
-    row=np.r_[row,m]
-    col=np.r_[col,ix[anchor]]
-    mat=coo_matrix((np.ones(len(row)),(row,col)),shape=(m+1,n)).tocsr()
+    row=np.r_[row,np.arange(m,m+len(anchors))]
+    col=np.r_[col,[ix[p] for p in anchors]]
+    mat=coo_matrix((np.ones(len(row)),(row,col)),shape=(m+len(anchors),n)).tocsr()
     old={(u,v) for u in block for v in rows.get(u,())}
     tie=np.array([randomizer.random()*(1 if z not in old else .4) for z in cand])
     objective=-100000*np.ones(n)-tie
     z=milp(objective,integrality=np.ones(n),
            bounds=Bounds(np.zeros(n),np.ones(n)),
-           constraints=LinearConstraint(mat,np.r_[np.full(m,-np.inf),1.],np.r_[np.ones(m),1.]),
+           constraints=LinearConstraint(mat,np.r_[np.full(m,-np.inf),np.ones(len(anchors))],
+                                        np.r_[np.ones(m),np.ones(len(anchors))]),
            options={'mip_rel_gap':0,'time_limit':limit})
     if z.x is None:return {'status':int(z.status),'state':None}
     selected={u:set() for u in block}
