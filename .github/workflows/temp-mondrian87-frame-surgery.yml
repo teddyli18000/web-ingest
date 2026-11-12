@@ -1,0 +1,55 @@
+name: temp-mondrian87-frame-surgery
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-mondrian87-frame-surgery.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-mondrian87-frame-surgery
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {seed: 157, window: 335}
+          - {seed: 163, window: 335}
+          - {seed: 167, window: 336}
+          - {seed: 173, window: 336}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare 85-to-87 topology surgery solver
+        run: |
+          python -m pip install ortools
+          python -m py_compile science-boundary/mondrian-87/{frame_repair,cpsat_search}.py
+      - name: Construct full defect-17 tiling
+        run: |
+          set -o pipefail
+          python science-boundary/mondrian-87/frame_repair.py \
+            --seed ${{ matrix.seed }} --window ${{ matrix.window }} \
+            --seconds 720 --outdir found | tee search.log
+      - name: Official Few Shots verification of any constructed tiling
+        run: |
+          if test -d found; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/mondrian-candidate
+            for f in found/certificate_*.json; do
+              cp "$f" /tmp/mondrian-candidate/certificate.json
+              python /tmp/few-shots/problems/p016-mondrian-87/verify/verify.py /tmp/mondrian-candidate
+            done
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mondrian87-frame-${{ matrix.seed }}-${{ matrix.window }}
+          path: |
+            search.log
+            found/
