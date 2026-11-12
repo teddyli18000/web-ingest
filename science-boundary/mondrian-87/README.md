@@ -8,7 +8,7 @@ Find a complete tiling of the 87×87 square by pairwise noncongruent integer-sid
 - The older OEIS/Muessig certificate has defect 22 and 13 rectangles.
 - An independent cell-occupancy recomputation of the PR #62 certificate found exact cover, distinct unordered shapes, area sum 7569, area multiset `[390,390,390,391,392,392,396,396,396,396,400,400,403,405,405,405,406,408,408]` and defect 18. The official Few Shots CI also verified the merged shot at 18.
 - No improved candidate has yet been established.
-- Tested all **9,048** moves altering one/two independent edge-coordinate classes by ±1 or ±2, or three classes by ±1. Of these, **4,264** produced valid tilings; best defect remained **18**. See [topology_probe.py](topology_probe.py). This excludes only that precise neighborhood around the 19-piece incumbent.
+- Tested all **58,008** moves altering one/two independent edge-coordinate classes by ±1 or ±2, three classes by ±1, or four classes by ±1. Of these, **22,248** produced valid tilings; best defect remained **18**. See [topology_probe.py](topology_probe.py). This excludes only that precise neighborhood around the 19-piece incumbent.
 
 ## Record mechanism
 The successful construction has a vertical line x=34 crossing only one rectangle, (8,0,66,6); independently fill notched left/right regions, deduplicate complete region fillings by shape set, then match complementary halves. This structural restriction is a search heuristic, not a mathematical requirement.
@@ -32,7 +32,7 @@ For k rectangles, area average is 7569/k; for k=19 it is 398.368421…. All rect
 ## Work log
 - 2026-11-12: Read workspace instructions, Few Shots rules, problem, verifier and record chain. Synced PR #62 and reconstructed the independently verified certificate statistics. Research directions documented above.
 
-- 2026-11-12: Executed exhaustive small edge-coordinate move enumeration around the record construction: 18 independent movable classes (9 horizontal-coordinate and 9 vertical-coordinate), 9,048 enumerated moves, 4,264 valid coverings with unique shapes, best 18. Coordinates and all 7,569 cells independently rechecked for each candidate.
+- 2026-11-12: Executed exhaustive small edge-coordinate move enumeration around the record construction: 18 independent movable classes (9 horizontal-coordinate and 9 vertical-coordinate), 58,008 enumerated moves, 22,248 valid coverings with unique shapes, best 18. Coordinates and all 7,569 cells independently rechecked for each candidate.
 
 ## Next steps
 Implement topology-coordinate model and test neighborhood improvements on the 18-defect seed; independently confirm every generated certificate using Few Shots verifier. If candidate quality plateaus, switch to topology-changing search and exact-cover representations.
