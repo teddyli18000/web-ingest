@@ -1,0 +1,111 @@
+name: temp Ramsey R46 independent-parent 36 construction
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-catalogue36.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-catalogue36-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  control:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Positive control of graph6, exact extension, and independent recount
+        run: |
+          python3 -m py_compile science-boundary/ramsey-r46/catalogue36_construct.py
+          python3 science-boundary/ramsey-r46/catalogue36_construct.py \
+            --start 0 --end 1 --ext-rounds 1000 --repair-seconds 1 \
+            --repair-steps 50 --outdir "$RUNNER_TEMP/p003-catalogue-control"
+          python3 - <<'PY'
+          import json,os
+          d=os.environ["RUNNER_TEMP"]+"/p003-catalogue-control"
+          s=json.load(open(d+"/summary.json"))
+          a=json.load(open(d+"/parent00-best.json"))["adjacency"]
+          assert len(a)==36 and all(len(r)==36 for r in a)
+          assert all(a[i][i]=="0" and a[i][j]==a[j][i]
+                     for i in range(36) for j in range(36))
+          print("CONTROL_OK",s["best_defects"])
+          PY
+  construct:
+    needs: control
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        include:
+          - {first: 0, last: 5, seed: 1101}
+          - {first: 5, last: 10, seed: 1102}
+          - {first: 10, last: 15, seed: 1103}
+          - {first: 15, last: 20, seed: 1104}
+          - {first: 20, last: 25, seed: 1105}
+          - {first: 25, last: 30, seed: 1106}
+          - {first: 30, last: 34, seed: 1107}
+          - {first: 34, last: 37, seed: 1108}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construct 36-point near misses from distinct Exoo 35 parents
+        run: |
+          python3 science-boundary/ramsey-r46/catalogue36_construct.py \
+            --start ${{ matrix.first }} --end ${{ matrix.last }} \
+            --seed ${{ matrix.seed }} \
+            --ext-rounds 550000 --repair-seconds 46 --repair-steps 5000 \
+            --outdir "$RUNNER_TEMP/p003-catalogue36"
+      - name: Independently recount every 36-point candidate
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/p003-catalogue36/summary.json" ]; then
+            python3 - <<'PY'
+          from pathlib import Path
+          import json,os
+          d=Path(os.environ["RUNNER_TEMP"])/"p003-catalogue36"
+          s=json.loads((d/"summary.json").read_text())
+          for result in s["parent_results"]:
+              idx=result["parent_index"]
+              a=json.loads((d/f"parent{idx:02d}-best.json").read_text())["adjacency"]
+              assert len(a)==36 and all(len(row)==36 for row in a)
+              assert all(a[i][i]=="0" and a[i][j]==a[j][i]
+                         for i in range(36) for j in range(36))
+              g=[sum(1<<j for j,c in enumerate(row) if c=="1") for row in a]
+              full=(1<<36)-1
+              co=[full&~v&~(1<<i) for i,v in enumerate(g)]
+              def f(x,k,c):
+                  if not k:return 1
+                  z=0
+                  while c.bit_count()>=k:
+                      b=c&-c;i=b.bit_length()-1;c^=b
+                      z+=f(x,k-1,c&x[i])
+                  return z
+              k4=f(g,4,full);i6=f(co,6,full)
+              assert (k4,i6)==(result["final_K4"],result["final_I6"])
+              print("INDEPENDENT_VERIFIED",idx,k4,i6,
+                    "edges",result["final_edges"])
+              if k4+i6==0:
+                  (d/"witness.json").write_text(json.dumps({"adjacency":a}))
+          PY
+          fi
+          if [ -f "$RUNNER_TEMP/p003-catalogue36/witness.json" ]; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+            mkdir -p "$RUNNER_TEMP/p003-verify"
+            cp "$RUNNER_TEMP/p003-catalogue36/witness.json" "$RUNNER_TEMP/p003-verify/certificate.json"
+            python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/p003-verify"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-catalogue-${{ matrix.first }}-${{ matrix.last }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/p003-catalogue36/
