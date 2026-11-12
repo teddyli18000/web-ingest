@@ -1,0 +1,77 @@
+name: temp p004 t11 high-order odd-cycle parent rewiring
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-p004-t11-higher-order.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-p004-t11-higher-order
+  cancel-in-progress: false
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {state: 0, mode: quad, seed: 2026111281}
+          - {state: 1, mode: quad, seed: 2026111282}
+          - {state: 0, mode: quint, seed: 2026111283}
+          - {state: 1, mode: quint, seed: 2026111284}
+    env:
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install numerical support packages
+        run: python -m pip install 'numpy>=1.26,<3' 'scipy>=1.12,<2'
+      - name: Pin known public source geometry and auxiliary codes
+        run: |
+          git init --quiet /tmp/c7-tandon
+          git -C /tmp/c7-tandon fetch --quiet --depth 1 https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git c753408492dde92a239708986d16c15dbf6c3235
+          git -C /tmp/c7-tandon checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-tandon rev-parse HEAD)" = c753408492dde92a239708986d16c15dbf6c3235
+          git init --quiet /tmp/c7-five
+          git -C /tmp/c7-five fetch --quiet --depth 1 https://github.com/molind/c7-five.git ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+          git -C /tmp/c7-five checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-five rev-parse HEAD)" = ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+      - name: Construct eleven orientable private pairs by targeted two/three owner swaps
+        run: |
+          mkdir -p /tmp/c7-oddcycle
+          python science-boundary/shannon-capacity-c7/code/c7p004_t11_oddcycle_repair.py \
+            science-boundary/shannon-capacity-c7/data/circular-neutral-high-port-p004.json \
+            /tmp/c7-tandon /tmp/c7-five /tmp/c7-oddcycle \
+            --state "${{ matrix.state }}" --mode "${{ matrix.mode }}" --max-cases 9000 --seed "${{ matrix.seed }}"
+      - name: Independently validate any new p004 ten-dimensional construction
+        run: |
+          if test -s /tmp/c7-oddcycle/certificate.json; then
+            python science-boundary/shannon-capacity-c7/code/c7p004_independent_bitset_verify.py \
+              /tmp/c7-oddcycle/certificate.json | tee /tmp/c7-oddcycle/independent.json
+            git clone --quiet --depth 1 https://github.com/few-shots/few-shots.git /tmp/fewshots
+            python /tmp/fewshots/problems/p004-shannon-capacity-c7/verify/verify.py \
+              /tmp/c7-oddcycle | tee /tmp/c7-oddcycle/verdict.json
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/c7-oddcycle')
+          z=json.loads((p/'verdict.json').read_text())
+          assert z['valid'] and int(z['score'])>=134754,z
+          print('NEW_P004_RECORD_VERIFIED',json.dumps(z,sort_keys=True))
+          PY
+          else
+            echo 'No 11-port/365-auxiliary candidate in this targeted constructive run.'
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c7-higher-cycle-${{ matrix.state }}-${{ matrix.mode }}
+          path: /tmp/c7-oddcycle/
+          retention-days: 14
