@@ -49,7 +49,7 @@ jobs:
           n,f,blocks=found[0]
           with open('/tmp/p015-projected-full.txt','w') as out:
               for b in blocks: out.write(' '.join(str(p+1) for p in b)+'\n')
-          pathlib.Path('p015-alt/selected.json').write_text(json.dumps({'blocks':blocks},separators=(',',':')))
+          pathlib.Path('p015-alt/selected.json').write_text(json.dumps({'blocks':blocks},separators=(',',':')))\n          pathlib.Path('p015-alt/certificate.json').write_text(json.dumps({'blocks':blocks},separators=(',',':')))
           pathlib.Path('p015-alt/start-size.txt').write_text(str(n))
           PY
           python /tmp/p015-verify.py p015-alt
