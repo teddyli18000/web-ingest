@@ -1,0 +1,44 @@
+name: temp-pdfcrack-watchdog
+
+# Keeps the temp-pdfcrack chain alive when a wave dies without any shard failing.
+# 2026-11-11: a wave ended with "Internal server error. Correlation ID: ..." after
+# all 20 shards had finished, so the advance job never ran and the chain stopped
+# silently for 21 hours. This watcher re-reads the finished wave and decides.
+#
+# A separate workflow (not a second trigger in the driver) so that watcher runs
+# cannot trigger the watcher again.
+
+on:
+  workflow_run:
+    workflows: ["temp-pdfcrack"]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: temp-pdfcrack-watchdog
+  cancel-in-progress: false
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Resume the chain if the wave died without a shard failure
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DISPATCH_TOKEN: ${{ secrets.AI_DAILY_DISPATCH_TOKEN }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_TITLE: ${{ github.event.workflow_run.display_title }}
+        run: bash temp-work/pdfcrack/watchdog.sh
