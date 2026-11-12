@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-11-11** | **4,417** | **2,570** |
+| **2014-08-09** | **2026-11-12** | **4,418** | **2,571** |
 
-### Latest All-Languages snapshot — 2026-11-11
+### Latest All-Languages snapshot — 2026-11-12
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [meta/astryx](https://github.com/meta/astryx) | TypeScript | 3,108 |
-| 2 | [anthropics/skills](https://github.com/anthropics/skills) | Python | 1,679 |
-| 3 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | JavaScript | 465 |
-| 4 | [anthropics/claude-quickstarts](https://github.com/anthropics/claude-quickstarts) | Python | 531 |
-| 5 | [google-deepmind/mujoco](https://github.com/google-deepmind/mujoco) | C++ | 456 |
-| 6 | [we-promise/sure](https://github.com/we-promise/sure) | Ruby | 159 |
-| 7 | [homeassistant-ai/ha-mcp](https://github.com/homeassistant-ai/ha-mcp) | Python | 790 |
-| 8 | [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) | Rust | 780 |
-| 9 | [sherlock-project/sherlock](https://github.com/sherlock-project/sherlock) | Python | 2,393 |
-| 10 | [tokio-rs/topcoat](https://github.com/tokio-rs/topcoat) | Rust | 192 |
+| 1 | [meta/astryx](https://github.com/meta/astryx) | TypeScript | 2,776 |
+| 2 | [ZhuLinsen/daily_stock_analysis](https://github.com/ZhuLinsen/daily_stock_analysis) | Python | 278 |
+| 3 | [GoogleChrome/modern-web-guidance-src](https://github.com/GoogleChrome/modern-web-guidance-src) | TypeScript | 159 |
+| 4 | [shadcn/improve](https://github.com/shadcn/improve) | — | 361 |
+| 5 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | JavaScript | 787 |
+| 6 | [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) | Rust | 708 |
+| 7 | [we-promise/sure](https://github.com/we-promise/sure) | Ruby | 1,078 |
+| 8 | [homeassistant-ai/ha-mcp](https://github.com/homeassistant-ai/ha-mcp) | Python | 645 |
+| 9 | [openai/codex-security](https://github.com/openai/codex-security) | TypeScript | 52 |
+| 10 | [TheAlgorithms/Java](https://github.com/TheAlgorithms/Java) | Java | 51 |
 
-[Open full snapshot →](data/2026/11/11/trending.json)
+[Open full snapshot →](data/2026/11/12/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 315 days  
+[`2026`](data/2026/) · 316 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
