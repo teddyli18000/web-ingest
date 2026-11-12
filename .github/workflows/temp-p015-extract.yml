@@ -17,7 +17,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Extract C(15,10,8) and verify
         run: python3 science-boundary/covering-15-9-7/extract_ljcr.py --out p015-parent-15-10-8.json
-      - name: Publish compact extracted certificate to run log\n        run: echo P015_PARENT_JSON=$(cat p015-parent-15-10-8.json)\n      - uses: actions/upload-artifact@v4
+      - name: Publish compact extracted certificate to run log
+        run: echo P015_PARENT_JSON=$(cat p015-parent-15-10-8.json)
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: p015-parent-15-10-8
