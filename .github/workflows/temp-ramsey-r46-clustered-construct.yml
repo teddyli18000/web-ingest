@@ -1,0 +1,125 @@
+name: temp Ramsey R46 clustered motif constructive search
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-clustered-construct.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-clustered-construct-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include:
+          - {seed: 101, weight: 0.2}
+          - {seed: 102, weight: 0.4}
+          - {seed: 103, weight: 0.6}
+          - {seed: 104, weight: 0.9}
+          - {seed: 105, weight: 1.2}
+          - {seed: 106, weight: 0.35}
+          - {seed: 107, weight: 0.75}
+          - {seed: 108, weight: 1.4}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile K4-overlap-aware graph constructor
+        run: |
+          g++ -O3 -std=c++17 -Wall -Wextra \
+            science-boundary/ramsey-r46/clustered_k4_construct.cpp \
+            -o "$RUNNER_TEMP/clustered_k4_construct"
+      - name: Prepare proven diverse high-quality parent structures
+        run: |
+          python3 - <<'PY'
+          import json,os
+          from pathlib import Path
+          import sys
+          sys.path.insert(0,"science-boundary/ramsey-r46")
+          from verify_clustered_parent import decode_graph6,score
+          d=Path("science-boundary/ramsey-r46/results")
+          paths=[
+              d/"compound-repair-36-12-defects.json",
+              d/"neutral-network-36-12-defects-257edges.json",
+              d/"neutral-network-36-12-defects-259edges.json",
+              d/"neutral-network-36-12-defects-264edges.json",
+          ]
+          all_rows=[json.loads(path.read_text())["adjacency"] for path in paths]
+          cluster=decode_graph6((d/"clustered-36-14-defects-mincover5.g6").read_text().strip())
+          all_rows.append(["".join("1" if cluster[i]>>j&1 else "0" for j in range(36))
+                           for i in range(36)])
+          for i,rows in enumerate(all_rows):
+              g=[sum(1<<j for j,c in enumerate(r) if c=="1") for r in rows]
+              result=score(g)
+              assert result==((12,2) if i==4 else (12,0)),(i,result)
+          outfile=Path(os.environ["RUNNER_TEMP"])/"parents.txt"
+          with outfile.open("w") as f:
+              f.write(f"{len(all_rows)}\n")
+              for rows in all_rows:
+                  f.write("\n".join(rows)+"\n")
+          print("PARENT_CONTROL_PASSED",len(all_rows))
+          PY
+      - name: Jointly reconstruct clustered forbidden motifs
+        run: |
+          mkdir -p "$RUNNER_TEMP/p003-cluster"
+          "$RUNNER_TEMP/clustered_k4_construct" \
+            "$RUNNER_TEMP/parents.txt" 115 ${{ matrix.seed }} \
+            ${{ matrix.weight }} \
+            "$RUNNER_TEMP/p003-cluster/improved.json" \
+            "$RUNNER_TEMP/p003-cluster/overlap.json" \
+            "$RUNNER_TEMP/p003-cluster/summary.txt"
+          cat "$RUNNER_TEMP/p003-cluster/summary.txt"
+      - name: Independent graph recount and Few Shots verifier if perfect
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json,os,itertools
+          from pathlib import Path
+          d=Path(os.environ["RUNNER_TEMP"])/"p003-cluster"
+          for p in [d/"improved.json",d/"overlap.json"]:
+              if not p.exists():continue
+              rows=json.loads(p.read_text())["adjacency"]
+              assert len(rows)==36 and all(len(r)==36 for r in rows)
+              assert all(rows[i][i]=="0" and rows[i][j]==rows[j][i]
+                         for i in range(36) for j in range(36))
+              g=[sum(1<<j for j,c in enumerate(r) if c=="1") for r in rows]
+              full=(1<<36)-1
+              co=[full&~x&~(1<<i) for i,x in enumerate(g)]
+              def count(x,c,k):
+                  if not k:return 1
+                  z=0
+                  while c.bit_count()>=k:
+                      bit=c&-c;i=bit.bit_length()-1;c^=bit
+                      z+=count(x,c&x[i],k-1)
+                  return z
+              k4=count(g,full,4);i6=count(co,full,6)
+              if p.name=="improved.json":assert k4+i6<12
+              else:assert k4+i6<=14
+              print("INDEPENDENT_RECOUNT",p.name,"K4",k4,"I6",i6,
+                    "edges",sum(x.bit_count() for x in g)//2)
+              if k4+i6==0:
+                  (d/"witness.json").write_text(json.dumps({"adjacency":rows}))
+          PY
+          if test -f "$RUNNER_TEMP/p003-cluster/witness.json"; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+            mkdir -p "$RUNNER_TEMP/p003-verify"
+            cp "$RUNNER_TEMP/p003-cluster/witness.json" "$RUNNER_TEMP/p003-verify/certificate.json"
+            python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/p003-verify"
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-cluster-${{ matrix.seed }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/p003-cluster/
+          retention-days: 14
+          if-no-files-found: warn
