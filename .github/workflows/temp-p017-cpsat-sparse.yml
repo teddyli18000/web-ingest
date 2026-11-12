@@ -1,0 +1,72 @@
+name: temp-p017-cpsat-sparse
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-p017-cpsat-sparse.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: p017-cpsat-sparse
+  cancel-in-progress: false
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install OR-Tools CP-SAT
+        run: python3 -m pip install --quiet ortools
+      - name: Get official p017 verifier and exact matrix
+        run: |
+          git clone -q --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+          python3 science-boundary/lop-be75eec-500/prepare.py /tmp/few-shots
+      - name: Start from strongest independently scored candidate
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          R=pathlib.Path('science-boundary/lop-be75eec-500/results')
+          paths=[pathlib.Path('/tmp/few-shots/problems/p017-lop-be75eec-500/baseline/certificate.json')]
+          for name in ('best.json','paired-best.json','subset-best.json','cpsat-best.json','sparse-best.json'):
+            q=R/name
+            if q.exists(): paths.append(q)
+          vals=list(map(int,pathlib.Path('matrix.txt').read_text().split()))
+          W=[vals[1+i*500:1+(i+1)*500] for i in range(500)]
+          def score(p):return sum(W[p[i]][p[j]] for i in range(500) for j in range(i+1,500))
+          candidates=[]
+          for path in paths:
+            p=json.loads(path.read_text())['order']
+            assert sorted(p)==list(range(500))
+            candidates.append((score(p),p,str(path)))
+          s,p,path=max(candidates)
+          pathlib.Path('baseline.txt').write_text(' '.join(map(str,p)))
+          print('START',s,path)
+          PY
+      - name: Optimize coupled multi-region ranks
+        run: |
+          mkdir -p science-boundary/lop-be75eec-500/results
+          python3 science-boundary/lop-be75eec-500/cpsat_sparse.py matrix.txt baseline.txt science-boundary/lop-be75eec-500/results/sparse-best.json 510 4 2>&1 | tee science-boundary/lop-be75eec-500/results/sparse-search.log
+      - name: Independently verify best with Few Shots official verifier
+        run: |
+          python3 - <<'PY'
+          import pathlib,json
+          r=pathlib.Path('science-boundary/lop-be75eec-500/results')
+          output=r/'sparse-best.json'
+          if not output.exists():
+            output.write_text(json.dumps({'order':list(map(int,pathlib.Path('baseline.txt').read_text().split()))},separators=(',',':')))
+          (r/'certificate.json').write_text(output.read_text())
+          PY
+          python3 /tmp/few-shots/problems/p017-lop-be75eec-500/verify/verify.py science-boundary/lop-be75eec-500/results | tee science-boundary/lop-be75eec-500/results/sparse-verification.json
+      - name: Persist and push result with concurrent-main retries
+        run: |
+          git config user.name 'p017-research-bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/lop-be75eec-500/results/
+          if ! git diff --cached --quiet; then
+            git commit -m 'science: persist sparse multi-region CP-SAT search'
+            for n in 1 2 3 4 5 6 7 8; do
+              git pull --rebase
+              if git push; then exit 0; fi
+            done
+            exit 1
+          fi
