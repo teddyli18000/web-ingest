@@ -18,69 +18,68 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 200 |
-| `rss_limited` | 4 |
+| `google_trending_now` | 204 |
 | `github_hottrends_mirror` | 3 |
 
 ### Latest SG snapshot — 2026-11-12
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | alice huang singapore entry ban | 200+ |
-| 2 | nvda stock price | 100+ |
-| 3 | lisa su | 100+ |
-| 4 | amd stock | 500+ |
-| 5 | 黄仁勋 | 200+ |
-| 6 | 黃仁勳 | 100+ |
-| 7 | nbis | 100+ |
-| 8 | singapore airlines fy2027 interim dividend | 200+ |
-| 9 | najib razak | 200+ |
-| 10 | prabowo subianto | 1000+ |
+| 1 | kimberly powell | 20000+ |
+| 2 | nvidia singapore sales reporting change | 5000+ |
+| 3 | tony leung ka-fai | 2000+ |
+| 4 | wok hey staff customer confrontation | 2000+ |
+| 5 | prabowo subianto | 1000+ |
+| 6 | alice huang singapore entry ban | 200+ |
+| 7 | amd stock | 1000+ |
+| 8 | 黄仁勋 | 200+ |
+| 9 | singapore airlines fy2027 interim dividend | 500+ |
+| 10 | dbs paylah china qr expansion | 2000+ |
 
 ### Latest US snapshot — 2026-11-12
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | smh stock | 500+ |
-| 2 | dan hicks golf | 2000+ |
-| 3 | white house | 1000+ |
-| 4 | dupont circle | 200+ |
-| 5 | juste jocyte natalie nakase fallout | 200+ |
-| 6 | avgo stock | 2000+ |
-| 7 | robinhood | 1000+ |
-| 8 | tsmc stock | 500+ |
-| 9 | nvda ticker | 500+ |
-| 10 | 英伟达股票 | 200+ |
+| 1 | kimberly powell | 500000+ |
+| 2 | building collapse nyc | 500000+ |
+| 3 | anthony clark | 200000+ |
+| 4 | snow | 200000+ |
+| 5 | dc shooting | 100000+ |
+| 6 | disco singer rochelle fleming passes | 100000+ |
+| 7 | warriors vs rockets | 200000+ |
+| 8 | usman nurmagomedov | 200000+ |
+| 9 | mark mcguinn | 50000+ |
+| 10 | rex ryan | 100000+ |
 
 ### Latest GB snapshot — 2026-11-12
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | gabriel martinelli | 200+ |
-| 2 | tradingview | 200+ |
-| 3 | washington dc | 2000+ |
-| 4 | bloomberg | 200+ |
-| 5 | ghana vs somalia | 1000+ |
-| 6 | amd share price | 2000+ |
-| 7 | kelly brook | 200+ |
-| 8 | m5 | 2000+ |
-| 9 | jared kushner | 500+ |
-| 10 | polar vortex el niño winter weather | 10000+ |
+| 1 | colette kress | 50000+ |
+| 2 | usman nurmagomedov | 20000+ |
+| 3 | polar vortex el niño winter weather | 10000+ |
+| 4 | new york | 20000+ |
+| 5 | body mass index misclassification uk | 10000+ |
+| 6 | edinburgh bypass | 10000+ |
+| 7 | winter storm | 10000+ |
+| 8 | metro bank | 5000+ |
+| 9 | washington dc | 5000+ |
+| 10 | maldives | 10000+ |
 
 ### Latest HK snapshot — 2026-11-12
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | nvidia 美股 | 100+ |
-| 2 | 鍾麗淇 | 200+ |
-| 3 | amd stock | 200+ |
-| 4 | nvda股價 | 100+ |
-| 5 | tim cook | 500+ |
-| 6 | 黃仁勳辭職 | 2000+ |
-| 7 | 黄仁勋辞职 | 200+ |
-| 8 | 肥媽 | 1000+ |
-| 9 | 玫瑰戰爭 | 2000+ |
-| 10 | 明天的天氣 | 10000+ |
+| 1 | kimberly powell | 10000+ |
+| 2 | 吳嘉儀 | 2000+ |
+| 3 | 黃仁勳辭職 | 2000+ |
+| 4 | 收入 中 位 數 | 1000+ |
+| 5 | 明天的天氣 | 10000+ |
+| 6 | bigbang | 2000+ |
+| 7 | 英伟达 | 500+ |
+| 8 | 肥媽 | 2000+ |
+| 9 | cuaca besok | 1000+ |
+| 10 | 鍾麗淇 | 200+ |
 
 [Open full snapshot →](data/2026/11/12/trending.json)
 
