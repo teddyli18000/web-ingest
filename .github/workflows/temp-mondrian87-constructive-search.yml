@@ -1,0 +1,59 @@
+name: temp-mondrian87-constructive-search
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'science-boundary/mondrian-87/cpsat_search.py'
+      - '.github/workflows/temp-mondrian87-constructive-search.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-mondrian87-constructive-search
+  cancel-in-progress: false
+
+jobs:
+  constructive-search:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {seed: 11, window: 390, k: 19, mode: lns}
+          - {seed: 13, window: 391, k: 19, mode: lns}
+          - {seed: 17, window: 388, k: 19, mode: full}
+          - {seed: 19, window: 395, k: 19, mode: full}
+          - {seed: 23, window: 370, k: 20, mode: full}
+          - {seed: 29, window: 352, k: 21, mode: full}
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install solver and check search code
+        run: |
+          python -m pip install ortools
+          python -m py_compile science-boundary/mondrian-87/cpsat_search.py
+      - name: Search for a complete improved dissection
+        run: |
+          set -o pipefail
+          python science-boundary/mondrian-87/cpsat_search.py \
+            --seed ${{ matrix.seed }} --window ${{ matrix.window }} \
+            --k ${{ matrix.k }} --mode ${{ matrix.mode }} \
+            --seconds 840 --outdir found | tee search.log
+      - name: Run official Few Shots verifier on any candidate
+        run: |
+          if test -d found; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/mondrian-candidate
+            for f in found/certificate_*.json; do
+              cp "$f" /tmp/mondrian-candidate/certificate.json
+              python /tmp/few-shots/problems/p016-mondrian-87/verify/verify.py /tmp/mondrian-candidate
+            done
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mondrian87-${{ matrix.seed }}-${{ matrix.window }}-${{ matrix.k }}
+          path: |
+            search.log
+            found/
