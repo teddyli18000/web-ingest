@@ -1,0 +1,71 @@
+name: temp-p017-exact-holes
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-p017-exact-holes.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: p017-exact-holes
+  cancel-in-progress: false
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve authoritative p017 verifier and baseline
+        run: git clone -q --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+      - name: Decode exact instance, verify baseline, select best starting permutation
+        run: |
+          python3 /tmp/few-shots/problems/p017-lop-be75eec-500/verify/verify.py /tmp/few-shots/problems/p017-lop-be75eec-500/baseline
+          python3 science-boundary/lop-be75eec-500/prepare.py /tmp/few-shots
+          python3 - <<'PY'
+          import json,pathlib
+          root=pathlib.Path('science-boundary/lop-be75eec-500/results')
+          paths=[pathlib.Path('/tmp/few-shots/problems/p017-lop-be75eec-500/baseline/certificate.json')]
+          for filename in ('best.json','subset-best.json'):
+              path=root/filename
+              if path.exists():paths.append(path)
+          numbers=list(map(int,pathlib.Path('matrix.txt').read_text().split()))
+          matrix=[numbers[1+i*500:1+(i+1)*500] for i in range(500)]
+          def objective(p):
+              return sum(matrix[p[i]][p[j]] for i in range(500) for j in range(i+1,500))
+          candidates=[]
+          for path in paths:
+              p=json.loads(path.read_text())['order']
+              assert sorted(p)==list(range(500))
+              candidates.append((objective(p),p,str(path)))
+          value,p,name=max(candidates)
+          pathlib.Path('baseline.txt').write_text(' '.join(map(str,p)))
+          print('selected initial candidate',name,'score',value)
+          PY
+      - name: Compile exact joint optimizer
+        run: g++ -std=c++17 -O3 -march=native -pthread science-boundary/lop-be75eec-500/exact_holes.cpp -o /tmp/exact-holes
+      - name: Optimize with exact sparse-hole neighborhoods and varied basins
+        run: |
+          mkdir -p science-boundary/lop-be75eec-500/results
+          /tmp/exact-holes matrix.txt baseline.txt science-boundary/lop-be75eec-500/results/subset-best.json 650 4 2>&1 | tee science-boundary/lop-be75eec-500/results/subset-search.log
+      - name: Independently verify final candidate with Few Shots
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          root=pathlib.Path('science-boundary/lop-be75eec-500/results')
+          p=root/'subset-best.json'
+          if not p.exists():
+              order=list(map(int,pathlib.Path('baseline.txt').read_text().split()))
+              p.write_text(json.dumps({'order':order},separators=(',',':')))
+          (root/'certificate.json').write_text(p.read_text())
+          PY
+          python3 /tmp/few-shots/problems/p017-lop-be75eec-500/verify/verify.py science-boundary/lop-be75eec-500/results | tee science-boundary/lop-be75eec-500/results/subset-verification.json
+      - name: Persist independently verified results
+        run: |
+          git config user.name 'p017-research-bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/lop-be75eec-500/results/
+          if ! git diff --cached --quiet; then
+            git commit -m 'science: persist exact-hole LOP search and independent score'
+            git pull --rebase
+            git push
+          fi
