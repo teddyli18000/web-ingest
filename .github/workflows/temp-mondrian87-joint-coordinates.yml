@@ -1,0 +1,55 @@
+name: temp-mondrian87-joint-coordinates
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-mondrian87-joint-coordinates.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-mondrian87-joint-coordinates
+  cancel-in-progress: false
+
+jobs:
+  construct:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {seed: 311, window: 390}
+          - {seed: 313, window: 390}
+          - {seed: 317, window: 391}
+          - {seed: 331, window: 391}
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare joint integer geometry solver
+        run: |
+          python -m pip install ortools
+          python -m py_compile science-boundary/mondrian-87/{joint_coords,cpsat_search}.py
+      - name: Construct defect-17 tiling by globally optimizing geometry
+        run: |
+          set -o pipefail
+          python science-boundary/mondrian-87/joint_coords.py \
+            --seed ${{ matrix.seed }} --window ${{ matrix.window }} \
+            --seconds 600 --outdir found | tee search.log
+      - name: Official Few Shots verifier
+        run: |
+          if test -d found; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/mondrian-candidate
+            for f in found/certificate_*.json; do
+              cp "$f" /tmp/mondrian-candidate/certificate.json
+              python /tmp/few-shots/problems/p016-mondrian-87/verify/verify.py /tmp/mondrian-candidate
+            done
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mondrian87-joint-coords-${{ matrix.seed }}-${{ matrix.window }}
+          path: |
+            search.log
+            found/
