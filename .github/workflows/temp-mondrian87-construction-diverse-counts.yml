@@ -1,0 +1,58 @@
+name: temp-mondrian87-construction-diverse-counts
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-mondrian87-construction-diverse-counts.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-mondrian87-construction-diverse-counts
+  cancel-in-progress: false
+
+jobs:
+  search:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {seed: 31, window: 465, k: 16}
+          - {seed: 37, window: 437, k: 17}
+          - {seed: 41, window: 413, k: 18}
+          - {seed: 43, window: 335, k: 22}
+          - {seed: 47, window: 320, k: 23}
+          - {seed: 53, window: 294, k: 25}
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare constructive CP-SAT solver
+        run: |
+          python -m pip install ortools
+          python -m py_compile science-boundary/mondrian-87/cpsat_search.py
+      - name: Construct complete alternative-count dissections
+        run: |
+          set -o pipefail
+          python science-boundary/mondrian-87/cpsat_search.py \
+            --seed ${{ matrix.seed }} --window ${{ matrix.window }} \
+            --k ${{ matrix.k }} --mode full --seconds 840 \
+            --outdir found | tee search.log
+      - name: Independently verify any certificate with official Few Shots code
+        run: |
+          if test -d found; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            mkdir -p /tmp/mondrian-candidate
+            for f in found/certificate_*.json; do
+              cp "$f" /tmp/mondrian-candidate/certificate.json
+              python /tmp/few-shots/problems/p016-mondrian-87/verify/verify.py /tmp/mondrian-candidate
+            done
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mondrian87-diverse-${{ matrix.seed }}-${{ matrix.k }}
+          path: |
+            search.log
+            found/
