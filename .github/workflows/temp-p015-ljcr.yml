@@ -1,0 +1,19 @@
+name: Temporary p015 LJCR source probe
+on:
+  push:
+    paths:
+      - .github/workflows/temp-p015-ljcr.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-p015-ljcr
+  cancel-in-progress: false
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe source range
+        run: python3 science-boundary/covering-15-9-7/probe_ljcr.py
