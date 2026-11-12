@@ -1,0 +1,29 @@
+name: temp Ramsey R46 clustered parent constructive audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-clustered-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify clustered graph and all five-edge surgery covers
+        run: |
+          python3 science-boundary/ramsey-r46/verify_clustered_parent.py \
+            --g6 science-boundary/ramsey-r46/results/clustered-36-14-defects-mincover5.g6 \
+            --output "$RUNNER_TEMP/clustered-summary.json"
+          cat "$RUNNER_TEMP/clustered-summary.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p003-cluster-audit-${{ github.run_id }}
+          path: ${{ runner.temp }}/clustered-summary.json
+          retention-days: 14
