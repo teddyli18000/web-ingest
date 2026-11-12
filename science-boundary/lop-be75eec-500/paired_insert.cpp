@@ -7,6 +7,7 @@ struct Insertion{int i,j,gain;};
 static mutex mx;
 static atomic<long long> tested{0}, positives{0};
 static long long best;
+static atomic<long long> published_best{0};
 static Perm best_order;
 static string destination;
 static chrono::steady_clock::time_point deadline;
@@ -60,7 +61,7 @@ void publish(const Perm &p,long long s,int first_gain,int second_gain,int epoch)
   lock_guard<mutex> lock(mx);
   if(s<=best)return;
   assert(score(p)==s);
-  best=s;best_order=p;positives++;
+  best=s;published_best.store(s);best_order=p;positives++;
   string tmp=destination+".tmp";
   {
     ofstream out(tmp);out<<"{\"order\":[";
@@ -88,7 +89,7 @@ int main(int argc,char **argv){
   for(int i=0;i<N;i++)for(int j=0;j<N;j++)input>>W[i][j];
   for(int i=0;i<N;i++)for(int j=0;j<N;j++)D[i][j]=W[i][j]-W[j][i];
   ifstream seed(argv[2]);for(int &x:best_order)seed>>x;
-  best=score(best_order);destination=argv[3];
+  best=score(best_order);published_best.store(best);destination=argv[3];
   int seconds=atoi(argv[4]),cores=atoi(argv[5]);
   deadline=chrono::steady_clock::now()+chrono::seconds(seconds);
   cerr<<"BASE "<<best<<'\n';
@@ -111,7 +112,7 @@ int main(int argc,char **argv){
       while(chrono::steady_clock::now()<deadline){
         int idx=counter.fetch_add(1);
         if(idx>=(int)moves.size())break;
-        if(best>base_score)break;
+        if(published_best.load()>base_score)break;
         evaluate(base,base_score,moves[idx],epoch);
       }
     };
