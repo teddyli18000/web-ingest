@@ -92,7 +92,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 ## Sources and priority
 
-1. `google_trending_now` — direct live Trending Now capture; highest quality.
+1. `google_trending_now` — direct live capture from the server-rendered Google Trending Now page (`ds:0`); highest quality.
 2. `googletrendarchive` — CC-BY-4.0 historical daily recovery.
 3. `github_rss_mirror` — historical Google Trending RSS snapshots mirrored from `fdciabdul/Google-Trends-Keywords-Scraper` only where a canonical region/date is missing. Exact commit/file provenance and the upstream **All Rights Reserved** notice are stored in every mirrored region.
 4. `github_hottrends_mirror` — legacy Google Hot Trends Atom snapshots recovered from exact Git commits when the modern mirror has a hole; provenance includes the historical `pn` endpoint, commit and file path.
@@ -126,7 +126,7 @@ Each file contains one date and valid snapshots for the canonical regions. Missi
 
 ## Recovery and validation
 
-- `capture.py` fetches all four regions before writing a newly-created live day. If Trending Now returns a successful but empty envelope for a region, it explicitly retries that region through the RSS fallback before failing the day.
+- `capture.py` fetches the server-rendered `/trending` page for all four regions and reads its inline `ds:0` dataset before writing a newly-created live day. RSS is used only when the full page dataset is unavailable.
 - Same-day reruns are idempotent by source quality.
 - `backfill.py` converts the licensed GoogleTrendArchive ZIP.
 - `mirror-manifest.json` records the GitHub mirror selection/import result after the one-shot backfill.
@@ -138,7 +138,7 @@ Each file contains one date and valid snapshots for the canonical regions. Missi
 
 - `AGENTS.md` — task boundaries and durable rules.
 - `archive_lib.py` — schema, canonical regions, validation, source priority, merge behavior, and paths.
-- `capture.py` — live four-region collector.
+- `capture.py` — live four-region collector using Google’s server-rendered Trending Now dataset with RSS fallback.
 - `backfill.py` / `backfill-manifest.json` — licensed historical recovery.
 - `mirror-manifest.json` — GitHub RSS mirror provenance/coverage after the one-shot import.
 - `validate_archive.py` — full archive validation.

@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-import json
-import subprocess
 import sys
 import unittest
-from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -12,7 +9,7 @@ sys.path.insert(0, str(ROOT))
 
 from archive_lib import REGIONS, SOURCE_QUALITY, canonical_item, new_document, validate_document
 from backfill import member_date, member_geo, parse_csv
-from capture import fetch_region
+from capture import parse_rss_xml, parse_trending_html
 from render_readme import path_date
 
 
@@ -62,37 +59,29 @@ class GoogleTrendingTests(unittest.TestCase):
         self.assertIsNone(member_geo("archive/MV-US/trending_MV-US_1d_20250920.csv"))
         self.assertIsNone(member_geo("archive/US-CA/trending_US-CA_1d_20250920.csv"))
 
-    @patch("capture.subprocess.run")
-    def test_empty_primary_falls_back_to_direct_rss(self, run):
-        run.side_effect = [
-            subprocess.CompletedProcess(
-                args=[],
-                returncode=0,
-                stdout=json.dumps({
-                    "source": "google_trending_now",
-                    "fetch_status": "success",
-                    "items": [],
-                }),
-                stderr="",
-            ),
-            subprocess.CompletedProcess(
-                args=[],
-                returncode=0,
-                stdout=json.dumps({
-                    "source": "rss_limited",
-                    "fetch_status": "rss_limited",
-                    "items": [{"query": "Fallback trend"}],
-                }),
-                stderr="",
-            ),
-        ]
+    def test_server_rendered_trending_page_is_normalized(self):
+        html = """<script>AF_initDataCallback({key: 'ds:0', hash: '123', data:
+        [null,[["Example trend",null,"SG",[1700000000],null,null,50000,null,800,
+        ["Example trend","Example related"],[18],[],"example trend"]]], sideChannel: {}});</script>"""
+        item = parse_trending_html(html, "SG")[0]
+        self.assertEqual(item["query"], "Example trend")
+        self.assertEqual(item["search_volume"], 50_000)
+        self.assertEqual(item["increase_percentage"], 800)
+        self.assertTrue(item["active"])
+        self.assertEqual(item["categories"], [{"id": 18, "name": "Technology"}])
 
-        result = fetch_region("SG")
-
-        self.assertEqual(result["source"], "rss_limited")
-        self.assertEqual([item["query"] for item in result["items"]], ["Fallback trend"])
-        self.assertIn("trending", run.call_args_list[0].args[0])
-        self.assertIn("rss", run.call_args_list[1].args[0])
+    def test_rss_fallback_is_normalized(self):
+        xml = b"""<?xml version="1.0" encoding="UTF-8"?>
+        <rss xmlns:ht="https://trends.google.com/trending/rss"><channel><item>
+          <title>Fallback trend</title>
+          <ht:approx_traffic>2000+</ht:approx_traffic>
+          <pubDate>Thu, 12 Nov 2026 12:30:00 -0800</pubDate>
+          <ht:news_item><ht:news_item_title>Fallback news</ht:news_item_title></ht:news_item>
+        </item></channel></rss>"""
+        item = parse_rss_xml(xml, "SG")[0]
+        self.assertEqual(item["query"], "Fallback trend")
+        self.assertEqual(item["search_volume_label"], "2000+")
+        self.assertEqual(item["trend_breakdown"], ["Fallback news"])
 
     def test_dashboard_path_date_uses_full_path(self):
         self.assertEqual(path_date(Path("google-trending/data/2026/01/03/trending.json")), "2026-01-03")

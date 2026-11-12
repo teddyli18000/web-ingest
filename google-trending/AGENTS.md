@@ -7,8 +7,8 @@ Read `README.md` before changing collection or historical behavior.
 ## Stable scope
 
 - Long-term regions are exactly **SG**, **US**, **GB**, and **HK** unless the repository owner explicitly changes that decision.
-- Live primary source is the full Trending Now data path through the pinned `google-trends-now` collector.
-- Google Trends RSS live fallback is visibly marked `rss_limited`.
+- Live primary source is the full dataset embedded by Google in the server-rendered `/trending` page (`AF_initDataCallback` key `ds:0`). Do not depend on the private `i0OFE` batchexecute RPC for routine collection.
+- Google Trends RSS live fallback is visibly marked `rss_limited`; it is limited to 10 rows and must not replace a working full-page capture.
 - `aurman/GoogleTrendArchive` is the licensed CC-BY-4.0 historical source where it preserves daily ordering.
 - `fdciabdul/Google-Trends-Keywords-Scraper` may be mirrored as `github_rss_mirror` to fill otherwise missing historical region snapshots. Preserve exact source repository, commit SHA, file path, RSS endpoint, and upstream rights notice.
 - Older Git-history recovery may use the predecessor Google Hot Trends Atom feed as `github_hottrends_mirror` only when the exact source commit and feed endpoint are verifiable. Never relabel those snapshots as modern Trending RSS.
