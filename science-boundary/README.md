@@ -23,7 +23,6 @@ This workspace is permanent. It is **not** part of `temp-work/` and is not subje
 | [`mona-lisa-tsp/`](mona-lisa-tsp/) | Can Nagata's 5,757,191-city-tour score on Mona Lisa 100K be improved? | Active — exact nearest-neighbor 2-opt probe prepared; no verified improvement yet. |
 
 Keep this table short and human-readable. Add one row when a genuinely new direction is opened. Detailed state belongs inside that direction.
-
 | [`covering-15-9-7/`](covering-15-9-7/) | Can a verified C(15,9,7) covering improve the 270-block public construction? | Active — exact residual-repair experiments launched; no verified improvement yet. |
 
 ## Layout
