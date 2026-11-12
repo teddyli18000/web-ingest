@@ -19,6 +19,8 @@ A valid shot must score **>= 33,489,270**.
 
 4. **Large exact/anytime precedence windows** (`cpsat_windows.py`) — CP-SAT optimizes all pair orientations in contiguous blocks of sizes 36, 44, 54, 66, 78. Acyclicity is enforced by `0 ≤ x_ij+x_jk−x_ik ≤ 1` for each triple, with baseline orientation as an initial hint. Runs 4 independent worker processes. Job `43244298765`: https://github.com/teddyli18000/web-ingest/actions/runs/43244298765.
 
+5. **Rank-variable CP-SAT on sparse regions** (`cpsat_sparse.py`) — optimization over 28–56 selected slots, including multiple distant clusters. Variables `rank[v]` have `AllDifferent`, pair decisions `x_{ij}` are reified comparisons, and `AddElement` captures score interactions with all vertices at frozen ranks. This is a different, polynomial-size (in model description) representation of a large coupled reassignment neighborhood, supporting much larger `k` than subset DP. Job `43244975004`: https://github.com/teddyli18000/web-ingest/actions/runs/43244975004.
+
 All methods use the matrix extracted by `prepare.py`, which checks the original instance hash and the baseline score. The job scripts run the independent Few Shots verifier against the final candidate; only final verified improvements are potential submissions. Persisted results go under `results/` after job completion.
 
 ### Sparse-hole DP derivation
@@ -35,11 +37,14 @@ For a vertex `v=p[i]` and a relocation to position `j<i`, the score delta is `Σ
 
 ## Measured outcomes
 
+- **2026-11-12 — ILS, completed:** 40,761 trial restarts/perturbations from the 33,489,269 baseline, no new record. The original Action verifier returned a valid 33,489,269 and baseline canonical hash, but Action's final push failed due to a concurrent `main` update; exact terminal statistics and verifier output were recovered into `results/ils-search.log` and `results/ils-verification.json`. Run https://github.com/teddyli18000/web-ingest/actions/runs/43241386921.
+- **2026-11-12 — exact sparse-hole DP, completed:** 175,886 exact subset-neighborhood trials; 5 positive moves **within suboptimal perturbed basins**, **zero improvements to global baseline**. Verifier `{"valid":true,"score":"33489269"}`. Output: `results/subset-search.log`, `results/subset-verification.json`. The tested 13–19-hole move family should not be blindly scaled without a new active-set representation.
+
 - **2026-11-12 — paired insertion, completed:** scanned the 40,000 lowest-loss first moves from the published baseline (first-move losses up to 10,720), searching the globally strongest second insertion after each; **no improvement**. Official Few Shots verifier returned `{"valid":true,"score":"33489269"}`, canonical hash identical to baseline. This is only an unsuccessful *selected two-move neighborhood*, not evidence of global optimality. Output: `results/paired-search.log`, `results/paired-verification.json`, and `results/paired-best.json`. The search direction pivots toward larger coordinated subsets rather than expanding this enumeration blindly.
 
 ## Next steps
 
-1. Inspect each job's official verifier result and source log (not merely its green/red status).
+1. Inspect each active CP-SAT job's official verifier result and source log (not merely its green/red status).
 2. If a strict improvement is found, freeze the highest-scoring permutation and run Few Shots `tools/check.py` using a valid SHOT.md before opening the authorized submission PR.
 3. If no improvement is found, compare the actual best scores and attempt counts, then reset the search representation: tune conflict-biased selection, use long-range precedence cycles / compound moves, and investigate exact larger coupled components.
 4. Preserve structural diversity of distinct elites to facilitate true recombination; do not repeatedly sample the same single parent basin.
@@ -56,4 +61,4 @@ For a vertex `v=p[i]` and a relocation to position `j<i`, the score delta is `Σ
 ## Work log
 
 - **2026-11-12:** Synced p017 board and authoritative problem definition. Added exact instance decoder, an initial ILS engine, and a 4-thread 1000-second Action.
-- **2026-11-12:** Designed exact sparse-hole dynamic programming and compiled successfully in a 4-thread Action (650 seconds). Added a separate long-range paired-insertion search; first selected two-move scan completed without improvement. Started a 4-worker CP-SAT larger-window search. Other campaigns run against the frozen published baseline or the best independently scored candidate available at job start. Awaiting independent verifier outputs.
+- **2026-11-12:** Designed exact sparse-hole dynamic programming and compiled successfully in a 4-thread Action (650 seconds). Added a separate long-range paired-insertion search; first selected two-move scan completed without improvement. Started 4-worker CP-SAT larger-window and separate sparse multi-region rank searches. Other campaigns run against the frozen published baseline or the best independently scored candidate available at job start. Awaiting independent verifier outputs.
