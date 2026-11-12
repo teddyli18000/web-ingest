@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-11-04** | **691** | **691** | **691** | **691** | **690** |
+| **2024-11-28** | **2026-11-12** | **692** | **692** | **692** | **692** | **691** |
 
 ### Source mix
 
@@ -19,73 +19,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
 | `google_trending_now` | 200 |
+| `rss_limited` | 4 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-11-04
+### Latest SG snapshot — 2026-11-12
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | democratic party | 20000+ |
-| 2 | baey yam keng | 10000+ |
-| 3 | us election results | 10000+ |
-| 4 | abdul el-sayed | 10000+ |
-| 5 | midterm elections 2026 | 5000+ |
-| 6 | hdb bto nov 2026 | 5000+ |
-| 7 | sungei bedok mrt | 2000+ |
-| 8 | republican party | 2000+ |
-| 9 | goh boon kang singapore driving ban | 1000+ |
-| 10 | james talarico | 5000+ |
+| 1 | alice huang singapore entry ban | 200+ |
+| 2 | nvda stock price | 100+ |
+| 3 | lisa su | 100+ |
+| 4 | amd stock | 500+ |
+| 5 | 黄仁勋 | 200+ |
+| 6 | 黃仁勳 | 100+ |
+| 7 | nbis | 100+ |
+| 8 | singapore airlines fy2027 interim dividend | 200+ |
+| 9 | najib razak | 200+ |
+| 10 | prabowo subianto | 1000+ |
 
-### Latest US snapshot — 2026-11-04
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | 2026 us election results | 10000000+ |
-| 2 | michigan election results | 2000000+ |
-| 3 | alaska senate race | 1000000+ |
-| 4 | texas voting results | 1000000+ |
-| 5 | mississippi senate race | 500000+ |
-| 6 | did abdul el sayed win | 1000000+ |
-| 7 | ohio governor race | 1000000+ |
-| 8 | ohio election results | 200000+ |
-| 9 | texas governor | 500000+ |
-| 10 | resultados de las elecciones de 2026 en estados unidos | 500000+ |
-
-### Latest GB snapshot — 2026-11-04
+### Latest US snapshot — 2026-11-12
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | man utd vs roma | 500000+ |
-| 2 | democratic party | 200000+ |
-| 3 | barcelona vs aston villa | 100000+ |
-| 4 | john frieda | 20000+ |
-| 5 | james talarico | 20000+ |
-| 6 | why is this morning not live today | 20000+ |
-| 7 | mississippi senate race | 20000+ |
-| 8 | torsten bell pension plans | 10000+ |
-| 9 | abdul el sayed | 20000+ |
-| 10 | nationwide | 20000+ |
+| 1 | smh stock | 500+ |
+| 2 | dan hicks golf | 2000+ |
+| 3 | white house | 1000+ |
+| 4 | dupont circle | 200+ |
+| 5 | juste jocyte natalie nakase fallout | 200+ |
+| 6 | avgo stock | 2000+ |
+| 7 | robinhood | 1000+ |
+| 8 | tsmc stock | 500+ |
+| 9 | nvda ticker | 500+ |
+| 10 | 英伟达股票 | 200+ |
 
-### Latest HK snapshot — 2026-11-04
+### Latest GB snapshot — 2026-11-12
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | us midterm elections | 20000+ |
-| 2 | 美國中期選舉結果 | 5000+ |
-| 3 | 周潤發 | 2000+ |
-| 4 | 長者日 | 2000+ |
-| 5 | 施 明 | 5000+ |
-| 6 | 劉彩玉 | 2000+ |
-| 7 | 再婚皇后 | 1000+ |
-| 8 | 羅鈞滿 | 500+ |
-| 9 | james talarico | 1000+ |
-| 10 | abdul el-sayed | 1000+ |
+| 1 | gabriel martinelli | 200+ |
+| 2 | tradingview | 200+ |
+| 3 | washington dc | 2000+ |
+| 4 | bloomberg | 200+ |
+| 5 | ghana vs somalia | 1000+ |
+| 6 | amd share price | 2000+ |
+| 7 | kelly brook | 200+ |
+| 8 | m5 | 2000+ |
+| 9 | jared kushner | 500+ |
+| 10 | polar vortex el niño winter weather | 10000+ |
 
-[Open full snapshot →](data/2026/11/04/trending.json)
+### Latest HK snapshot — 2026-11-12
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | nvidia 美股 | 100+ |
+| 2 | 鍾麗淇 | 200+ |
+| 3 | amd stock | 200+ |
+| 4 | nvda股價 | 100+ |
+| 5 | tim cook | 500+ |
+| 6 | 黃仁勳辭職 | 2000+ |
+| 7 | 黄仁勋辞职 | 200+ |
+| 8 | 肥媽 | 1000+ |
+| 9 | 玫瑰戰爭 | 2000+ |
+| 10 | 明天的天氣 | 10000+ |
+
+[Open full snapshot →](data/2026/11/12/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 293 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 294 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
