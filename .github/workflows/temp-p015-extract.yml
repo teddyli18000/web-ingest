@@ -1,0 +1,24 @@
+name: Temporary p015 extract alternate parent
+on:
+  push:
+    paths:
+      - .github/workflows/temp-p015-extract.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-p015-extract
+  cancel-in-progress: false
+jobs:
+  retrieve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract C(15,10,8) and verify
+        run: python3 science-boundary/covering-15-9-7/extract_ljcr.py --out p015-parent-15-10-8.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p015-parent-15-10-8
+          path: p015-parent-15-10-8.json
