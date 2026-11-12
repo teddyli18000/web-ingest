@@ -1,0 +1,72 @@
+name: temp-p017-block-dp
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-p017-block-dp.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: p017-block-dp
+  cancel-in-progress: false
+jobs:
+  constructive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    steps:
+      - uses: actions/checkout@v4
+      - name: Obtain exact LOP benchmark
+        run: |
+          git clone -q --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+          python3 science-boundary/lop-be75eec-500/prepare.py /tmp/few-shots
+      - name: Pick current strongest candidate
+        run: |
+          python3 - <<'PY'
+          import json,pathlib
+          root=pathlib.Path('science-boundary/lop-be75eec-500/results')
+          sources=[pathlib.Path('/tmp/few-shots/problems/p017-lop-be75eec-500/baseline/certificate.json')]
+          for name in ('best.json','subset-best.json','paired-best.json','cpsat-best.json','sparse-best.json','block-best.json'):
+            p=root/name
+            if p.exists():sources.append(p)
+          values=list(map(int,pathlib.Path('matrix.txt').read_text().split()))
+          W=[values[1+i*500:1+(i+1)*500] for i in range(500)]
+          def score(p):return sum(W[p[i]][p[j]] for i in range(500) for j in range(i+1,500))
+          vals=[]
+          for file in sources:
+            p=json.loads(file.read_text())['order']
+            assert sorted(p)==list(range(500))
+            vals.append((score(p),p,str(file)))
+          s,p,name=max(vals)
+          pathlib.Path('baseline.txt').write_text(' '.join(map(str,p)))
+          print('START',s,name)
+          PY
+      - name: Compile macro-block exact DP
+        run: g++ -O3 -march=native -std=c++17 -pthread science-boundary/lop-be75eec-500/block_dp.cpp -o /tmp/block-dp
+      - name: Search variable-size coupled macro-orderings
+        run: |
+          mkdir -p science-boundary/lop-be75eec-500/results
+          /tmp/block-dp matrix.txt baseline.txt science-boundary/lop-be75eec-500/results/block-best.json 490 4 2>&1 | tee science-boundary/lop-be75eec-500/results/block-search.log
+      - name: Independent Few Shots score verification
+        run: |
+          python3 - <<'PY'
+          import pathlib,json
+          root=pathlib.Path('science-boundary/lop-be75eec-500/results')
+          result=root/'block-best.json'
+          if not result.exists():
+            result.write_text(json.dumps({'order':list(map(int,pathlib.Path('baseline.txt').read_text().split()))},separators=(',',':')))
+          (root/'certificate.json').write_text(result.read_text())
+          PY
+          python3 /tmp/few-shots/problems/p017-lop-be75eec-500/verify/verify.py science-boundary/lop-be75eec-500/results | tee science-boundary/lop-be75eec-500/results/block-verification.json
+      - name: Commit verified result with main-head retries
+        run: |
+          git config user.name 'p017-research-bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add science-boundary/lop-be75eec-500/results/
+          if ! git diff --cached --quiet; then
+            git commit -m 'science: persist exact block-order search for p017'
+            for i in 1 2 3 4 5 6 7 8; do
+              git pull --rebase
+              if git push; then exit 0; fi
+            done
+            exit 1
+          fi
