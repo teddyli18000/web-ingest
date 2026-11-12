@@ -100,7 +100,7 @@ def main():
         "total_defects": k4 + i6,
         "minimum_red_edge_K4_cover": 5,
         "number_of_five_edge_covers": len(covers),
-        "max_K4s_sharing_an_edge": max(masks.values()).bit_count(),
+        "max_K4s_sharing_an_edge": max(mask.bit_count() for mask in masks.values()),
         "minimum_new_I6_after_five_deletions": best_after,
         "minimum_blue6_cover_edge_set": list(best_cover),
     }
