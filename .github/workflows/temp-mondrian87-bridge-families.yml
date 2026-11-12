@@ -1,0 +1,62 @@
+name: temp-mondrian87-bridge-families
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/temp-mondrian87-bridge-families.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-mondrian87-bridge-families
+  cancel-in-progress: false
+
+jobs:
+  construct:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {seed: 401, window: 390}
+          - {seed: 409, window: 390}
+          - {seed: 421, window: 391}
+          - {seed: 431, window: 391}
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build independent constructive bridge solver
+        run: |
+          g++ -std=c++20 -O3 science-boundary/mondrian-87/bridge_construct.cpp -o /tmp/bridge_construct
+      - name: Construct and match notched-region rectangle tilings
+        run: |
+          set +e
+          /tmp/bridge_construct ${{ matrix.seed }} ${{ matrix.window }} \
+            700 10000 150000 1000000 50 | tee search.log
+          rc=${PIPESTATUS[0]}
+          test "$rc" -le 1
+      - name: Officially verify any complete candidate
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          lines=Path('search.log').read_text().splitlines()
+          for i,line in enumerate(lines):
+              if line.startswith('FOUND '):
+                  rects=[list(map(int,x.split(','))) for x in lines[i+1].split()]
+                  Path('found').mkdir(exist_ok=True)
+                  Path('found/certificate.json').write_text(json.dumps({'rectangles':rects},separators=(',',':')))
+                  break
+          PY
+          if test -f found/certificate.json; then
+            git clone --depth 1 https://github.com/few-shots/few-shots.git /tmp/few-shots
+            python /tmp/few-shots/problems/p016-mondrian-87/verify/verify.py found
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mondrian87-bridge-${{ matrix.seed }}-${{ matrix.window }}
+          path: |
+            search.log
+            found/
