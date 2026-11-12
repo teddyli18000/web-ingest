@@ -1,0 +1,46 @@
+name: Temporary p015 exact repair
+on:
+  push:
+    paths:
+      - .github/workflows/temp-p015-repair.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-p015-repair
+  cancel-in-progress: false
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 48
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [15, 1515]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install OR-Tools
+        run: python -m pip install ortools==9.14.6206
+      - name: Retrieve public baseline and upstream verifier
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/few-shots/few-shots/main/problems/p015-covering-15-9-7/baseline/certificate.json -o /tmp/p015-baseline.json
+          mkdir -p /tmp/p015-verify
+          curl -fsSL https://raw.githubusercontent.com/few-shots/few-shots/main/problems/p015-covering-15-9-7/verify/verify.py -o /tmp/p015-verify/verify.py
+          cp /tmp/p015-baseline.json /tmp/p015-verify/certificate.json
+          python /tmp/p015-verify/verify.py /tmp/p015-verify | tee baseline-verdict.json
+      - name: Search and independently verify best certificate
+        run: |
+          python science-boundary/covering-15-9-7/search.py --input /tmp/p015-baseline.json --out p015-result --seed ${{ matrix.seed }} --rounds 24 --seconds 75 --workers 4
+          mkdir -p /tmp/p015-result-check
+          cp p015-result/certificate.json /tmp/p015-result-check/certificate.json
+          python /tmp/p015-verify/verify.py /tmp/p015-result-check | tee p015-result/verdict.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p015-repair-seed-${{ matrix.seed }}
+          path: |
+            p015-result/
+            baseline-verdict.json
