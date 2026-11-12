@@ -1,0 +1,142 @@
+name: temp Ramsey R46 induced-P4 structural escape
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/temp-ramsey-r46-p4-escape.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-ramsey-r46-p4-escape-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  control:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and validate P4-guided search
+        run: |
+          g++ -O3 -std=c++17 science-boundary/ramsey-r46/p4_landscape_36.cpp -o "$RUNNER_TEMP/p4-search"
+          python3 - <<'PY'
+          import json,os
+          p="science-boundary/ramsey-r46/results/neutral-network-36-12-defects-264edges.json"
+          rows=json.load(open(p))["adjacency"]
+          open(os.environ["RUNNER_TEMP"]+"/source36.txt","w").write("\n".join(rows)+"\n")
+          PY
+          "$RUNNER_TEMP/p4-search" "$RUNNER_TEMP/source36.txt" 0.08 \
+            10000 10000 20261112 "$RUNNER_TEMP/p4-control"
+          python3 - <<'PY'
+          import json,os
+          from itertools import combinations
+          d=os.environ["RUNNER_TEMP"]+"/p4-control/"
+          s=json.load(open(d+"summary.json"))
+          a=json.load(open(d+"best36.json"))["adjacency"]
+          assert len(a)==36 and all(len(row)==36 for row in a)
+          k4=sum(all(a[i][j]=="1" for i,j in combinations(q,2))
+                 for q in combinations(range(36),4))
+          i6=sum(all(a[i][j]=="0" for i,j in combinations(q,2))
+                 for q in combinations(range(36),6))
+          assert (k4,i6)==(s["best_K4"],s["best_I6"])
+          print("P4_CONSTRUCTIVE_CONTROL_OK",k4,i6,s["high_P4"])
+          PY
+  search:
+    needs: control
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        include:
+          - {parent: p264, lam: 0.035, seed: 1201}
+          - {parent: p264, lam: 0.065, seed: 1202}
+          - {parent: p264, lam: 0.110, seed: 1203}
+          - {parent: p264, lam: 0.180, seed: 1204}
+          - {parent: p260, lam: 0.070, seed: 1205}
+          - {parent: p260, lam: 0.140, seed: 1206}
+          - {parent: p257, lam: 0.075, seed: 1207}
+          - {parent: p257, lam: 0.145, seed: 1208}
+          - {parent: p259, lam: 0.080, seed: 1209}
+          - {parent: p259, lam: 0.150, seed: 1210}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile optimized Ramsey and induced-P4 evaluator
+        run: g++ -O3 -std=c++17 -march=native science-boundary/ramsey-r46/p4_landscape_36.cpp -o "$RUNNER_TEMP/p4-search"
+      - name: Run structural exploration followed by exact-defect quench
+        shell: bash
+        run: |
+          case "${{ matrix.parent }}" in
+            p264) PARENT=science-boundary/ramsey-r46/results/neutral-network-36-12-defects-264edges.json ;;
+            p260) PARENT=science-boundary/ramsey-r46/results/compound-repair-36-12-defects.json ;;
+            p257) PARENT=science-boundary/ramsey-r46/results/neutral-network-36-12-defects-257edges.json ;;
+            p259) PARENT=science-boundary/ramsey-r46/results/neutral-network-36-12-defects-259edges.json ;;
+          esac
+          python3 - "$PARENT" <<'PY'
+          import json,os,sys
+          a=json.load(open(sys.argv[1]))["adjacency"]
+          open(os.environ["RUNNER_TEMP"]+"/source36.txt","w").write("\n".join(a)+"\n")
+          PY
+          "$RUNNER_TEMP/p4-search" "$RUNNER_TEMP/source36.txt" \
+            ${{ matrix.lam }} 7000000 7000000 ${{ matrix.seed }} \
+            "$RUNNER_TEMP/p003-p4"
+      - name: Independently verify exact K4/I6 and P4 counters
+        if: always()
+        shell: bash
+        run: |
+          if [ -f "$RUNNER_TEMP/p003-p4/summary.json" ]; then
+            cat "$RUNNER_TEMP/p003-p4/summary.json"
+            python3 - <<'PY'
+          import itertools,json,os
+          from pathlib import Path
+          d=Path(os.environ["RUNNER_TEMP"])/"p003-p4"
+          s=json.loads((d/"summary.json").read_text())
+          for filename in ("best36.json","p4-high36.json"):
+              a=json.loads((d/filename).read_text())["adjacency"]
+              assert len(a)==36 and all(len(r)==36 for r in a)
+              assert all(a[i][i]=="0" and a[i][j]==a[j][i]
+                         for i in range(36) for j in range(36))
+              g=[sum(1<<j for j,c in enumerate(row) if c=="1") for row in a]
+              full=(1<<36)-1
+              comp=[full&~v&~(1<<i) for i,v in enumerate(g)]
+              def cliques(x,k,c):
+                  if not k:return 1
+                  z=0
+                  while c.bit_count()>=k:
+                      b=c&-c;i=b.bit_length()-1;c^=b
+                      z+=cliques(x,k-1,c&x[i])
+                  return z
+              k4=cliques(g,4,full);i6=cliques(comp,6,full)
+              p4=0
+              for vs in itertools.combinations(range(36),4):
+                  edges=sum(a[u][v]=="1" for u,v in itertools.combinations(vs,2))
+                  if edges==3:
+                      deg=sorted(sum(a[v][w]=="1" for w in vs if v!=w) for v in vs)
+                      p4+=int(deg==[1,1,2,2])
+              print("INDEPENDENT_VERIFIED",filename,"K4",k4,"I6",i6,"P4",p4)
+              if filename=="best36.json":
+                  assert (k4,i6,p4)==(s["best_K4"],s["best_I6"],s["best_P4"])
+              else:
+                  assert (k4+i6,p4)==(s["high_bad"],s["high_P4"])
+              if k4+i6==0:
+                  (d/"certificate.json").write_text(json.dumps({"adjacency":a}))
+          PY
+            if [ -f "$RUNNER_TEMP/p003-p4/certificate.json" ]; then
+              git clone --depth 1 https://github.com/few-shots/few-shots.git "$RUNNER_TEMP/few-shots"
+              mkdir -p "$RUNNER_TEMP/p003-verify"
+              cp "$RUNNER_TEMP/p003-p4/certificate.json" "$RUNNER_TEMP/p003-verify/certificate.json"
+              python3 "$RUNNER_TEMP/few-shots/problems/p003-ramsey-r46/verify/verify.py" "$RUNNER_TEMP/p003-verify"
+            fi
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p003-p4-${{ matrix.parent }}-${{ matrix.seed }}-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/p003-p4/
