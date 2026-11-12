@@ -22,7 +22,7 @@ The successful construction has a vertical line x=34 crossing only one rectangle
 
 ## Constructive solver (2026-11-12)
 - [cpsat_search.py](cpsat_search.py): each eligible unordered shape has at most one selected orientation; OR-Tools optional 2D intervals enforce nonoverlap, and exact total area 7569 ensures full coverage. This is a genuinely different family from the single-bridge record.
-- Two one-shot Actions workflows evaluate 12 independent parameter shards (four CP-SAT workers per shard); LNS cases release random subsets of incumbent rectangles while simultaneously choosing replacement shapes and placements.
+- Two one-shot CP-SAT Actions workflows evaluate 12 independent parameter shards (four CP-SAT workers per shard); LNS cases release random subsets of incumbent rectangles while simultaneously choosing replacement shapes and placements. The first six-shard run finished with no witness; full-search cases spent 840 seconds each and returned UNKNOWN for feasible windows, while A=395 proved infeasible quickly.\n- [frontier.cpp](frontier.cpp) is an independent unrestricted corner-first C++ exact-cover constructor with shape-unique area-sum pruning and row-gap reachability. [Seven additional constructive shards](https://github.com/teddyli18000/web-ingest/actions/runs/43245340216) cover 19–25 rectangles without fixing a separator.\n- [area_windows.py](area_windows.py) regenerates target window filters.
 - A cardinality/area-sum bitset DP (local experiment) identifies feasible windows for k=19: **388–392**; k=20: **368–372**; k=21: **351–352**; k=22: **334–336**; k=23: **319–322**; k=25: **293–295**. Those ranges are necessary arithmetic conditions, not constructive solutions.
 - A separate guillotine-recursion prototype produced no witness within area windows 250–650; switch to unrestricted non-guillotine topology instead of scaling this direction.
 
@@ -37,13 +37,13 @@ For k rectangles, area average is 7569/k; for k=19 it is 398.368421…. All rect
 - [Garrison, Seiler, Semchankau (2026), New Upper bounds on the Mondrian Art Problem](https://arxiv.org/abs/2609.01998)
 
 ## Work log
-- 2026-11-12: Switched from local edge exclusions to unrestricted constructive CP-SAT and 12 Actions search shards. Verified solver setup works on GitHub runner; one k=19, A=395 case exits infeasible rapidly, consistent with area-sum DP. The remaining shards were confirmed started, not yet verified successful.
+- 2026-11-12: First CP-SAT campaign completed without a defect≤17 witness. Five hard cases timed out with UNKNOWN; A=395,k=19 returned INFEASIBLE consistent with the preliminary shape-sum DP. A second CP-SAT 6-shard campaign remains running, as do 7 non-separator C++ constructor shards. Unknown is not a lower bound.\n- 2026-11-12: Switched from local edge exclusions to unrestricted constructive CP-SAT and 12 Actions search shards. Verified solver setup works on GitHub runner; one k=19, A=395 case exits infeasible rapidly, consistent with area-sum DP. The remaining shards were confirmed started, not yet verified successful.
 
 - 2026-11-12: Read workspace instructions, Few Shots rules, problem, verifier and record chain. Synced PR #62 and reconstructed the independently verified certificate statistics. Research directions documented above.
 
 - 2026-11-12: Executed exhaustive small edge-coordinate move enumeration around the record construction: 18 independent movable classes (9 horizontal-coordinate and 9 vertical-coordinate), 58,008 enumerated moves, 22,248 valid coverings with unique shapes, best 18. Coordinates and all 7,569 cells independently rechecked for each candidate.
 
 ## Next steps
-- Inspect the 12 running CP-SAT constructive shards and preserve any certificate immediately. The job runs the official Few Shots verifier on candidates; independently verify locally before making a claim.
+- Inspect the remaining CP-SAT and independent C++ constructive shards and preserve any certificate immediately. The job runs the official Few Shots verifier on candidates; independently verify locally before making a claim.
 - Prefer graph/topology-changing constructive models if CP-SAT stalls; in particular, release connected patch neighborhoods and reassemble across previous rectangle contacts rather than continually varying the same coordinates.
 - If a certificate scores ≤17, resync Few Shots main, prepare a compliant shot with the verifier's exact score and submit it.
