@@ -125,7 +125,7 @@ Each file contains one date and valid snapshots for the canonical regions. Missi
 
 ## Recovery and validation
 
-- `capture.py` fetches all four regions before writing a newly-created live day.
+- `capture.py` fetches all four regions before writing a newly-created live day. If Trending Now returns a successful but empty envelope for a region, it explicitly retries that region through the RSS fallback before failing the day.
 - Same-day reruns are idempotent by source quality.
 - `backfill.py` converts the licensed GoogleTrendArchive ZIP.
 - `mirror-manifest.json` records the GitHub mirror selection/import result after the one-shot backfill.

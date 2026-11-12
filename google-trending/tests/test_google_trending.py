@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
+import subprocess
 import sys
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -9,6 +12,7 @@ sys.path.insert(0, str(ROOT))
 
 from archive_lib import REGIONS, SOURCE_QUALITY, canonical_item, new_document, validate_document
 from backfill import member_date, member_geo, parse_csv
+from capture import fetch_region
 from render_readme import path_date
 
 
@@ -57,6 +61,38 @@ class GoogleTrendingTests(unittest.TestCase):
             self.assertEqual(member_date(name), "2024-11-28")
         self.assertIsNone(member_geo("archive/MV-US/trending_MV-US_1d_20250920.csv"))
         self.assertIsNone(member_geo("archive/US-CA/trending_US-CA_1d_20250920.csv"))
+
+    @patch("capture.subprocess.run")
+    def test_empty_primary_falls_back_to_direct_rss(self, run):
+        run.side_effect = [
+            subprocess.CompletedProcess(
+                args=[],
+                returncode=0,
+                stdout=json.dumps({
+                    "source": "google_trending_now",
+                    "fetch_status": "success",
+                    "items": [],
+                }),
+                stderr="",
+            ),
+            subprocess.CompletedProcess(
+                args=[],
+                returncode=0,
+                stdout=json.dumps({
+                    "source": "rss_limited",
+                    "fetch_status": "rss_limited",
+                    "items": [{"query": "Fallback trend"}],
+                }),
+                stderr="",
+            ),
+        ]
+
+        result = fetch_region("SG")
+
+        self.assertEqual(result["source"], "rss_limited")
+        self.assertEqual([item["query"] for item in result["items"]], ["Fallback trend"])
+        self.assertIn("trending", run.call_args_list[0].args[0])
+        self.assertIn("rss", run.call_args_list[1].args[0])
 
     def test_dashboard_path_date_uses_full_path(self):
         self.assertEqual(path_date(Path("google-trending/data/2026/01/03/trending.json")), "2026-01-03")

@@ -14,8 +14,18 @@ PACKAGE = "google-trends-now@1.1.1"
 LOCAL_TZ = ZoneInfo("Asia/Singapore")
 
 
+def run_collector(command: list[str], geo: str) -> dict:
+    process = subprocess.run(command, text=True, capture_output=True, check=False)
+    if process.returncode != 0:
+        raise RuntimeError(f"{geo}: collector failed: {process.stderr.strip()}")
+    try:
+        return json.loads(process.stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"{geo}: collector returned invalid JSON") from exc
+
+
 def fetch_region(geo: str) -> dict:
-    command = [
+    primary_command = [
         "npx", "--yes", PACKAGE,
         "trending",
         "--geo", geo,
@@ -27,17 +37,27 @@ def fetch_region(geo: str) -> dict:
         "--retries", "2",
         "--timeout-ms", "30000",
     ]
-    process = subprocess.run(command, text=True, capture_output=True, check=False)
-    if process.returncode != 0:
-        raise RuntimeError(f"{geo}: collector failed: {process.stderr.strip()}")
-    try:
-        payload = json.loads(process.stdout)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"{geo}: collector returned invalid JSON") from exc
+    payload = run_collector(primary_command, geo)
+    items = payload.get("items")
+
+    # google-trends-now only switches to RSS when the primary request fails.
+    # Google can also return a successful envelope with an empty item list;
+    # in that case explicitly query RSS instead of turning the whole daily run red.
+    if not isinstance(items, list) or not items:
+        rss_command = [
+            "npx", "--yes", PACKAGE,
+            "rss",
+            "--geo", geo,
+            "--limit", "all",
+            "--format", "json",
+            "--retries", "2",
+            "--timeout-ms", "30000",
+        ]
+        payload = run_collector(rss_command, geo)
+        items = payload.get("items")
 
     source = payload.get("source")
     status = payload.get("fetch_status")
-    items = payload.get("items")
     if source not in {"google_trending_now", "rss_limited"}:
         raise RuntimeError(f"{geo}: unexpected source {source!r}")
     if status not in {"success", "rss_limited"}:
