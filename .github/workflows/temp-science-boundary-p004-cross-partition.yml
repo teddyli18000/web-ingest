@@ -1,0 +1,98 @@
+name: temp p004 cross-partition constructive anchor repair
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-p004-cross-partition.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: temp-p004-cross-partition
+  cancel-in-progress: false
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {source: 0, axes: "0,1,2,3,7", seed: 46}
+          - {source: 1, axes: "0,1,2,3,7", seed: 47}
+          - {source: 2, axes: "0,1,2,5,7", seed: 48}
+          - {source: 3, axes: "0,2,4,6,8", seed: 49}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      PYTHONHASHSEED: '0'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install SciPy-HiGHS and NumPy
+        run: python -m pip install 'numpy>=1.26,<3' 'scipy>=1.12,<2'
+      - name: Recover four officially verified 134753-point source codes
+        run: |
+          mkdir -p /tmp/p004-sources /tmp/p004-outputs /tmp/p004-work
+          gh run download 42500797468 --repo "${{ github.repository }}" --name c7-p004-published-record-verified --dir /tmp/p004-work/published
+          gh run download 42502891420 --repo "${{ github.repository }}" --name c7-p004-coordinated-repair-1 --dir /tmp/p004-work/neutral1
+          gh run download 42502891420 --repo "${{ github.repository }}" --name c7-p004-coordinated-repair-17 --dir /tmp/p004-work/neutral17
+          gh run download 42502891420 --repo "${{ github.repository }}" --name c7-p004-coordinated-repair-101 --dir /tmp/p004-work/neutral101
+          cp /tmp/p004-work/published/shot/certificate.json /tmp/p004-sources/source0.json
+          cp /tmp/p004-work/neutral1/certificate.json /tmp/p004-sources/source1.json
+          cp /tmp/p004-work/neutral17/certificate.json /tmp/p004-sources/source2.json
+          cp /tmp/p004-work/neutral101/certificate.json /tmp/p004-sources/source3.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for i in range(4):
+              z=json.loads((Path('/tmp/p004-sources')/f'source{i}.json').read_text())['points']
+              assert len(z)==134753 and len(set(z))==134753
+          print('four_source_records_loaded',4)
+          PY
+      - name: Construct dynamic cross-coordinate anchored ten-dimensional replacements
+        run: |
+          python science-boundary/shannon-capacity-c7/code/c7p004_cross_partition_anchor_repair.py \
+            /tmp/p004-sources /tmp/p004-outputs \
+            --source "${{ matrix.source }}" --seed "${{ matrix.seed }}" \
+            --axes "${{ matrix.axes }}" --steps 180 --seconds 2
+      - name: Independently replay final ten-dimensional code
+        run: |
+          if test -s /tmp/p004-outputs/certificate.json; then
+            python science-boundary/shannon-capacity-c7/code/c7p004_independent_bitset_verify.py \
+              /tmp/p004-outputs/certificate.json | tee /tmp/p004-outputs/independent.json
+            git clone --quiet --depth 1 https://github.com/few-shots/few-shots.git /tmp/fewshots
+            python /tmp/fewshots/problems/p004-shannon-capacity-c7/verify/verify.py \
+              /tmp/p004-outputs | tee /tmp/p004-outputs/verdict.json
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/p004-outputs')
+          s=json.loads((p/'status.json').read_text())
+          v=json.loads((p/'verdict.json').read_text())
+          assert v['valid'] and int(v['score'])==s['best'] and s['best']>=134754
+          print('NEW_P004_RECORD_VERIFIED',json.dumps(v,sort_keys=True))
+          PY
+          else
+            python science-boundary/shannon-capacity-c7/code/c7p004_independent_bitset_verify.py \
+              /tmp/p004-outputs/neutral.json | tee /tmp/p004-outputs/independent.json
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/p004-outputs')
+          s=json.loads((p/'status.json').read_text())
+          v=json.loads((p/'independent.json').read_text())
+          assert v['valid'] and v['score']==134753 and s['best']==134753
+          PY
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p004-cross-partition-source-${{ matrix.source }}
+          path: /tmp/p004-outputs/
+          retention-days: 14
