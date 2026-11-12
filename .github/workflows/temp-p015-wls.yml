@@ -1,0 +1,43 @@
+name: Temporary p015 weighted repair
+on:
+  push:
+    paths:
+      - .github/workflows/temp-p015-wls.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-p015-wls
+  cancel-in-progress: false
+jobs:
+  weighted:
+    runs-on: ubuntu-latest
+    timeout-minutes: 19
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {seed: 37, tenure: 3}
+          - {seed: 205, tenure: 7}
+          - {seed: 7351, tenure: 11}
+          - {seed: 20261112, tenure: 17}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve public solver, baseline and upstream verifier
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/WynandVStaden/covering-design-records/main/v2/wls2.cpp -o /tmp/p015-wls2.cpp
+          g++ -O3 -std=c++17 -o /tmp/p015-wls2 /tmp/p015-wls2.cpp
+          curl -fsSL https://raw.githubusercontent.com/few-shots/few-shots/main/problems/p015-covering-15-9-7/baseline/certificate.json -o /tmp/p015-baseline.json
+          curl -fsSL https://raw.githubusercontent.com/few-shots/few-shots/main/problems/p015-covering-15-9-7/verify/verify.py -o /tmp/p015-verify.py
+          mkdir -p /tmp/p015-base
+          cp /tmp/p015-baseline.json /tmp/p015-base/certificate.json
+          python /tmp/p015-verify.py /tmp/p015-base
+      - name: Weighted decremental search and independent check
+        run: |
+          python science-boundary/covering-15-9-7/run_wls.py --binary /tmp/p015-wls2 --input /tmp/p015-baseline.json --output p015-wls-result --seconds 850 --seed ${{ matrix.seed }} --tenure ${{ matrix.tenure }}
+          python /tmp/p015-verify.py p015-wls-result | tee p015-wls-result/upstream-verdict.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p015-wls-seed-${{ matrix.seed }}
+          path: p015-wls-result/
