@@ -1,0 +1,75 @@
+name: temp labs100 independent orbit construction 20261112
+
+on:
+  push:
+    paths:
+      - '.github/workflows/temp-labs100-independent-orbits-20261112.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: temp-labs100-independent-orbits-20261112
+  cancel-in-progress: false
+
+jobs:
+  harvest:
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        shard: [0, 1, 2, 3]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Build exact pinned historical unrestricted native LABS solver
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone -q --depth 1 https://github.com/borkob/git_labs.git "$RUNNER_TEMP/native"
+          PIN=1aa123407636e48630174e0bf122037e369c1d68
+          git -C "$RUNNER_TEMP/native" fetch -q --depth 1 origin "$PIN"
+          git -C "$RUNNER_TEMP/native" checkout -q --detach "$PIN"
+          test "$(git -C "$RUNNER_TEMP/native" rev-parse HEAD)" = "$PIN"
+          make -s -j4 -C "$RUNNER_TEMP/native/solvers/lMAts-lRRts/src"
+      - name: Search independent N100 source orbits (4 native CPU threads)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 science-boundary/labs-100/code/native_new_orbit_harvest.py \
+            --exe "$RUNNER_TEMP/native/solvers/lMAts-lRRts/src/lMAts" \
+            --out science-boundary/labs-100/results/native_20261112 \
+            --shard ${{ matrix.shard }} --seconds 900 --workers 4
+      - name: Reverify source-distinct scores and exact output
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, pathlib, os
+          k=int(os.environ['SHARD'])
+          f=pathlib.Path(f'science-boundary/labs-100/results/native_20261112/shard-{k}.json')
+          o=json.loads(f.read_text())
+          assert o['runs']==4 and len(o['rows'])==4
+          assert len({row['seed'] for row in o['rows']})==4
+          assert o['independent_seed_orbits']==len({row['canonical'] for row in o['rows']})
+          for row in o['rows']:
+              a=[1 if c=='+' else -1 for c in row['sequence']]
+              assert len(a)==100
+              energy=sum(sum(a[i]*a[i+k] for i in range(100-k))**2 for k in range(1,100))
+              assert energy==row['energy'] and len(row['canonical'])==100
+          print('INDEPENDENTLY_VERIFIED',k,o['best_energy'],o['independent_seed_orbits'])
+          PY
+        env:
+          SHARD: ${{ matrix.shard }}
+      - name: Upload complete exact-checked N100 certificates
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: labs100-independent-orbits-20261112-shard-${{ matrix.shard }}
+          path: science-boundary/labs-100/results/native_20261112/shard-${{ matrix.shard }}.json
+          if-no-files-found: error
+          retention-days: 30
