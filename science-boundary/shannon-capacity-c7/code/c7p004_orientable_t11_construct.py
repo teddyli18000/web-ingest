@@ -177,9 +177,13 @@ def main():
                 (a.out/'best_parent.json').write_text(json.dumps(bestparent,indent=2)+'\n')
                 print('T11',json.dumps({'step':step,'hits':besthits,'obstruction':ds}),flush=True)
             if best[0]<=2:
-                words=build(g.S,best[3]-set().union(*(set(closed_neighborhood(x)) for x in
-                    ({j if c else i for i,j,c in witness})) & set().union(*(set(closed_neighborhood(x))
-                    for x in ({i if c else j for i,j,c in witness})))),witness)
+                PH={j if color else i for i,j,color in witness}
+                PV={i if color else j for i,j,color in witness}
+                NH=set().union(*(set(closed_neighborhood(x)) for x in PH))
+                NV=set().union(*(set(closed_neighborhood(x)) for x in PV))
+                auxiliary=best[3]-(NH&NV)
+                assert len(auxiliary)>=365
+                words=build(g.S,auxiliary,witness)
                 (a.out/'certificate.json').write_text(json.dumps({'points':words},separators=(',',':'))+'\n')
                 print('FOUND_P004',len(words),'step',step,flush=True)
                 break
