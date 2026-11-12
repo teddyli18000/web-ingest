@@ -1,0 +1,101 @@
+name: temp p004 constructive circular-jitter Hall gluing
+on:
+  push:
+    paths:
+      - .github/workflows/temp-science-boundary-p004-jitter-hall.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-p004-jitter-hall
+  cancel-in-progress: false
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        id: [0,1,2,3,4]
+    env:
+      OMP_NUM_THREADS: '1'
+      OPENBLAS_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install MILP dependencies
+        run: python -m pip install 'numpy>=1.26,<3' 'scipy>=1.12,<2'
+      - name: Pin verified BPZ and Family-F public 367-point sources
+        run: |
+          git init --quiet /tmp/c7-tandon
+          git -C /tmp/c7-tandon fetch --quiet --depth 1 https://github.com/tandonravi/C7-Shannon-Capacity-Heterogeneous-Recursion.git c753408492dde92a239708986d16c15dbf6c3235
+          git -C /tmp/c7-tandon checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-tandon rev-parse HEAD)" = c753408492dde92a239708986d16c15dbf6c3235
+          git init --quiet /tmp/c7-five
+          git -C /tmp/c7-five fetch --quiet --depth 1 https://github.com/molind/c7-five.git ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+          git -C /tmp/c7-five checkout --quiet --detach FETCH_HEAD
+          test "$(git -C /tmp/c7-five rev-parse HEAD)" = ae81e0d24b356aef3d388238f6fb4d02c4aa32a5
+      - name: Construct exact 367-point codes from five freely perturbed quantizer basins
+        run: |
+          mkdir -p /tmp/c7-jitter/inputs /tmp/c7-jitter/outputs
+          python science-boundary/shannon-capacity-c7/code/c7p5_circular_hall_io.py prepare \
+            science-boundary/shannon-capacity-c7/data/circular-phase-367-2026-11-04.json \
+            /tmp/c7-tandon/data/base_c7.json /tmp/c7-five/data/family-f.json \
+            /tmp/c7-jitter/inputs
+          python - <<'PY'
+          import base64,json,struct,subprocess
+          from pathlib import Path
+          root=Path('science-boundary/shannon-capacity-c7')
+          x=json.loads((root/'data/circular-neutral-high-port-p004.json').read_text())
+          for parent in x['parents']:
+              data=struct.unpack('<367H',base64.b64decode(parent['data']))
+              Path('/tmp/c7-jitter/inputs',parent['name']+'.ids').write_text(''.join(f'{z}\n' for z in data))
+          phases=['40,123,40,123,40','0,0,112,27,348','0,0,166,27,294',
+                  '40,123,40,123,94','0,0,112,27,294']
+          for i,phase in enumerate(phases):
+              out=Path('/tmp/c7-jitter/outputs')/f'j{i}'
+              subprocess.run(['python',str(root/'code/c7p5_circular_quantizer_joint_mis.py'),
+                  str(out),'--phase',phase,'--jitter','7','--seconds','45'],check=True)
+              data=(out/'parent.ids').read_text()
+              assert len(data.splitlines())==367
+              (Path('/tmp/c7-jitter/inputs')/f'j{i}.ids').write_text(data)
+          PY
+      - name: Complete all 16807 shifts by exact bipartite Hall matching for new 367 basins
+        run: |
+          g++ -std=c++17 -O3 -Wall -Wextra science-boundary/shannon-capacity-c7/code/c7p5_circular_hall_translation.cpp -o /tmp/c7-jitter/hall
+          mkdir -p /tmp/c7-jitter/scan
+          for partner in I0 X F0 F17 circle neutral14a neutral14b j0 j1 j2 j3 j4; do
+            if test "$partner" = "j${{ matrix.id }}"; then continue; fi
+            /tmp/c7-jitter/hall \
+              /tmp/c7-jitter/inputs/j${{ matrix.id }}.ids /tmp/c7-jitter/inputs/$partner.ids \
+              "$partner" /tmp/c7-jitter/scan/$partner.json \
+              /tmp/c7-jitter/scan/witness5.ids
+            if test -s /tmp/c7-jitter/scan/witness5.ids; then
+              python science-boundary/shannon-capacity-c7/code/c7p5_circular_hall_io.py verify \
+                /tmp/c7-jitter/scan/witness5.ids /tmp/c7-jitter/scan/shot
+              git clone --quiet --depth 1 https://github.com/few-shots/few-shots.git /tmp/fewshots
+              python /tmp/fewshots/problems/p004-shannon-capacity-c7/verify/verify.py \
+                /tmp/c7-jitter/scan/shot | tee /tmp/c7-jitter/scan/verdict.json
+              python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/c7-jitter/scan/verdict.json')
+          v=json.loads(p.read_text())
+          assert v['valid'] and int(v['score'])>=134754,v
+          print('P004_NEW_RECORD_VERIFIED',json.dumps(v,sort_keys=True))
+          PY
+              break
+            fi
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: c7-jitter-hall-parent-${{ matrix.id }}
+          path: |
+            /tmp/c7-jitter/outputs/j${{ matrix.id }}/
+            /tmp/c7-jitter/scan/
+          retention-days: 14
