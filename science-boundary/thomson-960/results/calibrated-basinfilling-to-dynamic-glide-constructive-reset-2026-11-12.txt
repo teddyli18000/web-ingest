@@ -94,3 +94,36 @@ Sources
 https://github.com/few-shots/few-shots/blob/main/problems/p007-thomson-problem/FEWSHOT.md
 https://doi.org/10.1063/5.0355867
 https://github.com/teddyli18000/web-ingest/blob/main/science-boundary/thomson-960/results/dependent-scar-cascade-R-A-2026-10-30.txt
+
+5. SECOND DISTINCT CONSTRUCTIVE REPRESENTATION: ELITE EDGE GENOMES
+Rather than interpolate Cartesian coordinates of R/A/B/W/D or compose
+fixed displacement fields, preserve each donor's Delaunay *connectivity
+motifs* directly: in each of 2--8 selected scar regions assign a donor
+R,A,B,W,D, compare actual source-vs-donor edge sets, then construct a
+signed genetic prescription of additions (desirable donor bonds)
+and deletions (source bonds absent from that donor). The biased
+physical dynamics drive all selected scar-edge replacements together
+while all 960 charges freely relax in the original Coulomb field.
+The bias sums +K*|new_edge| - K*|removed_edge|, an SO3-invariant
+pairwise potential with analytic angular gradient checked by
+finite differences. A full-record R->A donor-edge template is a
+positive construction control, while mixed A/B/W/D donor motifs
+search unseen combinations. At the end bias is removed entirely and
+N960 Thomson energy is scored by compiled independent Coulomb quench.
+
+This directly leverages genuinely *successful* low-energy configurations
+as structured ingredients and bypasses the previously demonstrated
+seam collisions of spatial cut-splice / local-coordinate mosaics.
+Unlike random multi-glide selection, every proposed topological motif
+has already appeared in a physically optimized near-record parent.
+
+Source: code/search_elite_scar_edge_genomes.py
+Action: https://github.com/teddyli18000/web-ingest/actions/runs/43250758794
+Two seeds x75 cycles after source/12-component force-gradient and
+R->A nonempty edge-genome checks. Subrecord N960 xyz saved.
+
+NEXT: Check both dynamic-glide and elite-edge-genome jobs.
+If their revised topological force changes actual Delaunay edges, use
+observed best-quality descendants to seed another round. If bias
+never changes topology, change the topology controller rather than
+multiplying identical runs. Winning score remains <=444368.3924051973.
