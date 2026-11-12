@@ -21,6 +21,8 @@ A valid shot must score **>= 33,489,270**.
 
 5. **Rank-variable CP-SAT on sparse regions** (`cpsat_sparse.py`) — optimization over 28–56 selected slots, including multiple distant clusters. Variables `rank[v]` have `AllDifferent`, pair decisions `x_{ij}` are reified comparisons, and `AddElement` captures score interactions with all vertices at frozen ranks. This is a different, polynomial-size (in model description) representation of a large coupled reassignment neighborhood, supporting much larger `k` than subset DP. Job `43244975004`: https://github.com/teddyli18000/web-ingest/actions/runs/43244975004.
 
+6. **Exact macro-block ordering** (`block_dp.cpp`) — partition a 40–500-vertex interval into 12–20 variable-sized contiguous blocks, aggregate all pair weights across blocks, exactly optimize the order of the entire blocks by subset DP, and then refine with full single-vertex descent. The search moves many vertices as coupled groups, so the entire candidate family is inaccessible to the sparse-hole variable-only model at feasible `k`. Job `43245898210`: https://github.com/teddyli18000/web-ingest/actions/runs/43245898210.
+
 All methods use the matrix extracted by `prepare.py`, which checks the original instance hash and the baseline score. The job scripts run the independent Few Shots verifier against the final candidate; only final verified improvements are potential submissions. Persisted results go under `results/` after job completion.
 
 ### Sparse-hole DP derivation
@@ -61,4 +63,4 @@ For a vertex `v=p[i]` and a relocation to position `j<i`, the score delta is `Σ
 ## Work log
 
 - **2026-11-12:** Synced p017 board and authoritative problem definition. Added exact instance decoder, an initial ILS engine, and a 4-thread 1000-second Action.
-- **2026-11-12:** Designed exact sparse-hole dynamic programming and compiled successfully in a 4-thread Action (650 seconds). Added a separate long-range paired-insertion search; first selected two-move scan completed without improvement. Started 4-worker CP-SAT larger-window and separate sparse multi-region rank searches. Other campaigns run against the frozen published baseline or the best independently scored candidate available at job start. Awaiting independent verifier outputs.
+- **2026-11-12:** Designed exact sparse-hole dynamic programming and compiled successfully in a 4-thread Action (650 seconds). Added a separate long-range paired-insertion search; first selected two-move scan completed without improvement. Started 4-worker CP-SAT larger-window and separate sparse multi-region rank searches, plus an exact macro-block reorder campaign. Other campaigns run against the frozen published baseline or the best independently scored candidate available at job start. Awaiting independent verifier outputs.
