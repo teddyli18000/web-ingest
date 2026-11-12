@@ -34,7 +34,7 @@ def run(exe,seed,duration):
     start=time.monotonic()
     proc=subprocess.run([str(exe),str(N),str(seed),str(duration),'1','0'],
                         capture_output=True,text=True,timeout=duration+65)
-    matches=list(re.finditer(r'(?<![+-])([+-]{100})\\s+(\\d+)\\s+([0-9]+(?:\\.[0-9]+)?)',proc.stdout))
+    matches=list(re.finditer(r'(?<![+-])([+-]{100})\s+(\d+)\s+([0-9]+(?:\.[0-9]+)?)',proc.stdout))
     assert proc.returncode==0 and matches,(proc.returncode,proc.stdout[-400:],proc.stderr[-400:])
     s,printed=matches[-1].group(1),int(matches[-1].group(2))
     e=energy(s)
