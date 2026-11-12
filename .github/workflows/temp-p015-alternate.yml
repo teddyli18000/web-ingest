@@ -1,0 +1,90 @@
+name: Temporary p015 alternate-family construction
+on:
+  push:
+    paths:
+      - .github/workflows/temp-p015-alternate.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-p015-alternate
+  cancel-in-progress: false
+jobs:
+  construct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve and verify independent 253-block parent
+        run: |
+          python3 science-boundary/covering-15-9-7/extract_ljcr.py --out /tmp/p015-parent.json
+          python3 - <<'PY'
+          import json
+          p=json.load(open('/tmp/p015-parent.json'))
+          with open('/tmp/p015-parent.txt','w') as f:
+              for b in p['blocks']: f.write(' '.join(map(str,b))+'\n')
+          PY
+          curl -fsSL https://raw.githubusercontent.com/few-shots/few-shots/main/problems/p015-covering-15-9-7/verify/verify.py -o /tmp/p015-verify.py
+      - name: Build two independent constructive search engines
+        run: |
+          g++ -O3 -std=c++17 -o /tmp/p015-project science-boundary/covering-15-9-7/projection_search.cpp
+          curl -fsSL https://raw.githubusercontent.com/WynandVStaden/covering-design-records/main/v2/wls2.cpp -o /tmp/p015-wls2.cpp
+          g++ -O3 -std=c++17 -o /tmp/p015-wls2 /tmp/p015-wls2.cpp
+      - name: Four simultaneous 10-to-9 projection searches
+        run: |
+          mkdir -p p015-alt
+          for seed in 101 202 303 404; do
+            mkdir -p "p015-alt/p$seed"
+            /tmp/p015-project /tmp/p015-parent.txt 100 "$seed" "p015-alt/p$seed/full.json" "p015-alt/p$seed/projected.json" >"p015-alt/p$seed/search.log" 2>&1 &
+          done
+          wait
+          python3 - <<'PY'
+          import json,pathlib
+          found=[]
+          for f in pathlib.Path('p015-alt').glob('p*/full.json'):
+              b=json.loads(f.read_text())['blocks']
+              found.append((len(b),str(f),b))
+          found.sort()
+          for n,f,b in found: print('projection+patch',n,f)
+          n,f,blocks=found[0]
+          with open('/tmp/p015-projected-full.txt','w') as out:
+              for b in blocks: out.write(' '.join(str(p+1) for p in b)+'\n')
+          pathlib.Path('p015-alt/selected.json').write_text(json.dumps({'blocks':blocks},separators=(',',':')))
+          pathlib.Path('p015-alt/start-size.txt').write_text(str(n))
+          PY
+          python /tmp/p015-verify.py p015-alt
+      - name: Shrink independent covering by four weighted local searches
+        run: |
+          b=$(cat p015-alt/start-size.txt)
+          for seed in 101 202 303 404; do
+            mkdir -p "p015-alt/wls$seed"
+            (cd "p015-alt/wls$seed" && /tmp/p015-wls2 15 9 7 "$b" 650 "$seed" /tmp/p015-projected-full.txt 7 0.05 269 >search.log 2>&1) &
+          done
+          wait
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,itertools
+          paths=list(Path('p015-alt').glob('wls*/shrink_cover_15_9_7_*.txt'))
+          baseline=json.loads(Path('p015-alt/selected.json').read_text())['blocks']
+          pool=[baseline]
+          pool.extend([[int(x)-1 for x in row.split()] for row in f.read_text().splitlines() if row.strip()] for f in paths)
+          def valid(blocks):
+              assert all(len(set(b))==9 and len(b)==9 for b in blocks)
+              covered={tuple(x) for b in blocks for x in itertools.combinations(sorted(b),7)}
+              return len(covered)==6435
+          pool=[c for c in pool if valid(c)]
+          best=min(pool,key=len)
+          Path('p015-alt/certificate.json').write_text(json.dumps({'blocks':best},separators=(',',':')))
+          print('verified candidate scores:',sorted(set(map(len,pool))),'BEST',len(best),flush=True)
+          PY
+          python /tmp/p015-verify.py p015-alt | tee p015-alt/upstream-verdict.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p015-alternate-family
+          path: |
+            p015-alt/certificate.json
+            p015-alt/upstream-verdict.json
+            p015-alt/start-size.txt
+            p015-alt/p*/search.log
+            p015-alt/wls*/search.log
