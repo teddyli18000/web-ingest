@@ -1,0 +1,96 @@
+p007 / Thomson N=960 -- constructive reset to dynamic multi-scar glides
+Date: 2026-11-12, America/Los_Angeles
+
+GOAL: find a physically relaxed N=960 Coulomb configuration whose exact
+Few Shots rational-certificate energy is <=444368.3924051973.
+Rechecked Few Shots main board (2026-11-12):
+Ronnie2025 p007 record 444368.3924061973, unchanged.
+
+1. FINISHED calibrated SO3 basin-filling
+Run https://github.com/teddyli18000/web-ingest/actions/runs/42853537615
+Both jobs succeeded, formal 110 trials each. Test case history:
+- sigma .003 seed 55301: 9 additional energy-distinct full N960
+  solutions, best outside supplied R/A/B/W ~444368.49375463434,
+  0 numerical subrecord. Strongly revisited A (45 visits).
+- sigma .005 seed 55302: 7 energy-distinct full N960 solutions,
+  best outside supplied R/A/B/W ~444368.4717835049,
+  0 numerical subrecord. Strongly revisited A (33), B (26),
+  W (17).
+- Physically calibrated parent SO3 RMS distances:
+  R-A .0038687423, R-B .0053597354, R-W .0054788586.
+- Independent bias finite differences passed. The broadened and narrowed
+  Gaussian families both failed to generate candidate-quality
+  improvement, even though narrowing changed the correct length scale.
+- Best independent new candidate remains W=444368.42162124
+  (R+0.02921504), from genuine area-preserving Hamiltonian scar braids;
+  both physically scored, not a new record.
+Do NOT simply extend Gaussian hill searches.
+
+2. WHAT CONSTRUCTIVE POSITIVE MECHANISM IS KNOWN
+Previously independently audited R->A exact triangulation transition
+(results/dependent-scar-cascade-R-A-2026-10-30.txt):
+a three-step history-dependent glide on the local 5-point
+support {108,282,511,599,502} triggers remote R Delaunay flips:
+  delete (79,134), add (35,323),
+  delete (21,230), add (74,363),
+so a local plastic deformation creates conditions for a coordinated
+remote elastic cascade. Isolated local one-flip release generally heals.
+Earlier two-flip scaffold homotopies explored only a few fixed pairs;
+C3 GA / C2 GA mix particle positions but do not explicitly drive
+many coordinated topology changes.
+
+3. NEW CONSTRUCTIVE MECHANISM
+Code:
+  science-boundary/thomson-960/code/search_joint_dynamic_glides.py
+Action:
+  https://github.com/teddyli18000/web-ingest/actions/runs/43249193340
+2 independent seeds x65 cycles, each preceded by a 2-cycle smoke and
+analytic finite-difference gradient check.
+
+Represent a live full-sphere configuration by a dynamic set of
+2--9 simultaneously targeted Delaunay diagonal exchanges
+corresponding to same-count 5/7 dislocation glide motifs.
+Full Coulomb particles respond and globally relax at every step.
+Use SO3-invariant *pair-distance conjugate force*:
+   V(X) = sum_{(u,v,a,b) in targeted} k
+              (|X_a-X_b| - |X_u-X_v|)
+A positive k favors the previously illegal opposite diagonal (a,b)
+relative to the existing (u,v).
+Analytic gradient from pair-distance derivatives is checked by
+12-angle central finite differences; true physical Coulomb force is
+the exact N960 numba pairwise energy difference gradient.
+First select 2--5 disjoint moves distributed across scars, ramp
+soft drive strength, retessellate *under bias*, then newly enumerate
+legal topology changes and dynamically append 1--4 compatible
+remote or local follower moves, jointly re-relax.
+Alternative abrupt vs staged weak-bias release.
+Final candidate is always unbiassed full N960 Coulomb minimization.
+Interleave genuine physical control trajectories with no glide drive.
+Source pool R, A, B, W, plus newly generated physical minima, keyed
+by full actual Coulomb energy and serialized complete unit xyz
+coordinates. Freeze all true subrecord points for official verification.
+
+This seeks topology/control co-optimization rather than merely a larger
+constant set of parent deformations, known symmetry-restricted GA,
+Riesz/anisotropic law, or score-space exclusion. Measured success
+requires better *candidate quality*, not raw new upper-energy basins.
+
+4. NEXT DECISION
+- Check Action 43249193340 smoke step explicitly: 78 same-count
+  root R flip candidates, analytic gradient finite differences, R/A/B/W
+  source energies. If any smoke fails, repair and rerun.
+- Compare chosen flip count vs actual flips after biased global relaxation,
+  distinct fully quenched N960 energies vs controls, and best energy.
+  Check whether nonlocal simultaneous glides genuinely cross Delaunay
+  boundaries: if 0 actual flips after drive, adapt force representation,
+  do NOT merely add trials. If many flips but high physical scores,
+  replace independent random targets with learned remote cascade from
+  observed positive R->A and topology softening.
+- Any numerical E < R-2e-7: freeze xyz, independently repolish,
+  rationalize, and run the official Few Shots exact verifier / check.py;
+  official improvement requires >=1e-6.
+
+Sources
+https://github.com/few-shots/few-shots/blob/main/problems/p007-thomson-problem/FEWSHOT.md
+https://doi.org/10.1063/5.0355867
+https://github.com/teddyli18000/web-ingest/blob/main/science-boundary/thomson-960/results/dependent-scar-cascade-R-A-2026-10-30.txt
