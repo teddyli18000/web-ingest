@@ -19,6 +19,7 @@ This workspace is permanent. It is **not** part of `temp-work/` and is not subje
 
 | [`job-shop-ta41/`](job-shop-ta41/) | Can precompletion resource-conflict inference construct jointly coordinated JSSP improvements and beat verified ta41 score 2006? | Active — proven conditional 4-arc joint correction of independent N7 ta43 elite 1888→1887; all 15 proper releases UNSAT, four jointly feasible, exact monotone one-swap barrier +32. Oracle-blind core-novelty ranking failed; IHS construction test pending, no ta41 2005 witness. |
 
+| [`mondrian-87/`](mondrian-87/) | Can an integer dissection of the 87×87 square improve Few Shots defect 18? | Active — verified 19-piece 18-defect record; testing topology-coordinate and unrestricted constructions. |
 | [`mona-lisa-tsp/`](mona-lisa-tsp/) | Can Nagata's 5,757,191-city-tour score on Mona Lisa 100K be improved? | Active — exact nearest-neighbor 2-opt probe prepared; no verified improvement yet. |
 
 Keep this table short and human-readable. Add one row when a genuinely new direction is opened. Detailed state belongs inside that direction.
