@@ -60,7 +60,7 @@ jobs:
           python science-boundary/shannon-capacity-c7/code/c7p004_cross_partition_anchor_repair.py \
             /tmp/p004-sources /tmp/p004-outputs \
             --source "${{ matrix.source }}" --seed "${{ matrix.seed }}" \
-            --axes "${{ matrix.axes }}" --steps 180 --seconds 2
+            --axes "${{ matrix.axes }}" --steps 420 --seconds 2
       - name: Independently replay final ten-dimensional code
         run: |
           if test -s /tmp/p004-outputs/certificate.json; then
