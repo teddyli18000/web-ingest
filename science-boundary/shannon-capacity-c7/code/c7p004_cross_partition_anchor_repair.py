@@ -173,7 +173,7 @@ def main():
         if step and step%50==0:
             # Move the 5+5 factor interface itself; no fixed original core.
             full=materialize(state,axes)
-            k=(step//50)%3
+            k=(step//50)%4
             axes=[tuple(map(int,a.axes.split(','))),
                   (0,1,2,5,7),(0,2,4,6,8),(0,1,2,3,6)][k]
             state=extract(full,axes)
@@ -217,10 +217,13 @@ def main():
             print('PROGRESS',json.dumps({'step':step,'score':current,'moves':moves,
                   'max_changed':maxchanged,'solver':dict(statuses)}),flush=True)
     valid=None
-    if winner is None and current==134753:
-        validate(state)
-        words=materialize(state,axes)
-        valid=len(set(words))==134753
+    if winner is None:
+        if current==134753:
+            validate(state)
+            words=materialize(state,axes)
+        else:
+            words=original
+        valid=len(words)==134753 and len(set(words))==134753
         (a.output/'neutral.json').write_text(json.dumps({'points':words},separators=(',',':'))+'\n')
     result={'method':'cross-partition-forced-anchor-dynamic-row-repair',
             'input_source':a.source,'seed':a.seed,'steps_requested':a.steps,
