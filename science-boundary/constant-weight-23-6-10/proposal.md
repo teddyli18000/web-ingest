@@ -12,9 +12,9 @@
 
 ### 进度指标与方向 · Metric and direction
 
-**中文：** 参数固定为 n=23、d=6、w=10；得分为合法码字数量，精确整数，**越大越好**。第一个突破目标为 2993。
+**中文：** 参数固定为 n=23、d=6、w=10；得分为合法码字数量，精确整数，**越大越好**，绝对 ε=1。第一个突破目标为 2993。
 
-**English:** Fix n=23, d=6, w=10. Score = number of valid codewords, an exact integer; **maximize**. First breakthrough: a 2993-word code.
+**English:** Fix n=23, d=6, w=10. Score = number of valid codewords, an exact integer; **maximize**, with absolute epsilon = 1. First breakthrough: a 2993-word code.
 
 ### 验证器思路 · Verifier
 
@@ -36,9 +36,9 @@
 
 ### 数据与许可 · Data and licence
 
-**中文：** 证书只包含公开发布的数学码字，按来源方允许的署名使用方式提供原始链接并致谢。特别感谢 Christian Lysenstøen（2026 年原始改进构造）和 Andries E. Brouwer（独立验证、后续优化及维护纪录表）。参考 [Lysenstøen 2026](https://arxiv.org/abs/2607.19550)、[Brouwer 表](https://aeb.win.tue.nl/codes/Andw.html)及表中所引的 Agrell–Vardy–Zeger (2000) 上界文献。无私人数据。
+**中文：** 2992 个整数码字来源于 [Brouwer 维护的公开构造文件](https://aeb.win.tue.nl/codes/cwc/d6/a23.6.10.2992H)，通过解析十六进制数、转换整数、排序及 JSON 序列化重建，不复制原始网页的文字表达。完整文件和 JSON 转写的**明确再发布授权条款目前尚未找到公开可核验的依据**；此处不主张已获 CC0、CC BY 或其他授权，也不将第三方数据重新许可为 CC0。原作者及数据提供者的权利保留，待补可核验授权依据。致谢 Christian Lysenstøen 的 2026 年构造进展，以及 Andries E. Brouwer 的纪录表维护与进一步优化。详见 [原始数据](https://aeb.win.tue.nl/codes/cwc/d6/a23.6.10.2992H)、[纪录表](https://aeb.win.tue.nl/codes/Andw.html)、[Lysenstøen 论文](https://arxiv.org/abs/2607.19550)。该证书不含个人数据。
 
-**English:** The certificate contains publicly released mathematical codewords, reused with source attribution under the stated permission. Credit Christian Lysenstøen for the initial 2026 improved construction and Andries E. Brouwer for independent verification, subsequent polishing and maintaining the table. Cite [Lysenstøen 2026](https://arxiv.org/abs/2607.19550), the [record table](https://aeb.win.tue.nl/codes/Andw.html), and its referenced Agrell–Vardy–Zeger (2000) upper bound. No personal or private data is included.
+**English:** The 2992 numerical codewords come from [Brouwer's published witness](https://aeb.win.tue.nl/codes/cwc/d6/a23.6.10.2992H), reconstructed by hexadecimal decoding, integer conversion, sorting and JSON encoding without reproducing the source page's prose. An **independently verifiable explicit redistribution authorization for the full list and its JSON transcription is not yet identified**; we do not assert CC0, CC BY, or other permission, and do not relicense the third-party baseline. Attribution and rights are reserved pending verified permission evidence. Credit Christian Lysenstøen's 2026 contribution and Andries E. Brouwer's maintained records and subsequent polishing. Sources: [original data](https://aeb.win.tue.nl/codes/cwc/d6/a23.6.10.2992H), [table](https://aeb.win.tue.nl/codes/Andw.html), [research paper](https://arxiv.org/abs/2607.19550). No personal data is present.
 
 ### 智能体初查 · Agent check
 
@@ -46,10 +46,10 @@
 | --- | --- |
 | Useful or influential | Standard coding-theory quantity in a long-running public record table and a 2026 research paper. |
 | Verifiable progress | Any valid 2993-word witness strictly improves the recorded constructive lower bound. |
-| Precisely defined | Fixed n=23, d=6, w=10; exact integer codeword count; maximize. |
+| Precisely defined | Fixed n=23, d=6, w=10; exact integer count; maximize; absolute epsilon = 1. |
 | Published record | The 2992-word source is linked directly from Brouwer's table and reproduced as JSON. |
 | Exactly checkable | Pure Python 3.12, exhaustive pairwise bit arithmetic in well under one second. |
-| Data and licence | Public attributed mathematics dataset, source and contributors explicitly credited. |
+| Data and licence | Public mathematical data with source attribution; explicit permission for redistribution of the full 2992-word list is pending independently verifiable evidence. |
 | Not a repeat | No duplicate among the published Few Shots p001–p017 or searched proposal Issues. |
 
 **实测 / Verified results (Python 3.12.16):** 2992 distinct weight-10 codewords, exact minimum distance **6** over **4,474,536** pairs. The independent 8-subset test found **134,640** unique 8-subsets. The baseline passes the draft verifier; one distance-2 counterexample and one invalid-format JSON certificate are both rejected. Four unit tests passed. All computations are documented in [the successful GitHub Actions run](https://github.com/teddyli18000/web-ingest/actions/runs/43370484174) and [baseline-check.json](https://github.com/teddyli18000/web-ingest/blob/main/science-boundary/constant-weight-23-6-10/results/baseline-check.json).
@@ -82,8 +82,11 @@
 ```python
 #!/usr/bin/env python3
 """Few Shots draft verifier for binary constant-weight A(23,6,10)."""
+
 import hashlib
 import json
+import os
+import stat
 import sys
 from pathlib import Path
 
@@ -92,18 +95,85 @@ WEIGHT = 10
 MIN_DISTANCE = 6
 MAX_WORDS = 10000
 MAX_BYTES = 100000
+MAX_DEPTH = 2
+MAX_INT_DIGITS = 12
 
 
 class Invalid(Exception):
     pass
 
 
+def check_depth(text):
+    depth = 0
+    in_string = False
+    escaped = False
+    for char in text:
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+        elif char == '"':
+            in_string = True
+        elif char in "[{":
+            depth += 1
+            if depth > MAX_DEPTH:
+                raise Invalid("JSON nesting exceeds limit")
+        elif char in "]}":
+            depth -= 1
+    # The JSON decoder validates matching brackets and strings.
+
+
+def reject_token(_):
+    raise Invalid("noninteger numeric token")
+
+
+def bounded_int(token):
+    if len(token.lstrip("-")) > MAX_INT_DIGITS:
+        raise Invalid("integer token exceeds limit")
+    return int(token)
+
+
+def unique_keys(pairs):
+    result = {}
+    for name, value in pairs:
+        if name in result:
+            raise Invalid("duplicate JSON key")
+        result[name] = value
+    return result
+
+
+def read_certificate(shot_dir):
+    path = Path(shot_dir) / "certificate.json"
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
+    fd = os.open(path, flags)
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise Invalid("certificate is not a regular file")
+        with os.fdopen(fd, "rb", closefd=False) as handle:
+            data = handle.read(MAX_BYTES + 1)
+    finally:
+        os.close(fd)
+    if len(data) > MAX_BYTES:
+        raise Invalid("certificate exceeds byte limit")
+    return data
+
+
+def parse_certificate(data):
+    text = data.decode("utf-8")
+    check_depth(text)
+    return json.loads(text, parse_int=bounded_int, parse_float=reject_token,
+                      parse_constant=reject_token, object_pairs_hook=unique_keys)
+
+
 def check(certificate):
     if type(certificate) is not dict or set(certificate) != {"codewords"}:
-        raise Invalid("expected an object with the codewords field")
+        raise Invalid("expected a single codewords field")
     words = certificate["codewords"]
     if type(words) is not list or not (1 <= len(words) <= MAX_WORDS):
-        raise Invalid("invalid codeword list length")
+        raise Invalid("codewords must be a nonempty bounded list")
     for word in words:
         if type(word) is not int or not (0 <= word < (1 << N)) or word.bit_count() != WEIGHT:
             raise Invalid("invalid 23-bit weight-10 codeword")
@@ -121,12 +191,7 @@ def check(certificate):
 
 def verify(shot_dir):
     try:
-        path = Path(shot_dir) / "certificate.json"
-        if path.stat().st_size > MAX_BYTES:
-            raise Invalid("certificate too large")
-        certificate = json.loads(path.read_text(encoding="utf-8"),
-            parse_float=lambda _: (_ for _ in ()).throw(Invalid("noninteger numeric token")),
-            parse_constant=lambda _: (_ for _ in ()).throw(Invalid("noninteger numeric token")))
+        certificate = parse_certificate(read_certificate(shot_dir))
         return check(certificate)
     except (OSError, UnicodeError, ValueError, Invalid, RecursionError):
         return {"valid": False, "score": None, "canonical_hash": None,

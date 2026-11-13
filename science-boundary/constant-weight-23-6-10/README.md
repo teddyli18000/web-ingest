@@ -36,6 +36,12 @@ This is a genuine open cell in the maintained constant-weight code tables, with 
 - [issue-63-ready.md](issue-63-ready.md) preserves the issue's live body, inserts the exact verified Agent check appendix before the Confirm section, and retains all three checked confirmations.
 - The linked GitHub integration returned `403 Resource not accessible by integration` on updating this external repository's issue. The remaining manual action is to replace the issue body with `issue-63-ready.md` and set the title to: `[出题 · Proposal] 二进制常重量码 A(23,6,10)：超过 2992 码字 / Constant-weight code A(23,6,10)`.
 
+## Review outcome (2026-11-13)
+
+- Few Shots #63 was marked `needs-changes` by two reviewers. Both accepted the mathematics, record, baseline and novelty. See [review-response.md](review-response.md).
+- The only substantive outstanding issue is verifiable permission to redistribute the whole 2992-codeword file and JSON transcription, not proof of a new bound. The 2026-11-13 verifier draft and proposal were corrected in this repository; no upstream edit has been made.
+- The user should supply a public grant or a citable rightsholder statement covering this exact witness before requesting a second automated review.
+
 ## Next steps
 
 1. Present [proposal.md](proposal.md) to the user and obtain approval before posting a public Few Shots issue under their account.
@@ -46,10 +52,10 @@ This is a genuine open cell in the maintained constant-weight code tables, with 
 
 - [Andries E. Brouwer, live constant-weight table](https://aeb.win.tue.nl/codes/Andw.html); [2992-word source file](https://aeb.win.tue.nl/codes/cwc/d6/a23.6.10.2992H).
 - [Christian Lysenstøen, *New lower bounds for binary constant-weight codes* (2026)](https://arxiv.org/abs/2607.19550).
-- [Agrell, Vardy & Zeger (2000), upper bounds](https://doi.org/10.1109/18.887823).
+- [Agrell, Vardy & Zeger (2000), upper bounds](https://doi.org/10.1109/18.887851).
 - [Few Shots propose-a-problem instructions](https://github.com/few-shots/few-shots/blob/main/skills/propose-a-problem/SKILL.md).
 
-Data provenance: published hex code from Brouwer's table, reproduced here with source link and attribution; the user confirmed attribution-permitted reuse. No proprietary or private data is used.
+Data provenance: published mathematical hex code from Brouwer's table, independently converted to JSON. Explicit publicly verifiable permission for redistribution of the full 2992-word file/JSON transcription is still needed for Few Shots approval; attribution alone is not evidence of authorization.
 
 ## Work log
 
