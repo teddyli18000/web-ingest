@@ -30,6 +30,12 @@ Maximise the size of a binary constant-weight code with 23 coordinates, exactly 
 
 This is a genuine open cell in the maintained constant-weight code tables, with a large difference between known construction and upper bound. Finding 2993 words would improve a published record and be directly machine-checkable. The upper bound is **not** evidence that 7521 is attainable. A 2026 paper used Johnson decomposition plus maximum-weight independent-set optimisation; exploration should seek genuinely improved coordinated constructions rather than only ruling out small exchanges.
 
+## Few Shots proposal submission
+
+- [Few Shots issue #63](https://github.com/few-shots/few-shots/issues/63) was created by the user. Its first eight problem sections and confirmation boxes are present, but the title is incomplete and the Agent check is missing.
+- [issue-63-ready.md](issue-63-ready.md) preserves the issue's live body, inserts the exact verified Agent check appendix before the Confirm section, and retains all three checked confirmations.
+- The linked GitHub integration returned `403 Resource not accessible by integration` on updating this external repository's issue. The remaining manual action is to replace the issue body with `issue-63-ready.md` and set the title to: `[出题 · Proposal] 二进制常重量码 A(23,6,10)：超过 2992 码字 / Constant-weight code A(23,6,10)`.
+
 ## Next steps
 
 1. Present [proposal.md](proposal.md) to the user and obtain approval before posting a public Few Shots issue under their account.
