@@ -24,3 +24,10 @@ A citable permission statement or public record by the person authorized to gran
 ## Upstream status
 
 Current upstream #63 has `needs-changes`. GitHub integration previously returned 403 on editing Few Shots issues. The revised `issue-63-ready.md` is a **draft**, not a completed upstream edit. After permission evidence is added, submit one final edit rather than triggering another review prematurely.
+
+## 2026-11-13 policy reconciliation (issue review rounds 1 and 2)
+
+- The live issue #63 has **two automated review comments**: [first](https://github.com/few-shots/few-shots/issues/63#issuecomment-6854903128) and [second](https://github.com/few-shots/few-shots/issues/63#issuecomment-6855265068). In round 2, reviewer A still requests a verifiable grant for the full Brouwer witness; reviewer B accepts the topic with corrected license wording and source attribution. Both accept the mathematical and reproducibility criteria.
+- Upstream [CONTRIBUTING.md](https://github.com/few-shots/few-shots/blob/main/CONTRIBUTING.md) explicitly distinguishes CC0-licensed shot/problem material from `problems/*/baseline/` certificates, which are taken from published sources **under their original terms**. Thus baseline data are not automatically relicensed CC0. This rule alone does not prove the published witness can be freely redistributed when the source does not state a clear license.
+- The question to send to maintainers before spending a third review is whether independent conversion of publicly provided mathematical codeword data, preserving original source/attribution and declining to assert an unverified license, is acceptable for a baseline; or whether an explicit grant covering the full file is required. The issue presently still carries the outdated attribution-permission claim.
+- Avoid editing the issue until maintainers clarify; corrections to the proposed verifier are already validated in the local workspace. Retain the original rights status for the witness instead of treating it as a newly CC0-licensed shot.
