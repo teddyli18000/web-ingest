@@ -1,0 +1,34 @@
+# Few Shots baseline licensing precedents — checked 2026-11-13
+
+## Bottom line
+
+Few Shots has already published numeric constructions from web pages that **did not state an explicit licence**. The closest precedents are [P012](https://github.com/few-shots/few-shots/blob/main/problems/p012-maxdet-23/PROBLEM.md) and [P013](https://github.com/few-shots/few-shots/blob/main/problems/p013-maxdet-29/PROBLEM.md). Their official baseline sections expressly state that the source pages had no licence for their matrices, yet each publishes the exact numerical matrix with attribution. Reviewers of [#41 round 2](https://github.com/few-shots/few-shots/issues/41#issuecomment-6523318717) accepted the 529 numeric entries with no separate permission; [#47](https://github.com/few-shots/few-shots/issues/47#issuecomment-6553080090) expressly adopted the already-published P012 approach for 841 numeric entries. Both problems subsequently received [publication decisions](https://github.com/few-shots/few-shots/issues/41#issuecomment-6524299536) and [#47 publication decision](https://github.com/few-shots/few-shots/issues/47#issuecomment-6553411723).
+
+This is documented **repository practice**, not an adjudication of intellectual property rights. A 2992-word code list is larger than either matrix; rights and jurisdiction still matter. No presumption of an express permission follows.
+
+## Comparison
+
+| Case | Source and size | Published treatment | Review history |
+| --- | --- | --- | --- |
+| [P012 maxdet 23](https://github.com/few-shots/few-shots/blob/main/problems/p012-maxdet-23/PROBLEM.md) | 529 ±1 numerical matrix entries from an archived mathematical record page, no stated matrix licence | Encodes entries as JSON, credits the source and explicitly says source page has no licence | [#41 round 2](https://github.com/few-shots/few-shots/issues/41#issuecomment-6523318717): accepts attributed mathematical data without claiming licence; [official publication](https://github.com/few-shots/few-shots/issues/41#issuecomment-6524299536) |
+| [P013 maxdet 29](https://github.com/few-shots/few-shots/blob/main/problems/p013-maxdet-29/PROBLEM.md) | 841 ±1 entries from archived record page; no stated matrix licence | Encodes entries as JSON and cites source with explicit absence of licence statement | [#47 review](https://github.com/few-shots/few-shots/issues/47#issuecomment-6553080090) says it follows the published P012 treatment; [official publication](https://github.com/few-shots/few-shots/issues/47#issuecomment-6553411723) |
+| [P010 Mona Lisa TSP](https://github.com/few-shots/few-shots/blob/main/problems/p010-mona-lisa-tsp/PROBLEM.md) | Published Nagata 100,000-city tour from Cook's Mona Lisa page | Re-encodes original TSPLIB tour as [588,906-byte baseline JSON](https://github.com/few-shots/few-shots/tree/main/problems/p010-mona-lisa-tsp/baseline), cites original source; no source licence claimed in the problem text and no separate baseline licence file | Original published problem; existence shows large external numerical witness mirrored in baseline. No evidence that copyright status was adjudicated |
+| [P011 sorting network](https://github.com/few-shots/few-shots/blob/main/problems/p011-sorting-network-17/PROBLEM.md) | 71-comparator JSON list from SorterHunter | Explicit MIT source licence and [full retained notice](https://github.com/few-shots/few-shots/tree/main/problems/p011-sorting-network-17/baseline) | [#40 review](https://github.com/few-shots/few-shots/issues/40#issuecomment-6522247350) verifies original licence |
+| [P015 covering 15-9-7](https://github.com/few-shots/few-shots/blob/main/problems/p015-covering-15-9-7/PROBLEM.md) | 270 blocks reconstructed from a published report | Separately preserves paper attribution and related Zenodo dataset CC BY 4.0 notice; no CC0 relicensing of baseline | [#56 review](https://github.com/few-shots/few-shots/issues/56#issuecomment-6680336489) checks source/data licence |
+| [P014 Golomb ruler 29](https://github.com/few-shots/few-shots/blob/main/problems/p014-golomb-ruler-29/PROBLEM.md) | Singer 1938 finite-field construction | Produces numerical ruler independently, no third-party baseline file copied | [#49 review](https://github.com/few-shots/few-shots/issues/49#issuecomment-6555360495) checks independently generated data |
+
+## Upstream rule
+
+[Few Shots CONTRIBUTING.md](https://github.com/few-shots/few-shots/blob/main/CONTRIBUTING.md) and [README.md](https://github.com/few-shots/few-shots/blob/main/README.md) explicitly distinguish CC0 material (problem statements, shot certificates and repository record data) from `problems/*/baseline/`, whose certificates retain the terms of their published sources. They do not automatically CC0-license third-party baseline witnesses.
+
+## Application to #63
+
+- The existing issue still asserts *"来源方允许的署名使用方式"* without citing a licence grant. Remove the assertion.
+- Say that [Brouwer's original 2992-word hexadecimal list](https://aeb.win.tue.nl/codes/cwc/d6/a23.6.10.2992H) was transformed by deterministic integer decoding and sorting, cite its original URL and source SHA-256, attribute the research and maintainer, and **do not assign CC0** or claim a verified licence for that source.
+- Distinguish publicly available mathematical data, provenance and attribution from an express copyright permission. Do not state that public availability by itself grants one.
+- The #63 [round 2 reviewer A](https://github.com/few-shots/few-shots/issues/63#issuecomment-6855265068) demands an express verifiable redistribution grant; reviewer B accepts correction and provenance. Before spending a third automated review, ask the referees whether the P012/P013 precedent applies to the 2992-word mathematical construction, and if not, identify the relevant distinction and the evidence required. Avoid submitting an unchanged permission claim.
+- The reviewer decision is not a legal finding, and the larger 2992-item list may differ in protection from the 529/841-entry examples.
+
+## Proposed single question to the maintainers
+
+> #63's mathematical correctness and 2992-word baseline have passed both reviews; we have corrected the unsupported claim that attribution permission was explicitly granted. We found that published P012 and P013 both reproduce numerical matrices from source pages that explicitly lack licence statements (see their PROBLEM.md baseline sections). The #47 review cites P012 as its precedent. Few Shots also specifies that third-party baselines retain their source terms rather than automatically becoming CC0. Can the same approach (only numerical codewords, deterministic hex-to-JSON conversion, full attribution, no republication of text and no CC0 claim) be accepted for A(23,6,10)? If not, please clarify what distinguishes this witness and what specific evidence would satisfy the baseline data criterion before we use the final automated review cycle.
