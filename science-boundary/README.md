@@ -22,6 +22,8 @@ This workspace is permanent. It is **not** part of `temp-work/` and is not subje
 | [`mondrian-87/`](mondrian-87/) | Can an integer dissection of the 87×87 square improve Few Shots defect 18? | Active — verified 19-piece 18-defect record; testing topology-coordinate and unrestricted constructions. |
 | [`mona-lisa-tsp/`](mona-lisa-tsp/) | Can Nagata's 5,757,191-city-tour score on Mona Lisa 100K be improved? | Active — exact nearest-neighbor 2-opt probe prepared; no verified improvement yet. |
 
+| [`constant-weight-23-6-10/`](constant-weight-23-6-10/) | Can A(23,6,10) exceed the published 2992-word code? | Opening — reproducing the public 2992-word witness and its independent checks for a Few Shots proposal. |
+
 Keep this table short and human-readable. Add one row when a genuinely new direction is opened. Detailed state belongs inside that direction.
 | [`covering-15-9-7/`](covering-15-9-7/) | Can a verified C(15,9,7) covering improve the 270-block public construction? | Active — independent 253-block C(15,10,8) parent verified; projection/shrink and dynamic ejection-chain searches active; best verified 270. |
 
