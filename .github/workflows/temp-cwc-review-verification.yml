@@ -1,0 +1,47 @@
+name: Temporary CWC 23 6 10 review regression
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/temp-cwc-review-verification.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: temp-cwc-review-verification
+  cancel-in-progress: false
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Unit and review regression tests
+        run: python3 -m unittest discover -s science-boundary/constant-weight-23-6-10/tests -v
+      - name: Verify full 2992-word baseline, canon and two bad certificates
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import time
+          from pathlib import Path
+          import importlib.util
+          topic=Path('science-boundary/constant-weight-23-6-10')
+          spec=importlib.util.spec_from_file_location('verify', topic/'code/verify.py')
+          mod=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(mod)
+          data=json.loads((topic/'baseline/certificate.json').read_text())
+          t=time.perf_counter()
+          result=mod.verify(topic/'baseline')
+          elapsed=time.perf_counter()-t
+          assert result['valid'] and result['score']=='2992',result
+          assert result['canonical_hash']=='6451ae0eb1887314ef32dea943da4ed879f2d7c440115980708e56cf0c4ed9c4',result
+          words=data['codewords']
+          assert len(words)==2992 and len(set(words))==2992
+          assert all(x.bit_count()==10 for x in words)
+          assert min((words[i]^words[j]).bit_count() for i in range(len(words)) for j in range(i))==6
+          print(json.dumps({'valid':result['valid'],'score':result['score'],'canonical_hash':result['canonical_hash'],'seconds':elapsed,'all_pairs':4474536}))
+          PY
