@@ -10,7 +10,7 @@ The task preserves changing data useful later: **source order, query, search-vol
 
 | First day | Latest day | Days archived | SG days | US days | GB days | HK days |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| **2024-11-28** | **2026-11-12** | **692** | **692** | **692** | **692** | **691** |
+| **2024-11-28** | **2026-11-13** | **693** | **693** | **693** | **693** | **692** |
 
 ### Source mix
 
@@ -18,74 +18,74 @@ The task preserves changing data useful later: **source order, query, search-vol
 | --- | ---: |
 | `googletrendarchive` | 1,479 |
 | `github_rss_mirror` | 1,081 |
-| `google_trending_now` | 204 |
+| `google_trending_now` | 208 |
 | `github_hottrends_mirror` | 3 |
 
-### Latest SG snapshot — 2026-11-12
+### Latest SG snapshot — 2026-11-13
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | kimberly powell | 20000+ |
-| 2 | nvidia singapore sales reporting change | 5000+ |
-| 3 | tony leung ka-fai | 2000+ |
-| 4 | wok hey staff customer confrontation | 2000+ |
-| 5 | prabowo subianto | 1000+ |
-| 6 | alice huang singapore entry ban | 200+ |
-| 7 | amd stock | 1000+ |
-| 8 | 黄仁勋 | 200+ |
-| 9 | singapore airlines fy2027 interim dividend | 500+ |
-| 10 | dbs paylah china qr expansion | 2000+ |
+| 1 | microsoft outage | 200000+ |
+| 2 | jensen huang third affair | 20000+ |
+| 3 | singapore vs paraguay | 2000+ |
+| 4 | spencer huang | 2000+ |
+| 5 | reverse vending machine | 2000+ |
+| 6 | treasury bill | 2000+ |
+| 7 | microsoft share price | 2000+ |
+| 8 | hougang prank | 1000+ |
+| 9 | 刘欢 | 500+ |
+| 10 | arrest | 2000+ |
 
-### Latest US snapshot — 2026-11-12
-
-| # | Trend | Search volume |
-| ---: | --- | ---: |
-| 1 | kimberly powell | 500000+ |
-| 2 | building collapse nyc | 500000+ |
-| 3 | anthony clark | 200000+ |
-| 4 | snow | 200000+ |
-| 5 | dc shooting | 100000+ |
-| 6 | disco singer rochelle fleming passes | 100000+ |
-| 7 | warriors vs rockets | 200000+ |
-| 8 | usman nurmagomedov | 200000+ |
-| 9 | mark mcguinn | 50000+ |
-| 10 | rex ryan | 100000+ |
-
-### Latest GB snapshot — 2026-11-12
+### Latest US snapshot — 2026-11-13
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | colette kress | 50000+ |
-| 2 | usman nurmagomedov | 20000+ |
-| 3 | polar vortex el niño winter weather | 10000+ |
-| 4 | new york | 20000+ |
-| 5 | body mass index misclassification uk | 10000+ |
-| 6 | edinburgh bypass | 10000+ |
-| 7 | winter storm | 10000+ |
-| 8 | metro bank | 5000+ |
-| 9 | washington dc | 5000+ |
-| 10 | maldives | 10000+ |
+| 1 | microsoft outage | 10000000+ |
+| 2 | mark mcguinn | 200000+ |
+| 3 | dan hicks | 500000+ |
+| 4 | social security cuts | 200000+ |
+| 5 | giants | 500000+ |
+| 6 | dc shooting | 500000+ |
+| 7 | jensen huang third affair | 200000+ |
+| 8 | italy vs france | 200000+ |
+| 9 | mavericks vs timberwolves | 100000+ |
+| 10 | raptors vs 76ers | 100000+ |
 
-### Latest HK snapshot — 2026-11-12
+### Latest GB snapshot — 2026-11-13
 
 | # | Trend | Search volume |
 | ---: | --- | ---: |
-| 1 | kimberly powell | 10000+ |
-| 2 | 吳嘉儀 | 2000+ |
-| 3 | 黃仁勳辭職 | 2000+ |
-| 4 | 收入 中 位 數 | 1000+ |
-| 5 | 明天的天氣 | 10000+ |
-| 6 | bigbang | 2000+ |
-| 7 | 英伟达 | 500+ |
-| 8 | 肥媽 | 2000+ |
-| 9 | cuaca besok | 1000+ |
-| 10 | 鍾麗淇 | 200+ |
+| 1 | microsoft outage | 1000000+ |
+| 2 | lisa maxwell daughter beau | 100000+ |
+| 3 | friday uk weather snowfall list | 50000+ |
+| 4 | england national football team vs croatia national football team standings | 200000+ |
+| 5 | polar vortex el niño winter weather | 50000+ |
+| 6 | england vs australia | 50000+ |
+| 7 | download 2027 | 50000+ |
+| 8 | dpd warehouse immigration enforcement | 10000+ |
+| 9 | italy vs france | 50000+ |
+| 10 | microsoft share price | 10000+ |
 
-[Open full snapshot →](data/2026/11/12/trending.json)
+### Latest HK snapshot — 2026-11-13
+
+| # | Trend | Search volume |
+| ---: | --- | ---: |
+| 1 | outlook | 100000+ |
+| 2 | outlook 死機 | 20000+ |
+| 3 | 新世界 | 2000+ |
+| 4 | 王書麒 | 1000+ |
+| 5 | 無敵小柑 | 1000+ |
+| 6 | 郭羨妮 | 500+ |
+| 7 | black friday | 1000+ |
+| 8 | 死亡 | 500+ |
+| 9 | jensen huang third affair | 5000+ |
+| 10 | 王忠林 | 500+ |
+
+[Open full snapshot →](data/2026/11/13/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 294 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
+[`2026`](data/2026/) · 295 days · [`2025`](data/2025/) · 364 days · [`2024`](data/2024/) · 34 days
 
 <!-- archive-dashboard:end -->
 
