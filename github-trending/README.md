@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-11-12** | **4,418** | **2,571** |
+| **2014-08-09** | **2026-11-13** | **4,419** | **2,572** |
 
-### Latest All-Languages snapshot — 2026-11-12
+### Latest All-Languages snapshot — 2026-11-13
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [meta/astryx](https://github.com/meta/astryx) | TypeScript | 2,776 |
-| 2 | [ZhuLinsen/daily_stock_analysis](https://github.com/ZhuLinsen/daily_stock_analysis) | Python | 278 |
-| 3 | [GoogleChrome/modern-web-guidance-src](https://github.com/GoogleChrome/modern-web-guidance-src) | TypeScript | 159 |
-| 4 | [shadcn/improve](https://github.com/shadcn/improve) | — | 361 |
-| 5 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | JavaScript | 787 |
-| 6 | [vercel-labs/agent-browser](https://github.com/vercel-labs/agent-browser) | Rust | 708 |
-| 7 | [we-promise/sure](https://github.com/we-promise/sure) | Ruby | 1,078 |
-| 8 | [homeassistant-ai/ha-mcp](https://github.com/homeassistant-ai/ha-mcp) | Python | 645 |
-| 9 | [openai/codex-security](https://github.com/openai/codex-security) | TypeScript | 52 |
-| 10 | [TheAlgorithms/Java](https://github.com/TheAlgorithms/Java) | Java | 51 |
+| 1 | [GoogleChrome/modern-web-guidance-src](https://github.com/GoogleChrome/modern-web-guidance-src) | TypeScript | 739 |
+| 2 | [openai/codex-security](https://github.com/openai/codex-security) | TypeScript | 643 |
+| 3 | [nvm-sh/nvm](https://github.com/nvm-sh/nvm) | Shell | 63 |
+| 4 | [pookjw/HermesEnabler](https://github.com/pookjw/HermesEnabler) | Objective-C | 218 |
+| 5 | [we-promise/sure](https://github.com/we-promise/sure) | Ruby | 967 |
+| 6 | [QwenLM/qwen-code](https://github.com/QwenLM/qwen-code) | TypeScript | 151 |
+| 7 | [ashhart/TensorFold](https://github.com/ashhart/TensorFold) | Zig | 54 |
+| 8 | [nodejs/node](https://github.com/nodejs/node) | JavaScript | 62 |
+| 9 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | JavaScript | 816 |
+| 10 | [meta/astryx](https://github.com/meta/astryx) | TypeScript | 1,830 |
 
-[Open full snapshot →](data/2026/11/12/trending.json)
+[Open full snapshot →](data/2026/11/13/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 316 days  
+[`2026`](data/2026/) · 317 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
