@@ -42,6 +42,11 @@ This is a genuine open cell in the maintained constant-weight code tables, with 
 - The only substantive outstanding issue is verifiable permission to redistribute the whole 2992-codeword file and JSON transcription, not proof of a new bound. The 2026-11-13 verifier draft and proposal were corrected in this repository; no upstream edit has been made.
 - The user should supply a public grant or a citable rightsholder statement covering this exact witness before requesting a second automated review.
 
+## 2026-11-13 review regression verified
+
+- [Python 3.12 GitHub Actions run 43453926266](https://github.com/teddyli18000/web-ingest/actions/runs/43453926266) succeeded: **18 tests** passed; full witness still scores **2992** with the original canonical hash; measured verifier runtime **0.106156116 s**. One-shot workflow removed.
+- The hardening is complete, but the explicit full-list redistribution permission requested by review A remains unsubstantiated. Do not trigger a new upstream review until a citable grant is supplied.
+
 ## Next steps
 
 1. Present [proposal.md](proposal.md) to the user and obtain approval before posting a public Few Shots issue under their account.

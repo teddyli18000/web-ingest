@@ -14,7 +14,7 @@ Source: https://github.com/few-shots/few-shots/issues/63#issuecomment-6854903128
 - Updated `proposal.md` and `issue-63-ready.md` to describe attribution and the unresolved permission accurately rather than claiming an unverified license.
 - Added explicit absolute epsilon = 1.
 - Replaced the draft verifier with one that detects duplicate JSON keys, enforces depth <=2, limits integer token lengths, uses bounded reads, rejects symlinks/nonregular files, and retains exact pairwise checks plus the canonical hash format.
-- Added `tests/test_verifier_review.py`: 14 regression tests (13 negative/format/canonical plus one valid) passed in a local Python 3.13.5 run before committing. The prior Python 3.12.16 baseline run remains documented in `results/baseline-check.json` for the earlier verifier; the revised verifier has not yet been rechecked against the full baseline in Python 3.12.
+- Added `tests/test_verifier_review.py`: 14 regression tests (13 negative/format/canonical plus one valid) passed in a local Python 3.13.5 run before committing. A [new Python 3.12 GitHub Actions regression](https://github.com/teddyli18000/web-ingest/actions/runs/43453926266) subsequently passed **18** tests (the 14 new tests plus 4 existing ones) and the full 2992-word baseline: score `2992`, unchanged canonical SHA-256 `6451ae0eb1887314ef32dea943da4ed879f2d7c440115980708e56cf0c4ed9c4`, exact 4,474,536 pair checks, verifier `0.106156116 s`. Temporary workflow was removed after validation.
 - Correct AVZ DOI is https://doi.org/10.1109/18.887851 (not 10.1109/18.887823).
 
 ## Required next evidence
