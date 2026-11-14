@@ -1,0 +1,104 @@
+name: Baidu signed download UA probe (one shot)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/temp-baidu-signed-ua-probe.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      BAIDU_DRIVE_BAIDU_SESSION: ${{ secrets.BAIDU_DRIVE_BAIDU_SESSION }}
+      BAIDU_DRIVE_STATE_KEY: ${{ secrets.BAIDU_DRIVE_STATE_KEY }}
+    steps:
+      - name: Checkout current control code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+          sparse-checkout: |
+            baidu-drive
+      - name: Checkout pinned mover
+        uses: actions/checkout@v4
+        with:
+          repository: teddyli18000/baidu-drive-mover
+          ref: a9e76feb18fe9ca1ac680d0ea555aac684d622de
+          path: .signed-probe
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: .signed-probe/go.mod
+          cache-dependency-path: .signed-probe/go.sum
+      - name: Load encrypted current Baidu session
+        run: |
+          python3 -m pip install -q "cryptography==46.0.4"
+          python3 - <<'PY'
+          import os,sys
+          from pathlib import Path
+          sys.path.insert(0,"baidu-drive")
+          import auth_session,auth_provision,controller
+          gh=controller.GitHub(os.environ["GITHUB_REPOSITORY"],os.environ["GITHUB_TOKEN"])
+          cookie=auth_session.read(gh,os.environ["BAIDU_DRIVE_BAIDU_SESSION"],os.environ["BAIDU_DRIVE_STATE_KEY"])
+          auth_provision.write_private(Path(os.environ["RUNNER_TEMP"])/"baidu-probe.cookies",cookie)
+          print("Encrypted browser session loaded privately")
+          PY
+      - name: Read exact 4 MiB signed range with netdisk UA, no upload
+        run: |
+          mkdir -p .signed-probe/cmd/probe
+          git fetch --depth=1 origin c4166a61e3c3dfe33d7f18f20acf51a9ea6e8ea8
+          git show c4166a61e3c3dfe33d7f18f20acf51a9ea6e8ea8:baidu-drive/mover/relay_dlink.go > .signed-probe/cmd/probe/relay_dlink.go
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path(".signed-probe/cmd/probe/relay_dlink.go")
+          old='const baiduWebUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36"'
+          text=p.read_text()
+          assert old in text
+          p.write_text(text.replace(old,'const baiduWebUserAgent = "netdisk"'))
+          PY
+          cat > .signed-probe/cmd/probe/main.go <<'GO'
+          package main
+          import (
+              "context"
+              "errors"
+              "fmt"
+              "io"
+              "os"
+              "strings"
+              "github.com/teddyli18000/baidu-drive-mover/internal/baidu"
+          )
+          func main() {
+              cookie,err:=os.ReadFile(os.Getenv("RUNNER_TEMP")+"/baidu-probe.cookies")
+              if err!=nil {panic("ephemeral cookie unavailable")}
+              cli,err:=baidu.NewClient(strings.TrimSpace(string(cookie)))
+              if err!=nil {panic("cannot initialize Baidu client")}
+              const size int64=1302042184
+              const n int64=4<<20
+              path:="/BaiduDriveMover/task-20261114T114758Z-5e9b9fb6c6b0/b-67e2afed8888d3835989/08.mp4"
+              src:=newBaiduSignedRangeSource(cli,strings.TrimSpace(string(cookie)),size)
+              _,err=src.resolve(context.Background(),path)
+              if err!=nil {
+                  if errors.Is(err,errBaiduDownloadDenied){fmt.Println("signed metadata refused")} else {fmt.Printf("signed metadata failed: %T\\n",err)}
+                  os.Exit(1)
+              }
+              fmt.Println("signed metadata generated")
+              stream,err:=src.OpenDownloadRange(context.Background(),path,0,n-1)
+              if err!=nil {
+                  if errors.Is(err,errBaiduDownloadDenied){fmt.Println("signed byte range refused")} else {fmt.Printf("signed byte range failed: %T\\n",err)}
+                  os.Exit(1)
+              }
+              defer stream.Body.Close()
+              count,err:=io.CopyN(io.Discard,stream.Body,n)
+              if err!=nil || count!=n {fmt.Println("signed range incomplete");os.Exit(1)}
+              fmt.Println("signed link with netdisk UA read exactly 4 MiB successfully")
+          }
+          GO
+          cd .signed-probe
+          go run ./cmd/probe
