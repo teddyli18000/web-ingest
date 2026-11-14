@@ -6,6 +6,7 @@ import base64
 import datetime as dt
 import json
 import os
+import uuid
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -63,11 +64,25 @@ class GitHub:
             params["sha"] = sha
         self.request("PUT", "/contents/" + urllib.parse.quote(path, safe="/"), params)
 
-    def dispatch(self, provider: str, task_id: str, capacity: int, reason: str = "shared-supervisor"):
+    def dispatch(self, provider: str, task_id: str, capacity: int, reason: str, reservation_id: str):
         self.request("POST", "/actions/workflows/" + WORKFLOWS[provider] + "/dispatches", {
             "ref": "main",
-            "inputs": {"task_id": task_id, "reason": reason, "max_workers": str(capacity)},
+            "inputs": {
+                "task_id": task_id,
+                "reason": reason,
+                "max_workers": str(capacity),
+                "reservation_id": reservation_id,
+            },
         })
+
+    def workflow_status(self, provider: str, reservation_id: str) -> str | None:
+        """Find the uniquely named preparation run for a persisted reservation."""
+        path = "/actions/workflows/" + WORKFLOWS[provider] + "/runs?event=workflow_dispatch&per_page=100"
+        response = self.request("GET", path)
+        for run in response.get("workflow_runs", []):
+            if run.get("display_title") == "Cloud prepare " + reservation_id:
+                return str(run.get("status"))
+        return None
 
 
 def load_provider(gh: GitHub, name: str) -> Provider | None:
@@ -94,19 +109,26 @@ def run(gh: GitHub, now: dt.datetime, reason: str = "shared-supervisor") -> dict
     state, sha = gh.read(STATE)
     state = state or {"schema": 1, "dispatched": {}}
     dispatch_state = state["dispatched"]
-    # While an Actions prepare run is queued, its requested capacity is
-    # reserved. Confirmed ACTIVE leases consume that reservation automatically.
+    # The next master inherits in-flight reservations from the last master.
+    # GitHub can keep a workflow queued longer than a timer threshold, so check
+    # real workflow state before releasing a pending reservation.
     reserved = 0
     eligible = []
     for p in providers:
         last = dispatch_state.get(p.name, {})
         then = parse_time(last.get("at")) if last.get("task_id") == p.task_id else None
-        if then and now - then < dt.timedelta(minutes=12):
+        if then is not None:
             seen = max(0, active_count(p, now) - int(last.get("active_before") or 0))
             held = max(0, int(last.get("slots") or 0) - seen)
             if held:
-                reserved += held
-                continue
+                age = now - then
+                pending = age < dt.timedelta(minutes=12)
+                if not pending:
+                    run_status = gh.workflow_status(p.name, str(last.get("reservation_id") or ""))
+                    pending = run_status in {"queued", "in_progress", "waiting", "pending", "requested"}
+                if pending:
+                    reserved += held
+                    continue
         eligible.append(p)
     # Ineligible providers still consume their real ACTIVE slots, and all
     # queued-but-not-yet-ACTIVE reservations reduce global free capacity.
@@ -115,24 +137,27 @@ def run(gh: GitHub, now: dt.datetime, reason: str = "shared-supervisor") -> dict
         for q in providers if q not in eligible
     ]
     allocations = allocate(eligible + shadow, now, pool_size=max(0, 3 - reserved))
-    changes = False
+    plans = []
     for p in providers:
         cap = allocations[p.name]
         if cap == 0:
             continue
+        reservation_id = uuid.uuid4().hex
         dispatch_state[p.name] = {
             "task_id": p.task_id,
             "at": now.isoformat(timespec="seconds"),
             "active_before": active_count(p, now),
             "slots": cap,
+            "reservation_id": reservation_id,
         }
-        # Reserve the chance before launching another workflow.
-        changes = True
-    if changes:
+        plans.append((p, cap, reservation_id))
+
+    # Durable intent is written *before* any external dispatch. If a master
+    # dies here, a successor can re-read and safely retry after checking runs.
+    if plans:
         gh.write(STATE, state, sha)
-        for p in providers:
-            if allocations[p.name]:
-                gh.dispatch(p.name, p.task_id, active_count(p, now) + allocations[p.name], reason)
+        for p, cap, reservation_id in plans:
+            gh.dispatch(p.name, p.task_id, active_count(p, now) + cap, reason, reservation_id)
     return allocations
 
 
