@@ -24,7 +24,7 @@ class PoolTests(unittest.TestCase):
         return Provider(name, "task", "RUNNING", list(files))
 
     def test_single_provider_uses_all_three_slots(self):
-        self.assertEqual(allocate([self.provider("baidu", self.file("READY"))], self.now), {"baidu": 3})
+        self.assertEqual(allocate([Provider("baidu", "task", "RUNNING", [self.file("READY")], files_total=3)], self.now), {"baidu": 3})
 
     def test_baidu_quark_share_one_global_pool(self):
         b = self.provider("baidu", self.file("ACTIVE", age=5), self.file("READY"))
