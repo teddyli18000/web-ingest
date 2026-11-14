@@ -140,10 +140,11 @@ func runRelayStep(ctx context.Context, input relayStepInput, baiduCookie, access
 		}, nil
 	}
 
-	source, err := baidu.NewClient(baiduCookie)
-	if err != nil || !source.HasLoginCookies() {
+	baiduClient, err := baidu.NewClient(baiduCookie)
+	if err != nil || !baiduClient.HasLoginCookies() {
 		return relayStepOutput{ErrorKind: "auth"}, baidu.ErrAuthRequired
 	}
+	source := newBaiduSignedRangeSource(baiduClient, baiduCookie, input.Size)
 
 	sessionURI := ""
 	sealed := strings.TrimSpace(input.SessionSealed)
@@ -153,6 +154,7 @@ func runRelayStep(ctx context.Context, input relayStepInput, baiduCookie, access
 			kind := "retryable"
 			if errors.Is(reconcileErr, errDriveDestinationConflict) { kind = "reconcile_required" }
 			if errors.Is(reconcileErr, errDriveAuthRequired) || errors.Is(reconcileErr, baidu.ErrAuthRequired) { kind = "auth" }
+			if errors.Is(reconcileErr, errBaiduDownloadDenied) { kind = "source_denied" }
 			return relayStepOutput{ErrorKind:kind}, reconcileErr
 		}
 		if disposition == destinationAdopted {return reconciled,nil}
@@ -197,6 +199,8 @@ func runRelayStep(ctx context.Context, input relayStepInput, baiduCookie, access
 					output.ErrorKind = "reconcile_required"
 				} else if errors.Is(reconcileErr, errDriveAuthRequired) || errors.Is(reconcileErr, baidu.ErrAuthRequired) {
 					output.ErrorKind = "auth"
+				} else if errors.Is(reconcileErr, errBaiduDownloadDenied) {
+					output.ErrorKind = "source_denied"
 				} else {
 					output.ErrorKind = "retryable"
 				}
@@ -215,6 +219,8 @@ func runRelayStep(ctx context.Context, input relayStepInput, baiduCookie, access
 		}
 		if errors.Is(relayErr, errDriveAuthRequired) || errors.Is(relayErr, baidu.ErrAuthRequired) {
 			output.ErrorKind = "auth"
+		} else if errors.Is(relayErr, errBaiduDownloadDenied) {
+			output.ErrorKind = "source_denied"
 		} else {
 			output.ErrorKind = "retryable"
 		}
@@ -254,6 +260,7 @@ func classifyRelayStepError(err error) string {
 	if errors.Is(err, errDriveAuthRequired) || errors.Is(err, baidu.ErrAuthRequired) {
 		return "auth"
 	}
+	if errors.Is(err, errBaiduDownloadDenied) { return "source_denied" }
 	return "retryable"
 }
 
