@@ -26,7 +26,7 @@ Implemented:
 
 The first live acceptance succeeded on November 8, 2026: one public-share file (6,065,237 bytes) was uploaded to Google Drive and independently verified, and task-owned Baidu staging was cleaned. The test confirmed end-to-end transfer using a personal Google Cloud OAuth Desktop client, not rclone's retiring shared client. See [AUTHORIZATION.md](AUTHORIZATION.md) for setup.
 
-The November 14 large-file test is **blocked** at Baidu download authorization (`PCS error_code 31326`). An alternative authenticated signed-link read was also refused in a single 4 MiB live probe. The proven PCS path remains intact for earlier working transfers. Explicit provider refusals now stop further automated VM retries; no client imitation or proxy-based workarounds are used. The task checkpoint and Google Drive resumable state remain preserved.
+The November 14 large-file transfer is **blocked** at Baidu download authorization (`PCS error_code 31326`). The same 8-file share failed again after a fresh Release-controlled transfer ([file worker](https://github.com/teddyli18000/web-ingest/actions/runs/43591760136)); a separate **4 MiB PCS Range** read of its staged `08.mp4` was also refused with `31326` ([probe](https://github.com/teddyli18000/web-ingest/actions/runs/43592039163)). An earlier authenticated signed-link 4 MiB read was refused as well. Therefore reducing the 512 MiB source Range alone is not a verified solution. The earlier proven small-file PCS path remains intact, and provider refusals stop further automated retries. The replacement task is `bd-20261114T114727Z-caff29` (0/8); its predecessor was canceled without deleting the retained checkpoints or Drive folders. No download request loop is active.
 
 ## Fixed Release
 
