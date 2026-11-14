@@ -121,7 +121,7 @@ teddyli18000/baidu-drive-mover
 a9e76feb18fe9ca1ac680d0ea555aac684d622de
 ```
 
-That pinned revision supplies the hardened scanner/stager/state/Drive-tree/cleanup code and exact bounded Baidu byte-range reads.
+That pinned revision supplies the hardened scanner/stager/state/Drive-tree/cleanup code. The task-local `mover/relay_locatedownload.go` adapter supplies the verified signed `locatedownload` source (4 MiB CDN ranges) to the existing exact 512 MiB Drive stream, without changing the pinned mover or its standalone Windows behavior.
 
 Task-local files under `baidu-drive/mover/` are Actions adapters, not a forked second product. `repository-integrity.yml` copies them into the pinned module, runs the relevant Go tests, and compiles the action/prepare/relay binaries on Linux.
 
