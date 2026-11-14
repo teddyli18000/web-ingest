@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import sys
+import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 TASK_ROOT = Path(__file__).resolve().parents[1]
@@ -16,6 +18,7 @@ from release_control import (
     QUEUE_START,
     SourceInfo,
     normalize_source_url,
+    process_release,
     queue_lines,
     release_body,
     upsert_readme,
@@ -94,6 +97,25 @@ https://github.com/example/two
         body = release_body()
         self.assertIn(f"{QUEUE_START}\n\n{QUEUE_END}", body)
         self.assertIn("No requests processed yet.", body)
+
+    def test_existing_mirror_does_not_require_upstream_metadata(self):
+        body = f"""# Git Mirror
+{QUEUE_START}
+https://github.com/mhtsec/ARTEX.git
+{QUEUE_END}
+"""
+        with tempfile.TemporaryDirectory() as tmp:
+            data_root = Path(tmp)
+            (data_root / "github.com/mhtsec/ARTEX").mkdir(parents=True)
+            with (
+                patch("release_control.DATA_ROOT", data_root),
+                patch("release_control.source_info", side_effect=AssertionError("metadata lookup must not run")),
+            ):
+                results = process_release(body, "token")
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].status, "already_mirrored")
+        self.assertEqual(results[0].source_url, "https://github.com/mhtsec/ARTEX")
 
     def test_readme_index_upsert_is_deterministic_and_escapes_description(self):
         readme = f"""# Public Git Repository Mirror
