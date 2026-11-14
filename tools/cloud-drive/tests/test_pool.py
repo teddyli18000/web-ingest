@@ -64,6 +64,7 @@ class FakeGitHub:
         self.dispatched = []
         self.write_calls = 0
         self.state = None
+        self.running_preparations = set()
         self.tasks = {
             "baidu": {"id": "task-b", "status": "RUNNING", "files_total": 8, "bytes_done": 0},
             "quark": {"id": "task-q", "status": "RUNNING", "files_total": 1, "bytes_done": 0},
@@ -95,6 +96,9 @@ class FakeGitHub:
         self.write_calls += 1
         self.state = value
 
+    def preparation_is_running(self, provider, issued_at):
+        return provider in self.running_preparations
+
     def dispatch(self, provider, task_id, capacity, reason="shared-supervisor"):
         self.dispatched.append((provider, task_id, capacity))
 
@@ -110,6 +114,25 @@ class SupervisorTests(unittest.TestCase):
         self.assertEqual(gh.write_calls, 1)
         self.assertEqual(run(gh, now + dt.timedelta(minutes=1)), {"baidu": 0, "quark": 0})
         self.assertEqual(len(gh.dispatched), 2)
+
+    def test_queued_prepare_still_owns_slots_after_twelve_minutes(self):
+        from supervisor import run
+        now = dt.datetime(2026, 11, 14, 16, tzinfo=UTC)
+        gh = FakeGitHub(now)
+        gh.running_preparations = {"baidu"}
+        run(gh, now)
+        result = run(gh, now + dt.timedelta(minutes=15))
+        self.assertEqual(result, {"baidu": 0, "quark": 0})
+        self.assertEqual(len(gh.dispatched), 2)
+
+    def test_lost_prepare_dispatch_released_after_grace(self):
+        from supervisor import run
+        now = dt.datetime(2026, 11, 14, 16, tzinfo=UTC)
+        gh = FakeGitHub(now)
+        run(gh, now)
+        result = run(gh, now + dt.timedelta(minutes=15))
+        self.assertEqual(result, {"baidu": 2, "quark": 1})
+        self.assertEqual(len(gh.dispatched), 4)
 
 if __name__ == "__main__":
     unittest.main()
