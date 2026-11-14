@@ -90,33 +90,27 @@ def run(gh: GitHub, now: dt.datetime) -> dict[str, int]:
     state, sha = gh.read(STATE)
     state = state or {"schema": 1, "dispatched": {}}
     dispatch_state = state["dispatched"]
-    # A dispatch holds its assigned slots while its provider preparation job
-    # is queued/starting. At least 12 minutes between attempts to that provider.
+    # While an Actions prepare run is queued, its requested capacity is
+    # reserved. Confirmed ACTIVE leases consume that reservation automatically.
+    reserved = 0
     eligible = []
     for p in providers:
         last = dispatch_state.get(p.name, {})
-        if last.get("task_id") == p.task_id:
-            then = parse_time(last.get("at"))
-            if then and now - then < dt.timedelta(minutes=12):
-                # A new confirmed active lease is a sufficient handoff receipt.
-                previous_active = int(last.get("active_before") or 0)
-                if active_count(p, now) <= previous_active:
-                    continue
+        then = parse_time(last.get("at")) if last.get("task_id") == p.task_id else None
+        if then and now - then < dt.timedelta(minutes=12):
+            seen = max(0, active_count(p, now) - int(last.get("active_before") or 0))
+            held = max(0, int(last.get("slots") or 0) - seen)
+            if held:
+                reserved += held
+                continue
         eligible.append(p)
-    # All providers, including ones with a pending prepare dispatch, consume
-    # their currently confirmed active worker slots globally.
-    allocations = allocate(providers, now)
-    allowed = {p.name for p in eligible}
-    for p in providers:
-        if p.name not in allowed:
-            allocations[p.name] = 0
-    # Reallocate unused allocations only among eligible providers, preserving
-    # live worker counts from ineligible providers.
-    if len(eligible) < len(providers):
-        extra = allocate([*eligible, *[
-            Provider(name=q.name, task_id=q.task_id, task_status="IDLE",
-                     records=q.records) for q in providers if q.name not in allowed]], now)
-        allocations = {p.name: extra.get(p.name, 0) for p in providers}
+    # Ineligible providers still consume their real ACTIVE slots, and all
+    # queued-but-not-yet-ACTIVE reservations reduce global free capacity.
+    shadow = [
+        Provider(q.name, q.task_id, "IDLE", q.records)
+        for q in providers if q not in eligible
+    ]
+    allocations = allocate(eligible + shadow, now, pool_size=max(0, 3 - reserved))
     changes = False
     for p in providers:
         cap = allocations[p.name]
@@ -127,6 +121,7 @@ def run(gh: GitHub, now: dt.datetime) -> dict[str, int]:
             "task_id": p.task_id,
             "at": now.isoformat(timespec="seconds"),
             "active_before": active_count(p, now),
+            "slots": cap,
         }
         # Reserve the chance before launching another workflow.
         changes = True
