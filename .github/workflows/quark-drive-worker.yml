@@ -1,0 +1,60 @@
+name: Quark Drive Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_id:
+        description: Current Quark transfer task ID
+        required: false
+        type: string
+      reason:
+        description: Shared Master handoff reason
+        required: false
+        type: string
+        default: shared-supervisor
+      max_workers:
+        description: Global Master assigned provider cap
+        required: false
+        type: string
+        default: '3'
+
+permissions:
+  contents: write
+  actions: write
+  issues: write
+
+concurrency:
+  group: quark-drive-live-state
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      PYTHONDONTWRITEBYTECODE: '1'
+      QUARK_DRIVE_QUARK_SESSION: ${{ secrets.QUARK_DRIVE_QUARK_SESSION }}
+      QUARK_DRIVE_RCLONE_CONFIG: ${{ secrets.QUARK_DRIVE_RCLONE_CONFIG }}
+      QUARK_DRIVE_STATE_KEY: ${{ secrets.QUARK_DRIVE_STATE_KEY }}
+      CLOUD_DRIVE_MAX_WORKERS: ${{ inputs.max_workers || '3' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            quark-drive
+      - name: Install encrypted-session dependency
+        run: python3 -m pip install 'cryptography==46.0.4'
+      - name: Load Quark/Google authorization
+        run: python3 quark-drive/auth_provision.py prepare
+      - name: Prepare staged Quark files and fill assigned worker slots
+        env:
+          TASK_ID: ${{ inputs.task_id }}
+          REASON: ${{ inputs.reason }}
+        run: python3 quark-drive/prepare_worker.py --task-id "$TASK_ID" --reason "$REASON"
+      - name: Notify on login-state changes
+        if: always()
+        run: python3 quark-drive/auth_notice.py

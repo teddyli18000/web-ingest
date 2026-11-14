@@ -1,0 +1,74 @@
+name: Quark Drive File Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_id:
+        description: Active Quark transfer task ID
+        required: true
+        type: string
+      file_id:
+        description: File-scoped relay ID
+        required: true
+        type: string
+      lease_id:
+        description: Current durable worker lease
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: quark-drive-file-${{ inputs.task_id }}-${{ inputs.file_id }}
+  cancel-in-progress: false
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            quark-drive
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: quark-drive/mover/go.mod
+      - name: Build standalone Quark streaming relay
+        run: |
+          cd quark-drive/mover
+          go build -o "$RUNNER_TEMP/quark-drive-relay" .
+          echo "QUARK_DRIVE_RELAY_BIN=$RUNNER_TEMP/quark-drive-relay" >> "$GITHUB_ENV"
+      - name: Install encrypted-session dependency
+        run: python3 -m pip install 'cryptography==46.0.4'
+      - name: Load Quark/Google authorization
+        env:
+          QUARK_DRIVE_QUARK_SESSION: ${{ secrets.QUARK_DRIVE_QUARK_SESSION }}
+          QUARK_DRIVE_RCLONE_CONFIG: ${{ secrets.QUARK_DRIVE_RCLONE_CONFIG }}
+          QUARK_DRIVE_STATE_KEY: ${{ secrets.QUARK_DRIVE_STATE_KEY }}
+        run: python3 quark-drive/auth_provision.py relay
+      - name: Transfer one file with renewable lease
+        env:
+          TASK_ID: ${{ inputs.task_id }}
+          FILE_ID: ${{ inputs.file_id }}
+          LEASE_ID: ${{ inputs.lease_id }}
+        run: |
+          python3 quark-drive/lease_heartbeat.py --task-id "$TASK_ID" --file-id "$FILE_ID" --lease-id "$LEASE_ID" &
+          monitor_pid=$!
+          trap 'kill "$monitor_pid" 2>/dev/null || true; wait "$monitor_pid" 2>/dev/null || true' EXIT
+          python3 quark-drive/relay_worker.py --task-id "$TASK_ID" --file-id "$FILE_ID" --lease-id "$LEASE_ID"
+      - name: Hand off to the shared Master
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run cloud-drive-supervisor.yml --repo "$GITHUB_REPOSITORY" --ref main \
+            -f "reason=file-worker-completed"
