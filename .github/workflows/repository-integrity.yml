@@ -25,6 +25,8 @@ on:
       - "!.github/workflows/*diagnostic*.yaml"
       - "!.github/workflows/git-mirror-*.yml"
       - "!.github/workflows/git-mirror-*.yaml"
+      # Durable Git Mirror control plane; re-include after legacy one-shot exclusions.
+      - ".github/workflows/git-mirror-reconcile.yml"
       # Despite its name, this is durable repository infrastructure.
       - ".github/workflows/temp-work-cleanup.yml"
       - ".github/workflows/temp-work-cleanup.yaml"
@@ -61,6 +63,7 @@ on:
       - "!.github/workflows/*diagnostic*.yaml"
       - "!.github/workflows/git-mirror-*.yml"
       - "!.github/workflows/git-mirror-*.yaml"
+      - ".github/workflows/git-mirror-reconcile.yml"
       - ".github/workflows/temp-work-cleanup.yml"
       - ".github/workflows/temp-work-cleanup.yaml"
       - "*/README.md"
