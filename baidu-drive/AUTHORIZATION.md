@@ -51,7 +51,7 @@ python $setup
 
 The helper opens a **dedicated Chrome profile** (saved at `%LOCALAPPDATA%\web-ingest\baidu-drive-browser`) and visits Baidu Netdisk. Sign in in the window that appears. It waits until the actual Baidu login status is valid, then sends a browser-session snapshot to the GitHub Actions Secret `BAIDU_DRIVE_BAIDU_SESSION` **through gh CLI standard input**, never through a Release, Issue, commit or CLI argument.
 
-On the first run it also securely initializes `BAIDU_DRIVE_STATE_KEY` and, if absent, `BAIDU_DRIVE_RCLONE_CONFIG` from your local rclone remote. On subsequent runs it **preserves the encryption key and Google authorization**. The helper dispatches `baidu-drive-worker.yml` with `reason=auth-updated`; any paused transfer automatically resumes at its existing checkpoint.
+On the first run it also securely initializes `BAIDU_DRIVE_STATE_KEY` and, if absent, `BAIDU_DRIVE_RCLONE_CONFIG` from your local rclone remote. On subsequent runs it **preserves the encryption key and Google authorization**. The helper wakes the shared `cloud-drive-supervisor.yml` with `reason=auth-updated`; any paused transfer automatically resumes at its existing checkpoint.
 
 ## After setup
 
