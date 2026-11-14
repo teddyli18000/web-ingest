@@ -43,5 +43,22 @@ class PrepTests(unittest.TestCase):
         self.assertEqual(done,{"b"})
         c.delete_staged.assert_called_once_with(["qb"])
 
+    def test_superseded_master_cannot_stage_quark_files(self):
+        task_id = "qk-20261114T160000Z-abcd"
+        gh = mock.Mock()
+        gh.read_json.side_effect = [
+            ({"active_task": task_id}, None),
+            ({"schema": 1, "dispatched": {"quark": {
+                "task_id": task_id, "reservation_id": "new-master"
+            }}}, None),
+        ]
+        client = mock.Mock()
+        folders = mock.Mock()
+        with mock.patch.dict("os.environ", {"CLOUD_DRIVE_RESERVATION_ID": "old-master"}):
+            self.assertEqual(p.run(gh, mock.Mock(), task_id, "shared-supervisor", client, folders, 3), 0)
+        client.share_token.assert_not_called()
+        folders.folder.assert_not_called()
+
+
 if __name__=="__main__":
     unittest.main()
