@@ -320,8 +320,29 @@ def subprocess_step(record: dict[str, Any]) -> tuple[int, dict[str, Any]]:
         raise WorkerError(f"relay step output is invalid: {exc}") from None
     if not isinstance(value, dict):
         raise WorkerError("relay step output is not an object")
-    value.pop("message", None)
+    message = str(value.pop("message", "") or "")
+    if completed.returncode != 0:
+        print(f"Relay step failed ({value.get('error_kind', 'unknown')}): {public_relay_diagnostic(message)}.")
     return completed.returncode, value
+
+
+def public_relay_diagnostic(message: str) -> str:
+    text = message.lower()
+    source = (
+        "Baidu file range" if "baidu" in text or "source" in text or "relay range" in text else
+        "Google Drive" if "drive" in text or "resumable" in text else
+        "upstream transport"
+    )
+    code = next((str(n) for n in (400, 401, 403, 404, 409, 429, 500, 502, 503, 504) if f"http {n}" in text), "")
+    cause = (
+        f"HTTP {code}" if code else
+        "unexpected EOF" if "eof" in text else
+        "timeout" if "timeout" in text or "deadline exceeded" in text else
+        "connection reset" if "connection reset" in text else
+        "connection refused" if "connection refused" in text else
+        "request failure"
+    )
+    return f"{source}: {cause}"
 
 
 def write_status_output(status: str) -> None:
