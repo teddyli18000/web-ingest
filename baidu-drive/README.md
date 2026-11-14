@@ -12,7 +12,7 @@ Implemented:
 - authenticated Baidu browser-share scanning, staging, cleanup and bounded-range download;
 - durable task/SQLite checkpoints and file-scoped relay state;
 - scan, isolated Baidu staging, Drive tree creation, verified-result import, and guarded cleanup through the pinned mover core;
-- exact bounded Baidu byte ranges;
+- signed Baidu `locatedownload` and exact 4 MiB source ranges inside Drive resumable upload windows;
 - direct Baidu response-body -> Google Drive resumable streaming;
 - 512 MiB network windows without whole-file or whole-chunk disk buffering;
 - up to three independent file workers with file-scoped leases;
@@ -26,7 +26,7 @@ Implemented:
 
 The first live acceptance succeeded on November 8, 2026: one public-share file (6,065,237 bytes) was uploaded to Google Drive and independently verified, and task-owned Baidu staging was cleaned. The test confirmed end-to-end transfer using a personal Google Cloud OAuth Desktop client, not rclone's retiring shared client. See [AUTHORIZATION.md](AUTHORIZATION.md) for setup.
 
-The November 14 transfer of eight large files remains **BLOCKED**, at 0/8 files and 0/9,517,870,965 bytes. New task `bd-20261114T114727Z-caff29` was created after the prior blocked task was canceled; the new task failed on its first large-file read ([worker](https://github.com/teddyli18000/web-ingest/actions/runs/43591760136)). The existing Drive folder, staged source, and encrypted resumable checkpoint are retained. Automated retries stop after a provider refusal.
+The November 14 transfer initially **BLOCKED**, at 0/8 files and 0/9,517,870,965 bytes. New task `bd-20261114T114727Z-caff29` was created after the prior blocked task was canceled; the new task failed on its first large-file read ([worker](https://github.com/teddyli18000/web-ingest/actions/runs/43591760136)). The existing Drive folder, staged source, and encrypted resumable checkpoint are retained. Automated retries stop after a provider refusal.
 
 The provider failure was isolated by several *read-only*, bounded 4 MiB probes on GitHub-hosted runners:
 - Existing Chrome UA against the staged PCS endpoint: HTTP 403, `error_code=31326`, **`hitcode=119`** ([observed response](https://github.com/teddyli18000/web-ingest/actions/runs/43594380069)). AList documentation associates this hitcode with a disallowed browser UA.
@@ -34,7 +34,11 @@ The provider failure was isolated by several *read-only*, bounded 4 MiB probes o
 - The previously implemented authenticated `/api/filemetas?dlink=1` source generated a signed link. The old Chrome-UA signed-range probe was refused ([run](https://github.com/teddyli18000/web-ingest/actions/runs/43582096695)), and a read-only replay using netdisk UA also generated metadata but had its actual signed-byte-range request refused ([run](https://github.com/teddyli18000/web-ingest/actions/runs/43594797407)).
 - A 4 MiB PCS read with the original UA also failed, so shrinking the 512 MiB relay window does not solve the authorization problem ([probe](https://github.com/teddyli18000/web-ingest/actions/runs/43592039163)).
 
-**Conclusion:** The existing small-file PCS success does not establish that the same API path is authorized for large files. The tested large-file download identity/signature flows are rejected; changing only User-Agent, range size, or using the old signed dlink does not restore access. The UA comparison used the same runner network; there is no evidence to change proxy or IP routing. A verified large-file authorized download mechanism is required before restarting the transfer. The 3-worker scheduler, Drive resumable logic, and checkpoint rules are unchanged.
+**Recovery (November 14, 2026):** BaiduPCS-Go's `method=locatedownload` obtains an authenticated account UK, signs the request with the existing BDUSS session, and returns a valid CDN download link. The same previously blocked `08.mp4` source returned an exact HTTP 206 for its first 4 MiB on GitHub Actions ([isolated protocol proof](https://github.com/teddyli18000/web-ingest/actions/runs/43597234310), [production Go-source proof](https://github.com/teddyli18000/web-ingest/actions/runs/43597976581)). No IP or proxy change was needed.
+
+The production relay now uses the signed `locatedownload` source, preserving the normal direct response-body-to-Drive upload path. The Baidu CDN side reads in exact **4 MiB segments**; Drive still receives its original **512 MiB resumable upload windows**. The original concurrency cap (three independent files), leases, Drive-confirmed offsets, sealed sessions, and streaming-MD5 evidence are unchanged. Explicit task `retry` can now re-arm a file previously marked permanently failed *only* for a known `source_denied` response, without discarding its upload checkpoint. [Repository integrity CI](https://github.com/teddyli18000/web-ingest/actions/runs/43598274981) passed.
+
+The existing task `bd-20261114T114727Z-caff29` was resumed in place ([recovery Action](https://github.com/teddyli18000/web-ingest/actions/runs/43598376541)); follow the fixed Release for its live status. The isolated probes do not themselves count as a verified Google Drive upload.
 
 ## Fixed Release
 
