@@ -1,0 +1,383 @@
+#!/usr/bin/env python3
+"""Lease-bound file worker for direct Quark Range -> Drive relay steps."""
+from __future__ import annotations
+
+import argparse
+import copy
+import datetime as dt
+import json
+import os
+import pathlib
+import re
+import random
+import subprocess
+import time
+from typing import Any, Callable
+
+import auth_provision
+import relay_control
+import relay_state
+import scheduler
+
+MAX_STEP_OUTPUT_BYTES = 1 << 20
+DEFAULT_RETRY_LIMIT = 3
+
+
+class WorkerError(RuntimeError):
+    pass
+
+
+def public_error(kind: str) -> str:
+    return {
+        "auth": "Relay authentication is unavailable or expired.",
+        "retryable": "Relay transport remained unavailable after bounded retries.",
+        "source_denied": "Quark refused the authenticated file download. Automatic retries stopped.",
+        "session_expired": "Drive resumable session expired before its destination could be reconciled.",
+        "session_absent": "Expired Drive session has no destination object; a fresh session may start safely.",
+        "reconcile_required": "Drive destination is ambiguous or conflicts with the Quark source.",
+        "state": "Encrypted relay capability state could not be opened.",
+        "input": "Relay worker input was rejected.",
+        "zero_file_pending": "Zero-byte Drive creation path is not enabled yet.",
+        "runtime": "Relay runtime inputs are unavailable in this worker.",
+    }.get(kind, "Relay worker stopped safely.")
+
+
+def clear_proven_absent_session(
+    record: dict[str, Any], lease_id: str, now: dt.datetime
+) -> dict[str, Any]:
+    """Clear session-scoped state only after Drive proved no final object exists."""
+    value = copy.deepcopy(record)
+    relay_state.require_lease(value, lease_id)
+    value["session_sealed"] = None
+    value["confirmed_offset"] = 0
+    value["hash_offset"] = 0
+    value["md5_state"] = None
+    value["computed_md5"] = None
+    value["heartbeat_at"] = relay_state.now_iso(now)
+    value["updated_at"] = value["heartbeat_at"]
+    value["last_error"] = ""
+    return value
+
+
+def apply_step_output(
+    record: dict[str, Any],
+    lease_id: str,
+    output: dict[str, Any],
+    now: dt.datetime,
+) -> dict[str, Any]:
+    value = record
+    relay_state.require_lease(value, lease_id)
+
+    sealed = str(output.get("session_sealed") or "").strip()
+    if sealed:
+        existing = str(value.get("session_sealed") or "").strip()
+        if not existing:
+            value = relay_state.attach_session(value, lease_id, sealed, now)
+        elif existing != sealed:
+            raise WorkerError("relay step returned an unexpected replacement session")
+
+    confirmed = int(output.get("confirmed_offset") or 0)
+    hashed = int(output.get("hash_offset") or 0)
+    state_text = str(output.get("md5_state") or "").strip() or None
+    computed = str(output.get("computed_md5") or "").strip() or None
+
+    # A trusted checkpoint always has Drive and MD5 state aligned. It may move
+    # backward because Drive remote truth is authoritative over a stale repo
+    # hint; the Go relay rebuilds the hash state to that proven remote offset.
+    if confirmed == hashed:
+        current_confirmed = int(value.get("confirmed_offset") or 0)
+        current_hash = int(value.get("hash_offset") or 0)
+        has_new_checkpoint = (
+            confirmed != current_confirmed
+            or hashed != current_hash
+            or state_text != (str(value.get("md5_state") or "").strip() or None)
+            or computed != (str(value.get("computed_md5") or "").strip() or None)
+        )
+        # If an early status request failed, Go can return its zero-value
+        # result before it has remote evidence. Do not let that erase a nonzero
+        # checkpoint. A genuine remote rewind carries a marshaled MD5 state.
+        trusted = bool(
+            output.get("complete")
+            or state_text
+            or computed
+            or confirmed == current_confirmed
+        )
+        if (has_new_checkpoint or output.get("complete")) and trusted:
+            value = relay_state.apply_relay_checkpoint(
+                value,
+                lease_id,
+                confirmed,
+                hashed,
+                state_text,
+                computed,
+                now,
+            )
+
+    if bool(output.get("complete")):
+        value = relay_state.complete(
+            value,
+            lease_id,
+            str(output.get("drive_file_id") or ""),
+            str(output.get("drive_md5") or ""),
+            str(output.get("computed_md5") or ""),
+            now,
+        )
+    return value
+
+
+def stop_with_failure(
+    repo: Any,
+    task_id: str,
+    file_id: str,
+    lease_id: str,
+    now: dt.datetime,
+    kind: str,
+    *,
+    permanent: bool,
+) -> str:
+    repo.mutate_record(
+        task_id,
+        file_id,
+        lambda current: relay_state.fail(
+            current,
+            lease_id,
+            now,
+            public_error(kind),
+            permanent=permanent,
+        ),
+        f"quark-drive: stop relay file {file_id}",
+    )
+    return relay_state.FAILED_PERMANENT if permanent else relay_state.FAILED_RETRYABLE
+
+
+def run_worker_loop(
+    repo: Any,
+    task_id: str,
+    file_id: str,
+    lease_id: str,
+    step: Callable[[dict[str, Any]], tuple[int, dict[str, Any]]],
+    *,
+    now_fn: Callable[[], dt.datetime] | None = None,
+    monotonic_fn: Callable[[], float] | None = None,
+    sleep_fn: Callable[[float], None] | None = None,
+    soft_runtime_seconds: int = scheduler.DEFAULT_SOFT_RUNTIME_SECONDS,
+    retry_limit: int = DEFAULT_RETRY_LIMIT,
+) -> str:
+    now_fn = now_fn or (lambda: dt.datetime.now(dt.timezone.utc))
+    monotonic_fn = monotonic_fn or time.monotonic
+    sleep_fn = sleep_fn or time.sleep
+    started = monotonic_fn()
+    consecutive_retryable = 0
+
+    while True:
+        record, _ = repo.read_record(task_id, file_id)
+        if record is None:
+            raise WorkerError("relay file state disappeared")
+        relay_state.require_lease(record, lease_id)
+
+        if monotonic_fn() - started >= soft_runtime_seconds:
+            repo.mutate_record(
+                task_id,
+                file_id,
+                lambda current: relay_state.pause(current, lease_id, now_fn(), "soft runtime boundary"),
+                f"quark-drive: pause relay file {file_id} at soft boundary",
+            )
+            return relay_state.PAUSED
+
+        try:
+            returncode, output = step(record)
+        except WorkerError:
+            return stop_with_failure(
+                repo,
+                task_id,
+                file_id,
+                lease_id,
+                now_fn(),
+                "runtime",
+                permanent=False,
+            )
+        if not isinstance(output, dict):
+            return stop_with_failure(
+                repo,
+                task_id,
+                file_id,
+                lease_id,
+                now_fn(),
+                "runtime",
+                permanent=False,
+            )
+
+        kind = str(output.get("error_kind") or "").strip()
+        if kind == "session_absent":
+            # The Go relay queried the exact destination and proved that the
+            # expired session did not leave a final object. Its partial upload
+            # is no longer usable, so reset only session-scoped progress and
+            # let the next loop create a fresh resumable session.
+            repo.mutate_record(
+                task_id,
+                file_id,
+                lambda current: clear_proven_absent_session(
+                    current, lease_id, now_fn()
+                ),
+                f"quark-drive: reset proven-absent Drive session for {file_id}",
+            )
+            consecutive_retryable = 0
+            continue
+
+        if kind in {"session_expired", "reconcile_required"}:
+            # session_expired is kept as a conservative fallback for an older
+            # relay binary. Current code emits reconcile_required only when an
+            # exact destination query found ambiguous/conflicting evidence.
+            repo.mutate_record(
+                task_id,
+                file_id,
+                lambda current: relay_state.block_reconcile(
+                    current,
+                    lease_id,
+                    now_fn(),
+                    public_error(kind),
+                ),
+                f"quark-drive: block Drive reconciliation for {file_id}",
+            )
+            return relay_state.BLOCKED_RECONCILE
+
+        repo.mutate_record(
+            task_id,
+            file_id,
+            lambda current: apply_step_output(current, lease_id, output, now_fn()),
+            f"quark-drive: checkpoint relay file {file_id}",
+        )
+
+        if bool(output.get("complete")) and returncode == 0:
+            return relay_state.VERIFIED
+
+        if returncode == 0 and not kind:
+            consecutive_retryable = 0
+            continue
+
+        if kind == "retryable" and consecutive_retryable + 1 < retry_limit:
+            consecutive_retryable += 1
+            base = float(1 << (consecutive_retryable - 1))
+            sleep_fn(random.uniform(base, base * 2.0))
+            continue
+
+        permanent = kind in {"state", "input", "zero_file_pending", "source_denied"}
+        return stop_with_failure(
+            repo,
+            task_id,
+            file_id,
+            lease_id,
+            now_fn(),
+            kind or "retryable",
+            permanent=permanent,
+        )
+
+
+def subprocess_step(record: dict[str, Any]) -> tuple[int, dict[str, Any]]:
+    binary = os.environ.get("QUARK_DRIVE_RELAY_BIN", "").strip()
+    cookie = os.environ.get("QUARK_DRIVE_QUARK_AUTH_FILE", "").strip()
+    token = os.environ.get("QUARK_DRIVE_GOOGLE_ACCESS_TOKEN_FILE", "").strip()
+    key = os.environ.get("QUARK_DRIVE_STATE_KEY_FILE", "").strip()
+    if not all((binary, cookie, token, key)):
+        raise WorkerError("relay runtime authentication inputs are not configured")
+    try:
+        auth_provision.refresh_google_token(
+            pathlib.Path(os.environ["QUARK_DRIVE_RCLONE_CONFIG_FILE"]),
+            pathlib.Path(token),
+            pathlib.Path(os.environ["QUARK_DRIVE_GOOGLE_TOKEN_EXPIRY_FILE"]),
+            pathlib.Path(os.environ["QUARK_DRIVE_RCLONE_BIN"]),
+        )
+    except auth_provision.AuthError as exc:
+        raise WorkerError("Google Drive token refresh failed") from exc
+
+    base = pathlib.Path(os.environ.get("RUNNER_TEMP") or ".") / "quark-drive-relay-work"
+    base.mkdir(parents=True, exist_ok=True)
+    input_path = base / "input.json"
+    output_path = base / "output.json"
+    input_path.write_text(json.dumps(record, ensure_ascii=False) + "\n", encoding="utf-8")
+    os.chmod(input_path, 0o600)
+    try:
+        output_path.unlink()
+    except FileNotFoundError:
+        pass
+
+    completed = subprocess.run(
+        [
+            binary,
+            "--input-json", str(input_path),
+            "--output-json", str(output_path),
+            "--quark-cookie-file", cookie,
+            "--drive-access-token-file", token,
+            "--state-key-file", key,
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    if not output_path.is_file():
+        return completed.returncode or 1, {"error_kind": "retryable"}
+    if output_path.stat().st_size > MAX_STEP_OUTPUT_BYTES:
+        raise WorkerError("relay step output is too large")
+    try:
+        value = json.loads(output_path.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, ValueError) as exc:
+        raise WorkerError(f"relay step output is invalid: {exc}") from None
+    if not isinstance(value, dict):
+        raise WorkerError("relay step output is not an object")
+    message = str(value.pop("message", "") or "")
+    if completed.returncode != 0:
+        print(f"Relay step failed ({value.get('error_kind', 'unknown')}): {public_relay_diagnostic(message)}.")
+    return completed.returncode, value
+
+
+def public_relay_diagnostic(message: str) -> str:
+    text = message.lower()
+    source = (
+        "Quark file range" if "quark" in text or "source" in text or "relay range" in text else
+        "Google Drive" if "drive" in text or "resumable" in text else
+        "upstream transport"
+    )
+    http_status = re.search(r"\bhttp\s+([1-5]\d{2})\b", text)
+    pcs_code = re.search(r"\berror_code\s+(-?\d+)\b", text)
+    cause = (
+        f"HTTP {http_status.group(1)}" if http_status else
+        f"Quark PCS error_code {pcs_code.group(1)}" if pcs_code else
+        "Quark Range not honored" if "did not honor requested range" in text else
+        "invalid Quark Content-Range" if "invalid quark content-range" in text else
+        "range start/end mismatch" if "quark range started at" in text or "quark range ended at" in text else
+        "unexpected EOF" if "eof" in text else
+        "timeout" if "timeout" in text or "deadline exceeded" in text else
+        "connection reset" if "connection reset" in text else
+        "connection refused" if "connection refused" in text else
+        "request failure"
+    )
+    return f"{source}: {cause}"
+
+
+def write_status_output(status: str) -> None:
+    output = os.environ.get("GITHUB_OUTPUT", "").strip()
+    if not output:
+        return
+    with open(output, "a", encoding="utf-8") as handle:
+        print(f"relay_status={status}", file=handle)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--task-id", required=True)
+    parser.add_argument("--file-id", required=True)
+    parser.add_argument("--lease-id", required=True)
+    args = parser.parse_args(argv)
+
+    repo = relay_control.GitHubRepo(
+        os.environ.get("GITHUB_REPOSITORY", ""),
+        os.environ.get("GITHUB_TOKEN", ""),
+    )
+    status = run_worker_loop(repo, args.task_id, args.file_id, args.lease_id, subprocess_step)
+    write_status_output(status)
+    print(f"relay worker stopped in {status}")
+    return 0 if status in {relay_state.VERIFIED, relay_state.PAUSED, relay_state.BLOCKED_RECONCILE} else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
