@@ -8,6 +8,7 @@ import datetime as dt
 import json
 import os
 import pathlib
+import re
 import subprocess
 import time
 from typing import Any, Callable
@@ -333,9 +334,14 @@ def public_relay_diagnostic(message: str) -> str:
         "Google Drive" if "drive" in text or "resumable" in text else
         "upstream transport"
     )
-    code = next((str(n) for n in (400, 401, 403, 404, 409, 429, 500, 502, 503, 504) if f"http {n}" in text), "")
+    http_status = re.search(r"\\bhttp\\s+([1-5]\\d{2})\\b", text)
+    pcs_code = re.search(r"\\berror_code\\s+(-?\\d+)\\b", text)
     cause = (
-        f"HTTP {code}" if code else
+        f"HTTP {http_status.group(1)}" if http_status else
+        f"Baidu PCS error_code {pcs_code.group(1)}" if pcs_code else
+        "Baidu Range not honored" if "did not honor requested range" in text else
+        "invalid Baidu Content-Range" if "invalid baidu content-range" in text else
+        "range start/end mismatch" if "baidu range started at" in text or "baidu range ended at" in text else
         "unexpected EOF" if "eof" in text else
         "timeout" if "timeout" in text or "deadline exceeded" in text else
         "connection reset" if "connection reset" in text else
