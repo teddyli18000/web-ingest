@@ -1,0 +1,28 @@
+name: Baidu relay refill worker slots (one shot)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-baidu-refill-workers.yml
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: baidu-drive-live-state
+  cancel-in-progress: false
+
+jobs:
+  refill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TASK_ID: bd-20261114T114727Z-caff29
+    steps:
+      - name: Dispatch existing master without changing checkpoints
+        run: |
+          gh workflow run baidu-drive-worker.yml             --repo "$GITHUB_REPOSITORY" --ref main             -f "task_id=$TASK_ID" -f "reason=refill-staged-file-slots"
+          echo "Requested serialized master refill for existing task"
