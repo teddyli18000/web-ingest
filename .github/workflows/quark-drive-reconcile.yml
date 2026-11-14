@@ -1,0 +1,168 @@
+name: Quark Drive Reconcile
+
+on:
+  release:
+    types: [edited]
+  push:
+    branches: [main]
+    paths:
+      - 'quark-drive/*.py'
+      - 'quark-drive/*.md'
+      - 'quark-drive/tests/**'
+      - 'quark-drive/mover/**'
+      - '.github/workflows/quark-drive-reconcile.yml'
+      - '.github/workflows/quark-drive-worker.yml'
+      - '.github/workflows/cloud-drive-supervisor.yml'
+      - '.github/workflows/quark-drive-file-worker.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+  issues: write
+
+concurrency:
+  group: quark-drive-live-state
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    if: >-
+      (github.event_name == 'release' &&
+       github.event.release.tag_name == 'quark-drive-live' &&
+       github.actor != 'github-actions[bot]') ||
+      (github.event_name == 'push' && github.actor != 'github-actions[bot]') ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Checkout task control plane
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            quark-drive
+
+      - name: Validate task implementation
+        if: github.event_name == 'push'
+        run: |
+          python3 -m pip install 'cryptography==46.0.4'
+          python3 -m py_compile quark-drive/*.py
+          python3 -m unittest discover -s quark-drive/tests -v
+
+      - name: Capture Release request baseline
+        id: request
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import base64
+          import json
+          import os
+          import re
+          import urllib.parse
+          import urllib.request
+
+          with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as fh:
+              event = json.load(fh)
+          body = ((event.get("release") or {}).get("body") or "")
+          match = re.search(r"(?im)^\s*command\s*[:=]\s*(.*?)\s*$", body)
+          command = (match.group(1).strip().lower() if match else "")
+
+          headers = {
+              "Authorization": f"Bearer {os.environ['GH_TOKEN']}",
+              "Accept": "application/vnd.github+json",
+              "X-GitHub-Api-Version": "2022-11-28",
+          }
+          api = f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}"
+
+          def read_json(path):
+              url = f"{api}/contents/{urllib.parse.quote(path, safe='/')}?ref=main"
+              req = urllib.request.Request(url, headers=headers)
+              with urllib.request.urlopen(req, timeout=30) as response:
+                  item = json.load(response)
+              return json.loads(base64.b64decode(item["content"]).decode("utf-8"))
+
+          runtime = read_json("quark-drive/state/runtime.json")
+          active = str(runtime.get("active_task") or "")
+          attempt = 0
+          if active:
+              task = read_json(f"quark-drive/state/tasks/{active}.json")
+              attempt = int(task.get("attempt") or 0)
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+              print(f"command={command}", file=out)
+              print(f"before_active={active}", file=out)
+              print(f"before_attempt={attempt}", file=out)
+          PY
+
+      - name: Reconcile Release control and durable task state
+        run: python3 quark-drive/controller.py reconcile
+
+      - name: Synchronize fixed login notification Issue
+        if: always()
+        run: python3 quark-drive/auth_notice.py
+
+      - name: Queue master scheduler only for an accepted start or retry
+        if: >-
+          github.event_name == 'release' &&
+          (steps.request.outputs.command == 'start' || steps.request.outputs.command == 'retry')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUEST_COMMAND: ${{ steps.request.outputs.command }}
+          BEFORE_ACTIVE: ${{ steps.request.outputs.before_active }}
+          BEFORE_ATTEMPT: ${{ steps.request.outputs.before_attempt }}
+        run: |
+          python3 - <<'PY'
+          import base64
+          import json
+          import os
+          import subprocess
+          import urllib.parse
+          import urllib.request
+
+          headers = {
+              "Authorization": f"Bearer {os.environ['GH_TOKEN']}",
+              "Accept": "application/vnd.github+json",
+              "X-GitHub-Api-Version": "2022-11-28",
+          }
+          api = f"https://api.github.com/repos/{os.environ['GITHUB_REPOSITORY']}"
+
+          def read_json(path):
+              url = f"{api}/contents/{urllib.parse.quote(path, safe='/')}?ref=main"
+              req = urllib.request.Request(url, headers=headers)
+              with urllib.request.urlopen(req, timeout=30) as response:
+                  item = json.load(response)
+              return json.loads(base64.b64decode(item["content"]).decode("utf-8"))
+
+          command = os.environ["REQUEST_COMMAND"]
+          before_active = os.environ.get("BEFORE_ACTIVE", "")
+          before_attempt = int(os.environ.get("BEFORE_ATTEMPT", "0") or 0)
+          runtime = read_json("quark-drive/state/runtime.json")
+          active = str(runtime.get("active_task") or "")
+          attempt = 0
+          if active:
+              task = read_json(f"quark-drive/state/tasks/{active}.json")
+              attempt = int(task.get("attempt") or 0)
+
+          accepted = (
+              command == "start" and bool(active) and active != before_active
+          ) or (
+              command == "retry" and bool(active) and active == before_active and attempt > before_attempt
+          )
+          if accepted:
+              subprocess.run(
+                  [
+                      "gh", "workflow", "run", "cloud-drive-supervisor.yml",
+                      "--ref", "main",
+
+                  ],
+                  check=True,
+              )
+          PY
