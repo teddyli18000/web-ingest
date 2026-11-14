@@ -16,6 +16,7 @@ Implemented:
 - direct Baidu response-body -> Google Drive resumable streaming;
 - 512 MiB network windows without whole-file or whole-chunk disk buffering;
 - up to three independent file workers with file-scoped leases;
+- staging refills the available worker slots instead of waiting for one isolated batch to finish;
 - cross-VM Drive offset and streaming-MD5 recovery;
 - AES-256-GCM sealing of resumable-session URIs, bound to task + file identity;
 - encrypted rotating browser Cookie state, Google OAuth keepalive, and fixed Issue login notification;
@@ -203,7 +204,7 @@ Owns Release protocol and task-level control state. It dispatches the master sch
 
 ### `baidu-drive-worker.yml`
 
-The **single master scheduler**. It serializes SQLite/control mutations, imports verified file results, performs guarded cleanup, prepares the next staging batch, creates/reconciles the Drive directory tree, and fills free file-worker slots. It also wakes on every file-worker workflow completion.
+The **single master scheduler**. It serializes SQLite/control mutations, imports verified file results, performs guarded cleanup, prepares enough bounded staging batches to feed up to three file workers, creates/reconciles the Drive directory tree, and fills free file-worker slots. It also wakes on every file-worker workflow completion.
 
 ### `baidu-drive-auth-keepalive.yml`
 
