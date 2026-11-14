@@ -119,7 +119,7 @@ class SupervisorTests(unittest.TestCase):
         from supervisor import run
         now = dt.datetime(2026, 11, 14, 16, tzinfo=UTC)
         gh = FakeGitHub(now)
-        gh.running_preparations = {"baidu"}
+        gh.running_preparations = {"baidu", "quark"}
         run(gh, now)
         result = run(gh, now + dt.timedelta(minutes=15))
         self.assertEqual(result, {"baidu": 0, "quark": 0})
