@@ -1,0 +1,62 @@
+name: temp-git-mirror-e2e
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/temp-git-mirror-e2e.yml'
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Queue existing mirror and dispatch persistent reconciler
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_id="$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/git-mirror-live" --jq '.id')"
+          body_file="$RUNNER_TEMP/git-mirror-e2e-body.md"
+          printf '%s\n' \
+            '# Git Mirror' \
+            '' \
+            'Paste one public HTTPS Git repository URL per line in **Queue**, then choose **Update release**.' \
+            '' \
+            'Accepted forms include `https://github.com/owner/repo`, the same URL ending in `.git`, and trailing whitespace or `/`. Multiple repositories may be queued at once. Existing mirrors are reported but never overwritten automatically.' \
+            '' \
+            '## Queue' \
+            '' \
+            '<!-- mirror-queue:start -->' \
+            'https://github.com/mhtsec/ARTEX.git' \
+            '<!-- mirror-queue:end -->' \
+            '' \
+            '## Last result' \
+            '' \
+            '<!-- mirror-result:start -->' \
+            'E2E probe queued.' \
+            '<!-- mirror-result:end -->' > "$body_file"
+          jq -n --rawfile body "$body_file" '{body:$body}' > "$RUNNER_TEMP/release.json"
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$release_id" --input "$RUNNER_TEMP/release.json" >/dev/null
+          gh workflow run git-mirror-reconcile.yml --ref main
+
+      - name: Self-clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/temp-git-mirror-e2e.yml
+          git commit -m "chore(git-mirror): remove E2E probe"
+          git pull --rebase origin main
+          git push origin HEAD:main
