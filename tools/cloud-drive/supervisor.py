@@ -116,7 +116,6 @@ def run(gh: GitHub, now: dt.datetime) -> dict[str, int]:
         cap = allocations[p.name]
         if cap == 0:
             continue
-        local_limit = active_count(p, now) + cap
         dispatch_state[p.name] = {
             "task_id": p.task_id,
             "at": now.isoformat(timespec="seconds"),
