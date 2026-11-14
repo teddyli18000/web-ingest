@@ -1,0 +1,89 @@
+name: Baidu Drive 4 MiB PCS range probe (one shot)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/temp-baidu-drive-pcs-range-probe.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      BAIDU_DRIVE_BAIDU_SESSION: ${{ secrets.BAIDU_DRIVE_BAIDU_SESSION }}
+      BAIDU_DRIVE_RCLONE_CONFIG: ${{ secrets.BAIDU_DRIVE_RCLONE_CONFIG }}
+      BAIDU_DRIVE_STATE_KEY: ${{ secrets.BAIDU_DRIVE_STATE_KEY }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Checkout Baidu Drive task
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+          sparse-checkout: |
+            baidu-drive
+      - name: Checkout pinned Baidu mover core
+        uses: actions/checkout@v4
+        with:
+          repository: teddyli18000/baidu-drive-mover
+          ref: a9e76feb18fe9ca1ac680d0ea555aac684d622de
+          path: .probe-core
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: .probe-core/go.mod
+          cache-dependency-path: .probe-core/go.sum
+      - name: Provision existing authorization
+        run: |
+          python3 -m pip install "cryptography==46.0.4"
+          python3 baidu-drive/auth_provision.py relay
+      - name: Read exactly one 4 MiB source range without Drive upload
+        run: |
+          mkdir -p .probe-core/cmd/baidu-range-probe
+          cat > .probe-core/cmd/baidu-range-probe/main.go <<'GO'
+          package main
+          import (
+              "context"
+              "errors"
+              "fmt"
+              "io"
+              "os"
+              "strings"
+              "github.com/teddyli18000/baidu-drive-mover/internal/baidu"
+          )
+          func main() {
+              cookie, err := os.ReadFile(os.Getenv("BAIDU_DRIVE_BAIDU_AUTH_FILE"))
+              if err != nil { panic("missing ephemeral Baidu auth") }
+              client, err := baidu.NewClient(strings.TrimSpace(string(cookie)))
+              if err != nil { panic("cannot initialize Baidu client") }
+              const start int64 = 0
+              const end int64 = (4 << 20) - 1
+              const total int64 = 1302042184
+              path := "/BaiduDriveMover/task-20261114T114758Z-5e9b9fb6c6b0/b-67e2afed8888d3835989/08.mp4"
+              stream, err := client.OpenDownloadRange(context.Background(), path, start, end)
+              if err != nil {
+                  var pcs *baidu.PCSRemoteError
+                  if errors.As(err, &pcs) {
+                      fmt.Printf("4 MiB PCS source request rejected with code %d\n", pcs.Code)
+                  } else {
+                      fmt.Printf("4 MiB PCS source request failed (%T)\n", err)
+                  }
+                  os.Exit(1)
+              }
+              defer stream.Body.Close()
+              if stream.Start != start || stream.End != end || stream.Total != total || stream.Remaining != end-start+1 {
+                  panic("4 MiB PCS range response does not match source metadata")
+              }
+              n, err := io.CopyN(io.Discard, stream.Body, end-start+1)
+              if err != nil { panic("4 MiB PCS response could not be read completely") }
+              fmt.Printf("4 MiB PCS source read passed; exact bytes=%d\n", n)
+          }
+          GO
+          cd .probe-core
+          go run ./cmd/baidu-range-probe
