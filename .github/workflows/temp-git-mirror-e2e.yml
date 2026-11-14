@@ -1,0 +1,88 @@
+name: temp-git-mirror-e2e
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/temp-git-mirror-e2e.yml'
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
+
+      - name: Queue existing mirror and dispatch persistent reconciler
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.request
+
+          repo = os.environ['GITHUB_REPOSITORY']
+          token = os.environ['GH_TOKEN']
+          headers = {
+              'Authorization': f'Bearer {token}',
+              'Accept': 'application/vnd.github+json',
+              'X-GitHub-Api-Version': '2022-11-28',
+          }
+          base = f'https://api.github.com/repos/{repo}'
+          req = urllib.request.Request(f'{base}/releases/tags/git-mirror-live', headers=headers)
+          with urllib.request.urlopen(req, timeout=30) as response:
+              release = json.load(response)
+          body = '''# Git Mirror
+
+Paste one public HTTPS Git repository URL per line in **Queue**, then choose **Update release**.
+
+Accepted forms include `https://github.com/owner/repo`, the same URL ending in `.git`, and trailing whitespace or `/`. Multiple repositories may be queued at once. Existing mirrors are reported but never overwritten automatically.
+
+## Queue
+
+<!-- mirror-queue:start -->
+https://github.com/mhtsec/ARTEX.git
+<!-- mirror-queue:end -->
+
+## Last result
+
+<!-- mirror-result:start -->
+E2E probe queued.
+<!-- mirror-result:end -->
+'''
+          payload = json.dumps({'body': body}).encode()
+          req = urllib.request.Request(
+              f"{base}/releases/{release['id']}", data=payload, headers=headers, method='PATCH'
+          )
+          with urllib.request.urlopen(req, timeout=30):
+              pass
+
+          payload = json.dumps({'ref': 'main'}).encode()
+          req = urllib.request.Request(
+              f'{base}/actions/workflows/git-mirror-reconcile.yml/dispatches',
+              data=payload, headers=headers, method='POST'
+          )
+          with urllib.request.urlopen(req, timeout=30):
+              pass
+          PY
+
+      - name: Self-clean
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/temp-git-mirror-e2e.yml
+          git commit -m "chore(git-mirror): remove E2E probe"
+          git pull --rebase origin main
+          git push origin HEAD:main
