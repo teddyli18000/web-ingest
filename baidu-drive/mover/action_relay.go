@@ -21,7 +21,8 @@ import (
 
 const (
 	defaultRelayStageWindowBytes = int64(8 << 30)
-	relayStageBatchFiles         = 200
+	relayStageBatchFiles         = 3
+	relayStageTargetFiles        = 3
 )
 
 type relayPrepareConfig struct {
@@ -85,72 +86,69 @@ func runRelayPreparation(ctx context.Context, taskID string, cfg relayPrepareCon
 		return fmt.Errorf("reconcile Drive directory tree: %w", err)
 	}
 
-	// If a previous preparation pass already staged bytes that have not yet
-	// been verified, do not stage more. The scheduler must drain that durable
-	// source batch first.
+
+	// Keep the three independent file-worker slots supplied. Previously one
+	// staged file prevented another batch from being staged until it completed.
+	// Each preparation pass can fill at most three staged batches, with the
+	// same per-batch byte bound and mover provenance/cleanup rules.
 	files, err := cfg.Store.ActionRelayFiles(ctx, taskID)
 	if err != nil {
 		return err
 	}
-	if len(files) != 0 {
-		if err := cfg.Store.UpdateTaskStatus(ctx, taskID, state.TaskPaused, ""); err != nil {
-			return err
-		}
-		return writeRelayManifest(cfg.RelayManifestPath, files)
-	}
-
 	window := cfg.StageWindowBytes
 	if window <= 0 {
 		window = defaultRelayStageWindowBytes
 	}
-	if _, err := cfg.Store.PlanBatchesBounded(ctx, taskID, relayStageBatchFiles, window); err != nil {
-		return fmt.Errorf("plan relay staging batch: %w", err)
-	}
-	pending, err := cfg.Store.StagingBatches(ctx, taskID)
-	if err != nil {
-		return fmt.Errorf("read relay staging batches: %w", err)
-	}
-	if len(pending) == 0 {
-		if complete, err := finishRelayTaskIfComplete(ctx, cfg.Store, taskID); err != nil {
-			return err
-		} else if complete {
-			return writeRelayManifest(cfg.RelayManifestPath, nil)
+	for stagePass := 0; stagePass < relayStageTargetFiles && len(files) < relayStageTargetFiles; stagePass++ {
+		if _, err := cfg.Store.PlanBatchesBounded(ctx, taskID, relayStageBatchFiles, window); err != nil {
+			return fmt.Errorf("plan relay staging batch: %w", err)
 		}
-		return fmt.Errorf("no staged relay files and no pending staging batch")
-	}
+		pending, err := cfg.Store.StagingBatches(ctx, taskID)
+		if err != nil {
+			return fmt.Errorf("read relay staging batches: %w", err)
+		}
+		if len(pending) == 0 {
+			break
+		}
 
-	// PlanBatchesBounded isolates a source file larger than the byte window into
-	// its own batch. Such a file must still be allowed because the relay never
-	// stores the whole file on the runner. Aggregate multi-file batches remain
-	// bounded by the configured staging window.
-	allowed := window
-	if pending[0].TotalBytes > allowed {
-		if pending[0].FileCount != 1 {
-			return fmt.Errorf("oversized relay batch contains %d files", pending[0].FileCount)
+		// A single file may exceed the byte target; its isolated batch is
+		// allowed because bytes remain remote until streamed to Drive.
+		allowed := window
+		if pending[0].TotalBytes > allowed {
+			if pending[0].FileCount != 1 {
+				return fmt.Errorf("oversized relay batch contains %d files", pending[0].FileCount)
+			}
+			allowed = pending[0].TotalBytes
 		}
-		allowed = pending[0].TotalBytes
-	}
-	stageRunner := &app.StageRunner{
-		Store:         cfg.Store,
-		Browser:       cfg.Browser,
-		Output:        io.Discard,
-		Logger:        cfg.Logger,
-		CookieStore:   cfg.CookieStore,
-		BatchSize:     relayStageBatchFiles,
-		MaxBatches:    1,
-		MaxCacheBytes: 0,
-		MaxBatchBytes: allowed,
-		NewClient: cfg.NewStagingClient,
-	}
-	if _, err := stageRunner.Run(ctx, taskID); err != nil {
-		return fmt.Errorf("stage relay batch: %w", err)
-	}
-	files, err = cfg.Store.ActionRelayFiles(ctx, taskID)
-	if err != nil {
-		return err
+		stageRunner := &app.StageRunner{
+			Store:         cfg.Store,
+			Browser:       cfg.Browser,
+			Output:        io.Discard,
+			Logger:        cfg.Logger,
+			CookieStore:   cfg.CookieStore,
+			BatchSize:     relayStageBatchFiles,
+			MaxBatches:    1,
+			MaxCacheBytes: 0,
+			MaxBatchBytes: allowed,
+			NewClient: cfg.NewStagingClient,
+		}
+		if _, err := stageRunner.Run(ctx, taskID); err != nil {
+			return fmt.Errorf("stage relay batch: %w", err)
+		}
+		nextFiles, err := cfg.Store.ActionRelayFiles(ctx, taskID)
+		if err != nil {
+			return err
+		}
+		if len(nextFiles) <= len(files) {
+			return fmt.Errorf("staging pass produced no additional relay files")
+		}
+		files = nextFiles
 	}
 	if len(files) == 0 {
-		return fmt.Errorf("staging pass produced no relay files")
+		return fmt.Errorf("no staged relay files and no pending staging batch")
+	}
+	if err := cfg.Store.UpdateTaskStatus(ctx, taskID, state.TaskPaused, ""); err != nil {
+		return err
 	}
 	return writeRelayManifest(cfg.RelayManifestPath, files)
 }
