@@ -125,7 +125,7 @@ def provision(mode: str) -> bool:
     write_private(key_path, state_key.strip())
     install_rclone(rclone_path)
     paths: dict[str, str | Path] = {
-        "QUARK_DRIVE_BAIDU_AUTH_FILE": cookie_path,
+        "QUARK_DRIVE_QUARK_AUTH_FILE": cookie_path,
         "QUARK_DRIVE_RCLONE_CONFIG_FILE": config_path,
         "QUARK_DRIVE_RCLONE_BIN": rclone_path,
         "QUARK_DRIVE_STATE_KEY_FILE": key_path,
