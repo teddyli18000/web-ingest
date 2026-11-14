@@ -65,7 +65,7 @@ jobs:
               "github.com/teddyli18000/baidu-drive-mover/internal/baidu"
           )
           type transport struct { base http.RoundTripper; ua string }
-          var hitPattern = regexp.MustCompile(`(?i)hitcode\\s*[:=]\\s*([0-9]+)`)
+          var hitPattern = regexp.MustCompile(`(?i)hitcode\s*[:=]\s*([0-9]+)`)
           func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
               r := req.Clone(req.Context())
               if t.ua != "" && strings.HasSuffix(strings.ToLower(r.URL.Hostname()), ".baidu.com") {
@@ -89,7 +89,15 @@ jobs:
                                   hit, _ = strconv.Atoi(m[1])
                               }
                           }
-                          fmt.Printf("provider status=%d error_code=%d hitcode=%d\\n", res.StatusCode, e.Code, hit)
+                          kind := "other"
+                          msg := strings.ToLower(e.Msg)
+                          switch {
+                          case strings.Contains(msg, "sign error"): kind = "sign_error"
+                          case strings.Contains(msg, "user is not authorized"): kind = "not_authorized"
+                          case strings.Contains(msg, "anti hotlinking"): kind = "anti_hotlinking"
+                          case strings.Contains(msg, "not found"): kind = "not_found"
+                          }
+                          fmt.Printf("provider status=%d error_code=%d hitcode=%d cause=%s\\n", res.StatusCode, e.Code, hit, kind)
                       } else { fmt.Printf("provider status=%d non_json_error=true\\n", res.StatusCode) }
                       res.Body = io.NopCloser(bytes.NewReader(data))
                   } else {res.Body = io.NopCloser(bytes.NewReader(nil))}
