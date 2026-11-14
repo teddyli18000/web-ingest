@@ -64,6 +64,8 @@ class FakeGitHub:
         self.dispatched = []
         self.write_calls = 0
         self.state = None
+        self.run_status = {}
+        self.fail_dispatch = False
         self.tasks = {
             "baidu": {"id": "task-b", "status": "RUNNING", "files_total": 8, "bytes_done": 0},
             "quark": {"id": "task-q", "status": "RUNNING", "files_total": 1, "bytes_done": 0},
@@ -95,8 +97,13 @@ class FakeGitHub:
         self.write_calls += 1
         self.state = value
 
-    def dispatch(self, provider, task_id, capacity, reason="shared-supervisor"):
-        self.dispatched.append((provider, task_id, capacity))
+    def dispatch(self, provider, task_id, capacity, reason, reservation_id):
+        if self.fail_dispatch:
+            raise RuntimeError("transport failed after journal commit")
+        self.dispatched.append((provider, task_id, capacity, reservation_id))
+
+    def workflow_status(self, provider, reservation_id):
+        return self.run_status.get(reservation_id)
 
 
 class SupervisorTests(unittest.TestCase):
@@ -106,9 +113,41 @@ class SupervisorTests(unittest.TestCase):
         gh = FakeGitHub(now)
         result = run(gh, now)
         self.assertEqual(result, {"baidu": 2, "quark": 1})
-        self.assertEqual(gh.dispatched, [("baidu", "task-b", 2), ("quark", "task-q", 1)])
+        self.assertEqual([(p, t, c) for p, t, c, _ in gh.dispatched],
+                         [("baidu", "task-b", 2), ("quark", "task-q", 1)])
         self.assertEqual(gh.write_calls, 1)
         self.assertEqual(run(gh, now + dt.timedelta(minutes=1)), {"baidu": 0, "quark": 0})
+        self.assertEqual(len(gh.dispatched), 2)
+
+    def test_queue_survives_master_restarts_even_after_grace_window(self):
+        from supervisor import run
+        now = dt.datetime(2026, 11, 14, 16, tzinfo=UTC)
+        gh = FakeGitHub(now)
+        run(gh, now)
+        for _, _, _, reservation_id in gh.dispatched:
+            gh.run_status[reservation_id] = "in_progress"
+        # The new master reconstructs both dispatch reservations from GitHub.
+        self.assertEqual(run(gh, now + dt.timedelta(hours=1)), {"baidu": 0, "quark": 0})
+        self.assertEqual(len(gh.dispatched), 2)
+        # Once GitHub confirms both runs terminated, a successor can recover.
+        for reservation_id in list(gh.run_status):
+            gh.run_status[reservation_id] = "completed"
+        result = run(gh, now + dt.timedelta(hours=1, minutes=1))
+        self.assertEqual(result, {"baidu": 2, "quark": 1})
+        self.assertEqual(len(gh.dispatched), 4)
+
+    def test_crash_after_journal_before_dispatch_is_recoverable(self):
+        from supervisor import run
+        now = dt.datetime(2026, 11, 14, 16, tzinfo=UTC)
+        gh = FakeGitHub(now)
+        gh.fail_dispatch = True
+        with self.assertRaisesRegex(RuntimeError, "journal commit"):
+            run(gh, now)
+        self.assertEqual(gh.write_calls, 1)
+        self.assertEqual(gh.dispatched, [])
+        gh.fail_dispatch = False
+        self.assertEqual(run(gh, now + dt.timedelta(minutes=1)), {"baidu": 0, "quark": 0})
+        self.assertEqual(run(gh, now + dt.timedelta(minutes=13)), {"baidu": 2, "quark": 1})
         self.assertEqual(len(gh.dispatched), 2)
 
 if __name__ == "__main__":
