@@ -8,13 +8,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   probe:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
+      GITHUB_TOKEN: ${{ github.token }}
       BAIDU_DRIVE_BAIDU_SESSION: ${{ secrets.BAIDU_DRIVE_BAIDU_SESSION }}
       BAIDU_DRIVE_RCLONE_CONFIG: ${{ secrets.BAIDU_DRIVE_RCLONE_CONFIG }}
       BAIDU_DRIVE_STATE_KEY: ${{ secrets.BAIDU_DRIVE_STATE_KEY }}
