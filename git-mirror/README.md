@@ -28,6 +28,8 @@ Both `https://github.com/example/project.git` and `https://github.com/example/pr
 | ARTEX | AI 自主渗透测试系统 \| 百度“agent+”攻防挑战赛冠军项目 | [mhtsec/ARTEX](https://github.com/mhtsec/ARTEX) | [Mirror](data/github.com/mhtsec/ARTEX/) |
 | dsh-infinite-gen-5 | DeepSeek v4.1 flash 逆向工具（无限五代） | [Minglink/dsh-infinite-gen-5](https://github.com/Minglink/dsh-infinite-gen-5) | [Mirror](data/github.com/Minglink/dsh-infinite-gen-5/) |
 | SDAutoLogin | Soochow Wi-Fi /Ethernet keeps ghosting you? This auto network guard & login buddy has your back. | [zqlan/SDAutoLogin](https://git.zqlhub.com/zqlan/SDAutoLogin) | [Mirror](data/git.zqlhub.com/zqlan/SDAutoLogin/) |
+| workbuddy2api-hub | WorkBuddy2API-Hub 社区接管分支（自用）：合并社区 PR #813-#819，v2.0.1 | [M-strange/workbuddy2api-hub](https://github.com/M-strange/workbuddy2api-hub) | [Mirror](data/github.com/M-strange/workbuddy2api-hub/) |
+| workbuddy2api-hub | WorkBuddy 国际国内多账号反代网关 — 双域独立路由与切换、稳定设备指纹防风控、国内成长任务全自动完成、后台定时调度器、Web监控看板，支持 Codex / Claude Code / DSH与标准 OpenAI 客户端。 | [teddyli18000/workbuddy2api-hub](https://github.com/teddyli18000/workbuddy2api-hub) | [Mirror](data/github.com/teddyli18000/workbuddy2api-hub/) |
 
 <!-- mirror-index:end -->
 
