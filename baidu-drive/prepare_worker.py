@@ -238,8 +238,8 @@ def run_prepare_worker(
     # file leases; stale preparation jobs become no-ops.
     reservation = os.environ.get("CLOUD_DRIVE_RESERVATION_ID", "")
     supervisor, _ = gh.read_json("tools/cloud-drive/state/supervisor.json", default={})
-    if supervisor:
-        assigned = supervisor.get("dispatched", {}).get("baidu", {})
+    if supervisor.get("schema") == 1 and "dispatched" in supervisor:
+        assigned = supervisor["dispatched"].get("baidu", {})
         if (
             not reservation
             or reservation != assigned.get("reservation_id")
