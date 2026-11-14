@@ -12,28 +12,28 @@ It does **not** mirror repository contents, README files, screenshots, avatars, 
 
 | First recovered day | Latest day | Days archived | All-Languages days |
 | --- | --- | ---: | ---: |
-| **2014-08-09** | **2026-11-13** | **4,419** | **2,572** |
+| **2014-08-09** | **2026-11-14** | **4,420** | **2,573** |
 
-### Latest All-Languages snapshot — 2026-11-13
+### Latest All-Languages snapshot — 2026-11-14
 
 | # | Repository | Language | Stars today |
 | ---: | --- | --- | ---: |
-| 1 | [GoogleChrome/modern-web-guidance-src](https://github.com/GoogleChrome/modern-web-guidance-src) | TypeScript | 739 |
-| 2 | [openai/codex-security](https://github.com/openai/codex-security) | TypeScript | 643 |
-| 3 | [nvm-sh/nvm](https://github.com/nvm-sh/nvm) | Shell | 63 |
-| 4 | [pookjw/HermesEnabler](https://github.com/pookjw/HermesEnabler) | Objective-C | 218 |
-| 5 | [we-promise/sure](https://github.com/we-promise/sure) | Ruby | 967 |
-| 6 | [QwenLM/qwen-code](https://github.com/QwenLM/qwen-code) | TypeScript | 151 |
-| 7 | [ashhart/TensorFold](https://github.com/ashhart/TensorFold) | Zig | 54 |
-| 8 | [nodejs/node](https://github.com/nodejs/node) | JavaScript | 62 |
-| 9 | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | JavaScript | 816 |
-| 10 | [meta/astryx](https://github.com/meta/astryx) | TypeScript | 1,830 |
+| 1 | [alibaba/open-code-review](https://github.com/alibaba/open-code-review) | Go | 215 |
+| 2 | [GoogleChrome/modern-web-guidance-src](https://github.com/GoogleChrome/modern-web-guidance-src) | TypeScript | 1,925 |
+| 3 | [openai/codex-security](https://github.com/openai/codex-security) | TypeScript | 751 |
+| 4 | [ZhuLinsen/daily_stock_analysis](https://github.com/ZhuLinsen/daily_stock_analysis) | Python | 256 |
+| 5 | [we-promise/sure](https://github.com/we-promise/sure) | Ruby | 925 |
+| 6 | [backnotprop/plannotator](https://github.com/backnotprop/plannotator) | TypeScript | 108 |
+| 7 | [louislam/uptime-kuma](https://github.com/louislam/uptime-kuma) | JavaScript | 71 |
+| 8 | [block/buzz](https://github.com/block/buzz) | Rust | 97 |
+| 9 | [tradermonty/claude-trading-skills](https://github.com/tradermonty/claude-trading-skills) | Python | 69 |
+| 10 | [tailscale/tailcat](https://github.com/tailscale/tailcat) | Go | 256 |
 
-[Open full snapshot →](data/2026/11/13/trending.json)
+[Open full snapshot →](data/2026/11/14/trending.json)
 
 ### Browse by year
 
-[`2026`](data/2026/) · 317 days  
+[`2026`](data/2026/) · 318 days  
 [`2025`](data/2025/) · 365 days  
 [`2024`](data/2024/) · 366 days  
 [`2023`](data/2023/) · 365 days  
