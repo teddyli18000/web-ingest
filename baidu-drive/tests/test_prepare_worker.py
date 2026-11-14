@@ -34,6 +34,15 @@ class PrepareWorkerTests(unittest.TestCase):
     def now(self):
         return dt.datetime(2026, 10, 27, 16, 0, tzinfo=UTC)
 
+    def test_prepare_eof_retry_requires_checkpoint_and_one_attempt(self):
+        task = {"id": "task-1", "mover_task_id": "mover-1"}
+        self.assertTrue(prepare_worker.should_retry_prepare_eof(1, {"last_error": "EOF"}, task, 0))
+        self.assertTrue(prepare_worker.should_retry_prepare_eof(1, {"last_error": "unexpected EOF"}, task, 0))
+        self.assertFalse(prepare_worker.should_retry_prepare_eof(1, {"last_error": "EOF"}, task, 1))
+        self.assertFalse(prepare_worker.should_retry_prepare_eof(0, {"last_error": "EOF"}, task, 0))
+        self.assertFalse(prepare_worker.should_retry_prepare_eof(1, {"last_error": "EOF"}, {}, 0))
+        self.assertFalse(prepare_worker.should_retry_prepare_eof(1, {"last_error": "invalid_grant"}, task, 0))
+
     def test_auth_updated_can_reenter_a_login_blocked_task(self):
         task_id = "bd-20261106T160000Z-abcd"
         task = {"id": task_id, "status": "NEEDS_LOGIN"}
