@@ -24,6 +24,8 @@ Google Drive
 
 The configured 512 MiB value is a network byte window, not a local file or in-memory allocation. HTTP transport buffers remain bounded independently of window size.
 
+Baidu source authorization now uses the signed `locatedownload` endpoint. Its returned CDN link is read through consecutive exact 4 MiB HTTP Ranges, exposed as one continuous stream to each 512 MiB Drive PUT. The source does not materialize 4 MiB segments on disk or change the Drive checkpoint quantum.
+
 Small files naturally finish in one final window. Large files use many fixed-size non-final windows. Non-final Drive windows remain multiples of 256 KiB.
 
 Zero-byte files are the only byte-path exception because there is no source range to read. They use an idempotent Drive create/adopt operation under the already-created task directory and still require exact destination reconciliation.
