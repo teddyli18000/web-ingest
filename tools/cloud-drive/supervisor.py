@@ -122,10 +122,10 @@ def run(gh: GitHub, now: dt.datetime, reason: str = "shared-supervisor") -> dict
             held = max(0, int(last.get("slots") or 0) - seen)
             if held:
                 age = now - then
-                pending = age < dt.timedelta(minutes=12)
-                if not pending:
-                    run_status = gh.workflow_status(p.name, str(last.get("reservation_id") or ""))
-                    pending = run_status in {"queued", "in_progress", "waiting", "pending", "requested"}
+                run_status = gh.workflow_status(p.name, str(last.get("reservation_id") or ""))
+                pending = run_status in {"queued", "in_progress", "waiting", "pending", "requested"}
+                if run_status is None:
+                    pending = age < dt.timedelta(minutes=12)
                 if pending:
                     reserved += held
                     continue
