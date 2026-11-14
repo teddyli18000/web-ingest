@@ -140,5 +140,23 @@ class PrepareWorkerTests(unittest.TestCase):
         self.assertIn("awaiting reconciliation", message.lower())
 
 
+
+    def test_old_master_dispatch_cannot_claim_files_after_handoff(self):
+        task_id = "bd-20261114T160000Z-abcd"
+        task = {"id": task_id, "status": "RUNNING"}
+        gh = mock.Mock()
+        gh.read_json.side_effect = [
+            ({"active_task": task_id}, None),
+            ({"schema": 1, "dispatched": {"baidu": {
+                "task_id": task_id, "reservation_id": "new-master",
+            }}}, None),
+        ]
+        with mock.patch.object(prepare_worker.controller, "load_task", return_value=task), \
+             mock.patch.object(prepare_worker, "prepare_ready") as ready, \
+             mock.patch.dict("os.environ", {"CLOUD_DRIVE_RESERVATION_ID": "old-master"}):
+            self.assertEqual(prepare_worker.run_prepare_worker(gh, mock.Mock(), task_id, "shared-supervisor"), 0)
+            ready.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()
