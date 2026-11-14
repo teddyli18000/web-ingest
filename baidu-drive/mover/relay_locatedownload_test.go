@@ -86,3 +86,49 @@ func TestLocatedSourceStreamsExactRange(t *testing.T) {
 		t.Fatalf("stream metadata/payload mismatch")
 	}
 }
+
+func TestLocatedReaderCrossesFourMiBSegments(t *testing.T) {
+	const firstEnd = (4 << 20) - 1
+	const finalEnd = firstEnd + 4
+	const total = finalEnd + 3
+	requests := 0
+	client := &http.Client{Transport: locatedRoundTripper(func(req *http.Request) (*http.Response, error) {
+		requests++
+		switch requests {
+		case 1:
+			if req.Header.Get("Range") != "bytes=0-4194303" {
+				t.Fatal("first segment range mismatch")
+			}
+			return &http.Response{
+				StatusCode: 206,
+				Header: http.Header{"Content-Range": []string{"bytes 0-4194303/4194310"}},
+				ContentLength: 4 << 20,
+				Body: io.NopCloser(bytes.NewReader(bytes.Repeat([]byte("A"), 4 << 20))),
+			}, nil
+		case 2:
+			if req.Header.Get("Range") != "bytes=4194304-4194308" {
+				t.Fatal("second segment range mismatch")
+			}
+			return &http.Response{
+				StatusCode: 206,
+				Header: http.Header{"Content-Range": []string{"bytes 4194304-4194308/4194310"}},
+				ContentLength: 5,
+				Body: io.NopCloser(strings.NewReader("BCDEF")),
+			}, nil
+		default:
+			t.Fatal("unexpected third source request")
+			return nil, nil
+		}
+	})}
+	reader := &locatedSegmentedReader{
+		ctx: context.Background(), client: client,
+		signed: "https://d.pcs.baidu.com/file/hidden",
+		position: 0, end: finalEnd,
+	}
+	if err := reader.openNext(); err != nil { t.Fatal(err) }
+	defer reader.Close()
+	got, err := io.ReadAll(reader)
+	if err != nil || len(got) != int(finalEnd+1) || string(got[len(got)-5:]) != "BCDEF" || requests != 2 || reader.total != total {
+		t.Fatalf("signed source segment continuity mismatch: requests=%d", requests)
+	}
+}
