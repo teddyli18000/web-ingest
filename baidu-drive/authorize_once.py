@@ -127,7 +127,7 @@ def initialize(repo: str, local_google: Path, login=browser_login, *, google_onl
     if not google_only and KEY_SECRET not in existing:
         set_secret(KEY_SECRET, base64.b64encode(secrets.token_bytes(32)).decode(), repo)
     subprocess.run(
-        ["gh", "workflow", "run", "baidu-drive-worker.yml", "--ref", "main",
+        ["gh", "workflow", "run", "cloud-drive-supervisor.yml", "--ref", "main",
          "-f", "reason=auth-updated", "--repo", repo],
         check=True,
     )
