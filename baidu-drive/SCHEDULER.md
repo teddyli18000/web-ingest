@@ -41,7 +41,7 @@ It alone may:
 - restore/write the mover SQLite checkpoint;
 - import independently verified file-worker results;
 - authorize/run tool-owned staging cleanup;
-- scan/resume a share and stage the next bounded batch;
+- scan/resume a share and stage enough bounded batches to fill three independent file-worker slots;
 - create/reconcile the Drive task directory tree;
 - synchronize file-scoped relay records;
 - decide which independent files receive leases;
@@ -142,9 +142,9 @@ This keeps replay automatic in the safe case without risking duplicate Drive obj
 
 ## Batch lifecycle
 
-The master stages one bounded batch at a time. The batch may contain a file larger than the staging byte target because Actions does not cache the whole file locally.
+The master fills the three file-worker slots by staging up to three bounded batches per preparation run, stopping as soon as at least three unverified staged files are available. New batches may be staged while an earlier batch is still uploading; each batch keeps the 8 GiB planning target and may isolate one larger file. There is no duplicate staging or concurrent staging writer.
 
-When every file in the current batch has a verified Drive ID, the next master run imports those results into SQLite. Existing mover cleanup gates then verify provenance and remove only the registered tool-owned Baidu staging batch. The master may then stage the next batch.
+When a staged batch's files are all independently verified on Drive, the next master run imports the results into SQLite. Existing mover cleanup gates then verify provenance and remove only that registered tool-owned Baidu staging batch. Completed/active files retain their original Drive sessions and leases.
 
 Task completion requires all manifest files to be verified and all tool-owned Baidu staging cleanup to reconcile cleanly.
 
