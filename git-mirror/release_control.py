@@ -115,7 +115,8 @@ def normalize_source_url(value: str) -> str:
     if parsed.query or parsed.fragment:
         raise ValueError("repository URL must not contain query or fragment components")
     path = parsed.path.rstrip("/")
-    if path.endswith(".git"):
+    host = (parsed.hostname or "").lower()
+    if host == "github.com" and path.endswith(".git"):
         path = path[:-4]
     normalized = urlunparse((parsed.scheme.lower(), parsed.netloc.lower(), path, "", "", ""))
     validate_source_url(normalized)
@@ -243,18 +244,12 @@ def process_release(body: str, token: str) -> list[RequestResult]:
                 results.append(RequestResult(raw, candidate, candidate, "duplicate", "duplicate request ignored"))
                 continue
             seen.add(dedupe_key)
-
-            existing_destination = default_destination(candidate)
-            existing_target = DATA_ROOT / existing_destination
-            if existing_target.exists():
-                parsed = urlparse(candidate)
-                parts = [part for part in parsed.path.split("/") if part]
-                label = "/".join(parts) or candidate
-                results.append(RequestResult(raw, candidate, label, "already_mirrored", "already mirrored; existing snapshot kept"))
-                continue
-
             info = source_info(candidate, token)
             target = DATA_ROOT / info.destination
+            if target.exists():
+                results.append(RequestResult(raw, info.web_url, info.source_label, "already_mirrored", "already mirrored; existing snapshot kept"))
+                continue
+
             try:
                 import_snapshot(info.clone_url, destination=info.destination)
                 collect_latest_release(info.web_url, destination=info.destination)

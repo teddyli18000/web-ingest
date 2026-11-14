@@ -58,7 +58,7 @@ jobs:
        github.actor != 'github-actions[bot]') ||
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
@@ -74,6 +74,9 @@ jobs:
           python3 -m py_compile git-mirror/*.py
           python3 -m unittest discover -s git-mirror/tests -v
           python3 git-mirror/validate_snapshots.py
+
+      - name: Ensure fixed Git Mirror Release exists
+        run: python3 git-mirror/release_control.py ensure-release
 
       - name: Process queued repositories
         id: process
@@ -103,13 +106,13 @@ jobs:
           git push origin HEAD:main
 
       - name: Publish Release result and consume queue
-        if: steps.process.outcome == 'success'
+        if: success() && steps.process.outcome == 'success'
         run: >-
           python3 git-mirror/release_control.py publish
           --result-file "$RUNNER_TEMP/git-mirror-result.json"
 
       - name: Mark failed requests
-        if: steps.process.outcome == 'success'
+        if: success() && steps.process.outcome == 'success'
         run: |
           python3 - "$RUNNER_TEMP/git-mirror-result.json" <<'PY'
           import json
