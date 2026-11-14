@@ -1,0 +1,123 @@
+name: Git Mirror Reconcile
+
+on:
+  release:
+    types: [edited]
+  push:
+    branches: [main]
+    paths:
+      - 'git-mirror/*.py'
+      - 'git-mirror/tests/**'
+      - 'git-mirror/templates/**'
+      - 'git-mirror/README.md'
+      - 'git-mirror/AGENTS.md'
+      - '.github/workflows/git-mirror-reconcile.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: git-mirror-live-state
+  cancel-in-progress: false
+
+env:
+  GITHUB_TOKEN: ${{ github.token }}
+  PYTHONDONTWRITEBYTECODE: '1'
+
+jobs:
+  maintain:
+    if: github.event_name == 'push' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          sparse-checkout: |
+            git-mirror
+          sparse-checkout-cone-mode: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate control plane
+        run: |
+          python3 -m py_compile git-mirror/*.py
+          python3 -m unittest discover -s git-mirror/tests -v
+          python3 git-mirror/validate_snapshots.py
+
+      - name: Ensure fixed Git Mirror Release exists
+        run: python3 git-mirror/release_control.py ensure-release
+
+  mirror:
+    if: >-
+      (github.event_name == 'release' &&
+       github.event.release.tag_name == 'git-mirror-live' &&
+       github.actor != 'github-actions[bot]') ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate git-mirror task
+        run: |
+          python3 -m py_compile git-mirror/*.py
+          python3 -m unittest discover -s git-mirror/tests -v
+          python3 git-mirror/validate_snapshots.py
+
+      - name: Process queued repositories
+        id: process
+        run: >-
+          python3 git-mirror/release_control.py process
+          --event-path "$GITHUB_EVENT_PATH"
+          --result-file "$RUNNER_TEMP/git-mirror-result.json"
+
+      - name: Validate resulting mirrors
+        run: python3 git-mirror/validate_snapshots.py
+
+      - name: Commit mirror output and human index
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -f git-mirror/data
+          git add git-mirror/README.md
+          if git diff --cached --quiet; then
+            echo "No repository changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "data(git-mirror): process Release queue"
+          git pull --rebase origin main
+          git push origin HEAD:main
+
+      - name: Publish Release result and consume queue
+        if: steps.process.outcome == 'success'
+        run: >-
+          python3 git-mirror/release_control.py publish
+          --result-file "$RUNNER_TEMP/git-mirror-result.json"
+
+      - name: Mark failed requests
+        if: steps.process.outcome == 'success'
+        run: |
+          python3 - "$RUNNER_TEMP/git-mirror-result.json" <<'PY'
+          import json
+          import sys
+
+          with open(sys.argv[1], encoding="utf-8") as handle:
+              payload = json.load(handle)
+          failed = [item for item in payload["results"] if item["status"] == "failed"]
+          if failed:
+              raise SystemExit(f"{len(failed)} mirror request(s) failed; see fixed Release status")
+          PY
