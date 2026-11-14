@@ -42,24 +42,27 @@ jobs:
           req = urllib.request.Request(f'{base}/releases/tags/git-mirror-live', headers=headers)
           with urllib.request.urlopen(req, timeout=30) as response:
               release = json.load(response)
-          body = '''# Git Mirror
 
-Paste one public HTTPS Git repository URL per line in **Queue**, then choose **Update release**.
-
-Accepted forms include `https://github.com/owner/repo`, the same URL ending in `.git`, and trailing whitespace or `/`. Multiple repositories may be queued at once. Existing mirrors are reported but never overwritten automatically.
-
-## Queue
-
-<!-- mirror-queue:start -->
-https://github.com/mhtsec/ARTEX.git
-<!-- mirror-queue:end -->
-
-## Last result
-
-<!-- mirror-result:start -->
-E2E probe queued.
-<!-- mirror-result:end -->
-'''
+          body = '\n'.join([
+              '# Git Mirror',
+              '',
+              'Paste one public HTTPS Git repository URL per line in **Queue**, then choose **Update release**.',
+              '',
+              'Accepted forms include `https://github.com/owner/repo`, the same URL ending in `.git`, and trailing whitespace or `/`. Multiple repositories may be queued at once. Existing mirrors are reported but never overwritten automatically.',
+              '',
+              '## Queue',
+              '',
+              '<!-- mirror-queue:start -->',
+              'https://github.com/mhtsec/ARTEX.git',
+              '<!-- mirror-queue:end -->',
+              '',
+              '## Last result',
+              '',
+              '<!-- mirror-result:start -->',
+              'E2E probe queued.',
+              '<!-- mirror-result:end -->',
+              '',
+          ])
           payload = json.dumps({'body': body}).encode()
           req = urllib.request.Request(
               f"{base}/releases/{release['id']}", data=payload, headers=headers, method='PATCH'
