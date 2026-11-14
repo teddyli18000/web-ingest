@@ -96,7 +96,6 @@ jobs:
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
-          TRANSFER_TASK_ID: ${{ inputs.task_id }}
         run: |
           gh workflow run cloud-drive-supervisor.yml --repo "$GITHUB_REPOSITORY" --ref main \
-            -f "task_id=$TRANSFER_TASK_ID" -f "reason=file-worker-completed"
+            -f "reason=file-worker-completed"

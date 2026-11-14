@@ -13,7 +13,7 @@ The master is a *reentrant GitHub Actions job*, not a six-hour immortal VM. It r
 
 The master is woken by the file-worker completion callback, operator input, and a **30-minute watchdog schedule**. A missing callback or a terminated master is recovered by the next watchdog. Checkpointed `next_retry_at` is respected; external transient failures back off with jitter without a finite attempt limit, while malformed inputs, unproven Drive duplicates and invalid authorization stop for reconciliation or re-login.
 
-A short-lived provider dispatch reservation avoids repeated scheduling while a newly triggered Actions job is still queued. The shared state lives under `tools/cloud-drive/state/supervisor.json`. No credentials or signed links may enter this file. The master runs only GitHub API calls; real downloads occur in the three worker jobs.
+A durable provider dispatch reservation protects slots while its preparation Action is queued or running. The first 12 minutes cover workflow dispatch propagation; after that the supervisor checks GitHub Actions job state before releasing the reservation. This prevents a long-queued preparation Action from later exceeding the shared three-worker limit. A lost dispatch is reissued when no queued/running job exists. The shared state lives under `tools/cloud-drive/state/supervisor.json`. No credentials or signed links may enter this file. The master runs only GitHub API calls; real downloads occur in the three worker jobs.
 
 ## Rollout
 

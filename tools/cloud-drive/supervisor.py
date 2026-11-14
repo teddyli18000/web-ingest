@@ -63,6 +63,20 @@ class GitHub:
             params["sha"] = sha
         self.request("PUT", "/contents/" + urllib.parse.quote(path, safe="/"), params)
 
+    def preparation_is_running(self, provider: str, issued_at: dt.datetime) -> bool:
+        """A queued/running provider handoff retains its reserved worker slots."""
+        workflow = WORKFLOWS[provider]
+        data = self.request(
+            "GET", "/actions/workflows/" + workflow + "/runs?event=workflow_dispatch&per_page=30"
+        )
+        for run in data.get("workflow_runs", []):
+            created = parse_time(run.get("created_at"))
+            if created is None or created < issued_at - dt.timedelta(minutes=2):
+                continue
+            if run.get("status") in {"queued", "requested", "waiting", "pending", "in_progress"}:
+                return True
+        return False
+
     def dispatch(self, provider: str, task_id: str, capacity: int, reason: str = "shared-supervisor"):
         self.request("POST", "/actions/workflows/" + WORKFLOWS[provider] + "/dispatches", {
             "ref": "main",
@@ -101,12 +115,17 @@ def run(gh: GitHub, now: dt.datetime, reason: str = "shared-supervisor") -> dict
     for p in providers:
         last = dispatch_state.get(p.name, {})
         then = parse_time(last.get("at")) if last.get("task_id") == p.task_id else None
-        if then and now - then < dt.timedelta(minutes=12):
+        if then:
             seen = max(0, active_count(p, now) - int(last.get("active_before") or 0))
             held = max(0, int(last.get("slots") or 0) - seen)
             if held:
-                reserved += held
-                continue
+                # The initial grace interval handles GitHub dispatch propagation.
+                # After that, only an actually queued/running prepare job
+                # retains the reservation. A lost dispatch can be retried.
+                within_grace = now - then < dt.timedelta(minutes=12)
+                if within_grace or gh.preparation_is_running(p.name, then):
+                    reserved += held
+                    continue
         eligible.append(p)
     # Ineligible providers still consume their real ACTIVE slots, and all
     # queued-but-not-yet-ACTIVE reservations reduce global free capacity.
