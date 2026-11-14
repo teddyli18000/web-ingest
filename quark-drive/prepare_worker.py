@@ -76,6 +76,19 @@ def run(gh: controller.GitHub, repo: relay_control.GitHubRepo,
     runtime, _ = gh.read_json(controller.RUNTIME_PATH, default=controller.DEFAULT_RUNTIME)
     if runtime.get("active_task") != task_id:
         return 0
+    # An earlier master may have dispatched a workflow that arrives after its
+    # reservation was superseded. Only the current ID can claim Quark workers.
+    reservation_id = os.environ.get("CLOUD_DRIVE_RESERVATION_ID", "")
+    supervisor, _ = gh.read_json("tools/cloud-drive/state/supervisor.json", default={})
+    if supervisor.get("schema") == 1 and "dispatched" in supervisor:
+        assigned = supervisor["dispatched"].get("quark", {})
+        if (
+            not reservation_id
+            or reservation_id != assigned.get("reservation_id")
+            or assigned.get("task_id") != task_id
+        ):
+            print("Superseded Quark preparation; no workers dispatched.")
+            return 0
     task = controller.load_task(gh, task_id)
     if not task or task.get("status") in {"CANCELED", "COMPLETED"}:
         return 0
