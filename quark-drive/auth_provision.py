@@ -130,7 +130,7 @@ def provision(mode: str) -> bool:
         "QUARK_DRIVE_RCLONE_BIN": rclone_path,
         "QUARK_DRIVE_STATE_KEY_FILE": key_path,
     }
-    if mode == "relay":
+    if mode in {"prepare", "relay"}:
         token_path = base / "google.access-token"
         expiry_path = base / "google.token-expiry"
         refresh_google_token(config_path, token_path, expiry_path, rclone_path)
