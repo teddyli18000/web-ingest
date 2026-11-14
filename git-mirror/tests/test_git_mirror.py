@@ -35,7 +35,7 @@ class GitMirrorTests(unittest.TestCase):
             "git@github.com:openai/openai-python.git",
             "ssh://git@github.com/openai/openai-python.git",
             "http://github.com/openai/openai-python.git",
-            "https://user:token@github.com/openai-python.git",
+            "https://user:token@github.com/openai/openai-python.git",
             "https://localhost/example/repo.git",
             "https://127.0.0.1/example/repo.git",
         ]
@@ -56,7 +56,7 @@ class GitMirrorTests(unittest.TestCase):
 
     def test_github_release_source_detection(self):
         self.assertEqual(
-            github_repo(https://github.com/example/project.git"),
+            github_repo("https://github.com/example/project.git"),
             ("example", "project"),
         )
         self.assertIsNone(github_repo("https://gitlab.com/example/project.git"))
@@ -127,7 +127,7 @@ https://github.com/example/two
         self.assertIn("collect_latest_release.py", content)
         self.assertIn("${{ github.token }}", content)
         self.assertIn("git add -f git-mirror/data", content)
-        self.assertIn("git rm -- \"$WORKFLOW_PATH\"", content)
+        self.assertIn('git rm -- "$WORKFLOW_PATH"', content)
         self.assertNotIn("schedule:", content)
         for token in (
             "{{LABEL}}",
