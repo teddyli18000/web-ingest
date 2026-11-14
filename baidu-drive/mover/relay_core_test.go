@@ -281,3 +281,13 @@ func TestParseDriveNextOffsetMissingRangeMeansZero(t *testing.T) {
 		t.Fatalf("next=%d err=%v", next, err)
 	}
 }
+
+func TestBaiduPCS31326IsRecognizedAsSourceDenial(t *testing.T) {
+	denied := fmt.Errorf("source response: %w", &baidu.PCSRemoteError{Operation: "download", Code: 31326})
+	if !isBaiduSourceDenied(denied) || classifyRelayStepError(denied) != "source_denied" {
+		t.Fatal("Baidu source restriction would be retried")
+	}
+	if isBaiduSourceDenied(&baidu.PCSRemoteError{Operation: "download", Code: 31042}) {
+		t.Fatal("unrelated Baidu error was treated as source denial")
+	}
+}

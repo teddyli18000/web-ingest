@@ -11,8 +11,8 @@ Read `README.md` and `SCHEDULER.md` before changing scheduling, worker state, tr
 - Google Drive verified/resumable remote state is the durable writable truth.
 - Repository state is a checkpoint and public coordination record; it must not override contradictory proven remote state.
 - There is exactly one global scheduler: `baidu-drive-worker.yml` / `prepare_worker.py`.
-- Keep one normal non-empty-file data path: authenticated staged-file signed dlink -> at most 4 MiB validated Baidu Range pieces -> direct Drive resumable PUT. Never spoof clients or route denied requests through third parties.
-- A 512 MiB relay window is a Drive byte interval, not a disk-backed chunk or RAM-sized buffer. Keep signed URLs runner-local and fail closed when the provider refuses authenticated download.
+- Keep one normal non-empty-file data path: exact Baidu Range response body -> direct Drive resumable PUT.
+- A 512 MiB relay window is a byte interval, not a disk-backed chunk or RAM-sized buffer.
 - Do not reintroduce Release asset staging, whole-file Actions cache, a second scheduler, or same-file multi-VM writes without a concrete measured failure mode.
 
 ## Control plane
@@ -81,7 +81,7 @@ Normal non-empty-file contract:
 
 ```text
 Baidu staged file
-  -> signed dlink with exact ≤4 MiB HTTP Range pieces
+  -> exact bounded HTTP Range
   -> direct response-body stream
   -> Drive resumable PUT
   -> Drive status reconciliation
