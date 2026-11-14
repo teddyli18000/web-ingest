@@ -194,7 +194,8 @@ def schedule_projection(
     retry_exhausted = sum(
         1
         for record in records
-        if record.get("status") == relay_state.FAILED_RETRYABLE
+        if policy.max_retryable_failures > 0
+        and record.get("status") == relay_state.FAILED_RETRYABLE
         and int(record.get("retryable_failures") or 0) >= policy.max_retryable_failures
     )
     runnable = sum(1 for record in records if scheduler.is_runnable(record, now, policy))

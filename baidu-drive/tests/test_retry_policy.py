@@ -49,19 +49,21 @@ class RetryPolicyTests(unittest.TestCase):
     def failed_record(self, failures):
         record = relay_state.new_record("task-1", source(), self.now())
         for i in range(failures):
-            record = relay_state.claim(record, f"lease-{i}", self.now())
-            record = relay_state.fail(record, f"lease-{i}", self.now(), "transport", permanent=False)
+            at = self.now() + dt.timedelta(hours=i)
+            record = relay_state.claim(record, f"lease-{i}", at)
+            record = relay_state.fail(record, f"lease-{i}", at, "transport", permanent=False)
         return record
 
-    def test_three_failed_workers_stop_automatic_rescheduling(self):
+    def test_three_failed_workers_wait_for_due_time_then_auto_resume(self):
         record = self.failed_record(3)
         self.assertEqual(record["retryable_failures"], 3)
         self.assertFalse(scheduler.is_runnable(record, self.now()))
         self.assertFalse(relay_state.runnable(record, self.now()))
+        self.assertTrue(scheduler.is_runnable(record, self.now() + dt.timedelta(hours=4)))
 
     def test_confirmed_forward_progress_resets_failure_counter(self):
         record = self.failed_record(2)
-        record = relay_state.claim(record, "lease-progress", self.now())
+        record = relay_state.claim(record, "lease-progress", self.now() + dt.timedelta(hours=4))
         record = relay_state.apply_relay_checkpoint(
             record,
             "lease-progress",
@@ -69,7 +71,7 @@ class RetryPolicyTests(unittest.TestCase):
             50,
             "opaque-md5-state",
             None,
-            self.now(),
+            self.now() + dt.timedelta(hours=4),
         )
         self.assertEqual(record["retryable_failures"], 0)
 

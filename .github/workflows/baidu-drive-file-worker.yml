@@ -80,13 +80,17 @@ jobs:
           BAIDU_DRIVE_STATE_KEY: ${{ secrets.BAIDU_DRIVE_STATE_KEY }}
         run: python3 baidu-drive/auth_provision.py relay
 
-      - name: Relay one leased file
+      - name: Relay one leased file with independent lease renewal
         id: relay
-        run: >-
-          python3 baidu-drive/relay_worker.py
-          --task-id '${{ inputs.task_id }}'
-          --file-id '${{ inputs.file_id }}'
-          --lease-id '${{ inputs.lease_id }}'
+        env:
+          TASK_ID: ${{ inputs.task_id }}
+          FILE_ID: ${{ inputs.file_id }}
+          LEASE_ID: ${{ inputs.lease_id }}
+        run: |
+          python3 baidu-drive/lease_heartbeat.py --task-id "$TASK_ID" --file-id "$FILE_ID" --lease-id "$LEASE_ID" &
+          monitor_pid=$!
+          trap 'kill "$monitor_pid" 2>/dev/null || true; wait "$monitor_pid" 2>/dev/null || true' EXIT
+          python3 baidu-drive/relay_worker.py --task-id "$TASK_ID" --file-id "$FILE_ID" --lease-id "$LEASE_ID"
 
       - name: Wake master scheduler after this file worker
         if: always()

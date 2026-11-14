@@ -173,7 +173,9 @@ class RelayWorkerTests(unittest.TestCase):
             now_fn=self.now, monotonic_fn=lambda: 0.0, sleep_fn=sleeps.append,
         )
         self.assertEqual(status, relay_state.VERIFIED)
-        self.assertEqual(sleeps, [1.0])
+        self.assertEqual(len(sleeps), 1)
+        self.assertGreaterEqual(sleeps[0], 1.0)
+        self.assertLessEqual(sleeps[0], 2.0)
         self.assertEqual(calls, 2)
 
     def test_bounded_retry_failure_releases_lease(self):
@@ -195,7 +197,9 @@ class RelayWorkerTests(unittest.TestCase):
             retry_limit=3,
         )
         self.assertEqual(status, relay_state.FAILED_RETRYABLE)
-        self.assertEqual(sleeps, [1.0, 2.0])
+        self.assertEqual(len(sleeps), 2)
+        self.assertTrue(1.0 <= sleeps[0] <= 2.0)
+        self.assertTrue(2.0 <= sleeps[1] <= 4.0)
         self.assertEqual(repo.record["status"], relay_state.FAILED_RETRYABLE)
         self.assertIsNone(repo.record["lease_id"])
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import datetime as dt
 import re
+import secrets
 from typing import Any, Iterable
 
 ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -20,8 +21,9 @@ VERIFIED = "VERIFIED"
 
 RUNNABLE = {READY, PAUSED, FAILED_RETRYABLE}
 TERMINAL = {VERIFIED, FAILED_PERMANENT}
-DEFAULT_STALE_SECONDS = 60 * 60
-DEFAULT_MAX_RETRYABLE_FAILURES = 3
+DEFAULT_STALE_SECONDS = 45 * 60
+LEGACY_STALE_SECONDS = 6 * 60 * 60
+DEFAULT_MAX_RETRYABLE_FAILURES = 0
 
 
 class RelayStateError(RuntimeError):
@@ -112,6 +114,8 @@ def new_record(task_id: str, source: dict[str, Any], now: dt.datetime | None = N
         "heartbeat_at": None,
         "attempts": 0,
         "retryable_failures": 0,
+        "next_retry_at": None,
+        "lease_heartbeat_protocol": 0,
         "last_error": "",
         "created_at": stamp,
         "updated_at": stamp,
@@ -134,11 +138,17 @@ def runnable(
     max_retryable_failures: int = DEFAULT_MAX_RETRYABLE_FAILURES,
 ) -> bool:
     status = str(record.get("status") or "")
-    if status == FAILED_RETRYABLE and int(record.get("retryable_failures") or 0) >= max_retryable_failures:
-        return False
+    if status == FAILED_RETRYABLE:
+        if max_retryable_failures > 0 and int(record.get("retryable_failures") or 0) >= max_retryable_failures:
+            return False
+        due = _parse_time(record.get("next_retry_at"))
+        if due is not None and due > now.astimezone(dt.timezone.utc):
+            return False
     if status in RUNNABLE:
         return int(record.get("confirmed_offset") or 0) < int(record.get("size") or 0) or int(record.get("size") or 0) == 0
-    return status == ACTIVE and heartbeat_stale(record, now, stale_seconds)
+    effective_stale = (stale_seconds if int(record.get("lease_heartbeat_protocol") or 0) >= 2
+                       else max(stale_seconds, LEGACY_STALE_SECONDS))
+    return status == ACTIVE and heartbeat_stale(record, now, effective_stale)
 
 
 def claim(
@@ -156,6 +166,8 @@ def claim(
     value["status"] = ACTIVE
     value["lease_id"] = lease_id
     value["lease_started_at"] = stamp
+    value["lease_heartbeat_protocol"] = 2
+    value["next_retry_at"] = None
     value["heartbeat_at"] = stamp
     value["attempts"] = int(value.get("attempts") or 0) + 1
     value["last_error"] = ""
@@ -166,6 +178,15 @@ def claim(
 def require_lease(record: dict[str, Any], lease_id: str) -> None:
     if str(record.get("status") or "") != ACTIVE or str(record.get("lease_id") or "") != lease_id:
         raise RelayStateError("worker no longer owns this file lease")
+
+
+def renew_lease(record: dict[str, Any], lease_id: str, now: dt.datetime) -> dict[str, Any]:
+    value = copy.deepcopy(record)
+    require_lease(value, lease_id)
+    stamp = now_iso(now)
+    value["heartbeat_at"] = stamp
+    value["updated_at"] = stamp
+    return value
 
 
 def attach_session(record: dict[str, Any], lease_id: str, sealed: str, now: dt.datetime) -> dict[str, Any]:
@@ -216,6 +237,7 @@ def apply_remote_progress(record: dict[str, Any], lease_id: str, remote_offset: 
     value["confirmed_offset"] = offset
     if offset > old_offset:
         value["retryable_failures"] = 0
+        value["next_retry_at"] = None
     value["heartbeat_at"] = now_iso(now)
     value["updated_at"] = value["heartbeat_at"]
     return value
@@ -251,6 +273,7 @@ def apply_relay_checkpoint(
     value["computed_md5"] = digest or None
     if offset > old_offset:
         value["retryable_failures"] = 0
+        value["next_retry_at"] = None
     value["heartbeat_at"] = now_iso(now)
     value["updated_at"] = value["heartbeat_at"]
     return value
@@ -286,7 +309,13 @@ def fail(record: dict[str, Any], lease_id: str, now: dt.datetime, message: str, 
     require_lease(value, lease_id)
     value["status"] = FAILED_PERMANENT if permanent else FAILED_RETRYABLE
     if not permanent:
-        value["retryable_failures"] = int(value.get("retryable_failures") or 0) + 1
+        failures = int(value.get("retryable_failures") or 0) + 1
+        value["retryable_failures"] = failures
+        backoff = min(3 * 3600, 30 * (2 ** min(failures - 1, 10)))
+        delay = backoff + secrets.randbelow(backoff + 1)
+        value["next_retry_at"] = now_iso(now + dt.timedelta(seconds=delay))
+    else:
+        value["next_retry_at"] = None
     value["lease_id"] = None
     value["lease_started_at"] = None
     value["heartbeat_at"] = None
@@ -302,6 +331,7 @@ def reset_retryable(record: dict[str, Any], now: dt.datetime) -> dict[str, Any]:
     if value.get("lease_id"):
         raise RelayStateError("cannot reset a leased retryable file")
     value["retryable_failures"] = 0
+    value["next_retry_at"] = None
     value["status"] = PAUSED
     value["last_error"] = ""
     value["updated_at"] = now_iso(now)

@@ -23,7 +23,8 @@ Implemented:
 - local one-time authorization helper using GitHub CLI Secrets;
 - zero-byte Drive file creation/adoption with exact destination reconciliation;
 - expired-session reconciliation before any replay;
-- automatic master-scheduler wakeup whenever a file-worker workflow completes, including failed/cancelled runs.
+- automatic master-scheduler wakeup whenever a file-worker workflow completes, including failed/cancelled runs;
+- renewable file leases during long Drive PUTs and unlimited transient-error retries with exponentially increasing jitter, persisted in `next_retry_at`.
 
 The first live acceptance succeeded on November 8, 2026: one public-share file (6,065,237 bytes) was uploaded to Google Drive and independently verified, and task-owned Baidu staging was cleaned. The test confirmed end-to-end transfer using a personal Google Cloud OAuth Desktop client, not rclone's retiring shared client. See [AUTHORIZATION.md](AUTHORIZATION.md) for setup.
 
