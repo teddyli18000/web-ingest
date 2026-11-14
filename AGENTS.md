@@ -22,7 +22,7 @@ When you need to inspect, run, repair, or extend a task:
 
 For **durable scientific frontier exploration**, use `science-boundary/`. Read `science-boundary/README.md` and `science-boundary/AGENTS.md` before working there. Each genuinely distinct research direction lives directly under `science-boundary/<research-topic>/` and keeps its own durable handoff, evidence, experiments, dead ends, and reproducible artifacts. This workspace is permanent and is not subject to `temp-work/` cleanup.
 
-For **one-shot snapshots of public Git repositories**, use the existing `git-mirror/` task instead of creating a new root task per source repository. Read `git-mirror/README.md` and `git-mirror/AGENTS.md`; concrete imports use temporary self-cleaning workflows rendered from the retained task template and write only file snapshots plus source provenance.
+For **one-shot snapshots of public Git repositories**, use the existing `git-mirror/` task instead of creating a new root task per source repository. Read `git-mirror/README.md` and `git-mirror/AGENTS.md`; normal imports enter through fixed Release `git-mirror-live`, where the persistent reconciler handles URL normalization, upstream metadata, snapshot/release capture, validation, README indexing, commit, and status projection. The retained per-repository workflow renderer is recovery-only.
 
 For repository-wide scheduling, workflow policy, audits, or maintenance helpers, use `tools/` as the manager workspace. Read `tools/README.md`, `tools/AGENTS.md`, and `tools/OPERATIONS.md` before changing repository-wide behavior.
 
