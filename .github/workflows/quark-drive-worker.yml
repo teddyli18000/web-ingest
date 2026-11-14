@@ -1,4 +1,5 @@
 name: Quark Drive Worker
+run-name: Cloud prepare ${{ inputs.reservation_id || inputs.reason || 'manual' }}
 
 on:
   workflow_dispatch:
@@ -17,6 +18,11 @@ on:
         required: false
         type: string
         default: '3'
+      reservation_id:
+        description: Shared master dispatch receipt
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -38,6 +44,7 @@ jobs:
       QUARK_DRIVE_RCLONE_CONFIG: ${{ secrets.QUARK_DRIVE_RCLONE_CONFIG }}
       QUARK_DRIVE_STATE_KEY: ${{ secrets.QUARK_DRIVE_STATE_KEY }}
       CLOUD_DRIVE_MAX_WORKERS: ${{ inputs.max_workers || '3' }}
+      CLOUD_DRIVE_RESERVATION_ID: ${{ inputs.reservation_id || '' }}
     steps:
       - uses: actions/checkout@v4
         with:
