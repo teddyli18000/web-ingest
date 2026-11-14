@@ -16,13 +16,13 @@ For every non-empty file:
 
 ```text
 Baidu staged file
-    ↓ exact HTTP Range
+    ↓ authenticated signed dlink; ≤4 MiB verified HTTP Range pieces
 bounded response-body stream
     ↓ exact Drive resumable PUT
 Google Drive
 ```
 
-The configured 512 MiB value is a network byte window, not a local file or in-memory allocation. HTTP transport buffers remain bounded independently of window size.
+The configured 512 MiB value is a Drive upload byte window, not a local file or in-memory allocation. The source uses an authenticated staged-file `fs_id` to acquire one signed `dlink` per relay invocation and reads at most 4 MiB per Baidu HTTP Range. A refused source response stops retries without changing the Drive-confirmed checkpoint.
 
 Small files naturally finish in one final window. Large files use many fixed-size non-final windows. Non-final Drive windows remain multiples of 256 KiB.
 
@@ -82,8 +82,8 @@ A file worker owns exactly one persisted lease. During one VM lifetime it repeat
 1. opens/recovers the file's sealed Drive resumable session;
 2. asks Drive for the actual confirmed offset;
 3. aligns the persisted streaming-MD5 state to that offset;
-4. asks Baidu for exactly the next bounded byte range;
-5. streams that response body directly into one Drive PUT;
+4. resolves a signed URL for the already staged file and validates sequential Baidu ranges of at most 4 MiB;
+5. streams those response bodies directly into one Drive PUT without buffering the upload window;
 6. records only Drive-confirmed progress and its matching MD5 state;
 7. repeats until verified completion or the soft runtime boundary.
 

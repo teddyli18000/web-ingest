@@ -12,7 +12,8 @@ Implemented:
 - authenticated Baidu browser-share scanning, staging, cleanup and bounded-range download;
 - durable task/SQLite checkpoints and file-scoped relay state;
 - scan, isolated Baidu staging, Drive tree creation, verified-result import, and guarded cleanup through the pinned mover core;
-- exact bounded Baidu byte ranges;
+- signed Baidu download URLs obtained for tool-owned staged files using the current browser session;
+- source downloads split into at most 4 MiB byte ranges, assembled as one streaming Drive upload without local payload caching;
 - direct Baidu response-body -> Google Drive resumable streaming;
 - 512 MiB network windows without whole-file or whole-chunk disk buffering;
 - up to three independent file workers with file-scoped leases;
@@ -88,7 +89,7 @@ master scheduler / prepare worker
 
 There is no separate small-file engine. A small non-empty file is one final relay window; a large file uses many fixed-size windows through the same path. Zero-byte files use a minimal Drive create/adopt branch because there are no source bytes to range-read.
 
-A 512 MiB relay window is a **network byte interval**, not a 512 MiB local file. HTTP buffers stay small and bounded, so runner disk capacity does not set the maximum transferable file size.
+A 512 MiB relay window is a **network byte interval**, not a local file. Each Drive resumable PUT streams verified Baidu source pieces of at most 4 MiB, fetched from an authenticated signed `dlink`. No payload cache or full-window RAM buffer is used. The signed URL stays runner-local and is never committed. HTTP 403, 429 and other explicit source refusals stop automated file retries.
 
 Release assets are not part of the normal transfer path. Baidu staging is already the durable source copy.
 
@@ -175,7 +176,7 @@ Exactly three Secrets are needed:
 
 `auth_session.py` saves renewed browser Cookies as AES-256-GCM ciphertext in `state/auth/baidu-session.json`. It tracks a fingerprint of the initial Secret, so the latest server-refreshed Cookie wins until a new local login explicitly replaces it. The serialized master alone updates the encrypted session; file workers only read it.
 
-The Go prepare and relay binaries now use the pinned mover's existing Baidu web client for share scanning, extraction codes, transfers, tool-owned staging, cleanup, and exact HTTP Range requests. No OAuth developer API adapter or separate local payload cache is involved.
+The Go prepare and relay binaries now use the pinned mover's existing Baidu web client for share scanning, extraction codes, transfers, tool-owned staging, cleanup, and authenticated signed-link acquisition for bounded source Range requests. No Baidu developer OAuth adapter or separate local payload cache is involved.
 
 A weekly `baidu-drive-auth-keepalive.yml` refreshes Google's OAuth grant using the pinned rclone binary, without running file transfers. Browser sessions cannot be renewed indefinitely after Baidu revokes them; in that case the master sets `NEEDS_LOGIN`, pauses all further work, and notifies through **one reusable GitHub Issue**. Running the same local helper updates the Secret without touching the stable AES key or Google login and automatically dispatches the existing master. Checkpoints survive.
 

@@ -95,3 +95,9 @@ func TestSignedSourceRejectsUntrustedLinkAndMismatchedRange(t *testing.T) {
  _,err:=source.OpenDownloadRange(context.Background(),remote,0,1023)
  if err==nil || !strings.Contains(err.Error(),"Content-Range") {t.Fatalf("wrong Range accepted: %v",err)}
 }
+
+func TestSignedBaiduDenialIsNotRetried(t *testing.T) {
+ if got:=classifyRelayStepError(fmt.Errorf("Baidu blocked: %w",errBaiduDownloadDenied));got!="source_denied" {
+  t.Fatalf("got %q, want source_denied",got)
+ }
+}
