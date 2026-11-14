@@ -58,7 +58,7 @@ jobs:
           print('Existing Baidu session loaded.')
           PY
 
-      - name: Inspect only the first share-list page (no staging, downloads or Drive)
+      - name: Inspect up to four share listing pages (no staging, downloads or Drive)
         run: |
           mkdir -p .source/cmd/share-probe-once
           cat > .source/cmd/share-probe-once/main.go <<'GO'
@@ -83,7 +83,8 @@ jobs:
                 if f.Size>s.maxFile {s.maxFile=f.Size}
                 if s.minFile==0 || f.Size<s.minFile {s.minFile=f.Size}
              }
-             return errFirstPage
+             if len(files)>0 || s.pageCount>=4 { return errFirstPage }
+             return nil
           }
           func main(){
              content, err:=os.ReadFile(os.Getenv("RUNNER_TEMP")+"/share-probe-cookie")
