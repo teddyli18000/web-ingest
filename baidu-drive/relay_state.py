@@ -308,6 +308,21 @@ def reset_retryable(record: dict[str, Any], now: dt.datetime) -> dict[str, Any]:
     return value
 
 
+SOURCE_DENIED_MESSAGE = "Baidu refused the authenticated file download. Automatic retries stopped."
+
+
+def reset_source_denied(record: dict[str, Any], now: dt.datetime) -> dict[str, Any]:
+    value = copy.deepcopy(record)
+    if value.get("status") != FAILED_PERMANENT or value.get("last_error") != SOURCE_DENIED_MESSAGE:
+        return value
+    if value.get("lease_id"):
+        raise RelayStateError("cannot re-arm a leased source-denied file")
+    value["status"] = PAUSED
+    value["last_error"] = ""
+    value["updated_at"] = now_iso(now)
+    return value
+
+
 def complete(
     record: dict[str, Any],
     lease_id: str,
