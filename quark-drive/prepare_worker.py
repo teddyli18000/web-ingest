@@ -81,6 +81,17 @@ def run(gh: controller.GitHub, repo: relay_control.GitHubRepo,
         return 0
     if task.get("status") == "NEEDS_LOGIN" and reason != "auth-updated":
         return 0
+    if reason not in {"auth-updated", "retry"}:
+        expired = any(
+            record.get("status") == relay_state.FAILED_RETRYABLE
+            and "authentication is unavailable or expired" in str(record.get("last_error") or "").lower()
+            for record in repo.list_records(task_id)
+        )
+        if expired:
+            task["status"] = "NEEDS_LOGIN"
+            task["message"] = "Quark or Google authorization expired. Run local authorization helper."
+            controller.save_task(gh, task, "expired-auth")
+            return 0
 
     share_id, url_code = api.parse_share_url(task["source_url"])
     token = client.share_token(share_id, task.get("extraction_code") or url_code)
@@ -170,8 +181,18 @@ def main() -> int:
     runtime,_=gh.read_json(controller.RUNTIME_PATH, default=controller.DEFAULT_RUNTIME)
     task_id=args.task_id or str(runtime.get("active_task") or "")
     if not task_id: return 0
-    cookie=Path(os.environ["QUARK_DRIVE_QUARK_AUTH_FILE"]).read_text(encoding="utf-8")
-    access=Path(os.environ["QUARK_DRIVE_GOOGLE_ACCESS_TOKEN_FILE"]).read_text(encoding="utf-8").strip()
+    cookie_path = os.environ.get("QUARK_DRIVE_QUARK_AUTH_FILE")
+    access_path = os.environ.get("QUARK_DRIVE_GOOGLE_ACCESS_TOKEN_FILE")
+    if not cookie_path or not access_path:
+        task = controller.load_task(gh, task_id)
+        task["status"] = "NEEDS_LOGIN"
+        task["message"] = "Quark or Google login required. Run the local authorization helper."
+        controller.save_task(gh, task, "login-required")
+        release = gh.ensure_release()
+        gh.patch_release(release, controller.render_release(controller.default_control(), runtime, task, "NEEDS_LOGIN", task["message"]))
+        return 0
+    cookie = Path(cookie_path).read_text(encoding="utf-8")
+    access = Path(access_path).read_text(encoding="utf-8").strip()
     client=api.Client(cookie)
     folders=drive.DriveFolders(access)
     try:
