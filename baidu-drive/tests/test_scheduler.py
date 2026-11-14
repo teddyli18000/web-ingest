@@ -106,7 +106,7 @@ class SchedulerTests(unittest.TestCase):
     def test_stale_worker_is_reclaimable(self):
         heartbeat = (self.now() - dt.timedelta(hours=2)).isoformat()
         files = [
-            self.file("stale", 20 * scheduler.GIB, status="ACTIVE", heartbeat=heartbeat),
+            {**self.file("stale", 20 * scheduler.GIB, status="ACTIVE", heartbeat=heartbeat), "lease_heartbeat_protocol": 2},
             self.file("b", 9 * scheduler.GIB),
             self.file("c", 5 * scheduler.GIB),
         ]
