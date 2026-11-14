@@ -132,12 +132,7 @@ jobs:
               b, err := os.ReadFile(os.Getenv("BAIDU_DRIVE_BAIDU_AUTH_FILE"))
               if err != nil {panic("ephemeral credential unavailable")}
               cookie := strings.TrimSpace(string(b))
-              original := check("existing-browser", "", cookie)
-              alternative := false
-              if !original {
-                  alternative = check("netdisk-client", "netdisk;P2SP;3.0.0.8;netdisk;11.12.3;ANG-AN00;android-android;10.0;JSbridge4.4.0;jointBridge;1.1.0;", cookie)
-              }
-              if !original && !alternative {os.Exit(1)}
+              if !check("pan-web-client", "pan.baidu.com", cookie) {os.Exit(1)}
           }
           GO
           cd .pcs-probe
