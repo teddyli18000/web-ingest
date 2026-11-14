@@ -2,6 +2,11 @@ name: Cloud Drive Supervisor
 
 on:
   workflow_dispatch:
+    inputs:
+      reason:
+        required: false
+        type: string
+        default: shared-supervisor
   workflow_run:
     workflows: [Baidu Drive File Worker, Quark Drive File Worker]
     types: [completed]
@@ -24,6 +29,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ github.token }}
       PYTHONDONTWRITEBYTECODE: '1'
+      CLOUD_DRIVE_REASON: ${{ inputs.reason || 'shared-supervisor' }}
     steps:
       - uses: actions/checkout@v4
         with:
