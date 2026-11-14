@@ -1,0 +1,136 @@
+name: Baidu PCS User-Agent diagnostic (one shot)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/temp-baidu-ua-diagnostic.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - name: Checkout web-ingest auth bridge
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+          sparse-checkout: |
+            baidu-drive
+      - name: Checkout pinned mover module
+        uses: actions/checkout@v4
+        with:
+          repository: teddyli18000/baidu-drive-mover
+          ref: a9e76feb18fe9ca1ac680d0ea555aac684d622de
+          path: .pcs-probe
+          persist-credentials: false
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: .pcs-probe/go.mod
+          cache-dependency-path: .pcs-probe/go.sum
+      - name: Provision existing credentials privately
+        env:
+          BAIDU_DRIVE_BAIDU_SESSION: ${{ secrets.BAIDU_DRIVE_BAIDU_SESSION }}
+          BAIDU_DRIVE_RCLONE_CONFIG: ${{ secrets.BAIDU_DRIVE_RCLONE_CONFIG }}
+          BAIDU_DRIVE_STATE_KEY: ${{ secrets.BAIDU_DRIVE_STATE_KEY }}
+        run: |
+          python3 -m pip install "cryptography==46.0.4"
+          python3 baidu-drive/auth_provision.py relay
+      - name: Check Chrome versus netdisk User-Agent without Drive upload
+        run: |
+          mkdir -p .pcs-probe/cmd/probe
+          cat > .pcs-probe/cmd/probe/main.go <<'GO'
+          package main
+          import (
+              "bytes"
+              "context"
+              "encoding/json"
+              "fmt"
+              "io"
+              "net/http"
+              "os"
+              "regexp"
+              "strconv"
+              "strings"
+              "time"
+
+              "github.com/teddyli18000/baidu-drive-mover/internal/baidu"
+          )
+          type transport struct { base http.RoundTripper; ua string }
+          var hitPattern = regexp.MustCompile(`(?i)hitcode\\s*[:=]\\s*([0-9]+)`)
+          func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
+              r := req.Clone(req.Context())
+              if t.ua != "" && strings.HasSuffix(strings.ToLower(r.URL.Hostname()), ".baidu.com") {
+                  r.Header.Set("User-Agent", t.ua)
+              }
+              res, err := t.base.RoundTrip(r)
+              if err != nil { return nil, err }
+              if res.StatusCode >= 400 {
+                  data, readErr := io.ReadAll(io.LimitReader(res.Body, 8192))
+                  res.Body.Close()
+                  if readErr == nil {
+                      var e struct {
+                          Code int `json:"error_code"`
+                          Msg string `json:"error_msg"`
+                          Hitcode int `json:"hitcode"`
+                      }
+                      if json.Unmarshal(data, &e) == nil {
+                          hit := e.Hitcode
+                          if hit == 0 {
+                              if m := hitPattern.FindStringSubmatch(e.Msg); len(m) == 2 {
+                                  hit, _ = strconv.Atoi(m[1])
+                              }
+                          }
+                          fmt.Printf("provider status=%d error_code=%d hitcode=%d\\n", res.StatusCode, e.Code, hit)
+                      } else { fmt.Printf("provider status=%d non_json_error=true\\n", res.StatusCode) }
+                      res.Body = io.NopCloser(bytes.NewReader(data))
+                  } else {res.Body = io.NopCloser(bytes.NewReader(nil))}
+              }
+              return res, nil
+          }
+          func check(label, agent, cookie string) bool {
+              fmt.Printf("variant=%s\\n", label)
+              client, err := baidu.NewClient(cookie, baidu.WithHTTPClient(&http.Client{
+                  Timeout: 45 * time.Second,
+                  Transport: &transport{base: http.DefaultTransport, ua: agent},
+              }))
+              if err != nil {fmt.Println("client setup failed"); return false}
+              source := "/BaiduDriveMover/task-20261114T114758Z-5e9b9fb6c6b0/b-67e2afed8888d3835989/08.mp4"
+              const count int64 = 4 << 20
+              stream, err := client.OpenDownloadRange(context.Background(), source, 0, count - 1)
+              if err != nil {
+                  fmt.Printf("source read rejected: %T\\n", err)
+                  return false
+              }
+              defer stream.Body.Close()
+              if stream.Start != 0 || stream.End != count-1 || stream.Total != 1302042184 {
+                  fmt.Println("source returned unexpected range")
+                  return false
+              }
+              n, err := io.CopyN(io.Discard, stream.Body, count)
+              if err != nil || n != count {fmt.Println("source read incomplete"); return false}
+              fmt.Printf("source exact range read succeeded, bytes=%d\\n", n)
+              return true
+          }
+          func main() {
+              b, err := os.ReadFile(os.Getenv("BAIDU_DRIVE_BAIDU_AUTH_FILE"))
+              if err != nil {panic("ephemeral credential unavailable")}
+              cookie := strings.TrimSpace(string(b))
+              original := check("existing-browser", "", cookie)
+              alternative := false
+              if !original {
+                  alternative = check("netdisk-client", "netdisk;P2SP;3.0.0.8;netdisk;11.12.3;ANG-AN00;android-android;10.0;JSbridge4.4.0;jointBridge;1.1.0;", cookie)
+              }
+              if !original && !alternative {os.Exit(1)}
+          }
+          GO
+          cd .pcs-probe
+          go run ./cmd/probe
