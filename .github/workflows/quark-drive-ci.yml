@@ -1,0 +1,43 @@
+name: Quark Drive CI
+
+on:
+  pull_request:
+    paths:
+      - 'quark-drive/**'
+      - '.github/workflows/quark-drive-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'quark-drive/**'
+      - '.github/workflows/quark-drive-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quark-drive-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Validate Quark API, state and authorization helpers
+        run: |
+          python3 -m pip install 'cryptography==46.0.4'
+          python3 -m py_compile quark-drive/*.py
+          python3 -m unittest discover -s quark-drive/tests -v
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: quark-drive/mover/go.mod
+      - name: Test and compile standalone Quark -> Drive streaming relay
+        run: |
+          cd quark-drive/mover
+          go test ./...
+          go build -o "$RUNNER_TEMP/quark-drive-relay" .
