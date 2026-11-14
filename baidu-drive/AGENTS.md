@@ -106,7 +106,7 @@ If a resumable session expires:
 
 ## Prepare/staging/cleanup
 
-The master serializes the mover SQLite checkpoint. Its prepare bridge may scan/resume, import verified file results, perform guarded cleanup, ensure the Drive directory tree, stage one bounded batch, and export a relay manifest.
+The master serializes the mover SQLite checkpoint. Its prepare bridge may scan/resume, import verified file results, perform guarded cleanup, ensure the Drive directory tree, stage additional bounded batches until three independent staged files are available, and export a relay manifest.
 
 The standalone mover's local-cache transfer path remains for its Windows CLI/legacy compatibility. Do not route the Actions relay through that cache pipeline.
 
