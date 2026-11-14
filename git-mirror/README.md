@@ -2,17 +2,34 @@
 
 `git-mirror` stores **one-shot mirrors** of public Git repositories for later use, plus a small human-facing [`books/`](books/) shelf for book files the owner wants preserved alongside those mirrors.
 
-The repository owner supplies a public repository URL. An Agent creates a temporary GitHub Actions workflow from the retained template, the Action shallow-clones the requested source branch, captures the latest formal release when supported, commits the mirror to `main`, and removes the temporary workflow.
+The normal control surface is the fixed **Git Mirror** Release (`git-mirror-live`). Paste one public repository URL per line into its **Queue** and update the Release; the persistent Action normalizes the URL, mirrors the repository, captures the latest formal GitHub Release when available, validates the result, updates this index, commits to `main`, and writes the result back to the same Release.
 
-This task is **not** a synchronization service. There is no recurring schedule and no automatic refresh policy.
+This task is still **one-shot per source**, not a synchronization service. Existing mirrors are reported but never overwritten or refreshed automatically.
+
+## Fixed Release
+
+Normal use requires no temporary workflow and no Agent intervention:
+
+1. Open the fixed Release [`git-mirror-live`](https://github.com/teddyli18000/web-ingest/releases/tag/git-mirror-live).
+2. Paste one public HTTPS Git repository URL per line between the Queue markers.
+3. Choose **Update release**.
+4. `Git Mirror Reconcile` processes every queued line, commits successful mirrors, clears the queue, and writes per-item results back under **Last result**.
+
+Both `https://github.com/example/project.git` and `https://github.com/example/project` are accepted, as are trailing `/`, normal whitespace, and non-breaking spaces. Duplicate URLs in the same batch are ignored. GitHub repository name and description are taken directly from the upstream GitHub API; no generated description is invented. For non-GitHub Git hosts, the description is `—` unless a later host-specific metadata adapter is added.
+
+`workflow_dispatch` reprocesses the current fixed Release and is the recovery path. The retained one-shot workflow renderer remains only as a maintenance fallback.
 
 ## Mirrored repositories
+
+<!-- mirror-index:start -->
 
 | Repository | Description | Source | Mirror |
 | --- | --- | --- | --- |
 | ARTEX | AI 自主渗透测试系统 \| 百度“agent+”攻防挑战赛冠军项目 | [mhtsec/ARTEX](https://github.com/mhtsec/ARTEX) | [Mirror](data/github.com/mhtsec/ARTEX/) |
 | dsh-infinite-gen-5 | DeepSeek v4.1 flash 逆向工具（无限五代） | [Minglink/dsh-infinite-gen-5](https://github.com/Minglink/dsh-infinite-gen-5) | [Mirror](data/github.com/Minglink/dsh-infinite-gen-5/) |
 | SDAutoLogin | Soochow Wi-Fi /Ethernet keeps ghosting you? This auto network guard & login buddy has your back. | [zqlan/SDAutoLogin](https://git.zqlhub.com/zqlan/SDAutoLogin) | [Mirror](data/git.zqlhub.com/zqlan/SDAutoLogin/) |
+
+<!-- mirror-index:end -->
 
 Keep this table for people: one concise row per mirrored repository. Detailed provenance belongs inside that mirror, not here.
 
@@ -73,22 +90,18 @@ Assets over the limit are not downloaded; their upstream name/link remains in `r
 
 - `import_snapshot.py` — shallow-clones the source, builds the working-tree snapshot, and writes provenance.
 - `collect_latest_release.py` — captures the latest formal GitHub release, full release notes, and eligible uploaded assets.
-- `render_workflow.py` — renders the retained one-shot workflow template for a concrete source URL.
-- `templates/one-shot-workflow.yml.tpl` — template copied into `.github/workflows/` only for one import.
+- `release_control.py` — owns fixed-Release parsing, URL normalization, batch processing, upstream GitHub metadata, README index updates, and Release status projection.
+- `.github/workflows/git-mirror-reconcile.yml` — persistent Release/event entry point; explicitly checks out `main` before processing.
+- `render_workflow.py` / `templates/one-shot-workflow.yml.tpl` — retained recovery tooling for a manually isolated one-shot import, not the normal control path.
 - `validate_snapshots.py` — validates stored mirrors.
 - `tests/` — deterministic task tests; they do not contact external repositories.
 - `books/` — human-facing bookshelf with its own local README and Agent rules.
 
 ## Agent procedure
 
-For Git repository imports:
+For normal Git repository imports, do not create a per-repository workflow. Use the fixed `git-mirror-live` Release exactly as the owner does. The control plane performs URL normalization, public-source checks, metadata lookup, import, release capture, validation, README indexing, commit, and status projection automatically.
 
-1. Read this README and `AGENTS.md`.
-2. Take the public repository URL supplied by the owner. Use the source default branch unless another branch is specified.
-3. Look up the upstream repository name and original description for the human-facing asset table.
-4. Render and commit a temporary one-shot workflow to `main`.
-5. The Action validates this task, imports `snapshot/`, captures the latest supported release, validates the result, removes its own workflow, and pushes the mirror to `main`.
-6. Verify the resulting mirror, then add one row to **Mirrored repositories** using the upstream repository name and original description. Link **Mirror** to the local mirror root so `snapshot/` and `release/` are both easy to reach.
+Use `render_workflow.py` and the retained one-shot template only when the fixed Release path itself is being repaired or a deliberately isolated recovery import is required.
 
 For books, read `books/README.md` and `books/AGENTS.md` instead of using the Git repository importer.
 
