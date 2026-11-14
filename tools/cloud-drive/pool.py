@@ -45,12 +45,23 @@ def ready(record: dict, now: dt.datetime) -> bool:
     return retry is None or retry <= now
 
 
-def demand(provider: Provider, now: dt.datetime) -> bool:
+def pending_count(provider: Provider, now: dt.datetime) -> int:
     if provider.task_status not in RUNNING_TASKS:
-        return False
+        return 0
     if not provider.records:
-        return True
-    return any(ready(r, now) for r in provider.records)
+        return max(1, provider.files_total)
+    ready_files = sum(ready(r, now) for r in provider.records)
+    unstaged = max(0, provider.files_total - len(provider.records))
+    if ready_files or unstaged:
+        return ready_files + unstaged
+    # Final verified files still require a master cleanup and task completion.
+    if provider.task_status == "RUNNING" and all(r.get("status") == "VERIFIED" for r in provider.records):
+        return 1
+    return 0
+
+
+def demand(provider: Provider, now: dt.datetime) -> bool:
+    return pending_count(provider, now) > 0
 
 
 def active_count(provider: Provider, now: dt.datetime) -> int:
@@ -64,6 +75,7 @@ def allocate(providers: list[Provider], now: dt.datetime, *, pool_size: int = MA
     if free == 0:
         return result
     eligible = [p for p in providers if demand(p, now)]
+    pending = {p.name: pending_count(p, now) for p in eligible}
     eligible.sort(key=lambda p: p.name)
     for p in eligible:
         if free == 0:
@@ -71,7 +83,10 @@ def allocate(providers: list[Provider], now: dt.datetime, *, pool_size: int = MA
         result[p.name] += 1
         free -= 1
     while free and eligible:
-        p = max(eligible, key=lambda q: (sum(max(0, int(r.get("size") or 0) - int(r.get("confirmed_offset") or 0))
+        candidates = [p for p in eligible if result[p.name] < pending[p.name]]
+        if not candidates:
+            break
+        p = max(candidates, key=lambda q: (sum(max(0, int(r.get("size") or 0) - int(r.get("confirmed_offset") or 0))
                                             for r in q.records if ready(r, now)) / (active_count(q, now) + result[q.name]),
                                           -len(q.name)))
         result[p.name] += 1
