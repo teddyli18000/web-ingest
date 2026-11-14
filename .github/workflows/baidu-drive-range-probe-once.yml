@@ -1,0 +1,113 @@
+name: Baidu Drive 4 MiB PCS range diagnostic (one shot)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/baidu-drive-range-probe-once.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      BAIDU_DRIVE_BAIDU_SESSION: ${{ secrets.BAIDU_DRIVE_BAIDU_SESSION }}
+      BAIDU_DRIVE_STATE_KEY: ${{ secrets.BAIDU_DRIVE_STATE_KEY }}
+    steps:
+      - name: Checkout task-local code and public checkpoint
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            baidu-drive
+
+      - name: Checkout pinned Baidu source client
+        uses: actions/checkout@v4
+        with:
+          repository: teddyli18000/baidu-drive-mover
+          ref: a9e76feb18fe9ca1ac680d0ea555aac684d622de
+          path: .probe-core
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: .probe-core/go.mod
+          cache-dependency-path: .probe-core/go.sum
+
+      - name: Read current encrypted browser session privately
+        run: |
+          python3 -m pip install -q "cryptography==46.0.4"
+          python3 - <<'PY'
+          import os, sys
+          from pathlib import Path
+          sys.path.insert(0, "baidu-drive")
+          import auth_session, auth_provision, controller
+          gh = controller.GitHub(os.environ["GITHUB_REPOSITORY"], os.environ["GITHUB_TOKEN"])
+          cookie = auth_session.read(gh, os.environ["BAIDU_DRIVE_BAIDU_SESSION"], os.environ["BAIDU_DRIVE_STATE_KEY"])
+          auth_provision.write_private(Path(os.environ["RUNNER_TEMP"]) / "baidu-probe.cookies", cookie)
+          print("Existing Baidu session loaded for a single read-only request.")
+          PY
+
+      - name: Probe one bounded Baidu range without writing remote files
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          record = json.loads(Path("baidu-drive/state/files/bd-20261114T085503Z-7eb87d/218252594820093.json").read_text())
+          assert record["file_id"] == "218252594820093" and record["size"] >= 4 << 20
+          import os
+          with open(os.environ["GITHUB_ENV"], "a") as out:
+              print("BAIDU_PROBE_REMOTE_PATH=" + record["baidu_staging_path"], file=out)
+          PY
+          mkdir -p .probe-core/cmd/baidu-range-probe
+          cat > .probe-core/cmd/baidu-range-probe/main.go <<'GO'
+          package main
+          import (
+            "context"
+            "errors"
+            "fmt"
+            "io"
+            "os"
+            "github.com/teddyli18000/baidu-drive-mover/internal/baidu"
+          )
+          func main() {
+            cookies, err := os.ReadFile(os.Getenv("RUNNER_TEMP") + "/baidu-probe.cookies")
+            if err != nil { fmt.Println("probe: local cookie file unavailable"); os.Exit(1) }
+            client, err := baidu.NewClient(string(cookies))
+            if err != nil { fmt.Println("probe: unable to construct client"); os.Exit(1) }
+            const length int64 = 4 << 20
+            source, err := client.OpenDownloadRange(context.Background(), os.Getenv("BAIDU_PROBE_REMOTE_PATH"), 0, length-1)
+            if err != nil {
+              var pcs *baidu.PCSRemoteError
+              if errors.As(err, &pcs) {
+                fmt.Printf("probe: PCS returned error_code %d\n", pcs.Code)
+              } else if errors.Is(err, baidu.ErrAuthRequired) {
+                fmt.Println("probe: Baidu authentication required")
+              } else if errors.Is(err, baidu.ErrRangeNotHonored) {
+                fmt.Println("probe: Range not honored")
+              } else {
+                fmt.Println("probe: failed with other upstream response error")
+              }
+              os.Exit(1)
+            }
+            defer source.Body.Close()
+            if source.Start != 0 || source.End != length-1 || source.Remaining != length || !source.Partial {
+              fmt.Println("probe: returned range metadata is not exact")
+              os.Exit(1)
+            }
+            n, err := io.CopyN(io.Discard, source.Body, length)
+            if err != nil || n != length {
+              fmt.Println("probe: range body ended before four MiB")
+              os.Exit(1)
+            }
+            fmt.Println("probe: success, one 4 MiB Range read using unchanged cookies and user agent")
+          }
+          GO
+          cd .probe-core
+          go run ./cmd/baidu-range-probe
