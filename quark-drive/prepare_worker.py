@@ -140,9 +140,10 @@ def run(gh: controller.GitHub, repo: relay_control.GitHubRepo,
     if files and len(cleaned) == len(files) and all(r["status"] == relay_state.VERIFIED for r in records):
         task["status"] = "COMPLETED"
         task["message"] = "All Quark files verified on Drive; task-owned staging cleaned."
+        previous_runtime = dict(runtime)
         runtime["active_task"] = None
         runtime["last_task"] = task_id
-        controller.save_runtime_if_changed(gh, {**runtime,"active_task":task_id}, runtime, "complete")
+        controller.save_runtime_if_changed(gh, previous_runtime, runtime, "complete")
     else:
         task["status"] = "RUNNING"
         task["message"] = f"Shared supervisor: {progress['active_workers']} active file workers."
