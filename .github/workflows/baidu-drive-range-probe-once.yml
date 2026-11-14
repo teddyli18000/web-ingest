@@ -1,4 +1,4 @@
-name: Baidu Drive 4 MiB PCS range diagnostic (one shot)
+name: Baidu Drive 4 MiB signed link probe (one shot)
 
 on:
   push:
@@ -54,18 +54,19 @@ jobs:
           print("Existing Baidu session loaded for a single read-only request.")
           PY
 
-      - name: Probe one bounded Baidu range without writing remote files
+      - name: Probe exactly one 4 MiB signed download with no remote writes
         run: |
           python3 - <<'PY'
-          import json
+          import json, os
           from pathlib import Path
           record = json.loads(Path("baidu-drive/state/files/bd-20261114T085503Z-7eb87d/218252594820093.json").read_text())
           assert record["file_id"] == "218252594820093" and record["size"] >= 4 << 20
-          import os
           with open(os.environ["GITHUB_ENV"], "a") as out:
               print("BAIDU_PROBE_REMOTE_PATH=" + record["baidu_staging_path"], file=out)
+              print("BAIDU_PROBE_SIZE=" + str(record["size"]), file=out)
           PY
           mkdir -p .probe-core/cmd/baidu-range-probe
+          cp baidu-drive/mover/relay_dlink.go .probe-core/cmd/baidu-range-probe/relay_dlink.go
           cat > .probe-core/cmd/baidu-range-probe/main.go <<'GO'
           package main
           import (
@@ -74,39 +75,33 @@ jobs:
             "fmt"
             "io"
             "os"
+            "strconv"
+            "strings"
             "github.com/teddyli18000/baidu-drive-mover/internal/baidu"
           )
           func main() {
-            cookies, err := os.ReadFile(os.Getenv("RUNNER_TEMP") + "/baidu-probe.cookies")
-            if err != nil { fmt.Println("probe: local cookie file unavailable"); os.Exit(1) }
-            client, err := baidu.NewClient(string(cookies))
-            if err != nil { fmt.Println("probe: unable to construct client"); os.Exit(1) }
+            cookie, err := os.ReadFile(os.Getenv("RUNNER_TEMP") + "/baidu-probe.cookies")
+            if err != nil { fmt.Println("probe: private cookie input missing"); os.Exit(1) }
+            client, err := baidu.NewClient(string(cookie))
+            if err != nil { fmt.Println("probe: unable to load current login"); os.Exit(1) }
+            size, err := strconv.ParseInt(os.Getenv("BAIDU_PROBE_SIZE"), 10, 64)
+            if err != nil || size <= 4<<20 { fmt.Println("probe: invalid task metadata"); os.Exit(1) }
+            source := newBaiduSignedRangeSource(client, string(cookie), size)
             const length int64 = 4 << 20
-            source, err := client.OpenDownloadRange(context.Background(), os.Getenv("BAIDU_PROBE_REMOTE_PATH"), 0, length-1)
+            stream, err := source.OpenDownloadRange(context.Background(), os.Getenv("BAIDU_PROBE_REMOTE_PATH"), 0, length-1)
             if err != nil {
-              var pcs *baidu.PCSRemoteError
-              if errors.As(err, &pcs) {
-                fmt.Printf("probe: PCS returned error_code %d\n", pcs.Code)
-              } else if errors.Is(err, baidu.ErrAuthRequired) {
-                fmt.Println("probe: Baidu authentication required")
-              } else if errors.Is(err, baidu.ErrRangeNotHonored) {
-                fmt.Println("probe: Range not honored")
-              } else {
-                fmt.Println("probe: failed with other upstream response error")
-              }
+              if errors.Is(err, errBaiduDownloadDenied) { fmt.Println("probe: Baidu refused signed download") 
+              } else if errors.Is(err, baidu.ErrAuthRequired) { fmt.Println("probe: Baidu login needs renewal")
+              } else if strings.Contains(err.Error(), "filemetas") { fmt.Println("probe: signed link metadata was not available")
+              } else if strings.Contains(err.Error(), "stage") { fmt.Println("probe: staged file lookup failed")
+              } else if strings.Contains(err.Error(), "Content-Range") { fmt.Println("probe: signed response did not honor Range")
+              } else { fmt.Println("probe: other signed source response failure") }
               os.Exit(1)
             }
-            defer source.Body.Close()
-            if source.Start != 0 || source.End != length-1 || source.Remaining != length || !source.Partial {
-              fmt.Println("probe: returned range metadata is not exact")
-              os.Exit(1)
-            }
-            n, err := io.CopyN(io.Discard, source.Body, length)
-            if err != nil || n != length {
-              fmt.Println("probe: range body ended before four MiB")
-              os.Exit(1)
-            }
-            fmt.Println("probe: success, one 4 MiB Range read using unchanged cookies and user agent")
+            defer stream.Body.Close()
+            n, err := io.CopyN(io.Discard, stream.Body, length)
+            if err != nil || n != length { fmt.Println("probe: incomplete signed 4 MiB response"); os.Exit(1) }
+            fmt.Println("probe: success, single authorized 4 MiB source read; no remote data written")
           }
           GO
           cd .probe-core
