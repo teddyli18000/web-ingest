@@ -63,6 +63,22 @@ class RelayWorkerTests(unittest.TestCase):
     def now(self):
         return dt.datetime(2026, 10, 27, 15, 0, tzinfo=UTC)
 
+    def test_public_relay_diagnostic_redacts_raw_error_details(self):
+        self.assertEqual(
+            relay_worker.public_relay_diagnostic(
+                "open Baidu relay range: HTTP 403 for signed URL https://example.org/private-token"
+            ),
+            "Baidu file range: HTTP 403",
+        )
+        self.assertEqual(
+            relay_worker.public_relay_diagnostic("start Drive resumable upload: unexpected EOF"),
+            "Google Drive: unexpected EOF",
+        )
+        self.assertEqual(
+            relay_worker.public_relay_diagnostic("read tcp 10.0.1.1: connection reset by peer"),
+            "upstream transport: connection reset",
+        )
+
     def test_worker_checkpoints_each_window_then_verifies(self):
         repo = FakeRepo(make_record(self.now(), 100))
         outputs = iter([
