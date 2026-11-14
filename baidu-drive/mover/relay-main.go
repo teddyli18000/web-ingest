@@ -140,9 +140,13 @@ func runRelayStep(ctx context.Context, input relayStepInput, baiduCookie, access
 		}, nil
 	}
 
-	source, err := baidu.NewClient(baiduCookie)
-	if err != nil || !source.HasLoginCookies() {
+	authClient, err := baidu.NewClient(baiduCookie)
+	if err != nil || !authClient.HasLoginCookies() {
 		return relayStepOutput{ErrorKind: "auth"}, baidu.ErrAuthRequired
+	}
+	source, err := newLocatedDownloadSource(baiduCookie)
+	if err != nil {
+		return relayStepOutput{ErrorKind: "auth"}, err
 	}
 
 	sessionURI := ""
@@ -247,8 +251,11 @@ func runRelayStep(ctx context.Context, input relayStepInput, baiduCookie, access
 }
 
 func isBaiduSourceDenied(err error) bool {
+	if errors.Is(err, errLocatedDownloadDenied) {
+		return true
+	}
 	var pcs *baidu.PCSRemoteError
-	return errors.As(err, &pcs) && pcs.Code == 31326
+	return errors.As(err, &pcs) && (pcs.Code == 31326 || pcs.Code == 31362)
 }
 
 func classifyRelayStepError(err error) string {
