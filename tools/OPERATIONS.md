@@ -72,3 +72,9 @@ Under the timeout + 15-minute planning-buffer policy, the 02:53 warm fallback re
 ## Maintenance principle
 
 Prefer a small executable guard/tool over relying on future Agents to remember a rule. Keep durable provenance and decisions; remove temporary mechanisms after they finish.
+
+### Shared Baidu/Quark transfer supervisor — 2026-11-14
+
+- One API-only supervisor, scheduled every 30 minutes and also woken by file-worker completion, coordinates **three total file workers** across the two providers. Provider-specific preparation remains an executor, not an independent global allocator.
+- `cloud-drive-supervisor.yml` is the only load-guard exception: its job is capped at three minutes, performs only GitHub state/API checks and dispatch, and never downloads or uploads file bytes. This recovery-critical control loop may overlap ingestion jobs; it does not reduce the heavy-workflow scheduling buffer.
+- Worker leases are renewable during a long Drive PUT; old unmonitored leases retain a six-hour handoff window. Provider transient errors back off with jitter and persist a due time, without a finite terminal retry limit.

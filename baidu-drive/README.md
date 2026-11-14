@@ -126,7 +126,7 @@ The master scheduler is the only global decision maker. It prefers independent f
 
 Each file worker owns one persisted lease and may process many relay windows during the same VM lifetime. At the soft runtime boundary it checkpoints and releases the lease instead of trying to run until GitHub's hard limit.
 
-After a file worker runs, its final `always()` step explicitly dispatches `baidu-drive-worker.yml` using `workflow_dispatch` and `GITHUB_TOKEN`. The master re-reads durable state and reconciles verified uploads. A `workflow_run: completed` fallback remains configured, but GitHub can suppress that chained event for workflows initiated by `GITHUB_TOKEN`; it must not be the sole wakeup path. Abrupt runner loss before the final dispatch may require another master run after the lease is stale. No second scheduler is used.
+After a file worker runs, its final `always()` step explicitly dispatches `cloud-drive-supervisor.yml` using `workflow_dispatch` and `GITHUB_TOKEN`. The master re-reads durable state and reconciles verified uploads. The shared supervisor also observes `workflow_run: completed` as a fallback, but GitHub can suppress that chained event for workflows initiated by `GITHUB_TOKEN`; it must not be the sole wakeup path. An independent 30-minute supervisor watchdog recovers from an abrupt runner loss after lease expiry. All providers share a global three-worker cap; the Baidu preparation job is a provider adapter, not a second global scheduler.
 
 ## Cross-VM recovery
 

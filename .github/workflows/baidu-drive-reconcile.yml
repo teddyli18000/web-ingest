@@ -12,6 +12,7 @@ on:
       - 'baidu-drive/mover/**'
       - '.github/workflows/baidu-drive-reconcile.yml'
       - '.github/workflows/baidu-drive-worker.yml'
+      - '.github/workflows/cloud-drive-supervisor.yml'
       - '.github/workflows/baidu-drive-file-worker.yml'
   workflow_dispatch:
 
@@ -157,10 +158,9 @@ jobs:
           if accepted:
               subprocess.run(
                   [
-                      "gh", "workflow", "run", "baidu-drive-worker.yml",
+                      "gh", "workflow", "run", "cloud-drive-supervisor.yml",
                       "--ref", "main",
-                      "-f", f"task_id={active}",
-                      "-f", f"reason={command}",
+
                   ],
                   check=True,
               )

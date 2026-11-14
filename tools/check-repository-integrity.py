@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW_DIR = ROOT / ".github" / "workflows"
 LOCAL_TZ = ZoneInfo("Asia/Singapore")
 POST_RUN_BUFFER_MINUTES = 15
+SUPERVISOR_WORKFLOWS = {'cloud-drive-supervisor.yml'}
 REFERENCE_YEAR = 2028  # leap year: exercises every month/day shape in one pass
 
 CRON_RE = re.compile(r"^\s*-\s*cron:\s*['\"]([^'\"]+)['\"]\s*(?:#.*)?$", re.MULTILINE)
@@ -26,6 +27,7 @@ TEMPORARY_NAME_PARTS = ("backfill", "repair", "migration", "probe", "diagnostic"
 # when repository-wide maintenance is owned by a non-matching directory.
 SCHEDULED_WORKFLOW_READMES = {
     "baidu-drive-auth-keepalive.yml": "baidu-drive/README.md",
+    "cloud-drive-supervisor.yml": "tools/cloud-drive/README.md",
     "ai-daily-warm.yml": "ai-daily/README.md",
     "ai-daily-warm.yaml": "ai-daily/README.md",
     "temp-work-cleanup.yml": "temp-work/README.md",
@@ -200,6 +202,9 @@ def build_windows(schedules: list[WorkflowSchedule]) -> list[RunWindow]:
 
 
 def check_load_balance(schedules: list[WorkflowSchedule]) -> None:
+    # API-only supervision is allowed to overlap heavy independent ingestion
+    # windows: it performs no downloads and exits in <=3 minutes.
+    schedules = [s for s in schedules if s.name not in SUPERVISOR_WORKFLOWS]
     windows = build_windows(schedules)
     reported: set[tuple[tuple[str, str], tuple[str, str]]] = set()
     for index, left in enumerate(windows):

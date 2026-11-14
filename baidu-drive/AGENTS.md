@@ -10,7 +10,7 @@ Read `README.md` and `SCHEDULER.md` before changing scheduling, worker state, tr
 - Tool-owned Baidu staging is the durable readable source.
 - Google Drive verified/resumable remote state is the durable writable truth.
 - Repository state is a checkpoint and public coordination record; it must not override contradictory proven remote state.
-- There is exactly one global scheduler: `baidu-drive-worker.yml` / `prepare_worker.py`.
+- There is exactly one global worker-pool scheduler: `cloud-drive-supervisor.yml` / `tools/cloud-drive/supervisor.py`. Baidu's `baidu-drive-worker.yml` / `prepare_worker.py` only prepares the assigned provider work within its shared slot cap.
 - Keep one normal non-empty-file data path: exact Baidu Range response body -> direct Drive resumable PUT.
 - A 512 MiB relay window is a byte interval, not a disk-backed chunk or RAM-sized buffer.
 - Do not reintroduce Release asset staging, whole-file Actions cache, a second scheduler, or same-file multi-VM writes without a concrete measured failure mode.

@@ -383,11 +383,13 @@ def run_prepare_worker(
         return 0
 
     now = utc_now()
+    pool_cap = int(os.environ.get("CLOUD_DRIVE_MAX_WORKERS", "3"))
     dispatched = relay_control.schedule_once(
         relay_repo,
         task_id,
         now,
         os.environ.get("GITHUB_RUN_ID", "prepare"),
+        policy=scheduler.Policy(max_workers=pool_cap),
     )
     records = relay_repo.list_records(task_id)
     task = merge_relay_progress(task, records)

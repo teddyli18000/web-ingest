@@ -112,7 +112,9 @@ jobs:
       - name: Validate repository and Action schedule
         run: python3 tools/check-repository-integrity.py --show
       - name: Validate repository management tools
-        run: find tools -maxdepth 2 -type f -name '*.py' -print0 | xargs -0 -r python3 -m py_compile
+        run: |
+          find tools -maxdepth 2 -type f -name '*.py' -print0 | xargs -0 -r python3 -m py_compile
+          python3 -m unittest discover -s tools/cloud-drive/tests -v
       - name: Validate AI Daily maintenance code
         run: |
           python3 -m py_compile ai-daily/*.py

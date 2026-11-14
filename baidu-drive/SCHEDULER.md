@@ -34,7 +34,7 @@ Do not introduce Release-asset staging or disk-backed chunk files without a meas
 
 ## Master scheduler
 
-The master is `baidu-drive-worker.yml` running `prepare_worker.py` under the serialized `baidu-drive-live-state` concurrency group.
+The global master is `cloud-drive-supervisor.yml` with a shared three-worker cap across Baidu and Quark. Baidu's `baidu-drive-worker.yml` remains a serialized preparation adapter, honoring its assigned `CLOUD_DRIVE_MAX_WORKERS` cap.
 
 It alone may:
 
@@ -95,9 +95,9 @@ At 5 hours the worker stops starting new windows, checkpoints, releases the leas
 
 ## Wakeup and hard VM loss
 
-After the relay step, a file worker dispatches `baidu-drive-worker.yml` explicitly through `workflow_dispatch` in a final `always()` step. This works with GitHub's built-in `GITHUB_TOKEN`; relying only on `workflow_run: completed` did not wake the master for Actions-token-dispatched file workers.
+After the relay step, a file worker dispatches `cloud-drive-supervisor.yml` explicitly through `workflow_dispatch` in a final `always()` step. This works with GitHub's built-in `GITHUB_TOKEN`; relying only on `workflow_run: completed` did not wake the master for Actions-token-dispatched file workers.
 
-The master re-reads durable state instead of trusting the completed VM. The `workflow_run: completed` trigger remains as a possible additional entry point, but is not relied on for normal chained operation. A dedicated 5-minute heartbeat accompanies each new worker, including while a long upload is in flight. The master can reclaim its lease after 45 minutes without a heartbeat; pre-upgrade workers retain a 6-hour timeout to avoid stealing an in-flight 512 MiB PUT. A periodic external supervisor should re-enter the master if the final workflow-dispatch step is skipped.
+The shared master re-reads durable state instead of trusting the completed VM. Its 30-minute GitHub API-only watchdog recovers missed completion events or abrupt loss of an Actions runner. The `workflow_run: completed` trigger remains as a possible additional entry point, but is not relied on for normal chained operation. A dedicated 5-minute heartbeat accompanies each new worker, including while a long upload is in flight. The master can reclaim its lease after 45 minutes without a heartbeat; pre-upgrade workers retain a 6-hour timeout to avoid stealing an in-flight 512 MiB PUT. A periodic external supervisor should re-enter the master if the final workflow-dispatch step is skipped.
 
 No cron watchdog and no second scheduler are used.
 

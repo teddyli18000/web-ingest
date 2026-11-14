@@ -12,10 +12,12 @@ on:
         required: false
         default: manual
         type: string
-  workflow_run:
-    workflows: [Baidu Drive File Worker]
-    types: [completed]
-
+      max_workers:
+        description: Assigned shared worker-pool cap for this provider
+        required: false
+        default: '3'
+        type: string
+ 
 permissions:
   contents: write
   actions: write
@@ -33,7 +35,8 @@ jobs:
       GITHUB_TOKEN: ${{ github.token }}
       PYTHONDONTWRITEBYTECODE: '1'
       BAIDU_DRIVE_TASK_ID: ${{ inputs.task_id || '' }}
-      BAIDU_DRIVE_REASON: ${{ github.event_name == 'workflow_run' && 'file-worker-completed' || inputs.reason || 'manual' }}
+      BAIDU_DRIVE_REASON: ${{ inputs.reason || 'manual' }}
+      CLOUD_DRIVE_MAX_WORKERS: ${{ inputs.max_workers || '3' }}
       BAIDU_DRIVE_BAIDU_SESSION: ${{ secrets.BAIDU_DRIVE_BAIDU_SESSION }}
       BAIDU_DRIVE_STATE_KEY: ${{ secrets.BAIDU_DRIVE_STATE_KEY }}
     steps:

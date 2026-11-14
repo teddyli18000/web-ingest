@@ -1,0 +1,41 @@
+name: Cloud Drive Supervisor
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        required: false
+        type: string
+        default: shared-supervisor
+  workflow_run:
+    workflows: [Baidu Drive File Worker, Quark Drive File Worker]
+    types: [completed]
+  schedule:
+    # API-only 1+3 recovery heartbeat; other ingestion schedules stay unchanged.
+    - cron: '9,39 * * * *'
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: cloud-drive-supervisor
+  cancel-in-progress: false
+
+jobs:
+  coordinate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      PYTHONDONTWRITEBYTECODE: '1'
+      CLOUD_DRIVE_REASON: ${{ inputs.reason || 'shared-supervisor' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+          sparse-checkout: |
+            tools/cloud-drive
+      - name: Reconcile both providers and fill shared slots
+        run: python3 tools/cloud-drive/supervisor.py
