@@ -149,5 +149,30 @@ class RelayControlTests(unittest.TestCase):
         )
 
 
+    def test_explicit_retry_rearms_only_source_denied_and_preserves_checkpoint(self):
+        repo = FakeRepo()
+        relay_control.sync_manifest(repo, "task-1", [self.source("a"), self.source("b")], self.now())
+        denied = repo.records[("task-1", "a")]
+        denied["status"] = relay_state.FAILED_PERMANENT
+        denied["last_error"] = relay_state.SOURCE_DENIED_MESSAGE
+        denied["confirmed_offset"] = 44
+        denied["hash_offset"] = 44
+        denied["md5_state"] = "hash-checkpoint"
+        denied["session_sealed"] = "encrypted-session"
+        other = repo.records[("task-1", "b")]
+        other["status"] = relay_state.FAILED_PERMANENT
+        other["last_error"] = "source identity mismatch"
+        self.assertEqual(relay_control.reset_retryable_files(repo, "task-1", self.now()), 0)
+        self.assertEqual(repo.records[("task-1", "a")]["status"], relay_state.FAILED_PERMANENT)
+        self.assertEqual(relay_control.reset_retryable_files(repo, "task-1", self.now(), rearm_source_denied=True), 1)
+        restarted = repo.records[("task-1", "a")]
+        self.assertEqual(restarted["status"], relay_state.PAUSED)
+        self.assertEqual(restarted["confirmed_offset"], 44)
+        self.assertEqual(restarted["hash_offset"], 44)
+        self.assertEqual(restarted["md5_state"], "hash-checkpoint")
+        self.assertEqual(restarted["session_sealed"], "encrypted-session")
+        self.assertEqual(repo.records[("task-1", "b")]["status"], relay_state.FAILED_PERMANENT)
+
+
 if __name__ == "__main__":
     unittest.main()
