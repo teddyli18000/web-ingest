@@ -71,6 +71,18 @@ class RelayWorkerTests(unittest.TestCase):
             "Baidu file range: HTTP 403",
         )
         self.assertEqual(
+            relay_worker.public_relay_diagnostic("open Baidu relay range: Baidu download returned HTTP 302"),
+            "Baidu file range: HTTP 302",
+        )
+        self.assertEqual(
+            relay_worker.public_relay_diagnostic("open Baidu relay range: Baidu PCS download failed with error_code 31066"),
+            "Baidu file range: Baidu PCS error_code 31066",
+        )
+        self.assertEqual(
+            relay_worker.public_relay_diagnostic("open Baidu relay range: Baidu download server did not honor requested range"),
+            "Baidu file range: Baidu Range not honored",
+        )
+        self.assertEqual(
             relay_worker.public_relay_diagnostic("start Drive resumable upload: unexpected EOF"),
             "Google Drive: unexpected EOF",
         )
