@@ -8,7 +8,8 @@
 - Use `git-mirror/books/` when the owner wants a book file preserved for later reading/use. Read `books/README.md` and `books/AGENTS.md` before adding one.
 - The default operation is a **single mirror**, not recurring synchronization.
 - Work directly on `main` unless the owner explicitly says otherwise.
-- Durable implementation stays under `git-mirror/`; each import workflow is temporary under `.github/workflows/`.
+- Normal imports enter through fixed Release `git-mirror-live` and persistent `.github/workflows/git-mirror-reconcile.yml`.
+- Durable implementation stays under `git-mirror/`; per-repository temporary workflows are recovery tooling only.
 
 ## Source boundary
 
@@ -32,30 +33,34 @@
 
 ## Human-facing asset index
 
-After a successful Git repository import, add exactly one concise row to `git-mirror/README.md` under **Mirrored repositories** with:
+The Release control plane updates exactly one concise row in `git-mirror/README.md` under **Mirrored repositories** after a successful new import, with:
 
 - repository name;
 - original upstream description;
 - upstream source link;
 - local **Mirror** link pointing to the mirror root.
 
-Keep machine metadata out of the README. The mirror-root link is intentional: a person can open `snapshot/` for source files or `release/` for the latest release from one place.
+Keep machine metadata out of the README. For GitHub, use the repository name and description returned by the upstream GitHub API verbatim apart from Markdown escaping/whitespace normalization; never invent a description. Non-GitHub sources use `—` when no deterministic metadata adapter exists. The mirror-root link is intentional: a person can open `snapshot/` for source files or `release/` for the latest release from one place.
 
 Books maintain their own separate human index in `git-mirror/books/README.md`; do not mix books into the repository table.
 
-## Temporary workflow
+## Release control plane
 
-For Git repository mirrors:
+Normal Git repository imports:
 
-- Start from `templates/one-shot-workflow.yml.tpl` or `render_workflow.py`.
-- No recurring `schedule:` trigger.
-- Prefer a path-scoped `push` trigger on the workflow file plus `workflow_dispatch` for recovery.
-- Give the job an explicit timeout and unique concurrency group.
-- Run `git-mirror` tests before importing.
-- Stage only the mirror output and the temporary workflow's own deletion.
-- Stage mirror output with `git add -f git-mirror/data`. A source repository may intentionally track files that match its own nested `.gitignore`; ordinary `git add` in `web-ingest` would otherwise silently omit them.
-- Rebase on latest `main` before pushing.
-- Remove the temporary workflow after a successful validated import.
+- accept one or more public HTTPS repository URLs from the Queue block in fixed Release `git-mirror-live`;
+- normalize `.git`, trailing `/`, ordinary whitespace and NBSP variants before deduplication;
+- reject credential-bearing/private GitHub sources;
+- process batch members independently so one bad URL does not discard other valid mirrors;
+- keep existing destinations immutable and report `already mirrored` instead of refreshing them;
+- run task tests and snapshot validation before committing;
+- stage mirror output with `git add -f git-mirror/data` so nested upstream `.gitignore` rules cannot silently omit tracked files;
+- update the human README index automatically only for newly created mirrors;
+- consume the Release Queue and write per-item status back only after repository changes have been validated and pushed.
+
+`workflow_dispatch` is the recovery entry point and must read the same fixed Release. Release-triggered runs must explicitly checkout `main` because a Release event otherwise refers to the Release tag.
+
+The retained `render_workflow.py` / `templates/one-shot-workflow.yml.tpl` path is recovery-only. If used, keep it unscheduled, self-cleaning, validated, and isolated exactly as before.
 
 Book imports may use a one-shot `temp-book-<slug>.yml` workflow when binary download is needed; follow `books/AGENTS.md` rather than the repository template.
 
@@ -85,4 +90,4 @@ Do not place mirrored repositories at the repository root, under `tools/`, under
 
 Everything copied here becomes public through `web-ingest`. If a supposedly public source contains obvious credentials, private keys, session material, personal/private data, or other material that should not be republished, stop instead of committing it.
 
-Source `.github/workflows/` files remain nested under `snapshot/` and must never be promoted into this repository's root `.github/workflows/` except for the temporary importer workflow created from our own retained template.
+Source `.github/workflows/` files remain nested under `snapshot/` and must never be promoted into this repository's root `.github/workflows/`. The only durable Git-mirror workflow is our own `git-mirror-reconcile.yml`; recovery one-shot workflows, when explicitly needed, come only from the retained local template.
