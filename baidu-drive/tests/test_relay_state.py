@@ -206,5 +206,17 @@ class RelayStateTests(unittest.TestCase):
         )
 
 
+    def test_source_denied_rearm_preserves_drive_checkpoint(self):
+        record = relay_state.claim(self.record(4096), "lease", self.now())
+        record = relay_state.apply_relay_checkpoint(record, "lease", 2048, 2048, "hashstate", None, self.now())
+        record = relay_state.fail(record, "lease", self.now(), relay_state.SOURCE_DENIED_MESSAGE, permanent=True)
+        fresh = relay_state.reset_source_denied(record, self.now())
+        self.assertEqual(fresh["status"], relay_state.PAUSED)
+        self.assertEqual(fresh["confirmed_offset"], 2048)
+        self.assertEqual(fresh["hash_offset"], 2048)
+        self.assertEqual(fresh["md5_state"], "hashstate")
+        self.assertEqual(fresh["last_error"], "")
+
+
 if __name__ == "__main__":
     unittest.main()
