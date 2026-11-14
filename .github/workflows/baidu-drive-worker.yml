@@ -43,6 +43,7 @@ jobs:
       BAIDU_DRIVE_TASK_ID: ${{ inputs.task_id || '' }}
       BAIDU_DRIVE_REASON: ${{ inputs.reason || 'manual' }}
       CLOUD_DRIVE_MAX_WORKERS: ${{ inputs.max_workers || '3' }}
+      CLOUD_DRIVE_RESERVATION_ID: ${{ inputs.reservation_id || '' }}
       BAIDU_DRIVE_BAIDU_SESSION: ${{ secrets.BAIDU_DRIVE_BAIDU_SESSION }}
       BAIDU_DRIVE_STATE_KEY: ${{ secrets.BAIDU_DRIVE_STATE_KEY }}
     steps:
