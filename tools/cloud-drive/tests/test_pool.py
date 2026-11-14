@@ -95,7 +95,7 @@ class FakeGitHub:
         self.write_calls += 1
         self.state = value
 
-    def dispatch(self, provider, task_id, capacity):
+    def dispatch(self, provider, task_id, capacity, reason="shared-supervisor"):
         self.dispatched.append((provider, task_id, capacity))
 
 
