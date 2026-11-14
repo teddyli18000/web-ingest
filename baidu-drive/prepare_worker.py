@@ -14,6 +14,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import time
 from typing import Any
 
 import auth_session
@@ -123,6 +124,19 @@ def apply_prepare_result(task: dict[str, Any], result: dict[str, Any]) -> dict[s
         value["drive_folder_id"] = drive_id
         value["drive_folder_url"] = f"https://drive.google.com/drive/folders/{drive_id}"
     return value
+
+
+def should_retry_prepare_eof(
+    returncode: int,
+    result: dict[str, Any],
+    task: dict[str, Any],
+    attempt: int,
+) -> bool:
+    return (
+        attempt == 0 and returncode != 0
+        and str(result.get("last_error") or "").strip().lower() in {"eof", "unexpected eof"}
+        and bool(task.get("mover_task_id"))
+    )
 
 
 def merge_relay_progress(task: dict[str, Any], records: list[dict[str, Any]]) -> dict[str, Any]:
@@ -270,13 +284,23 @@ def run_prepare_worker(
         status="RUNNING",
         message="Scheduler is reconciling verified results and the next bounded staging batch.",
     )
-    proc = subprocess.run(
-        prepare_command(task, binary, work, checkpoint, result_path, manifest_path, verified_path),
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False,
-    )
-    legacy_worker.persist_checkpoint(gh, task_id, checkpoint)
+    for attempt in range(2):
+        result_path.unlink(missing_ok=True)
+        proc = subprocess.run(
+            prepare_command(task, binary, work, checkpoint, result_path, manifest_path, verified_path),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        legacy_worker.persist_checkpoint(gh, task_id, checkpoint)
+        result = parse_json_file(result_path, {})
+        if not isinstance(result, dict):
+            result = {}
+        task = apply_prepare_result(task, result)
+        if not should_retry_prepare_eof(proc.returncode, result, task, attempt):
+            break
+        print("Baidu Drive upstream EOF; retrying once from the saved mover checkpoint.")
+        time.sleep(2)
     updated_cookie_path = work / "updated-baidu.cookies"
     if updated_cookie_path.is_file():
         auth_session.save_if_changed(
@@ -285,11 +309,6 @@ def run_prepare_worker(
             os.environ["BAIDU_DRIVE_STATE_KEY"],
             updated_cookie_path.read_text(encoding="utf-8"),
         )
-    result = parse_json_file(result_path, {})
-    if not isinstance(result, dict):
-        result = {}
-    task = apply_prepare_result(task, result)
-
     if proc.returncode != 0:
         detail = str(result.get("last_error") or "").lower()
         phases = (
@@ -316,13 +335,20 @@ def run_prepare_worker(
             "baidu security verification required",
             "interactive baidu login",
         ))
+        message = (
+            "Baidu browser session expired. Run the local gh authorization helper; checkpoint preserved."
+            if needs_login else
+            "Upstream EOF after automatic retry; task checkpoint preserved."
+            if detail.strip() in {"eof", "unexpected eof"} else
+            f"Scheduler preparation failed in {phase}; checkpoint preserved."
+        )
         render_and_save(
             gh, runtime, task,
             reason="relay-prepare-needs-login" if needs_login else "relay-prepare-blocked",
             status="NEEDS_LOGIN" if needs_login else "BLOCKED",
-            message="Baidu browser session expired. Run the local gh authorization helper; checkpoint preserved." if needs_login else "Scheduler preparation stopped safely at a durable checkpoint.",
+            message=message,
         )
-        return 0
+        return 1
 
     manifest = parse_json_file(manifest_path, [])
     if not isinstance(manifest, list):
