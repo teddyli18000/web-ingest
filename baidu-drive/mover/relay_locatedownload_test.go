@@ -90,7 +90,7 @@ func TestLocatedSourceStreamsExactRange(t *testing.T) {
 func TestLocatedReaderCrossesFourMiBSegments(t *testing.T) {
 	const firstEnd = (4 << 20) - 1
 	const finalEnd = firstEnd + 5
-	const total = finalEnd + 3
+	const total = finalEnd + 2
 	requests := 0
 	client := &http.Client{Transport: locatedRoundTripper(func(req *http.Request) (*http.Response, error) {
 		requests++
