@@ -87,7 +87,10 @@ func (s *baiduSignedRangeSource) resolve(ctx context.Context, remotePath string)
  if err != nil { return "", fmt.Errorf("query Baidu filemetas: %w", err) }
  defer resp.Body.Close()
  if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden { return "", errBaiduDownloadDenied }
- if resp.StatusCode != http.StatusOK { return "", fmt.Errorf("Baidu filemetas returned HTTP %d", resp.StatusCode) }
+ if resp.StatusCode != http.StatusOK {
+  if resp.StatusCode < 500 { return "", fmt.Errorf("%w (filemetas HTTP %d)", errBaiduDownloadDenied, resp.StatusCode) }
+  return "", fmt.Errorf("Baidu filemetas returned HTTP %d", resp.StatusCode)
+ }
  raw, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
  if err != nil { return "", fmt.Errorf("read Baidu filemetas: %w", err) }
  var payload struct {
@@ -95,7 +98,10 @@ func (s *baiduSignedRangeSource) resolve(ctx context.Context, remotePath string)
   Info []struct { FsID int64 `json:"fs_id"`; Dlink string `json:"dlink"` } `json:"info"`
  }
  if err := json.Unmarshal(raw, &payload); err != nil { return "", fmt.Errorf("decode Baidu filemetas: %w", err) }
- if payload.Errno != 0 { return "", fmt.Errorf("%w (filemetas errno %d)", errBaiduDownloadDenied, payload.Errno) }
+ if payload.Errno != 0 {
+  if payload.Errno == -6 || payload.Errno == -7 || payload.Errno == 9019 { return "", baidu.ErrAuthRequired }
+  return "", fmt.Errorf("%w (filemetas errno %d)", errBaiduDownloadDenied, payload.Errno)
+ }
  if len(payload.Info) != 1 || payload.Info[0].FsID != fsID { return "", fmt.Errorf("Baidu filemetas identity mismatch") }
  u, err := url.Parse(payload.Info[0].Dlink)
  if err != nil || !signedBaiduHost(u) { return "", fmt.Errorf("Baidu filemetas returned an untrusted download origin") }
@@ -134,7 +140,8 @@ func (r *baiduSegmentedReader) openNext() error {
  if resp.StatusCode != http.StatusPartialContent {
   resp.Body.Close()
   if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden { return errBaiduDownloadDenied }
-  return fmt.Errorf("Baidu signed download returned HTTP %d instead of 206", resp.StatusCode)
+  if resp.StatusCode < 500 { return fmt.Errorf("%w (signed range HTTP %d)", errBaiduDownloadDenied, resp.StatusCode) }
+  return fmt.Errorf("Baidu signed download returned HTTP %d", resp.StatusCode)
  }
  match := baiduContentRange.FindStringSubmatch(resp.Header.Get("Content-Range"))
  if len(match) != 4 { resp.Body.Close(); return fmt.Errorf("Baidu signed download omitted exact Content-Range") }
