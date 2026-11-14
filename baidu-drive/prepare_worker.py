@@ -233,6 +233,20 @@ def run_prepare_worker(
     task = controller.load_task(gh, task_id)
     if not task or runtime.get("active_task") != task_id:
         return 0
+    # A new master may supersede an Actions run that remained queued after a
+    # reservation expired. Only the current persisted reservation can schedule
+    # file leases; stale preparation jobs become no-ops.
+    reservation = os.environ.get("CLOUD_DRIVE_RESERVATION_ID", "")
+    supervisor, _ = gh.read_json("tools/cloud-drive/state/supervisor.json", default={})
+    if supervisor:
+        assigned = supervisor.get("dispatched", {}).get("baidu", {})
+        if (
+            not reservation
+            or reservation != assigned.get("reservation_id")
+            or assigned.get("task_id") != task_id
+        ):
+            print("Superseded or unassigned Baidu preparation; no files dispatched.")
+            return 0
     if str(task.get("status") or "") == "COMPLETED":
         return 0
     if str(task.get("status") or "") not in RUNNABLE_TASK_STATES and not (reason == "auth-updated" and task.get("status") == "NEEDS_LOGIN"):
