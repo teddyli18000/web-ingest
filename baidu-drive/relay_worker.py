@@ -334,8 +334,8 @@ def public_relay_diagnostic(message: str) -> str:
         "Google Drive" if "drive" in text or "resumable" in text else
         "upstream transport"
     )
-    http_status = re.search(r"\\bhttp\\s+([1-5]\\d{2})\\b", text)
-    pcs_code = re.search(r"\\berror_code\\s+(-?\\d+)\\b", text)
+    http_status = re.search(r"\bhttp\s+([1-5]\d{2})\b", text)
+    pcs_code = re.search(r"\berror_code\s+(-?\d+)\b", text)
     cause = (
         f"HTTP {http_status.group(1)}" if http_status else
         f"Baidu PCS error_code {pcs_code.group(1)}" if pcs_code else
