@@ -63,10 +63,10 @@ class GitHub:
             params["sha"] = sha
         self.request("PUT", "/contents/" + urllib.parse.quote(path, safe="/"), params)
 
-    def dispatch(self, provider: str, task_id: str, capacity: int):
+    def dispatch(self, provider: str, task_id: str, capacity: int, reason: str = "shared-supervisor"):
         self.request("POST", "/actions/workflows/" + WORKFLOWS[provider] + "/dispatches", {
             "ref": "main",
-            "inputs": {"task_id": task_id, "reason": "shared-supervisor", "max_workers": str(capacity)},
+            "inputs": {"task_id": task_id, "reason": reason, "max_workers": str(capacity)},
         })
 
 
@@ -85,8 +85,12 @@ def load_provider(gh: GitHub, name: str) -> Provider | None:
                     bytes_done=int(task.get("bytes_done") or 0))
 
 
-def run(gh: GitHub, now: dt.datetime) -> dict[str, int]:
+def run(gh: GitHub, now: dt.datetime, reason: str = "shared-supervisor") -> dict[str, int]:
     providers = [p for name in WORKFLOWS if (p := load_provider(gh, name)) is not None]
+    if reason == "auth-updated":
+        for p in providers:
+            if p.task_status == "NEEDS_LOGIN":
+                p.task_status = "BLOCKED_AUTH_SETUP"
     state, sha = gh.read(STATE)
     state = state or {"schema": 1, "dispatched": {}}
     dispatch_state = state["dispatched"]
@@ -128,12 +132,12 @@ def run(gh: GitHub, now: dt.datetime) -> dict[str, int]:
         gh.write(STATE, state, sha)
         for p in providers:
             if allocations[p.name]:
-                gh.dispatch(p.name, p.task_id, active_count(p, now) + allocations[p.name])
+                gh.dispatch(p.name, p.task_id, active_count(p, now) + allocations[p.name], reason)
     return allocations
 
 
 def main() -> None:
-    result = run(GitHub(), dt.datetime.now(dt.timezone.utc))
+    result = run(GitHub(), dt.datetime.now(dt.timezone.utc), os.environ.get("CLOUD_DRIVE_REASON", "shared-supervisor"))
     print("Shared supervisor dispatch:", {k: v for k, v in result.items() if v})
 
 
