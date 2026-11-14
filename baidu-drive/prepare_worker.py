@@ -263,7 +263,7 @@ def run_prepare_worker(
         return 0
 
     if reason in {"retry", "auth-updated"}:
-        relay_control.reset_retryable_files(relay_repo, task_id, utc_now())
+        relay_control.reset_retryable_files(relay_repo, task_id, utc_now(), rearm_source_denied=(reason == "retry"))
 
     binary = prepare_binary()
     assert binary is not None
