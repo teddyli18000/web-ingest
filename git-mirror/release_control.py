@@ -243,12 +243,18 @@ def process_release(body: str, token: str) -> list[RequestResult]:
                 results.append(RequestResult(raw, candidate, candidate, "duplicate", "duplicate request ignored"))
                 continue
             seen.add(dedupe_key)
-            info = source_info(candidate, token)
-            target = DATA_ROOT / info.destination
-            if target.exists():
-                results.append(RequestResult(raw, info.web_url, info.source_label, "already_mirrored", "already mirrored; existing snapshot kept"))
+
+            existing_destination = default_destination(candidate)
+            existing_target = DATA_ROOT / existing_destination
+            if existing_target.exists():
+                parsed = urlparse(candidate)
+                parts = [part for part in parsed.path.split("/") if part]
+                label = "/".join(parts) or candidate
+                results.append(RequestResult(raw, candidate, label, "already_mirrored", "already mirrored; existing snapshot kept"))
                 continue
 
+            info = source_info(candidate, token)
+            target = DATA_ROOT / info.destination
             try:
                 import_snapshot(info.clone_url, destination=info.destination)
                 collect_latest_release(info.web_url, destination=info.destination)
