@@ -233,6 +233,19 @@ def run_prepare_worker(
     task = controller.load_task(gh, task_id)
     if not task or runtime.get("active_task") != task_id:
         return 0
+    # Stale preparation jobs may still start after a new supervisor took over.
+    # Only the current persisted dispatch reservation may assign file leases.
+    dispatch_id = os.environ.get("CLOUD_DRIVE_RESERVATION_ID", "")
+    supervisor, _ = gh.read_json("tools/cloud-drive/state/supervisor.json", default={})
+    if supervisor.get("schema") == 1 and "dispatched" in supervisor:
+        assigned = supervisor["dispatched"].get("baidu", {})
+        if (
+            not dispatch_id
+            or dispatch_id != assigned.get("reservation_id")
+            or assigned.get("task_id") != task_id
+        ):
+            print("Superseded Baidu preparation; not dispatching workers.")
+            return 0
     if str(task.get("status") or "") == "COMPLETED":
         return 0
     if str(task.get("status") or "") not in RUNNABLE_TASK_STATES and not (reason == "auth-updated" and task.get("status") == "NEEDS_LOGIN"):
