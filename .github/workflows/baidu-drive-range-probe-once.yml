@@ -54,7 +54,7 @@ jobs:
           print("Existing Baidu session loaded for a single read-only request.")
           PY
 
-      - name: Probe exactly one 4 MiB signed download with no remote writes
+      - name: Read public staged-file identity
         run: |
           python3 - <<'PY'
           import json, os
@@ -65,6 +65,9 @@ jobs:
               print("BAIDU_PROBE_REMOTE_PATH=" + record["baidu_staging_path"], file=out)
               print("BAIDU_PROBE_SIZE=" + str(record["size"]), file=out)
           PY
+
+      - name: Probe exactly one 4 MiB signed download with no remote writes
+        run: |
           mkdir -p .probe-core/cmd/baidu-range-probe
           cp baidu-drive/mover/relay_dlink.go .probe-core/cmd/baidu-range-probe/relay_dlink.go
           cat > .probe-core/cmd/baidu-range-probe/main.go <<'GO'
