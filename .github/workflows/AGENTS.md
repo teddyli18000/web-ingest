@@ -24,7 +24,7 @@ For reliability-sensitive workflows, multiple cron entries may intentionally tar
 
 One-shot backfill, repair, migration, probe, diagnostic, experiment, or similar workflows may exist briefly but must never receive a recurring schedule. Remove them after successful validation.
 
-Prefer a `temp-` prefix for disposable experimental workflows. Existing temporary markers such as `backfill`, `repair`, `migration`, `probe`, and `diagnostic`, plus generated `git-mirror-*` import workflows, are also recognized by repository CI trigger policy.
+Prefer a `temp-` prefix for disposable experimental workflows. Existing temporary markers such as `backfill`, `repair`, `migration`, `probe`, and `diagnostic`, plus generated per-repository `git-mirror-*` import workflows, are also recognized by repository CI trigger policy. The persistent `git-mirror-reconcile.yml` control plane is explicitly re-included in repository integrity checks.
 
 Changes confined to clearly disposable workflow files are intentionally exempt from the full `repository-integrity` workflow. This avoids running the entire repository validation suite every time an Agent creates, adjusts, or self-deletes a one-shot Action. A disposable workflow is therefore responsible for validating the code/output it actually uses before committing durable results. If the same commit changes durable repository rules, task code, task documentation, or a persistent workflow, the normal repository-integrity triggers still apply.
 
