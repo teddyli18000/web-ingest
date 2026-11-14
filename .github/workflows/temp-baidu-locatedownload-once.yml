@@ -1,0 +1,137 @@
+name: Baidu locatedownload 4 MiB proof (one shot)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/temp-baidu-locatedownload-once.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+      BAIDU_DRIVE_BAIDU_SESSION: ${{ secrets.BAIDU_DRIVE_BAIDU_SESSION }}
+      BAIDU_DRIVE_STATE_KEY: ${{ secrets.BAIDU_DRIVE_STATE_KEY }}
+    steps:
+      - name: Checkout session helper and public source metadata
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+          sparse-checkout: |
+            baidu-drive
+      - name: Read authenticated account identity and one signed 4 MiB Range
+        run: |
+          python3 -m pip install -q 'cryptography==46.0.4'
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import re
+          import sys
+          import time
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+          from pathlib import Path
+
+          sys.path.insert(0, 'baidu-drive')
+          import auth_session
+          import controller
+
+          state_file = Path('baidu-drive/state/files/bd-20261114T114727Z-caff29/506174993752725.json')
+          staged = json.loads(state_file.read_text())
+          assert staged['size'] == 1302042184 and staged['baidu_staging_path'].startswith('/BaiduDriveMover/')
+          cookie = auth_session.read(
+              controller.GitHub(os.environ['GITHUB_REPOSITORY'], os.environ['GITHUB_TOKEN']),
+              os.environ['BAIDU_DRIVE_BAIDU_SESSION'],
+              os.environ['BAIDU_DRIVE_STATE_KEY'],
+          )
+          parsed_cookie = dict(
+              pair.strip().split('=', 1)
+              for pair in cookie.split(';') if '=' in pair
+          )
+          bduss = parsed_cookie['BDUSS']
+          ua = 'netdisk;P2SP;3.0.0.8;netdisk;11.12.3;ANG-AN00;android-android;10.0;JSbridge4.4.0;jointBridge;1.1.0;'
+
+          def request(url, *, method='GET', headers=None, data=None):
+              h = {'User-Agent': ua, 'Accept': 'application/json,*/*'}
+              if headers:
+                  h.update(headers)
+              req = urllib.request.Request(url, data=data, method=method, headers=h)
+              try:
+                  return urllib.request.urlopen(req, timeout=45)
+              except urllib.error.HTTPError as exc:
+                  payload = exc.read(4096)
+                  try:
+                      e = json.loads(payload)
+                      code = e.get('error_code', e.get('errno', 'unknown'))
+                      msg = str(e.get('error_msg', ''))
+                      hit = re.search(r'hitcode\s*[:=]\s*(\d+)', msg, re.IGNORECASE)
+                      kind = 'sign_error' if 'sign error' in msg.lower() else 'not_authorized' if 'not authorized' in msg.lower() else 'other'
+                      print(f'provider HTTP={exc.code} error_code={code} hitcode={hit.group(1) if hit else 0} cause={kind}')
+                  except (ValueError, TypeError):
+                      print(f'provider HTTP={exc.code} unclassified')
+                  raise RuntimeError('provider rejected request') from None
+
+          identity_url = 'https://pan.baidu.com/api/user/getinfo?need_selfinfo=1'
+          with request(identity_url, headers={'Cookie': cookie, 'Referer': 'https://pan.baidu.com/disk/home'}) as r:
+              user = json.load(r)
+          records = user.get('records', [])
+          if len(records) != 1 or int(records[0]['uk']) <= 0:
+              print('Account identity lookup did not return exactly one valid UK')
+              raise SystemExit(2)
+          uid = int(records[0]['uk'])
+          now = int(time.time())
+          devuid = hashlib.md5(bduss.encode()).hexdigest().upper() + '|0'
+          signature = hashlib.sha1((
+              hashlib.sha1(bduss.encode()).hexdigest() + str(uid) +
+              'ebrcUYiuxaZv2XGu7KIYKxUrqfnOfpDF' + str(now) + devuid
+          ).encode()).hexdigest()
+          args = {
+              'ant': '1', 'check_blue': '1', 'es': '1', 'esl': '1',
+              'app_id': '250528', 'method': 'locatedownload',
+              'path': staged['baidu_staging_path'], 'ver': '4.0',
+              'clienttype': '17', 'channel': '0', 'apn_id': '1_0',
+              'freeisp': '0', 'queryfree': '0', 'use': '0',
+              'time': str(now), 'rand': signature,
+              'devuid': devuid, 'cuid': devuid,
+          }
+          locator = 'https://pcs.baidu.com/rest/2.0/pcs/file?' + urllib.parse.urlencode(args)
+          print('Account UK resolved; sending signed locatedownload request')
+          with request(locator, method='POST', headers={'Cookie': cookie, 'Referer': 'https://pan.baidu.com/disk/home'}, data=b'') as r:
+              response = json.load(r)
+          if response.get('error_code') or response.get('errno'):
+              print(f'locatedownload rejected code={response.get("error_code", response.get("errno"))}')
+              raise SystemExit(1)
+          urls = response.get('urls') or []
+          links = [u['url'] for u in urls if u.get('encrypt') == 0 and isinstance(u.get('url'), str)]
+          if not links:
+              print(f'locatedownload produced no usable unencrypted URL; count={len(urls)}')
+              raise SystemExit(1)
+          url = urllib.parse.urlsplit(links[0])
+          host = (url.hostname or '').lower()
+          if url.username or url.password or url.port or not (host == 'd.pcs.baidu.com' or host.endswith('.baidupcs.com')):
+              print('locatedownload returned an unsupported download host')
+              raise SystemExit(1)
+          target = urllib.parse.urlunsplit(('https', url.netloc, url.path, url.query, ''))
+          print('Signed locatedownload link obtained; reading one exact 4 MiB range')
+          with request(target, headers={'Range': 'bytes=0-4194303', 'Accept': '*/*'}) as r:
+              content_range = r.headers.get('Content-Range')
+              status = r.status
+              if status != 206 or content_range != 'bytes 0-4194303/1302042184':
+                  print(f'Signed byte-range mismatch HTTP={status}, exact_range={content_range == "bytes 0-4194303/1302042184"}')
+                  raise SystemExit(1)
+              left = 4 << 20
+              while left:
+                  chunk = r.read(min(65536, left))
+                  if not chunk:
+                      raise RuntimeError('premature end of signed response')
+                  left -= len(chunk)
+          print('PASS: signed locatedownload provided exact 4 MiB source data without Drive write')
+          PY
