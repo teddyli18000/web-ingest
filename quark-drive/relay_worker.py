@@ -31,7 +31,7 @@ def public_error(kind: str) -> str:
     return {
         "auth": "Relay authentication is unavailable or expired.",
         "retryable": "Relay transport remained unavailable after bounded retries.",
-        "source_denied": "Quark refused the authenticated file download. Automatic retries stopped.",
+        "source_denied": "Quark temporarily refused the authenticated file download. Retry scheduled.",
         "session_expired": "Drive resumable session expired before its destination could be reconciled.",
         "session_absent": "Expired Drive session has no destination object; a fresh session may start safely.",
         "reconcile_required": "Drive destination is ambiguous or conflicts with the Quark source.",
@@ -261,7 +261,7 @@ def run_worker_loop(
             sleep_fn(random.uniform(base, base * 2.0))
             continue
 
-        permanent = kind in {"state", "input", "zero_file_pending", "source_denied"}
+        permanent = kind in {"state", "input", "zero_file_pending"}
         return stop_with_failure(
             repo,
             task_id,
