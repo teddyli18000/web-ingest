@@ -30,6 +30,7 @@ def public_error(kind: str) -> str:
     return {
         "auth": "Relay authentication is unavailable or expired.",
         "retryable": "Relay transport remained unavailable after bounded retries.",
+        "source_denied": "Baidu refused the authenticated file download. Automatic retries stopped.",
         "session_expired": "Drive resumable session expired before its destination could be reconciled.",
         "session_absent": "Expired Drive session has no destination object; a fresh session may start safely.",
         "reconcile_required": "Drive destination is ambiguous or conflicts with the Baidu source.",
@@ -258,7 +259,7 @@ def run_worker_loop(
             sleep_fn(float(1 << (consecutive_retryable - 1)))
             continue
 
-        permanent = kind in {"state", "input", "zero_file_pending"}
+        permanent = kind in {"state", "input", "zero_file_pending", "source_denied"}
         return stop_with_failure(
             repo,
             task_id,
