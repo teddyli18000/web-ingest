@@ -190,6 +190,111 @@ func (s *locatedDownloadSource) locate(ctx context.Context, remotePath string) (
 	return "", fmt.Errorf("%w: no valid signed download address", errLocatedDownloadDenied)
 }
 
+// The CDN has a separate per-request Range policy. Fetch bounded source
+// segments while exposing one continuous reader to Drive's 512 MiB PUT.
+const locatedSegmentBytes = int64(4 << 20)
+
+type locatedSegmentedReader struct {
+	ctx      context.Context
+	client   *http.Client
+	signed   string
+	position int64
+	end      int64
+	total    int64
+	current  io.ReadCloser
+	partEnd  int64
+}
+
+func (r *locatedSegmentedReader) openNext() error {
+	partEnd := r.position + locatedSegmentBytes - 1
+	if partEnd > r.end {
+		partEnd = r.end
+	}
+	req, err := http.NewRequestWithContext(r.ctx, http.MethodGet, r.signed, nil)
+	if err != nil {
+		return fmt.Errorf("create Baidu signed range request: %T", err)
+	}
+	req.Header.Set("User-Agent", locatedUserAgent)
+	req.Header.Set("Accept", "*/*")
+	req.Header.Set("Accept-Encoding", "identity")
+	req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", r.position, partEnd))
+	resp, err := r.client.Do(req)
+	if err != nil {
+		if errors.Is(err, errLocatedDownloadDenied) {
+			return errLocatedDownloadDenied
+		}
+		return fmt.Errorf("signed Baidu download transport failed: %T", err)
+	}
+	if resp.StatusCode != http.StatusPartialContent {
+		resp.Body.Close()
+		if resp.StatusCode < 500 {
+			return fmt.Errorf("%w: download HTTP %d", errLocatedDownloadDenied, resp.StatusCode)
+		}
+		return fmt.Errorf("Baidu signed download HTTP %d", resp.StatusCode)
+	}
+	actualStart, actualEnd, total, err := locatedRange(resp.Header.Get("Content-Range"))
+	if err != nil {
+		resp.Body.Close()
+		return err
+	}
+	if actualStart != r.position || actualEnd != partEnd ||
+		(r.total != 0 && r.total != total) ||
+		(resp.ContentLength >= 0 && resp.ContentLength != partEnd-r.position+1) {
+		resp.Body.Close()
+		return fmt.Errorf("Baidu signed download did not honor exact byte range")
+	}
+	r.total = total
+	r.current = resp.Body
+	r.partEnd = partEnd
+	return nil
+}
+
+func (r *locatedSegmentedReader) Read(p []byte) (int, error) {
+	if len(p) == 0 {
+		return 0, nil
+	}
+	if r.position > r.end {
+		return 0, io.EOF
+	}
+	if r.current == nil {
+		if err := r.openNext(); err != nil {
+			return 0, err
+		}
+	}
+	maxBytes := int64(len(p))
+	if left := r.partEnd - r.position + 1; maxBytes > left {
+		maxBytes = left
+	}
+	n, err := r.current.Read(p[:int(maxBytes)])
+	r.position += int64(n)
+	if err == io.EOF && r.position <= r.partEnd {
+		return n, io.ErrUnexpectedEOF
+	}
+	if err != nil && err != io.EOF {
+		return n, err
+	}
+	if r.position > r.partEnd {
+		_ = r.current.Close()
+		r.current = nil
+	}
+	if n > 0 {
+		return n, nil
+	}
+	if r.position > r.end {
+		return 0, io.EOF
+	}
+	return 0, io.ErrNoProgress
+}
+
+func (r *locatedSegmentedReader) Close() error {
+	if r.current == nil {
+		return nil
+	}
+	err := r.current.Close()
+	r.current = nil
+	return err
+}
+
 func (s *locatedDownloadSource) OpenDownloadRange(ctx context.Context, remotePath string, start, end int64) (*baidu.DownloadStream, error) {
 	if remotePath == "/BaiduDriveMover" || !strings.HasPrefix(remotePath, "/BaiduDriveMover/") || path.Clean(remotePath) != remotePath {
 		return nil, fmt.Errorf("Baidu source path is outside tool-owned staging")
@@ -201,43 +306,16 @@ func (s *locatedDownloadSource) OpenDownloadRange(ctx context.Context, remotePat
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, link, nil)
-	if err != nil {
-		return nil, fmt.Errorf("create signed Baidu byte-range request: %T", err)
+	reader := &locatedSegmentedReader{
+		ctx: ctx, client: s.data, signed: link, position: start, end: end,
 	}
-	req.Header.Set("User-Agent", locatedUserAgent)
-	req.Header.Set("Accept", "*/*")
-	req.Header.Set("Accept-Encoding", "identity")
-	req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", start, end))
-	resp, err := s.data.Do(req)
-	if err != nil {
-		// net/url.Error embeds signed query credentials; never wrap its text.
-		if errors.Is(err, errLocatedDownloadDenied) {
-			return nil, errLocatedDownloadDenied
-		}
-		return nil, fmt.Errorf("signed Baidu download transport failed: %T", err)
-	}
-	if resp.StatusCode != http.StatusPartialContent {
-		resp.Body.Close()
-		if resp.StatusCode < 500 {
-			return nil, fmt.Errorf("%w: download HTTP %d", errLocatedDownloadDenied, resp.StatusCode)
-		}
-		return nil, fmt.Errorf("Baidu signed download HTTP %d", resp.StatusCode)
-	}
-	actualStart, actualEnd, total, err := locatedRange(resp.Header.Get("Content-Range"))
-	if err != nil {
-		resp.Body.Close()
+	if err := reader.openNext(); err != nil {
 		return nil, err
 	}
-	if actualStart != start || actualEnd != end || (resp.ContentLength >= 0 && resp.ContentLength != end-start+1) {
-		resp.Body.Close()
-		return nil, fmt.Errorf("Baidu signed download did not honor exact byte range")
-	}
 	return &baidu.DownloadStream{
-		Body: resp.Body,
-		Start: start, End: end, Total: total,
+		Body: reader,
+		Start: start, End: end, Total: reader.total,
 		Remaining: end-start+1,
 		Partial: true,
-		ContentType: resp.Header.Get("Content-Type"),
 	}, nil
 }
