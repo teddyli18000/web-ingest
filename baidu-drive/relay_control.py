@@ -196,18 +196,25 @@ def sync_manifest(repo: Any, task_id: str, manifest: list[dict[str, Any]], now: 
     return result
 
 
-def reset_retryable_files(repo: Any, task_id: str, now: dt.datetime) -> int:
-    """Re-arm retryable files only after an explicit human/task retry request."""
+def reset_retryable_files(repo: Any, task_id: str, now: dt.datetime, rearm_source_denied: bool = False) -> int:
+    """Re-arm retryable files, plus previously denied files on explicit task retry."""
     reset = 0
     for record in repo.list_records(task_id):
-        if record.get("status") != relay_state.FAILED_RETRYABLE:
+        status = record.get("status")
+        source_denied = (
+            rearm_source_denied
+            and status == relay_state.FAILED_PERMANENT
+            and record.get("last_error") == relay_state.SOURCE_DENIED_MESSAGE
+        )
+        if status != relay_state.FAILED_RETRYABLE and not source_denied:
             continue
         file_id = str(record.get("file_id") or "")
         repo.mutate_record(
             task_id,
             file_id,
-            lambda current: relay_state.reset_retryable(current, now),
-            f"baidu-drive: re-arm retryable relay file {file_id}",
+            (lambda current: relay_state.reset_source_denied(current, now))
+            if source_denied else (lambda current: relay_state.reset_retryable(current, now)),
+            f"baidu-drive: re-arm relay file {file_id}",
         )
         reset += 1
     return reset
