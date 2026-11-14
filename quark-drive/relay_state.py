@@ -1,0 +1,418 @@
+#!/usr/bin/env python3
+"""Pure per-file state transitions for parallel Quark -> Drive relay workers."""
+from __future__ import annotations
+
+import copy
+import datetime as dt
+import re
+import secrets
+from typing import Any, Iterable
+
+ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
+MD5_PATTERN = re.compile(r"^[0-9a-fA-F]{32}$")
+
+READY = "READY"
+ACTIVE = "ACTIVE"
+PAUSED = "PAUSED"
+FAILED_RETRYABLE = "FAILED_RETRYABLE"
+FAILED_PERMANENT = "FAILED_PERMANENT"
+BLOCKED_RECONCILE = "BLOCKED_RECONCILE"
+VERIFIED = "VERIFIED"
+
+RUNNABLE = {READY, PAUSED, FAILED_RETRYABLE}
+TERMINAL = {VERIFIED, FAILED_PERMANENT}
+DEFAULT_STALE_SECONDS = 45 * 60
+LEGACY_STALE_SECONDS = 6 * 60 * 60
+DEFAULT_MAX_RETRYABLE_FAILURES = 0
+
+
+class RelayStateError(RuntimeError):
+    pass
+
+
+def now_iso(now: dt.datetime | None = None) -> str:
+    value = now or dt.datetime.now(dt.timezone.utc)
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=dt.timezone.utc)
+    return value.astimezone(dt.timezone.utc).isoformat(timespec="seconds")
+
+
+def _parse_time(value: Any) -> dt.datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = dt.datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=dt.timezone.utc)
+    return parsed.astimezone(dt.timezone.utc)
+
+
+def _safe_id(value: Any, label: str) -> str:
+    value = str(value or "").strip()
+    if not value or not ID_PATTERN.fullmatch(value):
+        raise RelayStateError(f"unsafe {label}")
+    return value
+
+
+def _canonical_md5(value: Any, label: str, required: bool = False) -> str:
+    text = str(value or "").strip()
+    if not text:
+        if required:
+            raise RelayStateError(f"{label} is required")
+        return ""
+    if not MD5_PATTERN.fullmatch(text):
+        raise RelayStateError(f"{label} is not a canonical MD5")
+    return text.lower()
+
+
+def state_path(task_id: str, file_id: str) -> str:
+    task = _safe_id(task_id, "task id")
+    file = _safe_id(file_id, "file id")
+    return f"quark-drive/state/files/{task}/{file}.json"
+
+
+def new_record(task_id: str, source: dict[str, Any], now: dt.datetime | None = None) -> dict[str, Any]:
+    task = _safe_id(task_id, "task id")
+    file_id = _safe_id(source.get("file_id"), "file id")
+    batch_id = _safe_id(source.get("batch_id"), "batch id")
+    size = int(source.get("size") or 0)
+    if size < 0:
+        raise RelayStateError("file size cannot be negative")
+    name = str(source.get("name") or "")
+    logical_path = str(source.get("logical_path") or "")
+    parent_path = str(source.get("parent_path") or "")
+    staging = str(source.get("quark_fid") or "")
+    parent_id = str(source.get("drive_parent_id") or "").strip()
+    if not name or not logical_path or not parent_path or not staging or not parent_id:
+        raise RelayStateError("relay manifest entry is incomplete")
+    source_md5 = _canonical_md5(source.get("md5"), "source MD5")
+    stamp = now_iso(now)
+    return {
+        "schema": 1,
+        "task_id": task,
+        "file_id": file_id,
+        "batch_id": batch_id,
+        "logical_path": logical_path,
+        "parent_path": parent_path,
+        "name": name,
+        "size": size,
+        "md5": source_md5,
+        "quark_fid": staging,
+        "drive_parent_id": parent_id,
+        "status": READY,
+        "confirmed_offset": 0,
+        "hash_offset": 0,
+        "md5_state": None,
+        "computed_md5": None,
+        "drive_file_id": None,
+        "drive_md5": None,
+        "session_sealed": None,
+        "lease_id": None,
+        "lease_started_at": None,
+        "heartbeat_at": None,
+        "attempts": 0,
+        "retryable_failures": 0,
+        "next_retry_at": None,
+        "lease_heartbeat_protocol": 0,
+        "last_error": "",
+        "created_at": stamp,
+        "updated_at": stamp,
+    }
+
+
+def heartbeat_stale(record: dict[str, Any], now: dt.datetime, stale_seconds: int = DEFAULT_STALE_SECONDS) -> bool:
+    heartbeat = _parse_time(record.get("heartbeat_at"))
+    if heartbeat is None:
+        return True
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=dt.timezone.utc)
+    return (now.astimezone(dt.timezone.utc) - heartbeat).total_seconds() >= stale_seconds
+
+
+def runnable(
+    record: dict[str, Any],
+    now: dt.datetime,
+    stale_seconds: int = DEFAULT_STALE_SECONDS,
+    max_retryable_failures: int = DEFAULT_MAX_RETRYABLE_FAILURES,
+) -> bool:
+    status = str(record.get("status") or "")
+    if status == FAILED_RETRYABLE:
+        if max_retryable_failures > 0 and int(record.get("retryable_failures") or 0) >= max_retryable_failures:
+            return False
+        due = _parse_time(record.get("next_retry_at"))
+        if due is not None and due > now.astimezone(dt.timezone.utc):
+            return False
+    if status in RUNNABLE:
+        return int(record.get("confirmed_offset") or 0) < int(record.get("size") or 0) or int(record.get("size") or 0) == 0
+    effective_stale = (stale_seconds if int(record.get("lease_heartbeat_protocol") or 0) >= 2
+                       else max(stale_seconds, LEGACY_STALE_SECONDS))
+    return status == ACTIVE and heartbeat_stale(record, now, effective_stale)
+
+
+def claim(
+    record: dict[str, Any],
+    lease_id: str,
+    now: dt.datetime,
+    stale_seconds: int = DEFAULT_STALE_SECONDS,
+    max_retryable_failures: int = DEFAULT_MAX_RETRYABLE_FAILURES,
+) -> dict[str, Any]:
+    lease_id = _safe_id(lease_id, "lease id")
+    value = copy.deepcopy(record)
+    if not runnable(value, now, stale_seconds, max_retryable_failures):
+        raise RelayStateError(f"file is not runnable from {value.get('status')}")
+    stamp = now_iso(now)
+    value["status"] = ACTIVE
+    value["lease_id"] = lease_id
+    value["lease_started_at"] = stamp
+    value["lease_heartbeat_protocol"] = 2
+    value["next_retry_at"] = None
+    value["heartbeat_at"] = stamp
+    value["attempts"] = int(value.get("attempts") or 0) + 1
+    value["last_error"] = ""
+    value["updated_at"] = stamp
+    return value
+
+
+def require_lease(record: dict[str, Any], lease_id: str) -> None:
+    if str(record.get("status") or "") != ACTIVE or str(record.get("lease_id") or "") != lease_id:
+        raise RelayStateError("worker no longer owns this file lease")
+
+
+def renew_lease(record: dict[str, Any], lease_id: str, now: dt.datetime) -> dict[str, Any]:
+    value = copy.deepcopy(record)
+    require_lease(value, lease_id)
+    stamp = now_iso(now)
+    value["heartbeat_at"] = stamp
+    value["updated_at"] = stamp
+    return value
+
+
+def attach_session(record: dict[str, Any], lease_id: str, sealed: str, now: dt.datetime) -> dict[str, Any]:
+    value = copy.deepcopy(record)
+    require_lease(value, lease_id)
+    sealed = str(sealed or "").strip()
+    if not sealed.startswith("v1."):
+        raise RelayStateError("invalid sealed session")
+    existing = str(value.get("session_sealed") or "")
+    if existing and existing != sealed:
+        raise RelayStateError("refusing to replace a live resumable session implicitly")
+    value["session_sealed"] = sealed
+    value["heartbeat_at"] = now_iso(now)
+    value["updated_at"] = value["heartbeat_at"]
+    return value
+
+
+def replace_expired_session(record: dict[str, Any], lease_id: str, sealed: str, now: dt.datetime) -> dict[str, Any]:
+    """Install a replacement session only after an external reconciliation proved it safe."""
+    value = copy.deepcopy(record)
+    require_lease(value, lease_id)
+    sealed = str(sealed or "").strip()
+    if not sealed.startswith("v1."):
+        raise RelayStateError("invalid sealed session")
+    value["session_sealed"] = sealed
+    value["confirmed_offset"] = 0
+    value["hash_offset"] = 0
+    value["md5_state"] = None
+    value["computed_md5"] = None
+    value["heartbeat_at"] = now_iso(now)
+    value["updated_at"] = value["heartbeat_at"]
+    return value
+
+
+def apply_remote_progress(record: dict[str, Any], lease_id: str, remote_offset: int, now: dt.datetime) -> dict[str, Any]:
+    """Persist Drive truth when no synchronized hash checkpoint is available."""
+    value = copy.deepcopy(record)
+    require_lease(value, lease_id)
+    size = int(value.get("size") or 0)
+    offset = int(remote_offset)
+    if offset < 0 or offset > size:
+        raise RelayStateError("remote offset is outside file size")
+    old_offset = int(value.get("confirmed_offset") or 0)
+    if int(value.get("hash_offset") or 0) != offset:
+        value["hash_offset"] = 0
+        value["md5_state"] = None
+        value["computed_md5"] = None
+    value["confirmed_offset"] = offset
+    if offset > old_offset:
+        value["retryable_failures"] = 0
+        value["next_retry_at"] = None
+    value["heartbeat_at"] = now_iso(now)
+    value["updated_at"] = value["heartbeat_at"]
+    return value
+
+
+def apply_relay_checkpoint(
+    record: dict[str, Any],
+    lease_id: str,
+    remote_offset: int,
+    hash_offset: int,
+    md5_state: str | None,
+    computed_md5: str | None,
+    now: dt.datetime,
+) -> dict[str, Any]:
+    """Atomically persist remote progress and its exactly aligned MD5 state."""
+    value = copy.deepcopy(record)
+    require_lease(value, lease_id)
+    size = int(value.get("size") or 0)
+    offset = int(remote_offset)
+    hashed = int(hash_offset)
+    if offset < 0 or offset > size or hashed != offset:
+        raise RelayStateError("relay hash checkpoint must equal Drive-confirmed offset")
+    state_text = str(md5_state or "").strip()
+    digest = _canonical_md5(computed_md5, "computed MD5")
+    if hashed > 0 and hashed < size and not state_text:
+        raise RelayStateError("non-final relay hash checkpoint is missing state")
+    if hashed == size and size > 0 and not digest:
+        raise RelayStateError("complete relay hash checkpoint is missing MD5")
+    old_offset = int(value.get("confirmed_offset") or 0)
+    value["confirmed_offset"] = offset
+    value["hash_offset"] = hashed
+    value["md5_state"] = state_text or None
+    value["computed_md5"] = digest or None
+    if offset > old_offset:
+        value["retryable_failures"] = 0
+        value["next_retry_at"] = None
+    value["heartbeat_at"] = now_iso(now)
+    value["updated_at"] = value["heartbeat_at"]
+    return value
+
+
+def pause(record: dict[str, Any], lease_id: str, now: dt.datetime, message: str = "") -> dict[str, Any]:
+    value = copy.deepcopy(record)
+    require_lease(value, lease_id)
+    value["status"] = PAUSED
+    value["lease_id"] = None
+    value["lease_started_at"] = None
+    value["heartbeat_at"] = None
+    value["last_error"] = str(message or "")[:300]
+    value["updated_at"] = now_iso(now)
+    return value
+
+
+def block_reconcile(record: dict[str, Any], lease_id: str, now: dt.datetime, message: str) -> dict[str, Any]:
+    """Release a lease while preserving all evidence needed to reconcile an expired session."""
+    value = copy.deepcopy(record)
+    require_lease(value, lease_id)
+    value["status"] = BLOCKED_RECONCILE
+    value["lease_id"] = None
+    value["lease_started_at"] = None
+    value["heartbeat_at"] = None
+    value["last_error"] = str(message or "")[:300]
+    value["updated_at"] = now_iso(now)
+    return value
+
+
+def fail(record: dict[str, Any], lease_id: str, now: dt.datetime, message: str, permanent: bool = False) -> dict[str, Any]:
+    value = copy.deepcopy(record)
+    require_lease(value, lease_id)
+    value["status"] = FAILED_PERMANENT if permanent else FAILED_RETRYABLE
+    if not permanent:
+        failures = int(value.get("retryable_failures") or 0) + 1
+        value["retryable_failures"] = failures
+        backoff = min(3 * 3600, 30 * (2 ** min(failures - 1, 10)))
+        delay = backoff + secrets.randbelow(backoff + 1)
+        value["next_retry_at"] = now_iso(now + dt.timedelta(seconds=delay))
+    else:
+        value["next_retry_at"] = None
+    value["lease_id"] = None
+    value["lease_started_at"] = None
+    value["heartbeat_at"] = None
+    value["last_error"] = str(message or "")[:300]
+    value["updated_at"] = now_iso(now)
+    return value
+
+
+def reset_retryable(record: dict[str, Any], now: dt.datetime) -> dict[str, Any]:
+    value = copy.deepcopy(record)
+    if value.get("status") != FAILED_RETRYABLE:
+        return value
+    if value.get("lease_id"):
+        raise RelayStateError("cannot reset a leased retryable file")
+    value["retryable_failures"] = 0
+    value["next_retry_at"] = None
+    value["status"] = PAUSED
+    value["last_error"] = ""
+    value["updated_at"] = now_iso(now)
+    return value
+
+
+SOURCE_DENIED_MESSAGE = "Quark refused the authenticated file download. Automatic retries stopped."
+
+
+def reset_source_denied(record: dict[str, Any], now: dt.datetime) -> dict[str, Any]:
+    value = copy.deepcopy(record)
+    if value.get("status") != FAILED_PERMANENT or value.get("last_error") != SOURCE_DENIED_MESSAGE:
+        return value
+    if value.get("lease_id"):
+        raise RelayStateError("cannot re-arm a leased source-denied file")
+    value["status"] = PAUSED
+    value["last_error"] = ""
+    value["updated_at"] = now_iso(now)
+    return value
+
+
+def complete(
+    record: dict[str, Any],
+    lease_id: str,
+    drive_file_id: str,
+    drive_md5: str,
+    computed_md5: str,
+    now: dt.datetime,
+) -> dict[str, Any]:
+    value = copy.deepcopy(record)
+    require_lease(value, lease_id)
+    drive_file_id = str(drive_file_id or "").strip()
+    if not drive_file_id:
+        raise RelayStateError("verified Drive file ID is required")
+    remote_md5 = _canonical_md5(drive_md5, "Drive MD5", required=True)
+    local_md5 = _canonical_md5(computed_md5, "computed MD5", required=True)
+    if remote_md5 != local_md5:
+        raise RelayStateError("Drive MD5 does not match streamed source MD5")
+    source_md5 = _canonical_md5(value.get("md5"), "source MD5")
+    if source_md5 and source_md5 != local_md5:
+        raise RelayStateError("streamed MD5 does not match canonical Quark MD5")
+    size = int(value.get("size") or 0)
+    value["confirmed_offset"] = size
+    value["hash_offset"] = size
+    value["md5_state"] = None
+    value["computed_md5"] = local_md5
+    value["drive_file_id"] = drive_file_id
+    value["drive_md5"] = remote_md5
+    value["session_sealed"] = None
+    value["status"] = VERIFIED
+    value["retryable_failures"] = 0
+    value["lease_id"] = None
+    value["lease_started_at"] = None
+    value["heartbeat_at"] = None
+    value["last_error"] = ""
+    value["updated_at"] = now_iso(now)
+    return value
+
+
+def aggregate(records: Iterable[dict[str, Any]]) -> dict[str, int]:
+    files_total = 0
+    files_verified = 0
+    bytes_total = 0
+    bytes_confirmed = 0
+    active = 0
+    for record in records:
+        files_total += 1
+        size = max(0, int(record.get("size") or 0))
+        offset = max(0, min(size, int(record.get("confirmed_offset") or 0)))
+        bytes_total += size
+        bytes_confirmed += offset
+        if record.get("status") == VERIFIED:
+            files_verified += 1
+            bytes_confirmed -= offset
+            bytes_confirmed += size
+        if record.get("status") == ACTIVE:
+            active += 1
+    return {
+        "files_total": files_total,
+        "files_verified": files_verified,
+        "bytes_total": bytes_total,
+        "bytes_confirmed": bytes_confirmed,
+        "active_workers": active,
+    }
