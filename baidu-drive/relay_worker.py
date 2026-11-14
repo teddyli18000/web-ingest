@@ -9,6 +9,7 @@ import json
 import os
 import pathlib
 import re
+import random
 import subprocess
 import time
 from typing import Any, Callable
@@ -256,7 +257,8 @@ def run_worker_loop(
 
         if kind == "retryable" and consecutive_retryable + 1 < retry_limit:
             consecutive_retryable += 1
-            sleep_fn(float(1 << (consecutive_retryable - 1)))
+            base = float(1 << (consecutive_retryable - 1))
+            sleep_fn(random.uniform(base, base * 2.0))
             continue
 
         permanent = kind in {"state", "input", "zero_file_pending", "source_denied"}

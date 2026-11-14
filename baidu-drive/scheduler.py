@@ -20,8 +20,9 @@ DEFAULT_MAX_WORKERS = 3
 DEFAULT_CHUNK_BYTES = 512 * MIB
 DEFAULT_SOFT_RUNTIME_SECONDS = 5 * 60 * 60
 DEFAULT_HARD_RUNTIME_SECONDS = 330 * 60
-DEFAULT_STALE_HEARTBEAT_SECONDS = 60 * 60
-DEFAULT_MAX_RETRYABLE_FAILURES = 3
+DEFAULT_STALE_HEARTBEAT_SECONDS = 45 * 60
+LEGACY_STALE_HEARTBEAT_SECONDS = 6 * 60 * 60
+DEFAULT_MAX_RETRYABLE_FAILURES = 0  # 0 = no finite transient retry limit
 
 RUNNABLE_FILE_STATES = {"READY", "PAUSED", "FAILED_RETRYABLE"}
 
@@ -46,8 +47,8 @@ class Policy:
             raise ValueError("hard runtime must exceed soft runtime")
         if self.stale_heartbeat_seconds <= 0:
             raise ValueError("stale heartbeat window must be positive")
-        if self.max_retryable_failures <= 0:
-            raise ValueError("max_retryable_failures must be positive")
+        if self.max_retryable_failures < 0:
+            raise ValueError("max_retryable_failures cannot be negative")
         return self
 
 
@@ -83,7 +84,9 @@ def heartbeat_is_stale(
     if heartbeat is None:
         return True
     age = (now.astimezone(dt.timezone.utc) - heartbeat).total_seconds()
-    return age >= policy.stale_heartbeat_seconds
+    threshold = (policy.stale_heartbeat_seconds if int(file_state.get("lease_heartbeat_protocol") or 0) >= 2
+                 else max(policy.stale_heartbeat_seconds, LEGACY_STALE_HEARTBEAT_SECONDS))
+    return age >= threshold
 
 
 def is_active(file_state: dict[str, Any], now: dt.datetime, policy: Policy = Policy()) -> bool:
@@ -96,8 +99,12 @@ def is_runnable(file_state: dict[str, Any], now: dt.datetime, policy: Policy = P
     policy.validate()
     status = str(file_state.get("status") or "").upper()
     size = max(0, int(file_state.get("size") or 0))
-    if status == "FAILED_RETRYABLE" and int(file_state.get("retryable_failures") or 0) >= policy.max_retryable_failures:
-        return False
+    if status == "FAILED_RETRYABLE":
+        if policy.max_retryable_failures > 0 and int(file_state.get("retryable_failures") or 0) >= policy.max_retryable_failures:
+            return False
+        due = _parse_time(file_state.get("next_retry_at"))
+        if due is not None and due > now.astimezone(dt.timezone.utc):
+            return False
     if status in RUNNABLE_FILE_STATES:
         # Zero-byte files still need one worker to create and verify the empty
         # Drive object even though there are no relay byte ranges.
